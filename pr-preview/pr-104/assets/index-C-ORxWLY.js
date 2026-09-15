@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BWybNZpP.js","./pako.esm-KbdoS3Oq.js","./lerc-aNvtmuiI.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BJVbmwGO.js","./pako.esm-KbdoS3Oq.js","./lerc-ClZ7AVsL.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18135,9 +18135,60 @@ let __tla = (async () => {
   function sourceChannelInAnyGroup(channelGroups, sourceId) {
     return sourceIdsInAnyGroup(channelGroups).has(sourceId);
   }
+  function isRgbDisplayFullyGrouped(channels2, channelGroups) {
+    const intensity = channels2.filter(isImageChannel);
+    if (intensity.length === 0 || !isRgbDisplaySource(channels2)) return false;
+    const groupedIds = sourceIdsInAnyGroup(channelGroups);
+    return intensity.every((c2) => groupedIds.has(c2.id));
+  }
+  function visibilitiesForRgbUnit(args) {
+    const ids = new Set(args.rgbChannels.filter(isImageChannel).map((c2) => c2.id));
+    const channelGroupRowVisibilities = {
+      ...args.groupRowVisibilities
+    };
+    for (const group2 of args.channelGroups) {
+      for (const gc2 of group2.channels) {
+        if (ids.has(gc2.channelId)) {
+          channelGroupRowVisibilities[gc2.id] = args.visible;
+        }
+      }
+    }
+    const channelVisibilities = {
+      ...args.stackVisibilities
+    };
+    for (const id2 of ids) channelVisibilities[id2] = args.visible;
+    return {
+      channelGroupRowVisibilities,
+      channelVisibilities
+    };
+  }
   function buildCompositedIntensityLayers(args) {
     const { onLoader, activeGroup, channelGroups = [], stackVisibilities, groupRowVisibilities, hasVisibilityMap, requireColor = true } = args;
     const groupedIds = sourceIdsInAnyGroup(channelGroups);
+    const rgbSource = isRgbDisplaySource(onLoader);
+    if (rgbSource) {
+      const intensity = onLoader.filter(isImageChannel);
+      const unitOn = intensity.every((sc2) => groupedIds.has(sc2.id) ? isDisplayedViaGroupRow(sc2.id, channelGroups, groupRowVisibilities) : !hasVisibilityMap || isStackVisible(stackVisibilities, sc2.id));
+      if (!unitOn) return [];
+      const groupsInOrder2 = activeGroup ? [
+        activeGroup,
+        ...channelGroups.filter((g2) => g2.id !== activeGroup.id)
+      ] : channelGroups;
+      return intensity.map((sc2) => {
+        let gc2 = null;
+        for (const group2 of groupsInOrder2) {
+          const row = group2.channels.find((r2) => r2.channelId === sc2.id && isGroupRowVisible(groupRowVisibilities, r2.id));
+          if (row) {
+            gc2 = row;
+            break;
+          }
+        }
+        return {
+          sc: sc2,
+          gc: gc2
+        };
+      });
+    }
     if (channelGroups.length === 0) {
       const layers = hasVisibilityMap ? onLoader.filter((sc2) => isStackVisible(stackVisibilities, sc2.id)) : onLoader.slice(0, DEFAULT_VISIBLE_INTENSITY_CHANNELS);
       return layers.filter((sc2) => !(requireColor && sc2.samples !== 3 && !sc2.color)).map((sc2) => ({
@@ -18168,7 +18219,7 @@ let __tla = (async () => {
       if (!hasVisibilityMap || !isStackVisible(stackVisibilities, sc2.id)) {
         continue;
       }
-      if (requireColor && sc2.samples !== 3 && !sc2.color) continue;
+      if (requireColor && !rgbSource && sc2.samples !== 3 && !sc2.color) continue;
       usedSourceIds.add(sc2.id);
       ordered.push({
         sc: sc2,
@@ -18240,6 +18291,9 @@ let __tla = (async () => {
         return out;
       }
       case "sync": {
+        if (!sourceChannels.some((sc2) => prev[sc2.id] !== void 0)) {
+          return freshStackDefaults(sourceChannels);
+        }
         const out = preservedStackVisibilities(sourceChannels, prev, true);
         for (const sc2 of sourceChannels) {
           if (out[sc2.id] !== void 0) continue;
@@ -62092,26 +62146,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BQAUiSXo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BYKXLtld.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BVl6BAiY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-rS5QAqB2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-VmtIVKON.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CL0hDrda.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BWybNZpP.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-C7hCeXwT.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-aNvtmuiI.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BJVbmwGO.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-D3qfhAyk.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-ClZ7AVsL.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BiS83qa-.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BewnipPq.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-XVZdHdok.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-D4fBRTO3.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -92775,6 +92829,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       sourceId: sc2.id
     };
     const toggleVisible = () => {
+      if (rgbDisplay) {
+        const next2 = visibilitiesForRgbUnit({
+          rgbChannels: sourceChannels.filter((c2) => c2.imageId === sc2.imageId && isImageChannel(c2)),
+          channelGroups,
+          groupRowVisibilities,
+          stackVisibilities,
+          visible: !visible
+        });
+        setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
+        setChannelVisibilities(next2.channelVisibilities);
+        return;
+      }
       if (gc2) {
         setChannelGroupRowVisibilities({
           ...groupRowVisibilities,
@@ -93153,6 +93219,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       model.allChannels,
       channelNameFilter
     ]);
+    const rgbDisplay = isRgbDisplayImage(image2);
+    const rgbChannels = flattenImageChannelsInDocumentOrder([
+      image2
+    ]);
+    const showAllChannelsStrip = model.allChannels.length > 0 && !isRgbDisplayFullyGrouped(rgbChannels, channelGroups);
     const openChip = openKey == null ? null : [
       ...model.groups.flatMap((g2) => g2.chips),
       ...model.allChannels
@@ -93160,9 +93231,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const onOpenEditor = (chip2) => {
       setOpenKey((cur) => cur === chip2.key ? null : chip2.key);
     };
+    const applyRgbUnit = (visible) => {
+      const next2 = visibilitiesForRgbUnit({
+        rgbChannels,
+        channelGroups,
+        groupRowVisibilities: useAppStore.getState().channelGroupRowVisibilities,
+        stackVisibilities: useAppStore.getState().channelVisibilities,
+        visible
+      });
+      setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
+      setChannelVisibilities(next2.channelVisibilities);
+    };
     const onGroupChip = (chip2) => {
       var _a2;
       if (!chip2.groupRowId) return;
+      if (rgbDisplay) {
+        applyRgbUnit(!chip2.visible);
+        return;
+      }
       const vis = useAppStore.getState().channelGroupRowVisibilities;
       if (chip2.visible) {
         setChannelGroupRowVisibilities({
@@ -93183,6 +93269,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const onAllChannelsChip = (chip2) => {
       var _a2, _b2;
+      if (rgbDisplay) {
+        applyRgbUnit(!chip2.visible);
+        return;
+      }
       if (chip2.groupRowId) {
         const vis2 = useAppStore.getState().channelGroupRowVisibilities;
         const groups = useDocumentStore.getState().channelGroups;
@@ -93221,27 +93311,48 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return jsxRuntimeExports.jsxs("div", {
       className: styles$n.root,
       children: [
-        model.groups.map((group2) => jsxRuntimeExports.jsx(GroupStrip, {
-          name: group2.name,
-          chips: group2.chips,
-          openChip,
-          allVisible: group2.allVisible,
-          onChip: onGroupChip,
-          onOpenEditor,
-          onToggleVisibility: () => {
-            const docGroup = channelGroups.find((g2) => g2.id === group2.id);
-            if (!docGroup || docGroup.channels.length === 0) return;
-            const allOn = docGroup.channels.every((gc2) => isGroupRowVisible(groupRowVisibilities, gc2.id));
-            const next2 = {
-              ...groupRowVisibilities
-            };
-            for (const gc2 of docGroup.channels) next2[gc2.id] = !allOn;
-            setChannelGroupRowVisibilities(next2);
-          }
-        }, group2.id)),
-        model.allChannels.length > 0 ? jsxRuntimeExports.jsx(GroupStrip, {
+        model.groups.map((group2) => {
+          const rgbUnit = rgbDisplay && group2.chips.length > 1 ? [
+            {
+              ...group2.chips[0],
+              key: `g:${group2.id}:rgb`,
+              name: "H&E",
+              visible: group2.allVisible
+            }
+          ] : group2.chips;
+          return jsxRuntimeExports.jsx(GroupStrip, {
+            name: group2.name,
+            chips: rgbUnit,
+            openChip,
+            allVisible: group2.allVisible,
+            onChip: onGroupChip,
+            onOpenEditor,
+            onToggleVisibility: () => {
+              if (rgbDisplay) {
+                applyRgbUnit(!group2.allVisible);
+                return;
+              }
+              const docGroup = channelGroups.find((g2) => g2.id === group2.id);
+              if (!docGroup || docGroup.channels.length === 0) return;
+              const allOn = docGroup.channels.every((gc2) => isGroupRowVisible(groupRowVisibilities, gc2.id));
+              const next2 = {
+                ...groupRowVisibilities
+              };
+              for (const gc2 of docGroup.channels) next2[gc2.id] = !allOn;
+              setChannelGroupRowVisibilities(next2);
+            }
+          }, group2.id);
+        }),
+        showAllChannelsStrip ? jsxRuntimeExports.jsx(GroupStrip, {
           name: "All channels",
-          chips: filteredAllChannels,
+          chips: rgbDisplay && filteredAllChannels.length > 1 ? [
+            {
+              ...filteredAllChannels[0],
+              key: "e:rgb",
+              name: "H&E",
+              visible: filteredAllChannels.every((c2) => c2.visible)
+            }
+          ] : filteredAllChannels,
           openChip,
           onChip: onAllChannelsChip,
           onOpenEditor,
@@ -164075,7 +164186,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const { channelsVisible, colors, selections } = meta.settings;
     const contrastLimits = meta.transfer === "cube-root" ? meta.settings.contrastLimits || [] : (meta.settings.contrastLimits || []).map(() => JPEG_BAKED_CONTRAST_LIMIT);
     return new MultiscaleImageLayer({
-      visible: true,
+      excludeBackground: true,
       loader: meta.jpegLoader,
       refinementStrategy: "no-overlap",
       maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
@@ -164738,39 +164849,40 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
     });
   }
-  const stack = "_stack_hcgyu_1";
-  const panelDropActive = "_panelDropActive_hcgyu_11";
-  const addStrip = "_addStrip_hcgyu_16";
-  const addStripRow = "_addStripRow_hcgyu_27";
-  const dropZone = "_dropZone_hcgyu_41";
-  const dropZoneTitle = "_dropZoneTitle_hcgyu_51";
-  const orDivider = "_orDivider_hcgyu_57";
-  const urlRow = "_urlRow_hcgyu_68";
-  const urlInput = "_urlInput_hcgyu_76";
-  const urlAdd = "_urlAdd_hcgyu_84";
-  const importError = "_importError_hcgyu_95";
-  const dropZoneActive = "_dropZoneActive_hcgyu_122";
-  const fieldLabel = "_fieldLabel_hcgyu_183";
-  const typeOverlay = "_typeOverlay_hcgyu_197";
-  const typeOverlayBackdrop = "_typeOverlayBackdrop_hcgyu_209";
-  const typeOverlayCard = "_typeOverlayCard_hcgyu_215";
-  const typeOverlayFields = "_typeOverlayFields_hcgyu_229";
-  const typeOverlayFile = "_typeOverlayFile_hcgyu_239";
-  const typeRow = "_typeRow_hcgyu_248";
-  const typeChipActive = "_typeChipActive_hcgyu_256";
-  const typeChipSuggested = "_typeChipSuggested_hcgyu_260";
-  const typeChipMuted = "_typeChipMuted_hcgyu_265";
-  const typeFooter = "_typeFooter_hcgyu_279";
-  const typeImport = "_typeImport_hcgyu_288";
-  const typeSection = "_typeSection_hcgyu_295";
-  const imageCard = "_imageCard_hcgyu_303";
-  const fileAccessOverlay = "_fileAccessOverlay_hcgyu_315";
-  const fileAccessAction = "_fileAccessAction_hcgyu_331";
-  const imageCardHeader = "_imageCardHeader_hcgyu_339";
-  const imageCardText = "_imageCardText_hcgyu_347";
-  const imageCardTitle = "_imageCardTitle_hcgyu_355";
-  const imageCardMeta = "_imageCardMeta_hcgyu_363";
-  const imageCardActions = "_imageCardActions_hcgyu_369";
+  const stack = "_stack_16drl_1";
+  const panelDropActive = "_panelDropActive_16drl_11";
+  const addStrip = "_addStrip_16drl_16";
+  const addStripRow = "_addStripRow_16drl_27";
+  const dropZone = "_dropZone_16drl_41";
+  const dropZoneTitle = "_dropZoneTitle_16drl_51";
+  const orDivider = "_orDivider_16drl_57";
+  const urlRow = "_urlRow_16drl_68";
+  const urlField = "_urlField_16drl_77";
+  const urlInput = "_urlInput_16drl_83";
+  const urlAdd = "_urlAdd_16drl_91";
+  const dropZoneActive = "_dropZoneActive_16drl_121";
+  const importError = "_importError_16drl_182";
+  const fieldLabel = "_fieldLabel_16drl_195";
+  const typeOverlay = "_typeOverlay_16drl_209";
+  const typeOverlayBackdrop = "_typeOverlayBackdrop_16drl_221";
+  const typeOverlayCard = "_typeOverlayCard_16drl_227";
+  const typeOverlayFields = "_typeOverlayFields_16drl_241";
+  const typeOverlayFile = "_typeOverlayFile_16drl_251";
+  const typeRow = "_typeRow_16drl_260";
+  const typeChipActive = "_typeChipActive_16drl_268";
+  const typeChipSuggested = "_typeChipSuggested_16drl_272";
+  const typeChipMuted = "_typeChipMuted_16drl_277";
+  const typeFooter = "_typeFooter_16drl_291";
+  const typeImport = "_typeImport_16drl_300";
+  const typeSection = "_typeSection_16drl_307";
+  const imageCard = "_imageCard_16drl_315";
+  const fileAccessOverlay = "_fileAccessOverlay_16drl_327";
+  const fileAccessAction = "_fileAccessAction_16drl_343";
+  const imageCardHeader = "_imageCardHeader_16drl_351";
+  const imageCardText = "_imageCardText_16drl_359";
+  const imageCardTitle = "_imageCardTitle_16drl_367";
+  const imageCardMeta = "_imageCardMeta_16drl_375";
+  const imageCardActions = "_imageCardActions_16drl_381";
   const styles$m = {
     stack,
     panelDropActive,
@@ -164780,10 +164892,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     dropZoneTitle,
     orDivider,
     urlRow,
+    urlField,
     urlInput,
     urlAdd,
-    importError,
     dropZoneActive,
+    importError,
     fieldLabel,
     typeOverlay,
     typeOverlayBackdrop,
@@ -164912,6 +165025,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [detectedRgbDisplay, setDetectedRgbDisplay] = reactExports.useState(null);
     const [detecting, setDetecting] = reactExports.useState(false);
     const [importError2, setImportError] = reactExports.useState(null);
+    const [stripErrorAt, setStripErrorAt] = reactExports.useState("drop");
     const [importBusy, setImportBusy] = reactExports.useState(false);
     const [dragging, setDragging] = reactExports.useState(false);
     const dragDepthRef = reactExports.useRef(0);
@@ -165028,12 +165142,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (handles.length === 0) return;
       const handle2 = handles[0];
       if (!await ensureFileHandlePermission(handle2)) {
+        setStripErrorAt("drop");
         setImportError("Allow file access to load this image.");
         return;
       }
       if (!await findFile({
         handle: handle2
       })) {
+        setStripErrorAt("drop");
         setImportError("Could not read the selected file.");
         return;
       }
@@ -165067,6 +165183,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (disabled2) return;
       const url = urlDraft.trim();
       if (!/^https?:\/\/.+/.test(url)) {
+        setStripErrorAt("url");
         setImportError("Enter a valid http(s) URL.");
         return;
       }
@@ -165108,11 +165225,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         ...e2.dataTransfer.items
       ].filter((i2) => i2.kind === "file");
       if (items.length === 0) {
+        setStripErrorAt("drop");
         setImportError("Drop an image file to add it.");
         return;
       }
       const handle2 = await fileHandleFromDataTransferItem(items[0]);
       if (!handle2) {
+        setStripErrorAt("drop");
         setImportError("Could not read the dropped file.");
         return;
       }
@@ -165291,6 +165410,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onDragOver,
       onDrop: (e2) => void onDrop(e2)
     };
+    const stripError = importError2 && !showTypeOverlay ? importError2 : null;
+    const dropError = stripError && stripErrorAt === "drop" ? stripError : null;
+    const urlError = stripError && stripErrorAt === "url" ? stripError : null;
     const addStrip2 = jsxRuntimeExports.jsxs("div", {
       className: [
         styles$m.addStrip,
@@ -165306,10 +165428,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             dragging ? styles$m.dropZoneActive : ""
           ].join(" "),
           disabled: disabled2,
+          "aria-invalid": dropError ? true : void 0,
           onClick: () => void browseLocal(),
           children: jsxRuntimeExports.jsx("span", {
-            className: styles$m.dropZoneTitle,
-            children: "Drop or Browse Image File"
+            className: [
+              styles$m.dropZoneTitle,
+              dropError ? styles$m.importError : ""
+            ].filter(Boolean).join(" "),
+            role: dropError ? "alert" : void 0,
+            children: dropError ?? "Drop or Browse Image File"
           })
         }),
         jsxRuntimeExports.jsx("div", {
@@ -165321,39 +165448,45 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         jsxRuntimeExports.jsxs("div", {
           className: styles$m.urlRow,
           children: [
-            jsxRuntimeExports.jsx("input", {
-              id: "upload-add-url",
-              type: "url",
-              className: `${minervaTheme.input} ${styles$m.urlInput}`,
-              placeholder: "Image URL (OME-TIFF or DICOMweb)",
-              "aria-label": "Image URL",
-              value: urlDraft,
-              disabled: disabled2,
-              onChange: (e2) => {
-                setUrlDraft(e2.target.value);
-                setImportError(null);
-              },
-              onKeyDown: (e2) => {
-                if (e2.key === "Enter") {
-                  e2.preventDefault();
-                  acceptUrlDraft();
-                }
-              }
+            jsxRuntimeExports.jsxs("div", {
+              className: styles$m.urlField,
+              children: [
+                jsxRuntimeExports.jsx("input", {
+                  id: "upload-add-url",
+                  type: "url",
+                  className: `${minervaTheme.input} ${styles$m.urlInput}`,
+                  placeholder: "Image URL (OME-TIFF or DICOMweb)",
+                  "aria-label": "Image URL",
+                  "aria-invalid": urlError ? true : void 0,
+                  value: urlDraft,
+                  disabled: disabled2,
+                  onChange: (e2) => {
+                    setUrlDraft(e2.target.value);
+                    setImportError(null);
+                  },
+                  onKeyDown: (e2) => {
+                    if (e2.key === "Enter") {
+                      e2.preventDefault();
+                      acceptUrlDraft();
+                    }
+                  }
+                }),
+                urlDraft.trim() ? jsxRuntimeExports.jsx(PanelActionButton, {
+                  type: "button",
+                  className: styles$m.urlAdd,
+                  disabled: disabled2 || !urlReady,
+                  onClick: acceptUrlDraft,
+                  children: "Add"
+                }) : null
+              ]
             }),
-            urlDraft.trim() ? jsxRuntimeExports.jsx(PanelActionButton, {
-              type: "button",
-              className: styles$m.urlAdd,
-              disabled: disabled2 || !urlReady,
-              onClick: acceptUrlDraft,
-              children: "Add"
+            urlError ? jsxRuntimeExports.jsx("div", {
+              className: styles$m.importError,
+              role: "alert",
+              children: urlError
             }) : null
           ]
-        }),
-        importError2 && !showTypeOverlay ? jsxRuntimeExports.jsx("div", {
-          className: styles$m.importError,
-          role: "alert",
-          children: importError2
-        }) : null
+        })
       ]
     });
     const typeOverlayDialog = showTypeOverlay && pending ? jsxRuntimeExports.jsxs("div", {
@@ -168020,25 +168153,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const pending = pendingLibraryImport;
       pendingLibraryImport = null;
       if (!pending) return;
-      let cancelled = false;
-      void (async () => {
-        const result = pending.kind === "dicomWeb" ? await importDicomWebRef.current({
-          url: pending.url
-        }) : await importOmeRef.current({
-          role: pending.role,
-          append: false,
-          source: pending.source
-        });
-        if (cancelled) return;
-        if (result.ok === false) {
-          window.alert(result.error);
-        }
-      })().finally(() => {
-        if (!cancelled) onSettled();
+      const imported = pending.kind === "dicomWeb" ? importDicomWebRef.current({
+        url: pending.url
+      }) : importOmeRef.current({
+        role: pending.role,
+        append: false,
+        source: pending.source
       });
-      return () => {
-        cancelled = true;
-      };
+      void imported.then((result) => {
+        if (result.ok === false) window.alert(result.error);
+      }).finally(onSettled);
     }, [
       onSettled
     ]);
@@ -243354,8 +243478,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       upper: limits.upper
     };
   }
-  function isEligible(sc2) {
-    return isImageChannel(sc2) && sc2.samples !== 3;
+  function documentChannels() {
+    return flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images);
+  }
+  function isEligible(sc2, all2) {
+    return isImageChannel(sc2) && sc2.samples !== 3 && !isRgbDisplayChannel(sc2, all2);
   }
   function acquire(used, waiters, max2) {
     return new Promise((resolve) => {
@@ -243383,7 +243510,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     for (const listener of listeners) listener();
   }
   function readChannel(channelId) {
-    return flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images).find((sc2) => sc2.id === channelId);
+    return documentChannels().find((sc2) => sc2.id === channelId);
   }
   function removeFromQueues(key2) {
     const idx = queue.indexOf(key2);
@@ -243584,8 +243711,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return job;
   }
   function targetFor(channelId) {
-    const sc2 = readChannel(channelId);
-    if (!sc2 || !isEligible(sc2)) return null;
+    const all2 = documentChannels();
+    const sc2 = all2.find((c2) => c2.id === channelId);
+    if (!sc2 || !isEligible(sc2, all2)) return null;
     const loader = loadersByImageId.get(sc2.imageId);
     if (!loader) return null;
     return {
@@ -243595,8 +243723,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function blockVisible(channelId) {
     if (blockedIds.has(channelId)) return;
-    const sc2 = readChannel(channelId);
-    if (!sc2 || sc2.gmmContrastLimits || !isEligible(sc2)) return;
+    const all2 = documentChannels();
+    const sc2 = all2.find((c2) => c2.id === channelId);
+    if (!sc2 || sc2.gmmContrastLimits || !isEligible(sc2, all2)) return;
     blockedIds.add(channelId);
   }
   function reconcileGmm(args) {
@@ -243616,7 +243745,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     }
     for (const sc2 of channels2) {
-      if (!isEligible(sc2) || !loadersByImageId.has(sc2.imageId)) continue;
+      if (!isEligible(sc2, channels2)) continue;
       if (sc2.gmmContrastLimits) continue;
       if (!visibleChannelIds.has(sc2.id)) continue;
       const loader = loadersByImageId.get(sc2.imageId);
@@ -243631,6 +243760,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
       if (!job) continue;
       blockVisible(sc2.id);
+    }
+    for (const id2 of [
+      ...blockedIds
+    ]) {
+      const sc2 = channels2.find((c2) => c2.id === id2);
+      if (!sc2 || !visibleChannelIds.has(id2) || sc2.gmmContrastLimits || !isEligible(sc2, channels2)) {
+        blockedIds.delete(id2);
+      }
     }
     holdingLoad = blockedIds.size > 0;
     notify();
@@ -244155,10 +244292,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }, []);
     const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] = reactExports.useState(() => /* @__PURE__ */ new Map());
     const [channelNameFilter, setChannelNameFilter] = reactExports.useState("");
-    const filteredAllChannels = reactExports.useMemo(() => uniqueSourceChannels.filter((sc2) => channelNameMatchesQuery(sc2.name, channelNameFilter)), [
+    const filteredAllChannels = reactExports.useMemo(() => {
+      const matched = uniqueSourceChannels.filter((sc2) => channelNameMatchesQuery(sc2.name, channelNameFilter));
+      if (!isRgbDisplaySource(uniqueSourceChannels)) return matched;
+      const first = matched.find((sc2) => isImageChannel(sc2));
+      const rest2 = matched.filter((sc2) => !isImageChannel(sc2));
+      return first ? [
+        first,
+        ...rest2
+      ] : matched;
+    }, [
       uniqueSourceChannels,
       channelNameFilter
     ]);
+    const showAllChannelsList = uniqueSourceChannels.length > 0 && !isRgbDisplayFullyGrouped(uniqueSourceChannels, channelGroups);
     reactExports.useEffect(() => {
       setLockedColorRowIdsByGroup((prev) => {
         const validGroupIds = new Set(channelGroups.map((g2) => g2.id));
@@ -244322,6 +244469,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const toggleGroupMasterVisibility = (group2) => {
       if (group2.channels.length === 0) return;
       const allOn = group2.channels.every((gc2) => isGroupRowVisible(channelGroupRowVisibilities, gc2.id));
+      const first = findSourceChannel(sourceChannels, group2.channels[0].channelId);
+      if (first && isRgbDisplayChannel(first, sourceChannels)) {
+        const next22 = visibilitiesForRgbUnit({
+          rgbChannels: sourceChannels.filter((c2) => c2.imageId === first.imageId && isImageChannel(c2)),
+          channelGroups,
+          groupRowVisibilities: channelGroupRowVisibilities,
+          stackVisibilities,
+          visible: !allOn
+        });
+        setChannelGroupRowVisibilities(next22.channelGroupRowVisibilities);
+        setChannelVisibilities(next22.channelVisibilities);
+        return;
+      }
       const next2 = {
         ...channelGroupRowVisibilities
       };
@@ -244617,6 +244777,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const isActive = activeChannelGroupId === group2.id;
       const isDropTarget = dragOverGroupId === group2.id;
       const rowsVisible = group2.channels.length === 0 || group2.channels.some((gc2) => isGroupRowVisible(channelGroupRowVisibilities, gc2.id));
+      const rgbGroup = group2.channels.length > 0 && group2.channels.every((row) => {
+        const src = findSourceChannel(sourceChannels, row.channelId);
+        return src != null && isRgbDisplayChannel(src, sourceChannels);
+      });
       const lockedIds = lockedIdsForGroup(group2.id);
       const folderDropProps = {
         onDragOver: (e2) => {
@@ -244716,7 +244880,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               })
             ]
           }),
-          expanded ? jsxRuntimeExports.jsxs("div", {
+          expanded && !rgbGroup ? jsxRuntimeExports.jsxs("div", {
             className: styles$c.groupFolderBody,
             children: [
               jsxRuntimeExports.jsx("ul", {
@@ -244749,6 +244913,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                         visibilityTitle: visible ? `Hide ${name2}` : `Show ${name2}`,
                         visibilityAriaLabel: `Toggle visibility for ${name2}`,
                         onToggleVisibility: (event) => toggleWithScrollOnShow(event, !visible, () => {
+                          if (rgbDisplay && sc2) {
+                            const next2 = visibilitiesForRgbUnit({
+                              rgbChannels: sourceChannels.filter((c2) => c2.imageId === sc2.imageId && isImageChannel(c2)),
+                              channelGroups,
+                              groupRowVisibilities: channelGroupRowVisibilities,
+                              stackVisibilities,
+                              visible: !visible
+                            });
+                            setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
+                            setChannelVisibilities(next2.channelVisibilities);
+                            return;
+                          }
                           setChannelGroupRowVisibilities({
                             ...channelGroupRowVisibilities,
                             [gc2.id]: !visible
@@ -244848,6 +245024,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const meta = imageLabel ? `${imageLabel} \xB7 index ${sc2.index}` : `Index ${sc2.index}`;
       const visibilityAriaLabel = imageLabel ? `Toggle layer for ${sc2.name} from ${imageLabel}` : `Toggle layer for ${sc2.name}`;
       const toggleAllChannelsVisibility = (nextVisible) => {
+        if (isRgbDisplayChannel(sc2, sourceChannels)) {
+          const next2 = visibilitiesForRgbUnit({
+            rgbChannels: sourceChannels.filter((c2) => c2.imageId === sc2.imageId && isImageChannel(c2)),
+            channelGroups,
+            groupRowVisibilities: channelGroupRowVisibilities,
+            stackVisibilities,
+            visible: nextVisible
+          });
+          setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
+          setChannelVisibilities(next2.channelVisibilities);
+          return;
+        }
         if (groupRows.length > 0) {
           const vis = {
             ...channelGroupRowVisibilities
@@ -244906,7 +245094,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             name: {
               mode: "editable",
-              name: sc2.name,
+              name: rgbDisplay ? "H&E" : sc2.name,
               meta,
               onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
             },
@@ -244952,7 +245140,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               className: styles$c.groupFolders,
               children: channelGroups.map((group2, i2) => renderGroupFolder(group2, i2))
             }) : null,
-            uniqueSourceChannels.length > 0 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+            showAllChannelsList ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
               children: [
                 jsxRuntimeExports.jsxs("div", {
                   className: styles$c.treeSeparator,
@@ -250985,6 +251173,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setActiveChannelGroup
     ]);
     const toggleChannel = (c2) => {
+      const stackVisibilities = Object.keys(channelVisibilities).length > 0 ? channelVisibilities : applyStackVisibilities(sourceChannels, {}, {
+        kind: "fresh"
+      });
+      const sc2 = findSourceChannel(sourceChannels, c2.source_uuid);
+      if (sc2 && isRgbDisplayChannel(sc2, sourceChannels)) {
+        const nextVisible2 = c2.group_uuid && c2.channel_uuid ? !(channelGroupRowVisibilities[c2.channel_uuid] ?? true) : !isStackVisible(stackVisibilities, c2.source_uuid);
+        const next2 = visibilitiesForRgbUnit({
+          rgbChannels: sourceChannels.filter((ch2) => ch2.imageId === sc2.imageId && isImageChannel(ch2)),
+          channelGroups: docChannelGroups,
+          groupRowVisibilities: channelGroupRowVisibilities,
+          stackVisibilities: channelVisibilities,
+          visible: nextVisible2
+        });
+        setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
+        setChannelVisibilities(next2.channelVisibilities);
+        return;
+      }
       if (c2.group_uuid && c2.channel_uuid) {
         const nextVisible2 = !(channelGroupRowVisibilities[c2.channel_uuid] ?? true);
         setChannelGroupRowVisibilities({
@@ -250993,9 +251198,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         });
         return;
       }
-      const stackVisibilities = Object.keys(channelVisibilities).length > 0 ? channelVisibilities : applyStackVisibilities(sourceChannels, {}, {
-        kind: "fresh"
-      });
       const nextVisible = !isStackVisible(stackVisibilities, c2.source_uuid);
       setChannelVisibilities({
         ...stackVisibilities,
@@ -251048,10 +251250,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   };
   const LoadingWidget = reactExports.forwardRef(({ placement = "top-left", label: label2 = "Loading layer data" }, ref) => {
-    const [loading, setLoading] = reactExports.useState(true);
+    const [loading, setLoading] = reactExports.useState(false);
     const onRedraw = reactExports.useCallback(({ layers }) => {
       const isLoading = layers.some((layer) => !layer.isLoaded);
-      setLoading((prev) => prev !== isLoading ? isLoading : prev);
+      setLoading((prev) => prev === isLoading ? prev : isLoading);
     }, []);
     reactExports.useImperativeHandle(ref, () => ({
       onRedraw
@@ -252226,6 +252428,7 @@ void main() {
         img: sc2.imageId,
         dt: sc2.sourceDataTypeId,
         k: sc2.kind,
+        rd: sc2.rgbDisplay,
         lr: sc2.lowerLimit,
         ur: sc2.upperLimit,
         glr: (_a2 = sc2.gmmContrastLimits) == null ? void 0 : _a2.lower,
@@ -252368,8 +252571,8 @@ void main() {
     return new MultiscaleImageLayer({
       id: `${args.layerId}${remount}`,
       ...settings,
-      visible: true,
       maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
+      excludeBackground: true,
       ...args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {},
       loader: args.loader.data,
       modelMatrix: layerModelMatrix(args.loader)
@@ -252410,26 +252613,33 @@ void main() {
         const settings = omeSettingsList[i2];
         if (!((_a2 = settings == null ? void 0 : settings.selections) == null ? void 0 : _a2.length)) return [];
         const anyVisible = (settings.channelsVisible ?? []).some(Boolean);
+        if (!anyVisible) return [];
         const overlay = omeVisiblePainted > 0;
-        if (anyVisible) omeVisiblePainted += 1;
+        omeVisiblePainted += 1;
         return [
           createMultiscaleLayer({
             loader,
             settings,
             layerId: `mainLayer-${sourceImageId}`,
             remountKey: args.remountKey,
-            overlay: anyVisible ? overlay : true,
+            overlay,
             ...transfer ? {
               transfer
             } : {}
           })
         ];
       }),
-      ...jpegLoaderEntries.map((entry, i2) => createEncodedImageLayer({
-        entry,
-        settings: jpegSettingsList[i2],
-        remountKey: args.remountKey
-      }))
+      ...jpegLoaderEntries.flatMap((entry, i2) => {
+        const settings = jpegSettingsList[i2];
+        if (!((settings == null ? void 0 : settings.channelsVisible) ?? []).some(Boolean)) return [];
+        return [
+          createEncodedImageLayer({
+            entry,
+            settings,
+            remountKey: args.remountKey
+          })
+        ];
+      })
     ];
   }
   function useViewerLayers(args) {
@@ -252705,12 +252915,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-14T20:35:59.760Z");
+    const label2 = utcShort("2026-09-15T16:37:00.464Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-14T20:35:59.760Z",
+      title: "2026-09-15T16:37:00.464Z",
       children: [
         "Updated ",
         label2,
@@ -253221,10 +253431,37 @@ void main() {
     if (role === "segmentation") {
       sourceChannels = seedMaskSourceChannelStyles(sourceChannels);
     }
-    const nextImages = mergeExtractedChannelsIntoImages(existingImages, sourceImageId, loader, basename2, role, sourceChannels, role === "intensity" ? rgbDisplay : void 0);
+    let extractedGroups = extracted.ChannelGroups;
+    const taggedForRgb = rgbDisplay == null ? sourceChannels : sourceChannels.map((c2) => ({
+      ...c2,
+      rgbDisplay
+    }));
+    const persistRgbDisplay = role === "intensity" ? rgbDisplay ?? (isRgbDisplaySource(taggedForRgb) ? true : void 0) : void 0;
+    const nextImages = mergeExtractedChannelsIntoImages(existingImages, sourceImageId, loader, basename2, role, sourceChannels, persistRgbDisplay);
+    if (role === "intensity" && extractedGroups.length === 0 && isRgbDisplaySource(taggedForRgb)) {
+      const intensity = sourceChannels.filter(isImageChannel);
+      extractedGroups = [
+        {
+          id: crypto.randomUUID(),
+          expanded: true,
+          name: "Hematoxylin & Eosin",
+          channels: intensity.map((channel) => ({
+            id: crypto.randomUUID(),
+            channelId: channel.id,
+            color: {
+              r: 204,
+              g: 0,
+              b: 255
+            },
+            lowerLimit: 0,
+            upperLimit: 255
+          }))
+        }
+      ];
+    }
     return {
       sourceChannels,
-      extractedGroups: extracted.ChannelGroups,
+      extractedGroups,
       nextImages
     };
   }
@@ -253924,7 +254161,13 @@ void main() {
     ]);
     reactExports.useEffect(() => {
       if (!activeStoryId) return;
-      const shown = visibleGmmIds(useDocumentStore.getState().images);
+      const liveImages = useDocumentStore.getState().images;
+      const shown = visibleGmmIds(liveImages);
+      reconcileGmm({
+        loaderEntries: omeLoaderEntries,
+        channels: flattenImageChannelsInDocumentOrder(liveImages),
+        visibleChannelIds: shown
+      });
       const prev = prevGmmShownRef.current;
       prevGmmShownRef.current = shown;
       if (prev === null) return;
@@ -253936,6 +254179,7 @@ void main() {
       }
     }, [
       activeStoryId,
+      omeLoaderEntries,
       channelGroups,
       channelVisibilities,
       channelGroupRowVisibilities,
