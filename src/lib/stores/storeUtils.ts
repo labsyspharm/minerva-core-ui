@@ -81,6 +81,7 @@ export function flattenImageChannelsInDocumentOrder(
       out.push({
         ...ch,
         imageId: im.id,
+        ...(im.rgbDisplay != null ? { rgbDisplay: im.rgbDisplay } : {}),
       });
     }
   }
@@ -256,6 +257,7 @@ export function rebindReplacementImageChannels(
     ...incoming,
     channels,
     contentRole: previous.contentRole ?? incoming.contentRole,
+    rgbDisplay: previous.rgbDisplay ?? incoming.rgbDisplay,
   };
 }
 

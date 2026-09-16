@@ -17,7 +17,7 @@ function createJpegLayers(meta) {
           () => JPEG_BAKED_CONTRAST_LIMIT,
         );
   return new MultiscaleImageLayer({
-    visible: true,
+    excludeBackground: true,
     loader: meta.jpegLoader,
     refinementStrategy: "no-overlap",
     maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
@@ -26,6 +26,7 @@ function createJpegLayers(meta) {
     colors,
     contrastLimits,
     selections,
+    modelMatrix: meta.modelMatrix,
   });
 }
 

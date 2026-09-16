@@ -780,6 +780,7 @@ function createTileLayers(meta) {
       // RGB TileLayer has no channelsVisible shader path.
       visible: anyChannelVisible,
       id: "rgb_image",
+      modelMatrix: meta.modelMatrix,
       getTileData: async ({ index, signal }) => {
         const { x, y, z } = index;
         const source = loaderPlanes[Math.abs(-z)];
@@ -835,6 +836,7 @@ function createTileLayers(meta) {
     colors,
     contrastLimits,
     selections,
+    modelMatrix: meta.modelMatrix,
   });
 }
 

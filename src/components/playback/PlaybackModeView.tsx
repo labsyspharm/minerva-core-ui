@@ -7,7 +7,6 @@ import {
   StoryPlaybackView,
 } from "@/components/playback/StoryPlaybackView";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
-import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { StoryExportMode } from "@/lib/storyExport/storyBundle";
@@ -19,10 +18,6 @@ export type PlaybackModeViewProps = StoryPlaybackLoaders & {
   hiddenChannel: boolean;
   noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
-  ensureChannelGmmContrastLimits?: (
-    channelIds: string[],
-    opts?: { overwriteExistingLimits?: boolean },
-  ) => Promise<Map<string, ContrastLimits>>;
   contrastEditable?: boolean;
   ioState: null | string;
   stopExport: () => void;
@@ -100,7 +95,6 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
           imagesPanel={props.imagesPanel}
           noLoader={props.noLoader}
           ensureChannelHistograms={props.ensureChannelHistograms}
-          ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
           contrastEditable={props.contrastEditable}
           viewer={
             <ChannelPanel {...channelPanelProps}>{props.viewer}</ChannelPanel>

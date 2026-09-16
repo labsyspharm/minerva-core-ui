@@ -15,12 +15,8 @@ import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
-import {
-  type Config,
-  type Loader,
-  toSettings,
-  VIV_TILE_MAX_CACHE_SIZE,
-} from "./viv";
+import { type Loader, toSettings, VIV_TILE_MAX_CACHE_SIZE } from "./viv";
+import { layerModelMatrix } from "./worldFrame";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
 function applyChannelRendering<S extends MainSettings>(
@@ -104,18 +100,6 @@ function loaderListFromEntries(sources: ViewerLoaderSources): LoaderList {
   ];
 }
 
-function createViewerConfigFromDocument(args: {
-  sourceChannels: Channel[];
-  channelGroups: ChannelGroup[];
-}): Config {
-  return {
-    toSettings: toSettings({
-      SourceChannels: args.sourceChannels,
-      channelGroups: args.channelGroups,
-    }),
-  };
-}
-
 function createDicomTileLayer(args: {
   entry: DicomIndex;
   settings: unknown;
@@ -130,6 +114,7 @@ function createDicomTileLayer(args: {
     settings: args.settings,
     rgbImage,
     imageID: `${imageKey}${remount}`,
+    modelMatrix: layerModelMatrix(args.entry.loader),
   });
 }
 
@@ -176,11 +161,13 @@ function createMultiscaleLayer(args: {
   return new MultiscaleImageLayer({
     id: `${args.layerId}${remount}`,
     ...settings,
-    // Keep mounted; hide via channelsVisible (layer visible toggles remount/flash).
-    visible: true,
     maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
+    // Viv's overview ImageLayer getRaster()s the full coarsest plane; isLoaded
+    // waits on that decode even after tiles have painted.
+    excludeBackground: true,
     ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
     loader: args.loader.data,
+    modelMatrix: layerModelMatrix(args.loader),
   } as never);
 }
 
@@ -195,6 +182,7 @@ function createEncodedImageLayer(args: {
     settings: args.settings,
     transfer: args.entry.transfer ?? "contrast",
     layerId: `jpeg-${args.entry.sourceImageId}${remount}`,
+    modelMatrix: layerModelMatrix(args.entry.loader),
   });
 }
 
@@ -230,26 +218,31 @@ function buildImageLayers(args: {
       // Mask-only loaders have no intensity selections; painted by createMaskTileLayer.
       if (!settings?.selections?.length) return [];
       const anyVisible = (settings.channelsVisible ?? []).some(Boolean);
+      if (!anyVisible) return [];
       const overlay = omeVisiblePainted > 0;
-      if (anyVisible) omeVisiblePainted += 1;
+      omeVisiblePainted += 1;
       return [
         createMultiscaleLayer({
           loader,
           settings,
           layerId: `mainLayer-${sourceImageId}`,
           remountKey: args.remountKey,
-          overlay: anyVisible ? overlay : true,
+          overlay,
           ...(transfer ? { transfer } : {}),
         }),
       ];
     }),
-    ...jpegLoaderEntries.map((entry, i) =>
-      createEncodedImageLayer({
-        entry,
-        settings: jpegSettingsList[i],
-        remountKey: args.remountKey,
-      }),
-    ),
+    ...jpegLoaderEntries.flatMap((entry, i) => {
+      const settings = jpegSettingsList[i] as MainSettings | undefined;
+      if (!(settings?.channelsVisible ?? []).some(Boolean)) return [];
+      return [
+        createEncodedImageLayer({
+          entry,
+          settings,
+          remountKey: args.remountKey,
+        }),
+      ];
+    }),
   ];
 }
 
@@ -290,13 +283,13 @@ export function useViewerLayers(args: {
   const channelsRef = useRef({ sourceChannels, channelGroups });
   channelsRef.current = { sourceChannels, channelGroups };
 
-  const viewerConfig = useMemo(() => {
+  const toDocSettings = useMemo(() => {
     // `channelsSignature` is the intentional memo key (histogram-stable).
     // Read channels from the ref so we close over the arrays from this signature.
     void channelsSignature;
     const { sourceChannels: sc, channelGroups: cg } = channelsRef.current;
-    return createViewerConfigFromDocument({
-      sourceChannels: sc,
+    return toSettings({
+      SourceChannels: sc,
       channelGroups: cg,
     });
   }, [channelsSignature]);
@@ -322,7 +315,7 @@ export function useViewerLayers(args: {
         sourceImageId?: string,
       ) => {
         const prev = prevSettingsRef.current.get(loaderKey);
-        const built = viewerConfig.toSettings(
+        const built = toDocSettings(
           activeChannelGroupId,
           modality,
           loader,
@@ -357,7 +350,7 @@ export function useViewerLayers(args: {
       dicomIndexList,
       omeLoaderEntries,
       jpegLoaderEntries,
-      viewerConfig,
+      toDocSettings,
       activeChannelGroupId,
       channelVisibilities,
       channelGroupRowVisibilities,
@@ -419,5 +412,5 @@ export function useViewerLayers(args: {
     ],
   );
 
-  return { viewerConfig, loaderList, mainSettingsList, imageLayers };
+  return { loaderList, mainSettingsList, imageLayers };
 }

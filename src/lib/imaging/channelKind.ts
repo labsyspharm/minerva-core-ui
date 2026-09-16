@@ -31,7 +31,7 @@ export function normalizeMaskVisualization(value: unknown): MaskVisualization {
 }
 
 /** Intensity channels on by default at import; matches default group slot count. */
-export const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 4;
+export const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 5;
 
 /** Document image role for import (`mixed` maps to intensity). */
 export function resolveImageImportRole(image: {
@@ -78,11 +78,14 @@ type RgbDisplayChannelFields = {
   name?: string;
   index?: number;
   id?: string;
+  /** Image-level import override, copied onto flattened channels. */
+  rgbDisplay?: boolean;
 };
 
-function isPlanarIntensityDtype(dtype: string | undefined): boolean {
+/** True for OME/Viv uint8 type ids (`Uint8`, `uint8`, `int8`). */
+function isUint8Dtype(dtype: string | undefined): boolean {
   if (dtype == null || dtype === "") return false;
-  return /uint/i.test(dtype);
+  return /^u?int8$/i.test(dtype.trim());
 }
 
 /** Pseudocolor tints for planar R/G/B channels in the viewer and channel panel. */
@@ -92,7 +95,7 @@ export const PLANAR_RGB_DISPLAY_COLORS = [
   { r: 0, g: 0, b: 255 },
 ] as const;
 
-function planarRgbSlotFromName(name: string): 0 | 1 | 2 | null {
+export function planarRgbSlotFromName(name: string): 0 | 1 | 2 | null {
   const n = name.toLowerCase();
   if (n.endsWith("_r") || n.endsWith("-r") || n.endsWith("[r]") || n === "r") {
     return 0;
@@ -107,8 +110,9 @@ function planarRgbSlotFromName(name: string): 0 | 1 | 2 | null {
 }
 
 /**
- * True for interleaved RGB (SamplesPerPixel=3) or planar RGB (3×SPP=1, e.g. H&E HE_r/g/b).
- * These are shown as a single color image, not multiplex fluorescence.
+ * True for interleaved RGB (SamplesPerPixel=3), named planar RGB (HE_r/g/b),
+ * or unnamed 3×uint8 planar (typical H&E). Import may set `rgbDisplay` to
+ * override the planar cases; packed `samples===3` always stays RGB.
  */
 export function isRgbDisplaySource(
   channels: readonly RgbDisplayChannelFields[],
@@ -118,10 +122,24 @@ export function isRgbDisplaySource(
   if (intensity.length === 1 && intensity[0].samples === 3) return true;
   const planar = intensity.filter((c) => (c.samples ?? 1) === 1);
   if (planar.length !== 3) return false;
+  const override = intensity.find((c) => c.rgbDisplay != null)?.rgbDisplay;
+  if (override != null) return override;
   if (planar.every((c) => planarRgbSlotFromName(c.name ?? "") != null)) {
     return true;
   }
-  return planar.every((c) => isPlanarIntensityDtype(c.sourceDataTypeId));
+  return planar.every((c) => isUint8Dtype(c.sourceDataTypeId));
+}
+
+/** Apply image-level `rgbDisplay` onto channel fields for {@link isRgbDisplaySource}. */
+export function isRgbDisplayImage(image: {
+  channels?: readonly RgbDisplayChannelFields[] | null;
+  rgbDisplay?: boolean;
+}): boolean {
+  const channels = image.channels ?? [];
+  if (image.rgbDisplay == null) return isRgbDisplaySource(channels);
+  return isRgbDisplaySource(
+    channels.map((c) => ({ ...c, rgbDisplay: image.rgbDisplay })),
+  );
 }
 
 /** 0 = red, 1 = green, 2 = blue within a planar RGB source triplet. */

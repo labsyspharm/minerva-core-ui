@@ -38,10 +38,18 @@ export function mergeExtractedChannelsIntoImages(
   basename: string,
   role: OmeImageImportRole,
   sourceChannels: Channel[],
+  rgbDisplay?: boolean,
 ): Image[] {
   let next = applySourceChannelsToImages(images, sourceChannels);
   next = applyLoaderPixelSizeToImage(next, sourceImageId, loader);
   next = setImageBasename(next, sourceImageId, basename);
   next = setImageContentRole(next, sourceImageId, role);
+  if (rgbDisplay != null) {
+    const idx = next.findIndex((im) => im.id === sourceImageId);
+    if (idx >= 0) {
+      next = [...next];
+      next[idx] = { ...next[idx], rgbDisplay };
+    }
+  }
   return next;
 }

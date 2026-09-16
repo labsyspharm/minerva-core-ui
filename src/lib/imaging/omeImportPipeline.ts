@@ -1,5 +1,9 @@
 import { extractChannels } from "@/lib/authoring/config";
-import { resolveImageImportRole } from "@/lib/imaging/channelKind";
+import {
+  isImageChannel,
+  isRgbDisplaySource,
+  resolveImageImportRole,
+} from "@/lib/imaging/channelKind";
 import { loadOmeLoaderForRole } from "@/lib/imaging/filesystem";
 import type { Loader } from "@/lib/imaging/viv";
 import type { PoolClass } from "@/lib/imaging/workers/pool";
@@ -21,7 +25,7 @@ import {
   applySharedImportPaletteToChannelGroups,
   applySharedImportPaletteToSourceChannels,
 } from "./psudoPalette";
-import { styleSourceChannelsForRole } from "./sourceChannelStyle";
+import { seedMaskSourceChannelStyles } from "./sourceChannelStyle";
 
 export type BuiltOmeImportSlice = {
   sourceChannels: Channel[];
@@ -42,6 +46,8 @@ export function buildOmeImportSlice(args: {
   sourceImageId: string;
   existingImages: Image[];
   relevantGroups?: ConfigGroup[];
+  /** Persist when import dialog asked RGB vs separate channels. */
+  rgbDisplay?: boolean;
 }): BuiltOmeImportSlice {
   const {
     loader,
@@ -50,6 +56,7 @@ export function buildOmeImportSlice(args: {
     sourceImageId,
     existingImages,
     relevantGroups = [],
+    rgbDisplay,
   } = args;
   const defaultKind = role === "segmentation" ? "mask" : "channel";
   const extracted = extractChannels(
@@ -66,8 +73,17 @@ export function buildOmeImportSlice(args: {
     existingImages,
   );
   if (role === "segmentation") {
-    sourceChannels = styleSourceChannelsForRole(sourceChannels, role);
+    sourceChannels = seedMaskSourceChannelStyles(sourceChannels);
   }
+  let extractedGroups = extracted.ChannelGroups;
+  const taggedForRgb =
+    rgbDisplay == null
+      ? sourceChannels
+      : sourceChannels.map((c) => ({ ...c, rgbDisplay }));
+  const persistRgbDisplay =
+    role === "intensity"
+      ? (rgbDisplay ?? (isRgbDisplaySource(taggedForRgb) ? true : undefined))
+      : undefined;
   const nextImages = mergeExtractedChannelsIntoImages(
     existingImages,
     sourceImageId,
@@ -75,10 +91,32 @@ export function buildOmeImportSlice(args: {
     basename,
     role,
     sourceChannels,
+    persistRgbDisplay,
   );
+  if (
+    role === "intensity" &&
+    extractedGroups.length === 0 &&
+    isRgbDisplaySource(taggedForRgb)
+  ) {
+    const intensity = sourceChannels.filter(isImageChannel);
+    extractedGroups = [
+      {
+        id: crypto.randomUUID(),
+        expanded: true,
+        name: "Hematoxylin & Eosin",
+        channels: intensity.map((channel) => ({
+          id: crypto.randomUUID(),
+          channelId: channel.id,
+          color: { r: 204, g: 0, b: 255 },
+          lowerLimit: 0,
+          upperLimit: 255,
+        })),
+      },
+    ];
+  }
   return {
     sourceChannels,
-    extractedGroups: extracted.ChannelGroups,
+    extractedGroups,
     nextImages,
   };
 }
@@ -106,14 +144,6 @@ export async function applyPaletteToFlatImportImages(
 ): Promise<Image[]> {
   const styled = await applySharedImportPaletteToSourceChannels(sourceChannels);
   return applySourceChannelsToImages(images, styled);
-}
-
-/** Palette for a replace-import that already has extracted groups. */
-export async function applyPaletteToGroupedImport(
-  groups: ChannelGroup[],
-  sourceChannels: Channel[],
-): Promise<ChannelGroup[]> {
-  return applySharedImportPaletteToChannelGroups(groups, sourceChannels);
 }
 
 export type ReplaceOmeLocalImageResult =

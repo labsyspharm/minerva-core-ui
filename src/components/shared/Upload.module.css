@@ -9,7 +9,7 @@
 }
 
 .panelDropActive {
-  outline: 1px dashed var(--minerva-ink);
+  outline: 2px dashed var(--minerva-ink);
   outline-offset: -2px;
 }
 
@@ -66,10 +66,17 @@
 }
 
 .addStripRow .urlRow {
-  position: relative;
+  flex-direction: column;
   flex-wrap: nowrap;
   width: auto;
   min-width: 0;
+  gap: 4px;
+  align-items: stretch;
+}
+
+.addStripRow .urlField {
+  min-height: 32px;
+  flex: 1 1 auto;
   gap: 0;
 }
 
@@ -81,7 +88,7 @@
   box-sizing: border-box;
 }
 
-.addStripRow .urlRow:has(.urlAdd) .urlInput {
+.addStripRow .urlField:has(.urlAdd) .urlInput {
   padding-right: 3.25rem;
 }
 
@@ -90,14 +97,6 @@
   right: 4px;
   top: 50%;
   transform: translateY(-50%);
-}
-
-.addStripRow .importError {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  margin-top: 4px;
 }
 
 .dropZone {
@@ -120,7 +119,14 @@
 
 .dropZone:hover,
 .dropZoneActive {
+  border-width: 2px;
   border-color: var(--minerva-ink);
+}
+
+.panelDropActive .dropZone,
+.panelDropActive .dropZone:hover,
+.panelDropActive .dropZoneActive {
+  border-width: 1px;
 }
 
 .dropZoneTitle {
@@ -164,6 +170,19 @@
   min-width: 0;
 }
 
+.urlField {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.urlRow .importError {
+  flex: 1 1 100%;
+}
+
 .urlInput {
   flex: 1;
   min-width: 120px;
@@ -171,10 +190,6 @@
   box-sizing: border-box;
   text-align: center;
   font-size: var(--minerva-size);
-}
-
-.urlInput::placeholder {
-  text-align: center;
 }
 
 .fieldLabel {
@@ -214,7 +229,7 @@
   z-index: 1;
   margin: 0;
   width: 100%;
-  max-width: min(24rem, calc(100vw - 2rem));
+  max-width: min(30rem, calc(100vw - 2rem));
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
@@ -244,7 +259,7 @@
 
 .typeRow {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 6px 8px;
   min-width: 0;

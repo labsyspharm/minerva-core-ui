@@ -86,20 +86,6 @@ type Metadata = {
   ROIs?: Roi[];
 };
 
-export type Config = {
-  toSettings: (
-    activeChannelGroupId: string | null,
-    modality: string,
-    l?: Loader,
-    channelVisibilities?: Record<string, boolean>,
-    /** When set (OME multi-image UUID), channel visibility matches this instead of `modality`. */
-    loaderSourceImageId?: string,
-    channelGroupRowVisibilities?: Record<string, boolean>,
-    /** Prior `sourceChannelIds` for this loader — keep hidden slots occupied. */
-    stickySourceChannelIds?: readonly string[],
-  ) => Settings;
-};
-
 /** Stable Viv channel slots: flip visibility instead of dropping selections. */
 function mergeStickyIntensityOccupancy(args: {
   visibleSourceIds: readonly string[];
@@ -170,7 +156,7 @@ export function loaderPixelSizeXY(loader: Loader): {
 const toDefaultSettings = (n: number) => {
   const chan_range = [...Array(n).keys()];
   const n_shown = 3;
-  const n_sub = n_shown; //TODO
+  const n_sub = n_shown;
   return {
     loader: null,
     selections: chan_range
@@ -204,7 +190,7 @@ type ToSettingsOpts = {
 
 const toSettings = (opts: ToSettingsOpts) => {
   return (
-    _activeChannelGroupId: string | null,
+    activeChannelGroupId: string | null,
     modality: string,
     loader: Loader | undefined,
     channelVisibilities?: Record<string, boolean>,
@@ -227,8 +213,8 @@ const toSettings = (opts: ToSettingsOpts) => {
       (sc) => sourceImageMatches(sc.imageId) && isImageChannel(sc),
     );
 
-    const activeGroup = _activeChannelGroupId
-      ? channelGroups.find((g) => g.id === _activeChannelGroupId)
+    const activeGroup = activeChannelGroupId
+      ? channelGroups.find((g) => g.id === activeChannelGroupId)
       : undefined;
 
     const hasVisibilityMap =
@@ -281,8 +267,8 @@ const toSettings = (opts: ToSettingsOpts) => {
         ? [gc.lowerLimit, gc.upperLimit]
         : effectiveSourceLimits(sc);
       const { r, g, b } = gc
-        ? effectiveDisplayColor(sc, SourceChannels, gc, i)
-        : effectiveSourceColor(sc, i, SourceChannels);
+        ? effectiveDisplayColor(sc, SourceChannels, gc)
+        : effectiveSourceColor(sc, SourceChannels);
       selections.push({ z: 0, t: 0, c: sc.index });
       colors.push([r, g, b]);
       contrastLimits.push([lo, hi]);

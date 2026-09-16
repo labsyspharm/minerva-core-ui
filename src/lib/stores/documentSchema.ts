@@ -175,6 +175,11 @@ export const ImageSchema = z.object({
   basename: z.string(),
   /** Import intent: intensity stack vs segmentation labels (persisted for Images tab). */
   contentRole: z.enum(["intensity", "segmentation"]).optional(),
+  /**
+   * Import override for ambiguous 3-channel planar files: true = color RGB
+   * (no per-channel sliders), false = multiplex IF. Undefined → runtime heuristics.
+   */
+  rgbDisplay: z.boolean().optional(),
   channels: z.array(ImageChannelSchema),
   source: ImageSourceSchema.optional(),
 });
@@ -326,6 +331,8 @@ export type GmmContrastLimits = z.infer<typeof GmmContrastLimitsSchema>;
  */
 export type Channel = ImageChannel & {
   imageId: string;
+  /** Copied from parent {@link Image.rgbDisplay} when flattened. */
+  rgbDisplay?: boolean;
 };
 
 export type ChannelGroupChannel = z.infer<typeof ChannelGroupChannelSchema>;
