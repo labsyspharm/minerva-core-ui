@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-2WzmUlR5.js","./pako.esm-KbdoS3Oq.js","./lerc-CKUs6Vn7.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Bxpqgr8K.js","./pako.esm-KbdoS3Oq.js","./lerc-CYBxkSjJ.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -61656,26 +61656,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BlpMQuBl.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Brk3yNQR.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-D5pEo-RL.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-vym6acpn.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BVrsulKK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-jNuMmjFm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-2WzmUlR5.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CMZ3whDI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CKUs6Vn7.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-Bxpqgr8K.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CdBP1UUH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CYBxkSjJ.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-B77EAtPQ.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DaGyFeVg.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CLVUnmhb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CdbGEAf9.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -157447,7 +157447,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   Polygon.utilityToolType = "Polygon";
   Polygon.TID300Representation = Polygon$1;
   MeasurementReport$1.registerTool(Polygon);
-  var Point$2 = function() {
+  var Point = function() {
     function Point2() {
       _classCallCheck(this, Point2);
     }
@@ -157486,11 +157486,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     return Point2;
   }();
-  Point$2.graphicType = "POINT";
-  Point$2.toolType = "Point";
-  Point$2.utilityToolType = "Point";
-  Point$2.TID300Representation = Point$1;
-  MeasurementReport$1.registerTool(Point$2);
+  Point.graphicType = "POINT";
+  Point.toolType = "Point";
+  Point.utilityToolType = "Point";
+  Point.TID300Representation = Point$1;
+  MeasurementReport$1.registerTool(Point);
   var Circle = function() {
     function Circle2() {
       _classCallCheck(this, Circle2);
@@ -164261,201 +164261,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return n2;
     }, _extends.apply(null, arguments);
   }
-  var RGB_MAX = 255;
-  var SV_MAX = 100;
-  var rgbaToHsva = (_ref) => {
+  var RGB_MAX$1 = 255;
+  var SV_MAX$1 = 100;
+  var rgbaToHsva$1 = (_ref) => {
     var { r: r2, g: g2, b: b2, a: a2 } = _ref;
     var max2 = Math.max(r2, g2, b2);
     var delta = max2 - Math.min(r2, g2, b2);
     var hh2 = delta ? max2 === r2 ? (g2 - b2) / delta : max2 === g2 ? 2 + (b2 - r2) / delta : 4 + (r2 - g2) / delta : 0;
     return {
       h: 60 * (hh2 < 0 ? hh2 + 6 : hh2),
-      s: max2 ? delta / max2 * SV_MAX : 0,
-      v: max2 / RGB_MAX * SV_MAX,
+      s: max2 ? delta / max2 * SV_MAX$1 : 0,
+      v: max2 / RGB_MAX$1 * SV_MAX$1,
       a: a2
     };
   };
-  var hsvaToHslaString = (hsva) => {
-    var { h: h2, s: s2, l: l2, a: a2 } = hsvaToHsla(hsva);
-    return "hsla(" + h2 + ", " + s2 + "%, " + l2 + "%, " + a2 + ")";
-  };
-  var hslaToHsva = (_ref4) => {
-    var { h: h2, s: s2, l: l2, a: a2 } = _ref4;
-    s2 *= (l2 < 50 ? l2 : SV_MAX - l2) / SV_MAX;
-    return {
-      h: h2,
-      s: s2 > 0 ? 2 * s2 / (l2 + s2) * SV_MAX : 0,
-      v: l2 + s2,
-      a: a2
-    };
-  };
-  var hsvaToHsla = (_ref5) => {
-    var { h: h2, s: s2, v: v2, a: a2 } = _ref5;
-    var hh2 = (200 - s2) * v2 / SV_MAX;
-    return {
-      h: h2,
-      s: hh2 > 0 && hh2 < 200 ? s2 * v2 / SV_MAX / (hh2 <= SV_MAX ? hh2 : 200 - hh2) * SV_MAX : 0,
-      l: hh2 / 2,
-      a: a2
-    };
-  };
-  var rgbToHex = (_ref7) => {
-    var { r: r2, g: g2, b: b2 } = _ref7;
-    var bin2 = r2 << 16 | g2 << 8 | b2;
-    return "#" + ((h2) => new Array(7 - h2.length).join("0") + h2)(bin2.toString(16));
-  };
-  var rgbaToHexa = (_ref8) => {
-    var { r: r2, g: g2, b: b2, a: a2 } = _ref8;
-    var alpha2 = typeof a2 === "number" && (a2 * 255 | 1 << 8).toString(16).slice(1);
-    return "" + rgbToHex({
-      r: r2,
-      g: g2,
-      b: b2
-    }) + (alpha2 ? alpha2 : "");
-  };
-  var hexToHsva = (hex) => rgbaToHsva(hexToRgba(hex));
-  var hexToRgba = (hex) => {
-    var htemp = hex.replace("#", "");
-    if (/^#?/.test(hex) && htemp.length === 3) {
-      hex = "#" + htemp.charAt(0) + htemp.charAt(0) + htemp.charAt(1) + htemp.charAt(1) + htemp.charAt(2) + htemp.charAt(2);
-    }
-    var reg = new RegExp("[A-Za-z0-9]{2}", "g");
-    var [r2, g2, b2 = 0, a2] = hex.match(reg).map((v2) => parseInt(v2, 16));
-    return {
-      r: r2,
-      g: g2,
-      b: b2,
-      a: (a2 != null ? a2 : 255) / RGB_MAX
-    };
-  };
-  var hsvaToRgba = (_ref9) => {
-    var { h: h2, s: s2, v: v2, a: a2 } = _ref9;
-    var _h2 = h2 / 60, _s = s2 / SV_MAX, _v = v2 / SV_MAX, hi2 = Math.floor(_h2) % 6;
-    var f2 = _h2 - Math.floor(_h2), _p = RGB_MAX * _v * (1 - _s), _q = RGB_MAX * _v * (1 - _s * f2), _t = RGB_MAX * _v * (1 - _s * (1 - f2));
-    _v *= RGB_MAX;
-    var rgba = {};
-    switch (hi2) {
-      case 0:
-        rgba.r = _v;
-        rgba.g = _t;
-        rgba.b = _p;
-        break;
-      case 1:
-        rgba.r = _q;
-        rgba.g = _v;
-        rgba.b = _p;
-        break;
-      case 2:
-        rgba.r = _p;
-        rgba.g = _v;
-        rgba.b = _t;
-        break;
-      case 3:
-        rgba.r = _p;
-        rgba.g = _q;
-        rgba.b = _v;
-        break;
-      case 4:
-        rgba.r = _t;
-        rgba.g = _p;
-        rgba.b = _v;
-        break;
-      case 5:
-        rgba.r = _v;
-        rgba.g = _p;
-        rgba.b = _q;
-        break;
-    }
-    rgba.r = Math.round(rgba.r);
-    rgba.g = Math.round(rgba.g);
-    rgba.b = Math.round(rgba.b);
-    return _extends({}, rgba, {
-      a: a2
-    });
-  };
-  var hsvaToRgbaString = (hsva) => {
-    var { r: r2, g: g2, b: b2, a: a2 } = hsvaToRgba(hsva);
-    return "rgba(" + r2 + ", " + g2 + ", " + b2 + ", " + a2 + ")";
-  };
-  var rgbaToRgb = (_ref0) => {
-    var { r: r2, g: g2, b: b2 } = _ref0;
-    return {
-      r: r2,
-      g: g2,
-      b: b2
-    };
-  };
-  var hslaToHsl = (_ref1) => {
-    var { h: h2, s: s2, l: l2 } = _ref1;
-    return {
-      h: h2,
-      s: s2,
-      l: l2
-    };
-  };
-  var hsvaToHex = (hsva) => rgbToHex(hsvaToRgba(hsva));
-  var hsvaToHexa = (hsva) => rgbaToHexa(hsvaToRgba(hsva));
-  var hsvaToHsv = (_ref10) => {
-    var { h: h2, s: s2, v: v2 } = _ref10;
-    return {
-      h: h2,
-      s: s2,
-      v: v2
-    };
-  };
-  var rgbToXY = (_ref12) => {
-    var { r: r2, g: g2, b: b2 } = _ref12;
-    var translateColor = function translateColor2(color2) {
-      return color2 <= 0.04045 ? color2 / 12.92 : Math.pow((color2 + 0.055) / 1.055, 2.4);
-    };
-    var red = translateColor(r2 / 255);
-    var green = translateColor(g2 / 255);
-    var blue = translateColor(b2 / 255);
-    var xyz = {};
-    xyz.x = red * 0.4124 + green * 0.3576 + blue * 0.1805;
-    xyz.y = red * 0.2126 + green * 0.7152 + blue * 0.0722;
-    xyz.bri = red * 0.0193 + green * 0.1192 + blue * 0.9505;
-    return xyz;
-  };
-  var color$1 = (str2) => {
-    var rgb;
-    var hsl;
-    var hsv2;
-    var rgba;
-    var hsla;
-    var hsva;
-    var xy;
-    var hex;
-    var hexa;
-    if (typeof str2 === "string" && validHex$1(str2)) {
-      hsva = hexToHsva(str2);
-      hex = str2;
-    } else if (typeof str2 !== "string") {
-      hsva = str2;
-    }
-    if (hsva) {
-      hsv2 = hsvaToHsv(hsva);
-      hsla = hsvaToHsla(hsva);
-      rgba = hsvaToRgba(hsva);
-      hexa = rgbaToHexa(rgba);
-      hex = hsvaToHex(hsva);
-      hsl = hslaToHsl(hsla);
-      rgb = rgbaToRgb(rgba);
-      xy = rgbToXY(rgb);
-    }
-    return {
-      rgb,
-      hsl,
-      hsv: hsv2,
-      rgba,
-      hsla,
-      hsva,
-      hex,
-      hexa,
-      xy
-    };
-  };
-  var validHex$1 = (hex) => /^#?([A-Fa-f0-9]{3,4}){1,2}$/.test(hex);
   function _objectWithoutPropertiesLoose(r2, e2) {
     if (null == r2) return {};
     var t2 = {};
@@ -164465,1466 +164284,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return t2;
   }
-  function useEventCallback(handler2) {
-    var callbackRef = reactExports.useRef(handler2);
-    reactExports.useEffect(() => {
-      callbackRef.current = handler2;
-    });
-    return reactExports.useCallback((value, event) => callbackRef.current && callbackRef.current(value, event), []);
-  }
-  var isTouch = (event) => "touches" in event;
-  var preventDefaultMove = (event) => {
-    !isTouch(event) && event.preventDefault && event.preventDefault();
-  };
-  var clamp = function clamp2(number2, min2, max2) {
-    if (min2 === void 0) {
-      min2 = 0;
-    }
-    if (max2 === void 0) {
-      max2 = 1;
-    }
-    return number2 > max2 ? max2 : number2 < min2 ? min2 : number2;
-  };
-  var getRelativePosition = (node2, event) => {
-    var rect = node2.getBoundingClientRect();
-    var pointer = isTouch(event) ? event.touches[0] : event;
-    return {
-      left: clamp((pointer.pageX - (rect.left + window.pageXOffset)) / rect.width),
-      top: clamp((pointer.pageY - (rect.top + window.pageYOffset)) / rect.height),
-      width: rect.width,
-      height: rect.height,
-      x: pointer.pageX - (rect.left + window.pageXOffset),
-      y: pointer.pageY - (rect.top + window.pageYOffset)
-    };
-  };
-  var _excluded$f = [
-    "prefixCls",
-    "className",
-    "onMove",
-    "onDown"
-  ];
-  var Interactive = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-interactive", className: className2, onMove, onDown } = props, reset = _objectWithoutPropertiesLoose(props, _excluded$f);
-    var container2 = reactExports.useRef(null);
-    var hasTouched = reactExports.useRef(false);
-    var [isDragging, setDragging] = reactExports.useState(false);
-    var onMoveCallback = useEventCallback(onMove);
-    var onKeyCallback = useEventCallback(onDown);
-    var isValid2 = (event) => {
-      if (hasTouched.current && !isTouch(event)) return false;
-      hasTouched.current = isTouch(event);
-      return true;
-    };
-    var handleMove = reactExports.useCallback((event) => {
-      preventDefaultMove(event);
-      if (!container2.current) return;
-      var isDown = isTouch(event) ? event.touches.length > 0 : event.buttons > 0;
-      if (!isDown) {
-        setDragging(false);
-        return;
-      }
-      onMoveCallback == null || onMoveCallback(getRelativePosition(container2.current, event), event);
-    }, [
-      onMoveCallback
-    ]);
-    var handleMoveEnd = reactExports.useCallback(() => setDragging(false), []);
-    var toggleDocumentEvents = reactExports.useCallback((state) => {
-      if (state) {
-        window.addEventListener(hasTouched.current ? "touchmove" : "mousemove", handleMove);
-        window.addEventListener(hasTouched.current ? "touchend" : "mouseup", handleMoveEnd);
-      } else {
-        window.removeEventListener("mousemove", handleMove);
-        window.removeEventListener("mouseup", handleMoveEnd);
-        window.removeEventListener("touchmove", handleMove);
-        window.removeEventListener("touchend", handleMoveEnd);
-      }
-    }, [
-      handleMove,
-      handleMoveEnd
-    ]);
-    reactExports.useEffect(() => {
-      toggleDocumentEvents(isDragging);
-      return () => {
-        toggleDocumentEvents(false);
-      };
-    }, [
-      isDragging,
-      handleMove,
-      handleMoveEnd,
-      toggleDocumentEvents
-    ]);
-    var handleMoveStart = reactExports.useCallback((event) => {
-      var activeEl = document.activeElement;
-      activeEl == null || activeEl.blur();
-      preventDefaultMove(event.nativeEvent);
-      if (!isValid2(event.nativeEvent)) return;
-      if (!container2.current) return;
-      onKeyCallback == null || onKeyCallback(getRelativePosition(container2.current, event.nativeEvent), event.nativeEvent);
-      setDragging(true);
-    }, [
-      onKeyCallback
-    ]);
-    return jsxRuntimeExports.jsx("div", _extends({}, reset, {
-      className: [
-        prefixCls,
-        className2 || ""
-      ].filter(Boolean).join(" "),
-      style: _extends({}, reset.style, {
-        touchAction: "none"
-      }),
-      ref: container2,
-      tabIndex: 0,
-      onMouseDown: handleMoveStart,
-      onTouchStart: handleMoveStart
-    }));
-  });
-  Interactive.displayName = "Interactive";
-  var _excluded$e = [
-    "className",
-    "prefixCls",
-    "left",
-    "top",
-    "style",
-    "fillProps"
-  ];
-  var Pointer$1 = (_ref) => {
-    var { className: className2, prefixCls, left, top: top2, style: style2, fillProps } = _ref, reset = _objectWithoutPropertiesLoose(_ref, _excluded$e);
-    var styleWrapper = _extends({}, style2, {
-      position: "absolute",
-      left,
-      top: top2
-    });
-    var stylePointer = _extends({
-      width: 18,
-      height: 18,
-      boxShadow: "var(--alpha-pointer-box-shadow)",
-      borderRadius: "50%",
-      backgroundColor: "var(--alpha-pointer-background-color)"
-    }, fillProps == null ? void 0 : fillProps.style, {
-      transform: left ? "translate(-9px, -1px)" : "translate(-1px, -9px)"
-    });
-    return jsxRuntimeExports.jsx("div", _extends({
-      className: prefixCls + "-pointer " + (className2 || ""),
-      style: styleWrapper
-    }, reset, {
-      children: jsxRuntimeExports.jsx("div", _extends({
-        className: prefixCls + "-fill"
-      }, fillProps, {
-        style: stylePointer
-      }))
-    }));
-  };
-  var _excluded$d = [
-    "prefixCls",
-    "className",
-    "hsva",
-    "background",
-    "bgProps",
-    "innerProps",
-    "pointerProps",
-    "radius",
-    "width",
-    "height",
-    "direction",
-    "style",
-    "onChange",
-    "pointer"
-  ];
-  var BACKGROUND_IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3uCTZhw1gGGYhAGBZIA/nYDCgBDAm9BGDWAAJyRCgLaBCAAgXwixzAS0pgAAAABJRU5ErkJggg==";
-  var Alpha = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-alpha", className: className2, hsva, background, bgProps = {}, innerProps = {}, pointerProps = {}, radius = 0, width, height = 16, direction: direction2 = "horizontal", style: style2, onChange, pointer } = props, other = _objectWithoutPropertiesLoose(props, _excluded$d);
-    var handleChange = (offset) => {
-      onChange && onChange(_extends({}, hsva, {
-        a: direction2 === "horizontal" ? offset.left : offset.top
-      }), offset);
-    };
-    var colorTo = hsvaToHslaString(Object.assign({}, hsva, {
-      a: 1
-    }));
-    var innerBackground = "linear-gradient(to " + (direction2 === "horizontal" ? "right" : "bottom") + ", rgba(244, 67, 54, 0) 0%, " + colorTo + " 100%)";
-    var comProps = {};
-    if (direction2 === "horizontal") {
-      comProps.left = hsva.a * 100 + "%";
-    } else {
-      comProps.top = hsva.a * 100 + "%";
-    }
-    var styleWrapper = _extends({
-      "--alpha-background-color": "#fff",
-      "--alpha-pointer-background-color": "rgb(248, 248, 248)",
-      "--alpha-pointer-box-shadow": "rgb(0 0 0 / 37%) 0px 1px 4px 0px",
-      borderRadius: radius,
-      background: "url(" + BACKGROUND_IMG + ") left center",
-      backgroundColor: "var(--alpha-background-color)"
-    }, {
-      width,
-      height
-    }, style2, {
-      position: "relative"
-    });
-    var handleKeyDown2 = reactExports.useCallback((event) => {
-      var step = 0.01;
-      var currentAlpha = hsva.a;
-      var newAlpha = currentAlpha;
-      switch (event.key) {
-        case "ArrowLeft":
-          if (direction2 === "horizontal") {
-            newAlpha = Math.max(0, currentAlpha - step);
-            event.preventDefault();
-          }
-          break;
-        case "ArrowRight":
-          if (direction2 === "horizontal") {
-            newAlpha = Math.min(1, currentAlpha + step);
-            event.preventDefault();
-          }
-          break;
-        case "ArrowUp":
-          if (direction2 === "vertical") {
-            newAlpha = Math.max(0, currentAlpha - step);
-            event.preventDefault();
-          }
-          break;
-        case "ArrowDown":
-          if (direction2 === "vertical") {
-            newAlpha = Math.min(1, currentAlpha + step);
-            event.preventDefault();
-          }
-          break;
-        default:
-          return;
-      }
-      if (newAlpha !== currentAlpha) {
-        var syntheticOffset = {
-          left: direction2 === "horizontal" ? newAlpha : hsva.a,
-          top: direction2 === "vertical" ? newAlpha : hsva.a,
-          width: 0,
-          height: 0,
-          x: 0,
-          y: 0
-        };
-        onChange && onChange(_extends({}, hsva, {
-          a: newAlpha
-        }), syntheticOffset);
-      }
-    }, [
-      hsva,
-      direction2,
-      onChange
-    ]);
-    var handleClick = reactExports.useCallback((event) => {
-      event.target.focus();
-    }, []);
-    var pointerElement = pointer && typeof pointer === "function" ? pointer(_extends({
-      prefixCls
-    }, pointerProps, comProps)) : jsxRuntimeExports.jsx(Pointer$1, _extends({}, pointerProps, {
-      prefixCls
-    }, comProps));
-    return jsxRuntimeExports.jsxs("div", _extends({}, other, {
-      className: [
-        prefixCls,
-        prefixCls + "-" + direction2,
-        className2 || ""
-      ].filter(Boolean).join(" "),
-      style: styleWrapper,
-      ref,
-      children: [
-        jsxRuntimeExports.jsx("div", _extends({}, bgProps, {
-          style: _extends({
-            inset: 0,
-            position: "absolute",
-            background: background || innerBackground,
-            borderRadius: radius
-          }, bgProps.style)
-        })),
-        jsxRuntimeExports.jsx(Interactive, _extends({}, innerProps, {
-          style: _extends({}, innerProps.style, {
-            inset: 0,
-            zIndex: 1,
-            position: "absolute",
-            outline: "none"
-          }),
-          onMove: handleChange,
-          onDown: handleChange,
-          onClick: handleClick,
-          onKeyDown: handleKeyDown2,
-          children: pointerElement
-        }))
-      ]
-    }));
-  });
-  Alpha.displayName = "Alpha";
-  var _excluded$c = [
-    "prefixCls",
-    "placement",
-    "label",
-    "value",
-    "className",
-    "style",
-    "labelStyle",
-    "inputStyle",
-    "onChange",
-    "onBlur",
-    "renderInput"
-  ];
-  var validHex = (hex) => /^#?([A-Fa-f0-9]{3,4}){1,2}$/.test(hex);
-  var getNumberValue = (value) => Number(String(value).replace(/%/g, ""));
-  var EditableInput = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-editable-input", placement = "bottom", label: label2, value: initValue, className: className2, style: style2, labelStyle, inputStyle, onChange, onBlur, renderInput } = props, other = _objectWithoutPropertiesLoose(props, _excluded$c);
-    var [value, setValue] = reactExports.useState(initValue);
-    var isFocus = reactExports.useRef(false);
-    var inputIdRef = reactExports.useRef(other.id || prefixCls + "-" + Math.random().toString(36).slice(2, 11));
-    var inputId = other.id || inputIdRef.current;
-    reactExports.useEffect(() => {
-      if (props.value !== value) {
-        if (!isFocus.current) {
-          setValue(props.value);
-        }
-      }
-    }, [
-      props.value
-    ]);
-    function handleChange(evn, valInit) {
-      var value2 = (valInit || evn.target.value).trim().replace(/^#/, "");
-      if (validHex(value2)) {
-        onChange && onChange(evn, value2);
-      }
-      var val = getNumberValue(value2);
-      if (!isNaN(val)) {
-        onChange && onChange(evn, val);
-      }
-      setValue(value2);
-    }
-    function handleBlur(evn) {
-      isFocus.current = false;
-      setValue(props.value);
-      onBlur && onBlur(evn);
-    }
-    var placementStyle = {};
-    if (placement === "bottom") {
-      placementStyle["flexDirection"] = "column";
-    }
-    if (placement === "top") {
-      placementStyle["flexDirection"] = "column-reverse";
-    }
-    if (placement === "left") {
-      placementStyle["flexDirection"] = "row-reverse";
-    }
-    var wrapperStyle = _extends({
-      "--editable-input-label-color": "rgb(153, 153, 153)",
-      "--editable-input-box-shadow": "rgb(204 204 204) 0px 0px 0px 1px inset",
-      "--editable-input-color": "#666",
-      position: "relative",
-      alignItems: "center",
-      display: "flex",
-      fontSize: 11
-    }, placementStyle, style2);
-    var editableStyle = _extends({
-      width: "100%",
-      paddingTop: 2,
-      paddingBottom: 2,
-      paddingLeft: 3,
-      paddingRight: 3,
-      fontSize: 11,
-      background: "transparent",
-      boxSizing: "border-box",
-      border: "none",
-      color: "var(--editable-input-color)",
-      boxShadow: "var(--editable-input-box-shadow)"
-    }, inputStyle);
-    var inputProps = _extends({
-      value,
-      onChange: handleChange,
-      onBlur: handleBlur,
-      autoComplete: "off",
-      onFocus: () => isFocus.current = true
-    }, other, {
-      id: inputId,
-      style: editableStyle,
-      onFocusCapture: (e2) => {
-        var elm2 = e2.target;
-        elm2.setSelectionRange(elm2.value.length, elm2.value.length);
-      }
-    });
-    return jsxRuntimeExports.jsxs("div", {
-      className: [
-        prefixCls,
-        className2 || ""
-      ].filter(Boolean).join(" "),
-      style: wrapperStyle,
-      children: [
-        renderInput ? renderInput(inputProps, ref) : jsxRuntimeExports.jsx("input", _extends({
-          ref
-        }, inputProps)),
-        label2 && jsxRuntimeExports.jsx("label", {
-          htmlFor: inputId,
-          style: _extends({
-            color: "var(--editable-input-label-color)",
-            textTransform: "capitalize"
-          }, labelStyle),
-          children: label2
-        })
-      ]
-    });
-  });
-  EditableInput.displayName = "EditableInput";
-  var _excluded$b = [
-    "prefixCls",
-    "className",
-    "color",
-    "colors",
-    "style",
-    "rectProps",
-    "onChange",
-    "addonAfter",
-    "addonBefore",
-    "rectRender"
-  ];
-  var Swatch = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-swatch", className: className2, color: color2, colors = [], style: style2, rectProps = {}, onChange, addonAfter, addonBefore, rectRender } = props, other = _objectWithoutPropertiesLoose(props, _excluded$b);
-    var rectStyle = _extends({
-      "--swatch-background-color": "rgb(144, 19, 254)",
-      background: "var(--swatch-background-color)",
-      height: 15,
-      width: 15,
-      marginRight: 5,
-      marginBottom: 5,
-      cursor: "pointer",
-      position: "relative",
-      outline: "none",
-      borderRadius: 2
-    }, rectProps.style);
-    var handleClick = (hex, evn) => {
-      onChange && onChange(hexToHsva(hex), color$1(hexToHsva(hex)), evn);
-    };
-    return jsxRuntimeExports.jsxs("div", _extends({
-      ref
-    }, other, {
-      className: [
-        prefixCls,
-        className2 || ""
-      ].filter(Boolean).join(" "),
-      style: _extends({
-        display: "flex",
-        flexWrap: "wrap",
-        position: "relative"
-      }, style2),
-      children: [
-        addonBefore && React$2.isValidElement(addonBefore) && addonBefore,
-        colors && Array.isArray(colors) && colors.map((item2, idx) => {
-          var title7 = "";
-          var background = "";
-          if (typeof item2 === "string") {
-            title7 = item2;
-            background = item2;
-          }
-          if (typeof item2 === "object" && item2.color) {
-            title7 = item2.title || item2.color;
-            background = item2.color;
-          }
-          var checked2 = color2 && color2.toLocaleLowerCase() === background.toLocaleLowerCase();
-          var render = rectRender && rectRender({
-            title: title7,
-            color: background,
-            checked: !!checked2,
-            style: _extends({}, rectStyle, {
-              background
-            }),
-            onClick: (evn) => handleClick(background, evn)
-          });
-          if (render) {
-            return jsxRuntimeExports.jsx(reactExports.Fragment, {
-              children: render
-            }, idx);
-          }
-          var child = rectProps.children && React$2.isValidElement(rectProps.children) ? React$2.cloneElement(rectProps.children, {
-            color: background,
-            checked: checked2
-          }) : null;
-          return jsxRuntimeExports.jsx("div", _extends({
-            tabIndex: 0,
-            title: title7,
-            onClick: (evn) => handleClick(background, evn)
-          }, rectProps, {
-            children: child,
-            style: _extends({}, rectStyle, {
-              background
-            })
-          }), idx);
-        }),
-        addonAfter && React$2.isValidElement(addonAfter) && addonAfter
-      ]
-    }));
-  });
-  Swatch.displayName = "Swatch";
   function _objectDestructuringEmpty(t2) {
     if (null == t2) throw new TypeError("Cannot destructure " + t2);
   }
-  var defalutStyle = {
-    marginRight: 0,
-    marginBottom: 0,
-    borderRadius: 0,
-    boxSizing: "border-box",
-    height: 25,
-    width: 25
-  };
-  function Point(_ref) {
-    var { style: style2, title: title7, checked: checked2, color: color2, onClick, rectProps } = _ref;
-    var btn = reactExports.useRef(null);
-    var handleMouseEnter = reactExports.useCallback(() => {
-      btn.current.style["zIndex"] = "2";
-      btn.current.style["outline"] = "#fff solid 2px";
-      btn.current.style["boxShadow"] = "rgb(0 0 0 / 25%) 0 0 5px 2px";
-    }, []);
-    var handleMouseLeave = reactExports.useCallback(() => {
-      if (!checked2) {
-        btn.current.style["zIndex"] = "0";
-        btn.current.style["outline"] = "initial";
-        btn.current.style["boxShadow"] = "initial";
-      }
-    }, [
-      checked2
-    ]);
-    var rectStyle = checked2 ? {
-      zIndex: 1,
-      outline: "#fff solid 2px",
-      boxShadow: "rgb(0 0 0 / 25%) 0 0 5px 2px"
-    } : {
-      zIndex: 0
-    };
-    return jsxRuntimeExports.jsx("div", _extends({
-      ref: btn,
-      title: title7
-    }, rectProps, {
-      onClick,
-      onMouseEnter: handleMouseEnter,
-      onMouseLeave: handleMouseLeave,
-      style: _extends({}, style2, {
-        marginRight: 0,
-        marginBottom: 0,
-        borderRadius: 0,
-        boxSizing: "border-box",
-        height: 25,
-        width: 25
-      }, defalutStyle, rectStyle, rectProps == null ? void 0 : rectProps.style)
-    }));
-  }
-  var _excluded$a = [
-    "prefixCls",
-    "placement",
-    "className",
-    "style",
-    "color",
-    "colors",
-    "showTriangle",
-    "rectProps",
-    "onChange",
-    "rectRender"
-  ];
-  var CORLER_HEX = [
-    "#B80000",
-    "#DB3E00",
-    "#FCCB00",
-    "#008B02",
-    "#006B76",
-    "#1273DE",
-    "#004DCF",
-    "#5300EB",
-    "#EB9694",
-    "#FAD0C3",
-    "#FEF3BD",
-    "#C1E1C5",
-    "#BEDADC",
-    "#C4DEF6",
-    "#BED3F3",
-    "#D4C4FB"
-  ];
-  var GithubPlacement = function(GithubPlacement2) {
-    GithubPlacement2["Left"] = "L";
-    GithubPlacement2["LeftTop"] = "LT";
-    GithubPlacement2["LeftBottom"] = "LB";
-    GithubPlacement2["Right"] = "R";
-    GithubPlacement2["RightTop"] = "RT";
-    GithubPlacement2["RightBottom"] = "RB";
-    GithubPlacement2["Top"] = "T";
-    GithubPlacement2["TopRight"] = "TR";
-    GithubPlacement2["TopLeft"] = "TL";
-    GithubPlacement2["Bottom"] = "B";
-    GithubPlacement2["BottomLeft"] = "BL";
-    GithubPlacement2["BottomRight"] = "BR";
-    return GithubPlacement2;
-  }({});
-  var Github = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-github", placement = GithubPlacement.TopRight, className: className2, style: style2, color: color2, colors = CORLER_HEX, showTriangle = true, rectProps = {}, onChange, rectRender } = props, other = _objectWithoutPropertiesLoose(props, _excluded$a);
-    var hsva = typeof color2 === "string" && validHex$1(color2) ? hexToHsva(color2) : color2;
-    var hex = color2 ? hsvaToHex(hsva) : "";
-    var handleChange = (hsv2) => onChange && onChange(color$1(hsv2));
-    var styleWrapper = _extends({
-      "--github-border": "1px solid rgba(0, 0, 0, 0.2)",
-      "--github-background-color": "#fff",
-      "--github-box-shadow": "rgb(0 0 0 / 15%) 0px 3px 12px",
-      "--github-arrow-border-color": "rgba(0, 0, 0, 0.15)",
-      width: 200,
-      borderRadius: 4,
-      background: "var(--github-background-color)",
-      boxShadow: "var(--github-box-shadow)",
-      border: "var(--github-border)",
-      position: "relative",
-      padding: 5
-    }, style2);
-    var rStyle = {
-      borderStyle: "solid",
-      position: "absolute"
-    };
-    var arrBrStyl = _extends({}, rStyle);
-    var arrStyl = _extends({}, rStyle);
-    if (/^T/.test(placement)) {
-      arrBrStyl.borderWidth = "0 8px 8px";
-      arrBrStyl.borderColor = "transparent transparent var(--github-arrow-border-color)";
-      arrStyl.borderWidth = "0 7px 7px";
-      arrStyl.borderColor = "transparent transparent var(--github-background-color)";
-    }
-    if (placement === GithubPlacement.TopRight) {
-      arrBrStyl.top = -8;
-      arrStyl.top = -7;
-    }
-    if (placement === GithubPlacement.Top) {
-      arrBrStyl.top = -8;
-      arrStyl.top = -7;
-    }
-    if (placement === GithubPlacement.TopLeft) {
-      arrBrStyl.top = -8;
-      arrStyl.top = -7;
-    }
-    if (/^B/.test(placement)) {
-      arrBrStyl.borderWidth = "8px 8px 0";
-      arrBrStyl.borderColor = "var(--github-arrow-border-color) transparent transparent";
-      arrStyl.borderWidth = "7px 7px 0";
-      arrStyl.borderColor = "var(--github-background-color) transparent transparent";
-      if (placement === GithubPlacement.BottomRight) {
-        arrBrStyl.top = "100%";
-        arrStyl.top = "100%";
-      }
-      if (placement === GithubPlacement.Bottom) {
-        arrBrStyl.top = "100%";
-        arrStyl.top = "100%";
-      }
-      if (placement === GithubPlacement.BottomLeft) {
-        arrBrStyl.top = "100%";
-        arrStyl.top = "100%";
-      }
-    }
-    if (/^(B|T)/.test(placement)) {
-      if (placement === GithubPlacement.Top || placement === GithubPlacement.Bottom) {
-        arrBrStyl.left = "50%";
-        arrBrStyl.marginLeft = -8;
-        arrStyl.left = "50%";
-        arrStyl.marginLeft = -7;
-      }
-      if (placement === GithubPlacement.TopRight || placement === GithubPlacement.BottomRight) {
-        arrBrStyl.right = 10;
-        arrStyl.right = 11;
-      }
-      if (placement === GithubPlacement.TopLeft || placement === GithubPlacement.BottomLeft) {
-        arrBrStyl.left = 7;
-        arrStyl.left = 8;
-      }
-    }
-    if (/^L/.test(placement)) {
-      arrBrStyl.borderWidth = "8px 8px 8px 0";
-      arrBrStyl.borderColor = "transparent var(--github-arrow-border-color) transparent transparent";
-      arrStyl.borderWidth = "7px 7px 7px 0";
-      arrStyl.borderColor = "transparent var(--github-background-color) transparent transparent";
-      arrBrStyl.left = -8;
-      arrStyl.left = -7;
-    }
-    if (/^R/.test(placement)) {
-      arrBrStyl.borderWidth = "8px 0 8px 8px";
-      arrBrStyl.borderColor = "transparent transparent transparent var(--github-arrow-border-color)";
-      arrStyl.borderWidth = "7px 0 7px 7px";
-      arrStyl.borderColor = "transparent transparent transparent var(--github-background-color)";
-      arrBrStyl.right = -8;
-      arrStyl.right = -7;
-    }
-    if (/^(L|R)/.test(placement)) {
-      if (placement === GithubPlacement.RightTop || placement === GithubPlacement.LeftTop) {
-        arrBrStyl.top = 5;
-        arrStyl.top = 6;
-      }
-      if (placement === GithubPlacement.Left || placement === GithubPlacement.Right) {
-        arrBrStyl.top = "50%";
-        arrStyl.top = "50%";
-        arrBrStyl.marginTop = -8;
-        arrStyl.marginTop = -7;
-      }
-      if (placement === GithubPlacement.LeftBottom || placement === GithubPlacement.RightBottom) {
-        arrBrStyl.top = "100%";
-        arrStyl.top = "100%";
-        arrBrStyl.marginTop = -21;
-        arrStyl.marginTop = -20;
-      }
-    }
-    var render = (_ref) => {
-      var props2 = _extends({}, (_objectDestructuringEmpty(_ref), _ref));
-      var handle2 = rectRender && rectRender(_extends({}, props2));
-      if (handle2) return handle2;
-      return jsxRuntimeExports.jsx(Point, _extends({}, props2, {
-        rectProps
-      }));
-    };
-    return jsxRuntimeExports.jsx(Swatch, _extends({
-      ref,
-      className: [
-        prefixCls,
-        className2
-      ].filter(Boolean).join(" "),
-      colors,
-      color: hex,
-      rectRender: render
-    }, other, {
-      onChange: handleChange,
-      style: styleWrapper,
-      rectProps: {
-        style: {
-          marginRight: 0,
-          marginBottom: 0,
-          borderRadius: 0,
-          height: 25,
-          width: 25
-        }
-      },
-      addonBefore: jsxRuntimeExports.jsx(reactExports.Fragment, {
-        children: showTriangle && jsxRuntimeExports.jsxs(reactExports.Fragment, {
-          children: [
-            jsxRuntimeExports.jsx("div", {
-              style: arrBrStyl
-            }),
-            jsxRuntimeExports.jsx("div", {
-              style: arrStyl
-            })
-          ]
-        })
-      })
-    }));
-  });
-  Github.displayName = "Github";
-  var Pointer = (_ref) => {
-    var { className: className2, color: color2, left, top: top2, prefixCls } = _ref;
-    var style2 = {
-      position: "absolute",
-      top: top2,
-      left
-    };
-    var stylePointer = {
-      "--saturation-pointer-box-shadow": "rgb(255 255 255) 0px 0px 0px 1.5px, rgb(0 0 0 / 30%) 0px 0px 1px 1px inset, rgb(0 0 0 / 40%) 0px 0px 1px 2px",
-      width: 6,
-      height: 6,
-      transform: "translate(-3px, -3px)",
-      boxShadow: "var(--saturation-pointer-box-shadow)",
-      borderRadius: "50%",
-      backgroundColor: color2
-    };
-    return reactExports.useMemo(() => jsxRuntimeExports.jsx("div", {
-      className: prefixCls + "-pointer " + (className2 || ""),
-      style: style2,
-      children: jsxRuntimeExports.jsx("div", {
-        className: prefixCls + "-fill",
-        style: stylePointer
-      })
-    }), [
-      top2,
-      left,
-      color2,
-      className2,
-      prefixCls
-    ]);
-  };
-  var _excluded$9 = [
-    "prefixCls",
-    "radius",
-    "pointer",
-    "className",
-    "hue",
-    "style",
-    "hsva",
-    "onChange"
-  ];
-  var Saturation = React$2.forwardRef((props, ref) => {
-    var _hsva$h;
-    var { prefixCls = "w-color-saturation", radius = 0, pointer, className: className2, hue = 0, style: style2, hsva, onChange } = props, other = _objectWithoutPropertiesLoose(props, _excluded$9);
-    var containerStyle = _extends({
-      width: 200,
-      height: 200,
-      borderRadius: radius
-    }, style2, {
-      position: "relative"
-    });
-    var containerRef = reactExports.useRef(null);
-    var combinedRef = reactExports.useCallback((node2) => {
-      containerRef.current = node2;
-      if (typeof ref === "function") {
-        ref(node2);
-      } else if (ref && "current" in ref) {
-        ref.current = node2;
-      }
-    }, [
-      ref
-    ]);
-    var handleChange = reactExports.useCallback((interaction, event) => {
-      onChange && hsva && onChange({
-        h: hsva.h,
-        s: interaction.left * 100,
-        v: (1 - interaction.top) * 100,
-        a: hsva.a
-      });
-      var element2 = containerRef.current;
-      if (element2) {
-        element2.focus();
-      }
-    }, [
-      hsva,
-      onChange
-    ]);
-    var handleKeyDown2 = reactExports.useCallback((event) => {
-      if (!hsva || !onChange) return;
-      var step = 1;
-      var newS = hsva.s;
-      var newV = hsva.v;
-      var changed = false;
-      switch (event.key) {
-        case "ArrowLeft":
-          newS = Math.max(0, hsva.s - step);
-          changed = true;
-          event.preventDefault();
-          break;
-        case "ArrowRight":
-          newS = Math.min(100, hsva.s + step);
-          changed = true;
-          event.preventDefault();
-          break;
-        case "ArrowUp":
-          newV = Math.min(100, hsva.v + step);
-          changed = true;
-          event.preventDefault();
-          break;
-        case "ArrowDown":
-          newV = Math.max(0, hsva.v - step);
-          changed = true;
-          event.preventDefault();
-          break;
-        default:
-          return;
-      }
-      if (changed) {
-        onChange({
-          h: hsva.h,
-          s: newS,
-          v: newV,
-          a: hsva.a
-        });
-      }
-    }, [
-      hsva,
-      onChange
-    ]);
-    var pointerElement = reactExports.useMemo(() => {
-      if (!hsva) return null;
-      var comProps = {
-        top: 100 - hsva.v + "%",
-        left: hsva.s + "%",
-        color: hsvaToHslaString(hsva)
-      };
-      if (pointer && typeof pointer === "function") {
-        return pointer(_extends({
-          prefixCls
-        }, comProps));
-      }
-      return jsxRuntimeExports.jsx(Pointer, _extends({
-        prefixCls
-      }, comProps));
-    }, [
-      hsva,
-      pointer,
-      prefixCls
-    ]);
-    var handleClick = reactExports.useCallback((event) => {
-      event.target.focus();
-    }, []);
-    return jsxRuntimeExports.jsx(Interactive, _extends({
-      className: [
-        prefixCls,
-        className2 || ""
-      ].filter(Boolean).join(" ")
-    }, other, {
-      style: _extends({
-        position: "absolute",
-        inset: 0,
-        cursor: "crosshair",
-        backgroundImage: "linear-gradient(0deg, #000, transparent), linear-gradient(90deg, #fff, hsl(" + ((_hsva$h = hsva == null ? void 0 : hsva.h) != null ? _hsva$h : hue) + ", 100%, 50%))"
-      }, containerStyle, {
-        outline: "none"
-      }),
-      ref: combinedRef,
-      onMove: handleChange,
-      onDown: handleChange,
-      onKeyDown: handleKeyDown2,
-      onClick: handleClick,
-      children: pointerElement
-    }));
-  });
-  Saturation.displayName = "Saturation";
-  var _excluded$8 = [
-    "prefixCls",
-    "className",
-    "hue",
-    "onChange",
-    "direction"
-  ];
-  var Hue = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-hue", className: className2, hue = 0, onChange: _onChange, direction: direction2 = "horizontal" } = props, other = _objectWithoutPropertiesLoose(props, _excluded$8);
-    return jsxRuntimeExports.jsx(Alpha, _extends({
-      ref,
-      className: prefixCls + " " + (className2 || "")
-    }, other, {
-      direction: direction2,
-      background: "linear-gradient(to " + (direction2 === "horizontal" ? "right" : "bottom") + ", rgb(255, 0, 0) 0%, rgb(255, 255, 0) 17%, rgb(0, 255, 0) 33%, rgb(0, 255, 255) 50%, rgb(0, 0, 255) 67%, rgb(255, 0, 255) 83%, rgb(255, 0, 0) 100%)",
-      hsva: {
-        h: hue,
-        s: 100,
-        v: 100,
-        a: hue / 360
-      },
-      onChange: (_2, interaction) => {
-        _onChange && _onChange({
-          h: direction2 === "horizontal" ? 360 * interaction.left : 360 * interaction.top
-        });
-      }
-    }));
-  });
-  Hue.displayName = "Hue";
-  var _excluded$7 = [
-    "prefixCls",
-    "hsva",
-    "placement",
-    "rProps",
-    "gProps",
-    "bProps",
-    "aProps",
-    "className",
-    "style",
-    "onChange"
-  ];
-  var EditableInputRGBA = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-editable-input-rgba", hsva, placement = "bottom", rProps = {}, gProps = {}, bProps = {}, aProps = {}, className: className2, style: style2, onChange } = props, other = _objectWithoutPropertiesLoose(props, _excluded$7);
-    var rgba = hsva ? hsvaToRgba(hsva) : {};
-    function handleBlur(evn) {
-      var value = Number(evn.target.value);
-      if (value && value > 255) {
-        evn.target.value = "255";
-      }
-      if (value && value < 0) {
-        evn.target.value = "0";
-      }
-    }
-    var handleAlphaBlur = (evn) => {
-      var value = Number(evn.target.value);
-      if (value && value > 100) {
-        evn.target.value = "100";
-      }
-      if (value && value < 0) {
-        evn.target.value = "0";
-      }
-    };
-    var handleChange = (value, type, evn) => {
-      if (typeof value === "number") {
-        if (type === "a") {
-          if (value < 0) value = 0;
-          if (value > 100) value = 100;
-          onChange && onChange(color$1(rgbaToHsva(_extends({}, rgba, {
-            a: value / 100
-          }))));
-        }
-        if (value > 255) {
-          value = 255;
-          evn.target.value = "255";
-        }
-        if (value < 0) {
-          value = 0;
-          evn.target.value = "0";
-        }
-        if (type === "r") {
-          onChange && onChange(color$1(rgbaToHsva(_extends({}, rgba, {
-            r: value
-          }))));
-        }
-        if (type === "g") {
-          onChange && onChange(color$1(rgbaToHsva(_extends({}, rgba, {
-            g: value
-          }))));
-        }
-        if (type === "b") {
-          onChange && onChange(color$1(rgbaToHsva(_extends({}, rgba, {
-            b: value
-          }))));
-        }
-      }
-    };
-    var roundedAlpha = rgba.a ? Math.round(rgba.a * 100) / 100 : 0;
-    return jsxRuntimeExports.jsxs("div", _extends({
-      ref,
-      className: [
-        prefixCls,
-        className2 || ""
-      ].filter(Boolean).join(" ")
-    }, other, {
-      style: _extends({
-        fontSize: 11,
-        display: "flex"
-      }, style2),
-      children: [
-        jsxRuntimeExports.jsx(EditableInput, _extends({
-          label: "R",
-          value: rgba.r || 0,
-          onBlur: handleBlur,
-          placement,
-          onChange: (evn, val) => handleChange(val, "r", evn)
-        }, rProps, {
-          style: _extends({}, rProps.style)
-        })),
-        jsxRuntimeExports.jsx(EditableInput, _extends({
-          label: "G",
-          value: rgba.g || 0,
-          onBlur: handleBlur,
-          placement,
-          onChange: (evn, val) => handleChange(val, "g", evn)
-        }, gProps, {
-          style: _extends({
-            marginLeft: 5
-          }, gProps.style)
-        })),
-        jsxRuntimeExports.jsx(EditableInput, _extends({
-          label: "B",
-          value: rgba.b || 0,
-          onBlur: handleBlur,
-          placement,
-          onChange: (evn, val) => handleChange(val, "b", evn)
-        }, bProps, {
-          style: _extends({
-            marginLeft: 5
-          }, bProps.style)
-        })),
-        aProps && jsxRuntimeExports.jsx(EditableInput, _extends({
-          label: "A",
-          value: parseInt(String(roundedAlpha * 100), 10),
-          onBlur: handleAlphaBlur,
-          placement,
-          onChange: (evn, val) => handleChange(val, "a", evn)
-        }, aProps, {
-          style: _extends({
-            marginLeft: 5
-          }, aProps.style)
-        }))
-      ]
-    }));
-  });
-  EditableInputRGBA.displayName = "EditableInputRGBA";
-  var _excluded$6 = [
-    "prefixCls",
-    "hsva",
-    "hProps",
-    "sProps",
-    "lProps",
-    "aProps",
-    "className",
-    "onChange"
-  ];
-  var EditableInputHSLA = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-editable-input-hsla", hsva, hProps = {}, sProps = {}, lProps = {}, aProps = {}, className: className2, onChange } = props, other = _objectWithoutPropertiesLoose(props, _excluded$6);
-    var hsla = hsva ? hsvaToHsla(hsva) : {
-      h: 0,
-      s: 0,
-      l: 0,
-      a: 0
-    };
-    var handleChange = (value, type, evn) => {
-      if (typeof value === "number") {
-        if (type === "h") {
-          if (value < 0) value = 0;
-          if (value > 360) value = 360;
-          onChange && onChange(color$1(hslaToHsva(_extends({}, hsla, {
-            h: value
-          }))));
-        }
-        if (type === "s") {
-          if (value < 0) value = 0;
-          if (value > 100) value = 100;
-          onChange && onChange(color$1(hslaToHsva(_extends({}, hsla, {
-            s: value
-          }))));
-        }
-        if (type === "l") {
-          if (value < 0) value = 0;
-          if (value > 100) value = 100;
-          onChange && onChange(color$1(hslaToHsva(_extends({}, hsla, {
-            l: value
-          }))));
-        }
-        if (type === "a") {
-          if (value < 0) value = 0;
-          if (value > 1) value = 1;
-          onChange && onChange(color$1(hslaToHsva(_extends({}, hsla, {
-            a: value
-          }))));
-        }
-      }
-    };
-    var aPropsObj = aProps == false ? false : _extends({
-      label: "A",
-      value: Math.round(hsla.a * 100) / 100
-    }, aProps, {
-      onChange: (evn, val) => handleChange(val, "a")
-    });
-    return jsxRuntimeExports.jsx(EditableInputRGBA, _extends({
-      ref,
-      hsva,
-      rProps: _extends({
-        label: "H",
-        value: Math.round(hsla.h)
-      }, hProps, {
-        onChange: (evn, val) => handleChange(val, "h")
-      }),
-      gProps: _extends({
-        label: "S",
-        value: Math.round(hsla.s) + "%"
-      }, sProps, {
-        onChange: (evn, val) => handleChange(val, "s")
-      }),
-      bProps: _extends({
-        label: "L",
-        value: Math.round(hsla.l) + "%"
-      }, lProps, {
-        onChange: (evn, val) => handleChange(val, "l")
-      }),
-      aProps: aPropsObj,
-      className: [
-        prefixCls,
-        className2 || ""
-      ].filter(Boolean).join(" ")
-    }, other));
-  });
-  EditableInputHSLA.displayName = "EditableInputHSLA";
-  var _excluded$5 = [
-    "style"
-  ];
-  function Arrow(props) {
-    var { style: style2 } = props, other = _objectWithoutPropertiesLoose(props, _excluded$5);
-    var btn = reactExports.useRef(null);
-    var handleMouseEnter = reactExports.useCallback(() => {
-      btn.current.style["backgroundColor"] = "var(--chrome-arrow-background-color)";
-    }, []);
-    var handleMouseLeave = reactExports.useCallback(() => {
-      btn.current.style["backgroundColor"] = "transparent";
-    }, []);
-    return jsxRuntimeExports.jsx("div", _extends({
-      ref: btn,
-      style: _extends({
-        marginLeft: 5,
-        cursor: "pointer",
-        transition: "background-color .3s",
-        borderRadius: 2
-      }, style2)
-    }, other, {
-      onMouseEnter: handleMouseEnter,
-      onMouseLeave: handleMouseLeave,
-      children: jsxRuntimeExports.jsx("svg", {
-        viewBox: "0 0 1024 1024",
-        width: "24",
-        height: "24",
-        style: {
-          display: "block"
-        },
-        children: jsxRuntimeExports.jsx("path", {
-          d: "M373.888 576h276.224c9.322667 0 14.293333 11.178667 9.173333 18.773333l-1.258666 1.557334-138.112 146.858666a10.709333 10.709333 0 0 1-14.293334 1.365334l-1.536-1.365334-138.112-146.858666c-6.592-6.997333-2.666667-18.645333 5.973334-20.16l1.941333-0.170667h276.224-276.224z m146.026667-295.189333l138.112 146.858666c7.04 7.509333 2.069333 20.330667-7.914667 20.330667H373.888c-9.984 0-14.976-12.821333-7.914667-20.330667l138.112-146.858666a10.730667 10.730667 0 0 1 15.829334 0z",
-          fill: "var(--chrome-arrow-fill)"
-        })
-      })
-    }));
-  }
-  function getIsEyeDropperSupported() {
-    return "EyeDropper" in window;
-  }
-  function EyeDropper(props) {
-    var click = () => {
-      if ("EyeDropper" in window) {
-        var eyeDropper = new window.EyeDropper();
-        eyeDropper.open().then((result) => {
-          props.onPickColor == null || props.onPickColor(result.sRGBHex);
-        }).catch((err2) => {
-          if (err2.name === "AbortError") ;
-        });
-      }
-    };
-    return jsxRuntimeExports.jsx("svg", {
-      viewBox: "0 0 512 512",
-      height: "1em",
-      width: "1em",
-      onClick: click,
-      children: jsxRuntimeExports.jsx("path", {
-        fill: "currentColor",
-        d: "M482.8 29.23c38.9 38.98 38.9 102.17 0 141.17L381.2 271.9l9.4 9.5c12.5 12.5 12.5 32.7 0 45.2s-32.7 12.5-45.2 0l-160-160c-12.5-12.5-12.5-32.7 0-45.2s32.7-12.5 45.2 0l9.5 9.4L341.6 29.23c39-38.974 102.2-38.974 141.2 0zM55.43 323.3 176.1 202.6l45.3 45.3-120.7 120.7c-3.01 3-4.7 7-4.7 11.3V416h36.1c4.3 0 8.3-1.7 11.3-4.7l120.7-120.7 45.3 45.3-120.7 120.7c-15 15-35.4 23.4-56.6 23.4H89.69l-39.94 26.6c-12.69 8.5-29.59 6.8-40.377-4-10.786-10.8-12.459-27.7-3.998-40.4L32 422.3v-42.4c0-21.2 8.43-41.6 23.43-56.6z"
-      })
-    });
-  }
-  var _excluded$4 = [
-    "prefixCls",
-    "className",
-    "style",
-    "color",
-    "showEditableInput",
-    "showEyeDropper",
-    "showColorPreview",
-    "showHue",
-    "showAlpha",
-    "inputType",
-    "rectProps",
-    "onChange"
-  ];
-  var ChromeInputType = function(ChromeInputType2) {
-    ChromeInputType2["HEXA"] = "hexa";
-    ChromeInputType2["RGBA"] = "rgba";
-    ChromeInputType2["HSLA"] = "hsla";
-    return ChromeInputType2;
-  }({});
-  var Chrome = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-chrome", className: className2, style: style2, color: color2, showEditableInput = true, showEyeDropper = true, showColorPreview = true, showHue = true, showAlpha = true, inputType = ChromeInputType.RGBA, rectProps = {}, onChange } = props, other = _objectWithoutPropertiesLoose(props, _excluded$4);
-    var hsva = typeof color2 === "string" && validHex$1(color2) ? hexToHsva(color2) : color2 || {
-      h: 0,
-      s: 0,
-      l: 0,
-      a: 0
-    };
-    var handleChange = (hsv2) => onChange && onChange(color$1(hsv2));
-    var [type, setType] = reactExports.useState(inputType);
-    var handleClick = () => {
-      if (type === ChromeInputType.RGBA) {
-        setType(ChromeInputType.HSLA);
-      }
-      if (type === ChromeInputType.HSLA) {
-        setType(ChromeInputType.HEXA);
-      }
-      if (type === ChromeInputType.HEXA) {
-        setType(ChromeInputType.RGBA);
-      }
-    };
-    var labelStyle = {
-      paddingTop: 6
-    };
-    var inputStyle = {
-      textAlign: "center",
-      paddingTop: 4,
-      paddingBottom: 4
-    };
-    var wrapperStyle = _extends({
-      "--chrome-arrow-fill": "#333",
-      "--chrome-arrow-background-color": "#e8e8e8",
-      borderRadius: 0,
-      flexDirection: "column",
-      width: 230,
-      padding: 0
-    }, style2);
-    var alphaStyle = {
-      "--chrome-alpha-box-shadow": "rgb(0 0 0 / 25%) 0px 0px 1px inset",
-      borderRadius: "50%",
-      background: hsvaToRgbaString(hsva),
-      boxShadow: "var(--chrome-alpha-box-shadow)"
-    };
-    var handleClickColor = (hex) => {
-      var result = hexToHsva(hex);
-      handleChange(_extends({}, result));
-    };
-    var styleSize = {
-      height: 14,
-      width: 14
-    };
-    var pointerProps = {
-      style: _extends({}, styleSize),
-      fillProps: {
-        style: styleSize
-      }
-    };
-    return jsxRuntimeExports.jsx(Github, _extends({
-      ref,
-      color: hsva,
-      style: wrapperStyle,
-      colors: void 0,
-      className: [
-        prefixCls,
-        className2
-      ].filter(Boolean).join(" "),
-      placement: GithubPlacement.TopLeft
-    }, other, {
-      addonAfter: jsxRuntimeExports.jsxs(reactExports.Fragment, {
-        children: [
-          jsxRuntimeExports.jsx(Saturation, {
-            hsva,
-            style: {
-              width: "100%",
-              height: 130
-            },
-            onChange: (newColor) => {
-              handleChange(_extends({}, hsva, newColor, {
-                a: hsva.a
-              }));
-            }
-          }),
-          jsxRuntimeExports.jsxs("div", {
-            style: {
-              padding: 15,
-              display: "flex",
-              alignItems: "center",
-              gap: 10
-            },
-            children: [
-              getIsEyeDropperSupported() && showEyeDropper && jsxRuntimeExports.jsx(EyeDropper, {
-                onPickColor: handleClickColor
-              }),
-              showColorPreview && jsxRuntimeExports.jsx(Alpha, {
-                width: 28,
-                height: 28,
-                hsva,
-                radius: 2,
-                style: {
-                  borderRadius: "50%"
-                },
-                bgProps: {
-                  style: {
-                    background: "transparent"
-                  }
-                },
-                innerProps: {
-                  style: alphaStyle
-                },
-                pointer: () => jsxRuntimeExports.jsx(reactExports.Fragment, {})
-              }),
-              jsxRuntimeExports.jsxs("div", {
-                style: {
-                  flex: 1
-                },
-                children: [
-                  showHue == true && jsxRuntimeExports.jsx(Hue, {
-                    hue: hsva.h,
-                    style: {
-                      width: "100%",
-                      height: 12,
-                      borderRadius: 2
-                    },
-                    pointerProps,
-                    bgProps: {
-                      style: {
-                        borderRadius: 2
-                      }
-                    },
-                    onChange: (newHue) => {
-                      handleChange(_extends({}, hsva, newHue));
-                    }
-                  }),
-                  showAlpha == true && jsxRuntimeExports.jsx(Alpha, {
-                    hsva,
-                    style: {
-                      marginTop: 6,
-                      height: 12,
-                      borderRadius: 2
-                    },
-                    pointerProps,
-                    bgProps: {
-                      style: {
-                        borderRadius: 2
-                      }
-                    },
-                    onChange: (newAlpha) => {
-                      handleChange(_extends({}, hsva, newAlpha));
-                    }
-                  })
-                ]
-              })
-            ]
-          }),
-          showEditableInput && jsxRuntimeExports.jsxs("div", {
-            style: {
-              display: "flex",
-              alignItems: "flex-start",
-              padding: "0 15px 15px 15px",
-              userSelect: "none"
-            },
-            children: [
-              jsxRuntimeExports.jsxs("div", {
-                style: {
-                  flex: 1
-                },
-                children: [
-                  type == ChromeInputType.RGBA && jsxRuntimeExports.jsx(EditableInputRGBA, {
-                    hsva,
-                    rProps: {
-                      labelStyle,
-                      inputStyle
-                    },
-                    gProps: {
-                      labelStyle,
-                      inputStyle
-                    },
-                    bProps: {
-                      labelStyle,
-                      inputStyle
-                    },
-                    aProps: showAlpha == false ? false : {
-                      labelStyle,
-                      inputStyle
-                    },
-                    onChange: (reColor) => handleChange(reColor.hsva)
-                  }),
-                  type === ChromeInputType.HEXA && jsxRuntimeExports.jsx(EditableInput, {
-                    label: "HEX",
-                    labelStyle,
-                    inputStyle,
-                    value: hsva.a > 0 && hsva.a < 1 ? hsvaToHexa(hsva).toLocaleUpperCase() : hsvaToHex(hsva).toLocaleUpperCase(),
-                    onChange: (_2, value) => {
-                      if (typeof value === "string") {
-                        handleChange(hexToHsva(/^#/.test(value) ? value : "#" + value));
-                      }
-                    }
-                  }),
-                  type === ChromeInputType.HSLA && jsxRuntimeExports.jsx(EditableInputHSLA, {
-                    hsva,
-                    hProps: {
-                      labelStyle,
-                      inputStyle
-                    },
-                    sProps: {
-                      labelStyle,
-                      inputStyle
-                    },
-                    lProps: {
-                      labelStyle,
-                      inputStyle
-                    },
-                    aProps: showAlpha == false ? false : {
-                      labelStyle,
-                      inputStyle
-                    },
-                    onChange: (reColor) => handleChange(reColor.hsva)
-                  })
-                ]
-              }),
-              jsxRuntimeExports.jsx(Arrow, {
-                onClick: handleClick
-              })
-            ]
-          })
-        ]
-      }),
-      rectRender: () => jsxRuntimeExports.jsx(reactExports.Fragment, {})
-    }));
-  });
-  Chrome.displayName = "Chrome";
   const layersPanel = "_layersPanel_1qxur_1";
   const layersUnifiedTop = "_layersUnifiedTop_1qxur_10";
   const layersToolbarSlot = "_layersToolbarSlot_1qxur_27";
@@ -167183,6 +165545,728 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   };
+  var RGB_MAX = 255;
+  var SV_MAX = 100;
+  var rgbaToHsva = (_ref) => {
+    var r2 = _ref.r, g2 = _ref.g, b2 = _ref.b, a2 = _ref.a;
+    var max2 = Math.max(r2, g2, b2);
+    var delta = max2 - Math.min(r2, g2, b2);
+    var hh2 = delta ? max2 === r2 ? (g2 - b2) / delta : max2 === g2 ? 2 + (b2 - r2) / delta : 4 + (r2 - g2) / delta : 0;
+    return {
+      h: 60 * (hh2 < 0 ? hh2 + 6 : hh2),
+      s: max2 ? delta / max2 * SV_MAX : 0,
+      v: max2 / RGB_MAX * SV_MAX,
+      a: a2
+    };
+  };
+  var hsvaToHslaString = (hsva) => {
+    var _hsvaToHsla2 = hsvaToHsla(hsva), h2 = _hsvaToHsla2.h, s2 = _hsvaToHsla2.s, l2 = _hsvaToHsla2.l, a2 = _hsvaToHsla2.a;
+    return "hsla(" + h2 + ", " + s2 + "%, " + l2 + "%, " + a2 + ")";
+  };
+  var hsvaToHsla = (_ref5) => {
+    var h2 = _ref5.h, s2 = _ref5.s, v2 = _ref5.v, a2 = _ref5.a;
+    var hh2 = (200 - s2) * v2 / SV_MAX;
+    return {
+      h: h2,
+      s: hh2 > 0 && hh2 < 200 ? s2 * v2 / SV_MAX / (hh2 <= SV_MAX ? hh2 : 200 - hh2) * SV_MAX : 0,
+      l: hh2 / 2,
+      a: a2
+    };
+  };
+  var rgbToHex = (_ref7) => {
+    var r2 = _ref7.r, g2 = _ref7.g, b2 = _ref7.b;
+    var bin2 = r2 << 16 | g2 << 8 | b2;
+    return "#" + ((h2) => new Array(7 - h2.length).join("0") + h2)(bin2.toString(16));
+  };
+  var rgbaToHexa = (_ref8) => {
+    var r2 = _ref8.r, g2 = _ref8.g, b2 = _ref8.b, a2 = _ref8.a;
+    var alpha2 = typeof a2 === "number" && (a2 * 255 | 1 << 8).toString(16).slice(1);
+    return "" + rgbToHex({
+      r: r2,
+      g: g2,
+      b: b2
+    }) + (alpha2 ? alpha2 : "");
+  };
+  var hexToHsva = (hex) => rgbaToHsva(hexToRgba(hex));
+  var hexToRgba = (hex) => {
+    var htemp = hex.replace("#", "");
+    if (/^#?/.test(hex) && htemp.length === 3) {
+      hex = "#" + htemp.charAt(0) + htemp.charAt(0) + htemp.charAt(1) + htemp.charAt(1) + htemp.charAt(2) + htemp.charAt(2);
+    }
+    var reg = new RegExp("[A-Za-z0-9]{2}", "g");
+    var _map2 = hex.match(reg).map((v2) => parseInt(v2, 16)), r2 = _map2[0], g2 = _map2[1], _map2$ = _map2[2], b2 = _map2$ === void 0 ? 0 : _map2$, a2 = _map2[3];
+    return {
+      r: r2,
+      g: g2,
+      b: b2,
+      a: (a2 != null ? a2 : 255) / RGB_MAX
+    };
+  };
+  var hsvaToRgba = (_ref9) => {
+    var h2 = _ref9.h, s2 = _ref9.s, v2 = _ref9.v, a2 = _ref9.a;
+    var _h2 = h2 / 60, _s = s2 / SV_MAX, _v = v2 / SV_MAX, hi2 = Math.floor(_h2) % 6;
+    var f2 = _h2 - Math.floor(_h2), _p = RGB_MAX * _v * (1 - _s), _q = RGB_MAX * _v * (1 - _s * f2), _t = RGB_MAX * _v * (1 - _s * (1 - f2));
+    _v *= RGB_MAX;
+    var rgba = {};
+    switch (hi2) {
+      case 0:
+        rgba.r = _v;
+        rgba.g = _t;
+        rgba.b = _p;
+        break;
+      case 1:
+        rgba.r = _q;
+        rgba.g = _v;
+        rgba.b = _p;
+        break;
+      case 2:
+        rgba.r = _p;
+        rgba.g = _v;
+        rgba.b = _t;
+        break;
+      case 3:
+        rgba.r = _p;
+        rgba.g = _q;
+        rgba.b = _v;
+        break;
+      case 4:
+        rgba.r = _t;
+        rgba.g = _p;
+        rgba.b = _v;
+        break;
+      case 5:
+        rgba.r = _v;
+        rgba.g = _p;
+        rgba.b = _q;
+        break;
+    }
+    rgba.r = Math.round(rgba.r);
+    rgba.g = Math.round(rgba.g);
+    rgba.b = Math.round(rgba.b);
+    return _extends({}, rgba, {
+      a: a2
+    });
+  };
+  var rgbaToRgb = (_ref0) => {
+    var r2 = _ref0.r, g2 = _ref0.g, b2 = _ref0.b;
+    return {
+      r: r2,
+      g: g2,
+      b: b2
+    };
+  };
+  var hslaToHsl = (_ref1) => {
+    var h2 = _ref1.h, s2 = _ref1.s, l2 = _ref1.l;
+    return {
+      h: h2,
+      s: s2,
+      l: l2
+    };
+  };
+  var hsvaToHex = (hsva) => rgbToHex(hsvaToRgba(hsva));
+  var hsvaToHsv = (_ref10) => {
+    var h2 = _ref10.h, s2 = _ref10.s, v2 = _ref10.v;
+    return {
+      h: h2,
+      s: s2,
+      v: v2
+    };
+  };
+  var rgbToXY = (_ref12) => {
+    var r2 = _ref12.r, g2 = _ref12.g, b2 = _ref12.b;
+    var translateColor = function translateColor2(color2) {
+      return color2 <= 0.04045 ? color2 / 12.92 : Math.pow((color2 + 0.055) / 1.055, 2.4);
+    };
+    var red = translateColor(r2 / 255);
+    var green = translateColor(g2 / 255);
+    var blue = translateColor(b2 / 255);
+    var xyz = {};
+    xyz.x = red * 0.4124 + green * 0.3576 + blue * 0.1805;
+    xyz.y = red * 0.2126 + green * 0.7152 + blue * 0.0722;
+    xyz.bri = red * 0.0193 + green * 0.1192 + blue * 0.9505;
+    return xyz;
+  };
+  var color$1 = (str2) => {
+    var rgb;
+    var hsl;
+    var hsv2;
+    var rgba;
+    var hsla;
+    var hsva;
+    var xy;
+    var hex;
+    var hexa;
+    if (typeof str2 === "string" && validHex(str2)) {
+      hsva = hexToHsva(str2);
+      hex = str2;
+    } else if (typeof str2 !== "string") {
+      hsva = str2;
+    }
+    if (hsva) {
+      hsv2 = hsvaToHsv(hsva);
+      hsla = hsvaToHsla(hsva);
+      rgba = hsvaToRgba(hsva);
+      hexa = rgbaToHexa(rgba);
+      hex = hsvaToHex(hsva);
+      hsl = hslaToHsl(hsla);
+      rgb = rgbaToRgb(rgba);
+      xy = rgbToXY(rgb);
+    }
+    return {
+      rgb,
+      hsl,
+      hsv: hsv2,
+      rgba,
+      hsla,
+      hsva,
+      hex,
+      hexa,
+      xy
+    };
+  };
+  var validHex = (hex) => /^#?([A-Fa-f0-9]{3,4}){1,2}$/.test(hex);
+  function useEventCallback(handler2) {
+    var callbackRef = reactExports.useRef(handler2);
+    reactExports.useEffect(() => {
+      callbackRef.current = handler2;
+    });
+    return reactExports.useCallback((value, event) => callbackRef.current && callbackRef.current(value, event), []);
+  }
+  var isTouch = (event) => "touches" in event;
+  var preventDefaultMove = (event) => {
+    !isTouch(event) && event.preventDefault && event.preventDefault();
+  };
+  var clamp = function clamp2(number2, min2, max2) {
+    if (min2 === void 0) {
+      min2 = 0;
+    }
+    if (max2 === void 0) {
+      max2 = 1;
+    }
+    return number2 > max2 ? max2 : number2 < min2 ? min2 : number2;
+  };
+  var getRelativePosition = (node2, event) => {
+    var rect = node2.getBoundingClientRect();
+    var pointer = isTouch(event) ? event.touches[0] : event;
+    return {
+      left: clamp((pointer.pageX - (rect.left + window.pageXOffset)) / rect.width),
+      top: clamp((pointer.pageY - (rect.top + window.pageYOffset)) / rect.height),
+      width: rect.width,
+      height: rect.height,
+      x: pointer.pageX - (rect.left + window.pageXOffset),
+      y: pointer.pageY - (rect.top + window.pageYOffset)
+    };
+  };
+  var _excluded$8 = [
+    "prefixCls",
+    "className",
+    "onMove",
+    "onDown"
+  ];
+  var Interactive = React$2.forwardRef((props, ref) => {
+    var _props$prefixCls = props.prefixCls, prefixCls = _props$prefixCls === void 0 ? "w-color-interactive" : _props$prefixCls, className2 = props.className, onMove = props.onMove, onDown = props.onDown, reset = _objectWithoutPropertiesLoose(props, _excluded$8);
+    var container2 = reactExports.useRef(null);
+    var hasTouched = reactExports.useRef(false);
+    var _useState = reactExports.useState(false), isDragging = _useState[0], setDragging = _useState[1];
+    var onMoveCallback = useEventCallback(onMove);
+    var onKeyCallback = useEventCallback(onDown);
+    var isValid2 = (event) => {
+      if (hasTouched.current && !isTouch(event)) return false;
+      hasTouched.current = isTouch(event);
+      return true;
+    };
+    var handleMove = reactExports.useCallback((event) => {
+      preventDefaultMove(event);
+      if (!container2.current) return;
+      var isDown = isTouch(event) ? event.touches.length > 0 : event.buttons > 0;
+      if (!isDown) {
+        setDragging(false);
+        return;
+      }
+      onMoveCallback == null || onMoveCallback(getRelativePosition(container2.current, event), event);
+    }, [
+      onMoveCallback
+    ]);
+    var handleMoveEnd = reactExports.useCallback(() => setDragging(false), []);
+    var toggleDocumentEvents = reactExports.useCallback((state) => {
+      if (state) {
+        window.addEventListener(hasTouched.current ? "touchmove" : "mousemove", handleMove);
+        window.addEventListener(hasTouched.current ? "touchend" : "mouseup", handleMoveEnd);
+      } else {
+        window.removeEventListener("mousemove", handleMove);
+        window.removeEventListener("mouseup", handleMoveEnd);
+        window.removeEventListener("touchmove", handleMove);
+        window.removeEventListener("touchend", handleMoveEnd);
+      }
+    }, [
+      handleMove,
+      handleMoveEnd
+    ]);
+    reactExports.useEffect(() => {
+      toggleDocumentEvents(isDragging);
+      return () => {
+        toggleDocumentEvents(false);
+      };
+    }, [
+      isDragging,
+      handleMove,
+      handleMoveEnd,
+      toggleDocumentEvents
+    ]);
+    var handleMoveStart = reactExports.useCallback((event) => {
+      var activeEl = document.activeElement;
+      activeEl == null || activeEl.blur();
+      preventDefaultMove(event.nativeEvent);
+      if (!isValid2(event.nativeEvent)) return;
+      if (!container2.current) return;
+      onKeyCallback == null || onKeyCallback(getRelativePosition(container2.current, event.nativeEvent), event.nativeEvent);
+      setDragging(true);
+    }, [
+      onKeyCallback
+    ]);
+    return jsxRuntimeExports.jsx("div", _extends({}, reset, {
+      className: [
+        prefixCls,
+        className2 || ""
+      ].filter(Boolean).join(" "),
+      style: _extends({}, reset.style, {
+        touchAction: "none"
+      }),
+      ref: container2,
+      tabIndex: 0,
+      onMouseDown: handleMoveStart,
+      onTouchStart: handleMoveStart
+    }));
+  });
+  Interactive.displayName = "Interactive";
+  var _excluded$7 = [
+    "className",
+    "prefixCls",
+    "left",
+    "top",
+    "style",
+    "fillProps"
+  ];
+  var Pointer$1 = (_ref) => {
+    var className2 = _ref.className, prefixCls = _ref.prefixCls, left = _ref.left, top2 = _ref.top, style2 = _ref.style, fillProps = _ref.fillProps, reset = _objectWithoutPropertiesLoose(_ref, _excluded$7);
+    var styleWrapper = _extends({}, style2, {
+      position: "absolute",
+      left,
+      top: top2
+    });
+    var stylePointer = _extends({
+      width: 18,
+      height: 18,
+      boxShadow: "var(--alpha-pointer-box-shadow)",
+      borderRadius: "50%",
+      backgroundColor: "var(--alpha-pointer-background-color)"
+    }, fillProps == null ? void 0 : fillProps.style, {
+      transform: left ? "translate(-9px, -1px)" : "translate(-1px, -9px)"
+    });
+    return jsxRuntimeExports.jsx("div", _extends({
+      className: prefixCls + "-pointer " + (className2 || ""),
+      style: styleWrapper
+    }, reset, {
+      children: jsxRuntimeExports.jsx("div", _extends({
+        className: prefixCls + "-fill"
+      }, fillProps, {
+        style: stylePointer
+      }))
+    }));
+  };
+  var _excluded$6 = [
+    "prefixCls",
+    "className",
+    "hsva",
+    "background",
+    "bgProps",
+    "innerProps",
+    "pointerProps",
+    "radius",
+    "width",
+    "height",
+    "direction",
+    "reverse",
+    "style",
+    "onChange",
+    "pointer"
+  ];
+  var BACKGROUND_IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3uCTZhw1gGGYhAGBZIA/nYDCgBDAm9BGDWAAJyRCgLaBCAAgXwixzAS0pgAAAABJRU5ErkJggg==";
+  var Alpha = React$2.forwardRef((props, ref) => {
+    var _props$prefixCls = props.prefixCls, prefixCls = _props$prefixCls === void 0 ? "w-color-alpha" : _props$prefixCls, className2 = props.className, hsva = props.hsva, background = props.background, _props$bgProps = props.bgProps, bgProps = _props$bgProps === void 0 ? {} : _props$bgProps, _props$innerProps = props.innerProps, innerProps = _props$innerProps === void 0 ? {} : _props$innerProps, _props$pointerProps = props.pointerProps, pointerProps = _props$pointerProps === void 0 ? {} : _props$pointerProps, _props$radius = props.radius, radius = _props$radius === void 0 ? 0 : _props$radius, width = props.width, _props$height = props.height, height = _props$height === void 0 ? 16 : _props$height, _props$direction = props.direction, direction2 = _props$direction === void 0 ? "horizontal" : _props$direction, _props$reverse = props.reverse, reverse = _props$reverse === void 0 ? false : _props$reverse, style2 = props.style, onChange = props.onChange, pointer = props.pointer, other = _objectWithoutPropertiesLoose(props, _excluded$6);
+    var offsetToAlpha = reactExports.useCallback((offset) => {
+      var value = direction2 === "horizontal" ? offset.left : offset.top;
+      if (direction2 === "horizontal") {
+        return reverse ? 1 - value : value;
+      }
+      return reverse ? value : 1 - value;
+    }, [
+      direction2,
+      reverse
+    ]);
+    var alphaToOffset = reactExports.useCallback((alpha2) => {
+      if (direction2 === "horizontal") {
+        return reverse ? 1 - alpha2 : alpha2;
+      }
+      return reverse ? alpha2 : 1 - alpha2;
+    }, [
+      direction2,
+      reverse
+    ]);
+    var handleChange = (offset) => {
+      var alpha2 = offsetToAlpha(offset);
+      onChange && onChange(_extends({}, hsva, {
+        a: alpha2
+      }), offset);
+    };
+    var colorTo = hsvaToHslaString(Object.assign({}, hsva, {
+      a: 1
+    }));
+    var horizontalGradient = reverse ? "linear-gradient(to right, " + colorTo + " 0%, rgba(244, 67, 54, 0) 100%)" : "linear-gradient(to right, rgba(244, 67, 54, 0) 0%, " + colorTo + " 100%)";
+    var verticalGradient = reverse ? "linear-gradient(to bottom, rgba(244, 67, 54, 0) 0%, " + colorTo + " 100%)" : "linear-gradient(to bottom, " + colorTo + " 0%, rgba(244, 67, 54, 0) 100%)";
+    var innerBackground = direction2 === "horizontal" ? horizontalGradient : verticalGradient;
+    var comProps = {};
+    if (direction2 === "horizontal") {
+      comProps.left = alphaToOffset(hsva.a) * 100 + "%";
+    } else {
+      comProps.top = alphaToOffset(hsva.a) * 100 + "%";
+    }
+    var styleWrapper = _extends({
+      "--alpha-background-color": "#fff",
+      "--alpha-pointer-background-color": "rgb(248, 248, 248)",
+      "--alpha-pointer-box-shadow": "rgb(0 0 0 / 37%) 0px 1px 4px 0px",
+      borderRadius: radius,
+      background: "url(" + BACKGROUND_IMG + ") left center",
+      backgroundColor: "var(--alpha-background-color)"
+    }, {
+      width,
+      height
+    }, style2, {
+      position: "relative"
+    });
+    var handleKeyDown2 = reactExports.useCallback((event) => {
+      var step = 0.01;
+      var currentAlpha = hsva.a;
+      var newAlpha = currentAlpha;
+      switch (event.key) {
+        case "ArrowLeft":
+          if (direction2 === "horizontal") {
+            newAlpha = reverse ? Math.min(1, currentAlpha + step) : Math.max(0, currentAlpha - step);
+            event.preventDefault();
+          }
+          break;
+        case "ArrowRight":
+          if (direction2 === "horizontal") {
+            newAlpha = reverse ? Math.max(0, currentAlpha - step) : Math.min(1, currentAlpha + step);
+            event.preventDefault();
+          }
+          break;
+        case "ArrowUp":
+          if (direction2 === "vertical") {
+            newAlpha = reverse ? Math.max(0, currentAlpha - step) : Math.min(1, currentAlpha + step);
+            event.preventDefault();
+          }
+          break;
+        case "ArrowDown":
+          if (direction2 === "vertical") {
+            newAlpha = reverse ? Math.min(1, currentAlpha + step) : Math.max(0, currentAlpha - step);
+            event.preventDefault();
+          }
+          break;
+        default:
+          return;
+      }
+      if (newAlpha !== currentAlpha) {
+        var syntheticAxisOffset = alphaToOffset(newAlpha);
+        var syntheticOffset = {
+          left: direction2 === "horizontal" ? syntheticAxisOffset : hsva.a,
+          top: direction2 === "vertical" ? syntheticAxisOffset : hsva.a,
+          width: 0,
+          height: 0,
+          x: 0,
+          y: 0
+        };
+        onChange && onChange(_extends({}, hsva, {
+          a: newAlpha
+        }), syntheticOffset);
+      }
+    }, [
+      alphaToOffset,
+      hsva,
+      direction2,
+      onChange,
+      reverse
+    ]);
+    var handleClick = reactExports.useCallback((event) => {
+      event.target.focus();
+    }, []);
+    var pointerElement = pointer && typeof pointer === "function" ? pointer(_extends({
+      prefixCls
+    }, pointerProps, comProps)) : jsxRuntimeExports.jsx(Pointer$1, _extends({}, pointerProps, {
+      prefixCls
+    }, comProps));
+    return jsxRuntimeExports.jsxs("div", _extends({}, other, {
+      className: [
+        prefixCls,
+        prefixCls + "-" + direction2,
+        className2 || ""
+      ].filter(Boolean).join(" "),
+      style: styleWrapper,
+      ref,
+      children: [
+        jsxRuntimeExports.jsx("div", _extends({}, bgProps, {
+          style: _extends({
+            inset: 0,
+            position: "absolute",
+            background: background || innerBackground,
+            borderRadius: radius
+          }, bgProps.style)
+        })),
+        jsxRuntimeExports.jsx(Interactive, _extends({}, innerProps, {
+          style: _extends({}, innerProps.style, {
+            inset: 0,
+            zIndex: 1,
+            position: "absolute",
+            outline: "none"
+          }),
+          onMove: handleChange,
+          onDown: handleChange,
+          onClick: handleClick,
+          onKeyDown: handleKeyDown2,
+          children: pointerElement
+        }))
+      ]
+    }));
+  });
+  Alpha.displayName = "Alpha";
+  var _excluded$5 = [
+    "prefixCls",
+    "className",
+    "hue",
+    "onChange",
+    "direction",
+    "reverse"
+  ];
+  var NORMAL_COLORS = "rgb(255, 0, 0) 0%, rgb(255, 255, 0) 17%, rgb(0, 255, 0) 33%, rgb(0, 255, 255) 50%, rgb(0, 0, 255) 67%, rgb(255, 0, 255) 83%, rgb(255, 0, 0) 100%";
+  var REVERSED_COLORS = "rgb(255, 0, 0) 0%, rgb(255, 0, 255) 17%, rgb(0, 0, 255) 33%, rgb(0, 255, 255) 50%, rgb(0, 255, 0) 67%, rgb(255, 255, 0) 83%, rgb(255, 0, 0) 100%";
+  var Hue = React$2.forwardRef((props, ref) => {
+    var _props$prefixCls = props.prefixCls, prefixCls = _props$prefixCls === void 0 ? "w-color-hue" : _props$prefixCls, className2 = props.className, _props$hue = props.hue, hue = _props$hue === void 0 ? 0 : _props$hue, _onChange = props.onChange, _props$direction = props.direction, direction2 = _props$direction === void 0 ? "horizontal" : _props$direction, _props$reverse = props.reverse, reverse = _props$reverse === void 0 ? false : _props$reverse, other = _objectWithoutPropertiesLoose(props, _excluded$5);
+    var getGradientBackground = reactExports.useCallback(() => {
+      if (direction2 === "horizontal") {
+        var colors = reverse ? REVERSED_COLORS : NORMAL_COLORS;
+        var gradientDirection = "right";
+        return "linear-gradient(to " + gradientDirection + ", " + colors + ")";
+      } else {
+        var _colors = reverse ? NORMAL_COLORS : REVERSED_COLORS;
+        var _gradientDirection = "bottom";
+        return "linear-gradient(to " + _gradientDirection + ", " + _colors + ")";
+      }
+    }, [
+      direction2,
+      reverse
+    ]);
+    var getHueFromInteraction = reactExports.useCallback((interaction) => {
+      var value = direction2 === "horizontal" ? interaction.left : interaction.top;
+      var normalizedValue;
+      if (direction2 === "horizontal") {
+        normalizedValue = reverse ? 1 - value : value;
+      } else {
+        normalizedValue = reverse ? value : 1 - value;
+      }
+      return 360 * normalizedValue;
+    }, [
+      direction2,
+      reverse
+    ]);
+    var gradientBackground = reactExports.useMemo(() => getGradientBackground(), [
+      getGradientBackground
+    ]);
+    return jsxRuntimeExports.jsx(Alpha, _extends({
+      ref,
+      className: prefixCls + " " + (className2 || "")
+    }, other, {
+      direction: direction2,
+      reverse,
+      background: gradientBackground,
+      hsva: {
+        h: hue,
+        s: 100,
+        v: 100,
+        a: hue / 360
+      },
+      onChange: (_2, interaction) => {
+        _onChange && _onChange({
+          h: getHueFromInteraction(interaction)
+        });
+      }
+    }));
+  });
+  Hue.displayName = "Hue";
+  var Pointer = (_ref) => {
+    var className2 = _ref.className, color2 = _ref.color, left = _ref.left, top2 = _ref.top, prefixCls = _ref.prefixCls;
+    var style2 = {
+      position: "absolute",
+      top: top2,
+      left
+    };
+    var stylePointer = {
+      "--saturation-pointer-box-shadow": "rgb(255 255 255) 0px 0px 0px 1.5px, rgb(0 0 0 / 30%) 0px 0px 1px 1px inset, rgb(0 0 0 / 40%) 0px 0px 1px 2px",
+      width: 6,
+      height: 6,
+      transform: "translate(-3px, -3px)",
+      boxShadow: "var(--saturation-pointer-box-shadow)",
+      borderRadius: "50%",
+      backgroundColor: color2
+    };
+    return reactExports.useMemo(() => jsxRuntimeExports.jsx("div", {
+      className: prefixCls + "-pointer " + (className2 || ""),
+      style: style2,
+      children: jsxRuntimeExports.jsx("div", {
+        className: prefixCls + "-fill",
+        style: stylePointer
+      })
+    }), [
+      top2,
+      left,
+      color2,
+      className2,
+      prefixCls
+    ]);
+  };
+  var _excluded$4 = [
+    "prefixCls",
+    "radius",
+    "pointer",
+    "className",
+    "hue",
+    "style",
+    "hsva",
+    "onChange"
+  ];
+  var Saturation = React$2.forwardRef((props, ref) => {
+    var _hsva$h;
+    var _props$prefixCls = props.prefixCls, prefixCls = _props$prefixCls === void 0 ? "w-color-saturation" : _props$prefixCls, _props$radius = props.radius, radius = _props$radius === void 0 ? 0 : _props$radius, pointer = props.pointer, className2 = props.className, _props$hue = props.hue, hue = _props$hue === void 0 ? 0 : _props$hue, style2 = props.style, hsva = props.hsva, onChange = props.onChange, other = _objectWithoutPropertiesLoose(props, _excluded$4);
+    var containerStyle = _extends({
+      width: 200,
+      height: 200,
+      borderRadius: radius
+    }, style2, {
+      position: "relative"
+    });
+    var containerRef = reactExports.useRef(null);
+    var combinedRef = reactExports.useCallback((node2) => {
+      containerRef.current = node2;
+      if (typeof ref === "function") {
+        ref(node2);
+      } else if (ref && "current" in ref) {
+        ref.current = node2;
+      }
+    }, [
+      ref
+    ]);
+    var handleChange = reactExports.useCallback((interaction, event) => {
+      onChange && hsva && onChange({
+        h: hsva.h,
+        s: interaction.left * 100,
+        v: (1 - interaction.top) * 100,
+        a: hsva.a
+      });
+      var element2 = containerRef.current;
+      if (element2) {
+        element2.focus();
+      }
+    }, [
+      hsva,
+      onChange
+    ]);
+    var handleKeyDown2 = reactExports.useCallback((event) => {
+      if (!hsva || !onChange) return;
+      var step = 1;
+      var newS = hsva.s;
+      var newV = hsva.v;
+      var changed = false;
+      switch (event.key) {
+        case "ArrowLeft":
+          newS = Math.max(0, hsva.s - step);
+          changed = true;
+          event.preventDefault();
+          break;
+        case "ArrowRight":
+          newS = Math.min(100, hsva.s + step);
+          changed = true;
+          event.preventDefault();
+          break;
+        case "ArrowUp":
+          newV = Math.min(100, hsva.v + step);
+          changed = true;
+          event.preventDefault();
+          break;
+        case "ArrowDown":
+          newV = Math.max(0, hsva.v - step);
+          changed = true;
+          event.preventDefault();
+          break;
+        default:
+          return;
+      }
+      if (changed) {
+        onChange({
+          h: hsva.h,
+          s: newS,
+          v: newV,
+          a: hsva.a
+        });
+      }
+    }, [
+      hsva,
+      onChange
+    ]);
+    var pointerElement = reactExports.useMemo(() => {
+      if (!hsva) return null;
+      var comProps = {
+        top: 100 - hsva.v + "%",
+        left: hsva.s + "%",
+        color: hsvaToHslaString(hsva)
+      };
+      if (pointer && typeof pointer === "function") {
+        return pointer(_extends({
+          prefixCls
+        }, comProps));
+      }
+      return jsxRuntimeExports.jsx(Pointer, _extends({
+        prefixCls
+      }, comProps));
+    }, [
+      hsva,
+      pointer,
+      prefixCls
+    ]);
+    var handleClick = reactExports.useCallback((event) => {
+      event.target.focus();
+    }, []);
+    return jsxRuntimeExports.jsx(Interactive, _extends({
+      className: [
+        prefixCls,
+        className2 || ""
+      ].filter(Boolean).join(" ")
+    }, other, {
+      style: _extends({
+        position: "absolute",
+        inset: 0,
+        cursor: "crosshair",
+        backgroundImage: "linear-gradient(0deg, #000, transparent), linear-gradient(90deg, #fff, hsl(" + ((_hsva$h = hsva == null ? void 0 : hsva.h) != null ? _hsva$h : hue) + ", 100%, 50%))"
+      }, containerStyle, {
+        outline: "none"
+      }),
+      ref: combinedRef,
+      onMove: handleChange,
+      onDown: handleChange,
+      onKeyDown: handleKeyDown2,
+      onClick: handleClick,
+      children: pointerElement
+    }));
+  });
+  Saturation.displayName = "Saturation";
   const SvgClose = (props) => reactExports.createElement("svg", {
     style: {
       width: 24,
@@ -167221,6 +166305,31 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     flexShrink: 0,
     marginBottom: 0
   };
+  const colorGridStyle = {
+    display: "grid",
+    gap: "0.5em"
+  };
+  const colorShownStyle = {
+    transition: "height 0.33s ease-out, opacity 0.33s ease-out"
+  };
+  const colorHiddenStyle = {
+    height: 0,
+    opacity: 0,
+    pointerEvents: "none",
+    transition: "height 0.33s ease-out, opacity 0.33s ease-out"
+  };
+  const hueRowStyle = {
+    display: "grid",
+    gridTemplateColumns: "1.5em 1fr"
+  };
+  const groupFolderChevron$1 = {
+    all: "unset",
+    display: "grid",
+    gridTemplateColumns: "1fr auto 1fr",
+    cursor: "pointer",
+    color: "#8b949e",
+    lineHeight: 0
+  };
   const closeButtonStyle = {
     display: "flex",
     alignItems: "center",
@@ -167258,6 +166367,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       position2,
       onClose
     ]);
+    const currentColor = color$1(pickerProps.color);
+    const [expanded, setExpanded] = reactExports.useState(false);
+    const hueProps = {
+      hue: currentColor.hsva.h,
+      onChange: ({ h: h2 }) => {
+        const { v: v2, s: s2 } = currentColor.hsva;
+        pickerProps.onChange(color$1({
+          h: h2,
+          v: v2,
+          s: s2,
+          a: 1
+        }));
+      }
+    };
+    const saturationProps = {
+      hsva: currentColor.hsva,
+      onChange: ({ h: h2, v: v2, s: s2, a: a2 }) => {
+        pickerProps.onChange(color$1({
+          h: h2,
+          v: v2,
+          s: s2,
+          a: a2
+        }));
+      },
+      style: expanded ? colorShownStyle : colorHiddenStyle
+    };
     if (!position2 || typeof document === "undefined") return null;
     return reactDomExports.createPortal(jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
@@ -167296,9 +166431,35 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 })
               })
             }),
-            jsxRuntimeExports.jsx(Chrome, {
-              ...pickerProps,
-              showTriangle: false
+            jsxRuntimeExports.jsxs("div", {
+              style: colorGridStyle,
+              children: [
+                jsxRuntimeExports.jsxs("div", {
+                  style: hueRowStyle,
+                  children: [
+                    jsxRuntimeExports.jsxs("button", {
+                      type: "button",
+                      style: groupFolderChevron$1,
+                      "aria-expanded": expanded,
+                      title: expanded ? "Fewer colors" : "More colors",
+                      onClick: () => setExpanded(!expanded),
+                      children: [
+                        jsxRuntimeExports.jsx("div", {}),
+                        jsxRuntimeExports.jsx(ChevronIcon, {
+                          direction: expanded ? "down" : "right"
+                        }),
+                        jsxRuntimeExports.jsx("div", {})
+                      ]
+                    }),
+                    jsxRuntimeExports.jsx(Hue, {
+                      ...hueProps
+                    })
+                  ]
+                }),
+                jsxRuntimeExports.jsx(Saturation, {
+                  ...saturationProps
+                })
+              ]
             })
           ]
         })
@@ -170244,7 +169405,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setAuthoringWaypointShapesIndex
     ]);
     const [colorPickerPos, setColorPickerPos] = reactExports.useState(null);
-    const [pickerHsva, setPickerHsva] = reactExports.useState(() => rgbaToHsva({
+    const [pickerHsva, setPickerHsva] = reactExports.useState(() => rgbaToHsva$1({
       r: 255,
       g: 255,
       b: 255,
@@ -170257,7 +169418,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }, []);
     const handleColorPickerOpen = (anchor) => {
       colorPickerTargetIdRef.current = null;
-      setPickerHsva(rgbaToHsva({
+      setPickerHsva(rgbaToHsva$1({
         r: globalColor[0],
         g: globalColor[1],
         b: globalColor[2],
@@ -170267,7 +169428,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const handleOpenAnnotationColorPicker = (annotationId, rgba, anchor) => {
       colorPickerTargetIdRef.current = annotationId;
-      setPickerHsva(rgbaToHsva({
+      setPickerHsva(rgbaToHsva$1({
         r: rgba[0],
         g: rgba[1],
         b: rgba[2],
@@ -248989,7 +248150,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     }) : null;
     const [colorPickerPos, setColorPickerPos] = reactExports.useState(null);
-    const [pickerHsva, setPickerHsva] = reactExports.useState(() => rgbaToHsva({
+    const [pickerHsva, setPickerHsva] = reactExports.useState(() => rgbaToHsva$1({
       r: 255,
       g: 255,
       b: 255,
@@ -249002,7 +248163,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }, []);
     const handleColorPickerOpen = (anchor, c2) => {
       setColorPickerChannel(c2);
-      setPickerHsva(rgbaToHsva({
+      setPickerHsva(rgbaToHsva$1({
         r: c2.r,
         g: c2.g,
         b: c2.b,
@@ -251077,12 +250238,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-14T16:47:56.832Z");
+    const label2 = utcShort("2026-09-16T17:53:37.153Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-14T16:47:56.832Z",
+      title: "2026-09-16T17:53:37.153Z",
       children: [
         "Updated ",
         label2,
