@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-G6Um8ddA.js","./pako.esm-KbdoS3Oq.js","./lerc-SlmVSl5V.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BGFjzixd.js","./pako.esm-KbdoS3Oq.js","./lerc-aELJJMvy.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -62146,26 +62146,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-SpnpewZq.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BZp-dS9h.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-6wpg9kUI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BECv0pek.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-b_mWxQLv.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-ilZR8IAm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-G6Um8ddA.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-T3gBay5E.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-SlmVSl5V.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BGFjzixd.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-D6HLXqFO.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-aELJJMvy.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CLXpRImc.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-B6Wkg7fc.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DIt2DFsF.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DKavVyUY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -242557,54 +242557,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const fallback = approximateAutoContrastFromUint16Histogram(u16);
     return fallback;
   }
-  async function fetchPlaneRaster(loader, sourceIndex, prefs = {}) {
-    var _a2;
-    const planes = loader.data;
-    if (!(planes == null ? void 0 : planes.length)) return null;
-    const first = planes[0];
-    const cIdx = first.labels.indexOf("c");
-    const channelCount = cIdx >= 0 ? first.shape[cIdx] : 1;
-    if (sourceIndex < 0 || sourceIndex >= channelCount) return null;
-    const preferCoarsest = prefs.preferCoarsest ?? false;
-    const order2 = preferCoarsest ? [
-      ...planes.keys()
-    ].reverse() : [
-      ...planes.keys()
-    ];
-    for (const i2 of order2) {
-      const plane = planes[i2];
-      try {
-        const raster = await plane.getRaster({
-          selection: {
-            t: 0,
-            z: 0,
-            c: sourceIndex
-          }
-        });
-        if ((_a2 = raster == null ? void 0 : raster.data) == null ? void 0 : _a2.length) return {
-          raster,
-          plane
-        };
-      } catch {
-      }
-    }
-    return null;
-  }
-  function rasterToUint16Array(data2) {
-    if (data2 instanceof Uint16Array) return data2;
-    const out = new Uint16Array(data2.length);
-    if (data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray) {
-      for (let i2 = 0; i2 < data2.length; i2++) out[i2] = data2[i2] << 8;
-      return out;
-    }
-    for (let i2 = 0; i2 < data2.length; i2++) {
-      const v2 = data2[i2];
-      out[i2] = Number.isFinite(v2) ? Math.max(0, Math.min(65535, Math.round(v2))) : 0;
-    }
-    return out;
-  }
   const FETCH_CONCURRENCY = 4;
   const FIT_CONCURRENCY = 1;
+  const GMM_MAX_SAMPLES = 1e4;
   const emptySnapshot = {
     holdingLoad: false
   };
@@ -242743,20 +242698,48 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }));
     if (groupsChanged) doc.setChannelGroups(nextGroups);
   }
-  async function runJob(job, gen) {
+  async function fetchCoarsestUint16(loader, sourceIndex) {
     var _a2;
+    const planes = loader.data;
+    if (!(planes == null ? void 0 : planes.length)) return null;
+    const cIdx = planes[0].labels.indexOf("c");
+    const nC = cIdx >= 0 ? planes[0].shape[cIdx] : 1;
+    if (sourceIndex < 0 || sourceIndex >= nC) return null;
+    let data2;
+    for (let i2 = planes.length - 1; i2 >= 0; i2--) {
+      try {
+        const raster = await planes[i2].getRaster({
+          selection: {
+            t: 0,
+            z: 0,
+            c: sourceIndex
+          }
+        });
+        if ((_a2 = raster == null ? void 0 : raster.data) == null ? void 0 : _a2.length) {
+          data2 = raster.data;
+          break;
+        }
+      } catch {
+      }
+    }
+    if (!(data2 == null ? void 0 : data2.length)) return null;
+    const stride = Math.max(1, Math.ceil(data2.length / GMM_MAX_SAMPLES));
+    const out = new Uint16Array(Math.ceil(data2.length / stride));
+    const u8 = data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray;
+    for (let i2 = 0, o2 = 0; i2 < data2.length; i2 += stride) {
+      const v2 = Number(data2[i2]);
+      out[o2++] = u8 ? v2 << 8 : Number.isFinite(v2) ? Math.max(0, Math.min(65535, Math.round(v2))) : 0;
+    }
+    return out;
+  }
+  async function runJob(job, gen) {
     await acquire(fetchUsedBox, fetchWaiters, FETCH_CONCURRENCY);
     let u16 = null;
     try {
       if (gen !== generation) return {
         kind: "failed"
       };
-      const hit = await fetchPlaneRaster(job.loader, job.index, {
-        preferCoarsest: true
-      });
-      if (((_a2 = hit == null ? void 0 : hit.raster) == null ? void 0 : _a2.data) && hit.raster.data.length > 0) {
-        u16 = rasterToUint16Array(hit.raster.data);
-      }
+      u16 = await fetchCoarsestUint16(job.loader, job.index);
     } finally {
       release(fetchUsedBox, fetchWaiters);
       pump();
@@ -252076,12 +252059,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-16T19:44:05.011Z");
+    const label2 = utcShort("2026-09-16T20:06:20.995Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-16T19:44:05.011Z",
+      title: "2026-09-16T20:06:20.995Z",
       children: [
         "Updated ",
         label2,
