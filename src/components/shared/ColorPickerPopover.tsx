@@ -1,6 +1,12 @@
-import { Chrome as ColorPicker } from "@uiw/react-color";
+import type { HsvaColor } from "@uiw/color-convert";
+import { color } from "@uiw/color-convert";
+import type { Chrome } from "@uiw/react-color";
+import type { AlphaProps } from "@uiw/react-color-alpha";
+import Hue from "@uiw/react-color-hue";
+import Saturation from "@uiw/react-color-saturation";
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import CloseIcon from "@/components/shared/icons/close.svg?react";
 
 const BACKDROP_Z = 9998;
@@ -30,6 +36,36 @@ const closeRowStyle: React.CSSProperties = {
   alignItems: "center",
   flexShrink: 0,
   marginBottom: 0,
+};
+
+const colorGridStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "0.5em",
+};
+
+const colorShownStyle: React.CSSProperties = {
+  transition: "height 0.33s ease-out, opacity 0.33s ease-out",
+};
+
+const colorHiddenStyle: React.CSSProperties = {
+  height: 0,
+  opacity: 0,
+  pointerEvents: "none",
+  transition: "height 0.33s ease-out, opacity 0.33s ease-out",
+};
+
+const hueRowStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1.5em 1fr",
+};
+
+const groupFolderChevron: React.CSSProperties = {
+  all: "unset",
+  display: "grid",
+  gridTemplateColumns: "1fr auto 1fr",
+  cursor: "pointer",
+  color: "#8b949e",
+  lineHeight: 0,
 };
 
 const closeButtonStyle: React.CSSProperties = {
@@ -67,7 +103,19 @@ export function colorPickerAnchorPosition(rect: DOMRect): {
 export type ColorPickerPopoverProps = {
   position: { top: number; left: number } | null;
   onClose: () => void;
-} & Omit<React.ComponentProps<typeof ColorPicker>, "ref">;
+} & Omit<React.ComponentProps<typeof Chrome>, "ref">;
+
+interface HueProps extends Omit<AlphaProps, "hsva" | "onChange"> {
+  onChange?: (newHue: { h: number }) => void;
+  hue: number;
+}
+
+export interface SaturationProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
+  prefixCls?: string;
+  hsva?: HsvaColor;
+  onChange?: (newColor: HsvaColor) => void;
+}
 
 /**
  * Fixed popover + transparent backdrop; close control in a row above the picker.
@@ -86,6 +134,24 @@ export function ColorPickerPopover({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [position, onClose]);
+
+  const currentColor = color(pickerProps.color);
+  const [expanded, setExpanded] = React.useState(false);
+
+  const hueProps: HueProps = {
+    hue: currentColor.hsva.h,
+    onChange: ({ h }) => {
+      const { v, s } = currentColor.hsva;
+      pickerProps.onChange(color({ h, v, s, a: 1 }));
+    },
+  };
+  const saturationProps: SaturationProps = {
+    hsva: currentColor.hsva,
+    onChange: ({ h, v, s, a }) => {
+      pickerProps.onChange(color({ h, v, s, a }));
+    },
+    style: expanded ? colorShownStyle : colorHiddenStyle,
+  };
 
   if (!position || typeof document === "undefined") return null;
 
@@ -123,7 +189,23 @@ export function ColorPickerPopover({
             <CloseIcon aria-hidden style={closeIconStyle} />
           </button>
         </div>
-        <ColorPicker {...pickerProps} showTriangle={false} />
+        <div style={colorGridStyle}>
+          <div style={hueRowStyle}>
+            <button
+              type="button"
+              style={groupFolderChevron}
+              aria-expanded={expanded}
+              title={expanded ? "Fewer colors" : "More colors"}
+              onClick={() => setExpanded(!expanded)}
+            >
+              <div></div>
+              <ChevronIcon direction={expanded ? "down" : "right"} />
+              <div></div>
+            </button>
+            <Hue {...hueProps} />
+          </div>
+          <Saturation {...saturationProps} />
+        </div>
       </div>
     </>,
     document.body,
