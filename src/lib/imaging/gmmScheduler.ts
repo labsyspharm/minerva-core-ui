@@ -3,10 +3,6 @@ import {
   fitChannelGmmContrastFromUint16,
 } from "@/lib/imaging/autoContrast";
 import { isImageChannel, isRgbDisplayChannel } from "@/lib/imaging/channelKind";
-import {
-  fetchPlaneRaster,
-  rasterToUint16Array,
-} from "@/lib/imaging/maskChannelRaster";
 import { looksLikeImportDefaultLimits } from "@/lib/imaging/sourceChannelStyle";
 import type { Loader } from "@/lib/imaging/viv";
 import type { Channel } from "@/lib/stores/documentStore";
@@ -18,6 +14,7 @@ import { applySourceChannelsToImages } from "@/lib/stores/storeUtils";
 
 const FETCH_CONCURRENCY = 4;
 const FIT_CONCURRENCY = 1;
+const GMM_MAX_SAMPLES = 10_000;
 
 type WriteGuard =
   | { kind: "still-missing" }
@@ -188,17 +185,53 @@ function commitFitted(job: Job, window: ContrastLimits): void {
   if (groupsChanged) doc.setChannelGroups(nextGroups);
 }
 
+/** Coarsest pyramid plane, at most 10k uint16 samples. */
+async function fetchCoarsestUint16(
+  loader: Loader,
+  sourceIndex: number,
+): Promise<Uint16Array | null> {
+  const planes = loader.data;
+  if (!planes?.length) return null;
+  const cIdx = planes[0].labels.indexOf("c");
+  const nC = cIdx >= 0 ? planes[0].shape[cIdx] : 1;
+  if (sourceIndex < 0 || sourceIndex >= nC) return null;
+
+  let data: ArrayLike<number> | undefined;
+  for (let i = planes.length - 1; i >= 0; i--) {
+    try {
+      const raster = await planes[i].getRaster({
+        selection: { t: 0, z: 0, c: sourceIndex },
+      });
+      if (raster?.data?.length) {
+        data = raster.data;
+        break;
+      }
+    } catch {
+      /* missing pyramid level */
+    }
+  }
+  if (!data?.length) return null;
+
+  const stride = Math.max(1, Math.ceil(data.length / GMM_MAX_SAMPLES));
+  const out = new Uint16Array(Math.ceil(data.length / stride));
+  const u8 = data instanceof Uint8Array || data instanceof Uint8ClampedArray;
+  for (let i = 0, o = 0; i < data.length; i += stride) {
+    const v = Number(data[i]);
+    out[o++] = u8
+      ? v << 8
+      : Number.isFinite(v)
+        ? Math.max(0, Math.min(65535, Math.round(v)))
+        : 0;
+  }
+  return out;
+}
+
 async function runJob(job: Job, gen: number): Promise<FitOutcome> {
   await acquire(fetchUsedBox, fetchWaiters, FETCH_CONCURRENCY);
   let u16: Uint16Array | null = null;
   try {
     if (gen !== generation) return { kind: "failed" };
-    const hit = await fetchPlaneRaster(job.loader, job.index, {
-      preferCoarsest: true,
-    });
-    if (hit?.raster?.data && hit.raster.data.length > 0) {
-      u16 = rasterToUint16Array(hit.raster.data);
-    }
+    u16 = await fetchCoarsestUint16(job.loader, job.index);
   } finally {
     release(fetchUsedBox, fetchWaiters);
     pump();
