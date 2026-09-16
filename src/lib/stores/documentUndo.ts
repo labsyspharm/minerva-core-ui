@@ -28,6 +28,12 @@ export function syncAppStoreChannelMirrorsFromDocument(): void {
   const { channelVisibilities } = visibility;
   delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
 
+  const classTableIds = new Set(doc.classTables.map((c) => c.id));
+  const classTableVisibilities = { ...app.classTableVisibilities };
+  for (const id of Object.keys(classTableVisibilities)) {
+    if (!classTableIds.has(id)) delete classTableVisibilities[id];
+  }
+
   const activeId = app.activeChannelGroupId;
   const nextActiveId =
     activeId && groups.some((g) => g.id === activeId)
@@ -37,6 +43,7 @@ export function syncAppStoreChannelMirrorsFromDocument(): void {
   useAppStore.setState({
     groupNames,
     channelVisibilities,
+    classTableVisibilities,
     channelGroupRowVisibilities: visibility.channelGroupRowVisibilities,
     activeChannelGroupId: nextActiveId,
   });

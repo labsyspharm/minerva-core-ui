@@ -116,6 +116,32 @@ export function worldFrameFromLoader(loader: Loader): WorldFrame {
   );
 }
 
+/**
+ * Unitless 1,1 / identity µm/px copies µm/px from *any* other open image
+ * with the same pixel size and a real physical scale.
+ */
+export function inheritUnitlessPhysicalSize(loaders: readonly Loader[]): void {
+  for (const loader of loaders) {
+    if (isCalibratedScale(loader)) continue;
+    const dims = loaderPixelSizeXY(loader);
+    if (!dims) continue;
+    const donor = loaders.find(
+      (peer) =>
+        peer !== loader &&
+        isCalibratedScale(peer) &&
+        loaderPixelSizeXY(peer)?.sizeX === dims.sizeX &&
+        loaderPixelSizeXY(peer)?.sizeY === dims.sizeY,
+    );
+    if (!donor) continue;
+    const { umPerPixelX, umPerPixelY } = worldFrameFromLoader(donor);
+    const pixels = loader.metadata.Pixels;
+    pixels.PhysicalSizeX = umPerPixelX;
+    pixels.PhysicalSizeY = umPerPixelY;
+    pixels.PhysicalSizeXUnit = WORLD_MICRON;
+    pixels.PhysicalSizeYUnit = WORLD_MICRON;
+  }
+}
+
 export function worldFrameFromPixelCounts(
   width: number,
   height: number,
@@ -144,6 +170,10 @@ export function layerModelMatrix(loader: Loader): Matrix4 {
 
 function isIdentityScale(scale: PhysicalScale): boolean {
   return scale.umPerPixelX === 1 && scale.umPerPixelY === 1;
+}
+
+function isCalibratedScale(loader: Loader): boolean {
+  return !isIdentityScale(parsePhysicalScale(loader.metadata?.Pixels));
 }
 
 export function pixelViewRectFromWorld(

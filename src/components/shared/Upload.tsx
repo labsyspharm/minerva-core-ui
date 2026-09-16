@@ -1,6 +1,7 @@
 import type { FormEventHandler, DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ClassCsvColumnPick } from "@/components/shared/channel/ClassTable";
 import { ImageChannelOverviewCard } from "@/components/shared/channel/ImageChannelOverview";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
@@ -9,7 +10,11 @@ import {
   PanelIconButton,
 } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
-import { resolveImageContentRole } from "@/lib/imaging/channelKind";
+import { attachClassTable, peekClassCsv } from "@/lib/classTable";
+import {
+  isMaskChannel,
+  resolveImageContentRole,
+} from "@/lib/imaging/channelKind";
 import { detectUrlImageFormat } from "@/lib/imaging/detectImageUrl";
 import {
   isDicomWebSeriesUrl,
@@ -29,7 +34,10 @@ import {
   detectOmeTiffPlanarRgbAmbiguity,
 } from "@/lib/imaging/omeTiff";
 import type { Image } from "@/lib/stores/documentStore";
-import { useDocumentStore } from "@/lib/stores/documentStore";
+import {
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
 import { jpegSourceNeedsLocalRoot } from "@/lib/storyExport/importStoryFolder";
 import type { ValidObj } from "@/lib/validate";
 import styles from "./Upload.module.css";
@@ -290,6 +298,18 @@ const Upload = (props: UploadProps) => {
   const [importError, setImportError] = useState<string | null>(null);
   const [stripErrorAt, setStripErrorAt] = useState<"drop" | "url">("drop");
   const [importBusy, setImportBusy] = useState(false);
+  const [classCsvFile, setClassCsvFile] = useState<File | null>(null);
+  const [classCsvCols, setClassCsvCols] = useState<{
+    headers: string[];
+    id: string;
+    name: string;
+  } | null>(null);
+  const classCsvInputRef = useRef<HTMLInputElement>(null);
+  const clearClassCsv = useCallback(() => {
+    setClassCsvFile(null);
+    setClassCsvCols(null);
+    if (classCsvInputRef.current) classCsvInputRef.current.value = "";
+  }, []);
   const [dragging, setDragging] = useState(false);
   const dragDepthRef = useRef(0);
   const localPickInFlightRef = useRef(false);
@@ -323,7 +343,8 @@ const Upload = (props: UploadProps) => {
     setImportError(null);
     setUrlDraft("");
     setImportBusy(false);
-  }, [abortFormatDetect, importRevision]);
+    clearClassCsv();
+  }, [abortFormatDetect, importRevision, clearClassCsv]);
 
   const openPending = useCallback(
     (next: PendingSource) => {
@@ -343,6 +364,7 @@ const Upload = (props: UploadProps) => {
       setDetectedRgbDisplay(null);
       setDetecting(false);
       setImportError(null);
+      clearClassCsv();
 
       const ac = new AbortController();
       formatDetectAbortRef.current = ac;
@@ -407,14 +429,15 @@ const Upload = (props: UploadProps) => {
         }
       })();
     },
-    [abortFormatDetect],
+    [abortFormatDetect, clearClassCsv],
   );
 
   const clearPending = useCallback(() => {
     abortFormatDetect();
     setPending(null);
     setImportError(null);
-  }, [abortFormatDetect]);
+    clearClassCsv();
+  }, [abortFormatDetect, clearClassCsv]);
 
   const acceptLocalHandles = useCallback(
     async (handles: Handle.File[]) => {
@@ -546,27 +569,48 @@ const Upload = (props: UploadProps) => {
         detectedRgbDisplay != null && role === "intensity"
           ? overlayRgbDisplay
           : undefined;
-      if (pending.kind === "local") {
-        const result = await onImportOme({
-          role,
-          append: hasImages,
-          rgbDisplay,
-          source: {
-            kind: "local",
-            path: pending.label,
-            handles: pending.handles,
-          },
-        });
-        if (result && result.ok === false) setImportError(result.error);
-        return;
-      }
+      const beforeMaskIds =
+        role === "segmentation" && classCsvFile
+          ? new Set(
+              flattenImageChannelsInDocumentOrder(
+                useDocumentStore.getState().images,
+              )
+                .filter(isMaskChannel)
+                .map((c) => c.id),
+            )
+          : null;
       const result = await onImportOme({
         role,
         append: hasImages,
         rgbDisplay,
-        source: { kind: "url", url: pending.url },
+        source:
+          pending.kind === "local"
+            ? {
+                kind: "local",
+                path: pending.label,
+                handles: pending.handles,
+              }
+            : { kind: "url", url: pending.url },
       });
-      if (result && result.ok === false) setImportError(result.error);
+      if (result && result.ok === false) {
+        setImportError(result.error);
+        return;
+      }
+      const sourceChannelId = beforeMaskIds
+        ? flattenImageChannelsInDocumentOrder(
+            useDocumentStore.getState().images,
+          ).find((c) => isMaskChannel(c) && !beforeMaskIds.has(c.id))?.id
+        : undefined;
+      if (result?.ok && classCsvFile && sourceChannelId) {
+        const attached = await attachClassTable({
+          sourceChannelId,
+          file: classCsvFile,
+          columns: classCsvCols
+            ? { id: classCsvCols.id, name: classCsvCols.name }
+            : undefined,
+        });
+        if (attached.ok === false) setImportError(attached.error);
+      }
     } finally {
       setImportBusy(false);
     }
@@ -856,6 +900,41 @@ const Upload = (props: UploadProps) => {
                   ))}
                 </div>
               </div>
+            ) : null}
+            {overlayRole === "segmentation" ? (
+              <div className={styles.typeRow}>
+                <span className={styles.fieldLabel}>Class table</span>
+                <input
+                  ref={classCsvInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className={styles.csvInput}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setClassCsvFile(file);
+                    if (!file) {
+                      setClassCsvCols(null);
+                      return;
+                    }
+                    void peekClassCsv(file).then(setClassCsvCols);
+                  }}
+                />
+                <PanelActionButton
+                  type="button"
+                  onClick={() => classCsvInputRef.current?.click()}
+                >
+                  {classCsvFile ? classCsvFile.name : "Optional CSV…"}
+                </PanelActionButton>
+              </div>
+            ) : null}
+            {overlayRole === "segmentation" && classCsvCols ? (
+              <ClassCsvColumnPick
+                headers={classCsvCols.headers}
+                id={classCsvCols.id}
+                name={classCsvCols.name}
+                onId={(id) => setClassCsvCols({ ...classCsvCols, id })}
+                onName={(name) => setClassCsvCols({ ...classCsvCols, name })}
+              />
             ) : null}
           </fieldset>
           {importError ? (

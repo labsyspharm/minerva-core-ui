@@ -16,7 +16,7 @@ import type { DicomIndex } from "./dicomIndex";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
 import { type Loader, toSettings, VIV_TILE_MAX_CACHE_SIZE } from "./viv";
-import { layerModelMatrix } from "./worldFrame";
+import { inheritUnitlessPhysicalSize, layerModelMatrix } from "./worldFrame";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
 function applyChannelRendering<S extends MainSettings>(
@@ -81,7 +81,7 @@ function loaderListFromEntries(sources: ViewerLoaderSources): LoaderList {
     omeLoaderEntries = [],
     jpegLoaderEntries = [],
   } = sources;
-  return [
+  const list = [
     ...dicomIndexList.map(({ sourceImageId, loader, modality }) => ({
       sourceImageId,
       loader,
@@ -98,6 +98,8 @@ function loaderListFromEntries(sources: ViewerLoaderSources): LoaderList {
       modality: "Colorimetric" as const,
     })),
   ];
+  inheritUnitlessPhysicalSize(list.map((row) => row.loader));
+  return list;
 }
 
 function createDicomTileLayer(args: {

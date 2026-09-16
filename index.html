@@ -31,25 +31,33 @@
         background: #000;
         color: #888;
         font-family: "DM Sans", sans-serif;
-        font-size: 18px;
+        font-size: 28px;
         z-index: 9999;
       }
-      #global-loader .dots::after {
-        content: "...";
-        display: inline-block;
-        width: 0;
-        overflow: hidden;
-        vertical-align: bottom;
-        animation: loader-dots 1.2s steps(4, end) infinite;
+      #global-loader .loading {
+        white-space: nowrap;
       }
-      @keyframes loader-dots {
-        to { width: 1.25em; }
+      #global-loader .dots span {
+        opacity: 0;
+        animation: blink 1.6s infinite steps(1, end);
+      }
+      #global-loader .dots span:nth-child(1) { animation-delay: 0.0s; }
+      #global-loader .dots span:nth-child(2) { animation-delay: 0.4s; }
+      #global-loader .dots span:nth-child(3) { animation-delay: 0.8s; }
+      @keyframes blink {
+        0%   { opacity: 0; }
+        25%  { opacity: 1; }
+        75%  { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #global-loader .dots span { opacity: 1; animation: none; }
       }
     </style>
   </head>
   <body>
     <script type="module" src="./index.tsx"></script>
-    <div id="global-loader">Loading Minerva<span class="dots"></span></div>
+    <div id="global-loader"><div class="loading">Loading Minerva<span class="dots"><span>.</span><span>.</span><span>.</span></span></div></div>
     <div id="react-output"></div>
   </body>
 </html>

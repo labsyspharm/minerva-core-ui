@@ -30,6 +30,7 @@ import type {
   ConfigWaypoint,
 } from "@/lib/authoring/config";
 import { extractChannels } from "@/lib/authoring/config";
+import { detachRemovedClassTables, hydrateClassTables } from "@/lib/classTable";
 import {
   applyVisibilityTransition,
   buildCompositedIntensityLayers,
@@ -409,6 +410,20 @@ const Content = (props: Props) => {
     };
   }, [viewerImageLayersLoaded]);
   const activeStoryId = useDocumentStore((s) => s.activeStoryId);
+  const classTableHydrateKey = useDocumentStore((s) =>
+    s.classTables.map((c) => `${c.id}:${c.digest}`).join("|"),
+  );
+  const prevStoryIdRef = React.useRef(activeStoryId);
+  // Digest key retriggers ingest without depending on classTables identity (color edits).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: classTableHydrateKey
+  React.useEffect(() => {
+    const storyChanged = prevStoryIdRef.current !== activeStoryId;
+    prevStoryIdRef.current = activeStoryId;
+    void hydrateClassTables(
+      useDocumentStore.getState().classTables,
+      storyChanged,
+    );
+  }, [activeStoryId, classTableHydrateKey]);
   const namespacedHandleKeys = React.useMemo(
     () =>
       handleKeys.map((k) =>
@@ -770,6 +785,7 @@ const Content = (props: Props) => {
         doc.images,
         doc.channelGroups,
         imageId,
+        doc.classTables,
       );
       if (result.images.length === doc.images.length) return;
       clearRemovedImageState([removed]);
@@ -793,6 +809,7 @@ const Content = (props: Props) => {
         resetActiveGroup: !activeStillExists,
         transition: { kind: "remove" },
       });
+      detachRemovedClassTables(doc.classTables, result.classTables);
 
       if (result.images.length === 0) {
         setFileName("");
@@ -1646,6 +1663,7 @@ const Content = (props: Props) => {
     const legacyModalityIds = new Set(indexList.map((d) => d.modality));
     let nextDocImages = [...doc.images];
     let nextChannelGroups = [...doc.channelGroups];
+    let nextClassTables = [...doc.classTables];
     const removedImages: Image[] = [];
     for (const im of doc.images) {
       const sameSeries =
@@ -1659,9 +1677,11 @@ const Content = (props: Props) => {
         nextDocImages,
         nextChannelGroups,
         im.id,
+        nextClassTables,
       );
       nextDocImages = removed.images;
       nextChannelGroups = removed.channelGroups;
+      nextClassTables = removed.classTables;
     }
     const channelsBefore = flattenImageChannelsInDocumentOrder(nextDocImages);
     nextDocImages = applySourceChannelsToImages(nextDocImages, SourceChannels);
@@ -1726,6 +1746,7 @@ const Content = (props: Props) => {
         isFresh || !mergedChannelGroups.some((g) => g.id === activeId),
       transition,
     });
+    detachRemovedClassTables(doc.classTables, nextClassTables);
     afterImageImportDocumentEffects();
   };
 

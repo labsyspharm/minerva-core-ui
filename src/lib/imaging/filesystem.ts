@@ -59,6 +59,31 @@ export type Dtype =
   | "Float64";
 type OmePixelMetadata = Loader["metadata"]["Pixels"];
 
+function tiffRational(tag: unknown): number | null {
+  if (typeof tag === "number" && Number.isFinite(tag)) return tag;
+  if (tag != null && typeof tag === "object" && "length" in tag) {
+    const arr = tag as ArrayLike<unknown>;
+    if (arr.length < 1) return null;
+    const n = Number(arr[0]);
+    const d = arr.length >= 2 ? Number(arr[1]) : 1;
+    if (!Number.isFinite(n) || !Number.isFinite(d) || d === 0) return null;
+    return n / d;
+  }
+  return null;
+}
+
+/** TIFF ResolutionUnit 1 = none; writers often emit X/YResolution 1/1 as a stub. */
+function isUnitlessPlaceholderResolution(fd: {
+  ResolutionUnit?: number;
+  XResolution?: unknown;
+  YResolution?: unknown;
+}): boolean {
+  if (fd.ResolutionUnit !== 1) return false;
+  return (
+    tiffRational(fd.XResolution) === 1 && tiffRational(fd.YResolution) === 1
+  );
+}
+
 function dtypeFromTiffDirectory(fileDirectory: {
   BitsPerSample?: number[];
   SampleFormat?: number[];
@@ -442,8 +467,10 @@ async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
     SizeZ: 1,
     SizeY: height,
     SizeX: width,
-    PhysicalSizeX: ome?.PhysicalSizeX ?? 1,
-    PhysicalSizeY: ome?.PhysicalSizeY ?? 1,
+    PhysicalSizeX:
+      ome?.PhysicalSizeX ?? (isUnitlessPlaceholderResolution(fd) ? 0 : 1),
+    PhysicalSizeY:
+      ome?.PhysicalSizeY ?? (isUnitlessPlaceholderResolution(fd) ? 0 : 1),
     PhysicalSizeXUnit: ome?.PhysicalSizeXUnit ?? "µm",
     PhysicalSizeYUnit: ome?.PhysicalSizeYUnit ?? "µm",
     PhysicalSizeZUnit: ome?.PhysicalSizeZUnit ?? "µm",
