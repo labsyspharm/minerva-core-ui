@@ -56,19 +56,25 @@ export function ConsumePendingLibraryImport({
     // invalidate hydrate / eager-GMM epochs on every story open.
     if (!pending) return;
 
-    const imported =
-      pending.kind === "dicomWeb"
-        ? importDicomWebRef.current({ url: pending.url })
-        : importOmeRef.current({
-            role: pending.role,
-            append: false,
-            source: pending.source,
-          });
-    void imported
-      .then((result) => {
-        if (result.ok === false) window.alert(result.error);
-      })
-      .finally(onSettled);
+    let cancelled = false;
+    void (async () => {
+      const result =
+        pending.kind === "dicomWeb"
+          ? await importDicomWebRef.current({ url: pending.url })
+          : await importOmeRef.current({
+              role: pending.role,
+              append: false,
+              source: pending.source,
+            });
+      if (cancelled) return;
+      if (result.ok === false) window.alert(result.error);
+    })().finally(() => {
+      if (!cancelled) onSettled();
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [onSettled]);
 
   return null;

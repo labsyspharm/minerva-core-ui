@@ -202,6 +202,33 @@ export const ChannelGroupSchema = z.object({
   channels: z.array(ChannelGroupChannelSchema),
 });
 
+/* -------------------- class tables -------------------- */
+
+/** Pixel / CSV classID after import. Integer in `1…0xFFFFFFFF`; 0 is unrepresentable. */
+const ClassIdSchema = z.number().int().positive().max(0xffff_ffff);
+
+/**
+ * Sidecar name table for one mask plane (`sourceChannelId` = ImageChannel.id).
+ * Name rows live in DuckDB, not in this JSON object.
+ */
+const ClassTableSchema = z.object({
+  id: IdSchema,
+  sourceChannelId: IdSchema,
+  source: z.object({ handleKey: z.string().min(1) }),
+  maxClassId: ClassIdSchema,
+  nameColors: z.array(
+    z.object({
+      name: z.string(),
+      color: ColorSchema,
+    }),
+  ),
+  /** SHA-256 of the attached CSV bytes. */
+  digest: z.string().min(1),
+  columns: z
+    .object({ id: z.string().min(1), name: z.string().min(1) })
+    .optional(),
+});
+
 const waypointObjectZ = z.object({
   id: IdSchema,
   groupId: IdSchema.optional(),
@@ -289,11 +316,12 @@ export const DocumentDataSchema = z.preprocess(
       return raw;
     }
     const r = raw as Record<string, unknown>;
-    if ("groups" in r && !("channelGroups" in r)) {
-      const { groups, ...rest } = r;
-      return { ...rest, channelGroups: groups };
+    let next = r;
+    if ("groups" in next && !("channelGroups" in next)) {
+      const { groups, ...rest } = next;
+      next = { ...rest, channelGroups: groups };
     }
-    return raw;
+    return next;
   },
   z.object({
     metadata: DocumentMetadataSchema.default({}),
@@ -301,6 +329,7 @@ export const DocumentDataSchema = z.preprocess(
     shapes: z.array(ShapeSchema),
     channelGroups: z.array(ChannelGroupSchema),
     images: z.array(ImageSchema),
+    classTables: z.array(ClassTableSchema).default([]),
   }),
 );
 
@@ -339,6 +368,7 @@ export type ChannelGroupChannel = z.infer<typeof ChannelGroupChannelSchema>;
 export type ChannelGroup = z.infer<typeof ChannelGroupSchema>;
 export type Waypoint = z.infer<typeof WaypointSchema>;
 export type SourceDistributionData = z.infer<typeof SourceDistributionSchema>;
+export type ClassTable = z.infer<typeof ClassTableSchema>;
 
 export type DocumentMetadata = z.infer<typeof DocumentMetadataSchema>;
 export type DocumentData = z.infer<typeof DocumentDataSchema>;

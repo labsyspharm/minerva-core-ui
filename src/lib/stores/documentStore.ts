@@ -16,6 +16,7 @@ import hash from "stable-hash";
 import { temporal } from "zundo";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
+import { deleteBlobsForStory } from "../persistence/db";
 import {
   deleteFileHandlesForStory,
   getFileHandle as loadFileHandleFromDb,
@@ -32,6 +33,7 @@ import {
 import type {
   Channel,
   ChannelGroup,
+  ClassTable,
   DocumentData,
   DocumentMetadata,
   Image,
@@ -63,6 +65,7 @@ export type DocumentState = {
   shapes: Shape[];
   channelGroups: ChannelGroup[];
   images: Image[];
+  classTables: ClassTable[];
   metadata: DocumentMetadata;
 };
 
@@ -93,6 +96,7 @@ export type DocumentStore = DocumentState & {
   setShapes: (shapes: Shape[]) => void;
   setChannelGroups: (channelGroups: ChannelGroup[]) => void;
   setImages: (images: Image[]) => void;
+  setClassTables: (classTables: ClassTable[]) => void;
   /** Atomically update coupled channel source/group state as one undo step. */
   setImagesAndChannelGroups: (
     images: Image[],
@@ -116,6 +120,7 @@ function createEmptyDocumentSlices(): Omit<DocumentState, "activeStoryId"> {
     shapes: [],
     channelGroups: [],
     images: [],
+    classTables: [],
     metadata: {},
   };
 }
@@ -142,14 +147,22 @@ export function documentShapes(s: DocumentStore): Shape[] {
 
 export type DocumentUndoState = Pick<
   DocumentState,
-  "waypoints" | "shapes" | "channelGroups" | "images" | "metadata"
+  | "waypoints"
+  | "shapes"
+  | "channelGroups"
+  | "images"
+  | "classTables"
+  | "metadata"
 >;
 
 function documentUndoEquality(
   past: DocumentUndoState,
   current: DocumentUndoState,
 ): boolean {
-  return hash(past) === hash(current);
+  if (past.classTables !== current.classTables) return false;
+  const { classTables: _p, ...p } = past;
+  const { classTables: _c, ...c } = current;
+  return hash(p) === hash(c);
 }
 
 const documentTemporalOptions = {
@@ -158,6 +171,7 @@ const documentTemporalOptions = {
     shapes: state.shapes,
     channelGroups: state.channelGroups,
     images: state.images,
+    classTables: state.classTables,
     metadata: state.metadata,
   }),
   limit: 100,
@@ -181,6 +195,7 @@ export const useDocumentStore = create<DocumentStore>()(
             shapes: [...data.shapes],
             channelGroups: [...data.channelGroups],
             images: [...data.images],
+            classTables: [...data.classTables],
             metadata: {
               ...m,
               id: m.id ?? activeStoryId,
@@ -198,6 +213,7 @@ export const useDocumentStore = create<DocumentStore>()(
               shapes: [...data.shapes],
               channelGroups: [...data.channelGroups],
               images: [...data.images],
+              classTables: [...data.classTables],
               metadata: {
                 ...m,
                 id: m.id ?? state.activeStoryId ?? undefined,
@@ -216,6 +232,7 @@ export const useDocumentStore = create<DocumentStore>()(
             shapes: [...s.shapes],
             channelGroups: [...s.channelGroups],
             images: [...s.images],
+            classTables: [...s.classTables],
           };
         },
 
@@ -251,6 +268,7 @@ export const useDocumentStore = create<DocumentStore>()(
             shapes: [...rec.data.shapes],
             channelGroups: [...rec.data.channelGroups],
             images: [...rec.data.images],
+            classTables: [...(rec.data.classTables ?? [])],
             metadata: { ...rec.data.metadata },
           });
           clearDocumentHistory();
@@ -269,6 +287,7 @@ export const useDocumentStore = create<DocumentStore>()(
             shapes: [...rec.data.shapes],
             channelGroups: [...rec.data.channelGroups],
             images: [...rec.data.images],
+            classTables: [...(rec.data.classTables ?? [])],
             metadata: { ...rec.data.metadata },
           });
           clearDocumentHistory();
@@ -278,6 +297,7 @@ export const useDocumentStore = create<DocumentStore>()(
         deleteStory: async (id) => {
           await deleteStoryRecord(id);
           await deleteFileHandlesForStory(id);
+          await deleteBlobsForStory(id);
           const current = get().activeStoryId;
           if (current !== id) return;
 
@@ -291,6 +311,7 @@ export const useDocumentStore = create<DocumentStore>()(
               shapes: [...rec.data.shapes],
               channelGroups: [...rec.data.channelGroups],
               images: [...rec.data.images],
+              classTables: [...(rec.data.classTables ?? [])],
               metadata: { ...rec.data.metadata },
             });
             clearDocumentHistory();
@@ -312,6 +333,7 @@ export const useDocumentStore = create<DocumentStore>()(
             shapes: [...rec.data.shapes],
             channelGroups: [...rec.data.channelGroups],
             images: [...rec.data.images],
+            classTables: [...(rec.data.classTables ?? [])],
             metadata: { ...rec.data.metadata },
           });
           clearDocumentHistory();
@@ -325,6 +347,9 @@ export const useDocumentStore = create<DocumentStore>()(
           set(() => ({ channelGroups: [...channelGroups] })),
 
         setImages: (images) => set(() => ({ images: [...images] })),
+
+        setClassTables: (classTables) =>
+          set(() => ({ classTables: [...classTables] })),
 
         setImagesAndChannelGroups: (images, channelGroups) =>
           set(() => ({

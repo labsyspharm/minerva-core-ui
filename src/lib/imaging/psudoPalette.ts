@@ -207,6 +207,19 @@ async function optimizePaletteSlots(
   return out;
 }
 
+/** One psudo color per distinct class name (n=1 skips optimize). */
+export async function optimizeDistinctPalette(
+  count: number,
+): Promise<RgbColor[]> {
+  if (count <= 0) return [];
+  if (count === 1) return [seedRgbForGroupChannelIndex(0)];
+  const slots: PaletteSlot[] = Array.from({ length: count }, (_, i) => ({
+    id: String(i),
+    color: seedRgbForGroupChannelIndex(i),
+  }));
+  return optimizePaletteSlots(slots);
+}
+
 export function isGroupEligibleForPsudoOptimize(
   group: ChannelGroup,
   sourceChannels: Channel[],

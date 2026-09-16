@@ -1,7 +1,14 @@
 import { OrthographicView, type OrthographicViewState } from "@deck.gl/core";
 import Deck, { type DeckGLRef } from "@deck.gl/react";
 import { ScaleBarLayer } from "@hms-dbmi/viv";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import "@deck.gl/widgets/stylesheet.css";
 
@@ -9,6 +16,11 @@ import type { Layer } from "@deck.gl/core";
 import { MaskExtension } from "@deck.gl/extensions";
 import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
+import {
+  getClassTableLutEpoch,
+  gpuStyleForClassTable,
+  subscribeClassTableLut,
+} from "@/lib/classTable";
 import { isMaskSourceRendered } from "@/lib/imaging/channelCompositor";
 import {
   DEFAULT_MASK_VISUALIZATION,
@@ -324,13 +336,15 @@ export const ImageViewer = (props: ImageViewerProps) => {
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
     squareViewportBorderWidth = 2,
   } = props;
-  const {
-    activeChannelGroupId,
-    channelVisibilities,
-    channelGroupRowVisibilities,
-    sam2Processing,
-    authoringWaypointEditorOpen,
-  } = useAppStore();
+  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
+  const channelVisibilities = useAppStore((s) => s.channelVisibilities);
+  const channelGroupRowVisibilities = useAppStore(
+    (s) => s.channelGroupRowVisibilities,
+  );
+  const sam2Processing = useAppStore((s) => s.sam2Processing);
+  const authoringWaypointEditorOpen = useAppStore(
+    (s) => s.authoringWaypointEditorOpen,
+  );
   // Live contrast/color preview is folded in `useViewerLayers`, not here.
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
   const maskVisualizationPreview = useAppStore(
@@ -342,6 +356,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
       : null;
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
+  const classTables = useDocumentStore((s) => s.classTables);
+  const classTableVisibilities = useAppStore((s) => s.classTableVisibilities);
+  const classTableLutEpoch = useSyncExternalStore(
+    subscribeClassTableLut,
+    getClassTableLutEpoch,
+    getClassTableLutEpoch,
+  );
   const selectionMaskActive =
     imageSelectionMask != null &&
     (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
@@ -389,6 +410,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }, [frame, setViewerWorldFrame]);
 
   const maskDisplayLayers = useMemo(() => {
+    void classTableLutEpoch;
     if (omeLoaderEntries.length === 0) return [];
 
     const layers: Layer[] = [];
@@ -416,11 +438,19 @@ export const ImageViewer = (props: ImageViewerProps) => {
               channelGroups,
               activeChannelGroupId,
             );
+      const classTable = classTables.find((c) => c.sourceChannelId === sc.id);
       const layer = createMaskTileLayer({
         id: `mask-channel-${sc.id}`,
         loader: entry.loader,
         channelIndex: sc.index,
         visualization,
+        classStyle: classTable
+          ? gpuStyleForClassTable(
+              classTable,
+              classTableVisibilities[classTable.id],
+              visualization.colorSeed ?? 0,
+            )
+          : undefined,
       });
       if (layer) layers.push(layer);
     }
@@ -433,6 +463,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
     activeChannelGroupId,
     channelGroups,
     maskVisualizationPreview,
+    classTables,
+    classTableVisibilities,
+    classTableLutEpoch,
   ]);
 
   // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last

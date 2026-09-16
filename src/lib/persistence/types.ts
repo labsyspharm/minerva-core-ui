@@ -6,6 +6,12 @@ export type FileHandleRow = {
   handle: FileSystemHandle;
 };
 
+/** CSV / sidecar bytes keyed like file handles (`story:<id>:classTable:<classTableId>`). */
+export type BlobRow = {
+  id: string;
+  bytes: Uint8Array;
+};
+
 /** Row in Dexie `stories` table — canonical document only (no file handles on this type). */
 export type StoryRecord = {
   id: string;
