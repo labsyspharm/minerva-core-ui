@@ -1,6 +1,187 @@
 /* @ts-self-types="./psudo.d.ts" */
 
 /**
+ * Profiled finalization result for browser performance experiments.
+ */
+class FinalizePaletteWasmResult {
+    static __wrap(ptr) {
+        const obj = Object.create(FinalizePaletteWasmResult.prototype);
+        obj.__wbg_ptr = ptr;
+        FinalizePaletteWasmResultFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        FinalizePaletteWasmResultFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_finalizepalettewasmresult_free(ptr, 0);
+    }
+    /**
+     * @returns {number}
+     */
+    get confusion_weighted() {
+        const ret = wasm.finalizepalettewasmresult_confusion_weighted(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get context_ms() {
+        const ret = wasm.finalizepalettewasmresult_context_ms(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get hue_separation_deficit() {
+        const ret = wasm.finalizepalettewasmresult_hue_separation_deficit(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get hue_separation_reward() {
+        const ret = wasm.finalizepalettewasmresult_hue_separation_reward(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get initial_polish_ms() {
+        const ret = wasm.finalizepalettewasmresult_initial_polish_ms(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get initial_polish_objective_evaluations() {
+        const ret = wasm.finalizepalettewasmresult_initial_polish_objective_evaluations(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {number}
+     */
+    get min_display_rgb_distance() {
+        const ret = wasm.finalizepalettewasmresult_min_display_rgb_distance(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get min_hue_gap_deg() {
+        const ret = wasm.finalizepalettewasmresult_min_hue_gap_deg(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get min_oklab_chroma() {
+        const ret = wasm.finalizepalettewasmresult_min_oklab_chroma(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get min_srgb_saturation() {
+        const ret = wasm.finalizepalettewasmresult_min_srgb_saturation(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get minus_mean_color_name_distance() {
+        const ret = wasm.finalizepalettewasmresult_minus_mean_color_name_distance(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get minus_min_color_name_distance() {
+        const ret = wasm.finalizepalettewasmresult_minus_min_color_name_distance(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get minus_min_perceptual_distance() {
+        const ret = wasm.finalizepalettewasmresult_minus_min_perceptual_distance(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get minus_min_saturation() {
+        const ret = wasm.finalizepalettewasmresult_minus_min_saturation(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    get oklab() {
+        const ret = wasm.finalizepalettewasmresult_oklab(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    get perceptual_deficit_penalty() {
+        const ret = wasm.finalizepalettewasmresult_perceptual_deficit_penalty(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get refine_ms() {
+        const ret = wasm.finalizepalettewasmresult_refine_ms(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get refine_objective_evaluations() {
+        const ret = wasm.finalizepalettewasmresult_refine_objective_evaluations(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {number}
+     */
+    get saturation_deficit_penalty() {
+        const ret = wasm.finalizepalettewasmresult_saturation_deficit_penalty(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    get srgb_linear() {
+        const ret = wasm.finalizepalettewasmresult_srgb_linear(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    get term_loss() {
+        const ret = wasm.finalizepalettewasmresult_term_loss(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get total() {
+        const ret = wasm.finalizepalettewasmresult_total(this.__wbg_ptr);
+        return ret;
+    }
+}
+if (Symbol.dispose) FinalizePaletteWasmResult.prototype[Symbol.dispose] = FinalizePaletteWasmResult.prototype.free;
+
+/**
  * One NM restart result for WASM worker pools (`run_nm_restart`).
  */
 class NmRestartWasmResult {
@@ -23,6 +204,13 @@ class NmRestartWasmResult {
     /**
      * @returns {number}
      */
+    get context_ms() {
+        const ret = wasm.nmrestartwasmresult_context_ms(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
     get min_display_rgb_distance() {
         const ret = wasm.nmrestartwasmresult_min_display_rgb_distance(this.__wbg_ptr);
         return ret;
@@ -35,6 +223,34 @@ class NmRestartWasmResult {
         var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    get polish_ms() {
+        const ret = wasm.nmrestartwasmresult_polish_ms(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get polish_objective_evaluations() {
+        const ret = wasm.nmrestartwasmresult_polish_objective_evaluations(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {number}
+     */
+    get solver_ms() {
+        const ret = wasm.nmrestartwasmresult_solver_ms(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get solver_objective_evaluations() {
+        const ret = wasm.nmrestartwasmresult_solver_objective_evaluations(this.__wbg_ptr);
+        return ret >>> 0;
     }
     /**
      * @returns {number}
@@ -90,7 +306,7 @@ function channel_gmm(array, subsample, tol, max_iter) {
 }
 
 /**
- * Polish + refine best OKLab and return linear sRGB (after parallel restarts).
+ * Polish + refine best OKLab and return display-encoded sRGB (after parallel restarts).
  * @param {Uint16Array} colors
  * @param {Uint16Array} locked_colors
  * @param {Uint16Array} intensities
@@ -128,6 +344,42 @@ function finalize_palette_optimize(colors, locked_colors, intensities, contrast_
 }
 
 /**
+ * Profile final polish/refine while returning the full-precision objective breakdown.
+ * @param {Uint16Array} colors
+ * @param {Uint16Array} locked_colors
+ * @param {Uint16Array} intensities
+ * @param {Uint16Array} contrast_limits
+ * @param {Uint16Array} luminance_values
+ * @param {string[]} excluded_colors
+ * @param {string[]} color_names
+ * @param {number | null | undefined} max_iters
+ * @param {number | null | undefined} confusion_baseline_samples
+ * @param {boolean | null | undefined} include_spatial_channel_overlap
+ * @param {Float32Array} oklab_best
+ * @returns {FinalizePaletteWasmResult}
+ */
+function finalize_palette_optimize_profiled(colors, locked_colors, intensities, contrast_limits, luminance_values, excluded_colors, color_names, max_iters, confusion_baseline_samples, include_spatial_channel_overlap, oklab_best) {
+    const ptr0 = passArray16ToWasm0(colors, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray16ToWasm0(locked_colors, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passArray16ToWasm0(intensities, wasm.__wbindgen_malloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passArray16ToWasm0(contrast_limits, wasm.__wbindgen_malloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passArray16ToWasm0(luminance_values, wasm.__wbindgen_malloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ptr5 = passArrayJsValueToWasm0(excluded_colors, wasm.__wbindgen_malloc);
+    const len5 = WASM_VECTOR_LEN;
+    const ptr6 = passArrayJsValueToWasm0(color_names, wasm.__wbindgen_malloc);
+    const len6 = WASM_VECTOR_LEN;
+    const ptr7 = passArrayF32ToWasm0(oklab_best, wasm.__wbindgen_malloc);
+    const len7 = WASM_VECTOR_LEN;
+    const ret = wasm.finalize_palette_optimize_profiled(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6, isLikeNone(max_iters) ? Number.MAX_SAFE_INTEGER : (max_iters) >>> 0, isLikeNone(confusion_baseline_samples) ? Number.MAX_SAFE_INTEGER : (confusion_baseline_samples) >>> 0, isLikeNone(include_spatial_channel_overlap) ? 0xFFFFFF : include_spatial_channel_overlap ? 1 : 0, ptr7, len7);
+    return FinalizePaletteWasmResult.__wrap(ret);
+}
+
+/**
  * @param {Uint16Array} array
  * @returns {Float32Array}
  */
@@ -141,7 +393,7 @@ function ln(array) {
 }
 
 /**
- * Defaults match `palette_study`: `max_iters` 3000, `confusion_baseline_samples` 32,
+ * WASM defaults: `max_iters` 2700, `confusion_baseline_samples` 32,
  * `num_restarts` 18 (scaled × n/3, max 40), spatial overlap off, full polish + refine.
  * @param {Uint16Array} colors
  * @param {Uint16Array} locked_colors
@@ -212,9 +464,11 @@ function optimize_in_lens(intensities, colors, contrast_limits, luminance_values
  * @param {number} restart_index
  * @param {number} seed_salt
  * @param {boolean} rescue_random_init
+ * @param {boolean | null} [profile_objective_evaluations]
+ * @param {boolean | null} [polish_each_restart]
  * @returns {NmRestartWasmResult}
  */
-function run_nm_restart(colors, locked_colors, intensities, contrast_limits, luminance_values, excluded_colors, color_names, max_iters, confusion_baseline_samples, include_spatial_channel_overlap, restart_index, seed_salt, rescue_random_init) {
+function run_nm_restart(colors, locked_colors, intensities, contrast_limits, luminance_values, excluded_colors, color_names, max_iters, confusion_baseline_samples, include_spatial_channel_overlap, restart_index, seed_salt, rescue_random_init, profile_objective_evaluations, polish_each_restart) {
     const ptr0 = passArray16ToWasm0(colors, wasm.__wbindgen_malloc);
     const len0 = WASM_VECTOR_LEN;
     const ptr1 = passArray16ToWasm0(locked_colors, wasm.__wbindgen_malloc);
@@ -229,7 +483,7 @@ function run_nm_restart(colors, locked_colors, intensities, contrast_limits, lum
     const len5 = WASM_VECTOR_LEN;
     const ptr6 = passArrayJsValueToWasm0(color_names, wasm.__wbindgen_malloc);
     const len6 = WASM_VECTOR_LEN;
-    const ret = wasm.run_nm_restart(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6, isLikeNone(max_iters) ? Number.MAX_SAFE_INTEGER : (max_iters) >>> 0, isLikeNone(confusion_baseline_samples) ? Number.MAX_SAFE_INTEGER : (confusion_baseline_samples) >>> 0, isLikeNone(include_spatial_channel_overlap) ? 0xFFFFFF : include_spatial_channel_overlap ? 1 : 0, restart_index, seed_salt, rescue_random_init);
+    const ret = wasm.run_nm_restart(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6, isLikeNone(max_iters) ? Number.MAX_SAFE_INTEGER : (max_iters) >>> 0, isLikeNone(confusion_baseline_samples) ? Number.MAX_SAFE_INTEGER : (confusion_baseline_samples) >>> 0, isLikeNone(include_spatial_channel_overlap) ? 0xFFFFFF : include_spatial_channel_overlap ? 1 : 0, restart_index, seed_salt, rescue_random_init, isLikeNone(profile_objective_evaluations) ? 0xFFFFFF : profile_objective_evaluations ? 1 : 0, isLikeNone(polish_each_restart) ? 0xFFFFFF : polish_each_restart ? 1 : 0);
     return NmRestartWasmResult.__wrap(ret);
 }
 function __wbg_get_imports() {
@@ -406,6 +660,9 @@ function __wbg_get_imports() {
     };
 }
 
+const FinalizePaletteWasmResultFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_finalizepalettewasmresult_free(ptr, 1));
 const NmRestartWasmResultFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_nmrestartwasmresult_free(ptr, 1));
@@ -692,7 +949,7 @@ async function __wbg_init(module_or_path) {
     }
 
     if (module_or_path === undefined) {
-        module_or_path = new URL(""+new URL('psudo_bg-Dcb5KWkB.wasm', import.meta.url).href+"", import.meta.url);
+        module_or_path = new URL(""+new URL('psudo_bg-UUUkz8kj.wasm', import.meta.url).href+"", import.meta.url);
     }
     const imports = __wbg_get_imports();
 
@@ -737,8 +994,52 @@ function packNmRestart(result) {
       oklab,
       total: result.total,
       min_display_rgb_distance: result.min_display_rgb_distance,
+      context_ms: result.context_ms,
+      solver_ms: result.solver_ms,
+      polish_ms: result.polish_ms,
+      solver_objective_evaluations: result.solver_objective_evaluations,
+      polish_objective_evaluations: result.polish_objective_evaluations,
     },
     transfer: [oklab.buffer],
+  };
+}
+
+function packFinalizeProfile(result) {
+  const srgbLinear = cloneFloat32(result.srgb_linear);
+  const oklab = cloneFloat32(result.oklab);
+  return {
+    result: {
+      srgb_linear: srgbLinear,
+      oklab,
+      objective: {
+        total: result.total,
+        minus_mean_color_name_distance:
+          result.minus_mean_color_name_distance,
+        minus_min_color_name_distance: result.minus_min_color_name_distance,
+        minus_min_perceptual_distance:
+          result.minus_min_perceptual_distance,
+        perceptual_deficit_penalty: result.perceptual_deficit_penalty,
+        min_display_rgb_distance: result.min_display_rgb_distance,
+        hue_separation_reward: result.hue_separation_reward,
+        hue_separation_deficit: result.hue_separation_deficit,
+        min_hue_gap_deg: result.min_hue_gap_deg,
+        term_loss: result.term_loss,
+        confusion_weighted: result.confusion_weighted,
+        minus_min_saturation: result.minus_min_saturation,
+        saturation_deficit_penalty: result.saturation_deficit_penalty,
+        min_srgb_saturation: result.min_srgb_saturation,
+        min_oklab_chroma: result.min_oklab_chroma,
+      },
+      phases: {
+        context_ms: result.context_ms,
+        initial_polish_ms: result.initial_polish_ms,
+        refine_ms: result.refine_ms,
+        initial_polish_objective_evaluations:
+          result.initial_polish_objective_evaluations,
+        refine_objective_evaluations: result.refine_objective_evaluations,
+      },
+    },
+    transfer: [srgbLinear.buffer, oklab.buffer],
   };
 }
 
@@ -780,7 +1081,9 @@ self.onmessage = async (event) => {
           args[9],
           args[10],
           args[11],
-          args[12]
+          args[12],
+          args[13],
+          args[14]
         );
         break;
       case "finalizePalette":
@@ -796,6 +1099,21 @@ self.onmessage = async (event) => {
           args[8],
           args[9],
           args[10]
+        );
+        break;
+      case "finalizePaletteProfiled":
+        result = finalize_palette_optimize_profiled(
+          args[0],
+          args[1],
+          args[2],
+          args[3],
+          args[4],
+          args[5],
+          args[6],
+          args[7],
+          args[8],
+          args[9],
+          args[10],
         );
         break;
       case "calculate_palette_loss":
@@ -822,7 +1140,11 @@ self.onmessage = async (event) => {
         throw new Error(`unknown psudo worker method: ${method}`);
     }
     const packed =
-      method === "nmRestart" ? packNmRestart(result) : packResult(result);
+      method === "nmRestart"
+        ? packNmRestart(result)
+        : method === "finalizePaletteProfiled"
+          ? packFinalizeProfile(result)
+          : packResult(result);
     self.postMessage({ id, ok: true, result: packed.result }, packed.transfer);
   } catch (err) {
     self.postMessage({

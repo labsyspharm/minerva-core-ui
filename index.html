@@ -34,12 +34,23 @@
         font-size: 18px;
         z-index: 9999;
       }
+      #global-loader .dots::after {
+        content: "...";
+        display: inline-block;
+        width: 0;
+        overflow: hidden;
+        vertical-align: bottom;
+        animation: loader-dots 1.2s steps(4, end) infinite;
+      }
+      @keyframes loader-dots {
+        to { width: 1.25em; }
+      }
     </style>
-    <script type="module" crossorigin src="./assets/index-BFdt2bh_.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-1IlfxsBJ.css">
+    <script type="module" crossorigin src="./assets/index-CwXCZoXr.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CwMZUamc.css">
   </head>
   <body>
-    <div id="global-loader">Loading Minerva...</div>
+    <div id="global-loader">Loading Minerva<span class="dots"></span></div>
     <div id="react-output"></div>
   </body>
 </html>

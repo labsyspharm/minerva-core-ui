@@ -4243,6 +4243,11 @@ const ImageSchema = objectType({
   basename: stringType(),
   /** Import intent: intensity stack vs segmentation labels (persisted for Images tab). */
   contentRole: enumType(["intensity", "segmentation"]).optional(),
+  /**
+   * Import override for ambiguous 3-channel planar files: true = color RGB
+   * (no per-channel sliders), false = multiplex IF. Undefined → runtime heuristics.
+   */
+  rgbDisplay: booleanType().optional(),
   channels: arrayType(ImageChannelSchema),
   source: ImageSourceSchema.optional()
 });
