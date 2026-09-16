@@ -321,7 +321,9 @@ export async function detachClassTable(sourceChannelId: string): Promise<void> {
   await dropClassTable(classTable.id).catch(() => undefined);
   await deleteBlob(classTable.source.handleKey).catch(() => undefined);
   const doc = useDocumentStore.getState();
-  doc.setClassTables(doc.classTables.filter((c) => c.id !== classTable.id));
+  if (doc.classTables.some((c) => c.id === classTable.id)) {
+    doc.setClassTables(doc.classTables.filter((c) => c.id !== classTable.id));
+  }
   const vis = { ...useAppStore.getState().classTableVisibilities };
   delete vis[classTable.id];
   useAppStore.setState({ classTableVisibilities: vis });
@@ -335,6 +337,7 @@ export function detachRemovedClassTables(
     if (remaining.some((c) => c.id === classTable.id)) continue;
     void detachClassTable(classTable.sourceChannelId);
   }
+  useDocumentStore.getState().setClassTables([...remaining]);
 }
 
 export function toggleClassVisible(classTableId: string, name: string): void {

@@ -1747,7 +1747,6 @@ const Content = (props: Props) => {
       transition,
     });
     detachRemovedClassTables(doc.classTables, nextClassTables);
-    useDocumentStore.getState().setClassTables(nextClassTables);
     afterImageImportDocumentEffects();
   };
 
