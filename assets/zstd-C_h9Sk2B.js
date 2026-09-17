@@ -1,4 +1,4 @@
-import { B as BaseDecoder } from "./index-CieOsVpy.js";
+import { B as BaseDecoder } from "./index-CbukDiNG.js";
 let init;
 let instance;
 let heap;

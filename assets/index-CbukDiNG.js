@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BGFjzixd.js","./pako.esm-KbdoS3Oq.js","./lerc-aELJJMvy.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-0puzr2ai.js","./pako.esm-KbdoS3Oq.js","./lerc-juQIrrIE.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -62146,26 +62146,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-6wpg9kUI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BECv0pek.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Br4FrVQk.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-D_dcr4BQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-ilZR8IAm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CmvWXRjK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BGFjzixd.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-D6HLXqFO.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-aELJJMvy.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-0puzr2ai.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-C-aX4mBH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-juQIrrIE.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-B6Wkg7fc.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-C_h9Sk2B.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DKavVyUY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DT5o7NZd.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -90574,7 +90574,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function ChannelRow(props) {
-    const { visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, contrast, trailing, locked, isMask, maskVisualization, onMaskVisualizationChange, onMaskVisualizationPreview, maskAriaLabel, fixedColorHex, colorHex, colorTitle, busy, onColorClick } = props;
+    const { visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, contrast, trailing, locked, isMask, maskVisualization, onMaskVisualizationChange, onMaskVisualizationPreview, maskAriaLabel, fixedColorHex, colorHex, colorTitle, busy, fitting, onColorClick } = props;
     const showMask = isMask && maskVisualization;
     const showColor = !isMask && onColorClick;
     const [maskControlsOpen, setMaskControlsOpen] = reactExports.useState(true);
@@ -90590,7 +90590,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return jsxRuntimeExports.jsxs("div", {
       ref: rowRef,
-      className: `${styles$o.channelRow}${locked ? ` ${styles$o.detailChannelRowLocked}` : ""}`,
+      className: [
+        styles$o.channelRow,
+        locked ? styles$o.detailChannelRowLocked : null,
+        fitting ? minervaTheme.busyOverlay : null
+      ].filter(Boolean).join(" "),
+      "aria-busy": fitting || void 0,
+      title: fitting ? "Fitting contrast\u2026" : void 0,
       children: [
         jsxRuntimeExports.jsxs("div", {
           className: styles$o.channelRowMain,
@@ -90673,6 +90679,1019 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }) : null
       ]
     });
+  }
+  const DEFAULT_LUMINANCE = new Uint16Array([
+    60,
+    92
+  ]);
+  const PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP = false;
+  const PSUDO_MAX_ITERS = 2700;
+  const PSUDO_CONFUSION_BASELINE_SAMPLES = 32;
+  const PSUDO_NUM_RESTARTS = 18;
+  const PSUDO_CONTRAST_MIN = 0;
+  const PSUDO_CONTRAST_MAX = 65535;
+  function clampUint16(n2) {
+    return Math.max(0, Math.min(65535, Math.round(n2)));
+  }
+  function asRgbColor(color2) {
+    return {
+      r: color2.r ?? 0,
+      g: color2.g ?? 0,
+      b: color2.b ?? 0
+    };
+  }
+  function defaultContrastLimits(nChannels) {
+    const out = new Uint16Array(nChannels * 2);
+    for (let i2 = 0; i2 < nChannels; i2++) {
+      out[i2 * 2] = PSUDO_CONTRAST_MIN;
+      out[i2 * 2 + 1] = PSUDO_CONTRAST_MAX;
+    }
+    return out;
+  }
+  function buildOptimizeInputsFromSlots(slots, lockedIds) {
+    const n2 = slots.length;
+    const colors = new Uint16Array(n2 * 3);
+    const locked = new Uint16Array(n2);
+    for (let i2 = 0; i2 < n2; i2++) {
+      const slot = slots[i2];
+      const { r: r2, g: g2, b: b2 } = slot.color;
+      colors[i2 * 3] = clampUint16(r2);
+      colors[i2 * 3 + 1] = clampUint16(g2);
+      colors[i2 * 3 + 2] = clampUint16(b2);
+      locked[i2] = (lockedIds == null ? void 0 : lockedIds.has(slot.id)) ? 1 : 0;
+    }
+    return {
+      colors,
+      locked,
+      intensities: new Uint16Array(0),
+      contrastLimits: defaultContrastLimits(n2),
+      luminance: DEFAULT_LUMINANCE,
+      excluded: [],
+      colorNames: Array.from({
+        length: n2
+      }, () => ""),
+      maxIters: PSUDO_MAX_ITERS,
+      confusionSamples: PSUDO_CONFUSION_BASELINE_SAMPLES,
+      spatial: PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP,
+      numRestarts: PSUDO_NUM_RESTARTS
+    };
+  }
+  function linearToDisplayRgb(linear, channelIndex) {
+    const i2 = channelIndex * 3;
+    return {
+      r: Math.max(0, Math.min(255, Math.round(linear[i2] * 255))),
+      g: Math.max(0, Math.min(255, Math.round(linear[i2 + 1] * 255))),
+      b: Math.max(0, Math.min(255, Math.round(linear[i2 + 2] * 255)))
+    };
+  }
+  let psudoWarmupPromise = null;
+  function warmupPsudoPalette() {
+    if (!psudoWarmupPromise) {
+      psudoWarmupPromise = __vitePreload(() => import("./index-DLxvjXSp.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.warmup());
+    }
+    return psudoWarmupPromise;
+  }
+  async function invokePsudoOptimize(inputs) {
+    const psudo = await __vitePreload(() => import("./index-DLxvjXSp.js"), true ? [] : void 0, import.meta.url);
+    await warmupPsudoPalette();
+    inputs.colorNames.length;
+    performance.now();
+    const optimized = await psudo.optimize(inputs.colors, inputs.locked, inputs.intensities, inputs.contrastLimits, inputs.luminance, inputs.excluded, inputs.colorNames, inputs.maxIters, inputs.confusionSamples, inputs.spatial, inputs.numRestarts);
+    const linear = optimized instanceof Float32Array ? optimized : new Float32Array(optimized);
+    return linear;
+  }
+  async function optimizePaletteSlots(slots, lockedIds = /* @__PURE__ */ new Set()) {
+    if (slots.length < 2) {
+      throw new Error("At least two channels are required to optimize a palette.");
+    }
+    if (slots.every((slot) => lockedIds.has(slot.id))) {
+      return slots.map((slot) => ({
+        ...slot.color
+      }));
+    }
+    const inputs = buildOptimizeInputsFromSlots(slots, lockedIds);
+    const nChannels = inputs.colorNames.length;
+    const linear = await invokePsudoOptimize(inputs);
+    const out = [];
+    for (let ch2 = 0; ch2 < nChannels; ch2++) {
+      if (inputs.locked[ch2] === 1) {
+        const i2 = ch2 * 3;
+        out.push({
+          r: inputs.colors[i2],
+          g: inputs.colors[i2 + 1],
+          b: inputs.colors[i2 + 2]
+        });
+      } else {
+        out.push(linearToDisplayRgb(linear, ch2));
+      }
+    }
+    return out;
+  }
+  function isGroupEligibleForPsudoOptimize(group2, sourceChannels) {
+    let imageChannelCount = 0;
+    for (const gc2 of group2.channels ?? []) {
+      const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
+      if (!sc2 || sc2.samples === 3 || !isImageChannel(sc2)) continue;
+      imageChannelCount++;
+    }
+    return imageChannelCount >= 2;
+  }
+  function seedRgbForGroupChannelIndex(index2) {
+    return hexToRgb(IMPORT_DEFAULT_SEED_HEX[index2 % IMPORT_DEFAULT_SEED_HEX.length]);
+  }
+  function currentGroupColors(group2) {
+    return (group2.channels ?? []).map((gc2) => ({
+      r: gc2.color.r,
+      g: gc2.color.g,
+      b: gc2.color.b
+    }));
+  }
+  async function optimizeChannelGroupWithLocks(group2, sourceChannels, lockedChannelRowIds = /* @__PURE__ */ new Set()) {
+    if (!isGroupEligibleForPsudoOptimize(group2, sourceChannels)) {
+      return currentGroupColors(group2);
+    }
+    const slots = (group2.channels ?? []).map((gc2) => ({
+      id: gc2.id,
+      color: asRgbColor(gc2.color)
+    }));
+    if (!slots.some((slot) => !lockedChannelRowIds.has(slot.id))) {
+      return currentGroupColors(group2);
+    }
+    return optimizePaletteSlots(slots, lockedChannelRowIds);
+  }
+  function applyOptimizedColorsToChannelGroup(channelGroups, groupId, colors, options) {
+    const locked = options == null ? void 0 : options.lockedChannelRowIds;
+    return channelGroups.map((g2) => {
+      if (g2.id !== groupId) return g2;
+      const channels2 = g2.channels.map((gc2, i2) => {
+        if (locked == null ? void 0 : locked.has(gc2.id)) return gc2;
+        const c2 = colors[i2];
+        if (!c2) return gc2;
+        return {
+          ...gc2,
+          color: {
+            r: c2.r,
+            g: c2.g,
+            b: c2.b
+          }
+        };
+      });
+      return {
+        ...g2,
+        channels: channels2
+      };
+    });
+  }
+  function usesDefaultImportGrouping(channelGroups) {
+    if (channelGroups.length === 0) return false;
+    return channelGroups.every((g2) => /^Group \d+$/.test(g2.name) && g2.channels.length >= 1 && g2.channels.length <= DEFAULT_VISIBLE_INTENSITY_CHANNELS);
+  }
+  function isImportPaletteSource(sc2, all2) {
+    return sc2.samples !== 3 && isImageChannel(sc2) && !isRgbDisplayChannel(sc2, all2);
+  }
+  function importPaletteSourceChannels(sourceChannels) {
+    if (sourceChannels.length === 0) return [];
+    const firstImageId = sourceChannels[0].imageId;
+    const fromFirst = sourceChannels.filter((sc2) => sc2.imageId === firstImageId && isImportPaletteSource(sc2, sourceChannels));
+    const pool = fromFirst.length > 0 ? fromFirst : sourceChannels.filter((sc2) => isImportPaletteSource(sc2, sourceChannels));
+    return pool.slice(0, DEFAULT_VISIBLE_INTENSITY_CHANNELS);
+  }
+  function seedPaletteForPicked(count2) {
+    return Array.from({
+      length: count2
+    }, (_2, i2) => seedRgbForGroupChannelIndex(i2));
+  }
+  function startingColorAwayFromLocked(lockedColors) {
+    const candidates = [
+      ...IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex)),
+      {
+        r: 255,
+        g: 255,
+        b: 255
+      },
+      {
+        r: 255,
+        g: 0,
+        b: 0
+      },
+      {
+        r: 0,
+        g: 255,
+        b: 0
+      },
+      {
+        r: 0,
+        g: 0,
+        b: 255
+      },
+      {
+        r: 255,
+        g: 255,
+        b: 0
+      }
+    ];
+    return candidates.find((c2) => !lockedColors.some((locked) => locked.r === c2.r && locked.g === c2.g && locked.b === c2.b)) ?? {
+      r: 255,
+      g: 255,
+      b: 255
+    };
+  }
+  async function optimizeImportPalette(sourceChannels) {
+    const seeds = seedPaletteForPicked(DEFAULT_VISIBLE_INTENSITY_CHANNELS);
+    const picked = importPaletteSourceChannels(sourceChannels);
+    if (picked.length < 2) return seeds;
+    const slots = picked.map((sc2, i2) => ({
+      id: sc2.id,
+      color: seeds[i2] ?? seeds[0]
+    }));
+    const optimized = await optimizePaletteSlots(slots, /* @__PURE__ */ new Set());
+    return seeds.map((fallback, i2) => optimized[i2] ?? fallback);
+  }
+  async function applySharedImportPaletteToChannelGroups(channelGroups, sourceChannels) {
+    if (!usesDefaultImportGrouping(channelGroups)) {
+      return channelGroups;
+    }
+    try {
+      const palette = await optimizeImportPalette(sourceChannels);
+      return channelGroups.map((g2) => ({
+        ...g2,
+        channels: g2.channels.map((gc2, index2) => {
+          const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
+          if ((sc2 == null ? void 0 : sc2.samples) === 3) return gc2;
+          const c2 = palette[index2 % palette.length];
+          return {
+            ...gc2,
+            color: {
+              r: c2.r,
+              g: c2.g,
+              b: c2.b
+            }
+          };
+        })
+      }));
+    } catch (e2) {
+      return channelGroups;
+    }
+  }
+  async function applySharedImportPaletteToSourceChannels(sourceChannels) {
+    const picked = importPaletteSourceChannels(sourceChannels);
+    try {
+      const palette = (await optimizeImportPalette(sourceChannels)).slice(0, picked.length);
+      return seedDefaultSourceChannelStyles(sourceChannels, palette);
+    } catch (e2) {
+      return seedDefaultSourceChannelStyles(sourceChannels, seedPaletteForPicked(picked.length));
+    }
+  }
+  function needsInitPalette(picked, groups) {
+    if (picked.length < 2) return false;
+    for (const sc2 of picked) {
+      if (sc2.color && !looksLikeImportDefaultSeedColor(sc2.color)) return false;
+    }
+    const pickedIds = new Set(picked.map((sc2) => sc2.id));
+    for (const g2 of groups) {
+      for (const gc2 of g2.channels) {
+        if (!pickedIds.has(gc2.channelId)) continue;
+        if (!looksLikeImportDefaultSeedColor(gc2.color)) return false;
+      }
+    }
+    return true;
+  }
+  let initPaletteKey = null;
+  let initPaletteInFlight = null;
+  let initPaletteGeneration = 0;
+  let prevUngroupedStackVis = null;
+  function resetInitPalette() {
+    initPaletteGeneration += 1;
+    initPaletteKey = null;
+    initPaletteInFlight = null;
+    prevUngroupedStackVis = null;
+  }
+  function ensureInitPalette(storyId) {
+    const doc = useDocumentStore.getState();
+    const sources = flattenImageChannelsInDocumentOrder(doc.images);
+    const picked = importPaletteSourceChannels(sources);
+    const key2 = `${storyId}:${picked.map((sc2) => sc2.id).join(",")}`;
+    if (initPaletteKey === key2 || initPaletteInFlight === key2) {
+      return Promise.resolve();
+    }
+    if (!needsInitPalette(picked, doc.channelGroups)) {
+      initPaletteKey = key2;
+      return Promise.resolve();
+    }
+    initPaletteInFlight = key2;
+    const generation2 = initPaletteGeneration;
+    const pendingIds = picked.map((sc2) => sc2.id);
+    setStackPalettePendingMany(pendingIds, true);
+    const run = (async () => {
+      try {
+        const palette = await optimizeImportPalette(sources);
+        if (generation2 !== initPaletteGeneration) return;
+        const docNow = useDocumentStore.getState();
+        if (docNow.activeStoryId !== storyId) return;
+        const sourcesNow = flattenImageChannelsInDocumentOrder(docNow.images);
+        const pickedNow = importPaletteSourceChannels(sourcesNow);
+        if (pickedNow.map((sc2) => sc2.id).join(",") !== picked.map((sc2) => sc2.id).join(",")) {
+          return;
+        }
+        if (!needsInitPalette(pickedNow, docNow.channelGroups)) {
+          initPaletteKey = key2;
+          return;
+        }
+        const colorBySourceId = new Map(pickedNow.map((sc2, i2) => [
+          sc2.id,
+          palette[i2]
+        ]));
+        let sourcesChanged = false;
+        const nextSources = sourcesNow.map((sc2) => {
+          const c2 = colorBySourceId.get(sc2.id);
+          if (!c2 || sc2.color && !looksLikeImportDefaultSeedColor(sc2.color)) {
+            return sc2;
+          }
+          sourcesChanged = true;
+          return {
+            ...sc2,
+            color: {
+              r: c2.r,
+              g: c2.g,
+              b: c2.b
+            }
+          };
+        });
+        let groupsChanged = false;
+        const nextGroups = docNow.channelGroups.map((g2) => {
+          let rowChanged = false;
+          const channels2 = g2.channels.map((gc2) => {
+            const c2 = colorBySourceId.get(gc2.channelId);
+            if (!c2 || !looksLikeImportDefaultSeedColor(gc2.color)) return gc2;
+            rowChanged = true;
+            return {
+              ...gc2,
+              color: {
+                r: c2.r,
+                g: c2.g,
+                b: c2.b
+              }
+            };
+          });
+          if (!rowChanged) return g2;
+          groupsChanged = true;
+          return {
+            ...g2,
+            channels: channels2
+          };
+        });
+        if (!sourcesChanged && !groupsChanged) {
+          initPaletteKey = key2;
+          return;
+        }
+        if (groupsChanged) {
+          docNow.setImagesAndChannelGroups(applySourceChannelsToImages(docNow.images, nextSources), nextGroups);
+        } else {
+          docNow.setImages(applySourceChannelsToImages(docNow.images, nextSources));
+        }
+        if (false) ;
+        initPaletteKey = key2;
+      } catch (e2) {
+      } finally {
+        setStackPalettePendingMany(pendingIds, false);
+        if (initPaletteInFlight === key2) initPaletteInFlight = null;
+      }
+    })();
+    return run;
+  }
+  let stackPaletteChain = Promise.resolve();
+  const stackPalettePending = /* @__PURE__ */ new Set();
+  let stackPalettePendingSnapshot = [];
+  const stackPalettePendingListeners = /* @__PURE__ */ new Set();
+  function setStackPalettePendingMany(sourceChannelIds, pending) {
+    if (sourceChannelIds.length === 0) return;
+    let changed = false;
+    for (const id2 of sourceChannelIds) {
+      if (pending) {
+        if (stackPalettePending.has(id2)) continue;
+        stackPalettePending.add(id2);
+        changed = true;
+      } else if (stackPalettePending.delete(id2)) {
+        changed = true;
+      }
+    }
+    if (!changed) return;
+    stackPalettePendingSnapshot = [
+      ...stackPalettePending
+    ];
+    for (const listener of stackPalettePendingListeners) listener();
+  }
+  function subscribeStackPalettePending(onStoreChange) {
+    stackPalettePendingListeners.add(onStoreChange);
+    return () => {
+      stackPalettePendingListeners.delete(onStoreChange);
+    };
+  }
+  function getStackPalettePendingIds() {
+    return stackPalettePendingSnapshot;
+  }
+  function markStackPalettePendingIfNeeded(sourceChannelId) {
+    const doc = useDocumentStore.getState();
+    if (sourceChannelInAnyGroup(doc.channelGroups, sourceChannelId)) return false;
+    const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+    const shown = sourceChannels.find((sc2) => sc2.id === sourceChannelId);
+    if (!shown || !isImageChannel(shown) || shown.samples === 3 || isRgbDisplayChannel(shown, sourceChannels)) {
+      return false;
+    }
+    if (shown.color) return false;
+    setStackPalettePendingMany([
+      shown.id
+    ], true);
+    return true;
+  }
+  function ensurePaletteForNewlyVisibleStackChannels(sourceChannelId) {
+    const pending = markStackPalettePendingIfNeeded(sourceChannelId);
+    const run = stackPaletteChain.then(async () => {
+      try {
+        await runEnsureStackPalette(sourceChannelId);
+      } finally {
+        if (pending) setStackPalettePendingMany([
+          sourceChannelId
+        ], false);
+      }
+    });
+    stackPaletteChain = run.then(() => void 0, () => void 0);
+    return run;
+  }
+  function reconcileUngroupedStackPalette(stackVisibilities) {
+    const vis = stackVisibilities;
+    const prev = prevUngroupedStackVis;
+    prevUngroupedStackVis = vis;
+    if (prev === null) return;
+    const doc = useDocumentStore.getState();
+    const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+    for (const sc2 of sourceChannels) {
+      if (sourceChannelInAnyGroup(doc.channelGroups, sc2.id)) continue;
+      if (isStackVisible(prev, sc2.id) || !isStackVisible(vis, sc2.id)) continue;
+      void ensurePaletteForNewlyVisibleStackChannels(sc2.id);
+    }
+  }
+  async function runEnsureStackPalette(sourceChannelId) {
+    const doc = useDocumentStore.getState();
+    if (sourceChannelInAnyGroup(doc.channelGroups, sourceChannelId)) return;
+    const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+    const shown = sourceChannels.find((sc2) => sc2.id === sourceChannelId);
+    if (!shown || !isImageChannel(shown) || shown.samples === 3 || isRgbDisplayChannel(shown, sourceChannels) || shown.color) {
+      return;
+    }
+    const groups = doc.channelGroups;
+    const app = useAppStore.getState();
+    const lockedSlots = [];
+    const unlocked = [];
+    const seen2 = /* @__PURE__ */ new Set();
+    for (const { sc: sc2, gc: gc2 } of buildCompositedIntensityLayers({
+      onLoader: sourceChannels.filter(isImageChannel),
+      activeGroup: groups.find((g2) => g2.id === app.activeChannelGroupId),
+      channelGroups: groups,
+      stackVisibilities: app.channelVisibilities,
+      groupRowVisibilities: app.channelGroupRowVisibilities,
+      hasVisibilityMap: true,
+      requireColor: false
+    })) {
+      if (seen2.has(sc2.id)) continue;
+      if (sc2.samples === 3 || isRgbDisplayChannel(sc2, sourceChannels)) continue;
+      seen2.add(sc2.id);
+      const color2 = (gc2 == null ? void 0 : gc2.color) ?? sc2.color;
+      if (color2) {
+        lockedSlots.push({
+          id: sc2.id,
+          color: asRgbColor(color2)
+        });
+      } else if (!gc2) {
+        unlocked.push(sc2);
+      }
+    }
+    if (!seen2.has(shown.id)) unlocked.push(shown);
+    if (unlocked.length === 0) return;
+    const lockedIds = new Set(lockedSlots.map((slot) => slot.id));
+    const unlockedStart = startingColorAwayFromLocked(lockedSlots.map((slot) => slot.color));
+    const slots = [
+      ...lockedSlots,
+      ...unlocked.map((sc2) => ({
+        id: sc2.id,
+        color: unlockedStart
+      }))
+    ];
+    let colors;
+    try {
+      colors = slots.length < 2 ? slots.map((slot) => slot.color) : await optimizePaletteSlots(slots, lockedIds);
+    } catch (e2) {
+      return;
+    }
+    const docNow = useDocumentStore.getState();
+    const sourcesNow = flattenImageChannelsInDocumentOrder(docNow.images);
+    const unlockedIds = new Set(unlocked.map((sc2) => sc2.id));
+    const indexById = new Map(slots.map((slot, i2) => [
+      slot.id,
+      i2
+    ]));
+    let changed = false;
+    const next2 = sourcesNow.map((sc2) => {
+      if (!unlockedIds.has(sc2.id) || sc2.color) return sc2;
+      const idx = indexById.get(sc2.id);
+      if (idx == null) return sc2;
+      const c2 = colors[idx];
+      if (!c2) return sc2;
+      changed = true;
+      return {
+        ...sc2,
+        color: {
+          r: c2.r,
+          g: c2.g,
+          b: c2.b
+        }
+      };
+    });
+    if (!changed) return;
+    docNow.setImages(applySourceChannelsToImages(docNow.images, next2));
+  }
+  function sanitizeGmmLimits(vmin, vmax) {
+    if (!Number.isFinite(vmin) || !Number.isFinite(vmax)) return null;
+    const lower = Math.max(0, Math.min(65535, Math.round(vmin)));
+    const upperRaw = Math.max(0, Math.min(65535, Math.round(vmax)));
+    const upper = upperRaw <= lower ? Math.min(65535, lower + 1) : upperRaw;
+    if (upper <= lower) return null;
+    return {
+      lower,
+      upper
+    };
+  }
+  function approximateAutoContrastFromUint16Histogram(u16) {
+    const n2 = u16.length;
+    if (n2 === 0) return null;
+    const hist = new Uint32Array(65536);
+    let positive = 0;
+    for (let i2 = 0; i2 < n2; i2++) {
+      const v2 = u16[i2];
+      hist[v2]++;
+      if (v2 > 0) positive++;
+    }
+    const zeroHeavy = hist[0] / n2 >= 1e-3 && positive >= 64;
+    const mass = zeroHeavy ? positive : n2;
+    const startV = zeroHeavy ? 1 : 0;
+    const idxLo = Math.max(0, Math.min(mass - 1, Math.floor(1e-3 * (mass - 1))));
+    const idxHi = Math.min(mass - 1, Math.ceil(0.999 * (mass - 1)));
+    const valuePastSortedIndex = (idx) => {
+      let cum = 0;
+      for (let v2 = startV; v2 < 65536; v2++) {
+        cum += hist[v2];
+        if (cum > idx) return v2;
+      }
+      return 65535;
+    };
+    return sanitizeGmmLimits(valuePastSortedIndex(idxLo), valuePastSortedIndex(idxHi));
+  }
+  async function fitChannelGmmContrastFromUint16(u16) {
+    if (u16.length === 0) return null;
+    const stats = null;
+    try {
+      if (false) ;
+      const psudo = await __vitePreload(() => import("./index-DLxvjXSp.js"), true ? [] : void 0, import.meta.url);
+      await warmupPsudoPalette();
+      if (false) ;
+      const t0 = performance.now();
+      const result = await psudo.channel_gmm(u16);
+      const ms = Math.round(performance.now() - t0);
+      if (result && result.length >= 2) {
+        const limits = sanitizeGmmLimits(result[0], result[1]);
+        if (limits) {
+          if (false) ;
+          return limits;
+        }
+      }
+      if (false) ;
+    } catch (e2) {
+    }
+    const fallback = approximateAutoContrastFromUint16Histogram(u16);
+    return fallback;
+  }
+  const FETCH_CONCURRENCY = 4;
+  const FIT_CONCURRENCY = 1;
+  const GMM_MAX_SAMPLES = 5e4;
+  const emptySnapshot = {
+    pendingIds: []
+  };
+  let generation = 0;
+  const loadersByImageId = /* @__PURE__ */ new Map();
+  const jobsByKey = /* @__PURE__ */ new Map();
+  const queue = [];
+  const inFlight = /* @__PURE__ */ new Map();
+  const failedKeys = /* @__PURE__ */ new Set();
+  const listeners = /* @__PURE__ */ new Set();
+  let snapshot = emptySnapshot;
+  let pendingKey = "";
+  const fetchWaiters = [];
+  const fitWaiters = [];
+  const fetchUsedBox = {
+    n: 0
+  };
+  const fitUsedBox = {
+    n: 0
+  };
+  function rasterKey(sourceImageId, index2) {
+    return `${sourceImageId}\0${index2}`;
+  }
+  function limitsEqual(a2, b2) {
+    return a2 != null && a2.lower === b2.lower && a2.upper === b2.upper;
+  }
+  function asWindow(limits) {
+    if ((limits == null ? void 0 : limits.lower) == null || limits.upper == null) return void 0;
+    return {
+      lower: limits.lower,
+      upper: limits.upper
+    };
+  }
+  function documentChannels() {
+    return flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images);
+  }
+  function isEligible(sc2, all2) {
+    return isImageChannel(sc2) && sc2.samples !== 3 && !isRgbDisplayChannel(sc2, all2);
+  }
+  function acquire(used, waiters, max2) {
+    return new Promise((resolve) => {
+      if (used.n < max2) {
+        used.n++;
+        resolve();
+        return;
+      }
+      waiters.push(() => {
+        used.n++;
+        resolve();
+      });
+    });
+  }
+  function release(used, waiters) {
+    var _a2;
+    used.n = Math.max(0, used.n - 1);
+    (_a2 = waiters.shift()) == null ? void 0 : _a2();
+  }
+  function notify() {
+    const pendingIds = [];
+    for (const job of jobsByKey.values()) {
+      for (const id2 of job.guards.keys()) pendingIds.push(id2);
+    }
+    pendingIds.sort();
+    const key2 = pendingIds.join("\0");
+    if (key2 === pendingKey) return;
+    pendingKey = key2;
+    snapshot = {
+      pendingIds
+    };
+    for (const listener of listeners) listener();
+  }
+  function readChannel(channelId) {
+    return documentChannels().find((sc2) => sc2.id === channelId);
+  }
+  function removeFromQueues(key2) {
+    const idx = queue.indexOf(key2);
+    if (idx >= 0) queue.splice(idx, 1);
+  }
+  function enqueue(job) {
+    removeFromQueues(job.rasterKey);
+    queue.push(job.rasterKey);
+  }
+  function finishJob(job, gen) {
+    if (gen !== generation) return;
+    jobsByKey.delete(job.rasterKey);
+    removeFromQueues(job.rasterKey);
+    inFlight.delete(job.rasterKey);
+    notify();
+  }
+  function commitFitted(job, window2) {
+    const doc = useDocumentStore.getState();
+    const channels2 = flattenImageChannelsInDocumentOrder(doc.images);
+    let changed = false;
+    const next2 = channels2.map((sc2) => {
+      if (!job.guards.has(sc2.id)) return sc2;
+      const guard = job.guards.get(sc2.id) ?? {
+        kind: "still-missing"
+      };
+      if (guard.kind === "still-missing") {
+        if (sc2.gmmContrastLimits) return sc2;
+      } else if (!limitsEqual(sc2.gmmContrastLimits, guard.expected)) {
+        return sc2;
+      }
+      changed = true;
+      return {
+        ...sc2,
+        gmmContrastLimits: {
+          lower: window2.lower,
+          upper: window2.upper
+        },
+        lowerLimit: window2.lower,
+        upperLimit: window2.upper
+      };
+    });
+    if (changed) {
+      doc.setImages(applySourceChannelsToImages(doc.images, next2));
+    }
+    let groupsChanged = false;
+    const nextGroups = doc.channelGroups.map((g2) => ({
+      ...g2,
+      channels: g2.channels.map((gc2) => {
+        if (!job.guards.has(gc2.channelId)) return gc2;
+        if (!looksLikeImportDefaultLimits(gc2.lowerLimit, gc2.upperLimit)) {
+          return gc2;
+        }
+        groupsChanged = true;
+        return {
+          ...gc2,
+          lowerLimit: window2.lower,
+          upperLimit: window2.upper
+        };
+      })
+    }));
+    if (groupsChanged) doc.setChannelGroups(nextGroups);
+  }
+  async function fetchCoarsestUint16(loader, sourceIndex) {
+    var _a2;
+    const planes = loader.data;
+    if (!(planes == null ? void 0 : planes.length)) return null;
+    const cIdx = planes[0].labels.indexOf("c");
+    const nC = cIdx >= 0 ? planes[0].shape[cIdx] : 1;
+    if (sourceIndex < 0 || sourceIndex >= nC) return null;
+    let data2;
+    for (let i2 = planes.length - 1; i2 >= 0; i2--) {
+      try {
+        const raster = await planes[i2].getRaster({
+          selection: {
+            t: 0,
+            z: 0,
+            c: sourceIndex
+          }
+        });
+        if ((_a2 = raster == null ? void 0 : raster.data) == null ? void 0 : _a2.length) {
+          data2 = raster.data;
+          break;
+        }
+      } catch {
+      }
+    }
+    if (!(data2 == null ? void 0 : data2.length)) return null;
+    const stride = Math.max(1, Math.ceil(data2.length / GMM_MAX_SAMPLES));
+    const out = new Uint16Array(Math.ceil(data2.length / stride));
+    const u8 = data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray;
+    for (let i2 = 0, o2 = 0; i2 < data2.length; i2 += stride) {
+      const v2 = Number(data2[i2]);
+      out[o2++] = u8 ? v2 << 8 : Number.isFinite(v2) ? Math.max(0, Math.min(65535, Math.round(v2))) : 0;
+    }
+    return out;
+  }
+  async function runJob(job, gen) {
+    await acquire(fetchUsedBox, fetchWaiters, FETCH_CONCURRENCY);
+    let u16 = null;
+    try {
+      if (gen !== generation) return {
+        kind: "failed"
+      };
+      u16 = await fetchCoarsestUint16(job.loader, job.index);
+    } finally {
+      release(fetchUsedBox, fetchWaiters);
+      pump();
+    }
+    if (gen !== generation) return {
+      kind: "failed"
+    };
+    if (!u16) {
+      failedKeys.add(job.rasterKey);
+      finishJob(job, gen);
+      pump();
+      return {
+        kind: "failed"
+      };
+    }
+    await acquire(fitUsedBox, fitWaiters, FIT_CONCURRENCY);
+    let window2 = null;
+    try {
+      if (gen === generation) {
+        window2 = await fitChannelGmmContrastFromUint16(u16);
+      }
+    } finally {
+      release(fitUsedBox, fitWaiters);
+    }
+    if (gen !== generation) return {
+      kind: "failed"
+    };
+    if (!window2) {
+      failedKeys.add(job.rasterKey);
+      finishJob(job, gen);
+      pump();
+      return {
+        kind: "failed"
+      };
+    }
+    commitFitted(job, window2);
+    finishJob(job, gen);
+    pump();
+    return {
+      kind: "fitted",
+      window: window2
+    };
+  }
+  function intern(job) {
+    const existing = inFlight.get(job.rasterKey);
+    if (existing) return existing;
+    removeFromQueues(job.rasterKey);
+    const gen = generation;
+    const promise = runJob(job, gen).catch((error2) => {
+      if (gen === generation) {
+        failedKeys.add(job.rasterKey);
+        finishJob(job, gen);
+        pump();
+      }
+      return {
+        kind: "failed"
+      };
+    });
+    inFlight.set(job.rasterKey, promise);
+    notify();
+    return promise;
+  }
+  function pump() {
+    for (const key2 of [
+      ...queue
+    ]) {
+      const job = jobsByKey.get(key2);
+      if (!job || inFlight.has(key2)) continue;
+      intern(job);
+    }
+  }
+  function attachChannel(job, channelId, guard) {
+    const prev = job.guards.get(channelId);
+    if (!((prev == null ? void 0 : prev.kind) === "unchanged" && guard.kind === "still-missing")) {
+      job.guards.set(channelId, guard);
+    }
+  }
+  function upsertJob(args) {
+    const { sc: sc2, loader, guard, retryFailed } = args;
+    const key2 = rasterKey(sc2.imageId, sc2.index);
+    if (failedKeys.has(key2)) {
+      if (!retryFailed) return null;
+      failedKeys.delete(key2);
+    }
+    const existing = jobsByKey.get(key2);
+    if (existing) {
+      attachChannel(existing, sc2.id, guard);
+      if (!inFlight.has(key2)) enqueue(existing);
+      return existing;
+    }
+    const job = {
+      rasterKey: key2,
+      loader,
+      sourceImageId: sc2.imageId,
+      index: sc2.index,
+      guards: /* @__PURE__ */ new Map([
+        [
+          sc2.id,
+          guard
+        ]
+      ])
+    };
+    jobsByKey.set(key2, job);
+    enqueue(job);
+    return job;
+  }
+  function targetFor(channelId) {
+    const all2 = documentChannels();
+    const sc2 = all2.find((c2) => c2.id === channelId);
+    if (!sc2 || !isEligible(sc2, all2)) return null;
+    const loader = loadersByImageId.get(sc2.imageId);
+    if (!loader) return null;
+    return {
+      sc: sc2,
+      loader
+    };
+  }
+  function reconcileGmm(args) {
+    const { loaderEntries, channels: channels2, visibleChannelIds } = args;
+    loadersByImageId.clear();
+    for (const entry of loaderEntries) {
+      loadersByImageId.set(entry.sourceImageId, entry.loader);
+    }
+    const liveIds = new Set(loaderEntries.map((e2) => e2.sourceImageId));
+    for (const [key2, job] of [
+      ...jobsByKey
+    ]) {
+      if (liveIds.has(job.sourceImageId)) continue;
+      if (!inFlight.has(key2)) {
+        jobsByKey.delete(key2);
+        removeFromQueues(key2);
+      }
+    }
+    for (const sc2 of channels2) {
+      if (!isEligible(sc2, channels2)) continue;
+      if (sc2.gmmContrastLimits) continue;
+      if (!visibleChannelIds.has(sc2.id)) continue;
+      const loader = loadersByImageId.get(sc2.imageId);
+      if (!loader) continue;
+      upsertJob({
+        sc: sc2,
+        loader,
+        guard: {
+          kind: "still-missing"
+        },
+        retryFailed: false
+      });
+    }
+    notify();
+    pump();
+  }
+  async function ensureGmm(channelIds) {
+    const result = /* @__PURE__ */ new Map();
+    const waits = [];
+    for (const channelId of channelIds) {
+      const target = targetFor(channelId);
+      if (!target) continue;
+      const current = asWindow(target.sc.gmmContrastLimits);
+      if (current) {
+        result.set(channelId, {
+          lower: current.lower,
+          upper: current.upper
+        });
+        continue;
+      }
+      const job = upsertJob({
+        sc: target.sc,
+        loader: target.loader,
+        guard: {
+          kind: "still-missing"
+        },
+        retryFailed: true
+      });
+      if (!job) continue;
+      waits.push(intern(job).then(() => {
+        const sc2 = readChannel(channelId);
+        const limits = asWindow(sc2 == null ? void 0 : sc2.gmmContrastLimits);
+        if (limits) result.set(channelId, {
+          lower: limits.lower,
+          upper: limits.upper
+        });
+      }));
+    }
+    notify();
+    pump();
+    await Promise.all(waits);
+    return result;
+  }
+  async function refitGmm(channelId) {
+    const target = targetFor(channelId);
+    if (!target) return null;
+    const key2 = rasterKey(target.sc.imageId, target.sc.index);
+    const running = inFlight.get(key2);
+    if (running) await running;
+    const latest = targetFor(channelId);
+    if (!latest) return null;
+    const expected = asWindow(latest.sc.gmmContrastLimits);
+    const guard = expected ? {
+      kind: "unchanged",
+      expected: {
+        lower: expected.lower,
+        upper: expected.upper
+      }
+    } : {
+      kind: "still-missing"
+    };
+    const job = upsertJob({
+      sc: latest.sc,
+      loader: latest.loader,
+      guard,
+      retryFailed: true
+    });
+    if (!job) return null;
+    notify();
+    const outcome = await intern(job);
+    if (outcome.kind !== "fitted") return null;
+    const sc2 = readChannel(channelId);
+    if (!limitsEqual(sc2 == null ? void 0 : sc2.gmmContrastLimits, outcome.window)) return null;
+    return {
+      lower: outcome.window.lower,
+      upper: outcome.window.upper
+    };
+  }
+  function subscribeGmmFit(onStoreChange) {
+    listeners.add(onStoreChange);
+    return () => {
+      listeners.delete(onStoreChange);
+    };
+  }
+  function getGmmPendingIds() {
+    return snapshot.pendingIds;
+  }
+  function clearGmmScheduler() {
+    generation += 1;
+    loadersByImageId.clear();
+    jobsByKey.clear();
+    queue.length = 0;
+    inFlight.clear();
+    failedKeys.clear();
+    pendingKey = "";
+    snapshot = emptySnapshot;
+    for (const listener of listeners) listener();
   }
   function histogramBinFromPixels(bits, width, data2) {
     const n_bins = 50;
@@ -91274,536 +92293,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return result;
   }
-  const DEFAULT_LUMINANCE = new Uint16Array([
-    60,
-    92
-  ]);
-  const PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP = false;
-  const PSUDO_MAX_ITERS = 2700;
-  const PSUDO_CONFUSION_BASELINE_SAMPLES = 32;
-  const PSUDO_NUM_RESTARTS = 18;
-  const PSUDO_CONTRAST_MIN = 0;
-  const PSUDO_CONTRAST_MAX = 65535;
-  function clampUint16(n2) {
-    return Math.max(0, Math.min(65535, Math.round(n2)));
-  }
-  function asRgbColor(color2) {
-    return {
-      r: color2.r ?? 0,
-      g: color2.g ?? 0,
-      b: color2.b ?? 0
-    };
-  }
-  function defaultContrastLimits(nChannels) {
-    const out = new Uint16Array(nChannels * 2);
-    for (let i2 = 0; i2 < nChannels; i2++) {
-      out[i2 * 2] = PSUDO_CONTRAST_MIN;
-      out[i2 * 2 + 1] = PSUDO_CONTRAST_MAX;
-    }
-    return out;
-  }
-  function buildOptimizeInputsFromSlots(slots, lockedIds) {
-    const n2 = slots.length;
-    const colors = new Uint16Array(n2 * 3);
-    const locked = new Uint16Array(n2);
-    for (let i2 = 0; i2 < n2; i2++) {
-      const slot = slots[i2];
-      const { r: r2, g: g2, b: b2 } = slot.color;
-      colors[i2 * 3] = clampUint16(r2);
-      colors[i2 * 3 + 1] = clampUint16(g2);
-      colors[i2 * 3 + 2] = clampUint16(b2);
-      locked[i2] = (lockedIds == null ? void 0 : lockedIds.has(slot.id)) ? 1 : 0;
-    }
-    return {
-      colors,
-      locked,
-      intensities: new Uint16Array(0),
-      contrastLimits: defaultContrastLimits(n2),
-      luminance: DEFAULT_LUMINANCE,
-      excluded: [],
-      colorNames: Array.from({
-        length: n2
-      }, () => ""),
-      maxIters: PSUDO_MAX_ITERS,
-      confusionSamples: PSUDO_CONFUSION_BASELINE_SAMPLES,
-      spatial: PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP,
-      numRestarts: PSUDO_NUM_RESTARTS
-    };
-  }
-  function linearToDisplayRgb(linear, channelIndex) {
-    const i2 = channelIndex * 3;
-    return {
-      r: Math.max(0, Math.min(255, Math.round(linear[i2] * 255))),
-      g: Math.max(0, Math.min(255, Math.round(linear[i2 + 1] * 255))),
-      b: Math.max(0, Math.min(255, Math.round(linear[i2 + 2] * 255)))
-    };
-  }
-  let psudoWarmupPromise = null;
-  function warmupPsudoPalette() {
-    if (!psudoWarmupPromise) {
-      psudoWarmupPromise = __vitePreload(() => import("./index-DLxvjXSp.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.warmup());
-    }
-    return psudoWarmupPromise;
-  }
-  async function invokePsudoOptimize(inputs) {
-    const psudo = await __vitePreload(() => import("./index-DLxvjXSp.js"), true ? [] : void 0, import.meta.url);
-    await warmupPsudoPalette();
-    inputs.colorNames.length;
-    performance.now();
-    const optimized = await psudo.optimize(inputs.colors, inputs.locked, inputs.intensities, inputs.contrastLimits, inputs.luminance, inputs.excluded, inputs.colorNames, inputs.maxIters, inputs.confusionSamples, inputs.spatial, inputs.numRestarts);
-    const linear = optimized instanceof Float32Array ? optimized : new Float32Array(optimized);
-    return linear;
-  }
-  async function optimizePaletteSlots(slots, lockedIds = /* @__PURE__ */ new Set()) {
-    if (slots.length < 2) {
-      throw new Error("At least two channels are required to optimize a palette.");
-    }
-    if (slots.every((slot) => lockedIds.has(slot.id))) {
-      return slots.map((slot) => ({
-        ...slot.color
-      }));
-    }
-    const inputs = buildOptimizeInputsFromSlots(slots, lockedIds);
-    const nChannels = inputs.colorNames.length;
-    const linear = await invokePsudoOptimize(inputs);
-    const out = [];
-    for (let ch2 = 0; ch2 < nChannels; ch2++) {
-      if (inputs.locked[ch2] === 1) {
-        const i2 = ch2 * 3;
-        out.push({
-          r: inputs.colors[i2],
-          g: inputs.colors[i2 + 1],
-          b: inputs.colors[i2 + 2]
-        });
-      } else {
-        out.push(linearToDisplayRgb(linear, ch2));
-      }
-    }
-    return out;
-  }
-  function isGroupEligibleForPsudoOptimize(group2, sourceChannels) {
-    let imageChannelCount = 0;
-    for (const gc2 of group2.channels ?? []) {
-      const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
-      if (!sc2 || sc2.samples === 3 || !isImageChannel(sc2)) continue;
-      imageChannelCount++;
-    }
-    return imageChannelCount >= 2;
-  }
-  function seedRgbForGroupChannelIndex(index2) {
-    return hexToRgb(IMPORT_DEFAULT_SEED_HEX[index2 % IMPORT_DEFAULT_SEED_HEX.length]);
-  }
-  function currentGroupColors(group2) {
-    return (group2.channels ?? []).map((gc2) => ({
-      r: gc2.color.r,
-      g: gc2.color.g,
-      b: gc2.color.b
-    }));
-  }
-  async function optimizeChannelGroupWithLocks(group2, sourceChannels, lockedChannelRowIds = /* @__PURE__ */ new Set()) {
-    if (!isGroupEligibleForPsudoOptimize(group2, sourceChannels)) {
-      return currentGroupColors(group2);
-    }
-    const slots = (group2.channels ?? []).map((gc2) => ({
-      id: gc2.id,
-      color: asRgbColor(gc2.color)
-    }));
-    if (!slots.some((slot) => !lockedChannelRowIds.has(slot.id))) {
-      return currentGroupColors(group2);
-    }
-    return optimizePaletteSlots(slots, lockedChannelRowIds);
-  }
-  function applyOptimizedColorsToChannelGroup(channelGroups, groupId, colors, options) {
-    const locked = options == null ? void 0 : options.lockedChannelRowIds;
-    return channelGroups.map((g2) => {
-      if (g2.id !== groupId) return g2;
-      const channels2 = g2.channels.map((gc2, i2) => {
-        if (locked == null ? void 0 : locked.has(gc2.id)) return gc2;
-        const c2 = colors[i2];
-        if (!c2) return gc2;
-        return {
-          ...gc2,
-          color: {
-            r: c2.r,
-            g: c2.g,
-            b: c2.b
-          }
-        };
-      });
-      return {
-        ...g2,
-        channels: channels2
-      };
-    });
-  }
-  function usesDefaultImportGrouping(channelGroups) {
-    if (channelGroups.length === 0) return false;
-    return channelGroups.every((g2) => /^Group \d+$/.test(g2.name) && g2.channels.length >= 1 && g2.channels.length <= DEFAULT_VISIBLE_INTENSITY_CHANNELS);
-  }
-  function isImportPaletteSource(sc2, all2) {
-    return sc2.samples !== 3 && isImageChannel(sc2) && !isRgbDisplayChannel(sc2, all2);
-  }
-  function importPaletteSourceChannels(sourceChannels) {
-    if (sourceChannels.length === 0) return [];
-    const firstImageId = sourceChannels[0].imageId;
-    const fromFirst = sourceChannels.filter((sc2) => sc2.imageId === firstImageId && isImportPaletteSource(sc2, sourceChannels));
-    const pool = fromFirst.length > 0 ? fromFirst : sourceChannels.filter((sc2) => isImportPaletteSource(sc2, sourceChannels));
-    return pool.slice(0, DEFAULT_VISIBLE_INTENSITY_CHANNELS);
-  }
-  function seedPaletteForPicked(count2) {
-    return Array.from({
-      length: count2
-    }, (_2, i2) => seedRgbForGroupChannelIndex(i2));
-  }
-  function startingColorAwayFromLocked(lockedColors) {
-    const candidates = [
-      ...IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex)),
-      {
-        r: 255,
-        g: 255,
-        b: 255
-      },
-      {
-        r: 255,
-        g: 0,
-        b: 0
-      },
-      {
-        r: 0,
-        g: 255,
-        b: 0
-      },
-      {
-        r: 0,
-        g: 0,
-        b: 255
-      },
-      {
-        r: 255,
-        g: 255,
-        b: 0
-      }
-    ];
-    return candidates.find((c2) => !lockedColors.some((locked) => locked.r === c2.r && locked.g === c2.g && locked.b === c2.b)) ?? {
-      r: 255,
-      g: 255,
-      b: 255
-    };
-  }
-  async function optimizeImportPalette(sourceChannels) {
-    const seeds = seedPaletteForPicked(DEFAULT_VISIBLE_INTENSITY_CHANNELS);
-    const picked = importPaletteSourceChannels(sourceChannels);
-    if (picked.length < 2) return seeds;
-    const slots = picked.map((sc2, i2) => ({
-      id: sc2.id,
-      color: seeds[i2] ?? seeds[0]
-    }));
-    const optimized = await optimizePaletteSlots(slots, /* @__PURE__ */ new Set());
-    return seeds.map((fallback, i2) => optimized[i2] ?? fallback);
-  }
-  async function applySharedImportPaletteToChannelGroups(channelGroups, sourceChannels) {
-    if (!usesDefaultImportGrouping(channelGroups)) {
-      return channelGroups;
-    }
-    try {
-      const palette = await optimizeImportPalette(sourceChannels);
-      return channelGroups.map((g2) => ({
-        ...g2,
-        channels: g2.channels.map((gc2, index2) => {
-          const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
-          if ((sc2 == null ? void 0 : sc2.samples) === 3) return gc2;
-          const c2 = palette[index2 % palette.length];
-          return {
-            ...gc2,
-            color: {
-              r: c2.r,
-              g: c2.g,
-              b: c2.b
-            }
-          };
-        })
-      }));
-    } catch (e2) {
-      return channelGroups;
-    }
-  }
-  async function applySharedImportPaletteToSourceChannels(sourceChannels) {
-    const picked = importPaletteSourceChannels(sourceChannels);
-    try {
-      const palette = (await optimizeImportPalette(sourceChannels)).slice(0, picked.length);
-      return seedDefaultSourceChannelStyles(sourceChannels, palette);
-    } catch (e2) {
-      return seedDefaultSourceChannelStyles(sourceChannels, seedPaletteForPicked(picked.length));
-    }
-  }
-  function needsInitPalette(picked, groups) {
-    if (picked.length < 2) return false;
-    for (const sc2 of picked) {
-      if (sc2.color && !looksLikeImportDefaultSeedColor(sc2.color)) return false;
-    }
-    const pickedIds = new Set(picked.map((sc2) => sc2.id));
-    for (const g2 of groups) {
-      for (const gc2 of g2.channels) {
-        if (!pickedIds.has(gc2.channelId)) continue;
-        if (!looksLikeImportDefaultSeedColor(gc2.color)) return false;
-      }
-    }
-    return true;
-  }
-  let initPaletteKey = null;
-  let initPaletteInFlight = null;
-  let initPaletteGeneration = 0;
-  let prevUngroupedStackVis = null;
-  function resetInitPalette() {
-    initPaletteGeneration += 1;
-    initPaletteKey = null;
-    initPaletteInFlight = null;
-    prevUngroupedStackVis = null;
-  }
-  function ensureInitPalette(storyId) {
-    const doc = useDocumentStore.getState();
-    const sources = flattenImageChannelsInDocumentOrder(doc.images);
-    const picked = importPaletteSourceChannels(sources);
-    const key2 = `${storyId}:${picked.map((sc2) => sc2.id).join(",")}`;
-    if (initPaletteKey === key2 || initPaletteInFlight === key2) {
-      return Promise.resolve();
-    }
-    if (!needsInitPalette(picked, doc.channelGroups)) {
-      initPaletteKey = key2;
-      return Promise.resolve();
-    }
-    initPaletteInFlight = key2;
-    const generation2 = initPaletteGeneration;
-    const pendingIds = picked.map((sc2) => sc2.id);
-    setStackPalettePendingMany(pendingIds, true);
-    const run = (async () => {
-      try {
-        const palette = await optimizeImportPalette(sources);
-        if (generation2 !== initPaletteGeneration) return;
-        const docNow = useDocumentStore.getState();
-        if (docNow.activeStoryId !== storyId) return;
-        const sourcesNow = flattenImageChannelsInDocumentOrder(docNow.images);
-        const pickedNow = importPaletteSourceChannels(sourcesNow);
-        if (pickedNow.map((sc2) => sc2.id).join(",") !== picked.map((sc2) => sc2.id).join(",")) {
-          return;
-        }
-        if (!needsInitPalette(pickedNow, docNow.channelGroups)) {
-          initPaletteKey = key2;
-          return;
-        }
-        const colorBySourceId = new Map(pickedNow.map((sc2, i2) => [
-          sc2.id,
-          palette[i2]
-        ]));
-        let sourcesChanged = false;
-        const nextSources = sourcesNow.map((sc2) => {
-          const c2 = colorBySourceId.get(sc2.id);
-          if (!c2 || sc2.color && !looksLikeImportDefaultSeedColor(sc2.color)) {
-            return sc2;
-          }
-          sourcesChanged = true;
-          return {
-            ...sc2,
-            color: {
-              r: c2.r,
-              g: c2.g,
-              b: c2.b
-            }
-          };
-        });
-        let groupsChanged = false;
-        const nextGroups = docNow.channelGroups.map((g2) => {
-          let rowChanged = false;
-          const channels2 = g2.channels.map((gc2) => {
-            const c2 = colorBySourceId.get(gc2.channelId);
-            if (!c2 || !looksLikeImportDefaultSeedColor(gc2.color)) return gc2;
-            rowChanged = true;
-            return {
-              ...gc2,
-              color: {
-                r: c2.r,
-                g: c2.g,
-                b: c2.b
-              }
-            };
-          });
-          if (!rowChanged) return g2;
-          groupsChanged = true;
-          return {
-            ...g2,
-            channels: channels2
-          };
-        });
-        if (!sourcesChanged && !groupsChanged) {
-          initPaletteKey = key2;
-          return;
-        }
-        if (groupsChanged) {
-          docNow.setImagesAndChannelGroups(applySourceChannelsToImages(docNow.images, nextSources), nextGroups);
-        } else {
-          docNow.setImages(applySourceChannelsToImages(docNow.images, nextSources));
-        }
-        if (false) ;
-        initPaletteKey = key2;
-      } catch (e2) {
-      } finally {
-        setStackPalettePendingMany(pendingIds, false);
-        if (initPaletteInFlight === key2) initPaletteInFlight = null;
-      }
-    })();
-    return run;
-  }
-  let stackPaletteChain = Promise.resolve();
-  const stackPalettePending = /* @__PURE__ */ new Set();
-  let stackPalettePendingSnapshot = [];
-  const stackPalettePendingListeners = /* @__PURE__ */ new Set();
-  function setStackPalettePendingMany(sourceChannelIds, pending) {
-    if (sourceChannelIds.length === 0) return;
-    let changed = false;
-    for (const id2 of sourceChannelIds) {
-      if (pending) {
-        if (stackPalettePending.has(id2)) continue;
-        stackPalettePending.add(id2);
-        changed = true;
-      } else if (stackPalettePending.delete(id2)) {
-        changed = true;
-      }
-    }
-    if (!changed) return;
-    stackPalettePendingSnapshot = [
-      ...stackPalettePending
-    ];
-    for (const listener of stackPalettePendingListeners) listener();
-  }
-  function subscribeStackPalettePending(onStoreChange) {
-    stackPalettePendingListeners.add(onStoreChange);
-    return () => {
-      stackPalettePendingListeners.delete(onStoreChange);
-    };
-  }
-  function getStackPalettePendingIds() {
-    return stackPalettePendingSnapshot;
-  }
-  function markStackPalettePendingIfNeeded(sourceChannelId) {
-    const doc = useDocumentStore.getState();
-    if (sourceChannelInAnyGroup(doc.channelGroups, sourceChannelId)) return false;
-    const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
-    const shown = sourceChannels.find((sc2) => sc2.id === sourceChannelId);
-    if (!shown || !isImageChannel(shown) || shown.samples === 3 || isRgbDisplayChannel(shown, sourceChannels)) {
-      return false;
-    }
-    if (shown.color) return false;
-    setStackPalettePendingMany([
-      shown.id
-    ], true);
-    return true;
-  }
-  function ensurePaletteForNewlyVisibleStackChannels(sourceChannelId) {
-    const pending = markStackPalettePendingIfNeeded(sourceChannelId);
-    const run = stackPaletteChain.then(async () => {
-      try {
-        await runEnsureStackPalette(sourceChannelId);
-      } finally {
-        if (pending) setStackPalettePendingMany([
-          sourceChannelId
-        ], false);
-      }
-    });
-    stackPaletteChain = run.then(() => void 0, () => void 0);
-    return run;
-  }
-  function reconcileUngroupedStackPalette(stackVisibilities) {
-    const vis = stackVisibilities;
-    const prev = prevUngroupedStackVis;
-    prevUngroupedStackVis = vis;
-    if (prev === null) return;
-    const doc = useDocumentStore.getState();
-    const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
-    for (const sc2 of sourceChannels) {
-      if (sourceChannelInAnyGroup(doc.channelGroups, sc2.id)) continue;
-      if (isStackVisible(prev, sc2.id) || !isStackVisible(vis, sc2.id)) continue;
-      void ensurePaletteForNewlyVisibleStackChannels(sc2.id);
-    }
-  }
-  async function runEnsureStackPalette(sourceChannelId) {
-    const doc = useDocumentStore.getState();
-    if (sourceChannelInAnyGroup(doc.channelGroups, sourceChannelId)) return;
-    const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
-    const shown = sourceChannels.find((sc2) => sc2.id === sourceChannelId);
-    if (!shown || !isImageChannel(shown) || shown.samples === 3 || isRgbDisplayChannel(shown, sourceChannels) || shown.color) {
-      return;
-    }
-    const groups = doc.channelGroups;
-    const app = useAppStore.getState();
-    const lockedSlots = [];
-    const unlocked = [];
-    const seen2 = /* @__PURE__ */ new Set();
-    for (const { sc: sc2, gc: gc2 } of buildCompositedIntensityLayers({
-      onLoader: sourceChannels.filter(isImageChannel),
-      activeGroup: groups.find((g2) => g2.id === app.activeChannelGroupId),
-      channelGroups: groups,
-      stackVisibilities: app.channelVisibilities,
-      groupRowVisibilities: app.channelGroupRowVisibilities,
-      hasVisibilityMap: true,
-      requireColor: false
-    })) {
-      if (seen2.has(sc2.id)) continue;
-      if (sc2.samples === 3 || isRgbDisplayChannel(sc2, sourceChannels)) continue;
-      seen2.add(sc2.id);
-      const color2 = (gc2 == null ? void 0 : gc2.color) ?? sc2.color;
-      if (color2) {
-        lockedSlots.push({
-          id: sc2.id,
-          color: asRgbColor(color2)
-        });
-      } else if (!gc2) {
-        unlocked.push(sc2);
-      }
-    }
-    if (!seen2.has(shown.id)) unlocked.push(shown);
-    if (unlocked.length === 0) return;
-    const lockedIds = new Set(lockedSlots.map((slot) => slot.id));
-    const unlockedStart = startingColorAwayFromLocked(lockedSlots.map((slot) => slot.color));
-    const slots = [
-      ...lockedSlots,
-      ...unlocked.map((sc2) => ({
-        id: sc2.id,
-        color: unlockedStart
-      }))
-    ];
-    let colors;
-    try {
-      colors = slots.length < 2 ? slots.map((slot) => slot.color) : await optimizePaletteSlots(slots, lockedIds);
-    } catch (e2) {
-      return;
-    }
-    const docNow = useDocumentStore.getState();
-    const sourcesNow = flattenImageChannelsInDocumentOrder(docNow.images);
-    const unlockedIds = new Set(unlocked.map((sc2) => sc2.id));
-    const indexById = new Map(slots.map((slot, i2) => [
-      slot.id,
-      i2
-    ]));
-    let changed = false;
-    const next2 = sourcesNow.map((sc2) => {
-      if (!unlockedIds.has(sc2.id) || sc2.color) return sc2;
-      const idx = indexById.get(sc2.id);
-      if (idx == null) return sc2;
-      const c2 = colors[idx];
-      if (!c2) return sc2;
-      changed = true;
-      return {
-        ...sc2,
-        color: {
-          r: c2.r,
-          g: c2.g,
-          b: c2.b
-        }
-      };
-    });
-    if (!changed) return;
-    docNow.setImages(applySourceChannelsToImages(docNow.images, next2));
-  }
   function commitChannelColorTarget(target) {
     var _a2;
     if (!target) return;
@@ -91922,6 +92411,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const setChannelVisibilities = useAppStore((s2) => s2.setChannelVisibilities);
     const setChannelGroupRowVisibilities = useAppStore((s2) => s2.setChannelGroupRowVisibilities);
     const palettePendingIds = reactExports.useSyncExternalStore(subscribeStackPalettePending, getStackPalettePendingIds, getStackPalettePendingIds);
+    const gmmPendingIds = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmPendingIds, getGmmPendingIds);
     const [colorTarget, setColorTarget] = reactExports.useState(null);
     const [colorPos, setColorPos] = reactExports.useState(null);
     const [histogramLoading2, setHistogramLoading] = reactExports.useState(false);
@@ -92042,6 +92532,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         jsxRuntimeExports.jsx(ChannelRow, {
           visible,
+          fitting: gmmPendingIds.includes(sc2.id),
           visibilityTitle: visible ? `Hide ${sc2.name}` : `Show ${sc2.name}`,
           visibilityAriaLabel: `Toggle visibility for ${sc2.name}`,
           onToggleVisibility: toggleVisible,
@@ -92205,27 +92696,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return chip2.visible ? `Hide ${chip2.name}` : `Show ${chip2.name}`;
   }
   function ChipButton(props) {
-    const { chip: chip2, open, dim, colorPending, onClick, onOpenEditor } = props;
-    const pendingLabel2 = `Assigning color to ${chip2.name}`;
+    const { chip: chip2, open, dim, colorPending, gmmPending, onClick, onOpenEditor } = props;
+    const pending = colorPending || gmmPending;
+    const pendingLabel2 = gmmPending ? `Fitting contrast for ${chip2.name}` : `Assigning color to ${chip2.name}`;
     return jsxRuntimeExports.jsxs("div", {
       className: [
         styles$n.chipCell,
         chip2.visible && chip2.hex ? styles$n.chipOn : null,
         !chip2.visible && chip2.hex ? styles$n.chipOutlined : null,
         chip2.hex ? null : styles$n.chipUnassigned,
-        colorPending ? minervaTheme.busyOverlay : null,
+        pending ? minervaTheme.busyOverlay : null,
         dim ? styles$n.chipDim : null
       ].filter(Boolean).join(" "),
       style: chip2.hex ? {
         "--ch": `#${chip2.hex}`
       } : void 0,
-      "aria-busy": colorPending || void 0,
+      "aria-busy": pending || void 0,
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
           className: `${minervaTheme.focusRing} ${styles$n.chip}`,
-          title: colorPending ? pendingLabel2 : chip2.name,
-          "aria-label": colorPending ? pendingLabel2 : chipAriaLabel(chip2),
+          title: pending ? pendingLabel2 : chip2.name,
+          "aria-label": pending ? pendingLabel2 : chipAriaLabel(chip2),
           "aria-pressed": chip2.visible,
           onClick: () => onClick(chip2),
           children: chip2.name
@@ -92251,6 +92743,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function ChipGrid(props) {
     const { chips, openChip } = props;
     const pendingIds = reactExports.useSyncExternalStore(subscribeStackPalettePending, getStackPalettePendingIds, getStackPalettePendingIds);
+    const gmmPendingIds = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmPendingIds, getGmmPendingIds);
     const openIndex = openChip ? chips.findIndex((c2) => c2.key === openChip.key) : -1;
     const rowEnd = openIndex < 0 ? -1 : Math.min(chips.length - 1, openIndex - openIndex % CHIP_COLS + CHIP_COLS - 1);
     return jsxRuntimeExports.jsx("div", {
@@ -92262,6 +92755,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             open: (openChip == null ? void 0 : openChip.key) === chip2.key,
             dim: openChip != null && openChip.key !== chip2.key,
             colorPending: pendingIds.includes(chip2.sourceId),
+            gmmPending: gmmPendingIds.includes(chip2.sourceId),
             onClick: props.onChip,
             onOpenEditor: props.onOpenEditor
           }),
@@ -242497,520 +242991,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }, reactExports.createElement("path", {
     d: "M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2 .9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z"
   }));
-  function sanitizeGmmLimits(vmin, vmax) {
-    if (!Number.isFinite(vmin) || !Number.isFinite(vmax)) return null;
-    const lower = Math.max(0, Math.min(65535, Math.round(vmin)));
-    const upperRaw = Math.max(0, Math.min(65535, Math.round(vmax)));
-    const upper = upperRaw <= lower ? Math.min(65535, lower + 1) : upperRaw;
-    if (upper <= lower) return null;
-    return {
-      lower,
-      upper
-    };
-  }
-  function approximateAutoContrastFromUint16Histogram(u16) {
-    const n2 = u16.length;
-    if (n2 === 0) return null;
-    const hist = new Uint32Array(65536);
-    let positive = 0;
-    for (let i2 = 0; i2 < n2; i2++) {
-      const v2 = u16[i2];
-      hist[v2]++;
-      if (v2 > 0) positive++;
-    }
-    const zeroHeavy = hist[0] / n2 >= 1e-3 && positive >= 64;
-    const mass = zeroHeavy ? positive : n2;
-    const startV = zeroHeavy ? 1 : 0;
-    const idxLo = Math.max(0, Math.min(mass - 1, Math.floor(1e-3 * (mass - 1))));
-    const idxHi = Math.min(mass - 1, Math.ceil(0.999 * (mass - 1)));
-    const valuePastSortedIndex = (idx) => {
-      let cum = 0;
-      for (let v2 = startV; v2 < 65536; v2++) {
-        cum += hist[v2];
-        if (cum > idx) return v2;
-      }
-      return 65535;
-    };
-    return sanitizeGmmLimits(valuePastSortedIndex(idxLo), valuePastSortedIndex(idxHi));
-  }
-  async function fitChannelGmmContrastFromUint16(u16) {
-    if (u16.length === 0) return null;
-    const stats = null;
-    try {
-      if (false) ;
-      const psudo = await __vitePreload(() => import("./index-DLxvjXSp.js"), true ? [] : void 0, import.meta.url);
-      await warmupPsudoPalette();
-      if (false) ;
-      const t0 = performance.now();
-      const result = await psudo.channel_gmm(u16);
-      const ms = Math.round(performance.now() - t0);
-      if (result && result.length >= 2) {
-        const limits = sanitizeGmmLimits(result[0], result[1]);
-        if (limits) {
-          if (false) ;
-          return limits;
-        }
-      }
-      if (false) ;
-    } catch (e2) {
-    }
-    const fallback = approximateAutoContrastFromUint16Histogram(u16);
-    return fallback;
-  }
-  const FETCH_CONCURRENCY = 4;
-  const FIT_CONCURRENCY = 1;
-  const GMM_MAX_SAMPLES = 1e4;
-  const emptySnapshot = {
-    holdingLoad: false
-  };
-  let generation = 0;
-  const loadersByImageId = /* @__PURE__ */ new Map();
-  const jobsByKey = /* @__PURE__ */ new Map();
-  const queue = [];
-  const inFlight = /* @__PURE__ */ new Map();
-  const failedKeys = /* @__PURE__ */ new Set();
-  const blockedIds = /* @__PURE__ */ new Set();
-  const listeners = /* @__PURE__ */ new Set();
-  let snapshot = emptySnapshot;
-  let holdingLoad = false;
-  const fetchWaiters = [];
-  const fitWaiters = [];
-  const fetchUsedBox = {
-    n: 0
-  };
-  const fitUsedBox = {
-    n: 0
-  };
-  function rasterKey(sourceImageId, index2) {
-    return `${sourceImageId}\0${index2}`;
-  }
-  function limitsEqual(a2, b2) {
-    return a2 != null && a2.lower === b2.lower && a2.upper === b2.upper;
-  }
-  function asWindow(limits) {
-    if ((limits == null ? void 0 : limits.lower) == null || limits.upper == null) return void 0;
-    return {
-      lower: limits.lower,
-      upper: limits.upper
-    };
-  }
-  function documentChannels() {
-    return flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images);
-  }
-  function isEligible(sc2, all2) {
-    return isImageChannel(sc2) && sc2.samples !== 3 && !isRgbDisplayChannel(sc2, all2);
-  }
-  function acquire(used, waiters, max2) {
-    return new Promise((resolve) => {
-      if (used.n < max2) {
-        used.n++;
-        resolve();
-        return;
-      }
-      waiters.push(() => {
-        used.n++;
-        resolve();
-      });
-    });
-  }
-  function release(used, waiters) {
-    var _a2;
-    used.n = Math.max(0, used.n - 1);
-    (_a2 = waiters.shift()) == null ? void 0 : _a2();
-  }
-  function notify() {
-    if (snapshot.holdingLoad === holdingLoad) return;
-    snapshot = {
-      holdingLoad
-    };
-    for (const listener of listeners) listener();
-  }
-  function readChannel(channelId) {
-    return documentChannels().find((sc2) => sc2.id === channelId);
-  }
-  function removeFromQueues(key2) {
-    const idx = queue.indexOf(key2);
-    if (idx >= 0) queue.splice(idx, 1);
-  }
-  function enqueue(job) {
-    removeFromQueues(job.rasterKey);
-    queue.push(job.rasterKey);
-  }
-  function dropBlocked(channelId) {
-    blockedIds.delete(channelId);
-    if (holdingLoad && blockedIds.size === 0) holdingLoad = false;
-  }
-  function finishJob(job, outcome, gen) {
-    var _a2;
-    if (gen !== generation) return;
-    for (const id2 of job.guards.keys()) {
-      if (outcome.kind === "failed") dropBlocked(id2);
-      else if ((_a2 = readChannel(id2)) == null ? void 0 : _a2.gmmContrastLimits) dropBlocked(id2);
-    }
-    jobsByKey.delete(job.rasterKey);
-    removeFromQueues(job.rasterKey);
-    inFlight.delete(job.rasterKey);
-    notify();
-  }
-  function commitFitted(job, window2) {
-    const doc = useDocumentStore.getState();
-    const channels2 = flattenImageChannelsInDocumentOrder(doc.images);
-    let changed = false;
-    const next2 = channels2.map((sc2) => {
-      if (!job.guards.has(sc2.id)) return sc2;
-      const guard = job.guards.get(sc2.id) ?? {
-        kind: "still-missing"
-      };
-      if (guard.kind === "still-missing") {
-        if (sc2.gmmContrastLimits) return sc2;
-      } else if (!limitsEqual(sc2.gmmContrastLimits, guard.expected)) {
-        return sc2;
-      }
-      changed = true;
-      return {
-        ...sc2,
-        gmmContrastLimits: {
-          lower: window2.lower,
-          upper: window2.upper
-        },
-        lowerLimit: window2.lower,
-        upperLimit: window2.upper
-      };
-    });
-    if (changed) {
-      doc.setImages(applySourceChannelsToImages(doc.images, next2));
-    }
-    let groupsChanged = false;
-    const nextGroups = doc.channelGroups.map((g2) => ({
-      ...g2,
-      channels: g2.channels.map((gc2) => {
-        if (!job.guards.has(gc2.channelId)) return gc2;
-        if (!looksLikeImportDefaultLimits(gc2.lowerLimit, gc2.upperLimit)) {
-          return gc2;
-        }
-        groupsChanged = true;
-        return {
-          ...gc2,
-          lowerLimit: window2.lower,
-          upperLimit: window2.upper
-        };
-      })
-    }));
-    if (groupsChanged) doc.setChannelGroups(nextGroups);
-  }
-  async function fetchCoarsestUint16(loader, sourceIndex) {
-    var _a2;
-    const planes = loader.data;
-    if (!(planes == null ? void 0 : planes.length)) return null;
-    const cIdx = planes[0].labels.indexOf("c");
-    const nC = cIdx >= 0 ? planes[0].shape[cIdx] : 1;
-    if (sourceIndex < 0 || sourceIndex >= nC) return null;
-    let data2;
-    for (let i2 = planes.length - 1; i2 >= 0; i2--) {
-      try {
-        const raster = await planes[i2].getRaster({
-          selection: {
-            t: 0,
-            z: 0,
-            c: sourceIndex
-          }
-        });
-        if ((_a2 = raster == null ? void 0 : raster.data) == null ? void 0 : _a2.length) {
-          data2 = raster.data;
-          break;
-        }
-      } catch {
-      }
-    }
-    if (!(data2 == null ? void 0 : data2.length)) return null;
-    const stride = Math.max(1, Math.ceil(data2.length / GMM_MAX_SAMPLES));
-    const out = new Uint16Array(Math.ceil(data2.length / stride));
-    const u8 = data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray;
-    for (let i2 = 0, o2 = 0; i2 < data2.length; i2 += stride) {
-      const v2 = Number(data2[i2]);
-      out[o2++] = u8 ? v2 << 8 : Number.isFinite(v2) ? Math.max(0, Math.min(65535, Math.round(v2))) : 0;
-    }
-    return out;
-  }
-  async function runJob(job, gen) {
-    await acquire(fetchUsedBox, fetchWaiters, FETCH_CONCURRENCY);
-    let u16 = null;
-    try {
-      if (gen !== generation) return {
-        kind: "failed"
-      };
-      u16 = await fetchCoarsestUint16(job.loader, job.index);
-    } finally {
-      release(fetchUsedBox, fetchWaiters);
-      pump();
-    }
-    if (gen !== generation) return {
-      kind: "failed"
-    };
-    if (!u16) {
-      failedKeys.add(job.rasterKey);
-      finishJob(job, {
-        kind: "failed"
-      }, gen);
-      pump();
-      return {
-        kind: "failed"
-      };
-    }
-    await acquire(fitUsedBox, fitWaiters, FIT_CONCURRENCY);
-    let window2 = null;
-    try {
-      if (gen === generation) {
-        window2 = await fitChannelGmmContrastFromUint16(u16);
-      }
-    } finally {
-      release(fitUsedBox, fitWaiters);
-    }
-    if (gen !== generation) return {
-      kind: "failed"
-    };
-    if (!window2) {
-      failedKeys.add(job.rasterKey);
-      finishJob(job, {
-        kind: "failed"
-      }, gen);
-      pump();
-      return {
-        kind: "failed"
-      };
-    }
-    commitFitted(job, window2);
-    finishJob(job, {
-      kind: "fitted"
-    }, gen);
-    pump();
-    return {
-      kind: "fitted",
-      window: window2
-    };
-  }
-  function intern(job) {
-    const existing = inFlight.get(job.rasterKey);
-    if (existing) return existing;
-    removeFromQueues(job.rasterKey);
-    const gen = generation;
-    const promise = runJob(job, gen).catch((error2) => {
-      if (gen === generation) {
-        failedKeys.add(job.rasterKey);
-        finishJob(job, {
-          kind: "failed"
-        }, gen);
-        pump();
-      }
-      return {
-        kind: "failed"
-      };
-    });
-    inFlight.set(job.rasterKey, promise);
-    notify();
-    return promise;
-  }
-  function pump() {
-    for (const key2 of [
-      ...queue
-    ]) {
-      const job = jobsByKey.get(key2);
-      if (!job || inFlight.has(key2)) continue;
-      intern(job);
-    }
-  }
-  function attachChannel(job, channelId, guard) {
-    const prev = job.guards.get(channelId);
-    if (!((prev == null ? void 0 : prev.kind) === "unchanged" && guard.kind === "still-missing")) {
-      job.guards.set(channelId, guard);
-    }
-  }
-  function upsertJob(args) {
-    const { sc: sc2, loader, guard, retryFailed } = args;
-    const key2 = rasterKey(sc2.imageId, sc2.index);
-    if (failedKeys.has(key2)) {
-      if (!retryFailed) return null;
-      failedKeys.delete(key2);
-    }
-    const existing = jobsByKey.get(key2);
-    if (existing) {
-      attachChannel(existing, sc2.id, guard);
-      if (!inFlight.has(key2)) enqueue(existing);
-      return existing;
-    }
-    const job = {
-      rasterKey: key2,
-      loader,
-      sourceImageId: sc2.imageId,
-      index: sc2.index,
-      guards: /* @__PURE__ */ new Map([
-        [
-          sc2.id,
-          guard
-        ]
-      ])
-    };
-    jobsByKey.set(key2, job);
-    enqueue(job);
-    return job;
-  }
-  function targetFor(channelId) {
-    const all2 = documentChannels();
-    const sc2 = all2.find((c2) => c2.id === channelId);
-    if (!sc2 || !isEligible(sc2, all2)) return null;
-    const loader = loadersByImageId.get(sc2.imageId);
-    if (!loader) return null;
-    return {
-      sc: sc2,
-      loader
-    };
-  }
-  function blockVisible(channelId) {
-    if (blockedIds.has(channelId)) return;
-    const all2 = documentChannels();
-    const sc2 = all2.find((c2) => c2.id === channelId);
-    if (!sc2 || sc2.gmmContrastLimits || !isEligible(sc2, all2)) return;
-    blockedIds.add(channelId);
-  }
-  function reconcileGmm(args) {
-    const { loaderEntries, channels: channels2, visibleChannelIds } = args;
-    loadersByImageId.clear();
-    for (const entry of loaderEntries) {
-      loadersByImageId.set(entry.sourceImageId, entry.loader);
-    }
-    const liveIds = new Set(loaderEntries.map((e2) => e2.sourceImageId));
-    for (const [key2, job] of [
-      ...jobsByKey
-    ]) {
-      if (liveIds.has(job.sourceImageId)) continue;
-      if (!inFlight.has(key2)) {
-        jobsByKey.delete(key2);
-        removeFromQueues(key2);
-      }
-    }
-    for (const sc2 of channels2) {
-      if (!isEligible(sc2, channels2)) continue;
-      if (sc2.gmmContrastLimits) continue;
-      if (!visibleChannelIds.has(sc2.id)) continue;
-      const loader = loadersByImageId.get(sc2.imageId);
-      if (!loader) continue;
-      const job = upsertJob({
-        sc: sc2,
-        loader,
-        guard: {
-          kind: "still-missing"
-        },
-        retryFailed: false
-      });
-      if (!job) continue;
-      blockVisible(sc2.id);
-    }
-    for (const id2 of [
-      ...blockedIds
-    ]) {
-      const sc2 = channels2.find((c2) => c2.id === id2);
-      if (!sc2 || !visibleChannelIds.has(id2) || sc2.gmmContrastLimits || !isEligible(sc2, channels2)) {
-        blockedIds.delete(id2);
-      }
-    }
-    holdingLoad = blockedIds.size > 0;
-    notify();
-    pump();
-  }
-  async function ensureGmm(channelIds) {
-    const result = /* @__PURE__ */ new Map();
-    const waits = [];
-    for (const channelId of channelIds) {
-      const target = targetFor(channelId);
-      if (!target) continue;
-      const current = asWindow(target.sc.gmmContrastLimits);
-      if (current) {
-        result.set(channelId, {
-          lower: current.lower,
-          upper: current.upper
-        });
-        continue;
-      }
-      const job = upsertJob({
-        sc: target.sc,
-        loader: target.loader,
-        guard: {
-          kind: "still-missing"
-        },
-        retryFailed: true
-      });
-      if (!job) continue;
-      blockVisible(channelId);
-      waits.push(intern(job).then(() => {
-        const sc2 = readChannel(channelId);
-        const limits = asWindow(sc2 == null ? void 0 : sc2.gmmContrastLimits);
-        if (limits) result.set(channelId, {
-          lower: limits.lower,
-          upper: limits.upper
-        });
-      }));
-    }
-    notify();
-    pump();
-    await Promise.all(waits);
-    return result;
-  }
-  async function refitGmm(channelId) {
-    const target = targetFor(channelId);
-    if (!target) return null;
-    const key2 = rasterKey(target.sc.imageId, target.sc.index);
-    const running = inFlight.get(key2);
-    if (running) await running;
-    const latest = targetFor(channelId);
-    if (!latest) return null;
-    const expected = asWindow(latest.sc.gmmContrastLimits);
-    const guard = expected ? {
-      kind: "unchanged",
-      expected: {
-        lower: expected.lower,
-        upper: expected.upper
-      }
-    } : {
-      kind: "still-missing"
-    };
-    const job = upsertJob({
-      sc: latest.sc,
-      loader: latest.loader,
-      guard,
-      retryFailed: true
-    });
-    if (!job) return null;
-    notify();
-    const outcome = await intern(job);
-    if (outcome.kind !== "fitted") return null;
-    const sc2 = readChannel(channelId);
-    if (!limitsEqual(sc2 == null ? void 0 : sc2.gmmContrastLimits, outcome.window)) return null;
-    return {
-      lower: outcome.window.lower,
-      upper: outcome.window.upper
-    };
-  }
-  function subscribeGmmFit(onStoreChange) {
-    listeners.add(onStoreChange);
-    return () => {
-      listeners.delete(onStoreChange);
-    };
-  }
-  function getGmmFitSnapshot() {
-    return snapshot;
-  }
-  function clearGmmScheduler() {
-    generation += 1;
-    loadersByImageId.clear();
-    jobsByKey.clear();
-    queue.length = 0;
-    inFlight.clear();
-    failedKeys.clear();
-    blockedIds.clear();
-    holdingLoad = false;
-    snapshot = emptySnapshot;
-    for (const listener of listeners) listener();
-  }
   const channelActionButton = "_channelActionButton_r32ls_3";
   const colorLockButtonLocked = "_colorLockButtonLocked_r32ls_20";
   const dropHint = "_dropHint_r32ls_29";
@@ -243420,6 +243400,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       channelVisibilities
     ]);
     const palettePendingIds = reactExports.useSyncExternalStore(subscribeStackPalettePending, getStackPalettePendingIds, getStackPalettePendingIds);
+    const gmmPendingIds = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmPendingIds, getGmmPendingIds);
     const [loadingHistogramSourceIds, setLoadingHistogramSourceIds] = reactExports.useState([]);
     const [colorPickerTarget, setColorPickerTarget] = reactExports.useState(null);
     const [colorPickerPos, setColorPickerPos] = reactExports.useState(null);
@@ -244054,6 +244035,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       onRemoveFromGroup: () => removeChannelFromGroup(group2.id, gc2.id),
                       children: jsxRuntimeExports.jsx(ChannelRow, {
                         visible,
+                        fitting: sc2 ? gmmPendingIds.includes(sc2.id) : false,
                         visibilityTitle: visible ? `Hide ${name2}` : `Show ${name2}`,
                         visibilityAriaLabel: `Toggle visibility for ${name2}`,
                         onToggleVisibility: (event) => toggleWithScrollOnShow(event, !visible, () => {
@@ -244231,6 +244213,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           sourceId: sc2.id,
           children: jsxRuntimeExports.jsx(ChannelRow, {
             visible: shownInViewer,
+            fitting: gmmPendingIds.includes(sc2.id),
             visibilityTitle: capped ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) \u2014 hide another channel` : home ? shownInViewer ? `Hide ${sc2.name} in groups` : `Show ${sc2.name} in groups` : stackLayerTitle(sc2, shownInViewer),
             visibilityAriaLabel,
             onToggleVisibility: expanded ? () => toggleAllChannelsVisibility(false) : (event) => toggleWithScrollOnShow(event, !shownInViewer, () => {
@@ -252059,12 +252042,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-16T20:06:20.995Z");
+    const label2 = utcShort("2026-09-17T14:22:48.716Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-16T20:06:20.995Z",
+      title: "2026-09-17T14:22:48.716Z",
       children: [
         "Updated ",
         label2,
@@ -253271,7 +253254,6 @@ void main() {
       images
     ]);
     const prevGmmShownRef = reactExports.useRef(null);
-    const gmmFit = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmFitSnapshot, getGmmFitSnapshot);
     reactExports.useEffect(() => {
       if (!activeStoryId) {
         clearGmmScheduler();
@@ -254626,14 +254608,13 @@ void main() {
         setPresenting(false);
       });
     }, []);
-    const showImageLoading = isLoadingImage || gmmFit.holdingLoad;
     reactExports.useEffect(() => {
       var _a2;
-      if (!showImageLoading) {
+      if (!isLoadingImage) {
         (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
       }
     }, [
-      showImageLoading
+      isLoadingImage
     ]);
     return jsxRuntimeExports.jsx(FileHandler, {
       handleKeys: namespacedHandleKeys,
@@ -254867,7 +254848,7 @@ void main() {
               playbackPreviewDisabled: _waypoints.length === 0
             }) : null,
             imager,
-            showImageLoading ? jsxRuntimeExports.jsxs("output", {
+            isLoadingImage ? jsxRuntimeExports.jsxs("output", {
               className: styles.importLoadingOverlay,
               "aria-busy": "true",
               children: [
