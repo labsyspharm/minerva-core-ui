@@ -1,5 +1,8 @@
-import type { MouseEventHandler } from "react";
+import type { MouseEventHandler, PointerEvent, ReactNode } from "react";
+import { useState } from "react";
+import { createPortal } from "react-dom";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { VIEWER_INTENSITY_LIMIT_HINT } from "@/lib/imaging/channelKind";
 import styles from "./ChannelRow.module.css";
 
 const EyeIcon = () => (
@@ -44,28 +47,70 @@ type VisibilityProps = {
   visible: boolean;
   title: string;
   ariaLabel: string;
+  blocked?: boolean;
   onClick: MouseEventHandler<HTMLButtonElement>;
 };
 
-/** Eye toggle for channel / group visibility (Photoshop-style). */
-export function ChannelVisibilitySwatch(props: VisibilityProps) {
-  const { visible, title, ariaLabel, onClick } = props;
+export function CursorHint(props: {
+  enabled: boolean;
+  label: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const track = (e: PointerEvent<HTMLElement>) => {
+    setPos({ x: e.clientX, y: e.clientY });
+  };
   return (
-    <button
-      type="button"
-      className={[
-        minervaTheme.focusRing,
-        styles.channelVisibilityButton,
-        visible ? "" : styles.channelVisibilityButtonHidden,
-      ]
+    <span
+      className={[styles.cursorHintHost, props.className]
         .filter(Boolean)
         .join(" ")}
-      title={title}
-      aria-label={ariaLabel}
-      aria-pressed={visible}
-      onClick={onClick}
+      onPointerEnter={track}
+      onPointerMove={track}
+      onPointerLeave={() => setPos(null)}
     >
-      {visible ? <EyeIcon /> : <EyeOffIcon />}
-    </button>
+      {props.children}
+      {props.enabled && pos
+        ? createPortal(
+            <output
+              className={styles.cursorHint}
+              style={{ left: pos.x, top: pos.y }}
+            >
+              {props.label}
+            </output>,
+            document.body,
+          )
+        : null}
+    </span>
+  );
+}
+
+/** Eye toggle for channel / group visibility (Photoshop-style). */
+export function ChannelVisibilitySwatch(props: VisibilityProps) {
+  const { visible, title, ariaLabel, blocked, onClick } = props;
+  return (
+    <CursorHint enabled={Boolean(blocked)} label={VIEWER_INTENSITY_LIMIT_HINT}>
+      <button
+        type="button"
+        className={[
+          minervaTheme.focusRing,
+          styles.channelVisibilityButton,
+          visible ? "" : styles.channelVisibilityButtonHidden,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        title={blocked ? undefined : title}
+        aria-label={blocked ? VIEWER_INTENSITY_LIMIT_HINT : ariaLabel}
+        aria-pressed={visible}
+        aria-disabled={blocked || undefined}
+        onClick={(e) => {
+          if (blocked) return;
+          onClick(e);
+        }}
+      >
+        {visible ? <EyeIcon /> : <EyeOffIcon />}
+      </button>
+    </CursorHint>
   );
 }

@@ -26,12 +26,14 @@ import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import {
   applyGroupRowVisibilities,
   applyStackVisibilities,
-  buildCompositedIntensityLayers,
   isDisplayedViaGroupRow,
   isGroupRowVisible,
   isRgbDisplayFullyGrouped,
   isStackVisible,
+  type VivIntensityCapVis,
   visibilitiesForRgbUnit,
+  vivIntensityCapExceeded,
+  withGroupRowVisible,
 } from "@/lib/imaging/channelCompositor";
 import {
   DEFAULT_MASK_VISUALIZATION,
@@ -71,7 +73,6 @@ import {
   effectiveSourceLimits,
   rgbToHex,
 } from "@/lib/imaging/sourceChannelStyle";
-import { MAX_VIV_INTENSITY_CHANNELS } from "@/lib/imaging/viv";
 import { useAppStore } from "@/lib/stores/appStore";
 import type {
   Channel,
@@ -519,7 +520,7 @@ export const ChannelGroupsMasterDetail = (
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
-  const channelGroupRowVisibilities = useAppStore(
+  const storedGroupRowVisibilities = useAppStore(
     (s) => s.channelGroupRowVisibilities,
   );
   const setChannelGroupRowVisibilities = useAppStore(
@@ -552,13 +553,61 @@ export const ChannelGroupsMasterDetail = (
     return out;
   }, [sourceChannels]);
 
+  const visKind =
+    Object.keys(channelVisibilities).length === 0 ? "fresh" : "sync";
   const stackVisibilities = React.useMemo(
     () =>
       applyStackVisibilities(sourceChannels, channelVisibilities, {
-        kind: Object.keys(channelVisibilities).length === 0 ? "fresh" : "sync",
+        kind: visKind,
       }),
-    [sourceChannels, channelVisibilities],
+    [sourceChannels, channelVisibilities, visKind],
   );
+  const channelGroupRowVisibilities = React.useMemo(
+    () =>
+      applyGroupRowVisibilities(
+        channelGroups,
+        storedGroupRowVisibilities,
+        { kind: visKind },
+        stackVisibilities,
+      ),
+    [channelGroups, storedGroupRowVisibilities, visKind, stackVisibilities],
+  );
+
+  const capVis: VivIntensityCapVis = {
+    channels: uniqueSourceChannels,
+    activeGroup: channelGroups.find((g) => g.id === activeChannelGroupId),
+    channelGroups,
+    stackVisibilities,
+    groupRowVisibilities: channelGroupRowVisibilities,
+  };
+  const fitsImage = (
+    imageId: string,
+    next: Partial<
+      Pick<VivIntensityCapVis, "stackVisibilities" | "groupRowVisibilities">
+    >,
+  ) => !vivIntensityCapExceeded(imageId, { ...capVis, ...next });
+  const applyRgbUnit = (imageId: string, visible: boolean) => {
+    const next = visibilitiesForRgbUnit({
+      rgbChannels: sourceChannels.filter(
+        (c) => c.imageId === imageId && isImageChannel(c),
+      ),
+      channelGroups,
+      groupRowVisibilities: channelGroupRowVisibilities,
+      stackVisibilities: stackVisibilities,
+      visible,
+    });
+    if (
+      visible &&
+      !fitsImage(imageId, {
+        stackVisibilities: next.channelVisibilities,
+        groupRowVisibilities: next.channelGroupRowVisibilities,
+      })
+    ) {
+      return;
+    }
+    setChannelGroupRowVisibilities(next.channelGroupRowVisibilities);
+    setChannelVisibilities(next.channelVisibilities);
+  };
   const palettePendingIds = React.useSyncExternalStore(
     subscribeStackPalettePending,
     getStackPalettePendingIds,
@@ -746,7 +795,7 @@ export const ChannelGroupsMasterDetail = (
       }
       setChannelVisibilities(stackOff);
       setChannelGroupRowVisibilities({
-        ...useAppStore.getState().channelGroupRowVisibilities,
+        ...channelGroupRowVisibilities,
         ...Object.fromEntries(seededChannels.map((gc) => [gc.id, true])),
       });
     }
@@ -786,7 +835,10 @@ export const ChannelGroupsMasterDetail = (
     );
   };
 
-  const toggleGroupMasterVisibility = (group: ChannelGroup) => {
+  const toggleGroupMasterVisibility = (
+    group: ChannelGroup,
+    showAllNext: Record<string, boolean>,
+  ) => {
     if (group.channels.length === 0) return;
     const allOn = group.channels.every((gc) =>
       isGroupRowVisible(channelGroupRowVisibilities, gc.id),
@@ -796,23 +848,22 @@ export const ChannelGroupsMasterDetail = (
       group.channels[0].channelId,
     );
     if (first && isRgbDisplayChannel(first, sourceChannels)) {
-      const next = visibilitiesForRgbUnit({
-        rgbChannels: sourceChannels.filter(
-          (c) => c.imageId === first.imageId && isImageChannel(c),
-        ),
-        channelGroups,
-        groupRowVisibilities: channelGroupRowVisibilities,
-        stackVisibilities: stackVisibilities,
-        visible: !allOn,
-      });
-      setChannelGroupRowVisibilities(next.channelGroupRowVisibilities);
-      setChannelVisibilities(next.channelVisibilities);
+      applyRgbUnit(first.imageId, !allOn);
+      return;
+    }
+    if (!allOn) {
+      const imageId = first?.imageId;
+      if (
+        imageId &&
+        !fitsImage(imageId, { groupRowVisibilities: showAllNext })
+      ) {
+        return;
+      }
+      setChannelGroupRowVisibilities(showAllNext);
       return;
     }
     const next = { ...channelGroupRowVisibilities };
-    for (const gc of group.channels) {
-      next[gc.id] = !allOn;
-    }
+    for (const gc of group.channels) next[gc.id] = false;
     setChannelGroupRowVisibilities(next);
   };
 
@@ -924,7 +975,7 @@ export const ChannelGroupsMasterDetail = (
 
       const updatedGroup = newGroups.find((g) => g.id === groupId);
       setChannelGroupRowVisibilities({
-        ...useAppStore.getState().channelGroupRowVisibilities,
+        ...channelGroupRowVisibilities,
         [newChannel.id]: true,
       });
 
@@ -969,6 +1020,7 @@ export const ChannelGroupsMasterDetail = (
       syncGroupState,
       optimizePaletteBusy,
       setChannelGroupRowVisibilities,
+      channelGroupRowVisibilities,
     ],
   );
 
@@ -1145,34 +1197,6 @@ export const ChannelGroupsMasterDetail = (
     setColorPickerPos(colorPickerAnchorPosition(rect));
   };
 
-  const compositedIntensityLayers = React.useMemo(
-    () =>
-      buildCompositedIntensityLayers({
-        onLoader: uniqueSourceChannels.filter((sc) => isImageChannel(sc)),
-        activeGroup: activeChannelGroupId
-          ? channelGroups.find((g) => g.id === activeChannelGroupId)
-          : undefined,
-        channelGroups,
-        stackVisibilities,
-        groupRowVisibilities: channelGroupRowVisibilities,
-        hasVisibilityMap: Object.keys(stackVisibilities).length > 0,
-      }),
-    [
-      uniqueSourceChannels,
-      activeChannelGroupId,
-      channelGroups,
-      stackVisibilities,
-      channelGroupRowVisibilities,
-    ],
-  );
-
-  const visibleIntensitySourceIds = new Set<string>();
-  for (let i = 0; i < compositedIntensityLayers.length; i++) {
-    if (i < MAX_VIV_INTENSITY_CHANNELS) {
-      visibleIntensitySourceIds.add(compositedIntensityLayers[i].sc.id);
-    }
-  }
-
   const showImageBadge = images.length > 1;
   const imageLabels = React.useMemo(
     () => uniqueImageDisplayLabels(images),
@@ -1195,6 +1219,23 @@ export const ChannelGroupsMasterDetail = (
         return src != null && isRgbDisplayChannel(src, sourceChannels);
       });
     const lockedIds = lockedIdsForGroup(group.id);
+    const allGroupRowsOn =
+      group.channels.length > 0 &&
+      group.channels.every((gc) =>
+        isGroupRowVisible(channelGroupRowVisibilities, gc.id),
+      );
+    const groupShowAllNext = { ...channelGroupRowVisibilities };
+    for (const gc of group.channels) groupShowAllNext[gc.id] = true;
+    const groupShowImageId = findSourceChannel(
+      sourceChannels,
+      group.channels[0]?.channelId,
+    )?.imageId;
+    const showAllBlocked =
+      !allGroupRowsOn &&
+      groupShowImageId != null &&
+      !fitsImage(groupShowImageId, {
+        groupRowVisibilities: groupShowAllNext,
+      });
 
     const folderDropProps = {
       onDragOver: (e: React.DragEvent) => {
@@ -1242,7 +1283,8 @@ export const ChannelGroupsMasterDetail = (
             visible={rowsVisible}
             title="Toggle visibility for all channels in this group"
             ariaLabel={`Toggle visibility for group ${group.name}`}
-            onClick={() => toggleGroupMasterVisibility(group)}
+            blocked={showAllBlocked}
+            onClick={() => toggleGroupMasterVisibility(group, groupShowAllNext)}
           />
           <input
             className={`${minervaTheme.input} ${styles.groupFolderName}`}
@@ -1301,6 +1343,19 @@ export const ChannelGroupsMasterDetail = (
                   channelGroupRowVisibilities,
                   gc.id,
                 );
+                const nextRowVis = withGroupRowVisible(
+                  channelGroupRowVisibilities,
+                  channelGroups,
+                  gc.id,
+                  true,
+                );
+                const showBlocked =
+                  sc != null &&
+                  isImageChannel(sc) &&
+                  !visible &&
+                  !fitsImage(sc.imageId, {
+                    groupRowVisibilities: nextRowVis,
+                  });
                 const hex = sc
                   ? assignedDisplayHex(sc, sourceChannels, gc)
                   : rgbToHex(gc.color);
@@ -1360,31 +1415,21 @@ export const ChannelGroupsMasterDetail = (
                           visible ? `Hide ${name}` : `Show ${name}`
                         }
                         visibilityAriaLabel={`Toggle visibility for ${name}`}
+                        visibilityBlocked={showBlocked}
                         onToggleVisibility={(event) =>
                           toggleWithScrollOnShow(event, !visible, () => {
                             if (rgbDisplay && sc) {
-                              const next = visibilitiesForRgbUnit({
-                                rgbChannels: sourceChannels.filter(
-                                  (c) =>
-                                    c.imageId === sc.imageId &&
-                                    isImageChannel(c),
-                                ),
-                                channelGroups,
-                                groupRowVisibilities:
-                                  channelGroupRowVisibilities,
-                                stackVisibilities: stackVisibilities,
-                                visible: !visible,
-                              });
-                              setChannelGroupRowVisibilities(
-                                next.channelGroupRowVisibilities,
-                              );
-                              setChannelVisibilities(next.channelVisibilities);
+                              applyRgbUnit(sc.imageId, !visible);
                               return;
                             }
-                            setChannelGroupRowVisibilities({
-                              ...channelGroupRowVisibilities,
-                              [gc.id]: !visible,
-                            });
+                            setChannelGroupRowVisibilities(
+                              visible
+                                ? {
+                                    ...channelGroupRowVisibilities,
+                                    [gc.id]: false,
+                                  }
+                                : nextRowVis,
+                            );
                           })
                         }
                         name={
@@ -1546,31 +1591,49 @@ export const ChannelGroupsMasterDetail = (
       ? `Toggle layer for ${sc.name} from ${imageLabel}`
       : `Toggle layer for ${sc.name}`;
 
+    const showGroupVis = inAnyGroup
+      ? withGroupRowVisible(
+          channelGroupRowVisibilities,
+          channelGroups,
+          home.row.id,
+          true,
+        )
+      : channelGroupRowVisibilities;
+    const showStackVis = inAnyGroup
+      ? stackVisibilities
+      : { ...stackVisibilities, [sc.id]: true };
+
     const toggleAllChannelsVisibility = (nextVisible: boolean) => {
       if (isRgbDisplayChannel(sc, sourceChannels)) {
-        const next = visibilitiesForRgbUnit({
-          rgbChannels: sourceChannels.filter(
-            (c) => c.imageId === sc.imageId && isImageChannel(c),
-          ),
-          channelGroups,
-          groupRowVisibilities: channelGroupRowVisibilities,
-          stackVisibilities: stackVisibilities,
-          visible: nextVisible,
-        });
-        setChannelGroupRowVisibilities(next.channelGroupRowVisibilities);
-        setChannelVisibilities(next.channelVisibilities);
+        applyRgbUnit(sc.imageId, nextVisible);
         return;
       }
       if (groupRows.length > 0) {
-        const vis = { ...channelGroupRowVisibilities };
-        for (const { row } of groupRows) vis[row.id] = nextVisible;
+        const vis = nextVisible
+          ? showGroupVis
+          : { ...channelGroupRowVisibilities };
+        if (!nextVisible) {
+          for (const { row } of groupRows) vis[row.id] = false;
+        }
+        if (
+          nextVisible &&
+          !fitsImage(sc.imageId, { groupRowVisibilities: vis })
+        ) {
+          return;
+        }
         setChannelGroupRowVisibilities(vis);
         return;
       }
-      setChannelVisibilities({
-        ...stackVisibilities,
-        [sc.id]: nextVisible,
-      });
+      const nextStack = nextVisible
+        ? showStackVis
+        : { ...stackVisibilities, [sc.id]: false };
+      if (
+        nextVisible &&
+        !fitsImage(sc.imageId, { stackVisibilities: nextStack })
+      ) {
+        return;
+      }
+      setChannelVisibilities(nextStack);
     };
 
     const palettePending = palettePendingIds.includes(sc.id);
@@ -1604,12 +1667,13 @@ export const ChannelGroupsMasterDetail = (
           };
 
     const expanded = !inAnyGroup && shownInViewer;
-    const capped =
-      expanded &&
+    const showBlocked =
       isImageChannel(sc) &&
-      stackOn &&
-      Boolean(sc.color) &&
-      !visibleIntensitySourceIds.has(sc.id);
+      !shownInViewer &&
+      !fitsImage(sc.imageId, {
+        stackVisibilities: showStackVis,
+        groupRowVisibilities: showGroupVis,
+      });
     const displayColor = effectiveDisplayColor(sc, sourceChannels, null);
     const displayLimits = effectiveSourceLimits(sc);
     const contrast =
@@ -1632,15 +1696,14 @@ export const ChannelGroupsMasterDetail = (
             visible={shownInViewer}
             fitting={gmmPendingIds.includes(sc.id)}
             visibilityTitle={
-              capped
-                ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
-                : home
-                  ? shownInViewer
-                    ? `Hide ${sc.name} in groups`
-                    : `Show ${sc.name} in groups`
-                  : stackLayerTitle(sc, shownInViewer)
+              home
+                ? shownInViewer
+                  ? `Hide ${sc.name} in groups`
+                  : `Show ${sc.name} in groups`
+                : stackLayerTitle(sc, shownInViewer)
             }
             visibilityAriaLabel={visibilityAriaLabel}
+            visibilityBlocked={showBlocked}
             onToggleVisibility={
               expanded
                 ? () => toggleAllChannelsVisibility(false)

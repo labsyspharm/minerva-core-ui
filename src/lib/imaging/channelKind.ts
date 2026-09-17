@@ -33,6 +33,11 @@ export function normalizeMaskVisualization(value: unknown): MaskVisualization {
 /** Intensity channels on by default at import; matches default group slot count. */
 export const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 5;
 
+/** Viv `XRLayer` shader cap (10 in Viv 0.22). Extra on-channels are not drawn. */
+export const MAX_VIV_INTENSITY_CHANNELS = 10;
+
+export const VIEWER_INTENSITY_LIMIT_HINT = `Max ${MAX_VIV_INTENSITY_CHANNELS} channels`;
+
 /** Document image role for import (`mixed` maps to intensity). */
 export function resolveImageImportRole(image: {
   contentRole?: "intensity" | "segmentation";

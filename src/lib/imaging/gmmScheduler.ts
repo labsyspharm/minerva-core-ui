@@ -13,8 +13,8 @@ import {
 import { applySourceChannelsToImages } from "@/lib/stores/storeUtils";
 
 const FETCH_CONCURRENCY = 4;
-const FIT_CONCURRENCY = 1;
-const GMM_MAX_SAMPLES = 50_000;
+const FIT_CONCURRENCY = 2;
+const GMM_MAX_SAMPLES = 40_000;
 
 type WriteGuard =
   | { kind: "still-missing" }
@@ -182,7 +182,7 @@ function commitFitted(job: Job, window: ContrastLimits): void {
   if (groupsChanged) doc.setChannelGroups(nextGroups);
 }
 
-/** Coarsest pyramid plane, at most 50k uint16 samples. */
+/** Coarsest pyramid plane, at most GMM_MAX_SAMPLES uint16 samples. */
 async function fetchCoarsestUint16(
   loader: Loader,
   sourceIndex: number,

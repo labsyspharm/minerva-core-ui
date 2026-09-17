@@ -101,7 +101,7 @@ export async function fitChannelGmmContrastFromUint16(
       console.log("[psudo] channel_gmm start", { pixels: u16.length });
     }
     const t0 = performance.now();
-    const result = await psudo.channel_gmm(u16);
+    const result = await psudo.channel_gmm(u16, undefined, undefined, 500);
     const ms = Math.round(performance.now() - t0);
     if (result && result.length >= 2) {
       const limits = sanitizeGmmLimits(result[0], result[1]);

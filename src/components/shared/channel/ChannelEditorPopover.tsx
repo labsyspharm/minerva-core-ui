@@ -11,9 +11,14 @@ import {
 } from "@/components/shared/channel/ChannelContrastEditor";
 import { ChannelRow } from "@/components/shared/channel/ChannelRow";
 import {
+  applyGroupRowVisibilities,
+  applyStackVisibilities,
   isGroupRowVisible,
   isStackVisible,
+  type VivIntensityCapVis,
   visibilitiesForRgbUnit,
+  vivIntensityCapExceeded,
+  withGroupRowVisible,
 } from "@/lib/imaging/channelCompositor";
 import {
   isImageChannel,
@@ -200,8 +205,8 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
   const setImagesAndChannelGroups = useDocumentStore(
     (s) => s.setImagesAndChannelGroups,
   );
-  const stackVisibilities = useAppStore((s) => s.channelVisibilities);
-  const groupRowVisibilities = useAppStore(
+  const storedStackVisibilities = useAppStore((s) => s.channelVisibilities);
+  const storedGroupRowVisibilities = useAppStore(
     (s) => s.channelGroupRowVisibilities,
   );
   const channelRendering = useAppStore((s) => s.channelRendering);
@@ -209,6 +214,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
   const setChannelGroupRowVisibilities = useAppStore(
     (s) => s.setChannelGroupRowVisibilities,
   );
+  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const palettePendingIds = React.useSyncExternalStore(
     subscribeStackPalettePending,
     getStackPalettePendingIds,
@@ -230,6 +236,25 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
   const sourceChannels = React.useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
+  );
+  const visKind =
+    Object.keys(storedStackVisibilities).length === 0 ? "fresh" : "sync";
+  const stackVisibilities = React.useMemo(
+    () =>
+      applyStackVisibilities(sourceChannels, storedStackVisibilities, {
+        kind: visKind,
+      }),
+    [sourceChannels, storedStackVisibilities, visKind],
+  );
+  const groupRowVisibilities = React.useMemo(
+    () =>
+      applyGroupRowVisibilities(
+        channelGroups,
+        storedGroupRowVisibilities,
+        { kind: visKind },
+        stackVisibilities,
+      ),
+    [channelGroups, storedGroupRowVisibilities, visKind, stackVisibilities],
   );
   const sc = findSourceChannel(sourceChannels, chip.sourceId);
   const gc =
@@ -286,9 +311,21 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
       ? { scope: "group", groupId: chip.groupId, rowId: gc.id }
       : { scope: "source", sourceId: sc.id };
 
-  const toggleVisible = () => {
-    if (rgbDisplay) {
-      const next = visibilitiesForRgbUnit({
+  const capVis: VivIntensityCapVis = {
+    channels: sourceChannels,
+    activeGroup: channelGroups.find((g) => g.id === activeChannelGroupId),
+    channelGroups,
+    stackVisibilities,
+    groupRowVisibilities,
+  };
+  const fits = (
+    next: Partial<
+      Pick<VivIntensityCapVis, "stackVisibilities" | "groupRowVisibilities">
+    >,
+  ) => !vivIntensityCapExceeded(sc.imageId, { ...capVis, ...next });
+
+  const rgbUnit = rgbDisplay
+    ? visibilitiesForRgbUnit({
         rgbChannels: sourceChannels.filter(
           (c) => c.imageId === sc.imageId && isImageChannel(c),
         ),
@@ -296,23 +333,55 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
         groupRowVisibilities,
         stackVisibilities,
         visible: !visible,
-      });
-      setChannelGroupRowVisibilities(next.channelGroupRowVisibilities);
-      setChannelVisibilities(next.channelVisibilities);
-      return;
-    }
-    if (gc) {
-      setChannelGroupRowVisibilities({
-        ...groupRowVisibilities,
-        [gc.id]: !visible,
-      });
-      return;
-    }
-    setChannelVisibilities({
-      ...stackVisibilities,
-      [sc.id]: !visible,
-    });
+      })
+    : null;
+  const nextGroupVis = gc
+    ? withGroupRowVisible(groupRowVisibilities, channelGroups, gc.id, !visible)
+    : null;
+  const nextStackVis = {
+    ...stackVisibilities,
+    [sc.id]: !visible,
   };
+
+  const toggleVisible = () => {
+    if (rgbUnit) {
+      if (
+        !visible &&
+        !fits({
+          stackVisibilities: rgbUnit.channelVisibilities,
+          groupRowVisibilities: rgbUnit.channelGroupRowVisibilities,
+        })
+      ) {
+        return;
+      }
+      setChannelGroupRowVisibilities(rgbUnit.channelGroupRowVisibilities);
+      setChannelVisibilities(rgbUnit.channelVisibilities);
+      return;
+    }
+    if (nextGroupVis) {
+      if (!visible && !fits({ groupRowVisibilities: nextGroupVis })) return;
+      setChannelGroupRowVisibilities(nextGroupVis);
+      return;
+    }
+    if (!visible && !fits({ stackVisibilities: nextStackVis })) return;
+    setChannelVisibilities(nextStackVis);
+  };
+
+  const showBlocked = Boolean(
+    rgbUnit
+      ? !visible &&
+          !fits({
+            stackVisibilities: rgbUnit.channelVisibilities,
+            groupRowVisibilities: rgbUnit.channelGroupRowVisibilities,
+          })
+      : isImageChannel(sc) &&
+          !visible &&
+          !fits(
+            nextGroupVis
+              ? { groupRowVisibilities: nextGroupVis }
+              : { stackVisibilities: nextStackVis },
+          ),
+  );
 
   const rename = (value: string) => {
     const trimmed = value.trim();
@@ -376,6 +445,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
         fitting={gmmPendingIds.includes(sc.id)}
         visibilityTitle={visible ? `Hide ${sc.name}` : `Show ${sc.name}`}
         visibilityAriaLabel={`Toggle visibility for ${sc.name}`}
+        visibilityBlocked={showBlocked}
         onToggleVisibility={toggleVisible}
         name={{
           mode: "editable",

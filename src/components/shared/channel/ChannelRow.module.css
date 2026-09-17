@@ -243,6 +243,27 @@
   color: var(--minerva-quiet);
 }
 
+.cursorHintHost {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.cursorHint {
+  position: fixed;
+  z-index: 10000;
+  margin: 0;
+  padding: 3px 6px;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 8px));
+  background: var(--minerva-ink);
+  color: var(--minerva-paper);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .channelVisibilityButton {
   display: flex;
   align-items: center;

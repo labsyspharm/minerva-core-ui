@@ -3,21 +3,17 @@ import type {
   Channel as SourceChannel,
 } from "@/lib/stores/documentStore";
 import type { Roi } from "../shapes/roiParser";
-import { buildCompositedIntensityLayers } from "./channelCompositor";
-import { isImageChannel } from "./channelKind";
+import {
+  applyVisibilityTransition,
+  buildCompositedIntensityLayers,
+} from "./channelCompositor";
+import { isImageChannel, MAX_VIV_INTENSITY_CHANNELS } from "./channelKind";
 import type { LoaderPlane } from "./loaderTypes";
 import {
   effectiveDisplayColor,
   effectiveSourceColor,
   effectiveSourceLimits,
 } from "./sourceChannelStyle";
-
-/**
- * Viv's `XRLayer` shader compiles with `MAX_CHANNELS` (10 in Viv 0.22).
- * Passing more than that crashes the WebGL draw. We cap visible intensity
- * layers at this limit and warn so the panel can surface a hint.
- */
-export const MAX_VIV_INTENSITY_CHANNELS = 10;
 
 /** Keep parent pyramid tiles around for best-available refinement while zooming. */
 export const VIV_TILE_MAX_CACHE_SIZE = 128;
@@ -217,16 +213,22 @@ const toSettings = (opts: ToSettingsOpts) => {
       ? channelGroups.find((g) => g.id === activeChannelGroupId)
       : undefined;
 
-    const hasVisibilityMap =
-      channelVisibilities != null &&
-      Object.keys(channelVisibilities).length > 0;
+    const filled = applyVisibilityTransition(
+      SourceChannels,
+      channelGroups,
+      channelVisibilities ?? {},
+      channelGroupRowVisibilities,
+      Object.keys(channelVisibilities ?? {}).length === 0
+        ? { kind: "fresh" }
+        : { kind: "sync" },
+    );
     const composited = buildCompositedIntensityLayers({
       onLoader,
       activeGroup,
       channelGroups,
-      stackVisibilities: channelVisibilities ?? {},
-      groupRowVisibilities: channelGroupRowVisibilities,
-      hasVisibilityMap,
+      stackVisibilities: filled.channelVisibilities,
+      groupRowVisibilities: filled.channelGroupRowVisibilities,
+      hasVisibilityMap: true,
     });
 
     if (composited.length > MAX_VIV_INTENSITY_CHANNELS && import.meta.env.DEV) {
