@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-0puzr2ai.js","./pako.esm-KbdoS3Oq.js","./lerc-juQIrrIE.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DabTjvKT.js","./pako.esm-KbdoS3Oq.js","./lerc-Bum2WscH.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -17575,6 +17575,8 @@ let __tla = (async () => {
     return parsed.success ? parsed.data : DEFAULT_MASK_VISUALIZATION;
   }
   const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 5;
+  const MAX_VIV_INTENSITY_CHANNELS = 10;
+  const VIEWER_INTENSITY_LIMIT_HINT = `Max ${MAX_VIV_INTENSITY_CHANNELS} channels`;
   function resolveImageImportRole(image2) {
     const role = resolveImageContentRole(image2);
     return role === "segmentation" ? "segmentation" : "intensity";
@@ -18129,6 +18131,28 @@ let __tla = (async () => {
   function isDisplayedViaGroupRow(sourceId, channelGroups, groupRowVisibilities) {
     return channelGroups.some((g2) => g2.channels.some((gc2) => gc2.channelId === sourceId && isGroupRowVisible(groupRowVisibilities, gc2.id)));
   }
+  function withGroupRowVisible(prev, channelGroups, rowId, visible) {
+    const next2 = {
+      ...prev,
+      [rowId]: visible
+    };
+    if (!visible) return next2;
+    let sourceId;
+    for (const group2 of channelGroups) {
+      const row = group2.channels.find((gc2) => gc2.id === rowId);
+      if (row) {
+        sourceId = row.channelId;
+        break;
+      }
+    }
+    if (!sourceId) return next2;
+    for (const group2 of channelGroups) {
+      for (const gc2 of group2.channels) {
+        if (gc2.channelId === sourceId && gc2.id !== rowId) next2[gc2.id] = false;
+      }
+    }
+    return next2;
+  }
   function sourceIdsInAnyGroup(channelGroups) {
     return new Set(channelGroups.flatMap((g2) => g2.channels.map((gc2) => gc2.channelId)));
   }
@@ -18227,6 +18251,36 @@ let __tla = (async () => {
       });
     }
     return ordered;
+  }
+  function compositedForImage(imageId, vis) {
+    return buildCompositedIntensityLayers({
+      onLoader: vis.channels.filter((sc2) => sc2.imageId === imageId && isImageChannel(sc2)),
+      activeGroup: vis.activeGroup,
+      channelGroups: vis.channelGroups,
+      stackVisibilities: vis.stackVisibilities,
+      groupRowVisibilities: vis.groupRowVisibilities,
+      hasVisibilityMap: true
+    });
+  }
+  function vivShownIntensitySourceIds(vis) {
+    const ids = /* @__PURE__ */ new Set();
+    const imageIds = /* @__PURE__ */ new Set();
+    for (const sc2 of vis.channels) {
+      if (isImageChannel(sc2)) imageIds.add(sc2.imageId);
+    }
+    for (const imageId of imageIds) {
+      const layers = compositedForImage(imageId, vis);
+      for (let i2 = 0; i2 < layers.length && i2 < MAX_VIV_INTENSITY_CHANNELS; i2++) {
+        ids.add(layers[i2].sc.id);
+      }
+    }
+    return ids;
+  }
+  function vivIntensityLayerCount(imageId, vis) {
+    return compositedForImage(imageId, vis).length;
+  }
+  function vivIntensityCapExceeded(imageId, vis) {
+    return vivIntensityLayerCount(imageId, vis) > MAX_VIV_INTENSITY_CHANNELS;
   }
   function isMaskSourceRendered(args) {
     const { sc: sc2, channelGroups = [], stackVisibilities, groupRowVisibilities } = args;
@@ -21782,7 +21836,6 @@ let __tla = (async () => {
       };
     });
   }
-  const MAX_VIV_INTENSITY_CHANNELS = 10;
   const VIV_TILE_MAX_CACHE_SIZE = 128;
   function mergeStickyIntensityOccupancy(args) {
     const preferredVisible = args.visibleSourceIds.slice(0, args.maxChannels);
@@ -21887,14 +21940,18 @@ let __tla = (async () => {
       const sourceImageMatches = (image_id) => loaderSourceImageId !== void 0 && loaderSourceImageId !== "" ? image_id === loaderSourceImageId : image_id === modality;
       const onLoader = SourceChannels.filter((sc2) => sourceImageMatches(sc2.imageId) && isImageChannel(sc2));
       const activeGroup = activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : void 0;
-      const hasVisibilityMap = channelVisibilities != null && Object.keys(channelVisibilities).length > 0;
+      const filled = applyVisibilityTransition(SourceChannels, channelGroups, channelVisibilities ?? {}, channelGroupRowVisibilities, Object.keys(channelVisibilities ?? {}).length === 0 ? {
+        kind: "fresh"
+      } : {
+        kind: "sync"
+      });
       const composited = buildCompositedIntensityLayers({
         onLoader,
         activeGroup,
         channelGroups,
-        stackVisibilities: channelVisibilities ?? {},
-        groupRowVisibilities: channelGroupRowVisibilities,
-        hasVisibilityMap
+        stackVisibilities: filled.channelVisibilities,
+        groupRowVisibilities: filled.channelGroupRowVisibilities,
+        hasVisibilityMap: true
       });
       if (composited.length > MAX_VIV_INTENSITY_CHANNELS && false) ;
       const byId = new Map(composited.map((layer) => [
@@ -62146,26 +62203,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-Br4FrVQk.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-D_dcr4BQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CQiL_Xp_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-a3QxUPq8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CmvWXRjK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-UrwmxIC7.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-0puzr2ai.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-C-aX4mBH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-juQIrrIE.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DabTjvKT.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DpJKI6aZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Bum2WscH.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-C_h9Sk2B.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-C_ZUOXE7.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DT5o7NZd.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CAmZKbdb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -90190,38 +90247,40 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  const channelNameInput = "_channelNameInput_186a2_3";
-  const channelRowMain = "_channelRowMain_186a2_12";
-  const channelRowTitle = "_channelRowTitle_186a2_19";
-  const channelRowMid = "_channelRowMid_186a2_29";
-  const channelNameSlot = "_channelNameSlot_186a2_34";
-  const channelRowTrailing = "_channelRowTrailing_186a2_49";
-  const maskDisclosureButton = "_maskDisclosureButton_186a2_59";
-  const channelImageSubtitle = "_channelImageSubtitle_186a2_82";
-  const maskModeControls = "_maskModeControls_186a2_95";
-  const maskControlsPanel = "_maskControlsPanel_186a2_102";
-  const maskModeToggles = "_maskModeToggles_186a2_107";
-  const maskModeGroup = "_maskModeGroup_186a2_114";
-  const maskModeGroupLabel = "_maskModeGroupLabel_186a2_121";
-  const maskVizToggle = "_maskVizToggle_186a2_128";
-  const maskOpacityControl = "_maskOpacityControl_186a2_140";
-  const maskOpacityInputRow = "_maskOpacityInputRow_186a2_148";
-  const maskOpacityLabel = "_maskOpacityLabel_186a2_161";
-  const maskOpacitySlider = "_maskOpacitySlider_186a2_168";
-  const maskOpacityValue = "_maskOpacityValue_186a2_236";
-  const channelVisibilityButton = "_channelVisibilityButton_186a2_246";
-  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_186a2_270";
-  const channelColorSwatch = "_channelColorSwatch_186a2_274";
-  const channelColorSwatchStatic = "_channelColorSwatchStatic_186a2_275";
-  const channelColorSwatchUnfilled = "_channelColorSwatchUnfilled_186a2_288";
-  const detailChannelRowLocked = "_detailChannelRowLocked_186a2_306";
-  const maskVizOption = "_maskVizOption_186a2_310";
-  const maskVizOptionActive = "_maskVizOptionActive_186a2_334";
-  const maskVizIconOutline = "_maskVizIconOutline_186a2_339";
-  const maskVizIconFull = "_maskVizIconFull_186a2_340";
-  const maskVizSwatchWhite = "_maskVizSwatchWhite_186a2_341";
-  const maskVizSwatchRandom = "_maskVizSwatchRandom_186a2_342";
-  const channelRow = "_channelRow_186a2_12";
+  const channelNameInput = "_channelNameInput_1qzw8_3";
+  const channelRowMain = "_channelRowMain_1qzw8_12";
+  const channelRowTitle = "_channelRowTitle_1qzw8_19";
+  const channelRowMid = "_channelRowMid_1qzw8_29";
+  const channelNameSlot = "_channelNameSlot_1qzw8_34";
+  const channelRowTrailing = "_channelRowTrailing_1qzw8_49";
+  const maskDisclosureButton = "_maskDisclosureButton_1qzw8_59";
+  const channelImageSubtitle = "_channelImageSubtitle_1qzw8_82";
+  const maskModeControls = "_maskModeControls_1qzw8_95";
+  const maskControlsPanel = "_maskControlsPanel_1qzw8_102";
+  const maskModeToggles = "_maskModeToggles_1qzw8_107";
+  const maskModeGroup = "_maskModeGroup_1qzw8_114";
+  const maskModeGroupLabel = "_maskModeGroupLabel_1qzw8_121";
+  const maskVizToggle = "_maskVizToggle_1qzw8_128";
+  const maskOpacityControl = "_maskOpacityControl_1qzw8_140";
+  const maskOpacityInputRow = "_maskOpacityInputRow_1qzw8_148";
+  const maskOpacityLabel = "_maskOpacityLabel_1qzw8_161";
+  const maskOpacitySlider = "_maskOpacitySlider_1qzw8_168";
+  const maskOpacityValue = "_maskOpacityValue_1qzw8_236";
+  const cursorHintHost = "_cursorHintHost_1qzw8_246";
+  const cursorHint = "_cursorHint_1qzw8_246";
+  const channelVisibilityButton = "_channelVisibilityButton_1qzw8_267";
+  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_1qzw8_291";
+  const channelColorSwatch = "_channelColorSwatch_1qzw8_295";
+  const channelColorSwatchStatic = "_channelColorSwatchStatic_1qzw8_296";
+  const channelColorSwatchUnfilled = "_channelColorSwatchUnfilled_1qzw8_309";
+  const detailChannelRowLocked = "_detailChannelRowLocked_1qzw8_327";
+  const maskVizOption = "_maskVizOption_1qzw8_331";
+  const maskVizOptionActive = "_maskVizOptionActive_1qzw8_355";
+  const maskVizIconOutline = "_maskVizIconOutline_1qzw8_360";
+  const maskVizIconFull = "_maskVizIconFull_1qzw8_361";
+  const maskVizSwatchWhite = "_maskVizSwatchWhite_1qzw8_362";
+  const maskVizSwatchRandom = "_maskVizSwatchRandom_1qzw8_363";
+  const channelRow = "_channelRow_1qzw8_12";
   const styles$o = {
     channelNameInput,
     channelRowMain,
@@ -90242,6 +90301,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     maskOpacityLabel,
     maskOpacitySlider,
     maskOpacityValue,
+    cursorHintHost,
+    cursorHint,
     channelVisibilityButton,
     channelVisibilityButtonHidden,
     channelColorSwatch,
@@ -90311,20 +90372,57 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })
     ]
   });
-  function ChannelVisibilitySwatch(props) {
-    const { visible, title: title7, ariaLabel, onClick } = props;
-    return jsxRuntimeExports.jsx("button", {
-      type: "button",
+  function CursorHint(props) {
+    const [pos, setPos] = reactExports.useState(null);
+    const track = (e2) => {
+      setPos({
+        x: e2.clientX,
+        y: e2.clientY
+      });
+    };
+    return jsxRuntimeExports.jsxs("span", {
       className: [
-        minervaTheme.focusRing,
-        styles$o.channelVisibilityButton,
-        visible ? "" : styles$o.channelVisibilityButtonHidden
+        styles$o.cursorHintHost,
+        props.className
       ].filter(Boolean).join(" "),
-      title: title7,
-      "aria-label": ariaLabel,
-      "aria-pressed": visible,
-      onClick,
-      children: visible ? jsxRuntimeExports.jsx(EyeIcon, {}) : jsxRuntimeExports.jsx(EyeOffIcon, {})
+      onPointerEnter: track,
+      onPointerMove: track,
+      onPointerLeave: () => setPos(null),
+      children: [
+        props.children,
+        props.enabled && pos ? reactDomExports.createPortal(jsxRuntimeExports.jsx("output", {
+          className: styles$o.cursorHint,
+          style: {
+            left: pos.x,
+            top: pos.y
+          },
+          children: props.label
+        }), document.body) : null
+      ]
+    });
+  }
+  function ChannelVisibilitySwatch(props) {
+    const { visible, title: title7, ariaLabel, blocked, onClick } = props;
+    return jsxRuntimeExports.jsx(CursorHint, {
+      enabled: Boolean(blocked),
+      label: VIEWER_INTENSITY_LIMIT_HINT,
+      children: jsxRuntimeExports.jsx("button", {
+        type: "button",
+        className: [
+          minervaTheme.focusRing,
+          styles$o.channelVisibilityButton,
+          visible ? "" : styles$o.channelVisibilityButtonHidden
+        ].filter(Boolean).join(" "),
+        title: blocked ? void 0 : title7,
+        "aria-label": blocked ? VIEWER_INTENSITY_LIMIT_HINT : ariaLabel,
+        "aria-pressed": visible,
+        "aria-disabled": blocked || void 0,
+        onClick: (e2) => {
+          if (blocked) return;
+          onClick(e2);
+        },
+        children: visible ? jsxRuntimeExports.jsx(EyeIcon, {}) : jsxRuntimeExports.jsx(EyeOffIcon, {})
+      })
     });
   }
   function ChannelColorSwatchButton(props) {
@@ -90574,7 +90672,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function ChannelRow(props) {
-    const { visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, contrast, trailing, locked, isMask, maskVisualization, onMaskVisualizationChange, onMaskVisualizationPreview, maskAriaLabel, fixedColorHex, colorHex, colorTitle, busy, fitting, onColorClick } = props;
+    const { visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, contrast, trailing, locked, isMask, maskVisualization, onMaskVisualizationChange, onMaskVisualizationPreview, maskAriaLabel, fixedColorHex, colorHex, colorTitle, busy, fitting, visibilityBlocked, onColorClick } = props;
     const showMask = isMask && maskVisualization;
     const showColor = !isMask && onColorClick;
     const [maskControlsOpen, setMaskControlsOpen] = reactExports.useState(true);
@@ -90605,6 +90703,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               visible,
               title: visibilityTitle,
               ariaLabel: visibilityAriaLabel,
+              blocked: visibilityBlocked,
               onClick: onToggleVisibility
             }),
             jsxRuntimeExports.jsxs("div", {
@@ -91255,7 +91354,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       await warmupPsudoPalette();
       if (false) ;
       const t0 = performance.now();
-      const result = await psudo.channel_gmm(u16);
+      const result = await psudo.channel_gmm(u16, void 0, void 0, 500);
       const ms = Math.round(performance.now() - t0);
       if (result && result.length >= 2) {
         const limits = sanitizeGmmLimits(result[0], result[1]);
@@ -91271,8 +91370,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return fallback;
   }
   const FETCH_CONCURRENCY = 4;
-  const FIT_CONCURRENCY = 1;
-  const GMM_MAX_SAMPLES = 5e4;
+  const FIT_CONCURRENCY = 2;
+  const GMM_MAX_SAMPLES = 4e4;
   const emptySnapshot = {
     pendingIds: []
   };
@@ -92405,11 +92504,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const setImages = useDocumentStore((s2) => s2.setImages);
     const setImagesAndChannelGroups = useDocumentStore((s2) => s2.setImagesAndChannelGroups);
-    const stackVisibilities = useAppStore((s2) => s2.channelVisibilities);
-    const groupRowVisibilities = useAppStore((s2) => s2.channelGroupRowVisibilities);
+    const storedStackVisibilities = useAppStore((s2) => s2.channelVisibilities);
+    const storedGroupRowVisibilities = useAppStore((s2) => s2.channelGroupRowVisibilities);
     const channelRendering = useAppStore((s2) => s2.channelRendering);
     const setChannelVisibilities = useAppStore((s2) => s2.setChannelVisibilities);
     const setChannelGroupRowVisibilities = useAppStore((s2) => s2.setChannelGroupRowVisibilities);
+    const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const palettePendingIds = reactExports.useSyncExternalStore(subscribeStackPalettePending, getStackPalettePendingIds, getStackPalettePendingIds);
     const gmmPendingIds = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmPendingIds, getGmmPendingIds);
     const [colorTarget, setColorTarget] = reactExports.useState(null);
@@ -92417,6 +92517,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [histogramLoading2, setHistogramLoading] = reactExports.useState(false);
     const sourceChannels = reactExports.useMemo(() => flattenImageChannelsInDocumentOrder(images), [
       images
+    ]);
+    const visKind = Object.keys(storedStackVisibilities).length === 0 ? "fresh" : "sync";
+    const stackVisibilities = reactExports.useMemo(() => applyStackVisibilities(sourceChannels, storedStackVisibilities, {
+      kind: visKind
+    }), [
+      sourceChannels,
+      storedStackVisibilities,
+      visKind
+    ]);
+    const groupRowVisibilities = reactExports.useMemo(() => applyGroupRowVisibilities(channelGroups, storedGroupRowVisibilities, {
+      kind: visKind
+    }, stackVisibilities), [
+      channelGroups,
+      storedGroupRowVisibilities,
+      visKind,
+      stackVisibilities
     ]);
     const sc2 = findSourceChannel(sourceChannels, chip2.sourceId);
     const gc2 = chip2.groupId && chip2.groupRowId ? ((_a2 = channelGroups.find((g2) => g2.id === chip2.groupId)) == null ? void 0 : _a2.channels.find((ch2) => ch2.id === chip2.groupRowId)) ?? null : null;
@@ -92462,31 +92578,61 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       scope: "source",
       sourceId: sc2.id
     };
-    const toggleVisible = () => {
-      if (rgbDisplay) {
-        const next2 = visibilitiesForRgbUnit({
-          rgbChannels: sourceChannels.filter((c2) => c2.imageId === sc2.imageId && isImageChannel(c2)),
-          channelGroups,
-          groupRowVisibilities,
-          stackVisibilities,
-          visible: !visible
-        });
-        setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
-        setChannelVisibilities(next2.channelVisibilities);
-        return;
-      }
-      if (gc2) {
-        setChannelGroupRowVisibilities({
-          ...groupRowVisibilities,
-          [gc2.id]: !visible
-        });
-        return;
-      }
-      setChannelVisibilities({
-        ...stackVisibilities,
-        [sc2.id]: !visible
-      });
+    const capVis = {
+      channels: sourceChannels,
+      activeGroup: channelGroups.find((g2) => g2.id === activeChannelGroupId),
+      channelGroups,
+      stackVisibilities,
+      groupRowVisibilities
     };
+    const fits = (next2) => !vivIntensityCapExceeded(sc2.imageId, {
+      ...capVis,
+      ...next2
+    });
+    const rgbUnit = rgbDisplay ? visibilitiesForRgbUnit({
+      rgbChannels: sourceChannels.filter((c2) => c2.imageId === sc2.imageId && isImageChannel(c2)),
+      channelGroups,
+      groupRowVisibilities,
+      stackVisibilities,
+      visible: !visible
+    }) : null;
+    const nextGroupVis = gc2 ? withGroupRowVisible(groupRowVisibilities, channelGroups, gc2.id, !visible) : null;
+    const nextStackVis = {
+      ...stackVisibilities,
+      [sc2.id]: !visible
+    };
+    const toggleVisible = () => {
+      if (rgbUnit) {
+        if (!visible && !fits({
+          stackVisibilities: rgbUnit.channelVisibilities,
+          groupRowVisibilities: rgbUnit.channelGroupRowVisibilities
+        })) {
+          return;
+        }
+        setChannelGroupRowVisibilities(rgbUnit.channelGroupRowVisibilities);
+        setChannelVisibilities(rgbUnit.channelVisibilities);
+        return;
+      }
+      if (nextGroupVis) {
+        if (!visible && !fits({
+          groupRowVisibilities: nextGroupVis
+        })) return;
+        setChannelGroupRowVisibilities(nextGroupVis);
+        return;
+      }
+      if (!visible && !fits({
+        stackVisibilities: nextStackVis
+      })) return;
+      setChannelVisibilities(nextStackVis);
+    };
+    const showBlocked = Boolean(rgbUnit ? !visible && !fits({
+      stackVisibilities: rgbUnit.channelVisibilities,
+      groupRowVisibilities: rgbUnit.channelGroupRowVisibilities
+    }) : isImageChannel(sc2) && !visible && !fits(nextGroupVis ? {
+      groupRowVisibilities: nextGroupVis
+    } : {
+      stackVisibilities: nextStackVis
+    }));
     const rename = (value) => {
       const trimmed = value.trim();
       if (!trimmed || trimmed === sc2.name) return;
@@ -92535,6 +92681,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           fitting: gmmPendingIds.includes(sc2.id),
           visibilityTitle: visible ? `Hide ${sc2.name}` : `Show ${sc2.name}`,
           visibilityAriaLabel: `Toggle visibility for ${sc2.name}`,
+          visibilityBlocked: showBlocked,
           onToggleVisibility: toggleVisible,
           name: {
             mode: "editable",
@@ -92660,21 +92807,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       allChannels
     };
   }
-  const root$9 = "_root_1v5gp_1";
-  const groupCard = "_groupCard_1v5gp_9";
-  const groupHeader = "_groupHeader_1v5gp_16";
-  const channelFilter$1 = "_channelFilter_1v5gp_23";
-  const groupLabel = "_groupLabel_1v5gp_28";
-  const filterEmpty$1 = "_filterEmpty_1v5gp_70";
-  const chipWrap = "_chipWrap_1v5gp_76";
-  const chipCell = "_chipCell_1v5gp_83";
-  const chipOn = "_chipOn_1v5gp_93";
-  const chipOutlined = "_chipOutlined_1v5gp_99";
-  const chipUnassigned = "_chipUnassigned_1v5gp_104";
-  const chip = "_chip_1v5gp_76";
-  const chipMenu = "_chipMenu_1v5gp_110";
-  const chipDim = "_chipDim_1v5gp_148";
-  const editor = "_editor_1v5gp_152";
+  const root$9 = "_root_1wrg4_1";
+  const groupCard = "_groupCard_1wrg4_9";
+  const groupHeader = "_groupHeader_1wrg4_16";
+  const channelFilter$1 = "_channelFilter_1wrg4_23";
+  const groupLabel = "_groupLabel_1wrg4_28";
+  const filterEmpty$1 = "_filterEmpty_1wrg4_70";
+  const chipWrap = "_chipWrap_1wrg4_76";
+  const chipCell = "_chipCell_1wrg4_83";
+  const chipOn = "_chipOn_1wrg4_93";
+  const chipOutlined = "_chipOutlined_1wrg4_99";
+  const chipUnassigned = "_chipUnassigned_1wrg4_104";
+  const chip = "_chip_1wrg4_76";
+  const chipMenu = "_chipMenu_1wrg4_110";
+  const chipHint = "_chipHint_1wrg4_120";
+  const chipDim = "_chipDim_1wrg4_154";
+  const editor = "_editor_1wrg4_158";
   const styles$n = {
     root: root$9,
     groupCard,
@@ -92689,6 +92837,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     chipUnassigned,
     chip,
     chipMenu,
+    chipHint,
     chipDim,
     editor
   };
@@ -92696,14 +92845,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return chip2.visible ? `Hide ${chip2.name}` : `Show ${chip2.name}`;
   }
   function ChipButton(props) {
-    const { chip: chip2, open, dim, colorPending, gmmPending, onClick, onOpenEditor } = props;
+    const { chip: chip2, open, dim, colorPending, gmmPending, shown, showBlocked, onClick, onOpenEditor } = props;
     const pending = colorPending || gmmPending;
     const pendingLabel2 = gmmPending ? `Fitting contrast for ${chip2.name}` : `Assigning color to ${chip2.name}`;
     return jsxRuntimeExports.jsxs("div", {
       className: [
         styles$n.chipCell,
-        chip2.visible && chip2.hex ? styles$n.chipOn : null,
-        !chip2.visible && chip2.hex ? styles$n.chipOutlined : null,
+        chip2.visible && chip2.hex && shown ? styles$n.chipOn : null,
+        chip2.hex && (!chip2.visible || !shown) ? styles$n.chipOutlined : null,
         chip2.hex ? null : styles$n.chipUnassigned,
         pending ? minervaTheme.busyOverlay : null,
         dim ? styles$n.chipDim : null
@@ -92713,14 +92862,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       } : void 0,
       "aria-busy": pending || void 0,
       children: [
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: `${minervaTheme.focusRing} ${styles$n.chip}`,
-          title: pending ? pendingLabel2 : chip2.name,
-          "aria-label": pending ? pendingLabel2 : chipAriaLabel(chip2),
-          "aria-pressed": chip2.visible,
-          onClick: () => onClick(chip2),
-          children: chip2.name
+        jsxRuntimeExports.jsx(CursorHint, {
+          enabled: showBlocked,
+          label: VIEWER_INTENSITY_LIMIT_HINT,
+          className: styles$n.chipHint,
+          children: jsxRuntimeExports.jsx("button", {
+            type: "button",
+            className: `${minervaTheme.focusRing} ${styles$n.chip}`,
+            title: pending ? pendingLabel2 : void 0,
+            "aria-label": pending ? pendingLabel2 : showBlocked ? VIEWER_INTENSITY_LIMIT_HINT : chipAriaLabel(chip2),
+            "aria-pressed": chip2.visible,
+            "aria-disabled": showBlocked || void 0,
+            onClick: () => {
+              if (showBlocked) return;
+              onClick(chip2);
+            },
+            children: chip2.name
+          })
         }),
         jsxRuntimeExports.jsx("button", {
           type: "button",
@@ -92741,7 +92899,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   const CHIP_COLS = 5;
   function ChipGrid(props) {
-    const { chips, openChip } = props;
+    const { chips, openChip, shownIds, blockedIds } = props;
     const pendingIds = reactExports.useSyncExternalStore(subscribeStackPalettePending, getStackPalettePendingIds, getStackPalettePendingIds);
     const gmmPendingIds = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmPendingIds, getGmmPendingIds);
     const openIndex = openChip ? chips.findIndex((c2) => c2.key === openChip.key) : -1;
@@ -92756,6 +92914,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             dim: openChip != null && openChip.key !== chip2.key,
             colorPending: pendingIds.includes(chip2.sourceId),
             gmmPending: gmmPendingIds.includes(chip2.sourceId),
+            shown: shownIds.has(chip2.sourceId),
+            showBlocked: blockedIds.has(chip2.sourceId),
             onClick: props.onChip,
             onOpenEditor: props.onOpenEditor
           }),
@@ -92782,6 +92942,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               visible: Boolean(props.allVisible),
               title: visLabel,
               ariaLabel: visLabel,
+              blocked: props.showAllBlocked,
               onClick: props.onToggleVisibility
             }) : null,
             jsxRuntimeExports.jsx("div", {
@@ -92811,6 +92972,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }) : jsxRuntimeExports.jsx(ChipGrid, {
           chips: props.chips,
           openChip: props.openChip,
+          shownIds: props.shownIds,
+          blockedIds: props.blockedIds,
           onChip: props.onChip,
           onOpenEditor: props.onOpenEditor
         })
@@ -92838,19 +93001,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       allSourceChannels,
       stackVisibilities
     ]);
+    const filledGroupVis = reactExports.useMemo(() => applyGroupRowVisibilities(channelGroups, groupRowVisibilities, {
+      kind: Object.keys(stackVisibilities).length === 0 ? "fresh" : "sync"
+    }, filledStackVis), [
+      channelGroups,
+      groupRowVisibilities,
+      stackVisibilities,
+      filledStackVis
+    ]);
     const model = reactExports.useMemo(() => buildImageChannelOverview({
       image: image2,
       channelGroups,
       allSourceChannels,
       stackVisibilities: filledStackVis,
-      groupRowVisibilities,
+      groupRowVisibilities: filledGroupVis,
       activeChannelGroupId
     }), [
       image2,
       channelGroups,
       allSourceChannels,
       filledStackVis,
-      groupRowVisibilities,
+      filledGroupVis,
       activeChannelGroupId
     ]);
     const filteredAllChannels = reactExports.useMemo(() => model.allChannels.filter((chip2) => channelNameMatchesQuery(chip2.name, channelNameFilter)), [
@@ -92862,21 +93033,41 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       image2
     ]);
     const showAllChannelsStrip = model.allChannels.length > 0 && !isRgbDisplayFullyGrouped(rgbChannels, channelGroups);
-    const openChip = openKey == null ? null : [
+    const overviewChips = [
       ...model.groups.flatMap((g2) => g2.chips),
       ...model.allChannels
-    ].find((c2) => c2.key === openKey) ?? null;
+    ];
+    const openChip = openKey == null ? null : overviewChips.find((c2) => c2.key === openKey) ?? null;
     const onOpenEditor = (chip2) => {
       setOpenKey((cur) => cur === chip2.key ? null : chip2.key);
     };
+    const capVis = {
+      channels: allSourceChannels,
+      activeGroup: channelGroups.find((g2) => g2.id === activeChannelGroupId),
+      channelGroups,
+      stackVisibilities: filledStackVis,
+      groupRowVisibilities: filledGroupVis
+    };
+    const shownIds = vivShownIntensitySourceIds(capVis);
+    const atCap = vivIntensityLayerCount(image2.id, capVis) >= MAX_VIV_INTENSITY_CHANNELS;
+    const fits = (next2) => !vivIntensityCapExceeded(image2.id, {
+      ...capVis,
+      ...next2
+    });
     const applyRgbUnit = (visible) => {
       const next2 = visibilitiesForRgbUnit({
         rgbChannels,
         channelGroups,
-        groupRowVisibilities: useAppStore.getState().channelGroupRowVisibilities,
-        stackVisibilities: useAppStore.getState().channelVisibilities,
+        groupRowVisibilities: filledGroupVis,
+        stackVisibilities: filledStackVis,
         visible
       });
+      if (visible && !fits({
+        stackVisibilities: next2.channelVisibilities,
+        groupRowVisibilities: next2.channelGroupRowVisibilities
+      })) {
+        return;
+      }
       setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
       setChannelVisibilities(next2.channelVisibilities);
     };
@@ -92887,7 +93078,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         applyRgbUnit(!chip2.visible);
         return;
       }
-      const vis = useAppStore.getState().channelGroupRowVisibilities;
+      const vis = filledGroupVis;
       if (chip2.visible) {
         setChannelGroupRowVisibilities({
           ...vis,
@@ -92895,12 +93086,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         });
         return;
       }
-      if (!isGroupRowVisible(vis, chip2.groupRowId)) {
-        setChannelGroupRowVisibilities({
-          ...vis,
-          [chip2.groupRowId]: true
-        });
-      }
+      const next2 = withGroupRowVisible(vis, channelGroups, chip2.groupRowId, true);
+      if (!fits({
+        groupRowVisibilities: next2
+      })) return;
+      setChannelGroupRowVisibilities(next2);
       void ((_a2 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _a2.call(nav, [
         chip2.sourceId
       ]).catch(() => void 0));
@@ -92912,17 +93102,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         return;
       }
       if (chip2.groupRowId) {
-        const vis2 = useAppStore.getState().channelGroupRowVisibilities;
-        const groups = useDocumentStore.getState().channelGroups;
+        const vis2 = filledGroupVis;
         const nextOn = !chip2.visible;
-        const next2 = {
+        const next2 = nextOn ? withGroupRowVisible(vis2, channelGroups, chip2.groupRowId, true) : {
           ...vis2
         };
-        for (const g2 of groups) {
-          for (const gc2 of g2.channels) {
-            if (gc2.channelId === chip2.sourceId) next2[gc2.id] = nextOn;
+        if (!nextOn) {
+          for (const g2 of channelGroups) {
+            for (const gc2 of g2.channels) {
+              if (gc2.channelId === chip2.sourceId) next2[gc2.id] = false;
+            }
           }
         }
+        if (nextOn && !fits({
+          groupRowVisibilities: next2
+        })) return;
         setChannelGroupRowVisibilities(next2);
         if (nextOn) {
           void ((_a2 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _a2.call(nav, [
@@ -92931,20 +93125,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }
         return;
       }
-      const prev = useAppStore.getState().channelVisibilities;
-      const vis = applyStackVisibilities(flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images), prev, {
-        kind: Object.keys(prev).length === 0 ? "fresh" : "sync"
-      });
+      const vis = filledStackVis;
       const turningOn = !isStackVisible(vis, chip2.sourceId);
-      setChannelVisibilities({
+      const nextStack = {
         ...vis,
         [chip2.sourceId]: turningOn
-      });
+      };
+      if (turningOn && !fits({
+        stackVisibilities: nextStack
+      })) return;
+      setChannelVisibilities(nextStack);
       if (!turningOn) return;
       void ((_b2 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _b2.call(nav, [
         chip2.sourceId
       ]).catch(() => void 0));
     };
+    const blockedIds = /* @__PURE__ */ new Set();
+    if (atCap) {
+      for (const chip2 of overviewChips) {
+        if (!chip2.visible && !shownIds.has(chip2.sourceId)) {
+          blockedIds.add(chip2.sourceId);
+        }
+      }
+    }
     if (image2.channels.length === 0) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$n.root,
@@ -92958,11 +93161,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               visible: group2.allVisible
             }
           ] : group2.chips;
+          const docGroup = channelGroups.find((g2) => g2.id === group2.id);
+          const showAllNext = {
+            ...filledGroupVis
+          };
+          if (docGroup) {
+            for (const gc2 of docGroup.channels) showAllNext[gc2.id] = true;
+          }
+          const showAllBlocked = !group2.allVisible && !rgbDisplay && docGroup != null && !fits({
+            groupRowVisibilities: showAllNext
+          });
           return jsxRuntimeExports.jsx(GroupStrip, {
             name: group2.name,
             chips: rgbUnit,
             openChip,
+            shownIds,
+            blockedIds,
             allVisible: group2.allVisible,
+            showAllBlocked,
             onChip: onGroupChip,
             onOpenEditor,
             onToggleVisibility: () => {
@@ -92970,13 +93186,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 applyRgbUnit(!group2.allVisible);
                 return;
               }
-              const docGroup = channelGroups.find((g2) => g2.id === group2.id);
               if (!docGroup || docGroup.channels.length === 0) return;
-              const allOn = docGroup.channels.every((gc2) => isGroupRowVisible(groupRowVisibilities, gc2.id));
+              const allOn = docGroup.channels.every((gc2) => isGroupRowVisible(filledGroupVis, gc2.id));
               const next2 = {
-                ...groupRowVisibilities
+                ...filledGroupVis
               };
               for (const gc2 of docGroup.channels) next2[gc2.id] = !allOn;
+              if (!allOn && !fits({
+                groupRowVisibilities: next2
+              })) return;
               setChannelGroupRowVisibilities(next2);
             }
           }, group2.id);
@@ -92992,6 +93210,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }
           ] : filteredAllChannels,
           openChip,
+          shownIds,
+          blockedIds,
           onChip: onAllChannelsChip,
           onOpenEditor,
           nameFilter: channelNameFilter,
@@ -243368,7 +243588,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const imageSelectionMask = useAppStore((s2) => s2.imageSelectionMask);
     const channelVisibilities = useAppStore((s2) => s2.channelVisibilities);
-    const channelGroupRowVisibilities = useAppStore((s2) => s2.channelGroupRowVisibilities);
+    const storedGroupRowVisibilities = useAppStore((s2) => s2.channelGroupRowVisibilities);
     const setChannelGroupRowVisibilities = useAppStore((s2) => s2.setChannelGroupRowVisibilities);
     const channelRendering = useAppStore((s2) => s2.channelRendering);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
@@ -243393,12 +243613,50 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }, [
       sourceChannels
     ]);
+    const visKind = Object.keys(channelVisibilities).length === 0 ? "fresh" : "sync";
     const stackVisibilities = reactExports.useMemo(() => applyStackVisibilities(sourceChannels, channelVisibilities, {
-      kind: Object.keys(channelVisibilities).length === 0 ? "fresh" : "sync"
+      kind: visKind
     }), [
       sourceChannels,
-      channelVisibilities
+      channelVisibilities,
+      visKind
     ]);
+    const channelGroupRowVisibilities = reactExports.useMemo(() => applyGroupRowVisibilities(channelGroups, storedGroupRowVisibilities, {
+      kind: visKind
+    }, stackVisibilities), [
+      channelGroups,
+      storedGroupRowVisibilities,
+      visKind,
+      stackVisibilities
+    ]);
+    const capVis = {
+      channels: uniqueSourceChannels,
+      activeGroup: channelGroups.find((g2) => g2.id === activeChannelGroupId),
+      channelGroups,
+      stackVisibilities,
+      groupRowVisibilities: channelGroupRowVisibilities
+    };
+    const fitsImage = (imageId, next2) => !vivIntensityCapExceeded(imageId, {
+      ...capVis,
+      ...next2
+    });
+    const applyRgbUnit = (imageId, visible) => {
+      const next2 = visibilitiesForRgbUnit({
+        rgbChannels: sourceChannels.filter((c2) => c2.imageId === imageId && isImageChannel(c2)),
+        channelGroups,
+        groupRowVisibilities: channelGroupRowVisibilities,
+        stackVisibilities,
+        visible
+      });
+      if (visible && !fitsImage(imageId, {
+        stackVisibilities: next2.channelVisibilities,
+        groupRowVisibilities: next2.channelGroupRowVisibilities
+      })) {
+        return;
+      }
+      setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
+      setChannelVisibilities(next2.channelVisibilities);
+    };
     const palettePendingIds = reactExports.useSyncExternalStore(subscribeStackPalettePending, getStackPalettePendingIds, getStackPalettePendingIds);
     const gmmPendingIds = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmPendingIds, getGmmPendingIds);
     const [loadingHistogramSourceIds, setLoadingHistogramSourceIds] = reactExports.useState([]);
@@ -243547,7 +243805,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }
         setChannelVisibilities(stackOff);
         setChannelGroupRowVisibilities({
-          ...useAppStore.getState().channelGroupRowVisibilities,
+          ...channelGroupRowVisibilities,
           ...Object.fromEntries(seededChannels.map((gc2) => [
             gc2.id,
             true
@@ -243591,28 +243849,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         };
       }));
     };
-    const toggleGroupMasterVisibility = (group2) => {
+    const toggleGroupMasterVisibility = (group2, showAllNext) => {
       if (group2.channels.length === 0) return;
       const allOn = group2.channels.every((gc2) => isGroupRowVisible(channelGroupRowVisibilities, gc2.id));
       const first = findSourceChannel(sourceChannels, group2.channels[0].channelId);
       if (first && isRgbDisplayChannel(first, sourceChannels)) {
-        const next22 = visibilitiesForRgbUnit({
-          rgbChannels: sourceChannels.filter((c2) => c2.imageId === first.imageId && isImageChannel(c2)),
-          channelGroups,
-          groupRowVisibilities: channelGroupRowVisibilities,
-          stackVisibilities,
-          visible: !allOn
-        });
-        setChannelGroupRowVisibilities(next22.channelGroupRowVisibilities);
-        setChannelVisibilities(next22.channelVisibilities);
+        applyRgbUnit(first.imageId, !allOn);
+        return;
+      }
+      if (!allOn) {
+        const imageId = first == null ? void 0 : first.imageId;
+        if (imageId && !fitsImage(imageId, {
+          groupRowVisibilities: showAllNext
+        })) {
+          return;
+        }
+        setChannelGroupRowVisibilities(showAllNext);
         return;
       }
       const next2 = {
         ...channelGroupRowVisibilities
       };
-      for (const gc2 of group2.channels) {
-        next2[gc2.id] = !allOn;
-      }
+      for (const gc2 of group2.channels) next2[gc2.id] = false;
       setChannelGroupRowVisibilities(next2);
     };
     const { ensureChannelHistograms } = useAuthorChannelNav() ?? {};
@@ -243709,7 +243967,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
       const updatedGroup = newGroups.find((g2) => g2.id === groupId);
       setChannelGroupRowVisibilities({
-        ...useAppStore.getState().channelGroupRowVisibilities,
+        ...channelGroupRowVisibilities,
         [newChannel.id]: true
       });
       if (!updatedGroup || isMask || !isGroupEligibleForPsudoOptimize(updatedGroup, sourceChannels)) {
@@ -243736,7 +243994,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       sourceChannels,
       syncGroupState,
       optimizePaletteBusy,
-      setChannelGroupRowVisibilities
+      setChannelGroupRowVisibilities,
+      channelGroupRowVisibilities
     ]);
     const removeChannelFromGroup = (groupId, rowId) => {
       const groups = useDocumentStore.getState().channelGroups;
@@ -243873,31 +244132,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setColorPickerTarget(target);
       setColorPickerPos(colorPickerAnchorPosition(rect));
     };
-    const compositedIntensityLayers = reactExports.useMemo(() => buildCompositedIntensityLayers({
-      onLoader: uniqueSourceChannels.filter((sc2) => isImageChannel(sc2)),
-      activeGroup: activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : void 0,
-      channelGroups,
-      stackVisibilities,
-      groupRowVisibilities: channelGroupRowVisibilities,
-      hasVisibilityMap: Object.keys(stackVisibilities).length > 0
-    }), [
-      uniqueSourceChannels,
-      activeChannelGroupId,
-      channelGroups,
-      stackVisibilities,
-      channelGroupRowVisibilities
-    ]);
-    const visibleIntensitySourceIds = /* @__PURE__ */ new Set();
-    for (let i2 = 0; i2 < compositedIntensityLayers.length; i2++) {
-      if (i2 < MAX_VIV_INTENSITY_CHANNELS) {
-        visibleIntensitySourceIds.add(compositedIntensityLayers[i2].sc.id);
-      }
-    }
     const showImageBadge = images.length > 1;
     const imageLabels = reactExports.useMemo(() => uniqueImageDisplayLabels(images), [
       images
     ]);
     const renderGroupFolder = (group2, groupIndex) => {
+      var _a2, _b2;
       const expanded = group2.expanded ?? groupIndex === 0;
       const isActive = activeChannelGroupId === group2.id;
       const isDropTarget = dragOverGroupId === group2.id;
@@ -243907,6 +244147,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         return src != null && isRgbDisplayChannel(src, sourceChannels);
       });
       const lockedIds = lockedIdsForGroup(group2.id);
+      const allGroupRowsOn = group2.channels.length > 0 && group2.channels.every((gc2) => isGroupRowVisible(channelGroupRowVisibilities, gc2.id));
+      const groupShowAllNext = {
+        ...channelGroupRowVisibilities
+      };
+      for (const gc2 of group2.channels) groupShowAllNext[gc2.id] = true;
+      const groupShowImageId = (_b2 = findSourceChannel(sourceChannels, (_a2 = group2.channels[0]) == null ? void 0 : _a2.channelId)) == null ? void 0 : _b2.imageId;
+      const showAllBlocked = !allGroupRowsOn && groupShowImageId != null && !fitsImage(groupShowImageId, {
+        groupRowVisibilities: groupShowAllNext
+      });
       const folderDropProps = {
         onDragOver: (e2) => {
           if (!isChannelDrag(e2)) return;
@@ -243953,7 +244202,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 visible: rowsVisible,
                 title: "Toggle visibility for all channels in this group",
                 ariaLabel: `Toggle visibility for group ${group2.name}`,
-                onClick: () => toggleGroupMasterVisibility(group2)
+                blocked: showAllBlocked,
+                onClick: () => toggleGroupMasterVisibility(group2, groupShowAllNext)
               }),
               jsxRuntimeExports.jsx("input", {
                 className: `${minervaTheme.input} ${styles$c.groupFolderName}`,
@@ -244014,6 +244264,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
                   const name2 = (sc2 == null ? void 0 : sc2.name) ?? "Unknown";
                   const visible = isGroupRowVisible(channelGroupRowVisibilities, gc2.id);
+                  const nextRowVis = withGroupRowVisible(channelGroupRowVisibilities, channelGroups, gc2.id, true);
+                  const showBlocked = sc2 != null && isImageChannel(sc2) && !visible && !fitsImage(sc2.imageId, {
+                    groupRowVisibilities: nextRowVis
+                  });
                   const hex = sc2 ? assignedDisplayHex(sc2, sourceChannels, gc2) : rgbToHex$1(gc2.color);
                   const palettePending = palettePendingIds.includes(gc2.channelId);
                   const rgbDisplay = sc2 ? isRgbDisplayChannel(sc2, sourceChannels) : false;
@@ -244038,23 +244292,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                         fitting: sc2 ? gmmPendingIds.includes(sc2.id) : false,
                         visibilityTitle: visible ? `Hide ${name2}` : `Show ${name2}`,
                         visibilityAriaLabel: `Toggle visibility for ${name2}`,
+                        visibilityBlocked: showBlocked,
                         onToggleVisibility: (event) => toggleWithScrollOnShow(event, !visible, () => {
                           if (rgbDisplay && sc2) {
-                            const next2 = visibilitiesForRgbUnit({
-                              rgbChannels: sourceChannels.filter((c2) => c2.imageId === sc2.imageId && isImageChannel(c2)),
-                              channelGroups,
-                              groupRowVisibilities: channelGroupRowVisibilities,
-                              stackVisibilities,
-                              visible: !visible
-                            });
-                            setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
-                            setChannelVisibilities(next2.channelVisibilities);
+                            applyRgbUnit(sc2.imageId, !visible);
                             return;
                           }
-                          setChannelGroupRowVisibilities({
+                          setChannelGroupRowVisibilities(visible ? {
                             ...channelGroupRowVisibilities,
-                            [gc2.id]: !visible
-                          });
+                            [gc2.id]: false
+                          } : nextRowVis);
                         }),
                         name: sc2 ? {
                           mode: "editable",
@@ -244149,31 +244396,41 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const imageSubtitle = imageSubtitleIfDistinct(sc2.name, imageLabel || null);
       const meta = imageLabel ? `${imageLabel} \xB7 index ${sc2.index}` : `Index ${sc2.index}`;
       const visibilityAriaLabel = imageLabel ? `Toggle layer for ${sc2.name} from ${imageLabel}` : `Toggle layer for ${sc2.name}`;
+      const showGroupVis = inAnyGroup ? withGroupRowVisible(channelGroupRowVisibilities, channelGroups, home.row.id, true) : channelGroupRowVisibilities;
+      const showStackVis = inAnyGroup ? stackVisibilities : {
+        ...stackVisibilities,
+        [sc2.id]: true
+      };
       const toggleAllChannelsVisibility = (nextVisible) => {
         if (isRgbDisplayChannel(sc2, sourceChannels)) {
-          const next2 = visibilitiesForRgbUnit({
-            rgbChannels: sourceChannels.filter((c2) => c2.imageId === sc2.imageId && isImageChannel(c2)),
-            channelGroups,
-            groupRowVisibilities: channelGroupRowVisibilities,
-            stackVisibilities,
-            visible: nextVisible
-          });
-          setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
-          setChannelVisibilities(next2.channelVisibilities);
+          applyRgbUnit(sc2.imageId, nextVisible);
           return;
         }
         if (groupRows.length > 0) {
-          const vis = {
+          const vis = nextVisible ? showGroupVis : {
             ...channelGroupRowVisibilities
           };
-          for (const { row } of groupRows) vis[row.id] = nextVisible;
+          if (!nextVisible) {
+            for (const { row } of groupRows) vis[row.id] = false;
+          }
+          if (nextVisible && !fitsImage(sc2.imageId, {
+            groupRowVisibilities: vis
+          })) {
+            return;
+          }
           setChannelGroupRowVisibilities(vis);
           return;
         }
-        setChannelVisibilities({
+        const nextStack = nextVisible ? showStackVis : {
           ...stackVisibilities,
-          [sc2.id]: nextVisible
-        });
+          [sc2.id]: false
+        };
+        if (nextVisible && !fitsImage(sc2.imageId, {
+          stackVisibilities: nextStack
+        })) {
+          return;
+        }
+        setChannelVisibilities(nextStack);
       };
       const palettePending = palettePendingIds.includes(sc2.id);
       const rgbDisplay = isRgbDisplayChannel(sc2, sourceChannels);
@@ -244199,7 +244456,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }
       };
       const expanded = !inAnyGroup && shownInViewer;
-      const capped = expanded && isImageChannel(sc2) && stackOn && Boolean(sc2.color) && !visibleIntensitySourceIds.has(sc2.id);
+      const showBlocked = isImageChannel(sc2) && !shownInViewer && !fitsImage(sc2.imageId, {
+        stackVisibilities: showStackVis,
+        groupRowVisibilities: showGroupVis
+      });
       const displayColor = effectiveDisplayColor(sc2, sourceChannels, null);
       const displayLimits = effectiveSourceLimits(sc2);
       const contrast = expanded && props.contrastEditable && isImageChannel(sc2) && !rgbDisplay ? {
@@ -244214,8 +244474,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: jsxRuntimeExports.jsx(ChannelRow, {
             visible: shownInViewer,
             fitting: gmmPendingIds.includes(sc2.id),
-            visibilityTitle: capped ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) \u2014 hide another channel` : home ? shownInViewer ? `Hide ${sc2.name} in groups` : `Show ${sc2.name} in groups` : stackLayerTitle(sc2, shownInViewer),
+            visibilityTitle: home ? shownInViewer ? `Hide ${sc2.name} in groups` : `Show ${sc2.name} in groups` : stackLayerTitle(sc2, shownInViewer),
             visibilityAriaLabel,
+            visibilityBlocked: showBlocked,
             onToggleVisibility: expanded ? () => toggleAllChannelsVisibility(false) : (event) => toggleWithScrollOnShow(event, !shownInViewer, () => {
               toggleAllChannelsVisibility(!shownInViewer);
             }),
@@ -250319,10 +250580,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       if (c2.group_uuid && c2.channel_uuid) {
         const nextVisible2 = !(channelGroupRowVisibilities[c2.channel_uuid] ?? true);
-        setChannelGroupRowVisibilities({
-          ...channelGroupRowVisibilities,
-          [c2.channel_uuid]: nextVisible2
-        });
+        setChannelGroupRowVisibilities(withGroupRowVisible(channelGroupRowVisibilities, docChannelGroups, c2.channel_uuid, nextVisible2));
         return;
       }
       const nextVisible = !isStackVisible(stackVisibilities, c2.source_uuid);
@@ -252042,12 +252300,12 @@ void main() {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-17T14:22:48.716Z");
+    const label2 = utcShort("2026-09-17T17:28:36.786Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-17T14:22:48.716Z",
+      title: "2026-09-17T17:28:36.786Z",
       children: [
         "Updated ",
         label2,
