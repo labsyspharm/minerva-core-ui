@@ -252,6 +252,7 @@ type ChannelRowProps = {
   colorHex?: string;
   colorTitle?: string;
   busy?: boolean;
+  fitting?: boolean;
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
 };
 
@@ -328,6 +329,7 @@ export function ChannelRow(props: ChannelRowProps) {
     colorHex,
     colorTitle,
     busy,
+    fitting,
     onColorClick,
   } = props;
 
@@ -336,9 +338,15 @@ export function ChannelRow(props: ChannelRowProps) {
 
   return (
     <div
-      className={`${styles.channelRow}${
-        locked ? ` ${styles.detailChannelRowLocked}` : ""
-      }`}
+      className={[
+        styles.channelRow,
+        locked ? styles.detailChannelRowLocked : null,
+        fitting ? minervaTheme.busyOverlay : null,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria-busy={fitting || undefined}
+      title={fitting ? "Fitting contrast…" : undefined}
     >
       <div
         className={`${styles.channelRowMain}${

@@ -1,12 +1,6 @@
 import type { FormEventHandler } from "react";
 import * as React from "react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
 import {
   ConsumePendingLibraryImport,
@@ -59,9 +53,7 @@ import {
 import {
   clearGmmScheduler,
   ensureGmm,
-  getGmmFitSnapshot,
   reconcileGmm,
-  subscribeGmmFit,
 } from "@/lib/imaging/gmmScheduler";
 import {
   clearOmeHistogramCache,
@@ -465,11 +457,6 @@ const Content = (props: Props) => {
     [images],
   );
   const prevGmmShownRef = React.useRef<Set<string> | null>(null);
-  const gmmFit = useSyncExternalStore(
-    subscribeGmmFit,
-    getGmmFitSnapshot,
-    getGmmFitSnapshot,
-  );
   React.useEffect(() => {
     if (!activeStoryId) {
       clearGmmScheduler();
@@ -2116,14 +2103,12 @@ const Content = (props: Props) => {
     });
   }, []);
 
-  const showImageLoading = isLoadingImage || gmmFit.holdingLoad;
-
   // Remove the global HTML loader once no async image load is pending (dev, demo, or restored doc).
   useEffect(() => {
-    if (!showImageLoading) {
+    if (!isLoadingImage) {
       document.getElementById("global-loader")?.remove();
     }
-  }, [showImageLoading]);
+  }, [isLoadingImage]);
 
   return (
     <FileHandler
@@ -2405,7 +2390,7 @@ const Content = (props: Props) => {
               />
             ) : null}
             {imager}
-            {showImageLoading ? (
+            {isLoadingImage ? (
               <output className={styles.importLoadingOverlay} aria-busy="true">
                 <div className={minervaTheme.spinner} />
                 <span>Loading…</span>

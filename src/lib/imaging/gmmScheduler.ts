@@ -3,10 +3,6 @@ import {
   fitChannelGmmContrastFromUint16,
 } from "@/lib/imaging/autoContrast";
 import { isImageChannel, isRgbDisplayChannel } from "@/lib/imaging/channelKind";
-import {
-  fetchPlaneRaster,
-  rasterToUint16Array,
-} from "@/lib/imaging/maskChannelRaster";
 import { looksLikeImportDefaultLimits } from "@/lib/imaging/sourceChannelStyle";
 import type { Loader } from "@/lib/imaging/viv";
 import type { Channel } from "@/lib/stores/documentStore";
@@ -18,6 +14,7 @@ import { applySourceChannelsToImages } from "@/lib/stores/storeUtils";
 
 const FETCH_CONCURRENCY = 4;
 const FIT_CONCURRENCY = 1;
+const GMM_MAX_SAMPLES = 50_000;
 
 type WriteGuard =
   | { kind: "still-missing" }
@@ -36,11 +33,11 @@ type FitOutcome =
   | { kind: "failed" };
 
 type GmmFitSnapshot = {
-  holdingLoad: boolean;
+  pendingIds: readonly string[];
 };
 
 const emptySnapshot: GmmFitSnapshot = {
-  holdingLoad: false,
+  pendingIds: [],
 };
 
 let generation = 0;
@@ -49,10 +46,9 @@ const jobsByKey = new Map<string, Job>();
 const queue: string[] = [];
 const inFlight = new Map<string, Promise<FitOutcome>>();
 const failedKeys = new Set<string>();
-const blockedIds = new Set<string>();
 const listeners = new Set<() => void>();
 let snapshot: GmmFitSnapshot = emptySnapshot;
-let holdingLoad = false;
+let pendingKey = "";
 const fetchWaiters: (() => void)[] = [];
 const fitWaiters: (() => void)[] = [];
 const fetchUsedBox = { n: 0 };
@@ -82,7 +78,7 @@ function documentChannels(): Channel[] {
   );
 }
 
-/** Packed RGB (`samples===3`) and planar H&E / Brightfield — no GMM, no load hold. */
+/** Packed RGB (`samples===3`) and planar H&E / Brightfield — no GMM. */
 function isEligible(sc: Channel, all: readonly Channel[]): boolean {
   return (
     isImageChannel(sc) && sc.samples !== 3 && !isRgbDisplayChannel(sc, all)
@@ -109,8 +105,15 @@ function release(used: { n: number }, waiters: (() => void)[]) {
 }
 
 function notify() {
-  if (snapshot.holdingLoad === holdingLoad) return;
-  snapshot = { holdingLoad };
+  const pendingIds: string[] = [];
+  for (const job of jobsByKey.values()) {
+    for (const id of job.guards.keys()) pendingIds.push(id);
+  }
+  pendingIds.sort();
+  const key = pendingIds.join("\0");
+  if (key === pendingKey) return;
+  pendingKey = key;
+  snapshot = { pendingIds };
   for (const listener of listeners) listener();
 }
 
@@ -128,17 +131,8 @@ function enqueue(job: Job) {
   queue.push(job.rasterKey);
 }
 
-function dropBlocked(channelId: string) {
-  blockedIds.delete(channelId);
-  if (holdingLoad && blockedIds.size === 0) holdingLoad = false;
-}
-
-function finishJob(job: Job, outcome: FitOutcome, gen: number) {
+function finishJob(job: Job, gen: number) {
   if (gen !== generation) return;
-  for (const id of job.guards.keys()) {
-    if (outcome.kind === "failed") dropBlocked(id);
-    else if (readChannel(id)?.gmmContrastLimits) dropBlocked(id);
-  }
   jobsByKey.delete(job.rasterKey);
   removeFromQueues(job.rasterKey);
   inFlight.delete(job.rasterKey);
@@ -188,17 +182,53 @@ function commitFitted(job: Job, window: ContrastLimits): void {
   if (groupsChanged) doc.setChannelGroups(nextGroups);
 }
 
+/** Coarsest pyramid plane, at most 50k uint16 samples. */
+async function fetchCoarsestUint16(
+  loader: Loader,
+  sourceIndex: number,
+): Promise<Uint16Array | null> {
+  const planes = loader.data;
+  if (!planes?.length) return null;
+  const cIdx = planes[0].labels.indexOf("c");
+  const nC = cIdx >= 0 ? planes[0].shape[cIdx] : 1;
+  if (sourceIndex < 0 || sourceIndex >= nC) return null;
+
+  let data: ArrayLike<number> | undefined;
+  for (let i = planes.length - 1; i >= 0; i--) {
+    try {
+      const raster = await planes[i].getRaster({
+        selection: { t: 0, z: 0, c: sourceIndex },
+      });
+      if (raster?.data?.length) {
+        data = raster.data;
+        break;
+      }
+    } catch {
+      /* missing pyramid level */
+    }
+  }
+  if (!data?.length) return null;
+
+  const stride = Math.max(1, Math.ceil(data.length / GMM_MAX_SAMPLES));
+  const out = new Uint16Array(Math.ceil(data.length / stride));
+  const u8 = data instanceof Uint8Array || data instanceof Uint8ClampedArray;
+  for (let i = 0, o = 0; i < data.length; i += stride) {
+    const v = Number(data[i]);
+    out[o++] = u8
+      ? v << 8
+      : Number.isFinite(v)
+        ? Math.max(0, Math.min(65535, Math.round(v)))
+        : 0;
+  }
+  return out;
+}
+
 async function runJob(job: Job, gen: number): Promise<FitOutcome> {
   await acquire(fetchUsedBox, fetchWaiters, FETCH_CONCURRENCY);
   let u16: Uint16Array | null = null;
   try {
     if (gen !== generation) return { kind: "failed" };
-    const hit = await fetchPlaneRaster(job.loader, job.index, {
-      preferCoarsest: true,
-    });
-    if (hit?.raster?.data && hit.raster.data.length > 0) {
-      u16 = rasterToUint16Array(hit.raster.data);
-    }
+    u16 = await fetchCoarsestUint16(job.loader, job.index);
   } finally {
     release(fetchUsedBox, fetchWaiters);
     pump();
@@ -207,7 +237,7 @@ async function runJob(job: Job, gen: number): Promise<FitOutcome> {
   if (gen !== generation) return { kind: "failed" };
   if (!u16) {
     failedKeys.add(job.rasterKey);
-    finishJob(job, { kind: "failed" }, gen);
+    finishJob(job, gen);
     pump();
     return { kind: "failed" };
   }
@@ -225,13 +255,13 @@ async function runJob(job: Job, gen: number): Promise<FitOutcome> {
   if (gen !== generation) return { kind: "failed" };
   if (!window) {
     failedKeys.add(job.rasterKey);
-    finishJob(job, { kind: "failed" }, gen);
+    finishJob(job, gen);
     pump();
     return { kind: "failed" };
   }
 
   commitFitted(job, window);
-  finishJob(job, { kind: "fitted", window }, gen);
+  finishJob(job, gen);
   pump();
   return { kind: "fitted", window };
 }
@@ -247,7 +277,7 @@ function intern(job: Job): Promise<FitOutcome> {
     }
     if (gen === generation) {
       failedKeys.add(job.rasterKey);
-      finishJob(job, { kind: "failed" }, gen);
+      finishJob(job, gen);
       pump();
     }
     return { kind: "failed" };
@@ -311,14 +341,6 @@ function targetFor(channelId: string): { sc: Channel; loader: Loader } | null {
   return { sc, loader };
 }
 
-function blockVisible(channelId: string) {
-  if (blockedIds.has(channelId)) return;
-  const all = documentChannels();
-  const sc = all.find((c) => c.id === channelId);
-  if (!sc || sc.gmmContrastLimits || !isEligible(sc, all)) return;
-  blockedIds.add(channelId);
-}
-
 export function reconcileGmm(args: {
   loaderEntries: readonly { loader: Loader; sourceImageId: string }[];
   channels: readonly Channel[];
@@ -344,29 +366,14 @@ export function reconcileGmm(args: {
     if (!visibleChannelIds.has(sc.id)) continue;
     const loader = loadersByImageId.get(sc.imageId);
     if (!loader) continue;
-    const job = upsertJob({
+    upsertJob({
       sc,
       loader,
       guard: { kind: "still-missing" },
       retryFailed: false,
     });
-    if (!job) continue;
-    blockVisible(sc.id);
   }
 
-  for (const id of [...blockedIds]) {
-    const sc = channels.find((c) => c.id === id);
-    if (
-      !sc ||
-      !visibleChannelIds.has(id) ||
-      sc.gmmContrastLimits ||
-      !isEligible(sc, channels)
-    ) {
-      blockedIds.delete(id);
-    }
-  }
-
-  holdingLoad = blockedIds.size > 0;
   notify();
   pump();
 }
@@ -391,7 +398,6 @@ export async function ensureGmm(
       retryFailed: true,
     });
     if (!job) continue;
-    blockVisible(channelId);
     waits.push(
       intern(job).then(() => {
         const sc = readChannel(channelId);
@@ -446,8 +452,8 @@ export function subscribeGmmFit(onStoreChange: () => void): () => void {
   };
 }
 
-export function getGmmFitSnapshot(): GmmFitSnapshot {
-  return snapshot;
+export function getGmmPendingIds(): readonly string[] {
+  return snapshot.pendingIds;
 }
 
 export function clearGmmScheduler(): void {
@@ -457,8 +463,7 @@ export function clearGmmScheduler(): void {
   queue.length = 0;
   inFlight.clear();
   failedKeys.clear();
-  blockedIds.clear();
-  holdingLoad = false;
+  pendingKey = "";
   snapshot = emptySnapshot;
   for (const listener of listeners) listener();
 }

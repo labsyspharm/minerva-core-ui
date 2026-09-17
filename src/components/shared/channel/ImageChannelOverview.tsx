@@ -13,6 +13,7 @@ import {
   visibilitiesForRgbUnit,
 } from "@/lib/imaging/channelCompositor";
 import { isRgbDisplayImage } from "@/lib/imaging/channelKind";
+import { getGmmPendingIds, subscribeGmmFit } from "@/lib/imaging/gmmScheduler";
 import {
   buildImageChannelOverview,
   channelNameMatchesQuery,
@@ -39,11 +40,16 @@ function ChipButton(props: {
   open: boolean;
   dim: boolean;
   colorPending: boolean;
+  gmmPending: boolean;
   onClick: (chip: ImageChannelChip) => void;
   onOpenEditor: (chip: ImageChannelChip) => void;
 }) {
-  const { chip, open, dim, colorPending, onClick, onOpenEditor } = props;
-  const pendingLabel = `Assigning color to ${chip.name}`;
+  const { chip, open, dim, colorPending, gmmPending, onClick, onOpenEditor } =
+    props;
+  const pending = colorPending || gmmPending;
+  const pendingLabel = gmmPending
+    ? `Fitting contrast for ${chip.name}`
+    : `Assigning color to ${chip.name}`;
   return (
     <div
       className={[
@@ -51,7 +57,7 @@ function ChipButton(props: {
         chip.visible && chip.hex ? styles.chipOn : null,
         !chip.visible && chip.hex ? styles.chipOutlined : null,
         chip.hex ? null : styles.chipUnassigned,
-        colorPending ? minervaTheme.busyOverlay : null,
+        pending ? minervaTheme.busyOverlay : null,
         dim ? styles.chipDim : null,
       ]
         .filter(Boolean)
@@ -59,13 +65,13 @@ function ChipButton(props: {
       style={
         chip.hex ? ({ "--ch": `#${chip.hex}` } as CSSProperties) : undefined
       }
-      aria-busy={colorPending || undefined}
+      aria-busy={pending || undefined}
     >
       <button
         type="button"
         className={`${minervaTheme.focusRing} ${styles.chip}`}
-        title={colorPending ? pendingLabel : chip.name}
-        aria-label={colorPending ? pendingLabel : chipAriaLabel(chip)}
+        title={pending ? pendingLabel : chip.name}
+        aria-label={pending ? pendingLabel : chipAriaLabel(chip)}
         aria-pressed={chip.visible}
         onClick={() => onClick(chip)}
       >
@@ -103,6 +109,11 @@ function ChipGrid(props: {
     getStackPalettePendingIds,
     getStackPalettePendingIds,
   );
+  const gmmPendingIds = useSyncExternalStore(
+    subscribeGmmFit,
+    getGmmPendingIds,
+    getGmmPendingIds,
+  );
   const openIndex = openChip
     ? chips.findIndex((c) => c.key === openChip.key)
     : -1;
@@ -122,6 +133,7 @@ function ChipGrid(props: {
             open={openChip?.key === chip.key}
             dim={openChip != null && openChip.key !== chip.key}
             colorPending={pendingIds.includes(chip.sourceId)}
+            gmmPending={gmmPendingIds.includes(chip.sourceId)}
             onClick={props.onChip}
             onOpenEditor={props.onOpenEditor}
           />
