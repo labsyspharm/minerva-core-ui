@@ -253,6 +253,7 @@ type ChannelRowProps = {
   colorTitle?: string;
   busy?: boolean;
   fitting?: boolean;
+  visibilityBlocked?: boolean;
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
 };
 
@@ -330,6 +331,7 @@ export function ChannelRow(props: ChannelRowProps) {
     colorTitle,
     busy,
     fitting,
+    visibilityBlocked,
     onColorClick,
   } = props;
 
@@ -357,6 +359,7 @@ export function ChannelRow(props: ChannelRowProps) {
           visible={visible}
           title={visibilityTitle}
           ariaLabel={visibilityAriaLabel}
+          blocked={visibilityBlocked}
           onClick={onToggleVisibility}
         />
         <div className={styles.channelRowTitle}>

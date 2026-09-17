@@ -5,6 +5,7 @@ import {
   isStackVisible,
   sourceChannelInAnyGroup,
   visibilitiesForRgbUnit,
+  withGroupRowVisible,
 } from "@/lib/imaging/channelCompositor";
 import {
   DEFAULT_VISIBLE_INTENSITY_CHANNELS,
@@ -205,10 +206,14 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       const nextVisible = !(
         channelGroupRowVisibilities[c.channel_uuid] ?? true
       );
-      setChannelGroupRowVisibilities({
-        ...channelGroupRowVisibilities,
-        [c.channel_uuid]: nextVisible,
-      });
+      setChannelGroupRowVisibilities(
+        withGroupRowVisible(
+          channelGroupRowVisibilities,
+          docChannelGroups,
+          c.channel_uuid,
+          nextVisible,
+        ),
+      );
       return;
     }
     const nextVisible = !isStackVisible(stackVisibilities, c.source_uuid);

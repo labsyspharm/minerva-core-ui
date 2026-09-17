@@ -8,6 +8,7 @@ import {
   isImageChannel,
   isMaskChannel,
   isRgbDisplaySource,
+  MAX_VIV_INTENSITY_CHANNELS,
 } from "./channelKind";
 import { SELECTION_MASK_CHANNEL_KEY } from "./maskLayers";
 
@@ -48,17 +49,45 @@ export function isDisplayedViaGroupRow(
   );
 }
 
+/** Viv draws one layer per source; turning a row on hides other memberships. */
+export function withGroupRowVisible(
+  prev: Record<string, boolean>,
+  channelGroups: readonly ChannelGroup[],
+  rowId: string,
+  visible: boolean,
+): Record<string, boolean> {
+  const next = { ...prev, [rowId]: visible };
+  if (!visible) return next;
+  let sourceId: string | undefined;
+  for (const group of channelGroups) {
+    const row = group.channels.find((gc) => gc.id === rowId);
+    if (row) {
+      sourceId = row.channelId;
+      break;
+    }
+  }
+  if (!sourceId) return next;
+  for (const group of channelGroups) {
+    for (const gc of group.channels) {
+      if (gc.channelId === sourceId && gc.id !== rowId) next[gc.id] = false;
+    }
+  }
+  return next;
+}
+
 type CompositedLayersArgs = {
   onLoader: Channel[];
   activeGroup: ChannelGroup | undefined;
-  channelGroups?: ChannelGroup[];
+  channelGroups?: readonly ChannelGroup[];
   stackVisibilities: Record<string, boolean>;
   groupRowVisibilities: Record<string, boolean>;
   hasVisibilityMap: boolean;
   requireColor?: boolean;
 };
 
-function sourceIdsInAnyGroup(channelGroups: ChannelGroup[]): Set<string> {
+function sourceIdsInAnyGroup(
+  channelGroups: readonly ChannelGroup[],
+): Set<string> {
   return new Set(
     channelGroups.flatMap((g) => g.channels.map((gc) => gc.channelId)),
   );
@@ -188,6 +217,60 @@ export function buildCompositedIntensityLayers(
   }
 
   return ordered;
+}
+
+export type VivIntensityCapVis = {
+  channels: readonly Channel[];
+  activeGroup: ChannelGroup | undefined;
+  channelGroups: readonly ChannelGroup[];
+  stackVisibilities: Record<string, boolean>;
+  groupRowVisibilities: Record<string, boolean>;
+};
+
+function compositedForImage(imageId: string, vis: VivIntensityCapVis) {
+  return buildCompositedIntensityLayers({
+    onLoader: vis.channels.filter(
+      (sc) => sc.imageId === imageId && isImageChannel(sc),
+    ),
+    activeGroup: vis.activeGroup,
+    channelGroups: vis.channelGroups,
+    stackVisibilities: vis.stackVisibilities,
+    groupRowVisibilities: vis.groupRowVisibilities,
+    hasVisibilityMap: true,
+  });
+}
+
+/** Source ids actually drawn per image (first `MAX_VIV_INTENSITY_CHANNELS`). */
+export function vivShownIntensitySourceIds(
+  vis: VivIntensityCapVis,
+): Set<string> {
+  const ids = new Set<string>();
+  const imageIds = new Set<string>();
+  for (const sc of vis.channels) {
+    if (isImageChannel(sc)) imageIds.add(sc.imageId);
+  }
+  for (const imageId of imageIds) {
+    const layers = compositedForImage(imageId, vis);
+    for (let i = 0; i < layers.length && i < MAX_VIV_INTENSITY_CHANNELS; i++) {
+      ids.add(layers[i].sc.id);
+    }
+  }
+  return ids;
+}
+
+export function vivIntensityLayerCount(
+  imageId: string,
+  vis: VivIntensityCapVis,
+): number {
+  return compositedForImage(imageId, vis).length;
+}
+
+/** True when this image's composite would exceed the Viv shader cap. */
+export function vivIntensityCapExceeded(
+  imageId: string,
+  vis: VivIntensityCapVis,
+): boolean {
+  return vivIntensityLayerCount(imageId, vis) > MAX_VIV_INTENSITY_CHANNELS;
 }
 
 export function isMaskSourceRendered(args: {
