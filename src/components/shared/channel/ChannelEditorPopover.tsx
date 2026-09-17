@@ -21,6 +21,7 @@ import {
   isRgbDisplayChannel,
   type MaskVisualization,
 } from "@/lib/imaging/channelKind";
+import { getGmmPendingIds, subscribeGmmFit } from "@/lib/imaging/gmmScheduler";
 import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
 import type { ImageChannelChip } from "@/lib/imaging/imageChannelOverview";
 import {
@@ -213,6 +214,11 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     getStackPalettePendingIds,
     getStackPalettePendingIds,
   );
+  const gmmPendingIds = React.useSyncExternalStore(
+    subscribeGmmFit,
+    getGmmPendingIds,
+    getGmmPendingIds,
+  );
   const [colorTarget, setColorTarget] =
     React.useState<ChannelColorTarget | null>(null);
   const [colorPos, setColorPos] = React.useState<{
@@ -367,6 +373,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     <>
       <ChannelRow
         visible={visible}
+        fitting={gmmPendingIds.includes(sc.id)}
         visibilityTitle={visible ? `Hide ${sc.name}` : `Show ${sc.name}`}
         visibilityAriaLabel={`Toggle visibility for ${sc.name}`}
         onToggleVisibility={toggleVisible}

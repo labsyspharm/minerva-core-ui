@@ -42,7 +42,12 @@ import {
   type MaskVisualization,
   planarRgbDisplayColor,
 } from "@/lib/imaging/channelKind";
-import { ensureGmm, refitGmm } from "@/lib/imaging/gmmScheduler";
+import {
+  ensureGmm,
+  getGmmPendingIds,
+  refitGmm,
+  subscribeGmmFit,
+} from "@/lib/imaging/gmmScheduler";
 import {
   scheduleBackgroundTask,
   sourceDistributionYValuesLength,
@@ -558,6 +563,11 @@ export const ChannelGroupsMasterDetail = (
     subscribeStackPalettePending,
     getStackPalettePendingIds,
     getStackPalettePendingIds,
+  );
+  const gmmPendingIds = React.useSyncExternalStore(
+    subscribeGmmFit,
+    getGmmPendingIds,
+    getGmmPendingIds,
   );
 
   const [loadingHistogramSourceIds, setLoadingHistogramSourceIds] =
@@ -1345,6 +1355,7 @@ export const ChannelGroupsMasterDetail = (
                     >
                       <ChannelRow
                         visible={visible}
+                        fitting={sc ? gmmPendingIds.includes(sc.id) : false}
                         visibilityTitle={
                           visible ? `Hide ${name}` : `Show ${name}`
                         }
@@ -1619,6 +1630,7 @@ export const ChannelGroupsMasterDetail = (
         <DraggableChannelRow label={sc.name} sourceId={sc.id}>
           <ChannelRow
             visible={shownInViewer}
+            fitting={gmmPendingIds.includes(sc.id)}
             visibilityTitle={
               capped
                 ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) — hide another channel`
