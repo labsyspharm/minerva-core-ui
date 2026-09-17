@@ -15,6 +15,7 @@
  */
 
 import type { ConfigWaypoint } from "../authoring/config";
+import { orientationOrOmit } from "../imaging/imageOrientation";
 import { type Loader, loaderPixelSizeXY } from "../imaging/viv";
 import {
   importedLineStyle,
@@ -44,6 +45,7 @@ import type {
   ChannelGroup,
   Image,
   ImageChannel,
+  ImageOrientation,
   ImageSource,
   Point,
   StoryShape,
@@ -220,6 +222,27 @@ export function setImageBasename(
   if (idx < 0) return images;
   const next = [...images];
   next[idx] = { ...next[idx], basename: basename.trim() };
+  return next;
+}
+
+/** Set or clear image orientation (omit field when identity). */
+export function setImageOrientation(
+  images: Image[],
+  imageId: string,
+  orientation: ImageOrientation | null | undefined,
+): Image[] {
+  const idx = images.findIndex((im) => im.id === imageId);
+  if (idx < 0) return images;
+  const next = [...images];
+  const cur = next[idx];
+  const omit = orientationOrOmit(orientation ?? undefined);
+  if (omit === undefined) {
+    if (cur.orientation === undefined) return images;
+    const { orientation: _drop, ...rest } = cur;
+    next[idx] = rest;
+  } else {
+    next[idx] = { ...cur, orientation: omit };
+  }
   return next;
 }
 

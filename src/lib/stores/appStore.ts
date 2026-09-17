@@ -33,7 +33,7 @@ import {
 } from "../shapes/shapeModel";
 import { mergeShapesAfterWaypointImport } from "../shapes/shapeWaypointImport";
 import type { ViewportSize, ViewRect } from "../viewer/samViewport";
-import type { Waypoint } from "./documentSchema";
+import type { ImageOrientation, Waypoint } from "./documentSchema";
 import {
   documentShapes,
   documentWaypoints,
@@ -597,6 +597,12 @@ type MaskVisualizationPreview = {
   visualization: MaskVisualization;
 };
 
+/** In-flight image orientation while dragging the dial; committed on pointerup. */
+export type ImageOrientationPreview = {
+  imageId: string;
+  orientation: ImageOrientation;
+};
+
 export interface AppStore {
   // State
   overlayLayers: OverlayLayer[];
@@ -785,6 +791,9 @@ export interface AppStore {
   setMaskVisualizationPreview: (
     preview: MaskVisualizationPreview | null,
   ) => void;
+  /** In-flight image rotate/flip; committed on dial pointerup. */
+  imageOrientationPreview: ImageOrientationPreview | null;
+  setImageOrientationPreview: (preview: ImageOrientationPreview | null) => void;
   channelVisibilities: Record<string, boolean>;
   groupNames: Record<string, string>;
 
@@ -926,6 +935,7 @@ const overlayInitialState = {
   activeChannelGroupId: null, // No channel group initially
   channelRendering: null,
   maskVisualizationPreview: null,
+  imageOrientationPreview: null,
   channelVisibilities: {},
   channelGroupRowVisibilities: {},
   groupNames: {},
@@ -2231,6 +2241,10 @@ export const useAppStore = create<AppStore>()(
 
       setMaskVisualizationPreview: (preview) => {
         set({ maskVisualizationPreview: preview });
+      },
+
+      setImageOrientationPreview: (preview) => {
+        set({ imageOrientationPreview: preview });
       },
 
       // Import waypoint shapes actions

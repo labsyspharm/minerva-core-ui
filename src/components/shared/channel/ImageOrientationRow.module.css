@@ -1,0 +1,132 @@
+.menuWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: var(--minerva-control);
+}
+
+.menu {
+  right: 0;
+  left: auto;
+  min-width: 0;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 6px 0;
+  border: none;
+  min-width: 0;
+}
+
+.section + .section {
+  border-top: 1px solid var(--minerva-edge);
+}
+
+.sectionLabel {
+  float: none;
+  padding: 0;
+  color: var(--minerva-quiet);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.knobButton {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: grab;
+  touch-action: none;
+  border-radius: 50%;
+  line-height: 0;
+  flex-shrink: 0;
+  width: var(--minerva-control);
+  height: var(--minerva-control);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.knobButton:focus-visible {
+  box-shadow: 0 0 0 var(--minerva-focus-width) var(--minerva-blue);
+}
+
+.knobButton:active {
+  cursor: grabbing;
+}
+
+.knob {
+  display: block;
+  width: 26px;
+  height: 26px;
+  color: var(--minerva-ink);
+  pointer-events: none;
+}
+
+.knobRing {
+  stroke: var(--minerva-edge);
+  stroke-width: 1.5;
+}
+
+.knobTick {
+  stroke: var(--minerva-quiet);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.knobArm {
+  stroke: var(--minerva-ink);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.knobHandle {
+  fill: var(--minerva-ink);
+}
+
+.degField {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  min-width: 0;
+}
+
+.degInput {
+  box-sizing: border-box;
+  width: 4.25rem;
+  height: 26px;
+  padding: 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: right;
+  line-height: 24px;
+}
+
+.degUnit {
+  color: var(--minerva-quiet);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}

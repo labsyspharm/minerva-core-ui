@@ -160,6 +160,16 @@ export const ImageSourceSchema = z.discriminatedUnion("kind", [
   ImageSourceDicomWebSchema,
 ]);
 
+/**
+ * Authoring orientation for an image (applied via Viv/deck `modelMatrix`).
+ * Omitted when identity. Both flips are canonicalized to +180° rotation.
+ */
+export const ImageOrientationSchema = z.object({
+  rotationDeg: z.number(),
+  flipHorizontal: z.boolean(),
+  flipVertical: z.boolean(),
+});
+
 export const ImageSchema = z.object({
   id: IdSchema,
   sizeX: z.number().int().positive(),
@@ -180,6 +190,8 @@ export const ImageSchema = z.object({
    * (no per-channel sliders), false = multiplex IF. Undefined → runtime heuristics.
    */
   rgbDisplay: z.boolean().optional(),
+  /** Rotate / reflect around the pixel center; omitted when identity. */
+  orientation: ImageOrientationSchema.optional(),
   channels: z.array(ImageChannelSchema),
   source: ImageSourceSchema.optional(),
 });
@@ -320,6 +332,7 @@ export type Shape = z.infer<typeof ShapeSchema>;
 
 export type Image = z.infer<typeof ImageSchema>;
 export type ImageSource = z.infer<typeof ImageSourceSchema>;
+export type ImageOrientation = z.infer<typeof ImageOrientationSchema>;
 export type ImageChannel = z.infer<typeof ImageChannelSchema>;
 export type ImageChannelKind = z.infer<typeof ImageChannelKindSchema>;
 export type MaskVisualization = z.infer<typeof MaskVisualizationSchema>;

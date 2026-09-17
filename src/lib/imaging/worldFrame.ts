@@ -1,5 +1,10 @@
 import { Matrix4 } from "@math.gl/core";
+import {
+  effectiveOrientation,
+  isIdentityOrientation,
+} from "@/lib/imaging/imageOrientation";
 import { type Loader, loaderPixelSizeXY } from "@/lib/imaging/viv";
+import type { ImageOrientation } from "@/lib/stores/documentSchema";
 import type { ViewRect } from "@/lib/viewer/samViewport";
 
 export type WorldFrame = {
@@ -137,9 +142,29 @@ export function effectiveWorldFrame(
   return worldFrameFromPixelCounts(docWidth, docHeight);
 }
 
-export function layerModelMatrix(loader: Loader): Matrix4 {
-  const { umPerPixelX, umPerPixelY } = worldFrameFromLoader(loader);
-  return new Matrix4().scale([umPerPixelX, umPerPixelY, 1]);
+/**
+ * Pixel → world transform for a Viv/deck image layer.
+ * `scale(µm/px) · T(center) · R(θ) · S(flip) · T(−center)` so rotation/flip
+ * pivot on the pixel center and the image does not jump.
+ */
+export function layerModelMatrix(
+  loader: Loader,
+  orientation?: ImageOrientation | null,
+): Matrix4 {
+  const frame = worldFrameFromLoader(loader);
+  const { umPerPixelX, umPerPixelY, pixelWidth, pixelHeight } = frame;
+  const m = new Matrix4().scale([umPerPixelX, umPerPixelY, 1]);
+  if (isIdentityOrientation(orientation)) return m;
+
+  const o = effectiveOrientation(orientation);
+  const cx = pixelWidth / 2;
+  const cy = pixelHeight / 2;
+  // Y-down image space: +rotateZ is clockwise on screen (matches CW button).
+  return m
+    .translate([cx, cy, 0])
+    .rotateZ((o.rotationDeg * Math.PI) / 180)
+    .scale([o.flipHorizontal ? -1 : 1, o.flipVertical ? -1 : 1, 1])
+    .translate([-cx, -cy, 0]);
 }
 
 function isIdentityScale(scale: PhysicalScale): boolean {

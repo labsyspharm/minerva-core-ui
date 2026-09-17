@@ -59,6 +59,7 @@ function useStoryPlaybackLayers({
     activeChannelGroupId,
     channelVisibilities,
     channelGroupRowVisibilities,
+    images,
   });
 }
 

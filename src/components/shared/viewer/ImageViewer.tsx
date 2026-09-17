@@ -336,6 +336,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const maskVisualizationPreview = useAppStore(
     (s) => s.maskVisualizationPreview,
   );
+  const imageOrientationPreview = useAppStore((s) => s.imageOrientationPreview);
   const selectionMaskVisualizationPreview =
     maskVisualizationPreview?.sourceChannelId === SELECTION_MASK_CHANNEL_KEY
       ? maskVisualizationPreview.visualization
@@ -416,11 +417,19 @@ export const ImageViewer = (props: ImageViewerProps) => {
               channelGroups,
               activeChannelGroupId,
             );
+      const docOrientation = images.find(
+        (im) => im.id === sc.imageId,
+      )?.orientation;
+      const orientation =
+        imageOrientationPreview?.imageId === sc.imageId
+          ? imageOrientationPreview.orientation
+          : docOrientation;
       const layer = createMaskTileLayer({
         id: `mask-channel-${sc.id}`,
         loader: entry.loader,
         channelIndex: sc.index,
         visualization,
+        orientation,
       });
       if (layer) layers.push(layer);
     }
@@ -433,6 +442,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     activeChannelGroupId,
     channelGroups,
     maskVisualizationPreview,
+    imageOrientationPreview,
   ]);
 
   // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last

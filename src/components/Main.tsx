@@ -428,6 +428,7 @@ const Content = (props: Props) => {
     channelVisibilities,
     channelGroupRowVisibilities,
     channelRendering,
+    imageOrientationPreview,
     setGroupNames,
   } = useAppStore();
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
@@ -1975,6 +1976,8 @@ const Content = (props: Props) => {
     channelVisibilities,
     channelGroupRowVisibilities,
     channelRendering,
+    images,
+    orientationPreview: imageOrientationPreview,
     remountKey: viewerRemountKey,
   });
 

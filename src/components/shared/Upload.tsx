@@ -2,6 +2,7 @@ import type { FormEventHandler, DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ImageChannelOverviewCard } from "@/components/shared/channel/ImageChannelOverview";
+import { ImageOrientationRow } from "@/components/shared/channel/ImageOrientationRow";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
@@ -611,30 +612,29 @@ const Upload = (props: UploadProps) => {
             </div>
             <div className={styles.imageCardMeta}>{metaParts.join(" · ")}</div>
           </div>
-          {onReplaceImage || onRemoveImage ? (
-            <div className={styles.imageCardActions}>
-              {onReplaceImage &&
-              im.source?.kind !== "jpeg" &&
-              im.source?.kind !== "dicomWeb" ? (
-                <PanelIconButton
-                  title={`Replace ${title} with another OME-TIFF`}
-                  aria-label={`Replace ${title}`}
-                  onClick={() => void onReplaceImage(im.id)}
-                >
-                  <ReplaceIcon title="Replace image" size={14} />
-                </PanelIconButton>
-              ) : null}
-              {onRemoveImage ? (
-                <PanelIconButton
-                  title={`Delete ${title}`}
-                  aria-label={`Delete ${title}`}
-                  onClick={() => void onRemoveImage(im.id)}
-                >
-                  <TrashIcon title="Delete" size={14} />
-                </PanelIconButton>
-              ) : null}
-            </div>
-          ) : null}
+          <div className={styles.imageCardActions}>
+            <ImageOrientationRow image={im} />
+            {onReplaceImage &&
+            im.source?.kind !== "jpeg" &&
+            im.source?.kind !== "dicomWeb" ? (
+              <PanelIconButton
+                title={`Replace ${title} with another OME-TIFF`}
+                aria-label={`Replace ${title}`}
+                onClick={() => void onReplaceImage(im.id)}
+              >
+                <ReplaceIcon title="Replace image" size={14} />
+              </PanelIconButton>
+            ) : null}
+            {onRemoveImage ? (
+              <PanelIconButton
+                title={`Delete ${title}`}
+                aria-label={`Delete ${title}`}
+                onClick={() => void onRemoveImage(im.id)}
+              >
+                <TrashIcon title="Delete" size={14} />
+              </PanelIconButton>
+            ) : null}
+          </div>
         </div>
         <ImageChannelOverviewCard image={im} />
         {showAccessOverlay ? (
