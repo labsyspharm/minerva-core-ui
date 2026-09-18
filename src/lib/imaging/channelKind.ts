@@ -117,17 +117,19 @@ export function planarRgbSlotFromName(name: string): 0 | 1 | 2 | null {
 /**
  * True for interleaved RGB (SamplesPerPixel=3), named planar RGB (HE_r/g/b),
  * or unnamed 3×uint8 planar (typical H&E). Import may set `rgbDisplay` to
- * override the planar cases; packed `samples===3` always stays RGB.
+ * override packed and planar cases (`false` = independent IF channels).
  */
 export function isRgbDisplaySource(
   channels: readonly RgbDisplayChannelFields[],
 ): boolean {
   const intensity = channels.filter(isImageChannel);
   if (intensity.length === 0) return false;
-  if (intensity.length === 1 && intensity[0].samples === 3) return true;
+  const override = intensity.find((c) => c.rgbDisplay != null)?.rgbDisplay;
+  if (intensity.length === 1 && intensity[0].samples === 3) {
+    return override !== false;
+  }
   const planar = intensity.filter((c) => (c.samples ?? 1) === 1);
   if (planar.length !== 3) return false;
-  const override = intensity.find((c) => c.rgbDisplay != null)?.rgbDisplay;
   if (override != null) return override;
   if (planar.every((c) => planarRgbSlotFromName(c.name ?? "") != null)) {
     return true;
@@ -187,10 +189,12 @@ export function isRgbDisplayChannel(
   allChannels: readonly RgbDisplayChannelFields[],
 ): boolean {
   if (!isImageChannel(channel)) return false;
-  if (channel.samples === 3) return true;
-  if (channel.imageId == null) return false;
-  const onImage = allChannels.filter((c) => c.imageId === channel.imageId);
-  return isRgbDisplaySource(onImage);
+  if (channel.imageId != null) {
+    return isRgbDisplaySource(
+      allChannels.filter((c) => c.imageId === channel.imageId),
+    );
+  }
+  return isRgbDisplaySource([channel]);
 }
 
 /** Document-level role inferred from persisted channel kinds on one image row. */

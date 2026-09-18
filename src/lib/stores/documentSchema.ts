@@ -176,8 +176,8 @@ export const ImageSchema = z.object({
   /** Import intent: intensity stack vs segmentation labels (persisted for Images tab). */
   contentRole: z.enum(["intensity", "segmentation"]).optional(),
   /**
-   * Import override for ambiguous 3-channel planar files: true = color RGB
-   * (no per-channel sliders), false = multiplex IF. Undefined → runtime heuristics.
+   * Import override for 3-channel RGB sources: true = one color RGB unit,
+   * false = independent IF channels. Undefined → runtime heuristics.
    */
   rgbDisplay: z.boolean().optional(),
   channels: z.array(ImageChannelSchema),

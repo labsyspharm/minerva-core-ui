@@ -125,7 +125,11 @@
     "overrides": {
       "@vivjs/types": "0.22.1",
       "@vivjs/types@workspace:*": "0.22.1",
-      "@vivjs/loaders": "github:simonwarchol/viv#9f9128e69d16fbe14bf5edf97f81d0c69c13f194&path:packages/loaders",
+      "@vivjs/constants@workspace:*": "0.22.1",
+      "@vivjs/extensions@workspace:*": "0.22.1",
+      "@vivjs/loaders": "github:simonwarchol/viv#8fe50dace590df5ebd66791caf5d5c240ac36221&path:packages/loaders",
+      "@vivjs/loaders@workspace:*": "github:simonwarchol/viv#8fe50dace590df5ebd66791caf5d5c240ac36221&path:packages/loaders",
+      "@vivjs/layers": "github:simonwarchol/viv#8fe50dace590df5ebd66791caf5d5c240ac36221&path:packages/layers",
       "math.gl": "^4.1.0",
       "@math.gl/core": "^4.1.0",
       "@math.gl/web-mercator": "^4.1.0",

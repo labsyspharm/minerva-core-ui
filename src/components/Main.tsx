@@ -74,6 +74,7 @@ import {
   useSyncJpegChannelFolders,
 } from "@/lib/imaging/loadJpegFromDocument";
 import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/maskLayers";
+import { createOmeDecodePool } from "@/lib/imaging/omeDecodePool";
 import {
   applyPaletteToFlatImportImages,
   buildOmeImportSlice,
@@ -89,7 +90,6 @@ import {
   warmupPsudoPalette,
 } from "@/lib/imaging/psudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
-import { Pool } from "@/lib/imaging/workers/pool";
 import { effectiveWorldFrame } from "@/lib/imaging/worldFrame";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
@@ -281,7 +281,7 @@ async function hydrateLoadersFromImages(
   const result = await hydrateDocumentLoaders(images, {
     channelGroups: opts?.channelGroups ?? [],
     documentUrl: opts?.documentUrl ?? window.location.href,
-    pool: new Pool(),
+    pool: createOmeDecodePool(),
     requestPermission,
     includeLocal: true,
     imageSource: useDocumentStore.getState().metadata.imageSource,
@@ -873,7 +873,7 @@ const Content = (props: Props) => {
           images: doc.images,
           imageId,
           handle,
-          pool: new Pool(),
+          pool: createOmeDecodePool(),
         });
         if (prep.ok === false) {
           if (prep.error) window.alert(prep.error);
@@ -992,8 +992,8 @@ const Content = (props: Props) => {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "local",
         handle,
-        in_f: i === 0 ? in_f : handle.name,
-        pool: new Pool(),
+        pool: createOmeDecodePool(),
+        rgbDisplay,
       });
       const sourceImageId = crypto.randomUUID();
       const basename = i === 0 ? in_f : handle.name;
@@ -1086,8 +1086,8 @@ const Content = (props: Props) => {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "local",
         handle,
-        in_f: basename,
-        pool: new Pool(),
+        pool: createOmeDecodePool(),
+        rgbDisplay,
       });
       const sourceImageId = crypto.randomUUID();
       const slice = buildOmeImportSlice({
@@ -1209,7 +1209,8 @@ const Content = (props: Props) => {
     const loader = await loadOmeLoaderForRole(role, {
       kind: "url",
       url,
-      pool: new Pool(),
+      pool: createOmeDecodePool(),
+      rgbDisplay,
     });
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return;
@@ -1280,7 +1281,8 @@ const Content = (props: Props) => {
     const loader = await loadOmeLoaderForRole(role, {
       kind: "url",
       url,
-      pool: new Pool(),
+      pool: createOmeDecodePool(),
+      rgbDisplay,
     });
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return { ok: false, error: "Import was superseded by a newer request." };

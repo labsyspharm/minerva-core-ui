@@ -5,8 +5,8 @@ import {
   resolveImageImportRole,
 } from "@/lib/imaging/channelKind";
 import { loadOmeLoaderForRole } from "@/lib/imaging/filesystem";
+import type { DecodePool } from "@/lib/imaging/omeDecodePool";
 import type { Loader } from "@/lib/imaging/viv";
-import type { PoolClass } from "@/lib/imaging/workers/pool";
 import type { ConfigGroup } from "@/lib/legacy/exhibit";
 import type { Image } from "@/lib/stores/documentSchema";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
@@ -167,7 +167,7 @@ export async function replaceOmeLocalImageInDocument(args: {
   images: Image[];
   imageId: string;
   handle: Handle.File;
-  pool?: PoolClass;
+  pool?: DecodePool;
 }): Promise<ReplaceOmeLocalImageResult> {
   const { images, imageId, handle, pool } = args;
   const oldImage = images.find((im) => im.id === imageId);
@@ -189,8 +189,8 @@ export async function replaceOmeLocalImageInDocument(args: {
   const loader = await loadOmeLoaderForRole(role, {
     kind: "local",
     handle,
-    in_f: file.name,
     pool,
+    rgbDisplay: oldImage.rgbDisplay,
   });
   const newImageId = crypto.randomUUID();
   const withoutOld = images.filter((im) => im.id !== imageId);

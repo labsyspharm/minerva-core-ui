@@ -51,23 +51,6 @@ function applyChannelRendering<S extends MainSettings>(
   return { ...settings, colors };
 }
 
-/**
- * Viv TileLayer `updateTriggers.getTileData` is `[loader, selections]` by
- * reference. Contrast/color keep the same `selections` array; eye toggles must
- * too, or the tile cache clears and the loading spinner flashes.
- */
-function reuseVivSelections<S extends MainSettings>(
-  next: S,
-  prev: S | undefined,
-): S {
-  if (!prev?.selections?.length || !next.selections?.length) return next;
-  if (prev.selections.length !== next.selections.length) return next;
-  for (let i = 0; i < next.selections.length; i++) {
-    if (prev.selections[i]?.c !== next.selections[i]?.c) return next;
-  }
-  return { ...next, selections: prev.selections };
-}
-
 type ViewerLoaderSources = {
   dicomIndexList?: DicomIndex[];
   omeLoaderEntries?: OmeLoaderEntry[];
@@ -306,7 +289,7 @@ export function useViewerLayers(args: {
     [dicomIndexList, omeLoaderEntries, jpegLoaderEntries],
   );
 
-  const prevSettingsRef = useRef<Map<string, MainSettings>>(new Map());
+  const prevSettingsRef = useRef<Map<string, string[]>>(new Map());
 
   const { dicomSettingsList, omeSettingsList, jpegSettingsList } =
     useMemo(() => {
@@ -316,7 +299,7 @@ export function useViewerLayers(args: {
         loader: Loader | undefined,
         sourceImageId?: string,
       ) => {
-        const prev = prevSettingsRef.current.get(loaderKey);
+        const prevIds = prevSettingsRef.current.get(loaderKey) ?? [];
         const built = toDocSettings(
           activeChannelGroupId,
           modality,
@@ -324,11 +307,12 @@ export function useViewerLayers(args: {
           channelVisibilities,
           sourceImageId,
           channelGroupRowVisibilities,
-          prev?.sourceChannelIds ?? [],
+          prevIds,
         ) as MainSettings;
-        const settings = reuseVivSelections(built, prev);
-        prevSettingsRef.current.set(loaderKey, settings);
-        return settings;
+        prevSettingsRef.current.set(loaderKey, [
+          ...(built.sourceChannelIds ?? []),
+        ]);
+        return built;
       };
 
       return {
