@@ -11,7 +11,7 @@ import type {
   SupportedTypedArray,
 } from "@/lib/imaging/loaderTypes";
 import { CELL_OUTLINE_RGB, type MaskGpuStyle } from "@/lib/imaging/maskLayers";
-import type { Loader } from "@/lib/imaging/viv";
+import { type Loader, VIV_TILE_MAX_CACHE_SIZE } from "@/lib/imaging/viv";
 import { layerModelMatrix } from "@/lib/imaging/worldFrame";
 
 const CELL_OUTLINE_COUNT = CELL_OUTLINE_RGB.length;
@@ -69,61 +69,39 @@ vec3 randomColor(uint label) {
   return maskViz.uPalette5;
 }
 
-bool isInteriorEdge(uint label, vec2 coord) {
-  uint n = uint(texture(channel0, coord + vec2(0.0, maskViz.uTexelSize.y)).r);
-  uint s = uint(texture(channel0, coord - vec2(0.0, maskViz.uTexelSize.y)).r);
-  uint e = uint(texture(channel0, coord + vec2(maskViz.uTexelSize.x, 0.0)).r);
-  uint w = uint(texture(channel0, coord - vec2(maskViz.uTexelSize.x, 0.0)).r);
-  return n != label || s != label || e != label || w != label;
+uint labelAt(vec2 coord) {
+  return uint(texture(channel0, coord).r);
 }
 
-uint unpackId(vec4 p) {
-  return uint(round(p.r * 255.0))
-    | (uint(round(p.g * 255.0)) << 8u)
-    | (uint(round(p.b * 255.0)) << 16u)
-    | (uint(round(p.a * 255.0)) << 24u);
-}
-
-// ponytail: 8 linear probes at load ≤ 0.5 (table ≥ 2× entries). A miss
-// falls through to hash / missHidden. Not a 512-id hidden-uniform cap.
-// Upgrade: longer probe or cuckoo if 4k-override tables collide.
-vec4 probeOverride(uint label) {
-  uint tableSize = uint(classStyle.uOverrideCount);
-  if (tableSize == 0u) return vec4(-1.0);
-  uint slot = (label * 2654435761u) % tableSize;
-  for (int k = 0; k < 8; k++) {
-    uint i = (slot + uint(k)) % tableSize;
-    uint id = unpackId(texelFetch(overrideTex, ivec2(int(i), 0), 0));
-    if (id == 0u) return vec4(-1.0);
-    if (id == label) return texelFetch(overrideTex, ivec2(int(i), 1), 0);
-  }
-  return vec4(-1.0);
+bool isOutline(uint label, vec2 coord) {
+  vec2 t = 1.0 / vec2(textureSize(channel0, 0));
+  return
+    labelAt(coord + vec2( t.x, 0.0)) != label ||
+    labelAt(coord + vec2(-t.x, 0.0)) != label ||
+    labelAt(coord + vec2(0.0,  t.y)) != label ||
+    labelAt(coord + vec2(0.0, -t.y)) != label;
 }
 
 void main() {
-  uint label = uint(texture(channel0, vTexCoord).r);
+  uint label = labelAt(vTexCoord);
   if (label == 0u) discard;
-  if (maskViz.uOutline != 0 && !isInteriorEdge(label, vTexCoord)) discard;
+  if (maskViz.uOutline != 0 && !isOutline(label, vTexCoord)) discard;
 
   vec3 rgb;
-  int strategy = classStyle.uClassStrategy;
-  if (strategy == 0) {
+  int w = int(classStyle.uLutSize.x);
+  int h = int(classStyle.uLutSize.y);
+  int y = int(label) / w;
+  uint cls = 0u;
+  if (y < h) {
+    cls = uint(round(texelFetch(classIndex, ivec2(int(label) % w, y), 0).r * 255.0));
+  }
+  if (cls == 0u) {
+    if (classStyle.uMissHidden != 0) discard;
     rgb = maskViz.uRandomColors != 0 ? randomColor(label) : vec3(1.0);
-  } else if (strategy == 1) {
-    int w = int(classStyle.uLutSize.x);
-    vec4 c = texelFetch(classLut, ivec2(int(label) % w, int(label) / w), 0);
+  } else {
+    vec4 c = texelFetch(classPalette, ivec2(int(cls), 0), 0);
     if (c.a == 0.0) discard;
     rgb = maskViz.uRandomColors != 0 ? c.rgb : vec3(1.0);
-  } else {
-    vec4 ov = probeOverride(label);
-    if (ov.a >= 0.0) {
-      if (ov.a == 0.0) discard;
-      rgb = maskViz.uRandomColors != 0 ? ov.rgb : vec3(1.0);
-    } else if (classStyle.uMissHidden != 0) {
-      discard;
-    } else {
-      rgb = maskViz.uRandomColors != 0 ? randomColor(label) : vec3(1.0);
-    }
   }
   float a = (maskViz.uOutline != 0 ? 230.0 : 170.0) / 255.0;
   fragColor = vec4(rgb, a * maskViz.opacity);
@@ -151,7 +129,6 @@ uniform maskVizUniforms {
   int uOutline;
   int uRandomColors;
   float uColorSeed;
-  vec2 uTexelSize;
   float opacity;
   vec3 uPalette0;
   vec3 uPalette1;
@@ -165,7 +142,6 @@ uniform maskVizUniforms {
     uOutline: "i32",
     uRandomColors: "i32",
     uColorSeed: "f32",
-    uTexelSize: "vec2<f32>",
     opacity: "f32",
     uPalette0: "vec3<f32>",
     uPalette1: "vec3<f32>",
@@ -179,50 +155,24 @@ uniform maskVizUniforms {
 const classStyleMod = {
   name: "classStyle",
   fs: `\
-uniform sampler2D classLut;
-uniform sampler2D overrideTex;
+uniform sampler2D classIndex;
+uniform sampler2D classPalette;
 uniform classStyleUniforms {
-  int uClassStrategy;
   vec2 uLutSize;
   int uMissHidden;
-  int uOverrideCount;
 } classStyle;
 `,
   uniformTypes: {
-    uClassStrategy: "i32",
     uLutSize: "vec2<f32>",
     uMissHidden: "i32",
-    uOverrideCount: "i32",
   },
 };
 
 const DUMMY_RGBA = new Uint8Array([0, 0, 0, 0]);
-
-function sparseToRgba8(overrides: Uint32Array, size: number): Uint8Array {
-  const data = new Uint8Array(size * 2 * 4);
-  for (let i = 0; i < size; i++) {
-    const id = overrides[i * 2];
-    const rgba = overrides[i * 2 + 1];
-    const o = i * 4;
-    data[o] = id & 255;
-    data[o + 1] = (id >>> 8) & 255;
-    data[o + 2] = (id >>> 16) & 255;
-    data[o + 3] = (id >>> 24) & 255;
-    const p = (size + i) * 4;
-    data[p] = rgba & 255;
-    data[p + 1] = (rgba >>> 8) & 255;
-    data[p + 2] = (rgba >>> 16) & 255;
-    data[p + 3] = (rgba >>> 24) & 255;
-  }
-  return data;
-}
+const DUMMY_R8 = new Uint8Array([0]);
 
 function styleKey(style: MaskGpuStyle | undefined): string {
-  if (!style || style.strategy === "plane") return "plane";
-  if (style.strategy === "denseLut") {
-    return `dense:${style.width}x${style.height}:${style.rev}`;
-  }
-  return `sparse:${style.overrides.length}:${style.missHidden}:${style.rev}`;
+  return style ? `${style.indexRev}:${style.rev}` : "";
 }
 
 type GpuTexture = {
@@ -230,40 +180,68 @@ type GpuTexture = {
   delete?: () => void;
 };
 
-function destroyTex(tex: GpuTexture | undefined) {
-  tex?.destroy?.();
-  tex?.delete?.();
-}
+// Index texture is stable per CSV; palette is tiny and changes with vis/color.
+const TEX_CACHE_MAX = 4;
+const indexTexCache = new Map<string, GpuTexture>();
+const paletteTexCache = new Map<string, GpuTexture>();
 
-// ponytail: one LUT per vis+palette, shared by all tiles. LRU of 4.
-const CLASS_TEX_CACHE_MAX = 4;
-const classTexCache = new Map<
-  string,
-  { lut: GpuTexture; override: GpuTexture }
->();
-
-function rememberClassTextures(
+function rememberTex(
+  cache: Map<string, GpuTexture>,
   key: string,
-  lut: GpuTexture,
-  override: GpuTexture,
-): { lut: GpuTexture; override: GpuTexture } {
-  const hit = classTexCache.get(key);
+  tex: GpuTexture,
+): GpuTexture {
+  const hit = cache.get(key);
   if (hit) {
-    classTexCache.delete(key);
-    classTexCache.set(key, hit);
+    cache.delete(key);
+    cache.set(key, hit);
     return hit;
   }
-  while (classTexCache.size >= CLASS_TEX_CACHE_MAX) {
-    const oldest = classTexCache.keys().next().value;
+  while (cache.size >= TEX_CACHE_MAX) {
+    const oldest = cache.keys().next().value;
     if (oldest == null) break;
-    const old = classTexCache.get(oldest);
-    classTexCache.delete(oldest);
-    destroyTex(old?.lut);
-    destroyTex(old?.override);
+    const evicted = cache.get(oldest);
+    evicted?.destroy?.();
+    evicted?.delete?.();
+    cache.delete(oldest);
   }
-  const entry = { lut, override };
-  classTexCache.set(key, entry);
-  return entry;
+  cache.set(key, tex);
+  return tex;
+}
+
+const NEAREST_SAMPLER = {
+  minFilter: "nearest",
+  magFilter: "nearest",
+  addressModeU: "clamp-to-edge",
+  addressModeV: "clamp-to-edge",
+} as const;
+
+function makeTexture(
+  device: XRLayerInstance["context"]["device"],
+  data: Uint8Array,
+  width: number,
+  height: number,
+  format: "r8unorm" | "rgba8unorm",
+): GpuTexture {
+  try {
+    return device.createTexture({
+      data,
+      width,
+      height,
+      format,
+      mipmaps: false,
+      sampler: NEAREST_SAMPLER,
+    });
+  } catch (e) {
+    console.warn("[featureTable] class texture create failed", e);
+    return device.createTexture({
+      data: format === "r8unorm" ? DUMMY_R8 : DUMMY_RGBA,
+      width: 1,
+      height: 1,
+      format,
+      mipmaps: false,
+      sampler: NEAREST_SAMPLER,
+    });
+  }
 }
 
 // Viv types XRLayer as a constructable const; subclass at runtime (Vitessce pattern).
@@ -278,8 +256,8 @@ type XRLayerInstance = {
       shaderInputs: { setProps: (props: Record<string, unknown>) => void };
       setBindings?: (props: Record<string, unknown>) => void;
     } | null;
-    classLutTexture?: GpuTexture;
-    overrideTexture?: GpuTexture;
+    classIndexTexture?: GpuTexture;
+    classPaletteTexture?: GpuTexture;
     classStyleKey?: string;
   };
   updateState(params: unknown): void;
@@ -298,7 +276,6 @@ class MaskBitmaskLayer extends XRLayerBase {
   static defaultProps = {
     ...BITMASK_PROPS,
     visualization: DEFAULT_MASK_VISUALIZATION,
-    classStyle: { strategy: "plane" } as MaskGpuStyle,
   };
 
   getNumChannels() {
@@ -323,47 +300,27 @@ class MaskBitmaskLayer extends XRLayerBase {
   }
 
   finalizeState() {
-    this.state.classLutTexture = undefined;
-    this.state.overrideTexture = undefined;
+    this.state.classIndexTexture = undefined;
+    this.state.classPaletteTexture = undefined;
     const proto = Object.getPrototypeOf(XRLayerBase.prototype) as {
       finalizeState?: (this: XRLayerInstance) => void;
     };
     proto.finalizeState?.call(this);
   }
 
-  updateState(params: unknown) {
-    super.updateState(params);
+  writeMaskViz() {
     const { model } = this.state;
     if (!model) return;
-    const channelData = this.props.channelData as MaskTileData | undefined;
-    const w = Math.max(1, channelData?.width ?? 1);
-    const h = Math.max(1, channelData?.height ?? 1);
     const viz =
       (this.props.visualization as MaskVisualization | undefined) ??
       DEFAULT_MASK_VISUALIZATION;
     const opacity = Math.min(1, Math.max(0, viz.opacity ?? 1));
-    const style =
-      (this.props.classStyle as MaskGpuStyle | undefined) ??
-      ({ strategy: "plane" } satisfies MaskGpuStyle);
-    this.ensureClassTextures(style);
-    let uClassStrategy = 0;
-    let uLutSize: [number, number] = [1, 1];
-    let uMissHidden = 0;
-    let uOverrideCount = 0;
-    if (style.strategy === "denseLut") {
-      uClassStrategy = 1;
-      uLutSize = [style.width, style.height];
-    } else if (style.strategy === "sparse") {
-      uClassStrategy = 2;
-      uMissHidden = style.missHidden ? 1 : 0;
-      uOverrideCount = style.overrides.length / 2;
-    }
+    const style = this.props.classStyle as MaskGpuStyle | undefined;
     model.shaderInputs.setProps({
       maskViz: {
         uOutline: viz.style === "outline" ? 1 : 0,
         uRandomColors: viz.color === "random" ? 1 : 0,
         uColorSeed: viz.colorSeed ?? 0,
-        uTexelSize: [1 / w, 1 / h],
         opacity,
         uPalette0: CELL_OUTLINE_VEC3[0],
         uPalette1: CELL_OUTLINE_VEC3[1],
@@ -373,78 +330,57 @@ class MaskBitmaskLayer extends XRLayerBase {
         uPalette5: CELL_OUTLINE_VEC3[5],
       },
       classStyle: {
-        uClassStrategy,
-        uLutSize,
-        uMissHidden,
-        uOverrideCount,
+        uLutSize: style ? [style.width, style.height] : [1, 1],
+        uMissHidden: style?.missHidden ? 1 : 0,
       },
-    });
-    model.setBindings?.({
-      classLut: this.state.classLutTexture,
-      overrideTex: this.state.overrideTexture,
     });
   }
 
-  ensureClassTextures(style: MaskGpuStyle) {
+  updateState(params: unknown) {
+    super.updateState(params);
+    const { model } = this.state;
+    if (!model) return;
+    this.ensureClassTextures(this.props.classStyle as MaskGpuStyle | undefined);
+    this.writeMaskViz();
+    model.setBindings?.({
+      classIndex: this.state.classIndexTexture,
+      classPalette: this.state.classPaletteTexture,
+    });
+  }
+
+  ensureClassTextures(style: MaskGpuStyle | undefined) {
     const key = styleKey(style);
-    if (this.state.classStyleKey === key && this.state.classLutTexture) return;
-    const cached = classTexCache.get(key);
-    if (cached) {
-      rememberClassTextures(key, cached.lut, cached.override);
-      this.state.classLutTexture = cached.lut;
-      this.state.overrideTexture = cached.override;
-      this.state.classStyleKey = key;
+    if (this.state.classStyleKey === key && this.state.classIndexTexture)
       return;
-    }
     const device = this.context.device;
-    const make = (data: Uint8Array, width: number, height: number) => {
-      try {
-        return device.createTexture({
-          data,
-          width,
-          height,
-          format: "rgba8unorm",
-          mipmaps: false,
-          sampler: {
-            minFilter: "nearest",
-            magFilter: "nearest",
-            addressModeU: "clamp-to-edge",
-            addressModeV: "clamp-to-edge",
-          },
-        });
-      } catch (e) {
-        console.warn("[classTable] class texture create failed", e);
-        return device.createTexture({
-          data: DUMMY_RGBA,
-          width: 1,
-          height: 1,
-          format: "rgba8unorm",
-          mipmaps: false,
-          sampler: {
-            minFilter: "nearest",
-            magFilter: "nearest",
-            addressModeU: "clamp-to-edge",
-            addressModeV: "clamp-to-edge",
-          },
-        });
-      }
-    };
-    let lut: GpuTexture;
-    let override: GpuTexture;
-    if (style.strategy === "denseLut") {
-      lut = make(style.rgba, style.width, style.height);
-      override = make(DUMMY_RGBA, 1, 1);
-    } else if (style.strategy === "sparse") {
-      const size = Math.max(1, style.overrides.length / 2);
-      lut = make(DUMMY_RGBA, 1, 1);
-      override = make(sparseToRgba8(style.overrides, size), size, 2);
-    } else {
-      lut = make(DUMMY_RGBA, 1, 1);
-      override = make(DUMMY_RGBA, 1, 1);
+    const indexKey = style
+      ? `i:${style.indexRev}:${style.width}x${style.height}`
+      : "";
+    const paletteKey = style ? `p:${style.rev}` : "";
+    let index = indexTexCache.get(indexKey);
+    if (!index) {
+      index = style
+        ? makeTexture(device, style.index, style.width, style.height, "r8unorm")
+        : makeTexture(device, DUMMY_R8, 1, 1, "r8unorm");
     }
-    const entry = rememberClassTextures(key, lut, override);
-    this.state.classLutTexture = entry.lut;
-    this.state.overrideTexture = entry.override;
+    this.state.classIndexTexture = rememberTex(indexTexCache, indexKey, index);
+    let palette = paletteTexCache.get(paletteKey);
+    if (!palette) {
+      palette = style
+        ? makeTexture(
+            device,
+            style.palette,
+            Math.max(1, style.palette.length / 4),
+            1,
+            "rgba8unorm",
+          )
+        : makeTexture(device, DUMMY_RGBA, 1, 1, "rgba8unorm");
+    }
+    this.state.classPaletteTexture = rememberTex(
+      paletteTexCache,
+      paletteKey,
+      palette,
+    );
     this.state.classStyleKey = key;
   }
 }
@@ -474,6 +410,7 @@ export function createMaskTileLayer(args: {
   channelIndex: number;
   visualization: MaskVisualization;
   classStyle?: MaskGpuStyle;
+  visible?: boolean;
 }): Layer | null {
   const planes = args.loader.data;
   if (!planes?.length) return null;
@@ -483,14 +420,19 @@ export function createMaskTileLayer(args: {
 
   const modelMatrix = layerModelMatrix(args.loader);
   const { visualization: viz, channelIndex, classStyle } = args;
+  const visible = args.visible !== false;
 
   return new TileLayer<MaskTileData>({
     id: args.id,
     tileSize: finest.tileSize,
-    minZoom: -(planes.length - 1),
+    minZoom: Math.round(-(planes.length - 1)),
     maxZoom: 0,
+    zoomOffset: Math.round(Math.log2(modelMatrix.getScale()[0] || 1)),
     extent: [0, 0, maskW, maskH],
     modelMatrix,
+    visible,
+    maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
+    maxRequests: 10,
     refinementStrategy: "best-available",
     pickable: false,
     updateTriggers: {
@@ -501,6 +443,7 @@ export function createMaskTileLayer(args: {
         viz.colorSeed ?? 0,
         viz.opacity ?? 1,
         styleKey(classStyle),
+        visible,
       ],
     },
     getTileData: async ({ index, signal }) => {
@@ -534,17 +477,18 @@ export function createMaskTileLayer(args: {
       }
       const bbox = props.tile.bbox;
       if (!("left" in bbox)) return null;
-      const { left, bottom, right, top } = bbox;
-      if ([left, bottom, right, top].some((v) => v < 0)) return null;
-      const { tileSize } = finest;
+      const { left, top } = bbox;
+      if ([left, top].some((v) => v < 0)) return null;
+      const scale = 2 ** Math.round(-props.tile.index.z);
       return new MaskBitmaskLayer({
         id: `${args.id}-bitmask-${props.tile.id}`,
         channelData: tileData,
         modelMatrix,
+        visible,
         bounds: [
           left,
-          tileData.height < tileSize ? maskH : bottom,
-          tileData.width < tileSize ? maskW : right,
+          top + tileData.height * scale,
+          left + tileData.width * scale,
           top,
         ],
         visualization: viz,

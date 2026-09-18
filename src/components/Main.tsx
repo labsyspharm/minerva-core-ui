@@ -1,4 +1,3 @@
-import type { FormEventHandler } from "react";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
@@ -15,7 +14,6 @@ import type {
   LoadedSourceSummary,
   OmeImportRequest,
   OmeImportResult,
-  ValidObj,
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
 import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
@@ -24,7 +22,11 @@ import type {
   ConfigWaypoint,
 } from "@/lib/authoring/config";
 import { extractChannels } from "@/lib/authoring/config";
-import { detachRemovedClassTables, hydrateClassTables } from "@/lib/classTable";
+import {
+  detachRemovedFeatureTables,
+  hydrateFeatureTables,
+  requestFeatureTableFileAccess,
+} from "@/lib/featureTable";
 import {
   applyVisibilityTransition,
   buildCompositedIntensityLayers,
@@ -140,7 +142,6 @@ import {
   type StoryExportMode,
   writeStoryBundleSidecars,
 } from "@/lib/storyExport/storyBundle";
-import { isOpts, validate } from "@/lib/validate";
 import {
   applyWaypointSeedAction,
   planWaypointConfigSeedTick,
@@ -402,20 +403,20 @@ const Content = (props: Props) => {
     };
   }, [viewerImageLayersLoaded]);
   const activeStoryId = useDocumentStore((s) => s.activeStoryId);
-  const classTableHydrateKey = useDocumentStore((s) =>
-    s.classTables.map((c) => `${c.id}:${c.digest}`).join("|"),
+  const featureTableHydrateKey = useDocumentStore((s) =>
+    s.featureTables.map((c) => `${c.id}:${c.digest}`).join("|"),
   );
   const prevStoryIdRef = React.useRef(activeStoryId);
-  // Digest key retriggers ingest without depending on classTables identity (color edits).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: classTableHydrateKey
+  // Digest key retriggers ingest without depending on featureTables identity (color edits).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: featureTableHydrateKey
   React.useEffect(() => {
     const storyChanged = prevStoryIdRef.current !== activeStoryId;
     prevStoryIdRef.current = activeStoryId;
-    void hydrateClassTables(
-      useDocumentStore.getState().classTables,
+    void hydrateFeatureTables(
+      useDocumentStore.getState().featureTables,
       storyChanged,
     );
-  }, [activeStoryId, classTableHydrateKey]);
+  }, [activeStoryId, featureTableHydrateKey]);
   const namespacedHandleKeys = React.useMemo(
     () =>
       handleKeys.map((k) =>
@@ -772,7 +773,7 @@ const Content = (props: Props) => {
         doc.images,
         doc.channelGroups,
         imageId,
-        doc.classTables,
+        doc.featureTables,
       );
       if (result.images.length === doc.images.length) return;
       clearRemovedImageState([removed]);
@@ -796,7 +797,7 @@ const Content = (props: Props) => {
         resetActiveGroup: !activeStillExists,
         transition: { kind: "remove" },
       });
-      detachRemovedClassTables(doc.classTables, result.classTables);
+      detachRemovedFeatureTables(doc.featureTables, result.featureTables);
 
       if (result.images.length === 0) {
         setFileName("");
@@ -1415,6 +1416,7 @@ const Content = (props: Props) => {
         documentUrl: window.location.href,
       });
       applyHydratedLoaders(result);
+      await requestFeatureTableFileAccess();
       if (
         result.omeLoaderEntries.length +
           result.jpegLoaderEntries.length +
@@ -1650,7 +1652,7 @@ const Content = (props: Props) => {
     const legacyModalityIds = new Set(indexList.map((d) => d.modality));
     let nextDocImages = [...doc.images];
     let nextChannelGroups = [...doc.channelGroups];
-    let nextClassTables = [...doc.classTables];
+    let nextFeatureTables = [...doc.featureTables];
     const removedImages: Image[] = [];
     for (const im of doc.images) {
       const sameSeries =
@@ -1664,11 +1666,11 @@ const Content = (props: Props) => {
         nextDocImages,
         nextChannelGroups,
         im.id,
-        nextClassTables,
+        nextFeatureTables,
       );
       nextDocImages = removed.images;
       nextChannelGroups = removed.channelGroups;
-      nextClassTables = removed.classTables;
+      nextFeatureTables = removed.featureTables;
     }
     const channelsBefore = flattenImageChannelsInDocumentOrder(nextDocImages);
     nextDocImages = applySourceChannelsToImages(nextDocImages, SourceChannels);
@@ -1733,11 +1735,9 @@ const Content = (props: Props) => {
         isFresh || !mergedChannelGroups.some((g) => g.id === activeId),
       transition,
     });
-    detachRemovedClassTables(doc.classTables, nextClassTables);
+    detachRemovedFeatureTables(doc.featureTables, nextFeatureTables);
     afterImageImportDocumentEffects();
   };
-
-  const [valid, setValid] = useState({} as ValidObj);
 
   const onStartRef = React.useRef(onStart);
   onStartRef.current = onStart;
@@ -2118,34 +2118,6 @@ const Content = (props: Props) => {
       onRestoredHandles={hasDemo ? undefined : onRestoredOmeHandles}
     >
       {({ handles, onAllow }) => {
-        const onSubmit: FormEventHandler = (event) => {
-          const form = event.currentTarget as HTMLFormElement;
-          const data = [...new FormData(form).entries()];
-          const formOut = data.reduce(
-            (o, [k, v]) => {
-              o[k] = `${v}`;
-              return o;
-            },
-            {
-              url: "",
-              name: "",
-            },
-          );
-          const formOpts = {
-            formOut,
-            onStart: (list) => onStart(list, handles),
-            handles,
-          };
-          if (isOpts(formOpts)) {
-            validate(formOpts).then((valid: ValidObj) => {
-              setValid(valid);
-            });
-          }
-          event.preventDefault();
-          event.stopPropagation();
-        };
-
-        const formProps = { onSubmit, valid };
         const imageLoaded = !noLoader;
         const handleNamesLabel = handles
           .map((h) => h.name)
@@ -2319,7 +2291,6 @@ const Content = (props: Props) => {
         };
 
         const uploadProps = {
-          formProps,
           onAllow,
           importRevision,
           imageLoaded,

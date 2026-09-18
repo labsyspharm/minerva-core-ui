@@ -202,7 +202,7 @@ export const ChannelGroupSchema = z.object({
   channels: z.array(ChannelGroupChannelSchema),
 });
 
-/* -------------------- class tables -------------------- */
+/* -------------------- feature tables -------------------- */
 
 /** Pixel / CSV classID after import. Integer in `1…0xFFFFFFFF`; 0 is unrepresentable. */
 const ClassIdSchema = z.number().int().positive().max(0xffff_ffff);
@@ -211,7 +211,7 @@ const ClassIdSchema = z.number().int().positive().max(0xffff_ffff);
  * Sidecar name table for one mask plane (`sourceChannelId` = ImageChannel.id).
  * Name rows live in DuckDB, not in this JSON object.
  */
-const ClassTableSchema = z.object({
+const FeatureTableSchema = z.object({
   id: IdSchema,
   sourceChannelId: IdSchema,
   source: z.object({ handleKey: z.string().min(1) }),
@@ -224,9 +224,9 @@ const ClassTableSchema = z.object({
   ),
   /** SHA-256 of the attached CSV bytes. */
   digest: z.string().min(1),
-  columns: z
-    .object({ id: z.string().min(1), name: z.string().min(1) })
-    .optional(),
+  columns: z.object({ id: z.string().min(1), name: z.string().min(1) }),
+  /** False when the CSV has no header row (`column0`,`column1`). */
+  header: z.boolean(),
 });
 
 const waypointObjectZ = z.object({
@@ -329,7 +329,7 @@ export const DocumentDataSchema = z.preprocess(
     shapes: z.array(ShapeSchema),
     channelGroups: z.array(ChannelGroupSchema),
     images: z.array(ImageSchema),
-    classTables: z.array(ClassTableSchema).default([]),
+    featureTables: z.array(FeatureTableSchema).default([]),
   }),
 );
 
@@ -368,7 +368,7 @@ export type ChannelGroupChannel = z.infer<typeof ChannelGroupChannelSchema>;
 export type ChannelGroup = z.infer<typeof ChannelGroupSchema>;
 export type Waypoint = z.infer<typeof WaypointSchema>;
 export type SourceDistributionData = z.infer<typeof SourceDistributionSchema>;
-export type ClassTable = z.infer<typeof ClassTableSchema>;
+export type FeatureTable = z.infer<typeof FeatureTableSchema>;
 
 export type DocumentMetadata = z.infer<typeof DocumentMetadataSchema>;
 export type DocumentData = z.infer<typeof DocumentDataSchema>;

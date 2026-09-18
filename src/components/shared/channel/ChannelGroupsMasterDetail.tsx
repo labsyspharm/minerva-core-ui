@@ -13,7 +13,7 @@ import {
 } from "@/components/shared/channel/ChannelEditorPopover";
 import { ChannelRow } from "@/components/shared/channel/ChannelRow";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
-import { classTableRowExtras } from "@/components/shared/channel/ClassTable";
+import { featureTableRowExtras } from "@/components/shared/channel/FeatureTable";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
@@ -530,7 +530,7 @@ export const ChannelGroupsMasterDetail = (
   const channelRendering = useAppStore((s) => s.channelRendering);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
-  const classTables = useDocumentStore((s) => s.classTables);
+  const featureTables = useDocumentStore((s) => s.featureTables);
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
   const setImages = useDocumentStore((s) => s.setImages);
   const setImagesAndChannelGroups = useDocumentStore(
@@ -1458,7 +1458,7 @@ export const ChannelGroupsMasterDetail = (
                               isMask: true,
                               maskVisualization: effectiveMaskVisualization(gc),
                               maskAriaLabel: `Mask display for ${name}`,
-                              ...classTableRowExtras(sc.id, classTables),
+                              ...featureTableRowExtras(sc.id, featureTables),
                               onMaskVisualizationChange: (viz) =>
                                 syncMaskVisualization(
                                   gc.channelId,
@@ -1728,7 +1728,7 @@ export const ChannelGroupsMasterDetail = (
                   isMask: true,
                   maskVisualization: effectiveMaskVisualization(sc),
                   maskAriaLabel: `Mask display for ${sc.name}`,
-                  ...classTableRowExtras(sc.id, classTables),
+                  ...featureTableRowExtras(sc.id, featureTables),
                   onMaskVisualizationChange: (viz) =>
                     syncMaskVisualization(sc.id, viz),
                   onMaskVisualizationPreview: (viz) =>

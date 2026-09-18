@@ -38,21 +38,17 @@ export type ClassVisibility =
   | { mode: "hide"; names: readonly string[] }
   | { mode: "show"; names: readonly string[] };
 
-export type MaskGpuStyle =
-  | { strategy: "plane" }
-  | {
-      strategy: "denseLut";
-      rgba: Uint8Array;
-      width: number;
-      height: number;
-      rev: string;
-    }
-  | {
-      strategy: "sparse";
-      missHidden: boolean;
-      overrides: Uint32Array;
-      rev: string;
-    };
+export type MaskGpuStyle = {
+  /** R8, class index per cell id. 0 = unnamed. */
+  index: Uint8Array;
+  width: number;
+  height: number;
+  /** RGBA8, row of class colors. Texel 0 unused. */
+  palette: Uint8Array;
+  missHidden: boolean;
+  indexRev: string;
+  rev: string;
+};
 
 function cellOutlineRgbFromSeed(seed: string): [number, number, number] {
   let h = 2166136261;

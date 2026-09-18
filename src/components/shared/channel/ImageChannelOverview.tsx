@@ -22,6 +22,7 @@ import {
   withGroupRowVisible,
 } from "@/lib/imaging/channelCompositor";
 import {
+  isMaskChannel,
   isRgbDisplayImage,
   MAX_VIV_INTENSITY_CHANNELS,
   VIEWER_INTENSITY_LIMIT_HINT,
@@ -268,7 +269,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
   );
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const nav = useAuthorChannelNav();
-  const [openKey, setOpenKey] = useState<string | null>(null);
+  const [openKey, setOpenKey] = useState<string | null | undefined>(undefined);
   const [channelNameFilter, setChannelNameFilter] = useState("");
 
   const allSourceChannels = useMemo(
@@ -331,13 +332,25 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     ...model.groups.flatMap((g) => g.chips),
     ...model.allChannels,
   ];
-  const openChip =
-    openKey == null
+  const maskIds = new Set(
+    image.channels.filter(isMaskChannel).map((c) => c.id),
+  );
+  const defaultMaskKey =
+    maskIds.size === 0
       ? null
-      : (overviewChips.find((c) => c.key === openKey) ?? null);
+      : (overviewChips.find((c) => maskIds.has(c.sourceId))?.key ?? null);
+  const resolvedOpenKey = openKey === undefined ? defaultMaskKey : openKey;
+
+  const openChip =
+    resolvedOpenKey == null
+      ? null
+      : (overviewChips.find((c) => c.key === resolvedOpenKey) ?? null);
 
   const onOpenEditor = (chip: ImageChannelChip) => {
-    setOpenKey((cur) => (cur === chip.key ? null : chip.key));
+    setOpenKey((cur) => {
+      const current = cur === undefined ? defaultMaskKey : cur;
+      return current === chip.key ? null : chip.key;
+    });
   };
 
   const capVis: VivIntensityCapVis = {

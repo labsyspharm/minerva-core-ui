@@ -6,7 +6,7 @@ export type FileHandleRow = {
   handle: FileSystemHandle;
 };
 
-/** CSV / sidecar bytes keyed like file handles (`story:<id>:classTable:<classTableId>`). */
+/** CSV / sidecar bytes keyed like file handles (`story:<id>:featureTable:<featureTableId>`). */
 export type BlobRow = {
   id: string;
   bytes: Uint8Array;
