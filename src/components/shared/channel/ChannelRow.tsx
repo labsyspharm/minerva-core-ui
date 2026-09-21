@@ -3,7 +3,6 @@ import {
   type MouseEventHandler,
   type ReactNode,
   useEffect,
-  useId,
   useRef,
   useState,
 } from "react";
@@ -12,7 +11,6 @@ import {
   type ChannelContrastEditorProps,
 } from "@/components/shared/channel/ChannelContrastEditor";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
-import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import { withReseededRandomColors } from "@/lib/imaging/channelKind";
@@ -148,66 +146,72 @@ function MaskOpacityControl(props: {
 function MaskModeControls(props: {
   value: MaskVisualization;
   onChange: (viz: MaskVisualization) => void;
-  onPreview?: (viz: MaskVisualization | null) => void;
   ariaLabel: string;
+  classColors?: boolean;
 }) {
-  const { value, onChange, ariaLabel } = props;
-  const randomActive = value.color === "random";
+  const { value, onChange, ariaLabel, classColors } = props;
+  const colored = value.color === "random";
   return (
     <div className={styles.maskModeControls}>
-      <div className={styles.maskModeToggles}>
-        <div className={styles.maskModeGroup}>
-          <fieldset
-            className={styles.maskVizToggle}
-            aria-label={`${ariaLabel} fill`}
-          >
-            <MaskVizButton
-              active={value.style === "outline"}
-              label="Outline"
-              iconClass={styles.maskVizIconOutline}
-              onClick={() => onChange({ ...value, style: "outline" })}
-            />
-            <MaskVizButton
-              active={value.style === "full"}
-              label="Full"
-              iconClass={styles.maskVizIconFull}
-              onClick={() => onChange({ ...value, style: "full" })}
-            />
-          </fieldset>
-          <span className={styles.maskModeGroupLabel}>Fill</span>
-        </div>
-        <div className={styles.maskModeGroup}>
-          <fieldset
-            className={styles.maskVizToggle}
-            aria-label={`${ariaLabel} color`}
-          >
-            <MaskVizButton
-              active={value.color === "white"}
-              label="White"
-              iconClass={styles.maskVizSwatchWhite}
-              onClick={() => onChange({ ...value, color: "white" })}
-            />
-            <MaskVizButton
-              active={randomActive}
-              label={randomActive ? "Random colors, re-seed" : "Random colors"}
-              title={
-                randomActive
+      <div className={styles.maskModeGroup}>
+        <fieldset
+          className={styles.maskVizToggle}
+          aria-label={`${ariaLabel} fill`}
+        >
+          <MaskVizButton
+            active={value.style === "outline"}
+            label="Outline"
+            iconClass={styles.maskVizIconOutline}
+            onClick={() => onChange({ ...value, style: "outline" })}
+          />
+          <MaskVizButton
+            active={value.style === "full"}
+            label="Full"
+            iconClass={styles.maskVizIconFull}
+            onClick={() => onChange({ ...value, style: "full" })}
+          />
+        </fieldset>
+        <span className={styles.maskModeGroupLabel}>Fill</span>
+      </div>
+      <div className={styles.maskModeGroup}>
+        <fieldset
+          className={styles.maskVizToggle}
+          aria-label={`${ariaLabel} color`}
+        >
+          <MaskVizButton
+            active={value.color === "white"}
+            label="White"
+            iconClass={styles.maskVizSwatchWhite}
+            onClick={() => onChange({ ...value, color: "white" })}
+          />
+          <MaskVizButton
+            active={colored}
+            label={
+              classColors
+                ? "Colored"
+                : colored
+                  ? "Random colors, re-seed"
+                  : "Random colors"
+            }
+            title={
+              classColors
+                ? "Class colors"
+                : colored
                   ? "Random colors (click to re-seed)"
                   : "Random colors"
-              }
-              iconClass={styles.maskVizSwatchRandom}
-              onClick={() => onChange(withReseededRandomColors(value))}
-            />
-          </fieldset>
-          <span className={styles.maskModeGroupLabel}>Color</span>
-        </div>
+            }
+            iconClass={styles.maskVizSwatchRandom}
+            onClick={() =>
+              onChange(
+                classColors
+                  ? { ...value, color: "random" }
+                  : withReseededRandomColors(value),
+              )
+            }
+          />
+        </fieldset>
+        <span className={styles.maskModeGroupLabel}>Color</span>
       </div>
-      <MaskOpacityControl
-        value={value}
-        onChange={onChange}
-        onPreview={props.onPreview}
-        ariaLabel={ariaLabel}
-      />
     </div>
   );
 }
@@ -240,6 +244,8 @@ type ChannelRowProps = {
   maskVisualization?: MaskVisualization;
   onMaskVisualizationChange?: (viz: MaskVisualization) => void;
   onMaskVisualizationPreview?: (viz: MaskVisualization | null) => void;
+  maskFooter?: ReactNode;
+  classColors?: boolean;
   maskAriaLabel?: string;
   /** Non-interactive swatch when the row has no color picker (e.g. selection mask). */
   fixedColorHex?: string;
@@ -250,16 +256,6 @@ type ChannelRowProps = {
   visibilityBlocked?: boolean;
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
 };
-
-function scrollRowNearest(row: HTMLElement | null) {
-  row?.scrollIntoView({
-    block: "nearest",
-    inline: "nearest",
-    behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-      ? "auto"
-      : "smooth",
-  });
-}
 
 function EditableChannelRowName(
   props: Extract<ChannelRowNameProps, { mode: "editable" }>,
@@ -327,6 +323,8 @@ export function ChannelRow(props: ChannelRowProps) {
     maskVisualization,
     onMaskVisualizationChange,
     onMaskVisualizationPreview,
+    maskFooter,
+    classColors,
     maskAriaLabel,
     fixedColorHex,
     colorHex,
@@ -339,22 +337,9 @@ export function ChannelRow(props: ChannelRowProps) {
 
   const showMask = isMask && maskVisualization;
   const showColor = !isMask && onColorClick;
-  const [maskControlsOpen, setMaskControlsOpen] = useState(true);
-  const rowRef = useRef<HTMLDivElement>(null);
-  const maskControlsId = useId();
-
-  const toggleMaskControls = () => {
-    const opening = !maskControlsOpen;
-    setMaskControlsOpen(opening);
-    if (!opening) return;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => scrollRowNearest(rowRef.current));
-    });
-  };
 
   return (
     <div
-      ref={rowRef}
       className={[
         styles.channelRow,
         locked ? styles.detailChannelRowLocked : null,
@@ -365,7 +350,11 @@ export function ChannelRow(props: ChannelRowProps) {
       aria-busy={fitting || undefined}
       title={fitting ? "Fitting contrast…" : undefined}
     >
-      <div className={styles.channelRowMain}>
+      <div
+        className={`${styles.channelRowMain}${
+          showMask ? ` ${styles.channelRowMainMask}` : ""
+        }`}
+      >
         <ChannelVisibilitySwatch
           visible={visible}
           title={visibilityTitle}
@@ -392,23 +381,21 @@ export function ChannelRow(props: ChannelRowProps) {
             </span>
           ) : null}
         </div>
-        <div className={styles.channelRowMid} data-channel-drag-ignore="">
+        <div
+          className={styles.channelRowMid}
+          data-channel-drag-ignore=""
+          draggable={false}
+        >
           {contrast ? <ChannelContrastEditor {...contrast} /> : null}
+          {showMask && onMaskVisualizationChange ? (
+            <MaskModeControls
+              value={maskVisualization}
+              ariaLabel={maskAriaLabel ?? name.name}
+              classColors={classColors}
+              onChange={onMaskVisualizationChange}
+            />
+          ) : null}
         </div>
-        {showMask ? (
-          <button
-            type="button"
-            className={`${minervaTheme.focusRing} ${styles.maskDisclosureButton}`}
-            aria-label={`${
-              maskControlsOpen ? "Hide" : "Show"
-            } mask display controls for ${name.name}`}
-            aria-expanded={maskControlsOpen}
-            aria-controls={maskControlsOpen ? maskControlsId : undefined}
-            onClick={toggleMaskControls}
-          >
-            <ChevronIcon direction={maskControlsOpen ? "down" : "right"} />
-          </button>
-        ) : null}
         {showMask && fixedColorHex ? (
           <span
             className={styles.channelColorSwatchStatic}
@@ -427,20 +414,17 @@ export function ChannelRow(props: ChannelRowProps) {
           />
         ) : null}
         <div className={styles.channelRowTrailing}>{trailing}</div>
-      </div>
-      {showMask && maskControlsOpen && onMaskVisualizationChange ? (
-        <div
-          id={maskControlsId}
-          className={styles.maskControlsPanel}
-          data-channel-drag-ignore=""
-        >
-          <MaskModeControls
+        {showMask && onMaskVisualizationChange ? (
+          <MaskOpacityControl
             value={maskVisualization}
-            ariaLabel={maskAriaLabel ?? name.name}
             onChange={onMaskVisualizationChange}
             onPreview={onMaskVisualizationPreview}
+            ariaLabel={maskAriaLabel ?? name.name}
           />
-        </div>
+        ) : null}
+      </div>
+      {showMask && maskFooter ? (
+        <div className={styles.maskControlsPanel}>{maskFooter}</div>
       ) : null}
     </div>
   );

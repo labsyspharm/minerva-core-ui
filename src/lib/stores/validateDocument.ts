@@ -333,6 +333,7 @@ function buildIdReplacementMap(data: {
     channels?: unknown[];
   }[];
   images: { id: string; channels?: unknown[] }[];
+  classTables?: unknown[];
 }): Map<string, string> {
   const map = new Map<string, string>();
 
@@ -367,6 +368,11 @@ function buildIdReplacementMap(data: {
     if (Array.isArray(sids)) for (const sid of sids) note(sid);
   }
   for (const s of data.shapes) note(s?.id);
+  for (const raw of data.classTables ?? []) {
+    const row = raw as { id?: string; sourceChannelId?: string };
+    note(row?.id);
+    if (row?.sourceChannelId != null) note(row.sourceChannelId);
+  }
 
   return map;
 }
@@ -388,7 +394,10 @@ function rewriteIds<T>(value: T, idMap: Map<string, string>): T {
         next[k] = rep(val);
       } else if (k === "shapeIds" && Array.isArray(val)) {
         next[k] = val.map((x) => (typeof x === "string" ? rep(x) : x));
-      } else if (k === "channelId" && typeof val === "string") {
+      } else if (
+        (k === "channelId" || k === "sourceChannelId") &&
+        typeof val === "string"
+      ) {
         next[k] = rep(val);
       } else {
         next[k] = walk(val);
@@ -441,8 +450,16 @@ function repairDocumentReferenceDrift(data: DocumentData): DocumentData {
 
   const cgSame = channelGroups.every((g, i) => g === data.channelGroups[i]);
   const wpSame = waypoints.every((w, i) => w === data.waypoints[i]);
-  if (cgSame && wpSame) return data;
-  return { ...data, channelGroups, waypoints };
+  const seenChannel = new Set<string>();
+  const classTables = data.classTables.filter((c) => {
+    if (!imageChannelIds.has(c.sourceChannelId)) return false;
+    if (seenChannel.has(c.sourceChannelId)) return false;
+    seenChannel.add(c.sourceChannelId);
+    return true;
+  });
+  const tablesSame = classTables.length === data.classTables.length;
+  if (cgSame && wpSame && tablesSame) return data;
+  return { ...data, channelGroups, waypoints, classTables };
 }
 
 function validateDocumentRelations(data: DocumentData): DocumentData {
@@ -493,6 +510,7 @@ export function validateDocumentData(input: unknown): DocumentData {
       shapes: candidate.shapes,
       channelGroups: [],
       images: [],
+      classTables: [],
     };
   } else if (
     candidate !== null &&
@@ -574,6 +592,9 @@ export function validateDocumentData(input: unknown): DocumentData {
       channels: Record<string, unknown>[];
     }[],
     images: imagesDraft,
+    classTables: Array.isArray(asRecord.classTables)
+      ? asRecord.classTables
+      : [],
   };
 
   for (const im of draft.images) {

@@ -1,7 +1,14 @@
 import { OrthographicView, type OrthographicViewState } from "@deck.gl/core";
 import Deck, { type DeckGLRef } from "@deck.gl/react";
 import { ScaleBarLayer } from "@hms-dbmi/viv";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import "@deck.gl/widgets/stylesheet.css";
 
@@ -9,11 +16,17 @@ import type { Layer } from "@deck.gl/core";
 import { MaskExtension } from "@deck.gl/extensions";
 import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
+import {
+  getClassTableLutEpoch,
+  gpuStyleForClassTable,
+  subscribeClassTableLut,
+} from "@/lib/classTable";
 import { isMaskSourceRendered } from "@/lib/imaging/channelCompositor";
 import {
   DEFAULT_MASK_VISUALIZATION,
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
+import type { LoaderList } from "@/lib/imaging/loaderEntries";
 import {
   IMAGE_SELECTION_MASK_LAYER_ID,
   SELECTION_MASK_CHANNEL_KEY,
@@ -22,6 +35,7 @@ import {
 } from "@/lib/imaging/maskLayers";
 import { createMaskTileLayer } from "@/lib/imaging/maskTileLayer";
 import { effectiveMaskVisualizationForSource } from "@/lib/imaging/sourceChannelStyle";
+import type { Loader } from "@/lib/imaging/viv";
 import {
   viewStateToWorld,
   WORLD_MICRON,
@@ -34,6 +48,7 @@ import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
+import { uniqueImageDisplayLabels } from "@/lib/stores/storeUtils";
 import {
   getViewerViewportSnapshotFromDeck,
   orthographicZoomToNumber,
@@ -58,6 +73,72 @@ const WAYPOINT_FLY_MS = 1400;
 const CAMERA_IDLE_COMMIT_MS = 160;
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+
+function planeWidth(plane: Loader["data"][number]): number {
+  const i = plane.labels.indexOf("x");
+  return i >= 0 ? (plane.shape[i] ?? 0) : 0;
+}
+
+/** Avivator Footer: `"1/5 [t, c, z, y, x]"` — 1 is finest. */
+function formatPyramidStatus(zoom: number, loader: Loader): string | null {
+  const planes = loader.data;
+  if (planes.length === 0) return null;
+  const baseWidth = planeWidth(planes[0]);
+  const levelZooms = planes.map((level) => {
+    const width = planeWidth(level);
+    return 0 - Math.round(Math.log2(baseWidth / width));
+  });
+  const coarsest = levelZooms[levelZooms.length - 1] ?? 0;
+  const zoomOffset = Math.round(
+    Math.log2(worldFrameFromLoader(loader).umPerPixelX || 1),
+  );
+  const tileZ = Math.min(0, Math.max(coarsest, Math.ceil(zoom + zoomOffset)));
+  const target = Math.round(tileZ);
+  let snapped = levelZooms[levelZooms.length - 1] ?? 0;
+  for (const lz of levelZooms) {
+    if (lz <= target) {
+      snapped = lz;
+      break;
+    }
+  }
+  const resolution = Math.max(0, levelZooms.indexOf(snapped));
+  const shape = planes[resolution]?.shape;
+  if (!shape) return null;
+  return `${resolution + 1}/${planes.length} [${shape.join(", ")}]`;
+}
+
+type PyramidHudLine = { key: string; text: string };
+
+function formatPyramidHudLines(
+  zoom: number,
+  loaders: LoaderList,
+  images: Parameters<typeof uniqueImageDisplayLabels>[0],
+): PyramidHudLine[] {
+  const labels = uniqueImageDisplayLabels(images);
+  const rows: { key: string; status: string; label: string }[] = [];
+  const seen = new Set<string>();
+  for (const item of loaders) {
+    const key = item.sourceImageId ?? `${item.modality}:${rows.length}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const status = formatPyramidStatus(zoom, item.loader);
+    if (!status) continue;
+    rows.push({
+      key,
+      status,
+      label:
+        (item.sourceImageId && labels.get(item.sourceImageId)) || item.modality,
+    });
+  }
+  if (rows.length === 0) return [];
+  if (rows.every((row) => row.status === rows[0].status)) {
+    return [{ key: rows[0].key, text: rows[0].status }];
+  }
+  return rows.map((row) => ({
+    key: row.key,
+    text: `${row.label} ${row.status}`,
+  }));
+}
 
 const deckViewStates = (
   ortho: OrthographicViewState,
@@ -266,11 +347,7 @@ const useWindowSize = () => {
   return windowSize;
 };
 
-import type {
-  LoaderList,
-  MainSettings,
-  OmeLoaderEntry,
-} from "@/lib/imaging/loaderEntries";
+import type { MainSettings, OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 
 export type {
   JpegLoaderEntry,
@@ -324,13 +401,15 @@ export const ImageViewer = (props: ImageViewerProps) => {
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
     squareViewportBorderWidth = 2,
   } = props;
-  const {
-    activeChannelGroupId,
-    channelVisibilities,
-    channelGroupRowVisibilities,
-    sam2Processing,
-    authoringWaypointEditorOpen,
-  } = useAppStore();
+  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
+  const channelVisibilities = useAppStore((s) => s.channelVisibilities);
+  const channelGroupRowVisibilities = useAppStore(
+    (s) => s.channelGroupRowVisibilities,
+  );
+  const sam2Processing = useAppStore((s) => s.sam2Processing);
+  const authoringWaypointEditorOpen = useAppStore(
+    (s) => s.authoringWaypointEditorOpen,
+  );
   // Live contrast/color preview is folded in `useViewerLayers`, not here.
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
   const maskVisualizationPreview = useAppStore(
@@ -342,6 +421,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
       : null;
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
+  const classTables = useDocumentStore((s) => s.classTables);
+  const classTableVisibilities = useAppStore((s) => s.classTableVisibilities);
+  const classTableLutEpoch = useSyncExternalStore(
+    subscribeClassTableLut,
+    getClassTableLutEpoch,
+    getClassTableLutEpoch,
+  );
   const selectionMaskActive =
     imageSelectionMask != null &&
     (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
@@ -377,6 +463,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
     () => (loaderList.length > 0 ? loaderList[0] : null),
     [loaderList],
   );
+  const [pyramidHud, setPyramidHud] = useState<PyramidHudLine[]>([]);
+  const publishPyramidHud = useCallback(
+    (zoom: number) => {
+      const next = formatPyramidHudLines(zoom, loaderList, images);
+      setPyramidHud((prev) => {
+        const prevKey = prev.map((line) => line.text).join("\n");
+        const nextKey = next.map((line) => line.text).join("\n");
+        return prevKey === nextKey ? prev : next;
+      });
+    },
+    [loaderList, images],
+  );
 
   const frame = useMemo(
     () => (firstLoader ? worldFrameFromLoader(firstLoader.loader) : null),
@@ -389,6 +487,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }, [frame, setViewerWorldFrame]);
 
   const maskDisplayLayers = useMemo(() => {
+    void classTableLutEpoch;
     if (omeLoaderEntries.length === 0) return [];
 
     const layers: Layer[] = [];
@@ -416,11 +515,19 @@ export const ImageViewer = (props: ImageViewerProps) => {
               channelGroups,
               activeChannelGroupId,
             );
+      const classTable = classTables.find((c) => c.sourceChannelId === sc.id);
       const layer = createMaskTileLayer({
         id: `mask-channel-${sc.id}`,
         loader: entry.loader,
         channelIndex: sc.index,
         visualization,
+        classStyle: classTable
+          ? gpuStyleForClassTable(
+              classTable,
+              classTableVisibilities[classTable.id],
+              visualization.colorSeed ?? 0,
+            )
+          : undefined,
       });
       if (layer) layers.push(layer);
     }
@@ -433,6 +540,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
     activeChannelGroupId,
     channelGroups,
     maskVisualizationPreview,
+    classTables,
+    classTableVisibilities,
+    classTableLutEpoch,
   ]);
 
   // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last
@@ -480,8 +590,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
       // Only re-seed Deck on init/resize/waypoint — not every wheel-idle.
       if (reseedDeck) setOrthoSeed(next);
       setViewState(next);
+      publishPyramidHud(flat.zoom);
     },
-    [],
+    [publishPyramidHud],
   );
 
   const scheduleIdleCameraCommit = useCallback(() => {
@@ -532,6 +643,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
       hasInitialized.current = true;
     }
   }, [fitViewState, firstLoader, commitIdleCamera]);
+
+  useEffect(() => {
+    const zoom =
+      toFlatViewState(cameraRef.current)?.zoom ??
+      toFlatViewState(fitViewState)?.zoom;
+    if (zoom != null) publishPyramidHud(zoom);
+  }, [fitViewState, publishPyramidHud]);
 
   // Resize changes the scalebar view; re-seed from the live camera so Deck does
   // not snap ortho back to the last programmatic seed.
@@ -997,11 +1115,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
       const flat = toFlatViewState(ortho) ?? toFlatViewState(nextViewState);
       if (flat) {
         cameraRef.current = withOrthoZoom(flat);
+        publishPyramidHud(flat.zoom);
       } else if (nextViewState) {
         cameraRef.current = nextViewState as OrthographicViewState;
       }
     },
-    [isDragging],
+    [isDragging, publishPyramidHud],
   );
 
   const handleInteractionStateChange = useCallback(
@@ -1100,6 +1219,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
         views={views}
       />
       <LoadingWidget ref={loadingWidgetRef} placement="center" />
+      {pyramidHud.length > 0 ? (
+        <output className={styles.pyramidHud}>
+          {pyramidHud.map((line) => (
+            <div key={line.key}>{line.text}</div>
+          ))}
+        </output>
+      ) : null}
       {showSquareViewportOverlay && (
         <div
           className={styles.squareViewportOverlay}

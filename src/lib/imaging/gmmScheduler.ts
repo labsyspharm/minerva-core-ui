@@ -2,7 +2,11 @@ import {
   type ContrastLimits,
   fitChannelGmmContrastFromUint16,
 } from "@/lib/imaging/autoContrast";
-import { isImageChannel, isRgbDisplayChannel } from "@/lib/imaging/channelKind";
+import {
+  isImageChannel,
+  isRgbDisplayChannel,
+  isUint8Dtype,
+} from "@/lib/imaging/channelKind";
 import { looksLikeImportDefaultLimits } from "@/lib/imaging/sourceChannelStyle";
 import type { Loader } from "@/lib/imaging/viv";
 import type { Channel } from "@/lib/stores/documentStore";
@@ -78,10 +82,13 @@ function documentChannels(): Channel[] {
   );
 }
 
-/** Packed RGB (`samples===3`) and planar H&E / Brightfield — no GMM. */
+/** Packed RGB, planar H&E, and 8-bit (full 0–255 window) — no GMM. */
 function isEligible(sc: Channel, all: readonly Channel[]): boolean {
   return (
-    isImageChannel(sc) && sc.samples !== 3 && !isRgbDisplayChannel(sc, all)
+    isImageChannel(sc) &&
+    sc.samples !== 3 &&
+    !isRgbDisplayChannel(sc, all) &&
+    !isUint8Dtype(sc.sourceDataTypeId)
   );
 }
 

@@ -15,8 +15,8 @@ import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
-import { type Loader, toSettings, VIV_TILE_MAX_CACHE_SIZE } from "./viv";
-import { layerModelMatrix } from "./worldFrame";
+import { type Loader, TILE_CACHE_PROPS, toSettings } from "./viv";
+import { inheritUnitlessPhysicalSize, layerModelMatrix } from "./worldFrame";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
 function applyChannelRendering<S extends MainSettings>(
@@ -51,23 +51,6 @@ function applyChannelRendering<S extends MainSettings>(
   return { ...settings, colors };
 }
 
-/**
- * Viv TileLayer `updateTriggers.getTileData` is `[loader, selections]` by
- * reference. Contrast/color keep the same `selections` array; eye toggles must
- * too, or the tile cache clears and the loading spinner flashes.
- */
-function reuseVivSelections<S extends MainSettings>(
-  next: S,
-  prev: S | undefined,
-): S {
-  if (!prev?.selections?.length || !next.selections?.length) return next;
-  if (prev.selections.length !== next.selections.length) return next;
-  for (let i = 0; i < next.selections.length; i++) {
-    if (prev.selections[i]?.c !== next.selections[i]?.c) return next;
-  }
-  return { ...next, selections: prev.selections };
-}
-
 type ViewerLoaderSources = {
   dicomIndexList?: DicomIndex[];
   omeLoaderEntries?: OmeLoaderEntry[];
@@ -81,7 +64,7 @@ function loaderListFromEntries(sources: ViewerLoaderSources): LoaderList {
     omeLoaderEntries = [],
     jpegLoaderEntries = [],
   } = sources;
-  return [
+  const list = [
     ...dicomIndexList.map(({ sourceImageId, loader, modality }) => ({
       sourceImageId,
       loader,
@@ -98,6 +81,8 @@ function loaderListFromEntries(sources: ViewerLoaderSources): LoaderList {
       modality: "Colorimetric" as const,
     })),
   ];
+  inheritUnitlessPhysicalSize(list.map((row) => row.loader));
+  return list;
 }
 
 function createDicomTileLayer(args: {
@@ -120,7 +105,6 @@ function createDicomTileLayer(args: {
 
 /** Later OME intensity layers: skip Viv's opaque background and add onto the base. */
 const OME_INTENSITY_OVERLAY_PROPS = {
-  excludeBackground: true,
   refinementStrategy: "no-overlap" as const,
   parameters: {
     blend: true,
@@ -161,7 +145,7 @@ function createMultiscaleLayer(args: {
   return new MultiscaleImageLayer({
     id: `${args.layerId}${remount}`,
     ...settings,
-    maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
+    ...TILE_CACHE_PROPS,
     // Viv's overview ImageLayer getRaster()s the full coarsest plane; isLoaded
     // waits on that decode even after tiles have painted.
     excludeBackground: true,
@@ -304,7 +288,7 @@ export function useViewerLayers(args: {
     [dicomIndexList, omeLoaderEntries, jpegLoaderEntries],
   );
 
-  const prevSettingsRef = useRef<Map<string, MainSettings>>(new Map());
+  const prevSettingsRef = useRef<Map<string, string[]>>(new Map());
 
   const { dicomSettingsList, omeSettingsList, jpegSettingsList } =
     useMemo(() => {
@@ -314,7 +298,7 @@ export function useViewerLayers(args: {
         loader: Loader | undefined,
         sourceImageId?: string,
       ) => {
-        const prev = prevSettingsRef.current.get(loaderKey);
+        const prevIds = prevSettingsRef.current.get(loaderKey) ?? [];
         const built = toDocSettings(
           activeChannelGroupId,
           modality,
@@ -322,11 +306,12 @@ export function useViewerLayers(args: {
           channelVisibilities,
           sourceImageId,
           channelGroupRowVisibilities,
-          prev?.sourceChannelIds ?? [],
+          prevIds,
         ) as MainSettings;
-        const settings = reuseVivSelections(built, prev);
-        prevSettingsRef.current.set(loaderKey, settings);
-        return settings;
+        prevSettingsRef.current.set(loaderKey, [
+          ...(built.sourceChannelIds ?? []),
+        ]);
+        return built;
       };
 
       return {

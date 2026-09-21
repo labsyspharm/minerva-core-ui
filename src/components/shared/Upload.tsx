@@ -1,6 +1,7 @@
 import type { FormEventHandler, DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ClassCsvColumnPick } from "@/components/shared/channel/ClassTable";
 import { ImageChannelOverviewCard } from "@/components/shared/channel/ImageChannelOverview";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
@@ -9,7 +10,11 @@ import {
   PanelIconButton,
 } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
-import { resolveImageContentRole } from "@/lib/imaging/channelKind";
+import { attachClassTable, peekClassCsv } from "@/lib/classTable";
+import {
+  isMaskChannel,
+  resolveImageContentRole,
+} from "@/lib/imaging/channelKind";
 import { detectUrlImageFormat } from "@/lib/imaging/detectImageUrl";
 import {
   isDicomWebSeriesUrl,
@@ -25,11 +30,15 @@ import type {
   OmeImportResult,
 } from "@/lib/imaging/omeImport";
 import {
+  detectOmeTiffBrightfield,
   detectOmeTiffMask,
   detectOmeTiffPlanarRgbAmbiguity,
 } from "@/lib/imaging/omeTiff";
 import type { Image } from "@/lib/stores/documentStore";
-import { useDocumentStore } from "@/lib/stores/documentStore";
+import {
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
 import { jpegSourceNeedsLocalRoot } from "@/lib/storyExport/importStoryFolder";
 import type { ValidObj } from "@/lib/validate";
 import styles from "./Upload.module.css";
@@ -290,6 +299,18 @@ const Upload = (props: UploadProps) => {
   const [importError, setImportError] = useState<string | null>(null);
   const [stripErrorAt, setStripErrorAt] = useState<"drop" | "url">("drop");
   const [importBusy, setImportBusy] = useState(false);
+  const [classCsvFile, setClassCsvFile] = useState<File | null>(null);
+  const [classCsvCols, setClassCsvCols] = useState<{
+    headers: string[];
+    id: string;
+    name: string;
+  } | null>(null);
+  const classCsvInputRef = useRef<HTMLInputElement>(null);
+  const clearClassCsv = useCallback(() => {
+    setClassCsvFile(null);
+    setClassCsvCols(null);
+    if (classCsvInputRef.current) classCsvInputRef.current.value = "";
+  }, []);
   const [dragging, setDragging] = useState(false);
   const dragDepthRef = useRef(0);
   const localPickInFlightRef = useRef(false);
@@ -298,6 +319,7 @@ const Upload = (props: UploadProps) => {
   const formatChosenByUserRef = useRef(false);
   const roleChosenByUserRef = useRef(false);
   const rgbDisplayChosenByUserRef = useRef(false);
+  const overlayRgbDisplayRef = useRef(false);
 
   const showTypeOverlay = pending != null;
   const dicomAllowed =
@@ -323,7 +345,8 @@ const Upload = (props: UploadProps) => {
     setImportError(null);
     setUrlDraft("");
     setImportBusy(false);
-  }, [abortFormatDetect, importRevision]);
+    clearClassCsv();
+  }, [abortFormatDetect, importRevision, clearClassCsv]);
 
   const openPending = useCallback(
     (next: PendingSource) => {
@@ -331,6 +354,7 @@ const Upload = (props: UploadProps) => {
       formatChosenByUserRef.current = false;
       roleChosenByUserRef.current = false;
       rgbDisplayChosenByUserRef.current = false;
+      overlayRgbDisplayRef.current = false;
       const role = resolveImportRole("intensity", pendingLabel(next));
       let format = inferFormat(next);
       if (role === "segmentation") format = "ome-tiff";
@@ -343,6 +367,7 @@ const Upload = (props: UploadProps) => {
       setDetectedRgbDisplay(null);
       setDetecting(false);
       setImportError(null);
+      clearClassCsv();
 
       const ac = new AbortController();
       formatDetectAbortRef.current = ac;
@@ -365,20 +390,33 @@ const Upload = (props: UploadProps) => {
           setDetecting(true);
 
           // 3-channel OME: skip mask detect; suggest Brightfield vs Fluorescence.
-          const rgbAmbiguity = await detectOmeTiffPlanarRgbAmbiguity(
+          const rgbAmbiguous = await detectOmeTiffPlanarRgbAmbiguity(
             source,
             ac.signal,
           );
           if (ac.signal.aborted) return;
 
-          if (rgbAmbiguity.ambiguous) {
+          if (rgbAmbiguous) {
             setDetectedRole("intensity");
             if (!roleChosenByUserRef.current) {
               setOverlayRole("intensity");
             }
-            setDetectedRgbDisplay(rgbAmbiguity.defaultRgbDisplay);
-            if (!rgbDisplayChosenByUserRef.current) {
-              setOverlayRgbDisplay(rgbAmbiguity.defaultRgbDisplay);
+            setDetectedRgbDisplay(false);
+            try {
+              const isBrightfield = await detectOmeTiffBrightfield(
+                source,
+                ac.signal,
+              );
+              if (ac.signal.aborted) return;
+              setDetectedRgbDisplay(isBrightfield);
+              if (!rgbDisplayChosenByUserRef.current) {
+                overlayRgbDisplayRef.current = isBrightfield;
+                setOverlayRgbDisplay(isBrightfield);
+              }
+            } catch (error) {
+              if (!ac.signal.aborted) {
+                console.warn("[minerva] brightfield suggestion failed", error);
+              }
             }
             return;
           }
@@ -407,14 +445,15 @@ const Upload = (props: UploadProps) => {
         }
       })();
     },
-    [abortFormatDetect],
+    [abortFormatDetect, clearClassCsv],
   );
 
   const clearPending = useCallback(() => {
     abortFormatDetect();
     setPending(null);
     setImportError(null);
-  }, [abortFormatDetect]);
+    clearClassCsv();
+  }, [abortFormatDetect, clearClassCsv]);
 
   const acceptLocalHandles = useCallback(
     async (handles: Handle.File[]) => {
@@ -544,29 +583,50 @@ const Upload = (props: UploadProps) => {
       }
       const rgbDisplay =
         detectedRgbDisplay != null && role === "intensity"
-          ? overlayRgbDisplay
+          ? overlayRgbDisplayRef.current
           : undefined;
-      if (pending.kind === "local") {
-        const result = await onImportOme({
-          role,
-          append: hasImages,
-          rgbDisplay,
-          source: {
-            kind: "local",
-            path: pending.label,
-            handles: pending.handles,
-          },
-        });
-        if (result && result.ok === false) setImportError(result.error);
-        return;
-      }
+      const beforeMaskIds =
+        role === "segmentation" && classCsvFile
+          ? new Set(
+              flattenImageChannelsInDocumentOrder(
+                useDocumentStore.getState().images,
+              )
+                .filter(isMaskChannel)
+                .map((c) => c.id),
+            )
+          : null;
       const result = await onImportOme({
         role,
         append: hasImages,
         rgbDisplay,
-        source: { kind: "url", url: pending.url },
+        source:
+          pending.kind === "local"
+            ? {
+                kind: "local",
+                path: pending.label,
+                handles: pending.handles,
+              }
+            : { kind: "url", url: pending.url },
       });
-      if (result && result.ok === false) setImportError(result.error);
+      if (result && result.ok === false) {
+        setImportError(result.error);
+        return;
+      }
+      const sourceChannelId = beforeMaskIds
+        ? flattenImageChannelsInDocumentOrder(
+            useDocumentStore.getState().images,
+          ).find((c) => isMaskChannel(c) && !beforeMaskIds.has(c.id))?.id
+        : undefined;
+      if (result?.ok && classCsvFile && sourceChannelId) {
+        const attached = await attachClassTable({
+          sourceChannelId,
+          file: classCsvFile,
+          columns: classCsvCols
+            ? { id: classCsvCols.id, name: classCsvCols.name }
+            : undefined,
+        });
+        if (attached.ok === false) setImportError(attached.error);
+      }
     } finally {
       setImportBusy(false);
     }
@@ -793,15 +853,12 @@ const Upload = (props: UploadProps) => {
               <FormatChip
                 label="Fluorescence"
                 selected={overlayRole === "intensity" && !overlayRgbDisplay}
-                suggested={
-                  detectedRole === "intensity" && detectedRgbDisplay !== true
-                }
-                muted={
-                  detectedRole !== "intensity" || detectedRgbDisplay === true
-                }
+                suggested={overlayRole === "intensity" && !overlayRgbDisplay}
+                muted={detectedRole !== "intensity"}
                 onClick={() => {
                   roleChosenByUserRef.current = true;
                   rgbDisplayChosenByUserRef.current = true;
+                  overlayRgbDisplayRef.current = false;
                   setOverlayRole("intensity");
                   setOverlayRgbDisplay(false);
                 }}
@@ -810,15 +867,12 @@ const Upload = (props: UploadProps) => {
                 <FormatChip
                   label="Brightfield"
                   selected={overlayRole === "intensity" && overlayRgbDisplay}
-                  suggested={
-                    detectedRole === "intensity" && detectedRgbDisplay === true
-                  }
-                  muted={
-                    detectedRole !== "intensity" || detectedRgbDisplay !== true
-                  }
+                  suggested={overlayRole === "intensity" && overlayRgbDisplay}
+                  muted={detectedRole !== "intensity"}
                   onClick={() => {
                     roleChosenByUserRef.current = true;
                     rgbDisplayChosenByUserRef.current = true;
+                    overlayRgbDisplayRef.current = true;
                     setOverlayRole("intensity");
                     setOverlayRgbDisplay(true);
                   }}
@@ -827,7 +881,7 @@ const Upload = (props: UploadProps) => {
               <FormatChip
                 label="Segmentation Mask"
                 selected={overlayRole === "segmentation"}
-                suggested={detectedRole === "segmentation"}
+                suggested={overlayRole === "segmentation"}
                 muted={detectedRole !== "segmentation"}
                 onClick={() => {
                   roleChosenByUserRef.current = true;
@@ -856,6 +910,41 @@ const Upload = (props: UploadProps) => {
                   ))}
                 </div>
               </div>
+            ) : null}
+            {overlayRole === "segmentation" ? (
+              <div className={styles.typeRow}>
+                <span className={styles.fieldLabel}>Class table</span>
+                <input
+                  ref={classCsvInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className={styles.csvInput}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setClassCsvFile(file);
+                    if (!file) {
+                      setClassCsvCols(null);
+                      return;
+                    }
+                    void peekClassCsv(file).then(setClassCsvCols);
+                  }}
+                />
+                <PanelActionButton
+                  type="button"
+                  onClick={() => classCsvInputRef.current?.click()}
+                >
+                  {classCsvFile ? classCsvFile.name : "Optional CSV…"}
+                </PanelActionButton>
+              </div>
+            ) : null}
+            {overlayRole === "segmentation" && classCsvCols ? (
+              <ClassCsvColumnPick
+                headers={classCsvCols.headers}
+                id={classCsvCols.id}
+                name={classCsvCols.name}
+                onId={(id) => setClassCsvCols({ ...classCsvCols, id })}
+                onName={(name) => setClassCsvCols({ ...classCsvCols, name })}
+              />
             ) : null}
           </fieldset>
           {importError ? (

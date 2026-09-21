@@ -13,6 +13,7 @@ import {
 } from "@/components/shared/channel/ChannelEditorPopover";
 import { ChannelRow } from "@/components/shared/channel/ChannelRow";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
+import { classTableRowExtras } from "@/components/shared/channel/ClassTable";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
@@ -69,7 +70,6 @@ import {
   assignedDisplayHex,
   effectiveDisplayColor,
   effectiveMaskVisualization,
-  effectiveSourceColor,
   effectiveSourceLimits,
   rgbToHex,
 } from "@/lib/imaging/sourceChannelStyle";
@@ -200,13 +200,18 @@ function DraggableChannelRow(props: {
     fromRowId: props.fromRowId,
   };
   const beginDrag = (e: React.DragEvent) => startChannelDrag(e, payload);
+  // dragstart.target is this wrap (the draggable), not the histogram/input under the cursor.
+  const ignoreRowDragRef = React.useRef(false);
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: grip button is the AT control; the row is a mouse drag hit target
     <div
       className={styles.channelRowWrap}
       draggable
+      onPointerDown={(e) => {
+        ignoreRowDragRef.current = shouldIgnoreChannelRowDrag(e.target);
+      }}
       onDragStart={(e) => {
-        if (shouldIgnoreChannelRowDrag(e.target)) {
+        if (ignoreRowDragRef.current) {
           e.preventDefault();
           return;
         }
@@ -462,7 +467,6 @@ function makeGroupChannelRow(
   sourceChannels: Channel[],
 ): ChannelGroupChannel {
   const [srcLo, srcHi] = effectiveSourceLimits(sc);
-  const srcColor = effectiveSourceColor(sc, sourceChannels);
   const seed =
     planarRgbDisplayColor(sc, sourceChannels) ??
     seedRgbForGroupChannelIndex(slotIndex);
@@ -471,7 +475,7 @@ function makeGroupChannelRow(
     id: crypto.randomUUID(),
     lowerLimit: srcLo,
     upperLimit: srcHi,
-    color: sc.color ?? seed ?? srcColor,
+    color: sc.color ?? seed,
     channelId: sc.id,
     ...(isMask
       ? {
@@ -529,6 +533,7 @@ export const ChannelGroupsMasterDetail = (
   const channelRendering = useAppStore((s) => s.channelRendering);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
+  const classTables = useDocumentStore((s) => s.classTables);
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
   const setImages = useDocumentStore((s) => s.setImages);
   const setImagesAndChannelGroups = useDocumentStore(
@@ -1456,6 +1461,7 @@ export const ChannelGroupsMasterDetail = (
                               isMask: true,
                               maskVisualization: effectiveMaskVisualization(gc),
                               maskAriaLabel: `Mask display for ${name}`,
+                              ...classTableRowExtras(sc.id, classTables),
                               onMaskVisualizationChange: (viz) =>
                                 syncMaskVisualization(
                                   gc.channelId,
@@ -1725,6 +1731,7 @@ export const ChannelGroupsMasterDetail = (
                   isMask: true,
                   maskVisualization: effectiveMaskVisualization(sc),
                   maskAriaLabel: `Mask display for ${sc.name}`,
+                  ...classTableRowExtras(sc.id, classTables),
                   onMaskVisualizationChange: (viz) =>
                     syncMaskVisualization(sc.id, viz),
                   onMaskVisualizationPreview: (viz) =>

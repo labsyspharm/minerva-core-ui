@@ -15,8 +15,34 @@ import {
   effectiveSourceLimits,
 } from "./sourceChannelStyle";
 
-/** Keep parent pyramid tiles around for best-available refinement while zooming. */
-export const VIV_TILE_MAX_CACHE_SIZE = 128;
+/** CPU raster bytes Deck may keep per layer (not GPU textures). */
+const VIV_TILE_MAX_CACHE_BYTE_SIZE = 512 * 1024 * 1024;
+
+function rasterTileByteLength(data: unknown): number {
+  if (data == null) return 0;
+  if (ArrayBuffer.isView(data)) return data.byteLength;
+  if (Array.isArray(data)) {
+    let n = 0;
+    for (const ch of data) n += rasterTileByteLength(ch);
+    return n;
+  }
+  return 0;
+}
+
+/** Viv's getTileData omits `byteLength`; Deck needs it for maxCacheByteSize. */
+function stampDeckTileByteLength(tile: {
+  content?: { data?: unknown; byteLength?: number } | null;
+}): void {
+  const c = tile.content;
+  if (c == null || Number.isFinite(c.byteLength)) return;
+  c.byteLength = rasterTileByteLength(c.data);
+}
+
+/** Omit maxCacheSize so Deck's count cap is Infinity when a byte budget is set. */
+export const TILE_CACHE_PROPS = {
+  maxCacheByteSize: VIV_TILE_MAX_CACHE_BYTE_SIZE,
+  onTileLoad: stampDeckTileByteLength,
+};
 
 type Selection = Record<"z" | "t" | "c", number>;
 type Color = [number, number, number];

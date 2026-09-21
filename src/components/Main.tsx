@@ -24,6 +24,7 @@ import type {
   ConfigWaypoint,
 } from "@/lib/authoring/config";
 import { extractChannels } from "@/lib/authoring/config";
+import { detachRemovedClassTables, hydrateClassTables } from "@/lib/classTable";
 import {
   applyVisibilityTransition,
   buildCompositedIntensityLayers,
@@ -73,6 +74,7 @@ import {
   useSyncJpegChannelFolders,
 } from "@/lib/imaging/loadJpegFromDocument";
 import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/maskLayers";
+import { createOmeDecodePool } from "@/lib/imaging/omeDecodePool";
 import {
   applyPaletteToFlatImportImages,
   buildOmeImportSlice,
@@ -88,7 +90,6 @@ import {
   warmupPsudoPalette,
 } from "@/lib/imaging/psudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
-import { Pool } from "@/lib/imaging/workers/pool";
 import { effectiveWorldFrame } from "@/lib/imaging/worldFrame";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
@@ -104,7 +105,7 @@ import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
 import { applyOmeRoisFromLoaderToFirstWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentSchema";
-import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
+import type { ChannelGroup } from "@/lib/stores/documentStore";
 import {
   documentShapes,
   documentSourceChannels,
@@ -280,7 +281,7 @@ async function hydrateLoadersFromImages(
   const result = await hydrateDocumentLoaders(images, {
     channelGroups: opts?.channelGroups ?? [],
     documentUrl: opts?.documentUrl ?? window.location.href,
-    pool: new Pool(),
+    pool: createOmeDecodePool(),
     requestPermission,
     includeLocal: true,
     imageSource: useDocumentStore.getState().metadata.imageSource,
@@ -401,6 +402,20 @@ const Content = (props: Props) => {
     };
   }, [viewerImageLayersLoaded]);
   const activeStoryId = useDocumentStore((s) => s.activeStoryId);
+  const classTableHydrateKey = useDocumentStore((s) =>
+    s.classTables.map((c) => `${c.id}:${c.digest}`).join("|"),
+  );
+  const prevStoryIdRef = React.useRef(activeStoryId);
+  // Digest key retriggers ingest without depending on classTables identity (color edits).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: classTableHydrateKey
+  React.useEffect(() => {
+    const storyChanged = prevStoryIdRef.current !== activeStoryId;
+    prevStoryIdRef.current = activeStoryId;
+    void hydrateClassTables(
+      useDocumentStore.getState().classTables,
+      storyChanged,
+    );
+  }, [activeStoryId, classTableHydrateKey]);
   const namespacedHandleKeys = React.useMemo(
     () =>
       handleKeys.map((k) =>
@@ -757,6 +772,7 @@ const Content = (props: Props) => {
         doc.images,
         doc.channelGroups,
         imageId,
+        doc.classTables,
       );
       if (result.images.length === doc.images.length) return;
       clearRemovedImageState([removed]);
@@ -780,6 +796,7 @@ const Content = (props: Props) => {
         resetActiveGroup: !activeStillExists,
         transition: { kind: "remove" },
       });
+      detachRemovedClassTables(doc.classTables, result.classTables);
 
       if (result.images.length === 0) {
         setFileName("");
@@ -856,7 +873,7 @@ const Content = (props: Props) => {
           images: doc.images,
           imageId,
           handle,
-          pool: new Pool(),
+          pool: createOmeDecodePool(),
         });
         if (prep.ok === false) {
           if (prep.error) window.alert(prep.error);
@@ -965,9 +982,6 @@ const Content = (props: Props) => {
     setLastOmeTiffUrl(null);
     const relevant_groups = [] as ConfigGroup[];
     let nextImages: Image[] = [];
-    let registry = {
-      SourceChannels: [] as Channel[],
-    };
     const entries: OmeLoaderEntry[] = [];
 
     for (let i = 0; i < handles.length; i++) {
@@ -975,8 +989,8 @@ const Content = (props: Props) => {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "local",
         handle,
-        in_f: i === 0 ? in_f : handle.name,
-        pool: new Pool(),
+        pool: createOmeDecodePool(),
+        rgbDisplay,
       });
       const sourceImageId = crypto.randomUUID();
       const basename = i === 0 ? in_f : handle.name;
@@ -990,9 +1004,6 @@ const Content = (props: Props) => {
         rgbDisplay,
       });
       nextImages = slice.nextImages;
-      registry = {
-        SourceChannels: [...registry.SourceChannels, ...slice.sourceChannels],
-      };
       entries.push({ loader, sourceImageId });
     }
 
@@ -1007,14 +1018,10 @@ const Content = (props: Props) => {
       });
     }
 
-    const { SourceChannels } = registry;
     // Fresh local replace: flat channels + shared palette; user creates groups in the panel.
     const ChannelGroups: ChannelGroup[] = [];
     if (role !== "segmentation") {
-      nextImages = await applyPaletteToFlatImportImages(
-        nextImages,
-        SourceChannels,
-      );
+      nextImages = await applyPaletteToFlatImportImages(nextImages);
     }
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries(entries);
@@ -1069,8 +1076,8 @@ const Content = (props: Props) => {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "local",
         handle,
-        in_f: basename,
-        pool: new Pool(),
+        pool: createOmeDecodePool(),
+        rgbDisplay,
       });
       const sourceImageId = crypto.randomUUID();
       const slice = buildOmeImportSlice({
@@ -1096,10 +1103,7 @@ const Content = (props: Props) => {
         if (slice.extractedGroups.length > 0) {
           newIntensityGroups.push(...slice.extractedGroups);
         } else {
-          nextImages = await applyPaletteToFlatImportImages(
-            nextImages,
-            slice.sourceChannels,
-          );
+          nextImages = await applyPaletteToFlatImportImages(nextImages);
         }
       }
     }
@@ -1192,7 +1196,8 @@ const Content = (props: Props) => {
     const loader = await loadOmeLoaderForRole(role, {
       kind: "url",
       url,
-      pool: new Pool(),
+      pool: createOmeDecodePool(),
+      rgbDisplay,
     });
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return;
@@ -1214,7 +1219,7 @@ const Content = (props: Props) => {
       relevantGroups: relevant_groups,
       rgbDisplay,
     });
-    let SourceChannels = slice.sourceChannels;
+    const SourceChannels = slice.sourceChannels;
     let nextImages = slice.nextImages;
     let ChannelGroups: ChannelGroup[];
     if (role === "segmentation") {
@@ -1225,11 +1230,7 @@ const Content = (props: Props) => {
         SourceChannels,
       );
     } else {
-      nextImages = await applyPaletteToFlatImportImages(
-        nextImages,
-        SourceChannels,
-      );
-      SourceChannels = flattenImageChannelsInDocumentOrder(nextImages);
+      nextImages = await applyPaletteToFlatImportImages(nextImages);
       ChannelGroups = [];
     }
     nextImages = setImageSource(nextImages, sourceImageId, {
@@ -1263,7 +1264,8 @@ const Content = (props: Props) => {
     const loader = await loadOmeLoaderForRole(role, {
       kind: "url",
       url,
-      pool: new Pool(),
+      pool: createOmeDecodePool(),
+      rgbDisplay,
     });
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return { ok: false, error: "Import was superseded by a newer request." };
@@ -1288,10 +1290,7 @@ const Content = (props: Props) => {
       url,
     });
     if (role !== "segmentation" && slice.extractedGroups.length === 0) {
-      nextImages = await applyPaletteToFlatImportImages(
-        nextImages,
-        slice.sourceChannels,
-      );
+      nextImages = await applyPaletteToFlatImportImages(nextImages);
     }
     const ChannelGroups = await finalizeAppendedIntensityGroups({
       mergedGroups,
@@ -1633,6 +1632,7 @@ const Content = (props: Props) => {
     const legacyModalityIds = new Set(indexList.map((d) => d.modality));
     let nextDocImages = [...doc.images];
     let nextChannelGroups = [...doc.channelGroups];
+    let nextClassTables = [...doc.classTables];
     const removedImages: Image[] = [];
     for (const im of doc.images) {
       const sameSeries =
@@ -1646,9 +1646,11 @@ const Content = (props: Props) => {
         nextDocImages,
         nextChannelGroups,
         im.id,
+        nextClassTables,
       );
       nextDocImages = removed.images;
       nextChannelGroups = removed.channelGroups;
+      nextClassTables = removed.classTables;
     }
     const channelsBefore = flattenImageChannelsInDocumentOrder(nextDocImages);
     nextDocImages = applySourceChannelsToImages(nextDocImages, SourceChannels);
@@ -1713,6 +1715,7 @@ const Content = (props: Props) => {
         isFresh || !mergedChannelGroups.some((g) => g.id === activeId),
       transition,
     });
+    detachRemovedClassTables(doc.classTables, nextClassTables);
     afterImageImportDocumentEffects();
   };
 

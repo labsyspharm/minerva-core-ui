@@ -25,6 +25,7 @@ type PendingLibraryImport =
       kind: "ome";
       role: OmeImageImportRole;
       source: OmeImportRequest["source"];
+      rgbDisplay?: boolean;
     }
   | { kind: "dicomWeb"; url: string };
 
@@ -56,19 +57,22 @@ export function ConsumePendingLibraryImport({
     // invalidate hydrate / eager-GMM epochs on every story open.
     if (!pending) return;
 
-    const imported =
-      pending.kind === "dicomWeb"
-        ? importDicomWebRef.current({ url: pending.url })
-        : importOmeRef.current({
-            role: pending.role,
-            append: false,
-            source: pending.source,
-          });
-    void imported
-      .then((result) => {
-        if (result.ok === false) window.alert(result.error);
-      })
-      .finally(onSettled);
+    // Don't skip onSettled on effect cleanup: React Strict Mode remounts this
+    // after consuming pending, and the overlay would stay up forever.
+    void (async () => {
+      const result =
+        pending.kind === "dicomWeb"
+          ? await importDicomWebRef.current({ url: pending.url })
+          : await importOmeRef.current({
+              role: pending.role,
+              append: false,
+              rgbDisplay: pending.rgbDisplay,
+              source: pending.source,
+            });
+      if (result.ok === false) window.alert(result.error);
+    })().finally(() => {
+      onSettled();
+    });
   }, [onSettled]);
 
   return null;
@@ -426,6 +430,7 @@ export function MinervaLibraryPage() {
                       kind: "ome",
                       role: req.role,
                       source: req.source,
+                      rgbDisplay: req.rgbDisplay,
                     })
                   }
                   onImportDicomWeb={(req) =>

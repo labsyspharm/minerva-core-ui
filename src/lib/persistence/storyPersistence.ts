@@ -69,6 +69,7 @@ export function emptyDocumentData(): DocumentData {
     shapes: [],
     channelGroups: [],
     images: [],
+    classTables: [],
   };
 }
 
