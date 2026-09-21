@@ -402,23 +402,22 @@ const Upload = (props: UploadProps) => {
               setOverlayRole("intensity");
             }
             setDetectedRgbDisplay(false);
-            void detectOmeTiffBrightfield(source, ac.signal)
-              .then((isBrightfield) => {
-                if (ac.signal.aborted) return;
-                setDetectedRgbDisplay(isBrightfield);
-                if (!rgbDisplayChosenByUserRef.current) {
-                  overlayRgbDisplayRef.current = isBrightfield;
-                  setOverlayRgbDisplay(isBrightfield);
-                }
-              })
-              .catch((error) => {
-                if (!ac.signal.aborted) {
-                  console.warn(
-                    "[minerva] brightfield suggestion failed",
-                    error,
-                  );
-                }
-              });
+            try {
+              const isBrightfield = await detectOmeTiffBrightfield(
+                source,
+                ac.signal,
+              );
+              if (ac.signal.aborted) return;
+              setDetectedRgbDisplay(isBrightfield);
+              if (!rgbDisplayChosenByUserRef.current) {
+                overlayRgbDisplayRef.current = isBrightfield;
+                setOverlayRgbDisplay(isBrightfield);
+              }
+            } catch (error) {
+              if (!ac.signal.aborted) {
+                console.warn("[minerva] brightfield suggestion failed", error);
+              }
+            }
             return;
           }
 
@@ -857,9 +856,7 @@ const Upload = (props: UploadProps) => {
                 suggested={
                   detectedRole === "intensity" && detectedRgbDisplay !== true
                 }
-                muted={
-                  detectedRole !== "intensity" || detectedRgbDisplay === true
-                }
+                muted={detectedRole !== "intensity"}
                 onClick={() => {
                   roleChosenByUserRef.current = true;
                   rgbDisplayChosenByUserRef.current = true;
@@ -875,9 +872,7 @@ const Upload = (props: UploadProps) => {
                   suggested={
                     detectedRole === "intensity" && detectedRgbDisplay === true
                   }
-                  muted={
-                    detectedRole !== "intensity" || detectedRgbDisplay !== true
-                  }
+                  muted={detectedRole !== "intensity"}
                   onClick={() => {
                     roleChosenByUserRef.current = true;
                     rgbDisplayChosenByUserRef.current = true;
