@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Minerva</title>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="images/favicon.png" />
+    <meta http-equiv="Cache-control" content="no-cache" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <style>
+      /* Boot colors match --minerva-paper / --minerva-ink / --minerva-quiet (hex: loader runs before JS/CSS modules). */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: #000;
+        color: #f2f2f2;
+      }
+      body {
+        min-height: 100vh;
+      }
+      #global-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        color: #888;
+        font-family: "DM Sans", sans-serif;
+        font-size: 28px;
+        z-index: 9999;
+      }
+      #global-loader .loading {
+        white-space: nowrap;
+      }
+      #global-loader .dots span {
+        opacity: 0;
+        animation: blink 1.6s infinite steps(1, end);
+      }
+      #global-loader .dots span:nth-child(1) { animation-delay: 0.0s; }
+      #global-loader .dots span:nth-child(2) { animation-delay: 0.4s; }
+      #global-loader .dots span:nth-child(3) { animation-delay: 0.8s; }
+      @keyframes blink {
+        0%   { opacity: 0; }
+        25%  { opacity: 1; }
+        75%  { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #global-loader .dots span { opacity: 1; animation: none; }
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/index-BJ4V6kgA.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-k-pU6F8K.css">
+  </head>
+  <body>
+    <div id="global-loader"><div class="loading">Loading Minerva<span class="dots"><span>.</span><span>.</span><span>.</span></span></div></div>
+    <div id="react-output"></div>
+  </body>
+</html>
