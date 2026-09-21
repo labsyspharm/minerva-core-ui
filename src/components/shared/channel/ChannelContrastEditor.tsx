@@ -451,7 +451,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const panWidth = `${(maxFrac - minFrac) * 100}%`;
 
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wrap} draggable={false}>
       <input
         type="number"
         className={`${minervaTheme.input} ${styles.limitInput}`}
