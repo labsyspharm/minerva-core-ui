@@ -30,6 +30,17 @@ import {
 } from "@/lib/stores/documentStore";
 import styles from "./ImageChannelOverview.module.css";
 
+/** Packed-RGB / H&E unit chip — same magenta as `samples === 3` default tint. */
+const HE_CHIP_HEX = "cc00ff";
+
+function heUnitChip(
+  base: ImageChannelChip,
+  key: string,
+  visible: boolean,
+): ImageChannelChip {
+  return { ...base, key, name: "H&E", hex: HE_CHIP_HEX, visible };
+}
+
 function chipAriaLabel(chip: ImageChannelChip): string {
   return chip.visible ? `Hide ${chip.name}` : `Show ${chip.name}`;
 }
@@ -340,14 +351,13 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     <div className={styles.root}>
       {model.groups.map((group) => {
         const rgbUnit =
-          rgbDisplay && group.chips.length > 1
+          rgbDisplay && group.chips[0]
             ? [
-                {
-                  ...group.chips[0],
-                  key: `g:${group.id}:rgb`,
-                  name: "H&E",
-                  visible: group.allVisible,
-                },
+                heUnitChip(
+                  group.chips[0],
+                  `g:${group.id}:rgb`,
+                  group.allVisible,
+                ),
               ]
             : group.chips;
         return (
@@ -380,14 +390,13 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
         <GroupStrip
           name="All channels"
           chips={
-            rgbDisplay && filteredAllChannels.length > 1
+            rgbDisplay && filteredAllChannels[0]
               ? [
-                  {
-                    ...filteredAllChannels[0],
-                    key: "e:rgb",
-                    name: "H&E",
-                    visible: filteredAllChannels.every((c) => c.visible),
-                  },
+                  heUnitChip(
+                    filteredAllChannels[0],
+                    "e:rgb",
+                    filteredAllChannels.every((c) => c.visible),
+                  ),
                 ]
               : filteredAllChannels
           }

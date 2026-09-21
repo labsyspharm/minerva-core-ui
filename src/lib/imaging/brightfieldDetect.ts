@@ -18,12 +18,29 @@ export function isBrightfieldRgb(
   const stride = Math.max(1, Math.ceil(nPixels / 10_000));
   let nDark = 0;
   let nLight = 0;
+  let nSampled = 0;
   for (let i = 0; i + 2 < data.length; i += 3 * stride) {
     const r = data[i];
     const g = data[i + 1];
     const b = data[i + 2];
+    nSampled += 1;
     if (r < dark && g < dark && b < dark) nDark += 1;
     else if (r > light && g > light && b > light) nLight += 1;
   }
-  return nLight > nDark && nDark + nLight > 0;
+  const brightfield = nLight > nDark && nDark + nLight > 0;
+  console.info("[minerva] rgb detect: high/low pixels", {
+    nDark,
+    nLight,
+    nMid: nSampled - nDark - nLight,
+    nSampled,
+    nPixels,
+    stride,
+    dark,
+    light,
+    sampleMax,
+    bitsPerSample,
+    dtype: data.constructor?.name,
+    brightfield,
+  });
+  return brightfield;
 }

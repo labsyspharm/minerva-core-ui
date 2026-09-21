@@ -8,6 +8,7 @@ type GeoTiffImage = {
     BitsPerSample?: number[] | ArrayLike<number>;
     SampleFormat?: number[];
     SamplesPerPixel?: number;
+    PhotometricInterpretation?: number;
     SubIFDs?: number[] | ArrayLike<number>;
   };
   getHeight: () => number;
@@ -68,6 +69,11 @@ async function getCoarsestTiffImage(
     typeof tiff.parseFileDirectoryAt !== "function" ||
     (baseInternals.source ?? tiff.source) == null
   ) {
+    console.info("[minerva] rgb detect: coarsest = IFD0 (no SubIFDs)", {
+      w: base.getWidth(),
+      h: base.getHeight(),
+      subIfds: offsets.length,
+    });
     return base;
   }
   let best = base;
@@ -88,6 +94,12 @@ async function getCoarsestTiffImage(
       best = image;
     }
   }
+  console.info("[minerva] rgb detect: coarsest from SubIFDs", {
+    w: best.getWidth(),
+    h: best.getHeight(),
+    ifd0: { w: base.getWidth(), h: base.getHeight() },
+    subIfds: offsets.length,
+  });
   return best;
 }
 
@@ -250,8 +262,12 @@ async function detectOmeTiffBrightfield(
   source: Blob | string,
   signal?: AbortSignal,
 ): Promise<boolean> {
+  const t0 = performance.now();
   const tiff = await openOmeTiff(source, signal);
+  const tOpen = performance.now();
   const image = await getCoarsestTiffImage(tiff);
+  if (signal?.aborted) return false;
+  const tLevel = performance.now();
   const w = image.getWidth();
   const h = image.getHeight();
   const scale = Math.min(1, BRIGHTFIELD_THUMB_MAX / Math.max(w, h, 1));
@@ -260,19 +276,50 @@ async function detectOmeTiffBrightfield(
   const spp = image.fileDirectory?.SamplesPerPixel ?? 1;
   const bitsRaw = image.fileDirectory?.BitsPerSample?.[0];
   const bits = typeof bitsRaw === "number" ? bitsRaw : 8;
+  const photo = image.fileDirectory?.PhotometricInterpretation;
+  const fullPixels = w * h;
+  const thumbPixels = tw * th;
+  console.info("[minerva] rgb detect: thumb request", {
+    spp,
+    bits,
+    photo,
+    w,
+    h,
+    fullPixels,
+    tw,
+    th,
+    thumbPixels,
+    openMs: Math.round(tOpen - t0),
+    levelMs: Math.round(tLevel - tOpen),
+  });
   if (spp >= 3) {
     try {
+      const tRead = performance.now();
       const rgb = await image.readRGB({
         width: tw,
         height: th,
         interleave: true,
         signal,
       });
-      return isBrightfieldRgb(rgb, bits);
-    } catch {
+      const readMs = Math.round(performance.now() - tRead);
+      console.info("[minerva] rgb detect: readRGB", {
+        nPixels: Math.floor(rgb.length / 3),
+        samples: rgb.length,
+        dtype: rgb.constructor?.name,
+        readMs,
+      });
+      const brightfield = isBrightfieldRgb(rgb, bits);
+      console.info("[minerva] rgb detect: done", {
+        brightfield,
+        totalMs: Math.round(performance.now() - t0),
+      });
+      return brightfield;
+    } catch (error) {
+      console.warn("[minerva] rgb detect: readRGB failed", error);
       return false;
     }
   }
+  const tRead = performance.now();
   const plane = await image.readRasters({
     samples: [0],
     interleave: true,
@@ -281,7 +328,19 @@ async function detectOmeTiffBrightfield(
     height: th,
     signal,
   });
-  return isBrightfieldRgb(scalePlaneToUint8Rgb(plane, bits));
+  const readMs = Math.round(performance.now() - tRead);
+  console.info("[minerva] rgb detect: readRasters", {
+    nPixels: plane.length,
+    samples: plane.length,
+    dtype: plane.constructor?.name,
+    readMs,
+  });
+  const brightfield = isBrightfieldRgb(scalePlaneToUint8Rgb(plane, bits));
+  console.info("[minerva] rgb detect: done", {
+    brightfield,
+    totalMs: Math.round(performance.now() - t0),
+  });
+  return brightfield;
 }
 
 /**
@@ -292,10 +351,20 @@ export async function detectOmeTiffPlanarRgbAmbiguity(
   source: File | string,
   signal?: AbortSignal,
 ): Promise<PlanarRgbAmbiguity> {
+  const t0 = performance.now();
   const xml = await getOmeTiffImageDescriptionOmeXml(source, {}, signal);
   if (signal?.aborted) return { ambiguous: false };
-  if (!threeChannelOmeFromXml(xml)) return { ambiguous: false };
+  const threeChannel = threeChannelOmeFromXml(xml);
+  console.info("[minerva] rgb detect: xml gate", {
+    threeChannel,
+    xmlMs: Math.round(performance.now() - t0),
+  });
+  if (!threeChannel) return { ambiguous: false };
   const defaultRgbDisplay = await detectOmeTiffBrightfield(source, signal);
   if (signal?.aborted) return { ambiguous: false };
+  console.info("[minerva] rgb detect: ambiguity", {
+    defaultRgbDisplay,
+    totalMs: Math.round(performance.now() - t0),
+  });
   return { ambiguous: true, defaultRgbDisplay };
 }
