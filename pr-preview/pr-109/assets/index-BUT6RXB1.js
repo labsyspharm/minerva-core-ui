@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BIc2qL_z.js","./pako.esm-KbdoS3Oq.js","./lerc-4dEWaPHk.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-D935cMPd.js","./pako.esm-KbdoS3Oq.js","./lerc-DWcQdFgm.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -66510,26 +66510,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-Bted2vYe.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DH-gWGuN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-D_OtMG7h.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BueKdgE5.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-B8CZuYe8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-uttfJDmn.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BIc2qL_z.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BqY6JF6M.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-4dEWaPHk.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-D935cMPd.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DHLDwyul.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DWcQdFgm.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Cn18-rwl.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-K89Tigwt.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BKO3eW3Q.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BD2GkZrH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -164851,6 +164851,31 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const ch2 = channels2 > 1 ? channel : 0;
     return classifyPlane(plane, ch2);
   }
+  function sanitizeOmeXml(raw2) {
+    let s2 = raw2.replaceAll("\0", "").trim();
+    if (!s2) return s2;
+    const endTag2 = s2.search(/<\/(?:ome:)?OME\s*>/i);
+    if (endTag2 >= 0) {
+      const gt = s2.indexOf(">", endTag2);
+      if (gt >= 0) s2 = s2.slice(0, gt + 1);
+    }
+    return s2.trim();
+  }
+  function parseOmeXml(raw2) {
+    const xml2 = sanitizeOmeXml(raw2);
+    if (!xml2) return null;
+    const doc = new DOMParser().parseFromString(xml2, "application/xml");
+    if (doc.getElementsByTagName("parsererror").length > 0) return null;
+    return doc;
+  }
+  function omePixelsElement(doc) {
+    return doc.getElementsByTagNameNS("*", "Pixels")[0] ?? null;
+  }
+  function omeChannelElements(pixels) {
+    return [
+      ...pixels.getElementsByTagNameNS("*", "Channel")
+    ].filter((el2) => el2.parentElement === pixels);
+  }
   async function openOmeTiff(source2, signal) {
     return typeof source2 === "string" ? await fromUrl(source2, {}, signal) : await fromBlob(source2, signal);
   }
@@ -164861,6 +164886,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const offsets = raw2 == null ? [] : Array.from(raw2);
     const baseInternals = base2;
     if (offsets.length === 0 || typeof tiff.parseFileDirectoryAt !== "function" || (baseInternals.source ?? tiff.source) == null) {
+      console.info("[minerva] rgb detect: coarsest = IFD0 (no SubIFDs)", {
+        w: base2.getWidth(),
+        h: base2.getHeight(),
+        subIfds: offsets.length
+      });
       return base2;
     }
     let best = base2;
@@ -164874,6 +164904,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         best = image2;
       }
     }
+    console.info("[minerva] rgb detect: coarsest from SubIFDs", {
+      w: best.getWidth(),
+      h: best.getHeight(),
+      ifd0: {
+        w: base2.getWidth(),
+        h: base2.getHeight()
+      },
+      subIfds: offsets.length
+    });
     return best;
   }
   async function detectOmeTiffMask(source2, signal) {
@@ -164908,12 +164947,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function hasOmePixels(imageDescription) {
-    var _a2;
     if (typeof imageDescription !== "string" || imageDescription.trim() === "") {
       return false;
     }
-    const doc = new DOMParser().parseFromString(imageDescription, "application/xml");
-    return ((_a2 = doc.querySelector("Image")) == null ? void 0 : _a2.querySelector("Pixels")) != null;
+    const doc = parseOmeXml(imageDescription);
+    return doc != null && omePixelsElement(doc) != null;
   }
   async function getOmeTiffImageDescriptionOmeXml(source2, urlOptions = {}, signal) {
     var _a2;
@@ -164924,7 +164962,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (typeof desc !== "string" || !hasOmePixels(desc)) {
         return null;
       }
-      return desc;
+      return sanitizeOmeXml(desc);
     } catch (e2) {
       return null;
     }
@@ -164940,14 +164978,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
   }
   function threeChannelOmeFromXml(omeXml) {
-    var _a2;
     if (omeXml == null || omeXml.trim() === "") return false;
-    const doc = new DOMParser().parseFromString(omeXml, "application/xml");
-    const pixels = (_a2 = doc.querySelector("Image")) == null ? void 0 : _a2.querySelector("Pixels");
+    const doc = parseOmeXml(omeXml);
+    const pixels = doc ? omePixelsElement(doc) : null;
     if (!pixels) return false;
-    const channelEls = [
-      ...pixels.querySelectorAll(":scope > Channel")
-    ];
+    const channelEls = omeChannelElements(pixels);
     const samples = channelEls.map((ch2) => {
       const raw2 = ch2.getAttribute("SamplesPerPixel");
       let n2 = 1;
@@ -165017,10 +165052,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return brightfield;
   }
   async function detectOmeTiffBrightfield(source2, signal) {
-    var _a2, _b2, _c2, _d, _e, _f;
+    var _a2, _b2, _c2, _d, _e, _f, _g2, _h2;
+    const t0 = performance.now();
     const tiff = await openOmeTiff(source2, signal);
+    const tOpen = performance.now();
     const image2 = await getCoarsestTiffImage(tiff);
     if (signal == null ? void 0 : signal.aborted) return false;
+    const tLevel = performance.now();
     const w2 = image2.getWidth();
     const h2 = image2.getHeight();
     const tileW = Math.max(1, ((_a2 = image2.getTileWidth) == null ? void 0 : _a2.call(image2)) || 256);
@@ -165037,26 +165075,43 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const bitsRaw = (_e = (_d = image2.fileDirectory) == null ? void 0 : _d.BitsPerSample) == null ? void 0 : _e[0];
     const bits = typeof bitsRaw === "number" ? bitsRaw : 8;
     const photo = (_f = image2.fileDirectory) == null ? void 0 : _f.PhotometricInterpretation;
+    const winPixels = (window2[2] - window2[0]) * (window2[3] - window2[1]);
     console.info("[minerva] rgb detect: coarsest tile", {
       spp,
       bits,
       photo,
       w: w2,
       h: h2,
+      fullPixels: w2 * h2,
       tileW,
       tileH,
-      window: window2
+      window: window2,
+      winPixels,
+      openMs: Math.round(tOpen - t0),
+      levelMs: Math.round(tLevel - tOpen)
     });
     try {
+      const tRead2 = performance.now();
       const rgb = await image2.readRGB({
         interleave: true,
         window: window2,
         signal
       });
-      return isBrightfieldRgb(rgb, {
+      console.info("[minerva] rgb detect: readRGB", {
+        nPixels: Math.floor(rgb.length / 3),
+        samples: rgb.length,
+        dtype: (_g2 = rgb.constructor) == null ? void 0 : _g2.name,
+        readMs: Math.round(performance.now() - tRead2)
+      });
+      const brightfield2 = isBrightfieldRgb(rgb, {
         sampleMax: sampleMaxForBuffer(rgb, bits),
         channels: 3
       });
+      console.info("[minerva] rgb detect: done", {
+        brightfield: brightfield2,
+        totalMs: Math.round(performance.now() - t0)
+      });
+      return brightfield2;
     } catch (error2) {
       if (signal == null ? void 0 : signal.aborted) return false;
       console.warn("[minerva] rgb detect: readRGB failed, falling back to raw samples", error2);
@@ -165068,21 +165123,40 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ] : [
       0
     ];
+    const tRead = performance.now();
     const raw2 = await image2.readRasters({
       samples,
       interleave: true,
       window: window2,
       signal
     });
-    return isBrightfieldRgb(raw2, {
+    console.info("[minerva] rgb detect: readRasters", {
+      channels: samples.length,
+      nPixels: Math.floor(raw2.length / samples.length),
+      samples: raw2.length,
+      dtype: (_h2 = raw2.constructor) == null ? void 0 : _h2.name,
+      readMs: Math.round(performance.now() - tRead)
+    });
+    const brightfield = isBrightfieldRgb(raw2, {
       sampleMax: sampleMaxForBuffer(raw2, bits),
       channels: samples.length
     });
+    console.info("[minerva] rgb detect: done", {
+      brightfield,
+      totalMs: Math.round(performance.now() - t0)
+    });
+    return brightfield;
   }
   async function detectOmeTiffPlanarRgbAmbiguity(source2, signal) {
+    const t0 = performance.now();
     const xml2 = await getOmeTiffImageDescriptionOmeXml(source2, {}, signal);
     if (signal == null ? void 0 : signal.aborted) return false;
-    return threeChannelOmeFromXml(xml2);
+    const threeChannel = threeChannelOmeFromXml(xml2);
+    console.info("[minerva] rgb detect: xml gate done", {
+      threeChannel,
+      xmlMs: Math.round(performance.now() - t0)
+    });
+    return threeChannel;
   }
   async function detectUrlImageFormat(url, signal) {
     const looksDicom = isDicomWebSeriesUrl(url);
@@ -254026,12 +254100,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-21T17:00:05.011Z");
+    const label2 = utcShort("2026-09-21T18:51:48.579Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-21T17:00:05.011Z",
+      title: "2026-09-21T18:51:48.579Z",
       children: [
         "Updated ",
         label2,
