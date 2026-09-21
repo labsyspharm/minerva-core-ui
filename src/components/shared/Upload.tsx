@@ -853,9 +853,7 @@ const Upload = (props: UploadProps) => {
               <FormatChip
                 label="Fluorescence"
                 selected={overlayRole === "intensity" && !overlayRgbDisplay}
-                suggested={
-                  detectedRole === "intensity" && detectedRgbDisplay !== true
-                }
+                suggested={overlayRole === "intensity" && !overlayRgbDisplay}
                 muted={detectedRole !== "intensity"}
                 onClick={() => {
                   roleChosenByUserRef.current = true;
@@ -869,9 +867,7 @@ const Upload = (props: UploadProps) => {
                 <FormatChip
                   label="Brightfield"
                   selected={overlayRole === "intensity" && overlayRgbDisplay}
-                  suggested={
-                    detectedRole === "intensity" && detectedRgbDisplay === true
-                  }
+                  suggested={overlayRole === "intensity" && overlayRgbDisplay}
                   muted={detectedRole !== "intensity"}
                   onClick={() => {
                     roleChosenByUserRef.current = true;
@@ -885,7 +881,7 @@ const Upload = (props: UploadProps) => {
               <FormatChip
                 label="Segmentation Mask"
                 selected={overlayRole === "segmentation"}
-                suggested={detectedRole === "segmentation"}
+                suggested={overlayRole === "segmentation"}
                 muted={detectedRole !== "segmentation"}
                 onClick={() => {
                   roleChosenByUserRef.current = true;
