@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-7Ly9YsiB.js","./pako.esm-KbdoS3Oq.js","./lerc-BddVr_mc.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-zsK_bmWs.js","./pako.esm-KbdoS3Oq.js","./lerc-D3ZvDVqz.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -10,7 +10,7 @@ var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot
 var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 let BaseDecoder, LercParameters, LercAddCompression, getDefaultExportFromCjs$1;
 let __tla = (async () => {
-  var _a, _b, _c, _OrthographicBoundsInterpolator_instances, asBoundsProps_fn, _g, _h, _i;
+  var _a, _b, _c, _g, _OrthographicBoundsInterpolator_instances, asBoundsProps_fn, _h, _i;
   (function polyfill() {
     const relList = document.createElement("link").relList;
     if (relList && relList.supports && relList.supports("modulepreload")) {
@@ -17620,6 +17620,9 @@ let __tla = (async () => {
     if (dtype == null || dtype === "") return false;
     return /^u?int8$/i.test(dtype.trim());
   }
+  function sourceDtypeMax(sourceDataTypeId) {
+    return isUint8Dtype(sourceDataTypeId) ? 255 : 65535;
+  }
   const PLANAR_RGB_DISPLAY_COLORS = [
     {
       r: 255,
@@ -17654,10 +17657,12 @@ let __tla = (async () => {
     var _a2;
     const intensity = channels2.filter(isImageChannel);
     if (intensity.length === 0) return false;
-    if (intensity.length === 1 && intensity[0].samples === 3) return true;
+    const override = (_a2 = intensity.find((c2) => c2.rgbDisplay != null)) == null ? void 0 : _a2.rgbDisplay;
+    if (intensity.length === 1 && intensity[0].samples === 3) {
+      return override !== false;
+    }
     const planar = intensity.filter((c2) => (c2.samples ?? 1) === 1);
     if (planar.length !== 3) return false;
-    const override = (_a2 = intensity.find((c2) => c2.rgbDisplay != null)) == null ? void 0 : _a2.rgbDisplay;
     if (override != null) return override;
     if (planar.every((c2) => planarRgbSlotFromName(c2.name ?? "") != null)) {
       return true;
@@ -17689,10 +17694,12 @@ let __tla = (async () => {
   }
   function isRgbDisplayChannel(channel, allChannels) {
     if (!isImageChannel(channel)) return false;
-    if (channel.samples === 3) return true;
-    if (channel.imageId == null) return false;
-    const onImage = allChannels.filter((c2) => c2.imageId === channel.imageId);
-    return isRgbDisplaySource(onImage);
+    if (channel.imageId != null) {
+      return isRgbDisplaySource(allChannels.filter((c2) => c2.imageId === channel.imageId));
+    }
+    return isRgbDisplaySource([
+      channel
+    ]);
   }
   function resolveImageContentRole(image2) {
     if (image2.contentRole === "segmentation") return "segmentation";
@@ -21707,6 +21714,16 @@ let __tla = (async () => {
   ];
   const IMPORT_DEFAULT_LOWER_LIMIT = 2 ** 5;
   const IMPORT_DEFAULT_UPPER_LIMIT = 2 ** 14;
+  function defaultSourceContrastLimits(sourceDataTypeId) {
+    if (isUint8Dtype(sourceDataTypeId)) return [
+      0,
+      255
+    ];
+    return [
+      IMPORT_DEFAULT_LOWER_LIMIT,
+      IMPORT_DEFAULT_UPPER_LIMIT
+    ];
+  }
   function looksLikeImportDefaultLimits(lower, upper) {
     if (lower === IMPORT_DEFAULT_LOWER_LIMIT && upper === IMPORT_DEFAULT_UPPER_LIMIT) {
       return true;
@@ -21769,11 +21786,10 @@ let __tla = (async () => {
         channel.gmmContrastLimits.upper
       ];
     }
-    const lo = channel.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT;
-    const hi2 = channel.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT;
+    const [defLo, defHi] = defaultSourceContrastLimits(channel.sourceDataTypeId);
     return [
-      lo,
-      hi2
+      channel.lowerLimit ?? defLo,
+      channel.upperLimit ?? defHi
     ];
   }
   function effectiveMaskVisualization(row2) {
@@ -21809,6 +21825,7 @@ let __tla = (async () => {
   function seedDefaultSourceChannelStyles(sourceChannels, palette) {
     let paletteIndex = 0;
     return sourceChannels.map((sc2) => {
+      const [defLo, defHi] = defaultSourceContrastLimits(sc2.sourceDataTypeId);
       if (sc2.samples === 3) {
         return {
           ...sc2,
@@ -21834,21 +21851,13 @@ let __tla = (async () => {
           maskVisualization: sc2.maskVisualization ?? DEFAULT_MASK_VISUALIZATION
         };
       }
-      const planar = planarRgbDisplayColor(sc2, sourceChannels);
-      if (planar) {
+      const tint = sc2.color ?? planarRgbDisplayColor(sc2, sourceChannels);
+      if (tint) {
         return {
           ...sc2,
-          color: sc2.color ?? planar,
-          lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
-          upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT
-        };
-      }
-      if (sc2.color) {
-        return {
-          ...sc2,
-          color: sc2.color,
-          lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
-          upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT
+          color: tint,
+          lowerLimit: sc2.lowerLimit ?? defLo,
+          upperLimit: sc2.upperLimit ?? defHi
         };
       }
       const fromPalette2 = isImageChannel(sc2) && palette && paletteIndex < palette.length ? palette[paletteIndex++] : void 0;
@@ -21861,12 +21870,31 @@ let __tla = (async () => {
             b: fromPalette2.b
           }
         } : {},
-        lowerLimit: sc2.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
-        upperLimit: sc2.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT
+        lowerLimit: sc2.lowerLimit ?? defLo,
+        upperLimit: sc2.upperLimit ?? defHi
       };
     });
   }
-  const VIV_TILE_MAX_CACHE_SIZE = 128;
+  const VIV_TILE_MAX_CACHE_BYTE_SIZE = 512 * 1024 * 1024;
+  function rasterTileByteLength(data2) {
+    if (data2 == null) return 0;
+    if (ArrayBuffer.isView(data2)) return data2.byteLength;
+    if (Array.isArray(data2)) {
+      let n2 = 0;
+      for (const ch2 of data2) n2 += rasterTileByteLength(ch2);
+      return n2;
+    }
+    return 0;
+  }
+  function stampDeckTileByteLength(tile) {
+    const c2 = tile.content;
+    if (c2 == null || Number.isFinite(c2.byteLength)) return;
+    c2.byteLength = rasterTileByteLength(c2.data);
+  }
+  const TILE_CACHE_PROPS = {
+    maxCacheByteSize: VIV_TILE_MAX_CACHE_BYTE_SIZE,
+    onTileLoad: stampDeckTileByteLength
+  };
   function mergeStickyIntensityOccupancy(args) {
     const preferredVisible = args.visibleSourceIds.slice(0, args.maxChannels);
     const visibleSet = new Set(preferredVisible);
@@ -66467,26 +66495,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-Bni40QC_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-B8kiosZ8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Tf7nGbze.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BL9GRu5v.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DRS1ED5b.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-D1HSTqaK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-7Ly9YsiB.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DOHlXXJG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BddVr_mc.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-zsK_bmWs.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BZRQshmg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-D3ZvDVqz.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-88T_Y4Bu.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BQnlBLM8.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-C5ITb-ac.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DqHMc23T.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -69388,6 +69416,7 @@ vec4 colormap(float intensity, float opacity) {
     console.log(`[viv:offsets] IFD scan complete: found ${offsets.length} offsets for:`, url);
     return offsets;
   }
+  const PHOTOMETRIC_BLACK_IS_ZERO = 1;
   const PHOTOMETRIC_RGB = 2;
   const PHOTOMETRIC_YCBCR = 6;
   function padSampleArray(values, length2, fallback) {
@@ -69588,6 +69617,33 @@ vec4 colormap(float intensity, float opacity) {
       return new GeoTIFFImage(ifd.fileDirectory, ifd.geoKeyDirectory, baseImage.dataView, tiff.littleEndian, tiff.cache, tiff.source);
     };
   }
+  function needsPhotometricRgbConversion(photometricInterpretation) {
+    return photometricInterpretation === PHOTOMETRIC_YCBCR;
+  }
+  function convertInterleavedPhotometricToRgb(data2, photometricInterpretation) {
+    if (photometricInterpretation === PHOTOMETRIC_YCBCR) {
+      return interleavedYCbCrToRgb(data2);
+    }
+    if (ArrayBuffer.isView(data2) && data2 instanceof Uint8Array) {
+      return data2;
+    }
+    return Uint8Array.from(data2);
+  }
+  function interleavedYCbCrToRgb(data2) {
+    const out = new Uint8Array(data2.length);
+    for (let i2 = 0; i2 < data2.length; i2 += 3) {
+      const y2 = data2[i2];
+      const cb2 = data2[i2 + 1];
+      const cr = data2[i2 + 2];
+      out[i2] = clampRgb8(y2 + 1.402 * (cr - 128));
+      out[i2 + 1] = clampRgb8(y2 - 0.34414 * (cb2 - 128) - 0.71414 * (cr - 128));
+      out[i2 + 2] = clampRgb8(y2 + 1.772 * (cb2 - 128));
+    }
+    return out;
+  }
+  function clampRgb8(v2) {
+    return Math.max(0, Math.min(255, Math.round(v2)));
+  }
   var __defProp$3 = Object.defineProperty;
   var __defNormalProp$3 = (obj, key2, value) => key2 in obj ? __defProp$3(obj, key2, {
     enumerable: true,
@@ -69596,9 +69652,26 @@ vec4 colormap(float intensity, float opacity) {
     value
   }) : obj[key2] = value;
   var __publicField$3 = (obj, key2, value) => {
-    __defNormalProp$3(obj, key2 + "", value);
+    __defNormalProp$3(obj, typeof key2 !== "symbol" ? key2 + "" : key2, value);
     return value;
   };
+  function sliceInterleavedSample(data2, width, height, sample) {
+    const n2 = width * height;
+    const ArrayType = data2.constructor;
+    const out = new ArrayType(n2);
+    const s2 = sample | 0;
+    for (let i2 = 0; i2 < n2; i2++) {
+      out[i2] = data2[i2 * 3 + s2];
+    }
+    return out;
+  }
+  function packedDecodeKey(selection, props) {
+    const t2 = (selection == null ? void 0 : selection.t) ?? 0;
+    const z2 = (selection == null ? void 0 : selection.z) ?? 0;
+    const window2 = props == null ? void 0 : props.window;
+    if (window2) return `${t2}:${z2}:${window2.join(",")}`;
+    return `${t2}:${z2}:raster`;
+  }
   const RGB_SAMPLES = [
     0,
     1,
@@ -69613,13 +69686,14 @@ vec4 colormap(float intensity, float opacity) {
       this.meta = meta;
       this.pool = pool;
       __publicField$3(this, "_indexer");
+      __publicField$3(this, "_packedDecodes", /* @__PURE__ */ new Map());
       this._indexer = indexer;
     }
     async getRaster({ selection, signal }) {
       const image2 = await this._indexer(selection);
       return this._readRasters(image2, {
         signal
-      });
+      }, selection);
     }
     async getTile({ x: x2, y: y2, selection, signal }) {
       const { height, width } = this._getTileExtent(x2, y2);
@@ -69637,28 +69711,46 @@ vec4 colormap(float intensity, float opacity) {
         width,
         height,
         signal
-      });
+      }, selection);
     }
-    async _readRasters(image2, props) {
+    async _readRasters(image2, props, selection) {
       padTiffSampleTags(image2.fileDirectory);
       const interleave = isInterleaved(this.shape);
       const signal = props == null ? void 0 : props.signal;
       if (signal == null ? void 0 : signal.aborted) {
         throw SIGNAL_ABORTED;
       }
+      const packedRgb = isPackedRgbTiffImage(image2);
+      const presentPlanar = packedRgb && !interleave;
+      if (presentPlanar) {
+        const key2 = packedDecodeKey(selection, props);
+        let pending2 = this._packedDecodes.get(key2);
+        if (!pending2) {
+          pending2 = this._decodeVisualRgb(image2, props, signal);
+          this._packedDecodes.set(key2, pending2);
+          pending2.then(() => {
+            queueMicrotask(() => this._packedDecodes.delete(key2));
+          }, () => {
+            this._packedDecodes.delete(key2);
+          });
+        }
+        const rgb = await pending2;
+        const sample = Math.max(0, Math.min(2, Number(selection.c) || 0));
+        return {
+          data: sliceInterleavedSample(rgb.data, rgb.width, rgb.height, sample),
+          width: rgb.width,
+          height: rgb.height
+        };
+      }
+      return this._decodeVisualRgb(image2, props, signal);
+    }
+    async _decodeVisualRgb(image2, props, signal) {
+      const interleave = isInterleaved(this.shape);
       const { signal: _signal, ...restProps } = props ?? {};
-      const planarRgb = isPlanarRgbTiffImage(image2);
       const packedRgb = isPackedRgbTiffImage(image2);
       let raster;
       try {
-        if (planarRgb) {
-          raster = await image2.readRasters({
-            ...restProps,
-            samples: RGB_SAMPLES,
-            interleave: true,
-            pool: this.pool
-          });
-        } else if (packedRgb) {
+        if (packedRgb) {
           raster = await image2.readRasters({
             ...restProps,
             samples: RGB_SAMPLES,
@@ -69681,8 +69773,12 @@ vec4 colormap(float intensity, float opacity) {
       if (signal == null ? void 0 : signal.aborted) {
         throw SIGNAL_ABORTED;
       }
-      const useInterleaved = planarRgb || packedRgb || interleave;
-      const data2 = useInterleaved ? raster : raster[0];
+      const useInterleaved = packedRgb || interleave;
+      let data2 = useInterleaved ? raster : raster[0];
+      const photo = image2.fileDirectory.PhotometricInterpretation;
+      if (packedRgb && needsPhotometricRgbConversion(photo)) {
+        data2 = convertInterleavedPhotometricToRgb(data2, photo);
+      }
       return {
         data: data2,
         width: raster.width,
@@ -70083,7 +70179,8 @@ vec4 colormap(float intensity, float opacity) {
       dtype: parsePixelDataType(metadata["Pixels"]["Type"]),
       meta: {
         physicalSizes: extractPhysicalSizesfromPixels(metadata["Pixels"]),
-        photometricInterpretation: baseImage.fileDirectory.PhotometricInterpretation
+        sourcePhotometricInterpretation: baseImage.fileDirectory.PhotometricInterpretation,
+        photometricInterpretation: isPackedRgbTiffImage(baseImage) || isPlanarRgbTiffImage(baseImage) ? PHOTOMETRIC_RGB : baseImage.fileDirectory.PhotometricInterpretation
       }
     };
   }
@@ -70139,6 +70236,20 @@ vec4 colormap(float intensity, float opacity) {
       });
     }
     return tiffImages;
+  }
+  function rootMetaForAvailableIfds(images, imageCount, packedRgb) {
+    if (images.length <= 1) return images;
+    const out = [];
+    let used = 0;
+    for (const image2 of images) {
+      const p2 = image2.Pixels;
+      const c2 = packedRgb ? 1 : Math.max(1, (p2 == null ? void 0 : p2.SizeC) ?? 1);
+      const n2 = Math.max(1, (p2 == null ? void 0 : p2.SizeZ) ?? 1) * c2 * Math.max(1, (p2 == null ? void 0 : p2.SizeT) ?? 1);
+      if (out.length > 0 && used + n2 > imageCount) break;
+      out.push(image2);
+      used += n2;
+    }
+    return out;
   }
   function resolveMetadata(omexml, SubIFDs) {
     const rois = omexml.rois || [];
@@ -70221,8 +70332,36 @@ vec4 colormap(float intensity, float opacity) {
       }
     };
   }
+  const PLANAR_RGB_CHANNEL_NAMES = [
+    "R",
+    "G",
+    "B"
+  ];
+  function presentPackedRgbAsPlanarChannels(metadata, vivDtype) {
+    const pixels = metadata.Pixels;
+    const src = pixels.Channels ?? [];
+    const channels2 = src.length >= 3 ? src.slice(0, 3).map((ch2) => ({
+      ...ch2,
+      SamplesPerPixel: 1
+    })) : PLANAR_RGB_CHANNEL_NAMES.map((name2, i2) => ({
+      ...src[0] ?? {},
+      ID: `Channel:0:${i2}`,
+      Name: name2,
+      SamplesPerPixel: 1
+    }));
+    return {
+      ...metadata,
+      Pixels: {
+        ...pixels,
+        SizeC: 3,
+        Interleaved: false,
+        Type: vivDtype,
+        Channels: channels2
+      }
+    };
+  }
   async function loadSingleFileOmeTiff(source2, options = {}) {
-    const { offsets, headers, pool, source: prebuiltSource } = options;
+    const { offsets, headers, pool, source: prebuiltSource, packedRgb: packedRgbLayout = "interleaved" } = options;
     const tiff = await createGeoTiff(source2, {
       headers,
       offsets,
@@ -70232,11 +70371,14 @@ vec4 colormap(float intensity, float opacity) {
     padTiffSampleTags(firstImage.fileDirectory);
     const packedRgb = isPackedRgbTiffImage(firstImage);
     const { rootMeta, levels } = resolveMetadata(fromString(firstImage.fileDirectory.ImageDescription), firstImage.fileDirectory.SubIFDs);
+    const imageCount = await tiff.getImageCount();
+    const usableMeta = rootMetaForAvailableIfds(rootMeta, imageCount, packedRgb);
     const images = [];
     let imageIfdOffset = 0;
-    for (const rawMetadata of rootMeta) {
+    for (const rawMetadata of usableMeta) {
       const vivDtype = packedRgb ? guessImageDataType(firstImage) : parsePixelDataType(rawMetadata["Pixels"]["Type"]);
-      const metadata = packedRgb ? collapsePackedRgbPixelsMetadata(rawMetadata, vivDtype) : rawMetadata;
+      const presentPlanar = packedRgb && packedRgbLayout === "planar";
+      const metadata = packedRgb ? presentPlanar ? presentPackedRgbAsPlanarChannels(rawMetadata, vivDtype) : collapsePackedRgbPixelsMetadata(rawMetadata, vivDtype) : rawMetadata;
       const imageSize = {
         z: metadata["Pixels"]["SizeZ"],
         c: packedRgb ? 1 : metadata["Pixels"]["SizeC"],
@@ -70253,9 +70395,11 @@ vec4 colormap(float intensity, float opacity) {
         t: 0,
         z: 0
       }, 0));
+      const sourcePhoto = firstImage.fileDirectory.PhotometricInterpretation;
       const meta = {
         physicalSizes: extractPhysicalSizesfromPixels(metadata["Pixels"]),
-        photometricInterpretation: firstImage.fileDirectory.PhotometricInterpretation
+        sourcePhotometricInterpretation: sourcePhoto,
+        photometricInterpretation: packedRgb ? presentPlanar ? PHOTOMETRIC_BLACK_IS_ZERO : PHOTOMETRIC_RGB : sourcePhoto
       };
       const data2 = await Promise.all(Array.from({
         length: levels
@@ -70267,7 +70411,7 @@ vec4 colormap(float intensity, float opacity) {
         }, level);
         return new TiffPixelSource((sel) => pyramidIndexer({
           t: sel.t ?? 0,
-          c: sel.c ?? 0,
+          c: packedRgb ? 0 : sel.c ?? 0,
           z: sel.z ?? 0
         }, level), vivDtype, tileSize, getShapeForLevel({
           axes,
@@ -70291,6 +70435,96 @@ vec4 colormap(float intensity, float opacity) {
     const load2 = isSupportedCompanionOmeTiffFile(source2) ? loadMultifileOmeTiff : loadSingleFileOmeTiff;
     const loaders = await load2(source2, opts);
     return opts.images === "all" ? loaders : loaders[0];
+  }
+  var __defProp$2 = Object.defineProperty;
+  var __defNormalProp$2 = (obj, key2, value) => key2 in obj ? __defProp$2(obj, key2, {
+    enumerable: true,
+    configurable: true,
+    writable: true,
+    value
+  }) : obj[key2] = value;
+  var __publicField$2 = (obj, key2, value) => {
+    __defNormalProp$2(obj, typeof key2 !== "symbol" ? key2 + "" : key2, value);
+    return value;
+  };
+  const defaultPoolSize$1 = ((_g = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _g.hardwareConcurrency) ?? 4;
+  function defaultCreateWorker() {
+    return new Worker(new URL("" + new URL("decoder.worker-BB8BIQv9.js", import.meta.url).href, import.meta.url), {
+      type: "module"
+    });
+  }
+  let WorkerWrapper$4 = class WorkerWrapper {
+    constructor(worker2) {
+      __publicField$2(this, "worker");
+      __publicField$2(this, "jobIdCounter", 0);
+      __publicField$2(this, "jobs", /* @__PURE__ */ new Map());
+      this.worker = worker2;
+      this.worker.addEventListener("message", (e2) => this.onWorkerMessage(e2));
+    }
+    getJobCount() {
+      return this.jobs.size;
+    }
+    onWorkerMessage(e2) {
+      const { jobId, error: error2, ...result } = e2.data;
+      const job = this.jobs.get(jobId);
+      this.jobs.delete(jobId);
+      if (!job) return;
+      if (error2) job.reject(new Error(error2));
+      else job.resolve(result);
+    }
+    submitJob(message2, transferables = []) {
+      const jobId = this.jobIdCounter++;
+      const promise = new Promise((resolve, reject) => {
+        this.jobs.set(jobId, {
+          resolve,
+          reject
+        });
+      });
+      this.worker.postMessage({
+        ...message2,
+        jobId
+      }, transferables);
+      return promise;
+    }
+    terminate() {
+      this.worker.terminate();
+    }
+  };
+  class Pool {
+    constructor(size = defaultPoolSize$1, createWorker = defaultCreateWorker) {
+      __publicField$2(this, "workerWrappers", null);
+      if (size) {
+        this.workerWrappers = (async () => {
+          const wrappers = [];
+          for (let i2 = 0; i2 < size; i2++) {
+            wrappers.push(new WorkerWrapper$4(createWorker()));
+          }
+          return wrappers;
+        })();
+      }
+    }
+    async decode(fileDirectory, buffer2) {
+      if (this.workerWrappers) {
+        const workerWrapper = (await this.workerWrappers).reduce((a2, b2) => a2.getJobCount() < b2.getJobCount() ? a2 : b2);
+        const { decoded } = await workerWrapper.submitJob({
+          fileDirectory,
+          buffer: buffer2
+        }, [
+          buffer2
+        ]);
+        return decoded;
+      }
+      const decoder = await getDecoder(fileDirectory);
+      return decoder.decode(fileDirectory, buffer2);
+    }
+    async destroy() {
+      if (!this.workerWrappers) return;
+      const wrappers = await this.workerWrappers;
+      this.workerWrappers = null;
+      for (const w2 of wrappers) {
+        w2.terminate();
+      }
+    }
   }
   const DEFAULT_INDICES = new Uint32Array([
     0,
@@ -80415,13 +80649,13 @@ in vec2 mask_texCoords;
       super.initializeState(args);
     }
     updateState({ props, oldProps, ...rest2 }) {
-      var _a2, _b2, _c2;
       super.updateState({
         props,
         oldProps,
         ...rest2
       });
-      if (!((_a2 = props.image) == null ? void 0 : _a2.data) || !((_b2 = props.image) == null ? void 0 : _b2.width) || !((_c2 = props.image) == null ? void 0 : _c2.height)) {
+      const img = getPreparedImage(props.image);
+      if (!img) {
         if (this.state.bitmapTexture) {
           this.state.bitmapTexture.delete();
           this.setState({
@@ -80436,13 +80670,12 @@ in vec2 mask_texCoords;
       if (this.state.bitmapTexture) {
         this.state.bitmapTexture.delete();
       }
-      const img = getPreparedImage(props.image);
       const texture = this.context.device.createTexture({
         width: img.width,
         height: img.height,
         dimension: "2d",
         data: img.data,
-        mipmaps: false,
+        mipLevels: 1,
         format: img.format || "rgba8unorm",
         sampler: {
           minFilter: "linear",
@@ -80467,7 +80700,7 @@ in vec2 mask_texCoords;
     renderLayers() {
       const { photometricInterpretation, transparentColor: transparentColorInHook } = this.props;
       const transparentColor = getTransparentColor(photometricInterpretation);
-      const image2 = this.state.bitmapTexture || getPreparedImage(this.props.image);
+      const image2 = this.state.bitmapTexture;
       if (!image2) return null;
       return new BitmapLayerWrapper({
         ...this.props,
@@ -80866,7 +81099,7 @@ void main(void) {
         height,
         dimension: "2d",
         data: ((_a2 = attrs.cast) == null ? void 0 : _a2.call(attrs, data2)) ?? data2,
-        mipmaps: false,
+        mipLevels: 1,
         sampler: {
           minFilter: attrs.filter,
           magFilter: attrs.filter,
@@ -81039,6 +81272,32 @@ void main(void) {
   };
   ImageLayer.layerName = "ImageLayer";
   ImageLayer.defaultProps = defaultProps$6;
+  function getPyramidZoomLevels(loader) {
+    if (!Array.isArray(loader) || loader.length === 0) {
+      return [
+        0
+      ];
+    }
+    const { width: baseWidth } = getImageSize(loader[0]);
+    return loader.map((level) => {
+      const { width } = getImageSize(level);
+      return 0 - Math.round(Math.log2(baseWidth / width));
+    });
+  }
+  function snapToAvailableZoom(z2, levelZooms) {
+    const target = Math.round(z2);
+    for (const lz of levelZooms) {
+      if (lz <= target) {
+        return lz;
+      }
+    }
+    return levelZooms[levelZooms.length - 1];
+  }
+  function getLevelScale(loader, levelIndex) {
+    const { width: baseWidth } = getImageSize(loader[0]);
+    const { width } = getImageSize(loader[levelIndex]);
+    return baseWidth / width;
+  }
   function renderSubLayers(props) {
     const { bbox: { left, top: top2 }, index: { x: x2, y: y2, z: z2 } } = props.tile;
     const { data: data2, id: id2, loader, maxZoom } = props;
@@ -81052,12 +81311,27 @@ void main(void) {
       return null;
     }
     const base2 = loader[0];
-    const scale2 = 2 ** Math.round(-z2);
+    let scale2 = 2 ** Math.round(-z2);
+    let boundLeft = left;
+    let boundTop = top2;
+    if (Array.isArray(loader) && loader.length > 1 && base2.labels) {
+      const levelZooms = getPyramidZoomLevels(loader);
+      const zNat = snapToAvailableZoom(z2, levelZooms);
+      scale2 = 2 ** Math.round(-zNat);
+      const factor2 = 2 ** (Math.round(z2) - zNat);
+      if (factor2 !== 1) {
+        const xNat = Math.floor(x2 / factor2);
+        const yNat = Math.floor(y2 / factor2);
+        const { tileSize } = base2;
+        boundLeft = xNat * tileSize * scale2;
+        boundTop = yNat * tileSize * scale2;
+      }
+    }
     const bounds = [
-      left,
-      top2 + data2.height * scale2,
-      left + data2.width * scale2,
-      top2
+      boundLeft,
+      boundTop + data2.height * scale2,
+      boundLeft + data2.width * scale2,
+      boundTop
     ];
     if (isInterleaved(base2.shape)) {
       const { photometricInterpretation = 2 } = base2.meta;
@@ -81204,15 +81478,20 @@ void main(void) {
     renderLayers() {
       const { loader, selections, opacity, viewportId, onTileError, onHover, id: id2, onClick, modelMatrix, excludeBackground, refinementStrategy } = this.props;
       const { tileSize, dtype } = loader[0];
+      const levelZooms = getPyramidZoomLevels(loader);
       const getTileData = async ({ index: { x: x2, y: y2, z: z2 }, signal }) => {
         if (!selections || selections.length === 0) {
           return null;
         }
-        const resolution = Math.round(-z2);
+        const zNat = snapToAvailableZoom(z2, levelZooms);
+        const resolution = levelZooms.indexOf(zNat);
+        const factor2 = 2 ** (Math.round(z2) - zNat);
+        const xNat = Math.floor(x2 / factor2);
+        const yNat = Math.floor(y2 / factor2);
         const getTile = (selection) => {
           const config2 = {
-            x: x2,
-            y: y2,
+            x: xNat,
+            y: yNat,
             selection,
             signal
           };
@@ -81253,13 +81532,13 @@ void main(void) {
           width,
           height
         ],
-        minZoom: Math.round(-(loader.length - 1)),
+        minZoom: levelZooms[levelZooms.length - 1],
         maxZoom: 0,
         refinementStrategy: refinementStrategy || (opacity === 1 ? "best-available" : "no-overlap"),
         updateTriggers: {
           getTileData: [
             loader,
-            selections
+            (selections == null ? void 0 : selections.length) ? selections.map((s2) => `${(s2 == null ? void 0 : s2.t) ?? 0},${(s2 == null ? void 0 : s2.c) ?? 0},${(s2 == null ? void 0 : s2.z) ?? 0}`).join("|") : ""
           ]
         },
         onTileError: onTileError || loader[0].onTileError
@@ -81270,7 +81549,7 @@ void main(void) {
       const baseLayer = implementsGetRaster && !excludeBackground && new ImageLayer(this.props, {
         id: `Background-Image-${id2}`,
         loader: lowestResolution,
-        modelMatrix: layerModelMatrix2.scale(2 ** (loader.length - 1)),
+        modelMatrix: layerModelMatrix2.scale(getLevelScale(loader, loader.length - 1)),
         visible: !viewportId || this.context.viewport.id === viewportId,
         onHover,
         onClick,
@@ -81387,9 +81666,10 @@ void main(void) {
       const { width, height } = getImageSize(loader[0]);
       const z2 = loader.length - 1;
       const lowestResolution = loader[z2];
+      const levelScale = getLevelScale(loader, z2);
       const overview = new ImageLayer(this.props, {
         id: `viewport-${id2}`,
-        modelMatrix: new Matrix4().scale(2 ** z2 * overviewScale),
+        modelMatrix: new Matrix4().scale(levelScale * overviewScale),
         loader: lowestResolution
       });
       const boundingBoxOutline = new PolygonLayer({
@@ -82282,7 +82562,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         dimension: "3d",
         data: ((_a2 = attrs.cast) == null ? void 0 : _a2.call(attrs, data2)) ?? data2,
         format: attrs.format,
-        mipmaps: false,
+        mipLevels: 1,
         sampler: {
           minFilter: "linear",
           magFilter: "linear",
@@ -83173,6 +83453,31 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     __proto__: null,
     default: P
   };
+  function sanitizeOmeXml(raw2) {
+    let s2 = raw2.replaceAll("\0", "").trim();
+    if (!s2) return s2;
+    const endTag2 = s2.search(/<\/(?:ome:)?OME\s*>/i);
+    if (endTag2 >= 0) {
+      const gt = s2.indexOf(">", endTag2);
+      if (gt >= 0) s2 = s2.slice(0, gt + 1);
+    }
+    return s2.trim();
+  }
+  function parseOmeXml(raw2) {
+    const xml2 = sanitizeOmeXml(raw2);
+    if (!xml2) return null;
+    const doc = new DOMParser().parseFromString(xml2, "application/xml");
+    if (doc.getElementsByTagName("parsererror").length > 0) return null;
+    return doc;
+  }
+  function omePixelsElement(doc) {
+    return doc.getElementsByTagNameNS("*", "Pixels")[0] ?? null;
+  }
+  function omeChannelElements(pixels) {
+    return [
+      ...pixels.getElementsByTagNameNS("*", "Channel")
+    ].filter((el2) => el2.parentElement === pixels);
+  }
   function asAppLoader(image2) {
     return image2;
   }
@@ -83207,18 +83512,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return "Uint32";
   }
   function parseFirstOmeImagePixels(imageDescription) {
-    var _a2;
     if (typeof imageDescription !== "string" || imageDescription.trim() === "") {
       return null;
     }
-    const doc = new DOMParser().parseFromString(imageDescription, "application/xml");
-    const pixels = (_a2 = doc.querySelector("Image")) == null ? void 0 : _a2.querySelector("Pixels");
+    const doc = parseOmeXml(imageDescription);
+    const pixels = doc ? omePixelsElement(doc) : null;
     if (!pixels) return null;
     const num2 = (name2) => {
       const value = pixels.getAttribute(name2);
       return value == null ? void 0 : Number(value);
     };
-    const channelCount = pixels.querySelectorAll("Channel").length;
+    const channelCount = omeChannelElements(pixels).length;
     return {
       ID: pixels.getAttribute("ID") ?? void 0,
       Type: pixels.getAttribute("Type") ?? void 0,
@@ -83313,9 +83617,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const offsets = baseImage.fileDirectory.SubIFDs;
     if (!Array.isArray(offsets) || offsets.length === 0) return images;
     const internals = tiff;
+    const baseInternals = baseImage;
+    if (typeof internals.parseFileDirectoryAt !== "function") return images;
+    const source2 = baseInternals.source ?? internals.source;
+    if (source2 == null) return images;
     for (const offset of offsets) {
       const parsed = await internals.parseFileDirectoryAt(offset);
-      images.push(new GeoTIFFImage(parsed.fileDirectory, parsed.geoKeyDirectory, internals.dataView, internals.littleEndian, internals.cache, internals.source));
+      images.push(new GeoTIFFImage(parsed.fileDirectory, parsed.geoKeyDirectory, baseInternals.dataView ?? internals.dataView, baseInternals.littleEndian ?? internals.littleEndian ?? true, baseInternals.cache ?? internals.cache, source2));
     }
     return images;
   }
@@ -83356,6 +83664,58 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         return getRaster({
           selection
         });
+      }
+    };
+  }
+  async function maskLoaderFromBlob(inFile) {
+    const tiff = await fromBlob(inFile);
+    const baseImage = await tiff.getImage(0);
+    const fd2 = baseImage.fileDirectory;
+    const width = baseImage.getWidth();
+    const height = baseImage.getHeight();
+    if (!isTiffPyramided(baseImage) && !isTiffTiled(baseImage)) {
+      const maxTextureSize = queryMaxTextureSize();
+      if (width > maxTextureSize || height > maxTextureSize) {
+        throw new Error(`This mask is not tiled or pyramided and is too large for the GPU (${width}\xD7${height}; max texture ${maxTextureSize}). Export it as a tiled OME-TIFF pyramid and import again.`);
+      }
+    }
+    const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
+    const dtype = dtypeFromTiffDirectory(fd2);
+    const ome = parseFirstOmeImagePixels(fd2.ImageDescription);
+    const sizeC = Math.max(1, (ome == null ? void 0 : ome.SizeC) ?? fd2.SamplesPerPixel ?? 1);
+    const channels2 = Array.from({
+      length: sizeC
+    }, (_2, i2) => ({
+      ID: `Channel:0:${i2}`,
+      Name: sizeC === 1 ? "Mask" : `Mask ${i2 + 1}`,
+      SamplesPerPixel: 1
+    }));
+    const pixels = {
+      ID: (ome == null ? void 0 : ome.ID) ?? "Pixels:0",
+      DimensionOrder: "XYZCT",
+      Type: (ome == null ? void 0 : ome.Type) ?? dtype,
+      SizeT: 1,
+      SizeC: sizeC,
+      SizeZ: 1,
+      SizeY: height,
+      SizeX: width,
+      PhysicalSizeX: (ome == null ? void 0 : ome.PhysicalSizeX) ?? (isUnitlessPlaceholderResolution(fd2) ? 0 : 1),
+      PhysicalSizeY: (ome == null ? void 0 : ome.PhysicalSizeY) ?? (isUnitlessPlaceholderResolution(fd2) ? 0 : 1),
+      PhysicalSizeXUnit: (ome == null ? void 0 : ome.PhysicalSizeXUnit) ?? "\xB5m",
+      PhysicalSizeYUnit: (ome == null ? void 0 : ome.PhysicalSizeYUnit) ?? "\xB5m",
+      PhysicalSizeZUnit: (ome == null ? void 0 : ome.PhysicalSizeZUnit) ?? "\xB5m",
+      BigEndian: (ome == null ? void 0 : ome.BigEndian) ?? false,
+      TiffData: [],
+      Channels: channels2
+    };
+    return {
+      data: pyramidImages.map((image2) => maskPlaneFromImage(image2, channels2.length, dtype)),
+      metadata: {
+        ID: "Image:0",
+        AquisitionDate: "",
+        Description: "",
+        Pixels: pixels,
+        ROIs: []
       }
     };
   }
@@ -83465,77 +83825,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       throw e2;
     }
   };
-  const toLoader = async ({ handle: handle2, pool = null }) => {
-    const in_file = await handle2.getFile();
-    if (pool) {
-      return asAppLoader(await loadOmeTiff(in_file, {
-        pool
-      }));
-    }
-    return asAppLoader(await loadOmeTiff(in_file));
-  };
-  async function maskLoaderFromBlob(inFile) {
-    const tiff = await fromBlob(inFile);
-    const baseImage = await tiff.getImage(0);
-    const fd2 = baseImage.fileDirectory;
-    const width = baseImage.getWidth();
-    const height = baseImage.getHeight();
-    if (!isTiffPyramided(baseImage) && !isTiffTiled(baseImage)) {
-      const maxTextureSize = queryMaxTextureSize();
-      if (width > maxTextureSize || height > maxTextureSize) {
-        throw new Error(`This mask is not tiled or pyramided and is too large for the GPU (${width}\xD7${height}; max texture ${maxTextureSize}). Export it as a tiled OME-TIFF pyramid and import again.`);
-      }
-    }
-    const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
-    const dtype = dtypeFromTiffDirectory(fd2);
-    const ome = parseFirstOmeImagePixels(fd2.ImageDescription);
-    const sizeC = Math.max(1, (ome == null ? void 0 : ome.SizeC) ?? fd2.SamplesPerPixel ?? 1);
-    const channels2 = Array.from({
-      length: sizeC
-    }, (_2, i2) => ({
-      ID: `Channel:0:${i2}`,
-      Name: sizeC === 1 ? "Mask" : `Mask ${i2 + 1}`,
-      SamplesPerPixel: 1
-    }));
-    const pixels = {
-      ID: (ome == null ? void 0 : ome.ID) ?? "Pixels:0",
-      DimensionOrder: "XYZCT",
-      Type: (ome == null ? void 0 : ome.Type) ?? dtype,
-      SizeT: 1,
-      SizeC: sizeC,
-      SizeZ: 1,
-      SizeY: height,
-      SizeX: width,
-      PhysicalSizeX: (ome == null ? void 0 : ome.PhysicalSizeX) ?? (isUnitlessPlaceholderResolution(fd2) ? 0 : 1),
-      PhysicalSizeY: (ome == null ? void 0 : ome.PhysicalSizeY) ?? (isUnitlessPlaceholderResolution(fd2) ? 0 : 1),
-      PhysicalSizeXUnit: (ome == null ? void 0 : ome.PhysicalSizeXUnit) ?? "\xB5m",
-      PhysicalSizeYUnit: (ome == null ? void 0 : ome.PhysicalSizeYUnit) ?? "\xB5m",
-      PhysicalSizeZUnit: (ome == null ? void 0 : ome.PhysicalSizeZUnit) ?? "\xB5m",
-      BigEndian: (ome == null ? void 0 : ome.BigEndian) ?? false,
-      TiffData: [],
-      Channels: channels2
-    };
+  function vivLoadOpts(pool, packedRgb) {
     return {
-      data: pyramidImages.map((image2) => maskPlaneFromImage(image2, channels2.length, dtype)),
-      metadata: {
-        ID: "Image:0",
-        AquisitionDate: "",
-        Description: "",
-        Pixels: pixels,
-        ROIs: []
-      }
+      ...pool ? {
+        pool
+      } : {},
+      ...packedRgb ? {
+        packedRgb
+      } : {}
     };
   }
-  const toMaskLoader = async ({ handle: handle2 }) => {
-    return maskLoaderFromBlob(await handle2.getFile());
-  };
-  const toMaskLoaderFromUrl = async (url) => {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch mask OME-TIFF (${response.status})`);
-    }
-    return maskLoaderFromBlob(await response.blob());
-  };
+  async function toMaskLoaderFromFile(inFile) {
+    return maskLoaderFromBlob(inFile);
+  }
   async function pickLocalOmeTiffHandle() {
     const picked = await toFile();
     if (picked.length === 0) return null;
@@ -83547,28 +83849,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return handle2;
   }
   async function loadOmeLoaderForRole(role, source2) {
-    const isMask = role === "segmentation";
+    const packedRgb = source2.rgbDisplay === false ? "planar" : void 0;
     if (source2.kind === "local") {
-      return isMask ? toMaskLoader({
-        handle: source2.handle,
-        in_f: source2.in_f,
-        pool: source2.pool
-      }) : toLoader({
-        handle: source2.handle,
-        in_f: source2.in_f,
-        pool: source2.pool
-      });
+      const file = await source2.handle.getFile();
+      if (role === "segmentation") {
+        return toMaskLoaderFromFile(file);
+      }
+      return asAppLoader(await loadOmeTiff(file, vivLoadOpts(source2.pool, packedRgb)));
     }
-    return isMask ? toMaskLoaderFromUrl(source2.url) : toLoaderFromUrl(source2.url, source2.pool);
+    if (role === "segmentation") {
+      const response = await fetch(source2.url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch mask OME-TIFF (${response.status})`);
+      }
+      return toMaskLoaderFromFile(await response.blob());
+    }
+    return asAppLoader(await loadOmeTiff(source2.url, vivLoadOpts(source2.pool, packedRgb)));
   }
-  const toLoaderFromUrl = async (url, pool) => {
-    if (pool) {
-      return asAppLoader(await loadOmeTiff(url, {
-        pool
-      }));
-    }
-    return asAppLoader(await loadOmeTiff(url));
-  };
   const sessionHandles = /* @__PURE__ */ new Map();
   async function putFileHandle(id2, handle2) {
     sessionHandles.set(id2, handle2);
@@ -92170,7 +92467,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       b: c2 == null ? void 0 : c2.b,
       lowerLimit: liveContrast ? liveContrast.lower : limits[0],
       upperLimit: liveContrast ? liveContrast.upper : limits[1],
-      distribution: sc2.sourceDistribution ?? null
+      distribution: sc2.sourceDistribution ?? null,
+      sourceDataTypeId: sc2.sourceDataTypeId
     };
   }
   function contrastEditorPropsForGroupRow(channelRendering, groupId, gc2, sc2) {
@@ -92188,7 +92486,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       b: c2.b ?? 0,
       lowerLimit: liveContrast ? liveContrast.lower : gc2.lowerLimit,
       upperLimit: liveContrast ? liveContrast.upper : gc2.upperLimit,
-      distribution: (sc2 == null ? void 0 : sc2.sourceDistribution) ?? null
+      distribution: (sc2 == null ? void 0 : sc2.sourceDistribution) ?? null,
+      sourceDataTypeId: sc2 == null ? void 0 : sc2.sourceDataTypeId
     };
   }
   function ChannelContrastEditor(props) {
@@ -92200,14 +92499,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       LowerRange: 0,
       UpperRange: 16
     };
+    const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
+    const eightBit = dtypeMax === 255;
     const scale2 = reactExports.useMemo(() => buildContrastScale({
-      distScale: dist2.XScale,
-      distMin: dist2.LowerRange,
-      distMax: dist2.UpperRange
+      distScale: eightBit ? "linear" : dist2.XScale,
+      distMin: eightBit ? 0 : dist2.LowerRange,
+      distMax: eightBit ? 255 : dist2.UpperRange,
+      dtypeMax
     }), [
+      eightBit,
       dist2.XScale,
       dist2.LowerRange,
-      dist2.UpperRange
+      dist2.UpperRange,
+      dtypeMax
     ]);
     const [sliderMin, setSliderMin] = reactExports.useState(() => scale2.toSlider(props.lowerLimit));
     const [sliderMax, setSliderMax] = reactExports.useState(() => scale2.toSlider(props.upperLimit));
@@ -92423,6 +92727,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const panWidth = `${(maxFrac - minFrac) * 100}%`;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$n.wrap,
+      draggable: false,
       children: [
         jsxRuntimeExports.jsx("input", {
           type: "number",
@@ -92844,6 +93149,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("div", {
               className: styles$q.channelRowMid,
               "data-channel-drag-ignore": "",
+              draggable: false,
               children: [
                 contrast ? jsxRuntimeExports.jsx(ChannelContrastEditor, {
                   ...contrast
@@ -92991,7 +93297,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images);
   }
   function isEligible(sc2, all2) {
-    return isImageChannel(sc2) && sc2.samples !== 3 && !isRgbDisplayChannel(sc2, all2);
+    return isImageChannel(sc2) && sc2.samples !== 3 && !isRgbDisplayChannel(sc2, all2) && !isUint8Dtype(sc2.sourceDataTypeId);
   }
   function acquire(used, waiters, max2) {
     return new Promise((resolve) => {
@@ -93401,7 +93707,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return binned;
     }, []);
   }
-  function WorkerWrapper$4(options) {
+  function WorkerWrapper$3(options) {
     return new Worker("" + new URL("histogram.worker-gh7SAJl9.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
@@ -93418,7 +93724,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       __publicField(this, "nextId", 1);
       __publicField(this, "rr", 0);
       for (let i2 = 0; i2 < size; i2++) {
-        const w2 = new WorkerWrapper$4();
+        const w2 = new WorkerWrapper$3();
         w2.onmessage = (ev) => {
           const { jobId, y: y2, error: error2 } = ev.data;
           const p2 = this.pending.get(jobId);
@@ -93755,10 +94061,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         {
           id: crypto.randomUUID(),
           YValues,
-          XScale: "log",
+          XScale: bits != null && bits <= 8 ? "linear" : "log",
           YScale: "linear",
           LowerRange: 0,
-          UpperRange: bits ?? 0
+          UpperRange: bits != null && bits <= 8 ? 2 ** bits - 1 : bits ?? 0
         }
       ];
     });
@@ -94425,6 +94731,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     chipDim,
     editor
   };
+  const HE_CHIP_HEX = "cc00ff";
+  function heUnitChip(base2, key2, visible) {
+    return {
+      ...base2,
+      key: key2,
+      name: "H&E",
+      hex: HE_CHIP_HEX,
+      visible
+    };
+  }
   function chipAriaLabel(chip2) {
     return chip2.visible ? `Hide ${chip2.name}` : `Show ${chip2.name}`;
   }
@@ -94432,6 +94748,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const { chip: chip2, open, dim, colorPending, gmmPending, shown, showBlocked, onClick, onOpenEditor } = props;
     const pending2 = colorPending || gmmPending;
     const pendingLabel2 = gmmPending ? `Fitting contrast for ${chip2.name}` : `Assigning color to ${chip2.name}`;
+    const showEditor = !chip2.key.endsWith(":rgb");
     return jsxRuntimeExports.jsxs("div", {
       className: [
         styles$m.chipCell,
@@ -94464,7 +94781,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             children: chip2.name
           })
         }),
-        jsxRuntimeExports.jsx("button", {
+        showEditor ? jsxRuntimeExports.jsx("button", {
           type: "button",
           className: `${minervaTheme.focusRing} ${styles$m.chipMenu}`,
           title: `Edit ${chip2.name}`,
@@ -94477,7 +94794,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: jsxRuntimeExports.jsx(ChevronIcon, {
             direction: open ? "up" : "down"
           })
-        })
+        }) : null
       ]
     });
   }
@@ -94744,13 +95061,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       className: styles$m.root,
       children: [
         model.groups.map((group2) => {
-          const rgbUnit = rgbDisplay && group2.chips.length > 1 ? [
-            {
-              ...group2.chips[0],
-              key: `g:${group2.id}:rgb`,
-              name: "H&E",
-              visible: group2.allVisible
-            }
+          const rgbUnit = rgbDisplay && group2.chips[0] ? [
+            heUnitChip(group2.chips[0], `g:${group2.id}:rgb`, group2.allVisible)
           ] : group2.chips;
           const docGroup = channelGroups.find((g2) => g2.id === group2.id);
           const showAllNext = {
@@ -94792,13 +95104,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         showAllChannelsStrip ? jsxRuntimeExports.jsx(GroupStrip, {
           name: "All channels",
-          chips: rgbDisplay && filteredAllChannels.length > 1 ? [
-            {
-              ...filteredAllChannels[0],
-              key: "e:rgb",
-              name: "H&E",
-              visible: filteredAllChannels.every((c2) => c2.visible)
-            }
+          chips: rgbDisplay && filteredAllChannels[0] ? [
+            heUnitChip(filteredAllChannels[0], "e:rgb", filteredAllChannels.every((c2) => c2.visible))
           ] : filteredAllChannels,
           openChip,
           shownIds,
@@ -164831,6 +165138,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         visible: anyChannelVisible,
         id: "rgb_image",
         modelMatrix: meta.modelMatrix,
+        ...TILE_CACHE_PROPS,
         getTileData: async ({ index: index2, signal }) => {
           const { x: x2, y: y2, z: z2 } = index2;
           const source2 = loaderPlanes2[Math.abs(-z2)];
@@ -164892,6 +165200,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       visible: true,
       loader: loaderPlanes2,
       refinementStrategy: "best-available",
+      ...TILE_CACHE_PROPS,
       id: `${imageID}-${contrastLimits.map(([l2, u2]) => `${l2}-${u2}`).join("-")}`,
       channelsVisible,
       colors,
@@ -164968,23 +165277,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return loadDicomWebPerInstance(root2);
     }
   };
-  function isBrightfieldRgb(data2, bitsPerSample = 8) {
-    const sampleMax = data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray ? 255 : 2 ** Math.max(1, Math.floor(bitsPerSample) || 8) - 1;
-    const dark = 25 / 255 * sampleMax;
-    const light = 220 / 255 * sampleMax;
-    const nPixels = Math.floor(data2.length / 3);
-    const stride = Math.max(1, Math.ceil(nPixels / 1e4));
-    let nDark = 0;
-    let nLight = 0;
-    for (let i2 = 0; i2 + 2 < data2.length; i2 += 3 * stride) {
-      const r2 = data2[i2];
-      const g2 = data2[i2 + 1];
-      const b2 = data2[i2 + 2];
-      if (r2 < dark && g2 < dark && b2 < dark) nDark += 1;
-      else if (r2 > light && g2 > light && b2 > light) nLight += 1;
-    }
-    return nLight > nDark && nDark + nLight > 0;
-  }
   const EQ_THRESHOLD = 0.5;
   const MIN_PAIRS = 1e5;
   const MAX_TILES = 6;
@@ -165146,6 +165438,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const offsets = raw2 == null ? [] : Array.from(raw2);
     const baseInternals = base2;
     if (offsets.length === 0 || typeof tiff.parseFileDirectoryAt !== "function" || (baseInternals.source ?? tiff.source) == null) {
+      console.info("[minerva] rgb detect: coarsest = IFD0 (no SubIFDs)", {
+        w: base2.getWidth(),
+        h: base2.getHeight(),
+        subIfds: offsets.length
+      });
       return base2;
     }
     let best = base2;
@@ -165159,6 +165456,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         best = image2;
       }
     }
+    console.info("[minerva] rgb detect: coarsest from SubIFDs", {
+      w: best.getWidth(),
+      h: best.getHeight(),
+      ifd0: {
+        w: base2.getWidth(),
+        h: base2.getHeight()
+      },
+      subIfds: offsets.length
+    });
     return best;
   }
   async function detectOmeTiffMask(source2, signal) {
@@ -165193,12 +165499,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function hasOmePixels(imageDescription) {
-    var _a2;
     if (typeof imageDescription !== "string" || imageDescription.trim() === "") {
       return false;
     }
-    const doc = new DOMParser().parseFromString(imageDescription, "application/xml");
-    return ((_a2 = doc.querySelector("Image")) == null ? void 0 : _a2.querySelector("Pixels")) != null;
+    const doc = parseOmeXml(imageDescription);
+    return doc != null && omePixelsElement(doc) != null;
   }
   async function getOmeTiffImageDescriptionOmeXml(source2, urlOptions = {}, signal) {
     var _a2;
@@ -165209,7 +165514,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (typeof desc !== "string" || !hasOmePixels(desc)) {
         return null;
       }
-      return desc;
+      return sanitizeOmeXml(desc);
     } catch (e2) {
       return null;
     }
@@ -165224,109 +165529,186 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return false;
     }
   }
-  function isThreeChannelOme(channels2) {
-    if (channels2.length === 1 && channels2[0].samples === 3) return true;
-    const planar = channels2.filter((c2) => c2.samples === 1);
-    return planar.length === 3 && planar.length === channels2.length;
-  }
   function threeChannelOmeFromXml(omeXml) {
-    var _a2;
     if (omeXml == null || omeXml.trim() === "") return false;
-    const doc = new DOMParser().parseFromString(omeXml, "application/xml");
-    const pixels = (_a2 = doc.querySelector("Image")) == null ? void 0 : _a2.querySelector("Pixels");
+    const doc = parseOmeXml(omeXml);
+    const pixels = doc ? omePixelsElement(doc) : null;
     if (!pixels) return false;
-    const channelEls = [
-      ...pixels.querySelectorAll(":scope > Channel")
-    ];
-    if (channelEls.length === 0) return false;
-    const channels2 = channelEls.map((ch2) => {
+    const channelEls = omeChannelElements(pixels);
+    const samples = channelEls.map((ch2) => {
       const raw2 = ch2.getAttribute("SamplesPerPixel");
-      let samples = 1;
+      let n2 = 1;
       if (raw2 != null && raw2 !== "") {
-        const n2 = Number(raw2);
-        if (Number.isFinite(n2) && n2 > 0) samples = n2;
+        const parsed = Number(raw2);
+        if (Number.isFinite(parsed) && parsed > 0) n2 = parsed;
       }
-      return {
-        name: ch2.getAttribute("Name") ?? ch2.getAttribute("ID") ?? "",
-        samples
-      };
+      return n2;
     });
-    return isThreeChannelOme(channels2);
+    const packed = samples.length === 1 && samples[0] === 3;
+    const planar = samples.length === 3 && samples.every((s2) => s2 === 1);
+    const showChips = packed || planar;
+    console.info("[minerva] rgb detect: xml gate", {
+      sizeC: pixels.getAttribute("SizeC"),
+      interleaved: pixels.getAttribute("Interleaved"),
+      channels: samples.length,
+      samplesPerPixel: samples,
+      packed,
+      planar,
+      showChips
+    });
+    return showChips;
   }
-  const BRIGHTFIELD_THUMB_MAX = 256;
-  function scalePlaneToUint8Rgb(plane, bitsPerSample) {
-    const bits = Math.max(1, Math.floor(bitsPerSample) || 8);
-    const sampleMax = 2 ** bits - 1;
-    const n2 = plane.length;
-    const out = new Uint8Array(n2 * 3);
-    for (let i2 = 0; i2 < n2; i2++) {
-      const v2 = Number(plane[i2]);
-      const u8 = sampleMax > 0 && Number.isFinite(v2) ? Math.max(0, Math.min(255, Math.round(v2 / sampleMax * 255))) : 0;
-      const o2 = i2 * 3;
-      out[o2] = u8;
-      out[o2 + 1] = u8;
-      out[o2 + 2] = u8;
+  function sampleMaxForBuffer(data2, bitsPerSample) {
+    if (data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray) {
+      return 255;
     }
-    return out;
+    if (data2 instanceof Float32Array || data2 instanceof Float64Array) {
+      return 1;
+    }
+    return 2 ** Math.max(1, Math.floor(bitsPerSample) || 8) - 1;
+  }
+  function isBrightfieldRgb(data2, opts) {
+    var _a2;
+    const { sampleMax } = opts;
+    const channels2 = Math.max(1, opts.channels);
+    const dark = 25 / 255 * sampleMax;
+    const light = 220 / 255 * sampleMax;
+    const nPixels = Math.floor(data2.length / channels2);
+    const stride = Math.max(1, Math.ceil(nPixels / 1e4));
+    let nDark = 0;
+    let nLight = 0;
+    let nSampled = 0;
+    for (let i2 = 0; i2 + channels2 - 1 < data2.length; i2 += channels2 * stride) {
+      const r2 = data2[i2];
+      const g2 = channels2 >= 3 ? data2[i2 + 1] : r2;
+      const b2 = channels2 >= 3 ? data2[i2 + 2] : r2;
+      nSampled += 1;
+      if (r2 < dark && g2 < dark && b2 < dark) nDark += 1;
+      else if (r2 > light && g2 > light && b2 > light) nLight += 1;
+    }
+    const brightfield = nLight > nDark && nDark + nLight > 0;
+    console.info("[minerva] rgb detect: high/low pixels", {
+      nDark,
+      nLight,
+      nMid: nSampled - nDark - nLight,
+      nSampled,
+      nPixels,
+      stride,
+      channels: channels2,
+      dark,
+      light,
+      sampleMax,
+      dtype: (_a2 = data2.constructor) == null ? void 0 : _a2.name,
+      brightfield
+    });
+    return brightfield;
   }
   async function detectOmeTiffBrightfield(source2, signal) {
-    var _a2, _b2, _c2;
+    var _a2, _b2, _c2, _d, _e, _f, _g2, _h2;
+    const t0 = performance.now();
     const tiff = await openOmeTiff(source2, signal);
+    const tOpen = performance.now();
     const image2 = await getCoarsestTiffImage(tiff);
+    if (signal == null ? void 0 : signal.aborted) return false;
+    const tLevel = performance.now();
     const w2 = image2.getWidth();
     const h2 = image2.getHeight();
-    const scale2 = Math.min(1, BRIGHTFIELD_THUMB_MAX / Math.max(w2, h2, 1));
-    const tw = Math.max(1, Math.round(w2 * scale2));
-    const th2 = Math.max(1, Math.round(h2 * scale2));
-    const spp = ((_a2 = image2.fileDirectory) == null ? void 0 : _a2.SamplesPerPixel) ?? 1;
-    const bitsRaw = (_c2 = (_b2 = image2.fileDirectory) == null ? void 0 : _b2.BitsPerSample) == null ? void 0 : _c2[0];
+    const tileW = Math.max(1, ((_a2 = image2.getTileWidth) == null ? void 0 : _a2.call(image2)) || 256);
+    const tileH = Math.max(1, ((_b2 = image2.getTileHeight) == null ? void 0 : _b2.call(image2)) || 256);
+    const x0 = Math.max(0, Math.floor(w2 / 2 / tileW) * tileW);
+    const y0 = Math.max(0, Math.floor(h2 / 2 / tileH) * tileH);
+    const window2 = [
+      x0,
+      y0,
+      Math.min(w2, x0 + tileW),
+      Math.min(h2, y0 + tileH)
+    ];
+    const spp = ((_c2 = image2.fileDirectory) == null ? void 0 : _c2.SamplesPerPixel) ?? 1;
+    const bitsRaw = (_e = (_d = image2.fileDirectory) == null ? void 0 : _d.BitsPerSample) == null ? void 0 : _e[0];
     const bits = typeof bitsRaw === "number" ? bitsRaw : 8;
-    if (spp >= 3) {
-      try {
-        const rgb = await image2.readRGB({
-          width: tw,
-          height: th2,
-          interleave: true,
-          signal
-        });
-        return isBrightfieldRgb(rgb, bits);
-      } catch {
-        return false;
-      }
+    const photo = (_f = image2.fileDirectory) == null ? void 0 : _f.PhotometricInterpretation;
+    const winPixels = (window2[2] - window2[0]) * (window2[3] - window2[1]);
+    console.info("[minerva] rgb detect: coarsest tile", {
+      spp,
+      bits,
+      photo,
+      w: w2,
+      h: h2,
+      fullPixels: w2 * h2,
+      tileW,
+      tileH,
+      window: window2,
+      winPixels,
+      openMs: Math.round(tOpen - t0),
+      levelMs: Math.round(tLevel - tOpen)
+    });
+    try {
+      const tRead2 = performance.now();
+      const rgb = await image2.readRGB({
+        interleave: true,
+        window: window2,
+        signal
+      });
+      console.info("[minerva] rgb detect: readRGB", {
+        nPixels: Math.floor(rgb.length / 3),
+        samples: rgb.length,
+        dtype: (_g2 = rgb.constructor) == null ? void 0 : _g2.name,
+        readMs: Math.round(performance.now() - tRead2)
+      });
+      const brightfield2 = isBrightfieldRgb(rgb, {
+        sampleMax: sampleMaxForBuffer(rgb, bits),
+        channels: 3
+      });
+      console.info("[minerva] rgb detect: done", {
+        brightfield: brightfield2,
+        totalMs: Math.round(performance.now() - t0)
+      });
+      return brightfield2;
+    } catch (error2) {
+      if (signal == null ? void 0 : signal.aborted) return false;
+      console.warn("[minerva] rgb detect: readRGB failed, falling back to raw samples", error2);
     }
-    const plane = await image2.readRasters({
-      samples: [
-        0
-      ],
+    const samples = spp >= 3 ? [
+      0,
+      1,
+      2
+    ] : [
+      0
+    ];
+    const tRead = performance.now();
+    const raw2 = await image2.readRasters({
+      samples,
       interleave: true,
-      window: [
-        0,
-        0,
-        w2,
-        h2
-      ],
-      width: tw,
-      height: th2,
+      window: window2,
       signal
     });
-    return isBrightfieldRgb(scalePlaneToUint8Rgb(plane, bits));
+    console.info("[minerva] rgb detect: readRasters", {
+      channels: samples.length,
+      nPixels: Math.floor(raw2.length / samples.length),
+      samples: raw2.length,
+      dtype: (_h2 = raw2.constructor) == null ? void 0 : _h2.name,
+      readMs: Math.round(performance.now() - tRead)
+    });
+    const brightfield = isBrightfieldRgb(raw2, {
+      sampleMax: sampleMaxForBuffer(raw2, bits),
+      channels: samples.length
+    });
+    console.info("[minerva] rgb detect: done", {
+      brightfield,
+      totalMs: Math.round(performance.now() - t0)
+    });
+    return brightfield;
   }
   async function detectOmeTiffPlanarRgbAmbiguity(source2, signal) {
+    const t0 = performance.now();
     const xml2 = await getOmeTiffImageDescriptionOmeXml(source2, {}, signal);
-    if (signal == null ? void 0 : signal.aborted) return {
-      ambiguous: false
-    };
-    if (!threeChannelOmeFromXml(xml2)) return {
-      ambiguous: false
-    };
-    const defaultRgbDisplay = await detectOmeTiffBrightfield(source2, signal);
-    if (signal == null ? void 0 : signal.aborted) return {
-      ambiguous: false
-    };
-    return {
-      ambiguous: true,
-      defaultRgbDisplay
-    };
+    if (signal == null ? void 0 : signal.aborted) return false;
+    const threeChannel = threeChannelOmeFromXml(xml2);
+    console.info("[minerva] rgb detect: xml gate done", {
+      threeChannel,
+      xmlMs: Math.round(performance.now() - t0)
+    });
+    return threeChannel;
   }
   async function detectUrlImageFormat(url, signal) {
     const looksDicom = isDicomWebSeriesUrl(url);
@@ -165607,7 +165989,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       excludeBackground: true,
       loader: meta.jpegLoader,
       refinementStrategy: "no-overlap",
-      maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
+      ...TILE_CACHE_PROPS,
       id: meta.layerId,
       channelsVisible,
       colors,
@@ -166389,6 +166771,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const formatChosenByUserRef = reactExports.useRef(false);
     const roleChosenByUserRef = reactExports.useRef(false);
     const rgbDisplayChosenByUserRef = reactExports.useRef(false);
+    const overlayRgbDisplayRef = reactExports.useRef(false);
     const showTypeOverlay = pending2 != null;
     const dicomAllowed = (pending2 == null ? void 0 : pending2.kind) === "url" && overlayRole !== "segmentation";
     const urlReady = /^https?:\/\/.+/.test(urlDraft.trim());
@@ -166427,6 +166810,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       formatChosenByUserRef.current = false;
       roleChosenByUserRef.current = false;
       rgbDisplayChosenByUserRef.current = false;
+      overlayRgbDisplayRef.current = false;
       const role = resolveImportRole("intensity", pendingLabel(next2));
       let format = inferFormat(next2);
       if (role === "segmentation") format = "ome-tiff";
@@ -166457,16 +166841,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           const source2 = next2.kind === "local" ? await next2.handles[0].getFile() : next2.url;
           if (ac2.signal.aborted) return;
           setDetecting(true);
-          const rgbAmbiguity = await detectOmeTiffPlanarRgbAmbiguity(source2, ac2.signal);
+          const rgbAmbiguous = await detectOmeTiffPlanarRgbAmbiguity(source2, ac2.signal);
           if (ac2.signal.aborted) return;
-          if (rgbAmbiguity.ambiguous) {
+          if (rgbAmbiguous) {
             setDetectedRole("intensity");
             if (!roleChosenByUserRef.current) {
               setOverlayRole("intensity");
             }
-            setDetectedRgbDisplay(rgbAmbiguity.defaultRgbDisplay);
-            if (!rgbDisplayChosenByUserRef.current) {
-              setOverlayRgbDisplay(rgbAmbiguity.defaultRgbDisplay);
+            setDetectedRgbDisplay(false);
+            try {
+              const isBrightfield = await detectOmeTiffBrightfield(source2, ac2.signal);
+              if (ac2.signal.aborted) return;
+              setDetectedRgbDisplay(isBrightfield);
+              if (!rgbDisplayChosenByUserRef.current) {
+                overlayRgbDisplayRef.current = isBrightfield;
+                setOverlayRgbDisplay(isBrightfield);
+              }
+            } catch (error2) {
+              if (!ac2.signal.aborted) {
+                console.warn("[minerva] brightfield suggestion failed", error2);
+              }
             }
             return;
           }
@@ -166635,7 +167029,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           setImportError("Image import is unavailable.");
           return;
         }
-        const rgbDisplay = detectedRgbDisplay != null && role === "intensity" ? overlayRgbDisplay : void 0;
+        const rgbDisplay = detectedRgbDisplay != null && role === "intensity" ? overlayRgbDisplayRef.current : void 0;
         const attachCsv = role === "segmentation" ? featureCsvFile : null;
         const beforeMaskIds = attachCsv ? new Set(flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images).filter(isMaskChannel).map((c2) => c2.id)) : null;
         const csvJob = attachCsv ? ingestFeatureCsvFile(attachCsv, featureCsvCols ? {
@@ -166889,6 +167283,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: () => {
                 roleChosenByUserRef.current = true;
                 rgbDisplayChosenByUserRef.current = true;
+                overlayRgbDisplayRef.current = false;
                 setOverlayRole("intensity");
                 setOverlayRgbDisplay(false);
               }
@@ -166901,6 +167296,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: () => {
                 roleChosenByUserRef.current = true;
                 rgbDisplayChosenByUserRef.current = true;
+                overlayRgbDisplayRef.current = true;
                 setOverlayRole("intensity");
                 setOverlayRgbDisplay(true);
               }
@@ -169532,6 +169928,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }) : importOmeRef.current({
         role: pending2.role,
         append: false,
+        rgbDisplay: pending2.rgbDisplay,
         source: pending2.source
       });
       void imported.then((result) => {
@@ -169888,7 +170285,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           onImportOme: (req) => startStoryWithPendingImport({
                             kind: "ome",
                             role: req.role,
-                            source: req.source
+                            source: req.source,
+                            rgbDisplay: req.rgbDisplay
                           }),
                           onImportDicomWeb: (req) => startStoryWithPendingImport({
                             kind: "dicomWeb",
@@ -244839,11 +245237,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fromRowId: props.fromRowId
     };
     const beginDrag = (e2) => startChannelDrag(e2, payload);
+    const ignoreRowDragRef = reactExports.useRef(false);
     return jsxRuntimeExports.jsxs("div", {
       className: styles$c.channelRowWrap,
       draggable: true,
+      onPointerDown: (e2) => {
+        ignoreRowDragRef.current = shouldIgnoreChannelRowDrag(e2.target);
+      },
       onDragStart: (e2) => {
-        if (shouldIgnoreChannelRowDrag(e2.target)) {
+        if (ignoreRowDragRef.current) {
           e2.preventDefault();
           return;
         }
@@ -245061,14 +245463,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function makeGroupChannelRow(sc2, slotIndex, sourceChannels) {
     const [srcLo, srcHi] = effectiveSourceLimits(sc2);
-    const srcColor = effectiveSourceColor(sc2, sourceChannels);
     const seed = planarRgbDisplayColor(sc2, sourceChannels) ?? seedRgbForGroupChannelIndex(slotIndex);
     const isMask = isMaskChannel(sc2);
     return {
       id: crypto.randomUUID(),
       lowerLimit: srcLo,
       upperLimit: srcHi,
-      color: sc2.color ?? seed ?? srcColor,
+      color: sc2.color ?? seed,
       channelId: sc2.id,
       ...isMask ? {
         maskVisualization: sc2.maskVisualization ?? DEFAULT_MASK_VISUALIZATION
@@ -247443,10 +247844,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  function dtypeMaxForChannel(sourceDataTypeId) {
-    if (sourceDataTypeId === "Uint8" || sourceDataTypeId === "Int8") return 255;
-    return 65535;
-  }
   function bitsPerSampleFromDtype(dtype) {
     if (dtype === "Uint8" || dtype === "Int8") return 8;
     if (dtype === "Uint16" || dtype === "Int16") return 16;
@@ -247597,7 +247994,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         };
       }
     }
-    const max2 = dtypeMaxForChannel(channel.sourceDataTypeId);
+    const max2 = sourceDtypeMax(channel.sourceDataTypeId);
     return {
       lowerLimit: channel.lowerLimit ?? 0,
       upperLimit: channel.upperLimit ?? max2
@@ -247705,7 +248102,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const data2 = entry.loader.data;
     return (data2 == null ? void 0 : data2.length) ? data2 : void 0;
   }
-  const MASK_EXPORT_CONCURRENCY = Math.min(8, ((_g = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _g.hardwareConcurrency) ?? 4);
+  const MASK_EXPORT_CONCURRENCY = Math.min(8, ((_h = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _h.hardwareConcurrency) ?? 4);
   function labelArrayCtor(dtype) {
     if (dtype === "Uint8") return Uint8Array;
     if (dtype === "Uint16") return Uint16Array;
@@ -249667,15 +250064,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     new Uint8Array(copy2).set(new Uint8Array(buffer2, byteOffset, byteLength));
     return copy2;
   }
-  function WorkerWrapper$3(options) {
-    return new Worker("" + new URL("jpegExport.worker-Q5JYOZj6.js", import.meta.url).href, {
+  function WorkerWrapper$2(options) {
+    return new Worker("" + new URL("jpegExport.worker-CSW9_LSR.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
   }
   const MAX_JPEG_EXPORT_WORKERS = 8;
-  const defaultPoolSize$1 = Math.min(MAX_JPEG_EXPORT_WORKERS, ((_h = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _h.hardwareConcurrency) ?? 4);
-  let WorkerWrapper$2 = class WorkerWrapper {
+  const defaultPoolSize = Math.min(MAX_JPEG_EXPORT_WORKERS, ((_i = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _i.hardwareConcurrency) ?? 4);
+  let WorkerWrapper$1 = class WorkerWrapper {
     constructor(worker2) {
       __publicField(this, "worker");
       __publicField(this, "jobIdCounter", 0);
@@ -249723,7 +250120,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
   };
   class JpegExportPool {
-    constructor(size = defaultPoolSize$1, createWorker = () => new WorkerWrapper$3()) {
+    constructor(size = defaultPoolSize, createWorker = () => new WorkerWrapper$2()) {
       __publicField(this, "workerWrappers", null);
       __publicField(this, "size");
       this.size = size;
@@ -249731,7 +250128,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         this.workerWrappers = (async () => {
           const wrappers = [];
           for (let i2 = 0; i2 < size; i2++) {
-            wrappers.push(new WorkerWrapper$2(createWorker()));
+            wrappers.push(new WorkerWrapper$1(createWorker()));
           }
           return wrappers;
         })();
@@ -249795,7 +250192,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function jpegExportConcurrency() {
     const pool = getJpegExportPool();
     if (pool) return pool.size;
-    return defaultPoolSize$1;
+    return defaultPoolSize;
   }
   async function exportJpegOmeTiffImage(opts) {
     var _a2, _b2;
@@ -251621,11 +252018,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   ];
   function legendChannelFromLayer(sc2, gc2, groupId) {
     const { r: r2, g: g2, b: b2 } = gc2.color;
-    const hex_color = [
-      r2,
-      g2,
-      b2
-    ].map((n2) => n2.toString(16).padStart(2, "0")).join("");
+    const hex_color = rgbToHex$1(gc2.color);
     return {
       r: r2,
       g: g2,
@@ -252547,10 +252940,10 @@ uniform classStyleUniforms {
       ],
       modelMatrix,
       visible,
-      maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
       maxRequests: 10,
       refinementStrategy: "best-available",
       pickable: false,
+      ...TILE_CACHE_PROPS,
       updateTriggers: {
         getTileData: [
           channelIndex
@@ -252628,10 +253021,12 @@ uniform classStyleUniforms {
       }
     });
   }
-  const main = "_main_1gd1g_1";
-  const squareViewportOverlay = "_squareViewportOverlay_1gd1g_6";
+  const main = "_main_1boo4_1";
+  const pyramidHud = "_pyramidHud_1boo4_6";
+  const squareViewportOverlay = "_squareViewportOverlay_1boo4_27";
   const styles$3 = {
     main,
+    pyramidHud,
     squareViewportOverlay
   };
   const ORTHO_VIEW_ID = "ortho";
@@ -252639,6 +253034,65 @@ uniform classStyleUniforms {
   const WAYPOINT_FLY_MS = 1400;
   const CAMERA_IDLE_COMMIT_MS = 160;
   const easeInOutCubic = (t2) => t2 < 0.5 ? 4 * t2 * t2 * t2 : 1 - (-2 * t2 + 2) ** 3 / 2;
+  function planeWidth(plane) {
+    const i2 = plane.labels.indexOf("x");
+    return i2 >= 0 ? plane.shape[i2] ?? 0 : 0;
+  }
+  function formatPyramidStatus(zoom, loader) {
+    var _a2;
+    const planes = loader.data;
+    if (planes.length === 0) return null;
+    const baseWidth = planeWidth(planes[0]);
+    const levelZooms = planes.map((level) => {
+      const width = planeWidth(level);
+      return 0 - Math.round(Math.log2(baseWidth / width));
+    });
+    const coarsest = levelZooms[levelZooms.length - 1] ?? 0;
+    const zoomOffset = Math.round(Math.log2(worldFrameFromLoader(loader).umPerPixelX || 1));
+    const tileZ = Math.min(0, Math.max(coarsest, Math.ceil(zoom + zoomOffset)));
+    const target = Math.round(tileZ);
+    let snapped = levelZooms[levelZooms.length - 1] ?? 0;
+    for (const lz of levelZooms) {
+      if (lz <= target) {
+        snapped = lz;
+        break;
+      }
+    }
+    const resolution = Math.max(0, levelZooms.indexOf(snapped));
+    const shape = (_a2 = planes[resolution]) == null ? void 0 : _a2.shape;
+    if (!shape) return null;
+    return `${resolution + 1}/${planes.length} [${shape.join(", ")}]`;
+  }
+  function formatPyramidHudLines(zoom, loaders, images) {
+    const labels = uniqueImageDisplayLabels(images);
+    const rows2 = [];
+    const seen2 = /* @__PURE__ */ new Set();
+    for (const item2 of loaders) {
+      const key2 = item2.sourceImageId ?? `${item2.modality}:${rows2.length}`;
+      if (seen2.has(key2)) continue;
+      seen2.add(key2);
+      const status = formatPyramidStatus(zoom, item2.loader);
+      if (!status) continue;
+      rows2.push({
+        key: key2,
+        status,
+        label: item2.sourceImageId && labels.get(item2.sourceImageId) || item2.modality
+      });
+    }
+    if (rows2.length === 0) return [];
+    if (rows2.every((row2) => row2.status === rows2[0].status)) {
+      return [
+        {
+          key: rows2[0].key,
+          text: rows2[0].status
+        }
+      ];
+    }
+    return rows2.map((row2) => ({
+      key: row2.key,
+      text: `${row2.label} ${row2.status}`
+    }));
+  }
   const deckViewStates = (ortho2, width, height) => ({
     [ORTHO_VIEW_ID]: ortho2,
     [SCALEBAR_VIEW_ID]: {
@@ -252826,6 +253280,18 @@ uniform classStyleUniforms {
     const firstLoader = reactExports.useMemo(() => loaderList.length > 0 ? loaderList[0] : null, [
       loaderList
     ]);
+    const [pyramidHud2, setPyramidHud] = reactExports.useState([]);
+    const publishPyramidHud = reactExports.useCallback((zoom) => {
+      const next2 = formatPyramidHudLines(zoom, loaderList, images);
+      setPyramidHud((prev) => {
+        const prevKey = prev.map((line) => line.text).join("\n");
+        const nextKey = next2.map((line) => line.text).join("\n");
+        return prevKey === nextKey ? prev : next2;
+      });
+    }, [
+      loaderList,
+      images
+    ]);
     const frame = reactExports.useMemo(() => firstLoader ? worldFrameFromLoader(firstLoader.loader) : null, [
       firstLoader
     ]);
@@ -252921,7 +253387,10 @@ uniform classStyleUniforms {
       isCameraBusyRef.current = false;
       if (reseedDeck) setOrthoSeed(next2);
       setViewState(next2);
-    }, []);
+      publishPyramidHud(flat.zoom);
+    }, [
+      publishPyramidHud
+    ]);
     const scheduleIdleCameraCommit = reactExports.useCallback(() => {
       if (idleCommitTimerRef.current) clearTimeout(idleCommitTimerRef.current);
       idleCommitTimerRef.current = setTimeout(() => {
@@ -252960,6 +253429,14 @@ uniform classStyleUniforms {
       fitViewState,
       firstLoader,
       commitIdleCamera
+    ]);
+    reactExports.useEffect(() => {
+      var _a2, _b2;
+      const zoom = ((_a2 = toFlatViewState(cameraRef.current)) == null ? void 0 : _a2.zoom) ?? ((_b2 = toFlatViewState(fitViewState)) == null ? void 0 : _b2.zoom);
+      if (zoom != null) publishPyramidHud(zoom);
+    }, [
+      fitViewState,
+      publishPyramidHud
     ]);
     reactExports.useEffect(() => {
       const { width, height } = viewportSize;
@@ -253375,11 +253852,13 @@ uniform classStyleUniforms {
       const flat = toFlatViewState(ortho2) ?? toFlatViewState(nextViewState);
       if (flat) {
         cameraRef.current = withOrthoZoom(flat);
+        publishPyramidHud(flat.zoom);
       } else if (nextViewState) {
         cameraRef.current = nextViewState;
       }
     }, [
-      isDragging
+      isDragging,
+      publishPyramidHud
     ]);
     const handleInteractionStateChange = reactExports.useCallback((state) => {
       const busy = !!(state.inTransition || state.isPanning || state.isZooming || state.isDragging);
@@ -253458,6 +253937,12 @@ uniform classStyleUniforms {
           ref: loadingWidgetRef,
           placement: "center"
         }),
+        pyramidHud2.length > 0 ? jsxRuntimeExports.jsx("output", {
+          className: styles$3.pyramidHud,
+          children: pyramidHud2.map((line) => jsxRuntimeExports.jsx("div", {
+            children: line.text
+          }, line.key))
+        }) : null,
         showSquareViewportOverlay && jsxRuntimeExports.jsx("div", {
           className: styles$3.squareViewportOverlay,
           style: squareViewportStyle
@@ -253552,18 +254037,6 @@ uniform classStyleUniforms {
       colors
     };
   }
-  function reuseVivSelections(next2, prev) {
-    var _a2, _b2, _c2, _d;
-    if (!((_a2 = prev == null ? void 0 : prev.selections) == null ? void 0 : _a2.length) || !((_b2 = next2.selections) == null ? void 0 : _b2.length)) return next2;
-    if (prev.selections.length !== next2.selections.length) return next2;
-    for (let i2 = 0; i2 < next2.selections.length; i2++) {
-      if (((_c2 = prev.selections[i2]) == null ? void 0 : _c2.c) !== ((_d = next2.selections[i2]) == null ? void 0 : _d.c)) return next2;
-    }
-    return {
-      ...next2,
-      selections: prev.selections
-    };
-  }
   function loaderListFromEntries(sources) {
     const { dicomIndexList = [], omeLoaderEntries = [], jpegLoaderEntries = [] } = sources;
     const list2 = [
@@ -253600,7 +254073,6 @@ uniform classStyleUniforms {
     });
   }
   const OME_INTENSITY_OVERLAY_PROPS = {
-    excludeBackground: true,
     refinementStrategy: "no-overlap",
     parameters: {
       blend: true,
@@ -253622,7 +254094,7 @@ uniform classStyleUniforms {
     return new MultiscaleImageLayer({
       id: `${args.layerId}${remount}`,
       ...settings,
-      maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
+      ...TILE_CACHE_PROPS,
       excludeBackground: true,
       ...args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {},
       loader: args.loader.data,
@@ -253725,11 +254197,12 @@ uniform classStyleUniforms {
     const prevSettingsRef = reactExports.useRef(/* @__PURE__ */ new Map());
     const { dicomSettingsList, omeSettingsList, jpegSettingsList } = reactExports.useMemo(() => {
       const withSticky = (loaderKey, modality, loader, sourceImageId) => {
-        const prev = prevSettingsRef.current.get(loaderKey);
-        const built = toDocSettings(activeChannelGroupId, modality, loader, channelVisibilities, sourceImageId, channelGroupRowVisibilities, (prev == null ? void 0 : prev.sourceChannelIds) ?? []);
-        const settings = reuseVivSelections(built, prev);
-        prevSettingsRef.current.set(loaderKey, settings);
-        return settings;
+        const prevIds = prevSettingsRef.current.get(loaderKey) ?? [];
+        const built = toDocSettings(activeChannelGroupId, modality, loader, channelVisibilities, sourceImageId, channelGroupRowVisibilities, prevIds);
+        prevSettingsRef.current.set(loaderKey, [
+          ...built.sourceChannelIds ?? []
+        ]);
+        return built;
       };
       return {
         dicomSettingsList: dicomIndexList.map(({ loader, modality, sourceImageId }, i2) => withSticky(sourceImageId || `dicom-${i2}`, modality, loader, sourceImageId || void 0)),
@@ -253966,12 +254439,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-21T18:01:02.373Z");
+    const label2 = utcShort("2026-09-21T21:12:03.008Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-21T18:01:02.373Z",
+      title: "2026-09-21T21:12:03.008Z",
       children: [
         "Updated ",
         label2,
@@ -254106,94 +254579,14 @@ uniform classStyleUniforms {
       })
     });
   };
-  function WorkerWrapper$1(options) {
+  function WorkerWrapper(options) {
     return new Worker("" + new URL("decoder.worker-DIAknyvn.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
   }
-  class WorkerWrapper {
-    constructor(worker2) {
-      __publicField(this, "worker");
-      __publicField(this, "jobIdCounter", 0);
-      __publicField(this, "jobs", /* @__PURE__ */ new Map());
-      this.worker = worker2;
-      this.worker.addEventListener("message", (e2) => this.onWorkerMessage(e2));
-    }
-    getJobCount() {
-      return this.jobs.size;
-    }
-    onWorkerMessage(e2) {
-      const { jobId, error: error2, ...result } = e2.data;
-      const job = this.jobs.get(jobId);
-      this.jobs.delete(jobId);
-      if (!job) return;
-      if (error2) job.reject(new Error(error2));
-      else job.resolve(result);
-    }
-    submitJob(message2, transferables) {
-      const jobId = this.jobIdCounter++;
-      const promise = new Promise((resolve, reject) => {
-        this.jobs.set(jobId, {
-          resolve,
-          reject
-        });
-      });
-      this.worker.postMessage({
-        ...message2,
-        jobId
-      }, transferables);
-      return promise;
-    }
-    rejectAllPending(reason2) {
-      for (const job of this.jobs.values()) {
-        job.reject(reason2);
-      }
-      this.jobs.clear();
-    }
-    terminate() {
-      this.rejectAllPending(new Error("Decoder pool destroyed"));
-      this.worker.terminate();
-    }
-  }
-  const defaultPoolSize = ((_i = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _i.hardwareConcurrency) ?? 4;
-  class Pool {
-    constructor(size = defaultPoolSize, createWorker = () => new WorkerWrapper$1()) {
-      __publicField(this, "workerWrappers", null);
-      if (size) {
-        this.workerWrappers = (async () => {
-          const wrappers = [];
-          for (let i2 = 0; i2 < size; i2++) {
-            wrappers.push(new WorkerWrapper(createWorker()));
-          }
-          return wrappers;
-        })();
-      }
-    }
-    async decode(fileDirectory, buffer2) {
-      const workerWrappersPromise = this.workerWrappers;
-      if (workerWrappersPromise) {
-        const wrappers = await workerWrappersPromise;
-        const workerWrapper = wrappers.reduce((a2, b2) => a2.getJobCount() < b2.getJobCount() ? a2 : b2);
-        const { decoded } = await workerWrapper.submitJob({
-          fileDirectory,
-          buffer: buffer2
-        }, [
-          buffer2
-        ]);
-        return decoded;
-      }
-      const decoder = await getDecoder(fileDirectory);
-      return await decoder.decode(fileDirectory, buffer2);
-    }
-    async destroy() {
-      if (!this.workerWrappers) return;
-      const wrappers = await this.workerWrappers;
-      this.workerWrappers = null;
-      for (const w2 of wrappers) {
-        w2.terminate();
-      }
-    }
+  function createOmeDecodePool() {
+    return new Pool(void 0, () => new WorkerWrapper());
   }
   function expandCubeRootTileData(data2) {
     const out = new Uint16Array(data2.length);
@@ -254265,7 +254658,7 @@ uniform classStyleUniforms {
     const deniedHandleKeys = [];
     const missingHandleKeys = [];
     const loaderErrors = [];
-    const pool = opts.pool === null ? void 0 : opts.pool ?? new Pool();
+    const pool = opts.pool === null ? void 0 : opts.pool ?? createOmeDecodePool();
     const dicomSeriesSeen = /* @__PURE__ */ new Set();
     const requestPermission = opts.requestPermission ?? false;
     const includeLocal = opts.includeLocal ?? true;
@@ -254297,7 +254690,8 @@ uniform classStyleUniforms {
               url: resolveOmeSourceUrl(documentUrl, im.source.url),
               ...pool ? {
                 pool
-              } : {}
+              } : {},
+              rgbDisplay: im.rgbDisplay
             });
             omeLoaderEntries.push({
               ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
@@ -254323,15 +254717,14 @@ uniform classStyleUniforms {
           if (!await findFile({
             handle: handle2
           })) break;
-          const file = await handle2.getFile();
           try {
             const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
               kind: "local",
               handle: handle2,
-              in_f: file.name,
               ...pool ? {
                 pool
-              } : {}
+              } : {},
+              rgbDisplay: im.rgbDisplay
             });
             omeLoaderEntries.push({
               ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
@@ -254474,21 +254867,52 @@ uniform classStyleUniforms {
     }
     return next2;
   }
+  const PACKED_RGB_IF_NAMES = /* @__PURE__ */ new Set([
+    "r",
+    "g",
+    "b"
+  ]);
+  function namePackedRgbIfChannels(channels2) {
+    const intensity = channels2.filter(isImageChannel).sort((a2, b2) => (a2.index ?? 0) - (b2.index ?? 0));
+    if (intensity.length !== 3) return channels2;
+    if (!intensity.every((c2) => PACKED_RGB_IF_NAMES.has((c2.name ?? "").trim().toLowerCase()))) {
+      return channels2;
+    }
+    const names = new Map(intensity.map((c2, i2) => [
+      c2.id,
+      `Channel ${i2 + 1}`
+    ]));
+    return channels2.map((c2) => {
+      const name2 = names.get(c2.id);
+      return name2 ? {
+        ...c2,
+        name: name2
+      } : c2;
+    });
+  }
   function buildOmeImportSlice(args) {
     const { loader, role, basename: basename2, sourceImageId, existingImages, relevantGroups = [], rgbDisplay } = args;
     const defaultKind = role === "segmentation" ? "mask" : "channel";
     const extracted = extractChannels(loader, "Colorimetric", relevantGroups, sourceImageId, defaultKind);
     let sourceChannels = prepareImportedSourceChannels(extracted.SourceChannels, role, basename2, existingImages);
+    let extractedGroups = extracted.ChannelGroups;
+    if (role === "intensity" && rgbDisplay === false) {
+      sourceChannels = namePackedRgbIfChannels(sourceChannels);
+      sourceChannels = sourceChannels.map((c2, i2) => c2.name === "H&E" ? {
+        ...c2,
+        name: `Channel ${i2 + 1}`
+      } : c2);
+      extractedGroups = [];
+    }
     if (role === "segmentation") {
       sourceChannels = seedMaskSourceChannelStyles(sourceChannels);
     }
-    let extractedGroups = extracted.ChannelGroups;
     const taggedForRgb = rgbDisplay == null ? sourceChannels : sourceChannels.map((c2) => ({
       ...c2,
       rgbDisplay
     }));
     const persistRgbDisplay = role === "intensity" ? rgbDisplay ?? (isRgbDisplaySource(taggedForRgb) ? true : void 0) : void 0;
-    const nextImages = mergeExtractedChannelsIntoImages(existingImages, sourceImageId, loader, basename2, role, sourceChannels, persistRgbDisplay);
+    const nextImages = mergeExtractedChannelsIntoImages(existingImages, sourceImageId, loader, basename2, role, taggedForRgb, persistRgbDisplay);
     if (role === "intensity" && extractedGroups.length === 0 && isRgbDisplaySource(taggedForRgb)) {
       const intensity = sourceChannels.filter(isImageChannel);
       extractedGroups = [
@@ -254511,7 +254935,7 @@ uniform classStyleUniforms {
       ];
     }
     return {
-      sourceChannels,
+      sourceChannels: taggedForRgb,
       extractedGroups,
       nextImages
     };
@@ -254526,8 +254950,9 @@ uniform classStyleUniforms {
     const flat = flattenImageChannelsInDocumentOrder(nextImages);
     return applySharedImportPaletteToChannelGroups(withNew, flat);
   }
-  async function applyPaletteToFlatImportImages(images, sourceChannels) {
-    const styled = await applySharedImportPaletteToSourceChannels(sourceChannels);
+  async function applyPaletteToFlatImportImages(images) {
+    const flat = flattenImageChannelsInDocumentOrder(images);
+    const styled = await applySharedImportPaletteToSourceChannels(flat);
     return applySourceChannelsToImages(images, styled);
   }
   async function replaceOmeLocalImageInDocument(args) {
@@ -254553,8 +254978,8 @@ uniform classStyleUniforms {
     const loader = await loadOmeLoaderForRole(role, {
       kind: "local",
       handle: handle2,
-      in_f: file.name,
-      pool
+      pool,
+      rgbDisplay: oldImage.rgbDisplay
     });
     const newImageId = crypto.randomUUID();
     const withoutOld = images.filter((im) => im.id !== imageId);
@@ -254865,7 +255290,7 @@ uniform classStyleUniforms {
     const result = await hydrateDocumentLoaders(images, {
       channelGroups: (opts == null ? void 0 : opts.channelGroups) ?? [],
       documentUrl: (opts == null ? void 0 : opts.documentUrl) ?? window.location.href,
-      pool: new Pool(),
+      pool: createOmeDecodePool(),
       requestPermission,
       includeLocal: true,
       imageSource: useDocumentStore.getState().metadata.imageSource,
@@ -255351,7 +255776,7 @@ uniform classStyleUniforms {
           images: doc.images,
           imageId,
           handle: handle2,
-          pool: new Pool()
+          pool: createOmeDecodePool()
         });
         if (prep.ok === false) {
           if (prep.error) window.alert(prep.error);
@@ -255437,17 +255862,14 @@ uniform classStyleUniforms {
       setLastOmeTiffUrl(null);
       const relevant_groups = [];
       let nextImages = [];
-      let registry2 = {
-        SourceChannels: []
-      };
       const entries = [];
       for (let i2 = 0; i2 < handles.length; i2++) {
         const handle2 = handles[i2];
         const loader = await loadOmeLoaderForRole(role, {
           kind: "local",
           handle: handle2,
-          in_f: i2 === 0 ? in_f : handle2.name,
-          pool: new Pool()
+          pool: createOmeDecodePool(),
+          rgbDisplay
         });
         const sourceImageId = crypto.randomUUID();
         const basename2 = i2 === 0 ? in_f : handle2.name;
@@ -255461,12 +255883,6 @@ uniform classStyleUniforms {
           rgbDisplay
         });
         nextImages = slice.nextImages;
-        registry2 = {
-          SourceChannels: [
-            ...registry2.SourceChannels,
-            ...slice.sourceChannels
-          ]
-        };
         entries.push({
           loader,
           sourceImageId
@@ -255482,10 +255898,9 @@ uniform classStyleUniforms {
           images: nextImages
         });
       }
-      const { SourceChannels } = registry2;
       const ChannelGroups2 = [];
       if (role !== "segmentation") {
-        nextImages = await applyPaletteToFlatImportImages(nextImages, SourceChannels);
+        nextImages = await applyPaletteToFlatImportImages(nextImages);
       }
       skipLoaderHydrateRef.current = true;
       setOmeLoaderEntries(entries);
@@ -255535,8 +255950,8 @@ uniform classStyleUniforms {
         const loader = await loadOmeLoaderForRole(role, {
           kind: "local",
           handle: handle2,
-          in_f: basename2,
-          pool: new Pool()
+          pool: createOmeDecodePool(),
+          rgbDisplay
         });
         const sourceImageId = crypto.randomUUID();
         const slice = buildOmeImportSlice({
@@ -255563,7 +255978,7 @@ uniform classStyleUniforms {
           if (slice.extractedGroups.length > 0) {
             newIntensityGroups.push(...slice.extractedGroups);
           } else {
-            nextImages = await applyPaletteToFlatImportImages(nextImages, slice.sourceChannels);
+            nextImages = await applyPaletteToFlatImportImages(nextImages);
           }
         }
       }
@@ -255649,7 +256064,8 @@ uniform classStyleUniforms {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "url",
         url,
-        pool: new Pool()
+        pool: createOmeDecodePool(),
+        rgbDisplay
       });
       if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
         return;
@@ -255666,7 +256082,7 @@ uniform classStyleUniforms {
         relevantGroups: relevant_groups,
         rgbDisplay
       });
-      let SourceChannels = slice.sourceChannels;
+      const SourceChannels = slice.sourceChannels;
       let nextImages = slice.nextImages;
       let ChannelGroups2;
       if (role === "segmentation") {
@@ -255674,8 +256090,7 @@ uniform classStyleUniforms {
       } else if (slice.extractedGroups.length > 0) {
         ChannelGroups2 = await applySharedImportPaletteToChannelGroups(slice.extractedGroups, SourceChannels);
       } else {
-        nextImages = await applyPaletteToFlatImportImages(nextImages, SourceChannels);
-        SourceChannels = flattenImageChannelsInDocumentOrder(nextImages);
+        nextImages = await applyPaletteToFlatImportImages(nextImages);
         ChannelGroups2 = [];
       }
       nextImages = setImageSource(nextImages, sourceImageId, {
@@ -255711,7 +256126,8 @@ uniform classStyleUniforms {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "url",
         url,
-        pool: new Pool()
+        pool: createOmeDecodePool(),
+        rgbDisplay
       });
       if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
         return {
@@ -255739,7 +256155,7 @@ uniform classStyleUniforms {
         url
       });
       if (role !== "segmentation" && slice.extractedGroups.length === 0) {
-        nextImages = await applyPaletteToFlatImportImages(nextImages, slice.sourceChannels);
+        nextImages = await applyPaletteToFlatImportImages(nextImages);
       }
       const ChannelGroups2 = await finalizeAppendedIntensityGroups({
         mergedGroups,

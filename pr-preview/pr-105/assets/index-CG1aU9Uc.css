@@ -6960,12 +6960,33 @@ body[data-color-mode*='light'] {
   margin-top: -1px;
   cursor: row-resize;
 }
-._main_1gd1g_1 {
+._main_1boo4_1 {
   position: relative;
   height: 100%;
 }
 
-._squareViewportOverlay_1gd1g_6 {
+._pyramidHud_1boo4_6 {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 1;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  border: none;
+  padding: 2px 8px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+._squareViewportOverlay_1boo4_27 {
   position: absolute;
   pointer-events: none;
   left: 50%;
