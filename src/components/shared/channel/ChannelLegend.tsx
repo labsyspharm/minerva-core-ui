@@ -23,12 +23,13 @@ import {
 import {
   assignedDisplayHex,
   effectiveSourceLimits,
+  rgbToHex,
 } from "@/lib/imaging/sourceChannelStyle";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
 import { basenameImportLabel } from "@/lib/stores/storeUtils";
 import styles from "./ChannelLegend.module.css";
 
-export const defaultChannels = [
+const defaultChannels = [
   { color: "0000FF", name: "DNA" },
   { color: "FF0000", name: "Red" },
   { color: "00FF00", name: "Green" },
@@ -64,9 +65,7 @@ export function legendChannelFromLayer(
   groupId: string,
 ): LegendChannel {
   const { r, g, b } = gc.color;
-  const hex_color = [r, g, b]
-    .map((n) => n.toString(16).padStart(2, "0"))
-    .join("");
+  const hex_color = rgbToHex(gc.color);
   return {
     r,
     g,

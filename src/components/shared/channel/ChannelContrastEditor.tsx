@@ -1,5 +1,6 @@
 import * as React from "react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { sourceDtypeMax } from "@/lib/imaging/channelKind";
 import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
 import type { SourceDistributionData } from "@/lib/stores/documentSchema";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
@@ -112,6 +113,7 @@ export type ChannelContrastEditorProps = {
   upperLimit: number;
   histogramLoading?: boolean;
   distribution?: SourceDistributionData | null;
+  sourceDataTypeId?: string;
 };
 
 export function renderingForSource<K extends ChannelRendering["kind"]>(
@@ -145,6 +147,7 @@ export function contrastEditorPropsForSource(
     lowerLimit: liveContrast ? liveContrast.lower : limits[0],
     upperLimit: liveContrast ? liveContrast.upper : limits[1],
     distribution: sc.sourceDistribution ?? null,
+    sourceDataTypeId: sc.sourceDataTypeId,
   };
 }
 
@@ -173,6 +176,7 @@ export function contrastEditorPropsForGroupRow(
     lowerLimit: liveContrast ? liveContrast.lower : gc.lowerLimit,
     upperLimit: liveContrast ? liveContrast.upper : gc.upperLimit,
     distribution: sc?.sourceDistribution ?? null,
+    sourceDataTypeId: sc?.sourceDataTypeId,
   };
 }
 
@@ -189,14 +193,17 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     UpperRange: 16,
   };
 
+  const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
+  const eightBit = dtypeMax === 255;
   const scale = React.useMemo(
     () =>
       buildContrastScale({
-        distScale: dist.XScale,
-        distMin: dist.LowerRange,
-        distMax: dist.UpperRange,
+        distScale: eightBit ? "linear" : dist.XScale,
+        distMin: eightBit ? 0 : dist.LowerRange,
+        distMax: eightBit ? 255 : dist.UpperRange,
+        dtypeMax,
       }),
-    [dist.XScale, dist.LowerRange, dist.UpperRange],
+    [eightBit, dist.XScale, dist.LowerRange, dist.UpperRange, dtypeMax],
   );
 
   const [sliderMin, setSliderMin] = React.useState(() =>
@@ -444,7 +451,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const panWidth = `${(maxFrac - minFrac) * 100}%`;
 
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wrap} draggable={false}>
       <input
         type="number"
         className={`${minervaTheme.input} ${styles.limitInput}`}

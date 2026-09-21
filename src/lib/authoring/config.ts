@@ -345,10 +345,10 @@ const extractDistributionsForSourceIndices = async (
         {
           id: crypto.randomUUID(),
           YValues,
-          XScale: "log",
+          XScale: bits != null && bits <= 8 ? "linear" : "log",
           YScale: "linear",
           LowerRange: 0,
-          UpperRange: bits ?? 0,
+          UpperRange: bits != null && bits <= 8 ? 2 ** bits - 1 : (bits ?? 0),
         },
       ] as [number, ConfigSourceDistribution];
     },

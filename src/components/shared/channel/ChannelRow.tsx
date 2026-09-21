@@ -381,7 +381,11 @@ export function ChannelRow(props: ChannelRowProps) {
             </span>
           ) : null}
         </div>
-        <div className={styles.channelRowMid} data-channel-drag-ignore="">
+        <div
+          className={styles.channelRowMid}
+          data-channel-drag-ignore=""
+          draggable={false}
+        >
           {contrast ? <ChannelContrastEditor {...contrast} /> : null}
           {showMask && onMaskVisualizationChange ? (
             <MaskModeControls

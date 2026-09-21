@@ -4,7 +4,7 @@ import type {
   JpegLoaderEntry,
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
-import { Pool } from "@/lib/imaging/workers/pool";
+import { createOmeDecodePool } from "@/lib/imaging/omeDecodePool";
 import { worldFrameFromPixelCounts } from "@/lib/imaging/worldFrame";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { DocumentData } from "@/lib/stores/documentSchema";
@@ -46,7 +46,7 @@ export async function loadStoryDocument(
 
   // CDN IIFE build inlines decoder workers as blob URLs (vite.bundle.config).
   const omePool = data.images.some((im) => im.source?.kind === "url")
-    ? new Pool()
+    ? createOmeDecodePool()
     : null;
   const { jpegLoaderEntries, omeLoaderEntries, dicomIndexList } =
     await hydrateDocumentLoaders(data.images, {

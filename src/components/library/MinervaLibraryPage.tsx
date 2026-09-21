@@ -25,6 +25,7 @@ type PendingLibraryImport =
       kind: "ome";
       role: OmeImageImportRole;
       source: OmeImportRequest["source"];
+      rgbDisplay?: boolean;
     }
   | { kind: "dicomWeb"; url: string };
 
@@ -62,6 +63,7 @@ export function ConsumePendingLibraryImport({
         : importOmeRef.current({
             role: pending.role,
             append: false,
+            rgbDisplay: pending.rgbDisplay,
             source: pending.source,
           });
     // Always settle — Strict Mode remounts this effect after pending is already
@@ -428,6 +430,7 @@ export function MinervaLibraryPage() {
                       kind: "ome",
                       role: req.role,
                       source: req.source,
+                      rgbDisplay: req.rgbDisplay,
                     })
                   }
                   onImportDicomWeb={(req) =>

@@ -70,7 +70,6 @@ import {
   assignedDisplayHex,
   effectiveDisplayColor,
   effectiveMaskVisualization,
-  effectiveSourceColor,
   effectiveSourceLimits,
   rgbToHex,
 } from "@/lib/imaging/sourceChannelStyle";
@@ -201,13 +200,18 @@ function DraggableChannelRow(props: {
     fromRowId: props.fromRowId,
   };
   const beginDrag = (e: React.DragEvent) => startChannelDrag(e, payload);
+  // dragstart.target is this wrap (the draggable), not the histogram/input under the cursor.
+  const ignoreRowDragRef = React.useRef(false);
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: grip button is the AT control; the row is a mouse drag hit target
     <div
       className={styles.channelRowWrap}
       draggable
+      onPointerDown={(e) => {
+        ignoreRowDragRef.current = shouldIgnoreChannelRowDrag(e.target);
+      }}
       onDragStart={(e) => {
-        if (shouldIgnoreChannelRowDrag(e.target)) {
+        if (ignoreRowDragRef.current) {
           e.preventDefault();
           return;
         }
@@ -463,7 +467,6 @@ function makeGroupChannelRow(
   sourceChannels: Channel[],
 ): ChannelGroupChannel {
   const [srcLo, srcHi] = effectiveSourceLimits(sc);
-  const srcColor = effectiveSourceColor(sc, sourceChannels);
   const seed =
     planarRgbDisplayColor(sc, sourceChannels) ??
     seedRgbForGroupChannelIndex(slotIndex);
@@ -472,7 +475,7 @@ function makeGroupChannelRow(
     id: crypto.randomUUID(),
     lowerLimit: srcLo,
     upperLimit: srcHi,
-    color: sc.color ?? seed ?? srcColor,
+    color: sc.color ?? seed,
     channelId: sc.id,
     ...(isMask
       ? {

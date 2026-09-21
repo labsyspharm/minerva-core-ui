@@ -76,6 +76,7 @@ import {
   useSyncJpegChannelFolders,
 } from "@/lib/imaging/loadJpegFromDocument";
 import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/maskLayers";
+import { createOmeDecodePool } from "@/lib/imaging/omeDecodePool";
 import {
   applyPaletteToFlatImportImages,
   buildOmeImportSlice,
@@ -91,7 +92,6 @@ import {
   warmupPsudoPalette,
 } from "@/lib/imaging/psudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
-import { Pool } from "@/lib/imaging/workers/pool";
 import { effectiveWorldFrame } from "@/lib/imaging/worldFrame";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
@@ -107,7 +107,7 @@ import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
 import { applyOmeRoisFromLoaderToFirstWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentSchema";
-import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
+import type { ChannelGroup } from "@/lib/stores/documentStore";
 import {
   documentShapes,
   documentSourceChannels,
@@ -282,7 +282,7 @@ async function hydrateLoadersFromImages(
   const result = await hydrateDocumentLoaders(images, {
     channelGroups: opts?.channelGroups ?? [],
     documentUrl: opts?.documentUrl ?? window.location.href,
-    pool: new Pool(),
+    pool: createOmeDecodePool(),
     requestPermission,
     includeLocal: true,
     imageSource: useDocumentStore.getState().metadata.imageSource,
@@ -874,7 +874,7 @@ const Content = (props: Props) => {
           images: doc.images,
           imageId,
           handle,
-          pool: new Pool(),
+          pool: createOmeDecodePool(),
         });
         if (prep.ok === false) {
           if (prep.error) window.alert(prep.error);
@@ -983,9 +983,6 @@ const Content = (props: Props) => {
     setLastOmeTiffUrl(null);
     const relevant_groups = [] as ConfigGroup[];
     let nextImages: Image[] = [];
-    let registry = {
-      SourceChannels: [] as Channel[],
-    };
     const entries: OmeLoaderEntry[] = [];
 
     for (let i = 0; i < handles.length; i++) {
@@ -993,8 +990,8 @@ const Content = (props: Props) => {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "local",
         handle,
-        in_f: i === 0 ? in_f : handle.name,
-        pool: new Pool(),
+        pool: createOmeDecodePool(),
+        rgbDisplay,
       });
       const sourceImageId = crypto.randomUUID();
       const basename = i === 0 ? in_f : handle.name;
@@ -1008,9 +1005,6 @@ const Content = (props: Props) => {
         rgbDisplay,
       });
       nextImages = slice.nextImages;
-      registry = {
-        SourceChannels: [...registry.SourceChannels, ...slice.sourceChannels],
-      };
       entries.push({ loader, sourceImageId });
     }
 
@@ -1025,14 +1019,10 @@ const Content = (props: Props) => {
       });
     }
 
-    const { SourceChannels } = registry;
     // Fresh local replace: flat channels + shared palette; user creates groups in the panel.
     const ChannelGroups: ChannelGroup[] = [];
     if (role !== "segmentation") {
-      nextImages = await applyPaletteToFlatImportImages(
-        nextImages,
-        SourceChannels,
-      );
+      nextImages = await applyPaletteToFlatImportImages(nextImages);
     }
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries(entries);
@@ -1087,8 +1077,8 @@ const Content = (props: Props) => {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "local",
         handle,
-        in_f: basename,
-        pool: new Pool(),
+        pool: createOmeDecodePool(),
+        rgbDisplay,
       });
       const sourceImageId = crypto.randomUUID();
       const slice = buildOmeImportSlice({
@@ -1114,10 +1104,7 @@ const Content = (props: Props) => {
         if (slice.extractedGroups.length > 0) {
           newIntensityGroups.push(...slice.extractedGroups);
         } else {
-          nextImages = await applyPaletteToFlatImportImages(
-            nextImages,
-            slice.sourceChannels,
-          );
+          nextImages = await applyPaletteToFlatImportImages(nextImages);
         }
       }
     }
@@ -1210,7 +1197,8 @@ const Content = (props: Props) => {
     const loader = await loadOmeLoaderForRole(role, {
       kind: "url",
       url,
-      pool: new Pool(),
+      pool: createOmeDecodePool(),
+      rgbDisplay,
     });
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return;
@@ -1232,7 +1220,7 @@ const Content = (props: Props) => {
       relevantGroups: relevant_groups,
       rgbDisplay,
     });
-    let SourceChannels = slice.sourceChannels;
+    const SourceChannels = slice.sourceChannels;
     let nextImages = slice.nextImages;
     let ChannelGroups: ChannelGroup[];
     if (role === "segmentation") {
@@ -1243,11 +1231,7 @@ const Content = (props: Props) => {
         SourceChannels,
       );
     } else {
-      nextImages = await applyPaletteToFlatImportImages(
-        nextImages,
-        SourceChannels,
-      );
-      SourceChannels = flattenImageChannelsInDocumentOrder(nextImages);
+      nextImages = await applyPaletteToFlatImportImages(nextImages);
       ChannelGroups = [];
     }
     nextImages = setImageSource(nextImages, sourceImageId, {
@@ -1281,7 +1265,8 @@ const Content = (props: Props) => {
     const loader = await loadOmeLoaderForRole(role, {
       kind: "url",
       url,
-      pool: new Pool(),
+      pool: createOmeDecodePool(),
+      rgbDisplay,
     });
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return { ok: false, error: "Import was superseded by a newer request." };
@@ -1306,10 +1291,7 @@ const Content = (props: Props) => {
       url,
     });
     if (role !== "segmentation" && slice.extractedGroups.length === 0) {
-      nextImages = await applyPaletteToFlatImportImages(
-        nextImages,
-        slice.sourceChannels,
-      );
+      nextImages = await applyPaletteToFlatImportImages(nextImages);
     }
     const ChannelGroups = await finalizeAppendedIntensityGroups({
       mergedGroups,
