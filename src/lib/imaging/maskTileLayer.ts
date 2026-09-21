@@ -11,7 +11,7 @@ import type {
   SupportedTypedArray,
 } from "@/lib/imaging/loaderTypes";
 import { CELL_OUTLINE_RGB, type MaskGpuStyle } from "@/lib/imaging/maskLayers";
-import type { Loader } from "@/lib/imaging/viv";
+import { type Loader, TILE_CACHE_PROPS } from "@/lib/imaging/viv";
 import { layerModelMatrix } from "@/lib/imaging/worldFrame";
 
 const CELL_OUTLINE_COUNT = CELL_OUTLINE_RGB.length;
@@ -493,6 +493,7 @@ export function createMaskTileLayer(args: {
     modelMatrix,
     refinementStrategy: "best-available",
     pickable: false,
+    ...TILE_CACHE_PROPS,
     updateTriggers: {
       getTileData: [channelIndex],
       renderSubLayers: [

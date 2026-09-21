@@ -1,5 +1,4 @@
 import { fromBlob, fromUrl, GeoTIFFImage as GeoTIFFImageClass } from "geotiff";
-import { isBrightfieldRgb } from "@/lib/imaging/brightfieldDetect";
 import { classify, type MaskDetectResult } from "@/lib/imaging/maskDetect";
 
 type GeoTiffImage = {
@@ -20,12 +19,6 @@ type GeoTiffImage = {
     window: [number, number, number, number];
     width?: number;
     height?: number;
-    signal?: AbortSignal;
-  }) => Promise<ArrayLike<number>>;
-  readRGB: (options: {
-    width?: number;
-    height?: number;
-    interleave?: boolean;
     signal?: AbortSignal;
   }) => Promise<ArrayLike<number>>;
 };
@@ -178,23 +171,6 @@ export async function isOmeTiff(
   }
 }
 
-export type PlanarRgbAmbiguity =
-  | {
-      ambiguous: true;
-      /** Suggested chip: true = Brightfield, false = Fluorescence. */
-      defaultRgbDisplay: boolean;
-    }
-  | { ambiguous: false };
-
-/** Packed RGB (one × SPP=3) or three planar SPP=1 channels. */
-function isThreeChannelOme(
-  channels: readonly { name: string; samples: number }[],
-): boolean {
-  if (channels.length === 1 && channels[0].samples === 3) return true;
-  const planar = channels.filter((c) => c.samples === 1);
-  return planar.length === 3 && planar.length === channels.length;
-}
-
 function threeChannelOmeFromXml(omeXml: string | null | undefined): boolean {
   if (omeXml == null || omeXml.trim() === "") return false;
   const doc = new DOMParser().parseFromString(omeXml, "application/xml");
@@ -202,23 +178,44 @@ function threeChannelOmeFromXml(omeXml: string | null | undefined): boolean {
   if (!pixels) return false;
   const channelEls = [...pixels.querySelectorAll(":scope > Channel")];
   if (channelEls.length === 0) return false;
-  const channels = channelEls.map((ch) => {
+  const samples = channelEls.map((ch) => {
     const raw = ch.getAttribute("SamplesPerPixel");
-    let samples = 1;
+    let n = 1;
     if (raw != null && raw !== "") {
-      const n = Number(raw);
-      if (Number.isFinite(n) && n > 0) samples = n;
+      const parsed = Number(raw);
+      if (Number.isFinite(parsed) && parsed > 0) n = parsed;
     }
-    return {
-      name: ch.getAttribute("Name") ?? ch.getAttribute("ID") ?? "",
-      samples,
-    };
+    return n;
   });
-  return isThreeChannelOme(channels);
+  if (samples.length === 1 && samples[0] === 3) return true;
+  return samples.length === 3 && samples.every((s) => s === 1);
 }
 
-/** Thumbnail max edge for QuPath-style dark/light. */
-const BRIGHTFIELD_THUMB_MAX = 256;
+/**
+ * QuPath GuiTools.estimateImageType dark/light heuristic.
+ * 25/220 of 8-bit max, scaled to 2^bitsPerSample-1 (never the buffer max).
+ * More near-white than near-black → brightfield.
+ */
+function isBrightfieldRgb(data: ArrayLike<number>, bitsPerSample = 8): boolean {
+  const sampleMax =
+    data instanceof Uint8Array || data instanceof Uint8ClampedArray
+      ? 255
+      : 2 ** Math.max(1, Math.floor(bitsPerSample) || 8) - 1;
+  const dark = (25 / 255) * sampleMax;
+  const light = (220 / 255) * sampleMax;
+  const nPixels = Math.floor(data.length / 3);
+  const stride = Math.max(1, Math.ceil(nPixels / 10_000));
+  let nDark = 0;
+  let nLight = 0;
+  for (let i = 0; i + 2 < data.length; i += 3 * stride) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    if (r < dark && g < dark && b < dark) nDark += 1;
+    else if (r > light && g > light && b > light) nLight += 1;
+  }
+  return nLight > nDark && nDark + nLight > 0;
+}
 
 function scalePlaneToUint8Rgb(
   plane: ArrayLike<number>,
@@ -243,29 +240,37 @@ function scalePlaneToUint8Rgb(
 }
 
 /**
- * QuPath dark/light on the coarsest pyramid level (SubIFD when present).
- * geotiff `readRGB({ width, height })` still decodes full-res first — slow.
+ * One coarsest tile, centered — (0,0) is often empty padding.
+ * Avoids `readRGB({ width, height })`, which still decodes the full plane.
  */
-async function detectOmeTiffBrightfield(
+export async function detectOmeTiffBrightfield(
   source: Blob | string,
   signal?: AbortSignal,
 ): Promise<boolean> {
   const tiff = await openOmeTiff(source, signal);
   const image = await getCoarsestTiffImage(tiff);
+  if (signal?.aborted) return false;
   const w = image.getWidth();
   const h = image.getHeight();
-  const scale = Math.min(1, BRIGHTFIELD_THUMB_MAX / Math.max(w, h, 1));
-  const tw = Math.max(1, Math.round(w * scale));
-  const th = Math.max(1, Math.round(h * scale));
+  const tileW = Math.max(1, image.getTileWidth?.() || 256);
+  const tileH = Math.max(1, image.getTileHeight?.() || 256);
+  const x0 = Math.max(0, Math.floor(w / 2 / tileW) * tileW);
+  const y0 = Math.max(0, Math.floor(h / 2 / tileH) * tileH);
+  const window: [number, number, number, number] = [
+    x0,
+    y0,
+    Math.min(w, x0 + tileW),
+    Math.min(h, y0 + tileH),
+  ];
   const spp = image.fileDirectory?.SamplesPerPixel ?? 1;
   const bitsRaw = image.fileDirectory?.BitsPerSample?.[0];
   const bits = typeof bitsRaw === "number" ? bitsRaw : 8;
   if (spp >= 3) {
     try {
-      const rgb = await image.readRGB({
-        width: tw,
-        height: th,
+      const rgb = await image.readRasters({
+        samples: [0, 1, 2],
         interleave: true,
+        window,
         signal,
       });
       return isBrightfieldRgb(rgb, bits);
@@ -276,26 +281,18 @@ async function detectOmeTiffBrightfield(
   const plane = await image.readRasters({
     samples: [0],
     interleave: true,
-    window: [0, 0, w, h],
-    width: tw,
-    height: th,
+    window,
     signal,
   });
   return isBrightfieldRgb(scalePlaneToUint8Rgb(plane, bits));
 }
 
-/**
- * For 3-channel OME: skip mask heuristics and suggest Brightfield vs Fluorescence
- * via dark/light. Otherwise `{ ambiguous: false }` (caller may run mask).
- */
+/** Packed RGB (1×SPP=3) or three planar channels. */
 export async function detectOmeTiffPlanarRgbAmbiguity(
   source: File | string,
   signal?: AbortSignal,
-): Promise<PlanarRgbAmbiguity> {
+): Promise<boolean> {
   const xml = await getOmeTiffImageDescriptionOmeXml(source, {}, signal);
-  if (signal?.aborted) return { ambiguous: false };
-  if (!threeChannelOmeFromXml(xml)) return { ambiguous: false };
-  const defaultRgbDisplay = await detectOmeTiffBrightfield(source, signal);
-  if (signal?.aborted) return { ambiguous: false };
-  return { ambiguous: true, defaultRgbDisplay };
+  if (signal?.aborted) return false;
+  return threeChannelOmeFromXml(xml);
 }

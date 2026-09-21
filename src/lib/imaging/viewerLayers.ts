@@ -15,7 +15,7 @@ import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
-import { type Loader, toSettings, VIV_TILE_MAX_CACHE_SIZE } from "./viv";
+import { type Loader, TILE_CACHE_PROPS, toSettings } from "./viv";
 import { inheritUnitlessPhysicalSize, layerModelMatrix } from "./worldFrame";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
@@ -105,7 +105,6 @@ function createDicomTileLayer(args: {
 
 /** Later OME intensity layers: skip Viv's opaque background and add onto the base. */
 const OME_INTENSITY_OVERLAY_PROPS = {
-  excludeBackground: true,
   refinementStrategy: "no-overlap" as const,
   parameters: {
     blend: true,
@@ -146,7 +145,7 @@ function createMultiscaleLayer(args: {
   return new MultiscaleImageLayer({
     id: `${args.layerId}${remount}`,
     ...settings,
-    maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
+    ...TILE_CACHE_PROPS,
     // Viv's overview ImageLayer getRaster()s the full coarsest plane; isLoaded
     // waits on that decode even after tiles have painted.
     excludeBackground: true,

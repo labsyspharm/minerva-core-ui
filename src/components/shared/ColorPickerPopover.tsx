@@ -1,7 +1,5 @@
-import type { HsvaColor } from "@uiw/color-convert";
 import { color } from "@uiw/color-convert";
 import type { Chrome } from "@uiw/react-color";
-import type { AlphaProps } from "@uiw/react-color-alpha";
 import Hue from "@uiw/react-color-hue";
 import Saturation from "@uiw/react-color-saturation";
 import * as React from "react";
@@ -100,22 +98,10 @@ export function colorPickerAnchorPosition(rect: DOMRect): {
   };
 }
 
-export type ColorPickerPopoverProps = {
+type ColorPickerPopoverProps = {
   position: { top: number; left: number } | null;
   onClose: () => void;
 } & Omit<React.ComponentProps<typeof Chrome>, "ref">;
-
-interface HueProps extends Omit<AlphaProps, "hsva" | "onChange"> {
-  onChange?: (newHue: { h: number }) => void;
-  hue: number;
-}
-
-export interface SaturationProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
-  prefixCls?: string;
-  hsva?: HsvaColor;
-  onChange?: (newColor: HsvaColor) => void;
-}
 
 /**
  * Fixed popover + transparent backdrop; close control in a row above the picker.
@@ -138,14 +124,14 @@ export function ColorPickerPopover({
   const currentColor = color(pickerProps.color);
   const [expanded, setExpanded] = React.useState(false);
 
-  const hueProps: HueProps = {
+  const hueProps = {
     hue: currentColor.hsva.h,
-    onChange: ({ h }) => {
+    onChange: ({ h }: { h: number }) => {
       const { v, s } = currentColor.hsva;
       pickerProps.onChange(color({ h, v, s, a: 1 }));
     },
   };
-  const saturationProps: SaturationProps = {
+  const saturationProps = {
     hsva: currentColor.hsva,
     onChange: ({ h, v, s, a }) => {
       pickerProps.onChange(color({ h, v, s, a }));

@@ -70,7 +70,6 @@ import {
   assignedDisplayHex,
   effectiveDisplayColor,
   effectiveMaskVisualization,
-  effectiveSourceColor,
   effectiveSourceLimits,
   rgbToHex,
 } from "@/lib/imaging/sourceChannelStyle";
@@ -463,7 +462,6 @@ function makeGroupChannelRow(
   sourceChannels: Channel[],
 ): ChannelGroupChannel {
   const [srcLo, srcHi] = effectiveSourceLimits(sc);
-  const srcColor = effectiveSourceColor(sc, sourceChannels);
   const seed =
     planarRgbDisplayColor(sc, sourceChannels) ??
     seedRgbForGroupChannelIndex(slotIndex);
@@ -472,7 +470,7 @@ function makeGroupChannelRow(
     id: crypto.randomUUID(),
     lowerLimit: srcLo,
     upperLimit: srcHi,
-    color: sc.color ?? seed ?? srcColor,
+    color: sc.color ?? seed,
     channelId: sc.id,
     ...(isMask
       ? {

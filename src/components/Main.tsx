@@ -105,7 +105,7 @@ import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
 import { applyOmeRoisFromLoaderToFirstWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentSchema";
-import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
+import type { ChannelGroup } from "@/lib/stores/documentStore";
 import {
   documentShapes,
   documentSourceChannels,
@@ -982,9 +982,6 @@ const Content = (props: Props) => {
     setLastOmeTiffUrl(null);
     const relevant_groups = [] as ConfigGroup[];
     let nextImages: Image[] = [];
-    let registry = {
-      SourceChannels: [] as Channel[],
-    };
     const entries: OmeLoaderEntry[] = [];
 
     for (let i = 0; i < handles.length; i++) {
@@ -1007,9 +1004,6 @@ const Content = (props: Props) => {
         rgbDisplay,
       });
       nextImages = slice.nextImages;
-      registry = {
-        SourceChannels: [...registry.SourceChannels, ...slice.sourceChannels],
-      };
       entries.push({ loader, sourceImageId });
     }
 
@@ -1024,14 +1018,10 @@ const Content = (props: Props) => {
       });
     }
 
-    const { SourceChannels } = registry;
     // Fresh local replace: flat channels + shared palette; user creates groups in the panel.
     const ChannelGroups: ChannelGroup[] = [];
     if (role !== "segmentation") {
-      nextImages = await applyPaletteToFlatImportImages(
-        nextImages,
-        SourceChannels,
-      );
+      nextImages = await applyPaletteToFlatImportImages(nextImages);
     }
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries(entries);
@@ -1113,10 +1103,7 @@ const Content = (props: Props) => {
         if (slice.extractedGroups.length > 0) {
           newIntensityGroups.push(...slice.extractedGroups);
         } else {
-          nextImages = await applyPaletteToFlatImportImages(
-            nextImages,
-            slice.sourceChannels,
-          );
+          nextImages = await applyPaletteToFlatImportImages(nextImages);
         }
       }
     }
@@ -1232,7 +1219,7 @@ const Content = (props: Props) => {
       relevantGroups: relevant_groups,
       rgbDisplay,
     });
-    let SourceChannels = slice.sourceChannels;
+    const SourceChannels = slice.sourceChannels;
     let nextImages = slice.nextImages;
     let ChannelGroups: ChannelGroup[];
     if (role === "segmentation") {
@@ -1243,11 +1230,7 @@ const Content = (props: Props) => {
         SourceChannels,
       );
     } else {
-      nextImages = await applyPaletteToFlatImportImages(
-        nextImages,
-        SourceChannels,
-      );
-      SourceChannels = flattenImageChannelsInDocumentOrder(nextImages);
+      nextImages = await applyPaletteToFlatImportImages(nextImages);
       ChannelGroups = [];
     }
     nextImages = setImageSource(nextImages, sourceImageId, {
@@ -1307,10 +1290,7 @@ const Content = (props: Props) => {
       url,
     });
     if (role !== "segmentation" && slice.extractedGroups.length === 0) {
-      nextImages = await applyPaletteToFlatImportImages(
-        nextImages,
-        slice.sourceChannels,
-      );
+      nextImages = await applyPaletteToFlatImportImages(nextImages);
     }
     const ChannelGroups = await finalizeAppendedIntensityGroups({
       mergedGroups,

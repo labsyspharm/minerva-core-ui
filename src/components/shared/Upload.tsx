@@ -30,6 +30,7 @@ import type {
   OmeImportResult,
 } from "@/lib/imaging/omeImport";
 import {
+  detectOmeTiffBrightfield,
   detectOmeTiffMask,
   detectOmeTiffPlanarRgbAmbiguity,
 } from "@/lib/imaging/omeTiff";
@@ -318,6 +319,7 @@ const Upload = (props: UploadProps) => {
   const formatChosenByUserRef = useRef(false);
   const roleChosenByUserRef = useRef(false);
   const rgbDisplayChosenByUserRef = useRef(false);
+  const overlayRgbDisplayRef = useRef(false);
 
   const showTypeOverlay = pending != null;
   const dicomAllowed =
@@ -352,6 +354,7 @@ const Upload = (props: UploadProps) => {
       formatChosenByUserRef.current = false;
       roleChosenByUserRef.current = false;
       rgbDisplayChosenByUserRef.current = false;
+      overlayRgbDisplayRef.current = false;
       const role = resolveImportRole("intensity", pendingLabel(next));
       let format = inferFormat(next);
       if (role === "segmentation") format = "ome-tiff";
@@ -387,21 +390,35 @@ const Upload = (props: UploadProps) => {
           setDetecting(true);
 
           // 3-channel OME: skip mask detect; suggest Brightfield vs Fluorescence.
-          const rgbAmbiguity = await detectOmeTiffPlanarRgbAmbiguity(
+          const rgbAmbiguous = await detectOmeTiffPlanarRgbAmbiguity(
             source,
             ac.signal,
           );
           if (ac.signal.aborted) return;
 
-          if (rgbAmbiguity.ambiguous) {
+          if (rgbAmbiguous) {
             setDetectedRole("intensity");
             if (!roleChosenByUserRef.current) {
               setOverlayRole("intensity");
             }
-            setDetectedRgbDisplay(rgbAmbiguity.defaultRgbDisplay);
-            if (!rgbDisplayChosenByUserRef.current) {
-              setOverlayRgbDisplay(rgbAmbiguity.defaultRgbDisplay);
-            }
+            setDetectedRgbDisplay(false);
+            void detectOmeTiffBrightfield(source, ac.signal)
+              .then((isBrightfield) => {
+                if (ac.signal.aborted) return;
+                setDetectedRgbDisplay(isBrightfield);
+                if (!rgbDisplayChosenByUserRef.current) {
+                  overlayRgbDisplayRef.current = isBrightfield;
+                  setOverlayRgbDisplay(isBrightfield);
+                }
+              })
+              .catch((error) => {
+                if (!ac.signal.aborted) {
+                  console.warn(
+                    "[minerva] brightfield suggestion failed",
+                    error,
+                  );
+                }
+              });
             return;
           }
 
@@ -567,7 +584,7 @@ const Upload = (props: UploadProps) => {
       }
       const rgbDisplay =
         detectedRgbDisplay != null && role === "intensity"
-          ? overlayRgbDisplay
+          ? overlayRgbDisplayRef.current
           : undefined;
       const beforeMaskIds =
         role === "segmentation" && classCsvFile
@@ -846,6 +863,7 @@ const Upload = (props: UploadProps) => {
                 onClick={() => {
                   roleChosenByUserRef.current = true;
                   rgbDisplayChosenByUserRef.current = true;
+                  overlayRgbDisplayRef.current = false;
                   setOverlayRole("intensity");
                   setOverlayRgbDisplay(false);
                 }}
@@ -863,6 +881,7 @@ const Upload = (props: UploadProps) => {
                   onClick={() => {
                     roleChosenByUserRef.current = true;
                     rgbDisplayChosenByUserRef.current = true;
+                    overlayRgbDisplayRef.current = true;
                     setOverlayRole("intensity");
                     setOverlayRgbDisplay(true);
                   }}
