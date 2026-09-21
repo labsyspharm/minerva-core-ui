@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BKR9X6Mw.js","./pako.esm-KbdoS3Oq.js","./lerc-DZfYBxtb.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BWdLlZuQ.js","./pako.esm-KbdoS3Oq.js","./lerc-DMh4dlwC.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -66510,26 +66510,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CSOWM9UX.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-B8uhoatZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Cdrt08Q1.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Q36fH6el.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-2UI3_yau.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-Dhzoprzb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BKR9X6Mw.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-Dm8yi3zp.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-DZfYBxtb.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BWdLlZuQ.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BKWcYClM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DMh4dlwC.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CriTfSEO.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CTOVuiL6.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-C2tuleOh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-B-Po-fXz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -94130,6 +94130,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     chipDim,
     editor
   };
+  const HE_CHIP_HEX = "cc00ff";
+  function heUnitChip(base2, key2, visible) {
+    return {
+      ...base2,
+      key: key2,
+      name: "H&E",
+      hex: HE_CHIP_HEX,
+      visible
+    };
+  }
   function chipAriaLabel(chip2) {
     return chip2.visible ? `Hide ${chip2.name}` : `Show ${chip2.name}`;
   }
@@ -94137,6 +94147,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const { chip: chip2, open, dim, colorPending, gmmPending, shown, showBlocked, onClick, onOpenEditor } = props;
     const pending2 = colorPending || gmmPending;
     const pendingLabel2 = gmmPending ? `Fitting contrast for ${chip2.name}` : `Assigning color to ${chip2.name}`;
+    const showEditor = !chip2.key.endsWith(":rgb");
     return jsxRuntimeExports.jsxs("div", {
       className: [
         styles$n.chipCell,
@@ -94169,7 +94180,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             children: chip2.name
           })
         }),
-        jsxRuntimeExports.jsx("button", {
+        showEditor ? jsxRuntimeExports.jsx("button", {
           type: "button",
           className: `${minervaTheme.focusRing} ${styles$n.chipMenu}`,
           title: `Edit ${chip2.name}`,
@@ -94182,7 +94193,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: jsxRuntimeExports.jsx(ChevronIcon, {
             direction: open ? "up" : "down"
           })
-        })
+        }) : null
       ]
     });
   }
@@ -94442,13 +94453,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       className: styles$n.root,
       children: [
         model.groups.map((group2) => {
-          const rgbUnit = rgbDisplay && group2.chips.length > 1 ? [
-            {
-              ...group2.chips[0],
-              key: `g:${group2.id}:rgb`,
-              name: "H&E",
-              visible: group2.allVisible
-            }
+          const rgbUnit = rgbDisplay && group2.chips[0] ? [
+            heUnitChip(group2.chips[0], `g:${group2.id}:rgb`, group2.allVisible)
           ] : group2.chips;
           const docGroup = channelGroups.find((g2) => g2.id === group2.id);
           const showAllNext = {
@@ -94490,13 +94496,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         showAllChannelsStrip ? jsxRuntimeExports.jsx(GroupStrip, {
           name: "All channels",
-          chips: rgbDisplay && filteredAllChannels.length > 1 ? [
-            {
-              ...filteredAllChannels[0],
-              key: "e:rgb",
-              name: "H&E",
-              visible: filteredAllChannels.every((c2) => c2.visible)
-            }
+          chips: rgbDisplay && filteredAllChannels[0] ? [
+            heUnitChip(filteredAllChannels[0], "e:rgb", filteredAllChannels.every((c2) => c2.visible))
           ] : filteredAllChannels,
           openChip,
           shownIds,
@@ -166292,18 +166293,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               setOverlayRole("intensity");
             }
             setDetectedRgbDisplay(false);
-            void detectOmeTiffBrightfield(source2, ac2.signal).then((isBrightfield) => {
+            try {
+              const isBrightfield = await detectOmeTiffBrightfield(source2, ac2.signal);
               if (ac2.signal.aborted) return;
               setDetectedRgbDisplay(isBrightfield);
               if (!rgbDisplayChosenByUserRef.current) {
                 overlayRgbDisplayRef.current = isBrightfield;
                 setOverlayRgbDisplay(isBrightfield);
               }
-            }).catch((error2) => {
+            } catch (error2) {
               if (!ac2.signal.aborted) {
                 console.warn("[minerva] brightfield suggestion failed", error2);
               }
-            });
+            }
             return;
           }
           setDetectedRgbDisplay(null);
@@ -166731,7 +166733,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       label: "Fluorescence",
                       selected: overlayRole === "intensity" && !overlayRgbDisplay,
                       suggested: detectedRole === "intensity" && detectedRgbDisplay !== true,
-                      muted: detectedRole !== "intensity" || detectedRgbDisplay === true,
+                      muted: detectedRole !== "intensity",
                       onClick: () => {
                         roleChosenByUserRef.current = true;
                         rgbDisplayChosenByUserRef.current = true;
@@ -166744,7 +166746,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       label: "Brightfield",
                       selected: overlayRole === "intensity" && overlayRgbDisplay,
                       suggested: detectedRole === "intensity" && detectedRgbDisplay === true,
-                      muted: detectedRole !== "intensity" || detectedRgbDisplay !== true,
+                      muted: detectedRole !== "intensity",
                       onClick: () => {
                         roleChosenByUserRef.current = true;
                         rgbDisplayChosenByUserRef.current = true;
@@ -254024,12 +254026,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-21T15:46:09.086Z");
+    const label2 = utcShort("2026-09-21T16:48:35.529Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-21T15:46:09.086Z",
+      title: "2026-09-21T16:48:35.529Z",
       children: [
         "Updated ",
         label2,
