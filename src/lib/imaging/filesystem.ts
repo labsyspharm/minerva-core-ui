@@ -2,6 +2,7 @@ import { loadOmeTiff } from "@hms-dbmi/viv";
 import { fileOpen } from "browser-fs-access";
 import { fromBlob, GeoTIFFImage } from "geotiff";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
+import { omePixelsElement, parseOmeXml } from "./omeXml";
 import type { Loader } from "./viv";
 import type { PoolClass } from "./workers/pool";
 
@@ -83,17 +84,14 @@ function parseFirstOmeImagePixels(
   if (typeof imageDescription !== "string" || imageDescription.trim() === "") {
     return null;
   }
-  const doc = new DOMParser().parseFromString(
-    imageDescription,
-    "application/xml",
-  );
-  const pixels = doc.querySelector("Image")?.querySelector("Pixels");
+  const doc = parseOmeXml(imageDescription);
+  const pixels = doc ? omePixelsElement(doc) : null;
   if (!pixels) return null;
   const num = (name: string) => {
     const value = pixels.getAttribute(name);
     return value == null ? undefined : Number(value);
   };
-  const channelCount = pixels.querySelectorAll("Channel").length;
+  const channelCount = pixels.getElementsByTagNameNS("*", "Channel").length;
   return {
     ID: pixels.getAttribute("ID") ?? undefined,
     Type: pixels.getAttribute("Type") ?? undefined,

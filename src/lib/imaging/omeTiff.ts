@@ -1,6 +1,11 @@
 import { fromBlob, fromUrl, GeoTIFFImage as GeoTIFFImageClass } from "geotiff";
 import { isBrightfieldRgb } from "@/lib/imaging/brightfieldDetect";
 import { classify, type MaskDetectResult } from "@/lib/imaging/maskDetect";
+import {
+  omeChannelElements,
+  omePixelsElement,
+  parseOmeXml,
+} from "@/lib/imaging/omeXml";
 
 type GeoTiffImage = {
   fileDirectory?: {
@@ -137,11 +142,8 @@ function hasOmePixels(imageDescription: unknown): boolean {
   if (typeof imageDescription !== "string" || imageDescription.trim() === "") {
     return false;
   }
-  const doc = new DOMParser().parseFromString(
-    imageDescription,
-    "application/xml",
-  );
-  return doc.querySelector("Image")?.querySelector("Pixels") != null;
+  const doc = parseOmeXml(imageDescription);
+  return doc != null && omePixelsElement(doc) != null;
 }
 
 /** Read OME-XML from OME-TIFF ImageDescription without loading pixels. */
@@ -209,10 +211,10 @@ function isThreeChannelOme(
 
 function threeChannelOmeFromXml(omeXml: string | null | undefined): boolean {
   if (omeXml == null || omeXml.trim() === "") return false;
-  const doc = new DOMParser().parseFromString(omeXml, "application/xml");
-  const pixels = doc.querySelector("Image")?.querySelector("Pixels");
+  const doc = parseOmeXml(omeXml);
+  const pixels = doc ? omePixelsElement(doc) : null;
   if (!pixels) return false;
-  const channelEls = [...pixels.querySelectorAll(":scope > Channel")];
+  const channelEls = omeChannelElements(pixels);
   if (channelEls.length === 0) return false;
   const channels = channelEls.map((ch) => {
     const raw = ch.getAttribute("SamplesPerPixel");
