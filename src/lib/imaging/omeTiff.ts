@@ -7,6 +7,7 @@ type GeoTiffImage = {
     BitsPerSample?: number[] | ArrayLike<number>;
     SampleFormat?: number[];
     SamplesPerPixel?: number;
+    PhotometricInterpretation?: number;
     SubIFDs?: number[] | ArrayLike<number>;
   };
   getHeight: () => number;
@@ -19,6 +20,12 @@ type GeoTiffImage = {
     window: [number, number, number, number];
     width?: number;
     height?: number;
+    signal?: AbortSignal;
+  }) => Promise<ArrayLike<number>>;
+  /** Applies the photometric transform (YCbCr, palette, CMYK) that readRasters skips. */
+  readRGB: (options: {
+    interleave: true;
+    window: [number, number, number, number];
     signal?: AbortSignal;
   }) => Promise<ArrayLike<number>>;
 };
@@ -177,7 +184,6 @@ function threeChannelOmeFromXml(omeXml: string | null | undefined): boolean {
   const pixels = doc.querySelector("Image")?.querySelector("Pixels");
   if (!pixels) return false;
   const channelEls = [...pixels.querySelectorAll(":scope > Channel")];
-  if (channelEls.length === 0) return false;
   const samples = channelEls.map((ch) => {
     const raw = ch.getAttribute("SamplesPerPixel");
     let n = 1;
@@ -187,61 +193,86 @@ function threeChannelOmeFromXml(omeXml: string | null | undefined): boolean {
     }
     return n;
   });
-  if (samples.length === 1 && samples[0] === 3) return true;
-  return samples.length === 3 && samples.every((s) => s === 1);
+  const packed = samples.length === 1 && samples[0] === 3;
+  const planar = samples.length === 3 && samples.every((s) => s === 1);
+  const showChips = packed || planar;
+  console.info("[minerva] rgb detect: xml gate", {
+    sizeC: pixels.getAttribute("SizeC"),
+    interleaved: pixels.getAttribute("Interleaved"),
+    channels: samples.length,
+    samplesPerPixel: samples,
+    packed,
+    planar,
+    showChips,
+  });
+  return showChips;
 }
 
 /**
- * QuPath GuiTools.estimateImageType dark/light heuristic.
- * 25/220 of 8-bit max, scaled to 2^bitsPerSample-1 (never the buffer max).
- * More near-white than near-black → brightfield.
+ * Full-scale value of the buffer we actually got back, not of the file's tags.
+ * `readRGB` normalizes every photometric except plain RGB to 8-bit, and float
+ * TIFFs carry 0–1 samples rather than 2^bits-1.
  */
-function isBrightfieldRgb(data: ArrayLike<number>, bitsPerSample = 8): boolean {
-  const sampleMax =
-    data instanceof Uint8Array || data instanceof Uint8ClampedArray
-      ? 255
-      : 2 ** Math.max(1, Math.floor(bitsPerSample) || 8) - 1;
+function sampleMaxForBuffer(
+  data: ArrayLike<number>,
+  bitsPerSample: number,
+): number {
+  if (data instanceof Uint8Array || data instanceof Uint8ClampedArray) {
+    return 255;
+  }
+  if (data instanceof Float32Array || data instanceof Float64Array) {
+    return 1;
+  }
+  return 2 ** Math.max(1, Math.floor(bitsPerSample) || 8) - 1;
+}
+
+/**
+ * QuPath GuiTools.estimateImageType dark/light heuristic: more near-white than
+ * near-black → brightfield. Thresholds are 25/220 of 8-bit, rescaled to the
+ * buffer's full scale. `channels` is 1 for the grayscale fallback.
+ */
+function isBrightfieldRgb(
+  data: ArrayLike<number>,
+  opts: { sampleMax: number; channels: number },
+): boolean {
+  const { sampleMax } = opts;
+  const channels = Math.max(1, opts.channels);
   const dark = (25 / 255) * sampleMax;
   const light = (220 / 255) * sampleMax;
-  const nPixels = Math.floor(data.length / 3);
+  const nPixels = Math.floor(data.length / channels);
   const stride = Math.max(1, Math.ceil(nPixels / 10_000));
   let nDark = 0;
   let nLight = 0;
-  for (let i = 0; i + 2 < data.length; i += 3 * stride) {
+  let nSampled = 0;
+  for (let i = 0; i + channels - 1 < data.length; i += channels * stride) {
     const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
+    const g = channels >= 3 ? data[i + 1] : r;
+    const b = channels >= 3 ? data[i + 2] : r;
+    nSampled += 1;
     if (r < dark && g < dark && b < dark) nDark += 1;
     else if (r > light && g > light && b > light) nLight += 1;
   }
-  return nLight > nDark && nDark + nLight > 0;
-}
-
-function scalePlaneToUint8Rgb(
-  plane: ArrayLike<number>,
-  bitsPerSample: number,
-): Uint8Array {
-  const bits = Math.max(1, Math.floor(bitsPerSample) || 8);
-  const sampleMax = 2 ** bits - 1;
-  const n = plane.length;
-  const out = new Uint8Array(n * 3);
-  for (let i = 0; i < n; i++) {
-    const v = Number(plane[i]);
-    const u8 =
-      sampleMax > 0 && Number.isFinite(v)
-        ? Math.max(0, Math.min(255, Math.round((v / sampleMax) * 255)))
-        : 0;
-    const o = i * 3;
-    out[o] = u8;
-    out[o + 1] = u8;
-    out[o + 2] = u8;
-  }
-  return out;
+  const brightfield = nLight > nDark && nDark + nLight > 0;
+  console.info("[minerva] rgb detect: high/low pixels", {
+    nDark,
+    nLight,
+    nMid: nSampled - nDark - nLight,
+    nSampled,
+    nPixels,
+    stride,
+    channels,
+    dark,
+    light,
+    sampleMax,
+    dtype: data.constructor?.name,
+    brightfield,
+  });
+  return brightfield;
 }
 
 /**
- * One coarsest tile, centered — (0,0) is often empty padding.
- * Avoids `readRGB({ width, height })`, which still decodes the full plane.
+ * One coarsest tile, centered — (0,0) is often empty padding. Windowed, so
+ * unlike `readRGB({ width, height })` it does not decode the full plane.
  */
 export async function detectOmeTiffBrightfield(
   source: Blob | string,
@@ -265,26 +296,45 @@ export async function detectOmeTiffBrightfield(
   const spp = image.fileDirectory?.SamplesPerPixel ?? 1;
   const bitsRaw = image.fileDirectory?.BitsPerSample?.[0];
   const bits = typeof bitsRaw === "number" ? bitsRaw : 8;
-  if (spp >= 3) {
-    try {
-      const rgb = await image.readRasters({
-        samples: [0, 1, 2],
-        interleave: true,
-        window,
-        signal,
-      });
-      return isBrightfieldRgb(rgb, bits);
-    } catch {
-      return false;
-    }
+  const photo = image.fileDirectory?.PhotometricInterpretation;
+  console.info("[minerva] rgb detect: coarsest tile", {
+    spp,
+    bits,
+    photo,
+    w,
+    h,
+    tileW,
+    tileH,
+    window,
+  });
+  // readRasters hands back raw samples: JPEG H&E is YCbCr (Cb/Cr sit near 128,
+  // so nothing ever reads as light), WhiteIsZero is inverted, Palette is
+  // indices. readRGB applies the photometric transform and always returns
+  // interleaved RGB. It throws when the tag is missing or unsupported.
+  try {
+    const rgb = await image.readRGB({ interleave: true, window, signal });
+    return isBrightfieldRgb(rgb, {
+      sampleMax: sampleMaxForBuffer(rgb, bits),
+      channels: 3,
+    });
+  } catch (error) {
+    if (signal?.aborted) return false;
+    console.warn(
+      "[minerva] rgb detect: readRGB failed, falling back to raw samples",
+      error,
+    );
   }
-  const plane = await image.readRasters({
-    samples: [0],
+  const samples = spp >= 3 ? [0, 1, 2] : [0];
+  const raw = await image.readRasters({
+    samples,
     interleave: true,
     window,
     signal,
   });
-  return isBrightfieldRgb(scalePlaneToUint8Rgb(plane, bits));
+  return isBrightfieldRgb(raw, {
+    sampleMax: sampleMaxForBuffer(raw, bits),
+    channels: samples.length,
+  });
 }
 
 /** Packed RGB (1×SPP=3) or three planar channels. */
