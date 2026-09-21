@@ -11318,23 +11318,59 @@ function pickClassColumns(headers) {
   if (!id || !name || id === name) return null;
   return { id, name };
 }
+function parseCsvLine(line) {
+  const out = [];
+  let cur = "";
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (quoted && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else quoted = !quoted;
+    } else if (ch === "," && !quoted) {
+      out.push(cur.trim());
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur.trim());
+  return out;
+}
+function peekCsvHeaders(bytes) {
+  const text = new TextDecoder().decode(
+    bytes.subarray(0, Math.min(bytes.byteLength, 8192))
+  );
+  let line = text.split(/\r?\n/).find((l) => l.trim().length > 0) ?? "";
+  if (line.charCodeAt(0) === 65279) line = line.slice(1);
+  const headers = parseCsvLine(line).filter((h) => h.length > 0);
+  if (headers.length < 2) return null;
+  const guess = pickClassColumns(headers) ?? (/^\d+$/.test(headers[0]) ? null : { id: headers[0], name: headers[1] });
+  if (!guess) return null;
+  return { headers, ...guess };
+}
 
-function tableName(classTableId) {
-  return `classtable_${classTableId.replaceAll("-", "")}`;
+const LUT_MAX_DIM = 2048;
+const INDEX_TEX_MAX = LUT_MAX_DIM * LUT_MAX_DIM;
+const MAX_CLASS_NAMES = 255;
+function indexTexSize(count) {
+  const n = Math.max(1, count | 0);
+  if (n > INDEX_TEX_MAX) return null;
+  let width = Math.min(LUT_MAX_DIM, n);
+  width = Math.max(4, width + 3 & -4);
+  return { width, height: Math.max(1, Math.ceil(n / width)) };
+}
+
+function tableName(featureTableId) {
+  return `featuretable_${featureTableId.replaceAll("-", "")}`;
 }
 function sqlString(value) {
   return `'${value.replaceAll("'", "''")}'`;
 }
 function sqlIdent(name) {
   return `"${name.replaceAll('"', '""')}"`;
-}
-function describeHeaders(result) {
-  const names = result.getChildAt(0);
-  const headers = [];
-  for (let i = 0; i < result.numRows; i++) {
-    headers.push(String(names?.get(i) ?? ""));
-  }
-  return headers;
 }
 function firstValue(result) {
   if (result.numRows === 0) return void 0;
@@ -11368,75 +11404,90 @@ async function uniqueNames(c, table) {
   }
   return names;
 }
-async function ingest(classTableId, bytes, columns) {
+async function resolveColumns(source, columns, header) {
+  if (columns) return { cols: columns, header: header ?? true };
+  const head = source.file ? new Uint8Array(await source.file.slice(0, 8192).arrayBuffer()) : source.bytes?.subarray(0, Math.min(8192, source.bytes.byteLength));
+  if (!head) throw new Error("CSV is empty");
+  const peeked = peekCsvHeaders(head);
+  if (peeked)
+    return { cols: { id: peeked.id, name: peeked.name }, header: true };
+  const text = new TextDecoder().decode(head);
+  let line = text.split(/\r?\n/).find((l) => l.trim().length > 0) ?? "";
+  if (line.charCodeAt(0) === 65279) line = line.slice(1);
+  const cells = parseCsvLine(line).filter((h) => h.length > 0);
+  if (cells.length < 2) {
+    throw new Error(
+      "CSV needs classID,className; cellId,className; cellId,phenotype; cellId,cellType; or two columns with no header"
+    );
+  }
+  return { cols: { id: "column0", name: "column1" }, header: false };
+}
+async function registerSource(duck, name, source) {
+  if (source.file) {
+    await duck.registerFileHandle(
+      name,
+      source.file,
+      w.BROWSER_FILEREADER,
+      true
+    );
+    return;
+  }
+  if (!source.bytes) throw new Error("CSV is empty");
+  const copy = new Uint8Array(source.bytes.byteLength);
+  copy.set(source.bytes);
+  await duck.registerFileBuffer(name, copy);
+}
+async function exportTwoColCsv(duck, c, table) {
+  const out = `${table}_persist.csv`;
+  await duck.registerEmptyFileBuffer(out);
+  await c.query(
+    `COPY ${table} TO ${sqlString(out)} (HEADER true, DELIMITER ',')`
+  );
+  const buf = await duck.copyFileToBuffer(out);
+  await duck.dropFile(out).catch(() => void 0);
+  return buf.slice();
+}
+async function ingest(featureTableId, source, columns, header) {
   const c = await ensureConn();
   const duck = db;
   if (!duck) throw new Error("DuckDB failed to start");
-  const table = tableName(classTableId);
+  const { cols, header: hasHeader } = await resolveColumns(
+    source,
+    columns,
+    header
+  );
+  const table = tableName(featureTableId);
   const staging = `${table}_stg`;
   const raw = `${table}_raw`;
   const file = `${table}.csv`;
   await c.query(`DROP TABLE IF EXISTS ${staging}`);
   await c.query(`DROP TABLE IF EXISTS ${raw}`);
-  await duck.registerFileBuffer(file, bytes);
-  const loadRaw = async (header) => {
-    await c.query(`DROP TABLE IF EXISTS ${raw}`);
-    await c.query(
-      `CREATE TABLE ${raw} AS SELECT * FROM read_csv(${sqlString(file)}, header=${header ? "true" : "false"}, all_varchar=true)`
-    );
-    return describeHeaders(await c.query(`DESCRIBE ${raw}`));
-  };
+  await registerSource(duck, file, source);
   try {
-    let headers = null;
-    try {
-      headers = await loadRaw(true);
-    } catch {
-      headers = null;
-    }
-    let cols = null;
-    if (columns) {
-      if (!headers?.includes(columns.id) || !headers.includes(columns.name)) {
-        throw new Error(`CSV is missing "${columns.id}" or "${columns.name}"`);
-      }
-      cols = columns;
-    } else {
-      cols = headers ? pickClassColumns(headers) : null;
-      if (!cols) {
-        try {
-          headers = await loadRaw(false);
-        } catch {
-          throw new Error("CSV has no class rows");
-        }
-        cols = pickClassColumns(headers) ?? (headers.length >= 2 ? { id: headers[0], name: headers[1] } : null);
-      }
-    }
-    if (!cols) {
-      throw new Error(
-        "CSV needs classID,className; cellId,className; cellId,phenotype; cellId,cellType; or two columns with no header"
-      );
-    }
-    const idExpr = `trim(CAST(${sqlIdent(cols.id)} AS VARCHAR))`;
-    const nameExpr = `CAST(COALESCE(${sqlIdent(cols.name)}, '') AS VARCHAR)`;
-    const valid = `regexp_matches(${idExpr}, '^[0-9]+$') AND TRY_CAST(${idExpr} AS UINTEGER) BETWEEN 1 AND 4294967295`;
+    await c.query(
+      `CREATE TABLE ${raw} AS SELECT trim(CAST(${sqlIdent(cols.id)} AS VARCHAR)) AS class_id, CAST(COALESCE(${sqlIdent(cols.name)}, '') AS VARCHAR) AS class_name FROM read_csv(${sqlString(file)}, header=${hasHeader ? "true" : "false"}, all_varchar=true)`
+    );
+    const valid = `regexp_matches(class_id, '^[0-9]+$') AND TRY_CAST(class_id AS UINTEGER) BETWEEN 1 AND 4294967295`;
     const bad = await c.query(
-      `SELECT ${idExpr} FROM ${raw} WHERE ${idExpr} NOT IN ('', '0') AND NOT (${valid}) LIMIT 1`
+      `SELECT class_id FROM ${raw} WHERE class_id NOT IN ('', '0') AND NOT (${valid}) LIMIT 1`
     );
     const badId = firstValue(bad);
     if (badId != null && String(badId).length > 0) {
       throw new Error(`Invalid classID "${String(badId)}"`);
     }
     const dup = await c.query(
-      `SELECT TRY_CAST(${idExpr} AS UINTEGER) FROM ${raw} WHERE ${valid} GROUP BY 1 HAVING COUNT(*) > 1 LIMIT 1`
+      `SELECT TRY_CAST(class_id AS UINTEGER) FROM ${raw} WHERE ${valid} GROUP BY 1 HAVING COUNT(*) > 1 LIMIT 1`
     );
     const dupId = firstValue(dup);
     if (dupId != null) {
       throw new Error(`Duplicate classID ${Number(dupId)}`);
     }
     await c.query(
-      `CREATE TABLE ${staging} AS SELECT CAST(${idExpr} AS UINTEGER) AS class_id, ${nameExpr} AS class_name FROM ${raw} WHERE ${valid}`
+      `CREATE TABLE ${staging} AS SELECT CAST(class_id AS UINTEGER) AS class_id, class_name FROM ${raw} WHERE ${valid}`
     );
+    await c.query(`DROP TABLE IF EXISTS ${raw}`);
     const stats = await c.query(
-      `SELECT COUNT(*)::INTEGER AS n, MAX(class_id)::INTEGER AS m FROM ${staging}`
+      `SELECT COUNT(*) AS n, MAX(class_id) AS m FROM ${staging}`
     );
     if (Number(stats.getChildAt(0)?.get(0) ?? 0) === 0) {
       throw new Error("CSV has no class rows");
@@ -11445,20 +11496,32 @@ async function ingest(classTableId, bytes, columns) {
     await c.query(`DROP TABLE IF EXISTS ${table}`);
     await c.query(`ALTER TABLE ${staging} RENAME TO ${table}`);
     const names = await uniqueNames(c, table);
-    return { maxClassId, names };
+    const index = await fillClassIndex(c, table, maxClassId, names);
+    const persist = source.file ? await exportTwoColCsv(duck, c, table) : void 0;
+    return {
+      maxClassId,
+      names,
+      persist,
+      columns: cols,
+      header: hasHeader,
+      index
+    };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    if (/Referenced column|does not exist/i.test(message) && (message.includes(cols.id) || message.includes(cols.name))) {
+      throw new Error(`CSV is missing "${cols.id}" or "${cols.name}"`);
+    }
+    throw e;
   } finally {
     await c.query(`DROP TABLE IF EXISTS ${raw}`).catch(() => void 0);
     await c.query(`DROP TABLE IF EXISTS ${staging}`).catch(() => void 0);
     await duck.dropFile(file).catch(() => void 0);
   }
 }
-async function page(classTableId, query, offset, limit) {
+async function page(featureTableId, query, offset, limit) {
   const c = await ensureConn();
-  const table = tableName(classTableId);
-  const exists = await c.query(
-    `SELECT COUNT(*)::INTEGER FROM information_schema.tables WHERE table_name = ${sqlString(table)}`
-  );
-  if (Number(exists.getChildAt(0)?.get(0) ?? 0) === 0) {
+  const table = tableName(featureTableId);
+  if (!await tableExists(c, table)) {
     return { rows: [], total: 0 };
   }
   const needle = query.trim();
@@ -11478,110 +11541,46 @@ async function page(classTableId, query, offset, limit) {
   }
   return { rows, total };
 }
-const CELL_OUTLINE_RGB = [
-  [82, 249, 0],
-  [0, 251, 255],
-  [255, 0, 40],
-  [255, 188, 0],
-  [145, 169, 255],
-  [255, 0, 255]
-];
-function defaultClassColor(classId, colorSeed) {
-  const i = ((classId ^ colorSeed) >>> 0) % CELL_OUTLINE_RGB.length;
-  const [r, g, b] = CELL_OUTLINE_RGB[i];
-  return { r, g, b };
-}
-function packRgba(color, a) {
-  return color.r & 255 | (color.g & 255) << 8 | (color.b & 255) << 16 | (a & 255) << 24;
-}
-function nameVisible(vis, name) {
-  if (vis.mode === "all") return true;
-  const hit = vis.names.includes(name);
-  return vis.mode === "hide" ? !hit : hit;
-}
-const DENSE_LUT_MAX = 1048576;
-async function rebuildLut(msg) {
-  const maxClassId = Math.max(0, msg.maxClassId | 0);
-  const colors = /* @__PURE__ */ new Map();
-  for (const o of msg.nameColors) {
-    colors.set(o.name, { r: o.r, g: o.g, b: o.b });
-  }
-  const unnamedAlpha = msg.vis.mode === "show" ? 0 : 255;
-  const c = await ensureConn();
-  const table = tableName(msg.classTableId);
+async function tableExists(c, table) {
   const exists = await c.query(
     `SELECT COUNT(*)::INTEGER FROM information_schema.tables WHERE table_name = ${sqlString(table)}`
   );
-  const hasTable = Number(exists.getChildAt(0)?.get(0) ?? 0) > 0;
-  const rows = [];
-  if (hasTable) {
-    const result = await c.query(`SELECT class_id, class_name FROM ${table}`);
-    const ids = result.getChildAt(0);
-    const names = result.getChildAt(1);
-    for (let i = 0; i < result.numRows; i++) {
-      rows.push({
-        id: Number(ids?.get(i) ?? 0),
-        name: String(names?.get(i) ?? "")
-      });
-    }
-  }
-  if (maxClassId + 1 <= DENSE_LUT_MAX) {
-    const width = Math.min(1024, Math.max(1, maxClassId + 1));
-    const height = Math.max(1, Math.ceil((maxClassId + 1) / width));
-    const rgba = new Uint8Array(width * height * 4);
-    for (let id = 1; id <= maxClassId; id++) {
-      const color = defaultClassColor(id, msg.seed);
-      const x = id % width;
-      const y = Math.floor(id / width);
-      const i = (y * width + x) * 4;
-      rgba[i] = color.r;
-      rgba[i + 1] = color.g;
-      rgba[i + 2] = color.b;
-      rgba[i + 3] = unnamedAlpha;
-    }
-    for (const row of rows) {
-      if (row.id < 1 || row.id > maxClassId) continue;
-      const color = colors.get(row.name) ?? defaultClassColor(row.id, msg.seed);
-      const x = row.id % width;
-      const y = Math.floor(row.id / width);
-      const i = (y * width + x) * 4;
-      rgba[i] = color.r;
-      rgba[i + 1] = color.g;
-      rgba[i + 2] = color.b;
-      rgba[i + 3] = nameVisible(msg.vis, row.name) ? 255 : 0;
-    }
-    return { strategy: "denseLut", rgba, width, height };
-  }
-  const entries = [];
-  for (const row of rows) {
-    if (row.id < 1) continue;
-    const color = colors.get(row.name) ?? defaultClassColor(row.id, msg.seed);
-    const a = nameVisible(msg.vis, row.name) ? 255 : 0;
-    entries.push({ id: row.id, packed: packRgba(color, a) });
-  }
-  let size = 16;
-  while (size < Math.max(16, entries.length * 2)) size <<= 1;
-  const overrides = new Uint32Array(size * 2);
-  for (const e of entries) {
-    const slot = (Math.imul(e.id, 2654435761) >>> 0) % size;
-    for (let k = 0; k < size; k++) {
-      const i = (slot + k) % size;
-      if (overrides[i * 2] === 0) {
-        overrides[i * 2] = e.id;
-        overrides[i * 2 + 1] = e.packed;
-        break;
-      }
-    }
-  }
-  return {
-    strategy: "sparse",
-    missHidden: msg.vis.mode === "show",
-    overrides
-  };
+  return Number(exists.getChildAt(0)?.get(0) ?? 0) > 0;
 }
-async function drop(classTableId) {
+async function fillClassIndex(c, table, maxClassId, names) {
+  const size = indexTexSize(maxClassId + 1);
+  if (!size) {
+    console.warn("[featureTable] class index exceeds GPU texture size");
+    return void 0;
+  }
+  const nameToIdx = /* @__PURE__ */ new Map();
+  const n = Math.min(names.length, MAX_CLASS_NAMES);
+  for (let i = 0; i < n; i++) nameToIdx.set(names[i], i + 1);
+  const data = new Uint8Array(size.width * size.height);
+  const result = await c.query(`SELECT class_id, class_name FROM ${table}`);
+  const ids = result.getChildAt(0);
+  const nms = result.getChildAt(1);
+  for (let i = 0; i < result.numRows; i++) {
+    const id = Number(ids?.get(i) ?? 0);
+    if (id < 1 || id > maxClassId) continue;
+    const cls = nameToIdx.get(String(nms?.get(i) ?? "")) ?? 0;
+    data[Math.floor(id / size.width) * size.width + id % size.width] = cls;
+  }
+  return { data, width: size.width, height: size.height };
+}
+async function readClassIndex(featureTableId) {
+  const c = await ensureConn();
+  const table = tableName(featureTableId);
+  if (!await tableExists(c, table)) return { names: [] };
+  const names = await uniqueNames(c, table);
+  const stats = await c.query(`SELECT MAX(class_id) AS m FROM ${table}`);
+  const maxClassId = Number(stats.getChildAt(0)?.get(0) ?? 0);
+  const index = await fillClassIndex(c, table, maxClassId, names);
+  return { names, index };
+}
+async function drop(featureTableId) {
   if (!conn) return;
-  await conn.query(`DROP TABLE IF EXISTS ${tableName(classTableId)}`);
+  await conn.query(`DROP TABLE IF EXISTS ${tableName(featureTableId)}`);
 }
 async function reset() {
   if (!conn || !db) return;
@@ -11599,50 +11598,50 @@ self.onmessage = (e) => {
 async function handle(msg) {
   try {
     if (msg.type === "ingest") {
-      const { maxClassId, names } = await ingest(
-        msg.classTableId,
-        msg.bytes,
-        msg.columns
+      const { maxClassId, names, persist, columns, header, index } = await ingest(
+        msg.featureTableId,
+        { file: msg.file, bytes: msg.bytes },
+        msg.columns,
+        msg.header
       );
-      self.postMessage({
-        id: msg.id,
-        type: "ingested",
-        maxClassId,
-        names
-      });
-      return;
-    }
-    if (msg.type === "rebuildLut") {
-      const lut = await rebuildLut(msg);
-      if (lut.strategy === "denseLut") {
-        self.postMessage(
-          {
-            id: msg.id,
-            type: "lut",
-            strategy: "denseLut",
-            rgba: lut.rgba,
-            width: lut.width,
-            height: lut.height
-          },
-          { transfer: [lut.rgba.buffer] }
-        );
-        return;
-      }
+      const transfer = [];
+      if (persist) transfer.push(persist.buffer);
+      if (index) transfer.push(index.data.buffer);
       self.postMessage(
         {
           id: msg.id,
-          type: "lut",
-          strategy: "sparse",
-          missHidden: lut.missHidden,
-          overrides: lut.overrides
+          type: "ingested",
+          maxClassId,
+          names,
+          persist,
+          columns,
+          header,
+          index: index?.data,
+          indexWidth: index?.width,
+          indexHeight: index?.height
         },
-        { transfer: [lut.overrides.buffer] }
+        { transfer }
+      );
+      return;
+    }
+    if (msg.type === "classIndex") {
+      const { names, index } = await readClassIndex(msg.featureTableId);
+      self.postMessage(
+        {
+          id: msg.id,
+          type: "classIndex",
+          names,
+          index: index?.data,
+          indexWidth: index?.width,
+          indexHeight: index?.height
+        },
+        index ? { transfer: [index.data.buffer] } : void 0
       );
       return;
     }
     if (msg.type === "page") {
       const result = await page(
-        msg.classTableId,
+        msg.featureTableId,
         msg.query,
         msg.offset,
         msg.limit
@@ -11652,7 +11651,7 @@ async function handle(msg) {
       return;
     }
     if (msg.type === "drop") {
-      await drop(msg.classTableId);
+      await drop(msg.featureTableId);
       self.postMessage({ id: msg.id, type: "ok" });
       return;
     }
@@ -11660,6 +11659,7 @@ async function handle(msg) {
     self.postMessage({ id: msg.id, type: "ok" });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    console.error("[featureTable]", err);
     self.postMessage({
       id: msg.id,
       type: "error",

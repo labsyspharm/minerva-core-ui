@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-V-8ZgMRg.js","./pako.esm-KbdoS3Oq.js","./lerc-Ck8qQ1Bd.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-7Ly9YsiB.js","./pako.esm-KbdoS3Oq.js","./lerc-BddVr_mc.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -13233,7 +13233,7 @@ let __tla = (async () => {
   const wordmark$1 = "_wordmark_68zcf_20";
   const wordmarkDisplay = "_wordmarkDisplay_68zcf_32";
   const title$2 = "_title_68zcf_36";
-  const field$1 = "_field_68zcf_37";
+  const field$2 = "_field_68zcf_37";
   const input$1 = "_input_68zcf_62";
   const surface = "_surface_68zcf_82";
   const selectLeft = "_selectLeft_68zcf_89";
@@ -13258,7 +13258,7 @@ let __tla = (async () => {
     wordmark: wordmark$1,
     wordmarkDisplay,
     title: title$2,
-    field: field$1,
+    field: field$2,
     input: input$1,
     surface,
     selectLeft,
@@ -17260,22 +17260,6 @@ let __tla = (async () => {
       next2.channelGroups = next2.groups;
       delete next2.groups;
     }
-    if ("maskCatalogs" in next2 && !("classTables" in next2)) {
-      next2.classTables = next2.maskCatalogs;
-      delete next2.maskCatalogs;
-    }
-    if (Array.isArray(next2.classTables)) {
-      next2.classTables = next2.classTables.map((raw22) => {
-        if (raw22 === null || typeof raw22 !== "object" || Array.isArray(raw22)) {
-          return raw22;
-        }
-        const ct = raw22;
-        return {
-          ...ct,
-          nameColors: Array.isArray(ct.nameColors) ? ct.nameColors : []
-        };
-      });
-    }
     const shapes = next2.shapes;
     const waypoints = next2.waypoints;
     if (Array.isArray(shapes)) {
@@ -17469,7 +17453,7 @@ let __tla = (async () => {
     channels: arrayType(ChannelGroupChannelSchema)
   });
   const ClassIdSchema = numberType().int().positive().max(4294967295);
-  const ClassTableSchema = objectType({
+  const FeatureTableSchema = objectType({
     id: IdSchema,
     sourceChannelId: IdSchema,
     source: objectType({
@@ -17484,7 +17468,8 @@ let __tla = (async () => {
     columns: objectType({
       id: stringType().min(1),
       name: stringType().min(1)
-    }).optional()
+    }),
+    header: booleanType()
   });
   const waypointObjectZ = objectType({
     id: IdSchema,
@@ -17568,7 +17553,7 @@ let __tla = (async () => {
     shapes: arrayType(ShapeSchema),
     channelGroups: arrayType(ChannelGroupSchema),
     images: arrayType(ImageSchema$1),
-    classTables: arrayType(ClassTableSchema).default([])
+    featureTables: arrayType(FeatureTableSchema).default([])
   }));
   const jsonExportCoreSchema = objectType({
     version: unionType([
@@ -17611,6 +17596,8 @@ let __tla = (async () => {
     return parsed.success ? parsed.data : DEFAULT_MASK_VISUALIZATION;
   }
   const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 5;
+  const MAX_VIV_INTENSITY_CHANNELS = 10;
+  const VIEWER_INTENSITY_LIMIT_HINT = `Max ${MAX_VIV_INTENSITY_CHANNELS} channels`;
   function resolveImageImportRole(image2) {
     const role = resolveImageContentRole(image2);
     return role === "segmentation" ? "segmentation" : "intensity";
@@ -18174,6 +18161,28 @@ let __tla = (async () => {
   function isDisplayedViaGroupRow(sourceId, channelGroups, groupRowVisibilities) {
     return channelGroups.some((g2) => g2.channels.some((gc2) => gc2.channelId === sourceId && isGroupRowVisible(groupRowVisibilities, gc2.id)));
   }
+  function withGroupRowVisible(prev, channelGroups, rowId, visible) {
+    const next2 = {
+      ...prev,
+      [rowId]: visible
+    };
+    if (!visible) return next2;
+    let sourceId;
+    for (const group2 of channelGroups) {
+      const row2 = group2.channels.find((gc2) => gc2.id === rowId);
+      if (row2) {
+        sourceId = row2.channelId;
+        break;
+      }
+    }
+    if (!sourceId) return next2;
+    for (const group2 of channelGroups) {
+      for (const gc2 of group2.channels) {
+        if (gc2.channelId === sourceId && gc2.id !== rowId) next2[gc2.id] = false;
+      }
+    }
+    return next2;
+  }
   function sourceIdsInAnyGroup(channelGroups) {
     return new Set(channelGroups.flatMap((g2) => g2.channels.map((gc2) => gc2.channelId)));
   }
@@ -18272,6 +18281,36 @@ let __tla = (async () => {
       });
     }
     return ordered;
+  }
+  function compositedForImage(imageId, vis) {
+    return buildCompositedIntensityLayers({
+      onLoader: vis.channels.filter((sc2) => sc2.imageId === imageId && isImageChannel(sc2)),
+      activeGroup: vis.activeGroup,
+      channelGroups: vis.channelGroups,
+      stackVisibilities: vis.stackVisibilities,
+      groupRowVisibilities: vis.groupRowVisibilities,
+      hasVisibilityMap: true
+    });
+  }
+  function vivShownIntensitySourceIds(vis) {
+    const ids = /* @__PURE__ */ new Set();
+    const imageIds = /* @__PURE__ */ new Set();
+    for (const sc2 of vis.channels) {
+      if (isImageChannel(sc2)) imageIds.add(sc2.imageId);
+    }
+    for (const imageId of imageIds) {
+      const layers = compositedForImage(imageId, vis);
+      for (let i2 = 0; i2 < layers.length && i2 < MAX_VIV_INTENSITY_CHANNELS; i2++) {
+        ids.add(layers[i2].sc.id);
+      }
+    }
+    return ids;
+  }
+  function vivIntensityLayerCount(imageId, vis) {
+    return compositedForImage(imageId, vis).length;
+  }
+  function vivIntensityCapExceeded(imageId, vis) {
+    return vivIntensityLayerCount(imageId, vis) > MAX_VIV_INTENSITY_CHANNELS;
   }
   function isMaskSourceRendered(args) {
     const { sc: sc2, channelGroups = [], stackVisibilities, groupRowVisibilities } = args;
@@ -21827,7 +21866,6 @@ let __tla = (async () => {
       };
     });
   }
-  const MAX_VIV_INTENSITY_CHANNELS = 10;
   const VIV_TILE_MAX_CACHE_SIZE = 128;
   function mergeStickyIntensityOccupancy(args) {
     const preferredVisible = args.visibleSourceIds.slice(0, args.maxChannels);
@@ -21932,14 +21970,18 @@ let __tla = (async () => {
       const sourceImageMatches = (image_id) => loaderSourceImageId !== void 0 && loaderSourceImageId !== "" ? image_id === loaderSourceImageId : image_id === modality;
       const onLoader = SourceChannels.filter((sc2) => sourceImageMatches(sc2.imageId) && isImageChannel(sc2));
       const activeGroup = activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : void 0;
-      const hasVisibilityMap = channelVisibilities != null && Object.keys(channelVisibilities).length > 0;
+      const filled = applyVisibilityTransition(SourceChannels, channelGroups, channelVisibilities ?? {}, channelGroupRowVisibilities, Object.keys(channelVisibilities ?? {}).length === 0 ? {
+        kind: "fresh"
+      } : {
+        kind: "sync"
+      });
       const composited = buildCompositedIntensityLayers({
         onLoader,
         activeGroup,
         channelGroups,
-        stackVisibilities: channelVisibilities ?? {},
-        groupRowVisibilities: channelGroupRowVisibilities,
-        hasVisibilityMap
+        stackVisibilities: filled.channelVisibilities,
+        groupRowVisibilities: filled.channelGroupRowVisibilities,
+        hasVisibilityMap: true
       });
       if (composited.length > MAX_VIV_INTENSITY_CHANNELS && false) ;
       const byId = new Map(composited.map((layer) => [
@@ -66425,26 +66467,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BV5ZbpbM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-D1wsAFoA.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Bni40QC_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-B8kiosZ8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-C1sjPvWe.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DRS1ED5b.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-V-8ZgMRg.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BeUFgRhr.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Ck8qQ1Bd.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-7Ly9YsiB.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DOHlXXJG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BddVr_mc.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Ba7YHRu1.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-88T_Y4Bu.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-C6e2LTSG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-C5ITb-ac.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -74071,7 +74113,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
   const OUTER_POLYGON_WINDING = WINDING.CLOCKWISE;
   const HOLE_POLYGON_WINDING = WINDING.COUNTER_CLOCKWISE;
   const windingOptions = {};
-  function validate$1(polygon) {
+  function validate(polygon) {
     polygon = polygon && polygon.positions || polygon;
     if (!Array.isArray(polygon) && !ArrayBuffer.isView(polygon)) {
       throw new Error("invalid polygon");
@@ -74143,7 +74185,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     return targetIndex;
   }
   function normalize$3(polygon, positionSize) {
-    validate$1(polygon);
+    validate(polygon);
     const positions = [];
     const holeIndices = [];
     if ("positions" in polygon) {
@@ -83562,6 +83604,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (handle2.kind === "file") return handle2;
     return void 0;
   }
+  async function deleteFileHandle(id2) {
+    sessionHandles.delete(id2);
+    await storyDb.handles.delete(id2);
+  }
   async function deleteFileHandlesForStory(storyId) {
     const prefix = `story:${storyId}:`;
     for (const id2 of sessionHandles.keys()) {
@@ -84081,14 +84127,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     next2[idx] = replacement;
     return next2;
   }
-  function removeImageFromDocument(images, channelGroups, imageId, classTables) {
+  function removeImageFromDocument(images, channelGroups, imageId, featureTables) {
     const image2 = images.find((im) => im.id === imageId);
     if (!image2) {
       return {
         images,
         channelGroups,
         removedChannelIds: [],
-        classTables
+        featureTables
       };
     }
     const removedChannelIds = image2.channels.map((ch2) => ch2.id);
@@ -84100,7 +84146,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         channels: g2.channels.filter((gc2) => !removed.has(gc2.channelId))
       })).filter((g2) => g2.channels.length > 0),
       removedChannelIds,
-      classTables: classTables.filter((c2) => !removed.has(c2.sourceChannelId))
+      featureTables: featureTables.filter((c2) => !removed.has(c2.sourceChannelId))
     };
   }
   function basenameImportLabel(basename2) {
@@ -85085,7 +85131,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (Array.isArray(sids)) for (const sid of sids) note(sid);
     }
     for (const s2 of data2.shapes) note(s2 == null ? void 0 : s2.id);
-    for (const raw2 of data2.classTables ?? []) {
+    for (const raw2 of data2.featureTables ?? []) {
       const row2 = raw2;
       note(row2 == null ? void 0 : row2.id);
       if ((row2 == null ? void 0 : row2.sourceChannelId) != null) note(row2.sourceChannelId);
@@ -85151,19 +85197,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const cgSame = channelGroups.every((g2, i2) => g2 === data2.channelGroups[i2]);
     const wpSame = waypoints.every((w2, i2) => w2 === data2.waypoints[i2]);
     const seenChannel = /* @__PURE__ */ new Set();
-    const classTables = data2.classTables.filter((c2) => {
+    const featureTables = data2.featureTables.filter((c2) => {
       if (!imageChannelIds.has(c2.sourceChannelId)) return false;
       if (seenChannel.has(c2.sourceChannelId)) return false;
       seenChannel.add(c2.sourceChannelId);
       return true;
     });
-    const tablesSame = classTables.length === data2.classTables.length;
+    const tablesSame = featureTables.length === data2.featureTables.length;
     if (cgSame && wpSame && tablesSame) return data2;
     return {
       ...data2,
       channelGroups,
       waypoints,
-      classTables
+      featureTables
     };
   }
   function validateDocumentRelations(data2) {
@@ -85199,7 +85245,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         shapes: candidate.shapes,
         channelGroups: [],
         images: [],
-        classTables: []
+        featureTables: []
       };
     } else if (candidate !== null && typeof candidate === "object" && !Array.isArray(candidate) && Array.isArray(candidate.waypoints) && Array.isArray(candidate.shapes) && (Array.isArray(candidate.groups) || Array.isArray(candidate.channelGroups)) && Array.isArray(candidate.sourceChannels) && !(Array.isArray(candidate.images) && candidate.images.some((im) => im && Array.isArray(im.channels) && im.channels.length > 0))) {
       candidate = normalizeLegacySnapshot(candidate);
@@ -85233,7 +85279,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       shapes: shapesIn.filter((s2) => s2 != null && typeof s2 === "object" && !Array.isArray(s2) && typeof s2.type === "string"),
       channelGroups: Array.isArray(rawCg) ? rawCg : [],
       images: imagesDraft,
-      classTables: Array.isArray(asRecord.classTables) ? asRecord.classTables : []
+      featureTables: Array.isArray(asRecord.featureTables) ? asRecord.featureTables : []
     };
     for (const im of draft.images) {
       if (!Array.isArray(im.channels)) im.channels = [];
@@ -85296,7 +85342,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       shapes: [],
       channelGroups: [],
       images: [],
-      classTables: []
+      featureTables: []
     };
   }
   async function setActiveStoryId(id2) {
@@ -85375,7 +85421,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       shapes: [],
       channelGroups: [],
       images: [],
-      classTables: [],
+      featureTables: [],
       metadata: {}
     };
   }
@@ -85395,9 +85441,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return s2.shapes;
   }
   function documentUndoEquality(past, current) {
-    if (past.classTables !== current.classTables) return false;
-    const { classTables: _p, ...p2 } = past;
-    const { classTables: _c2, ...c2 } = current;
+    if (past.featureTables !== current.featureTables) return false;
+    const { featureTables: _p, ...p2 } = past;
+    const { featureTables: _c2, ...c2 } = current;
     return stableHash(p2) === stableHash(c2);
   }
   const documentTemporalOptions = {
@@ -85406,7 +85452,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       shapes: state.shapes,
       channelGroups: state.channelGroups,
       images: state.images,
-      classTables: state.classTables,
+      featureTables: state.featureTables,
       metadata: state.metadata
     }),
     limit: 100,
@@ -85434,8 +85480,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         images: [
           ...data2.images
         ],
-        classTables: [
-          ...data2.classTables
+        featureTables: [
+          ...data2.featureTables
         ],
         metadata: {
           ...m2,
@@ -85461,8 +85507,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           images: [
             ...data2.images
           ],
-          classTables: [
-            ...data2.classTables
+          featureTables: [
+            ...data2.featureTables
           ],
           metadata: {
             ...m2,
@@ -85491,8 +85537,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         images: [
           ...s2.images
         ],
-        classTables: [
-          ...s2.classTables
+        featureTables: [
+          ...s2.featureTables
         ]
       };
     },
@@ -85534,8 +85580,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         images: [
           ...rec.data.images
         ],
-        classTables: [
-          ...rec.data.classTables ?? []
+        featureTables: [
+          ...rec.data.featureTables ?? []
         ],
         metadata: {
           ...rec.data.metadata
@@ -85564,8 +85610,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         images: [
           ...rec.data.images
         ],
-        classTables: [
-          ...rec.data.classTables ?? []
+        featureTables: [
+          ...rec.data.featureTables ?? []
         ],
         metadata: {
           ...rec.data.metadata
@@ -85598,8 +85644,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           images: [
             ...rec2.data.images
           ],
-          classTables: [
-            ...rec2.data.classTables ?? []
+          featureTables: [
+            ...rec2.data.featureTables ?? []
           ],
           metadata: {
             ...rec2.data.metadata
@@ -85631,8 +85677,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         images: [
           ...rec.data.images
         ],
-        classTables: [
-          ...rec.data.classTables ?? []
+        featureTables: [
+          ...rec.data.featureTables ?? []
         ],
         metadata: {
           ...rec.data.metadata
@@ -85660,9 +85706,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         ...images
       ]
     })),
-    setClassTables: (classTables) => set2(() => ({
-      classTables: [
-        ...classTables
+    setFeatureTables: (featureTables) => set2(() => ({
+      featureTables: [
+        ...featureTables
       ]
     })),
     setImagesAndChannelGroups: (images, channelGroups) => set2(() => ({
@@ -86260,7 +86306,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     channelRendering: null,
     maskVisualizationPreview: null,
     channelVisibilities: {},
-    classTableVisibilities: {},
+    featureTableVisibilities: {},
     channelGroupRowVisibilities: {},
     groupNames: {},
     targetWaypointCamera: null,
@@ -86526,7 +86572,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         imageSelectionMask: null,
         maskVisualizationPreview: null,
         channelVisibilities: vis,
-        classTableVisibilities: {},
+        featureTableVisibilities: {},
         activeStoryIndex: null,
         waypointAuthoring: /* @__PURE__ */ new Map(),
         authoringWaypointShapesIndex: null,
@@ -87592,19 +87638,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     const { channelVisibilities } = visibility;
     delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
-    const classTableIds = new Set(doc.classTables.map((c2) => c2.id));
-    const classTableVisibilities = {
-      ...app.classTableVisibilities
+    const featureTableIds = new Set(doc.featureTables.map((c2) => c2.id));
+    const featureTableVisibilities = {
+      ...app.featureTableVisibilities
     };
-    for (const id2 of Object.keys(classTableVisibilities)) {
-      if (!classTableIds.has(id2)) delete classTableVisibilities[id2];
+    for (const id2 of Object.keys(featureTableVisibilities)) {
+      if (!featureTableIds.has(id2)) delete featureTableVisibilities[id2];
     }
     const activeId = app.activeChannelGroupId;
     const nextActiveId = activeId && groups.some((g2) => g2.id === activeId) ? activeId : ((_a2 = groups[0]) == null ? void 0 : _a2.id) ?? null;
     useAppStore.setState({
       groupNames,
       channelVisibilities,
-      classTableVisibilities,
+      featureTableVisibilities,
       channelGroupRowVisibilities: visibility.channelGroupRowVisibilities,
       activeChannelGroupId: nextActiveId
     });
@@ -88884,51 +88930,41 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return n2;
     }, _extends.apply(null, arguments);
   }
-  var RGB_MAX = 255;
-  var SV_MAX = 100;
-  var rgbaToHsva = (_ref) => {
-    var { r: r2, g: g2, b: b2, a: a2 } = _ref;
+  var RGB_MAX$1 = 255;
+  var SV_MAX$1 = 100;
+  var rgbaToHsva$1 = (_ref) => {
+    var r2 = _ref.r, g2 = _ref.g, b2 = _ref.b, a2 = _ref.a;
     var max2 = Math.max(r2, g2, b2);
     var delta = max2 - Math.min(r2, g2, b2);
     var hh2 = delta ? max2 === r2 ? (g2 - b2) / delta : max2 === g2 ? 2 + (b2 - r2) / delta : 4 + (r2 - g2) / delta : 0;
     return {
       h: 60 * (hh2 < 0 ? hh2 + 6 : hh2),
-      s: max2 ? delta / max2 * SV_MAX : 0,
-      v: max2 / RGB_MAX * SV_MAX,
+      s: max2 ? delta / max2 * SV_MAX$1 : 0,
+      v: max2 / RGB_MAX$1 * SV_MAX$1,
       a: a2
     };
   };
   var hsvaToHslaString = (hsva) => {
-    var { h: h2, s: s2, l: l2, a: a2 } = hsvaToHsla(hsva);
+    var _hsvaToHsla2 = hsvaToHsla(hsva), h2 = _hsvaToHsla2.h, s2 = _hsvaToHsla2.s, l2 = _hsvaToHsla2.l, a2 = _hsvaToHsla2.a;
     return "hsla(" + h2 + ", " + s2 + "%, " + l2 + "%, " + a2 + ")";
   };
-  var hslaToHsva = (_ref4) => {
-    var { h: h2, s: s2, l: l2, a: a2 } = _ref4;
-    s2 *= (l2 < 50 ? l2 : SV_MAX - l2) / SV_MAX;
-    return {
-      h: h2,
-      s: s2 > 0 ? 2 * s2 / (l2 + s2) * SV_MAX : 0,
-      v: l2 + s2,
-      a: a2
-    };
-  };
   var hsvaToHsla = (_ref5) => {
-    var { h: h2, s: s2, v: v2, a: a2 } = _ref5;
-    var hh2 = (200 - s2) * v2 / SV_MAX;
+    var h2 = _ref5.h, s2 = _ref5.s, v2 = _ref5.v, a2 = _ref5.a;
+    var hh2 = (200 - s2) * v2 / SV_MAX$1;
     return {
       h: h2,
-      s: hh2 > 0 && hh2 < 200 ? s2 * v2 / SV_MAX / (hh2 <= SV_MAX ? hh2 : 200 - hh2) * SV_MAX : 0,
+      s: hh2 > 0 && hh2 < 200 ? s2 * v2 / SV_MAX$1 / (hh2 <= SV_MAX$1 ? hh2 : 200 - hh2) * SV_MAX$1 : 0,
       l: hh2 / 2,
       a: a2
     };
   };
   var rgbToHex = (_ref7) => {
-    var { r: r2, g: g2, b: b2 } = _ref7;
+    var r2 = _ref7.r, g2 = _ref7.g, b2 = _ref7.b;
     var bin2 = r2 << 16 | g2 << 8 | b2;
     return "#" + ((h2) => new Array(7 - h2.length).join("0") + h2)(bin2.toString(16));
   };
   var rgbaToHexa = (_ref8) => {
-    var { r: r2, g: g2, b: b2, a: a2 } = _ref8;
+    var r2 = _ref8.r, g2 = _ref8.g, b2 = _ref8.b, a2 = _ref8.a;
     var alpha2 = typeof a2 === "number" && (a2 * 255 | 1 << 8).toString(16).slice(1);
     return "" + rgbToHex({
       r: r2,
@@ -88936,26 +88972,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       b: b2
     }) + (alpha2 ? alpha2 : "");
   };
-  var hexToHsva = (hex) => rgbaToHsva(hexToRgba(hex));
+  var hexToHsva = (hex) => rgbaToHsva$1(hexToRgba(hex));
   var hexToRgba = (hex) => {
     var htemp = hex.replace("#", "");
     if (/^#?/.test(hex) && htemp.length === 3) {
       hex = "#" + htemp.charAt(0) + htemp.charAt(0) + htemp.charAt(1) + htemp.charAt(1) + htemp.charAt(2) + htemp.charAt(2);
     }
     var reg = new RegExp("[A-Za-z0-9]{2}", "g");
-    var [r2, g2, b2 = 0, a2] = hex.match(reg).map((v2) => parseInt(v2, 16));
+    var _map2 = hex.match(reg).map((v2) => parseInt(v2, 16)), r2 = _map2[0], g2 = _map2[1], _map2$ = _map2[2], b2 = _map2$ === void 0 ? 0 : _map2$, a2 = _map2[3];
     return {
       r: r2,
       g: g2,
       b: b2,
-      a: (a2 != null ? a2 : 255) / RGB_MAX
+      a: (a2 != null ? a2 : 255) / RGB_MAX$1
     };
   };
   var hsvaToRgba = (_ref9) => {
-    var { h: h2, s: s2, v: v2, a: a2 } = _ref9;
-    var _h2 = h2 / 60, _s = s2 / SV_MAX, _v = v2 / SV_MAX, hi2 = Math.floor(_h2) % 6;
-    var f2 = _h2 - Math.floor(_h2), _p = RGB_MAX * _v * (1 - _s), _q = RGB_MAX * _v * (1 - _s * f2), _t = RGB_MAX * _v * (1 - _s * (1 - f2));
-    _v *= RGB_MAX;
+    var h2 = _ref9.h, s2 = _ref9.s, v2 = _ref9.v, a2 = _ref9.a;
+    var _h2 = h2 / 60, _s = s2 / SV_MAX$1, _v = v2 / SV_MAX$1, hi2 = Math.floor(_h2) % 6;
+    var f2 = _h2 - Math.floor(_h2), _p = RGB_MAX$1 * _v * (1 - _s), _q = RGB_MAX$1 * _v * (1 - _s * f2), _t = RGB_MAX$1 * _v * (1 - _s * (1 - f2));
+    _v *= RGB_MAX$1;
     var rgba = {};
     switch (hi2) {
       case 0:
@@ -88996,12 +89032,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       a: a2
     });
   };
-  var hsvaToRgbaString = (hsva) => {
-    var { r: r2, g: g2, b: b2, a: a2 } = hsvaToRgba(hsva);
-    return "rgba(" + r2 + ", " + g2 + ", " + b2 + ", " + a2 + ")";
-  };
   var rgbaToRgb = (_ref0) => {
-    var { r: r2, g: g2, b: b2 } = _ref0;
+    var r2 = _ref0.r, g2 = _ref0.g, b2 = _ref0.b;
     return {
       r: r2,
       g: g2,
@@ -89009,7 +89041,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   };
   var hslaToHsl = (_ref1) => {
-    var { h: h2, s: s2, l: l2 } = _ref1;
+    var h2 = _ref1.h, s2 = _ref1.s, l2 = _ref1.l;
     return {
       h: h2,
       s: s2,
@@ -89017,9 +89049,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   };
   var hsvaToHex = (hsva) => rgbToHex(hsvaToRgba(hsva));
-  var hsvaToHexa = (hsva) => rgbaToHexa(hsvaToRgba(hsva));
   var hsvaToHsv = (_ref10) => {
-    var { h: h2, s: s2, v: v2 } = _ref10;
+    var h2 = _ref10.h, s2 = _ref10.s, v2 = _ref10.v;
     return {
       h: h2,
       s: s2,
@@ -89027,7 +89058,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   };
   var rgbToXY = (_ref12) => {
-    var { r: r2, g: g2, b: b2 } = _ref12;
+    var r2 = _ref12.r, g2 = _ref12.g, b2 = _ref12.b;
     var translateColor = function translateColor2(color2) {
       return color2 <= 0.04045 ? color2 / 12.92 : Math.pow((color2 + 0.055) / 1.055, 2.4);
     };
@@ -89050,7 +89081,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     var xy;
     var hex;
     var hexa;
-    if (typeof str2 === "string" && validHex$1(str2)) {
+    if (typeof str2 === "string" && validHex(str2)) {
       hsva = hexToHsva(str2);
       hex = str2;
     } else if (typeof str2 !== "string") {
@@ -89078,7 +89109,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       xy
     };
   };
-  var validHex$1 = (hex) => /^#?([A-Fa-f0-9]{3,4}){1,2}$/.test(hex);
+  var validHex = (hex) => /^#?([A-Fa-f0-9]{3,4}){1,2}$/.test(hex);
   function _objectWithoutPropertiesLoose(r2, e2) {
     if (null == r2) return {};
     var t2 = {};
@@ -89120,17 +89151,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       y: pointer.pageY - (rect.top + window.pageYOffset)
     };
   };
-  var _excluded$f = [
+  var _excluded$8 = [
     "prefixCls",
     "className",
     "onMove",
     "onDown"
   ];
   var Interactive = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-interactive", className: className2, onMove, onDown } = props, reset = _objectWithoutPropertiesLoose(props, _excluded$f);
+    var _props$prefixCls = props.prefixCls, prefixCls = _props$prefixCls === void 0 ? "w-color-interactive" : _props$prefixCls, className2 = props.className, onMove = props.onMove, onDown = props.onDown, reset = _objectWithoutPropertiesLoose(props, _excluded$8);
     var container2 = reactExports.useRef(null);
     var hasTouched = reactExports.useRef(false);
-    var [isDragging, setDragging] = reactExports.useState(false);
+    var _useState = reactExports.useState(false), isDragging = _useState[0], setDragging = _useState[1];
     var onMoveCallback = useEventCallback(onMove);
     var onKeyCallback = useEventCallback(onDown);
     var isValid2 = (event) => {
@@ -89202,7 +89233,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }));
   });
   Interactive.displayName = "Interactive";
-  var _excluded$e = [
+  var _excluded$7 = [
     "className",
     "prefixCls",
     "left",
@@ -89211,7 +89242,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     "fillProps"
   ];
   var Pointer$1 = (_ref) => {
-    var { className: className2, prefixCls, left, top: top2, style: style2, fillProps } = _ref, reset = _objectWithoutPropertiesLoose(_ref, _excluded$e);
+    var className2 = _ref.className, prefixCls = _ref.prefixCls, left = _ref.left, top2 = _ref.top, style2 = _ref.style, fillProps = _ref.fillProps, reset = _objectWithoutPropertiesLoose(_ref, _excluded$7);
     var styleWrapper = _extends({}, style2, {
       position: "absolute",
       left,
@@ -89237,7 +89268,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }))
     }));
   };
-  var _excluded$d = [
+  var _excluded$6 = [
     "prefixCls",
     "className",
     "hsva",
@@ -89249,27 +89280,50 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     "width",
     "height",
     "direction",
+    "reverse",
     "style",
     "onChange",
     "pointer"
   ];
   var BACKGROUND_IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3uCTZhw1gGGYhAGBZIA/nYDCgBDAm9BGDWAAJyRCgLaBCAAgXwixzAS0pgAAAABJRU5ErkJggg==";
   var Alpha = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-alpha", className: className2, hsva, background, bgProps = {}, innerProps = {}, pointerProps = {}, radius = 0, width, height = 16, direction: direction2 = "horizontal", style: style2, onChange, pointer } = props, other = _objectWithoutPropertiesLoose(props, _excluded$d);
+    var _props$prefixCls = props.prefixCls, prefixCls = _props$prefixCls === void 0 ? "w-color-alpha" : _props$prefixCls, className2 = props.className, hsva = props.hsva, background = props.background, _props$bgProps = props.bgProps, bgProps = _props$bgProps === void 0 ? {} : _props$bgProps, _props$innerProps = props.innerProps, innerProps = _props$innerProps === void 0 ? {} : _props$innerProps, _props$pointerProps = props.pointerProps, pointerProps = _props$pointerProps === void 0 ? {} : _props$pointerProps, _props$radius = props.radius, radius = _props$radius === void 0 ? 0 : _props$radius, width = props.width, _props$height = props.height, height = _props$height === void 0 ? 16 : _props$height, _props$direction = props.direction, direction2 = _props$direction === void 0 ? "horizontal" : _props$direction, _props$reverse = props.reverse, reverse = _props$reverse === void 0 ? false : _props$reverse, style2 = props.style, onChange = props.onChange, pointer = props.pointer, other = _objectWithoutPropertiesLoose(props, _excluded$6);
+    var offsetToAlpha = reactExports.useCallback((offset) => {
+      var value = direction2 === "horizontal" ? offset.left : offset.top;
+      if (direction2 === "horizontal") {
+        return reverse ? 1 - value : value;
+      }
+      return reverse ? value : 1 - value;
+    }, [
+      direction2,
+      reverse
+    ]);
+    var alphaToOffset = reactExports.useCallback((alpha2) => {
+      if (direction2 === "horizontal") {
+        return reverse ? 1 - alpha2 : alpha2;
+      }
+      return reverse ? alpha2 : 1 - alpha2;
+    }, [
+      direction2,
+      reverse
+    ]);
     var handleChange = (offset) => {
+      var alpha2 = offsetToAlpha(offset);
       onChange && onChange(_extends({}, hsva, {
-        a: direction2 === "horizontal" ? offset.left : offset.top
+        a: alpha2
       }), offset);
     };
     var colorTo = hsvaToHslaString(Object.assign({}, hsva, {
       a: 1
     }));
-    var innerBackground = "linear-gradient(to " + (direction2 === "horizontal" ? "right" : "bottom") + ", rgba(244, 67, 54, 0) 0%, " + colorTo + " 100%)";
+    var horizontalGradient = reverse ? "linear-gradient(to right, " + colorTo + " 0%, rgba(244, 67, 54, 0) 100%)" : "linear-gradient(to right, rgba(244, 67, 54, 0) 0%, " + colorTo + " 100%)";
+    var verticalGradient = reverse ? "linear-gradient(to bottom, rgba(244, 67, 54, 0) 0%, " + colorTo + " 100%)" : "linear-gradient(to bottom, " + colorTo + " 0%, rgba(244, 67, 54, 0) 100%)";
+    var innerBackground = direction2 === "horizontal" ? horizontalGradient : verticalGradient;
     var comProps = {};
     if (direction2 === "horizontal") {
-      comProps.left = hsva.a * 100 + "%";
+      comProps.left = alphaToOffset(hsva.a) * 100 + "%";
     } else {
-      comProps.top = hsva.a * 100 + "%";
+      comProps.top = alphaToOffset(hsva.a) * 100 + "%";
     }
     var styleWrapper = _extends({
       "--alpha-background-color": "#fff",
@@ -89291,25 +89345,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       switch (event.key) {
         case "ArrowLeft":
           if (direction2 === "horizontal") {
-            newAlpha = Math.max(0, currentAlpha - step);
+            newAlpha = reverse ? Math.min(1, currentAlpha + step) : Math.max(0, currentAlpha - step);
             event.preventDefault();
           }
           break;
         case "ArrowRight":
           if (direction2 === "horizontal") {
-            newAlpha = Math.min(1, currentAlpha + step);
+            newAlpha = reverse ? Math.max(0, currentAlpha - step) : Math.min(1, currentAlpha + step);
             event.preventDefault();
           }
           break;
         case "ArrowUp":
           if (direction2 === "vertical") {
-            newAlpha = Math.max(0, currentAlpha - step);
+            newAlpha = reverse ? Math.max(0, currentAlpha - step) : Math.min(1, currentAlpha + step);
             event.preventDefault();
           }
           break;
         case "ArrowDown":
           if (direction2 === "vertical") {
-            newAlpha = Math.min(1, currentAlpha + step);
+            newAlpha = reverse ? Math.min(1, currentAlpha + step) : Math.max(0, currentAlpha - step);
             event.preventDefault();
           }
           break;
@@ -89317,9 +89371,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           return;
       }
       if (newAlpha !== currentAlpha) {
+        var syntheticAxisOffset = alphaToOffset(newAlpha);
         var syntheticOffset = {
-          left: direction2 === "horizontal" ? newAlpha : hsva.a,
-          top: direction2 === "vertical" ? newAlpha : hsva.a,
+          left: direction2 === "horizontal" ? syntheticAxisOffset : hsva.a,
+          top: direction2 === "vertical" ? syntheticAxisOffset : hsva.a,
           width: 0,
           height: 0,
           x: 0,
@@ -89330,9 +89385,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }), syntheticOffset);
       }
     }, [
+      alphaToOffset,
       hsva,
       direction2,
-      onChange
+      onChange,
+      reverse
     ]);
     var handleClick = reactExports.useCallback((event) => {
       event.target.focus();
@@ -89376,462 +89433,71 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }));
   });
   Alpha.displayName = "Alpha";
-  var _excluded$c = [
+  var _excluded$5 = [
     "prefixCls",
-    "placement",
-    "label",
-    "value",
     "className",
-    "style",
-    "labelStyle",
-    "inputStyle",
+    "hue",
     "onChange",
-    "onBlur",
-    "renderInput"
+    "direction",
+    "reverse"
   ];
-  var validHex = (hex) => /^#?([A-Fa-f0-9]{3,4}){1,2}$/.test(hex);
-  var getNumberValue = (value) => Number(String(value).replace(/%/g, ""));
-  var EditableInput = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-editable-input", placement = "bottom", label: label2, value: initValue, className: className2, style: style2, labelStyle, inputStyle, onChange, onBlur, renderInput } = props, other = _objectWithoutPropertiesLoose(props, _excluded$c);
-    var [value, setValue] = reactExports.useState(initValue);
-    var isFocus = reactExports.useRef(false);
-    var inputIdRef = reactExports.useRef(other.id || prefixCls + "-" + Math.random().toString(36).slice(2, 11));
-    var inputId = other.id || inputIdRef.current;
-    reactExports.useEffect(() => {
-      if (props.value !== value) {
-        if (!isFocus.current) {
-          setValue(props.value);
-        }
+  var NORMAL_COLORS = "rgb(255, 0, 0) 0%, rgb(255, 255, 0) 17%, rgb(0, 255, 0) 33%, rgb(0, 255, 255) 50%, rgb(0, 0, 255) 67%, rgb(255, 0, 255) 83%, rgb(255, 0, 0) 100%";
+  var REVERSED_COLORS = "rgb(255, 0, 0) 0%, rgb(255, 0, 255) 17%, rgb(0, 0, 255) 33%, rgb(0, 255, 255) 50%, rgb(0, 255, 0) 67%, rgb(255, 255, 0) 83%, rgb(255, 0, 0) 100%";
+  var Hue = React$2.forwardRef((props, ref) => {
+    var _props$prefixCls = props.prefixCls, prefixCls = _props$prefixCls === void 0 ? "w-color-hue" : _props$prefixCls, className2 = props.className, _props$hue = props.hue, hue = _props$hue === void 0 ? 0 : _props$hue, _onChange = props.onChange, _props$direction = props.direction, direction2 = _props$direction === void 0 ? "horizontal" : _props$direction, _props$reverse = props.reverse, reverse = _props$reverse === void 0 ? false : _props$reverse, other = _objectWithoutPropertiesLoose(props, _excluded$5);
+    var getGradientBackground = reactExports.useCallback(() => {
+      if (direction2 === "horizontal") {
+        var colors = reverse ? REVERSED_COLORS : NORMAL_COLORS;
+        var gradientDirection = "right";
+        return "linear-gradient(to " + gradientDirection + ", " + colors + ")";
+      } else {
+        var _colors = reverse ? NORMAL_COLORS : REVERSED_COLORS;
+        var _gradientDirection = "bottom";
+        return "linear-gradient(to " + _gradientDirection + ", " + _colors + ")";
       }
     }, [
-      props.value
+      direction2,
+      reverse
     ]);
-    function handleChange(evn, valInit) {
-      var value2 = (valInit || evn.target.value).trim().replace(/^#/, "");
-      if (validHex(value2)) {
-        onChange && onChange(evn, value2);
+    var getHueFromInteraction = reactExports.useCallback((interaction) => {
+      var value = direction2 === "horizontal" ? interaction.left : interaction.top;
+      var normalizedValue;
+      if (direction2 === "horizontal") {
+        normalizedValue = reverse ? 1 - value : value;
+      } else {
+        normalizedValue = reverse ? value : 1 - value;
       }
-      var val = getNumberValue(value2);
-      if (!isNaN(val)) {
-        onChange && onChange(evn, val);
-      }
-      setValue(value2);
-    }
-    function handleBlur(evn) {
-      isFocus.current = false;
-      setValue(props.value);
-      onBlur && onBlur(evn);
-    }
-    var placementStyle = {};
-    if (placement === "bottom") {
-      placementStyle["flexDirection"] = "column";
-    }
-    if (placement === "top") {
-      placementStyle["flexDirection"] = "column-reverse";
-    }
-    if (placement === "left") {
-      placementStyle["flexDirection"] = "row-reverse";
-    }
-    var wrapperStyle = _extends({
-      "--editable-input-label-color": "rgb(153, 153, 153)",
-      "--editable-input-box-shadow": "rgb(204 204 204) 0px 0px 0px 1px inset",
-      "--editable-input-color": "#666",
-      position: "relative",
-      alignItems: "center",
-      display: "flex",
-      fontSize: 11
-    }, placementStyle, style2);
-    var editableStyle = _extends({
-      width: "100%",
-      paddingTop: 2,
-      paddingBottom: 2,
-      paddingLeft: 3,
-      paddingRight: 3,
-      fontSize: 11,
-      background: "transparent",
-      boxSizing: "border-box",
-      border: "none",
-      color: "var(--editable-input-color)",
-      boxShadow: "var(--editable-input-box-shadow)"
-    }, inputStyle);
-    var inputProps = _extends({
-      value,
-      onChange: handleChange,
-      onBlur: handleBlur,
-      autoComplete: "off",
-      onFocus: () => isFocus.current = true
-    }, other, {
-      id: inputId,
-      style: editableStyle,
-      onFocusCapture: (e2) => {
-        var elm2 = e2.target;
-        elm2.setSelectionRange(elm2.value.length, elm2.value.length);
-      }
-    });
-    return jsxRuntimeExports.jsxs("div", {
-      className: [
-        prefixCls,
-        className2 || ""
-      ].filter(Boolean).join(" "),
-      style: wrapperStyle,
-      children: [
-        renderInput ? renderInput(inputProps, ref) : jsxRuntimeExports.jsx("input", _extends({
-          ref
-        }, inputProps)),
-        label2 && jsxRuntimeExports.jsx("label", {
-          htmlFor: inputId,
-          style: _extends({
-            color: "var(--editable-input-label-color)",
-            textTransform: "capitalize"
-          }, labelStyle),
-          children: label2
-        })
-      ]
-    });
-  });
-  EditableInput.displayName = "EditableInput";
-  var _excluded$b = [
-    "prefixCls",
-    "className",
-    "color",
-    "colors",
-    "style",
-    "rectProps",
-    "onChange",
-    "addonAfter",
-    "addonBefore",
-    "rectRender"
-  ];
-  var Swatch = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-swatch", className: className2, color: color2, colors = [], style: style2, rectProps = {}, onChange, addonAfter, addonBefore, rectRender } = props, other = _objectWithoutPropertiesLoose(props, _excluded$b);
-    var rectStyle = _extends({
-      "--swatch-background-color": "rgb(144, 19, 254)",
-      background: "var(--swatch-background-color)",
-      height: 15,
-      width: 15,
-      marginRight: 5,
-      marginBottom: 5,
-      cursor: "pointer",
-      position: "relative",
-      outline: "none",
-      borderRadius: 2
-    }, rectProps.style);
-    var handleClick = (hex, evn) => {
-      onChange && onChange(hexToHsva(hex), color$1(hexToHsva(hex)), evn);
-    };
-    return jsxRuntimeExports.jsxs("div", _extends({
-      ref
-    }, other, {
-      className: [
-        prefixCls,
-        className2 || ""
-      ].filter(Boolean).join(" "),
-      style: _extends({
-        display: "flex",
-        flexWrap: "wrap",
-        position: "relative"
-      }, style2),
-      children: [
-        addonBefore && React$2.isValidElement(addonBefore) && addonBefore,
-        colors && Array.isArray(colors) && colors.map((item2, idx) => {
-          var title7 = "";
-          var background = "";
-          if (typeof item2 === "string") {
-            title7 = item2;
-            background = item2;
-          }
-          if (typeof item2 === "object" && item2.color) {
-            title7 = item2.title || item2.color;
-            background = item2.color;
-          }
-          var checked2 = color2 && color2.toLocaleLowerCase() === background.toLocaleLowerCase();
-          var render = rectRender && rectRender({
-            title: title7,
-            color: background,
-            checked: !!checked2,
-            style: _extends({}, rectStyle, {
-              background
-            }),
-            onClick: (evn) => handleClick(background, evn)
-          });
-          if (render) {
-            return jsxRuntimeExports.jsx(reactExports.Fragment, {
-              children: render
-            }, idx);
-          }
-          var child = rectProps.children && React$2.isValidElement(rectProps.children) ? React$2.cloneElement(rectProps.children, {
-            color: background,
-            checked: checked2
-          }) : null;
-          return jsxRuntimeExports.jsx("div", _extends({
-            tabIndex: 0,
-            title: title7,
-            onClick: (evn) => handleClick(background, evn)
-          }, rectProps, {
-            children: child,
-            style: _extends({}, rectStyle, {
-              background
-            })
-          }), idx);
-        }),
-        addonAfter && React$2.isValidElement(addonAfter) && addonAfter
-      ]
-    }));
-  });
-  Swatch.displayName = "Swatch";
-  function _objectDestructuringEmpty(t2) {
-    if (null == t2) throw new TypeError("Cannot destructure " + t2);
-  }
-  var defalutStyle = {
-    marginRight: 0,
-    marginBottom: 0,
-    borderRadius: 0,
-    boxSizing: "border-box",
-    height: 25,
-    width: 25
-  };
-  function Point$2(_ref) {
-    var { style: style2, title: title7, checked: checked2, color: color2, onClick, rectProps } = _ref;
-    var btn = reactExports.useRef(null);
-    var handleMouseEnter = reactExports.useCallback(() => {
-      btn.current.style["zIndex"] = "2";
-      btn.current.style["outline"] = "#fff solid 2px";
-      btn.current.style["boxShadow"] = "rgb(0 0 0 / 25%) 0 0 5px 2px";
-    }, []);
-    var handleMouseLeave = reactExports.useCallback(() => {
-      if (!checked2) {
-        btn.current.style["zIndex"] = "0";
-        btn.current.style["outline"] = "initial";
-        btn.current.style["boxShadow"] = "initial";
-      }
+      return 360 * normalizedValue;
     }, [
-      checked2
+      direction2,
+      reverse
     ]);
-    var rectStyle = checked2 ? {
-      zIndex: 1,
-      outline: "#fff solid 2px",
-      boxShadow: "rgb(0 0 0 / 25%) 0 0 5px 2px"
-    } : {
-      zIndex: 0
-    };
-    return jsxRuntimeExports.jsx("div", _extends({
-      ref: btn,
-      title: title7
-    }, rectProps, {
-      onClick,
-      onMouseEnter: handleMouseEnter,
-      onMouseLeave: handleMouseLeave,
-      style: _extends({}, style2, {
-        marginRight: 0,
-        marginBottom: 0,
-        borderRadius: 0,
-        boxSizing: "border-box",
-        height: 25,
-        width: 25
-      }, defalutStyle, rectStyle, rectProps == null ? void 0 : rectProps.style)
-    }));
-  }
-  var _excluded$a = [
-    "prefixCls",
-    "placement",
-    "className",
-    "style",
-    "color",
-    "colors",
-    "showTriangle",
-    "rectProps",
-    "onChange",
-    "rectRender"
-  ];
-  var CORLER_HEX = [
-    "#B80000",
-    "#DB3E00",
-    "#FCCB00",
-    "#008B02",
-    "#006B76",
-    "#1273DE",
-    "#004DCF",
-    "#5300EB",
-    "#EB9694",
-    "#FAD0C3",
-    "#FEF3BD",
-    "#C1E1C5",
-    "#BEDADC",
-    "#C4DEF6",
-    "#BED3F3",
-    "#D4C4FB"
-  ];
-  var GithubPlacement = function(GithubPlacement2) {
-    GithubPlacement2["Left"] = "L";
-    GithubPlacement2["LeftTop"] = "LT";
-    GithubPlacement2["LeftBottom"] = "LB";
-    GithubPlacement2["Right"] = "R";
-    GithubPlacement2["RightTop"] = "RT";
-    GithubPlacement2["RightBottom"] = "RB";
-    GithubPlacement2["Top"] = "T";
-    GithubPlacement2["TopRight"] = "TR";
-    GithubPlacement2["TopLeft"] = "TL";
-    GithubPlacement2["Bottom"] = "B";
-    GithubPlacement2["BottomLeft"] = "BL";
-    GithubPlacement2["BottomRight"] = "BR";
-    return GithubPlacement2;
-  }({});
-  var Github = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-github", placement = GithubPlacement.TopRight, className: className2, style: style2, color: color2, colors = CORLER_HEX, showTriangle = true, rectProps = {}, onChange, rectRender } = props, other = _objectWithoutPropertiesLoose(props, _excluded$a);
-    var hsva = typeof color2 === "string" && validHex$1(color2) ? hexToHsva(color2) : color2;
-    var hex = color2 ? hsvaToHex(hsva) : "";
-    var handleChange = (hsv2) => onChange && onChange(color$1(hsv2));
-    var styleWrapper = _extends({
-      "--github-border": "1px solid rgba(0, 0, 0, 0.2)",
-      "--github-background-color": "#fff",
-      "--github-box-shadow": "rgb(0 0 0 / 15%) 0px 3px 12px",
-      "--github-arrow-border-color": "rgba(0, 0, 0, 0.15)",
-      width: 200,
-      borderRadius: 4,
-      background: "var(--github-background-color)",
-      boxShadow: "var(--github-box-shadow)",
-      border: "var(--github-border)",
-      position: "relative",
-      padding: 5
-    }, style2);
-    var rStyle = {
-      borderStyle: "solid",
-      position: "absolute"
-    };
-    var arrBrStyl = _extends({}, rStyle);
-    var arrStyl = _extends({}, rStyle);
-    if (/^T/.test(placement)) {
-      arrBrStyl.borderWidth = "0 8px 8px";
-      arrBrStyl.borderColor = "transparent transparent var(--github-arrow-border-color)";
-      arrStyl.borderWidth = "0 7px 7px";
-      arrStyl.borderColor = "transparent transparent var(--github-background-color)";
-    }
-    if (placement === GithubPlacement.TopRight) {
-      arrBrStyl.top = -8;
-      arrStyl.top = -7;
-    }
-    if (placement === GithubPlacement.Top) {
-      arrBrStyl.top = -8;
-      arrStyl.top = -7;
-    }
-    if (placement === GithubPlacement.TopLeft) {
-      arrBrStyl.top = -8;
-      arrStyl.top = -7;
-    }
-    if (/^B/.test(placement)) {
-      arrBrStyl.borderWidth = "8px 8px 0";
-      arrBrStyl.borderColor = "var(--github-arrow-border-color) transparent transparent";
-      arrStyl.borderWidth = "7px 7px 0";
-      arrStyl.borderColor = "var(--github-background-color) transparent transparent";
-      if (placement === GithubPlacement.BottomRight) {
-        arrBrStyl.top = "100%";
-        arrStyl.top = "100%";
-      }
-      if (placement === GithubPlacement.Bottom) {
-        arrBrStyl.top = "100%";
-        arrStyl.top = "100%";
-      }
-      if (placement === GithubPlacement.BottomLeft) {
-        arrBrStyl.top = "100%";
-        arrStyl.top = "100%";
-      }
-    }
-    if (/^(B|T)/.test(placement)) {
-      if (placement === GithubPlacement.Top || placement === GithubPlacement.Bottom) {
-        arrBrStyl.left = "50%";
-        arrBrStyl.marginLeft = -8;
-        arrStyl.left = "50%";
-        arrStyl.marginLeft = -7;
-      }
-      if (placement === GithubPlacement.TopRight || placement === GithubPlacement.BottomRight) {
-        arrBrStyl.right = 10;
-        arrStyl.right = 11;
-      }
-      if (placement === GithubPlacement.TopLeft || placement === GithubPlacement.BottomLeft) {
-        arrBrStyl.left = 7;
-        arrStyl.left = 8;
-      }
-    }
-    if (/^L/.test(placement)) {
-      arrBrStyl.borderWidth = "8px 8px 8px 0";
-      arrBrStyl.borderColor = "transparent var(--github-arrow-border-color) transparent transparent";
-      arrStyl.borderWidth = "7px 7px 7px 0";
-      arrStyl.borderColor = "transparent var(--github-background-color) transparent transparent";
-      arrBrStyl.left = -8;
-      arrStyl.left = -7;
-    }
-    if (/^R/.test(placement)) {
-      arrBrStyl.borderWidth = "8px 0 8px 8px";
-      arrBrStyl.borderColor = "transparent transparent transparent var(--github-arrow-border-color)";
-      arrStyl.borderWidth = "7px 0 7px 7px";
-      arrStyl.borderColor = "transparent transparent transparent var(--github-background-color)";
-      arrBrStyl.right = -8;
-      arrStyl.right = -7;
-    }
-    if (/^(L|R)/.test(placement)) {
-      if (placement === GithubPlacement.RightTop || placement === GithubPlacement.LeftTop) {
-        arrBrStyl.top = 5;
-        arrStyl.top = 6;
-      }
-      if (placement === GithubPlacement.Left || placement === GithubPlacement.Right) {
-        arrBrStyl.top = "50%";
-        arrStyl.top = "50%";
-        arrBrStyl.marginTop = -8;
-        arrStyl.marginTop = -7;
-      }
-      if (placement === GithubPlacement.LeftBottom || placement === GithubPlacement.RightBottom) {
-        arrBrStyl.top = "100%";
-        arrStyl.top = "100%";
-        arrBrStyl.marginTop = -21;
-        arrStyl.marginTop = -20;
-      }
-    }
-    var render = (_ref) => {
-      var props2 = _extends({}, (_objectDestructuringEmpty(_ref), _ref));
-      var handle2 = rectRender && rectRender(_extends({}, props2));
-      if (handle2) return handle2;
-      return jsxRuntimeExports.jsx(Point$2, _extends({}, props2, {
-        rectProps
-      }));
-    };
-    return jsxRuntimeExports.jsx(Swatch, _extends({
+    var gradientBackground = reactExports.useMemo(() => getGradientBackground(), [
+      getGradientBackground
+    ]);
+    return jsxRuntimeExports.jsx(Alpha, _extends({
       ref,
-      className: [
-        prefixCls,
-        className2
-      ].filter(Boolean).join(" "),
-      colors,
-      color: hex,
-      rectRender: render
+      className: prefixCls + " " + (className2 || "")
     }, other, {
-      onChange: handleChange,
-      style: styleWrapper,
-      rectProps: {
-        style: {
-          marginRight: 0,
-          marginBottom: 0,
-          borderRadius: 0,
-          height: 25,
-          width: 25
-        }
+      direction: direction2,
+      reverse,
+      background: gradientBackground,
+      hsva: {
+        h: hue,
+        s: 100,
+        v: 100,
+        a: hue / 360
       },
-      addonBefore: jsxRuntimeExports.jsx(reactExports.Fragment, {
-        children: showTriangle && jsxRuntimeExports.jsxs(reactExports.Fragment, {
-          children: [
-            jsxRuntimeExports.jsx("div", {
-              style: arrBrStyl
-            }),
-            jsxRuntimeExports.jsx("div", {
-              style: arrStyl
-            })
-          ]
-        })
-      })
+      onChange: (_2, interaction) => {
+        _onChange && _onChange({
+          h: getHueFromInteraction(interaction)
+        });
+      }
     }));
   });
-  Github.displayName = "Github";
+  Hue.displayName = "Hue";
   var Pointer = (_ref) => {
-    var { className: className2, color: color2, left, top: top2, prefixCls } = _ref;
+    var className2 = _ref.className, color2 = _ref.color, left = _ref.left, top2 = _ref.top, prefixCls = _ref.prefixCls;
     var style2 = {
       position: "absolute",
       top: top2,
@@ -89861,7 +89527,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       prefixCls
     ]);
   };
-  var _excluded$9 = [
+  var _excluded$4 = [
     "prefixCls",
     "radius",
     "pointer",
@@ -89873,7 +89539,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   ];
   var Saturation = React$2.forwardRef((props, ref) => {
     var _hsva$h;
-    var { prefixCls = "w-color-saturation", radius = 0, pointer, className: className2, hue = 0, style: style2, hsva, onChange } = props, other = _objectWithoutPropertiesLoose(props, _excluded$9);
+    var _props$prefixCls = props.prefixCls, prefixCls = _props$prefixCls === void 0 ? "w-color-saturation" : _props$prefixCls, _props$radius = props.radius, radius = _props$radius === void 0 ? 0 : _props$radius, pointer = props.pointer, className2 = props.className, _props$hue = props.hue, hue = _props$hue === void 0 ? 0 : _props$hue, style2 = props.style, hsva = props.hsva, onChange = props.onChange, other = _objectWithoutPropertiesLoose(props, _excluded$4);
     var containerStyle = _extends({
       width: 200,
       height: 200,
@@ -89995,559 +89661,45 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }));
   });
   Saturation.displayName = "Saturation";
-  var _excluded$8 = [
-    "prefixCls",
-    "className",
-    "hue",
-    "onChange",
-    "direction"
-  ];
-  var Hue = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-hue", className: className2, hue = 0, onChange: _onChange, direction: direction2 = "horizontal" } = props, other = _objectWithoutPropertiesLoose(props, _excluded$8);
-    return jsxRuntimeExports.jsx(Alpha, _extends({
-      ref,
-      className: prefixCls + " " + (className2 || "")
-    }, other, {
-      direction: direction2,
-      background: "linear-gradient(to " + (direction2 === "horizontal" ? "right" : "bottom") + ", rgb(255, 0, 0) 0%, rgb(255, 255, 0) 17%, rgb(0, 255, 0) 33%, rgb(0, 255, 255) 50%, rgb(0, 0, 255) 67%, rgb(255, 0, 255) 83%, rgb(255, 0, 0) 100%)",
-      hsva: {
-        h: hue,
-        s: 100,
-        v: 100,
-        a: hue / 360
-      },
-      onChange: (_2, interaction) => {
-        _onChange && _onChange({
-          h: direction2 === "horizontal" ? 360 * interaction.left : 360 * interaction.top
-        });
-      }
-    }));
-  });
-  Hue.displayName = "Hue";
-  var _excluded$7 = [
-    "prefixCls",
-    "hsva",
-    "placement",
-    "rProps",
-    "gProps",
-    "bProps",
-    "aProps",
-    "className",
-    "style",
-    "onChange"
-  ];
-  var EditableInputRGBA = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-editable-input-rgba", hsva, placement = "bottom", rProps = {}, gProps = {}, bProps = {}, aProps = {}, className: className2, style: style2, onChange } = props, other = _objectWithoutPropertiesLoose(props, _excluded$7);
-    var rgba = hsva ? hsvaToRgba(hsva) : {};
-    function handleBlur(evn) {
-      var value = Number(evn.target.value);
-      if (value && value > 255) {
-        evn.target.value = "255";
-      }
-      if (value && value < 0) {
-        evn.target.value = "0";
-      }
-    }
-    var handleAlphaBlur = (evn) => {
-      var value = Number(evn.target.value);
-      if (value && value > 100) {
-        evn.target.value = "100";
-      }
-      if (value && value < 0) {
-        evn.target.value = "0";
-      }
-    };
-    var handleChange = (value, type, evn) => {
-      if (typeof value === "number") {
-        if (type === "a") {
-          if (value < 0) value = 0;
-          if (value > 100) value = 100;
-          onChange && onChange(color$1(rgbaToHsva(_extends({}, rgba, {
-            a: value / 100
-          }))));
-        }
-        if (value > 255) {
-          value = 255;
-          evn.target.value = "255";
-        }
-        if (value < 0) {
-          value = 0;
-          evn.target.value = "0";
-        }
-        if (type === "r") {
-          onChange && onChange(color$1(rgbaToHsva(_extends({}, rgba, {
-            r: value
-          }))));
-        }
-        if (type === "g") {
-          onChange && onChange(color$1(rgbaToHsva(_extends({}, rgba, {
-            g: value
-          }))));
-        }
-        if (type === "b") {
-          onChange && onChange(color$1(rgbaToHsva(_extends({}, rgba, {
-            b: value
-          }))));
-        }
-      }
-    };
-    var roundedAlpha = rgba.a ? Math.round(rgba.a * 100) / 100 : 0;
-    return jsxRuntimeExports.jsxs("div", _extends({
-      ref,
+  const SvgChevronDown = (props) => reactExports.createElement("svg", {
+    width: "1em",
+    height: "1em",
+    viewBox: "0 0 12 12",
+    fill: "currentColor",
+    ...props
+  }, reactExports.createElement("path", {
+    d: "M2 4L6 8L10 4",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    fill: "none"
+  }));
+  const chevronRight = "_chevronRight_m5cf6_1";
+  const chevronLeft = "_chevronLeft_m5cf6_2";
+  const chevronDown = "_chevronDown_m5cf6_3";
+  const chevronUp = "_chevronUp_m5cf6_4";
+  const styles$r = {
+    chevronRight,
+    chevronLeft,
+    chevronDown,
+    chevronUp
+  };
+  const DIRECTION_CLASS = {
+    right: styles$r.chevronRight,
+    left: styles$r.chevronLeft,
+    down: styles$r.chevronDown,
+    up: styles$r.chevronUp
+  };
+  function ChevronIcon({ direction: direction2 = "down", className: className2 }) {
+    return jsxRuntimeExports.jsx(SvgChevronDown, {
       className: [
-        prefixCls,
-        className2 || ""
-      ].filter(Boolean).join(" ")
-    }, other, {
-      style: _extends({
-        fontSize: 11,
-        display: "flex"
-      }, style2),
-      children: [
-        jsxRuntimeExports.jsx(EditableInput, _extends({
-          label: "R",
-          value: rgba.r || 0,
-          onBlur: handleBlur,
-          placement,
-          onChange: (evn, val) => handleChange(val, "r", evn)
-        }, rProps, {
-          style: _extends({}, rProps.style)
-        })),
-        jsxRuntimeExports.jsx(EditableInput, _extends({
-          label: "G",
-          value: rgba.g || 0,
-          onBlur: handleBlur,
-          placement,
-          onChange: (evn, val) => handleChange(val, "g", evn)
-        }, gProps, {
-          style: _extends({
-            marginLeft: 5
-          }, gProps.style)
-        })),
-        jsxRuntimeExports.jsx(EditableInput, _extends({
-          label: "B",
-          value: rgba.b || 0,
-          onBlur: handleBlur,
-          placement,
-          onChange: (evn, val) => handleChange(val, "b", evn)
-        }, bProps, {
-          style: _extends({
-            marginLeft: 5
-          }, bProps.style)
-        })),
-        aProps && jsxRuntimeExports.jsx(EditableInput, _extends({
-          label: "A",
-          value: parseInt(String(roundedAlpha * 100), 10),
-          onBlur: handleAlphaBlur,
-          placement,
-          onChange: (evn, val) => handleChange(val, "a", evn)
-        }, aProps, {
-          style: _extends({
-            marginLeft: 5
-          }, aProps.style)
-        }))
-      ]
-    }));
-  });
-  EditableInputRGBA.displayName = "EditableInputRGBA";
-  var _excluded$6 = [
-    "prefixCls",
-    "hsva",
-    "hProps",
-    "sProps",
-    "lProps",
-    "aProps",
-    "className",
-    "onChange"
-  ];
-  var EditableInputHSLA = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-editable-input-hsla", hsva, hProps = {}, sProps = {}, lProps = {}, aProps = {}, className: className2, onChange } = props, other = _objectWithoutPropertiesLoose(props, _excluded$6);
-    var hsla = hsva ? hsvaToHsla(hsva) : {
-      h: 0,
-      s: 0,
-      l: 0,
-      a: 0
-    };
-    var handleChange = (value, type, evn) => {
-      if (typeof value === "number") {
-        if (type === "h") {
-          if (value < 0) value = 0;
-          if (value > 360) value = 360;
-          onChange && onChange(color$1(hslaToHsva(_extends({}, hsla, {
-            h: value
-          }))));
-        }
-        if (type === "s") {
-          if (value < 0) value = 0;
-          if (value > 100) value = 100;
-          onChange && onChange(color$1(hslaToHsva(_extends({}, hsla, {
-            s: value
-          }))));
-        }
-        if (type === "l") {
-          if (value < 0) value = 0;
-          if (value > 100) value = 100;
-          onChange && onChange(color$1(hslaToHsva(_extends({}, hsla, {
-            l: value
-          }))));
-        }
-        if (type === "a") {
-          if (value < 0) value = 0;
-          if (value > 1) value = 1;
-          onChange && onChange(color$1(hslaToHsva(_extends({}, hsla, {
-            a: value
-          }))));
-        }
-      }
-    };
-    var aPropsObj = aProps == false ? false : _extends({
-      label: "A",
-      value: Math.round(hsla.a * 100) / 100
-    }, aProps, {
-      onChange: (evn, val) => handleChange(val, "a")
-    });
-    return jsxRuntimeExports.jsx(EditableInputRGBA, _extends({
-      ref,
-      hsva,
-      rProps: _extends({
-        label: "H",
-        value: Math.round(hsla.h)
-      }, hProps, {
-        onChange: (evn, val) => handleChange(val, "h")
-      }),
-      gProps: _extends({
-        label: "S",
-        value: Math.round(hsla.s) + "%"
-      }, sProps, {
-        onChange: (evn, val) => handleChange(val, "s")
-      }),
-      bProps: _extends({
-        label: "L",
-        value: Math.round(hsla.l) + "%"
-      }, lProps, {
-        onChange: (evn, val) => handleChange(val, "l")
-      }),
-      aProps: aPropsObj,
-      className: [
-        prefixCls,
-        className2 || ""
-      ].filter(Boolean).join(" ")
-    }, other));
-  });
-  EditableInputHSLA.displayName = "EditableInputHSLA";
-  var _excluded$5 = [
-    "style"
-  ];
-  function Arrow(props) {
-    var { style: style2 } = props, other = _objectWithoutPropertiesLoose(props, _excluded$5);
-    var btn = reactExports.useRef(null);
-    var handleMouseEnter = reactExports.useCallback(() => {
-      btn.current.style["backgroundColor"] = "var(--chrome-arrow-background-color)";
-    }, []);
-    var handleMouseLeave = reactExports.useCallback(() => {
-      btn.current.style["backgroundColor"] = "transparent";
-    }, []);
-    return jsxRuntimeExports.jsx("div", _extends({
-      ref: btn,
-      style: _extends({
-        marginLeft: 5,
-        cursor: "pointer",
-        transition: "background-color .3s",
-        borderRadius: 2
-      }, style2)
-    }, other, {
-      onMouseEnter: handleMouseEnter,
-      onMouseLeave: handleMouseLeave,
-      children: jsxRuntimeExports.jsx("svg", {
-        viewBox: "0 0 1024 1024",
-        width: "24",
-        height: "24",
-        style: {
-          display: "block"
-        },
-        children: jsxRuntimeExports.jsx("path", {
-          d: "M373.888 576h276.224c9.322667 0 14.293333 11.178667 9.173333 18.773333l-1.258666 1.557334-138.112 146.858666a10.709333 10.709333 0 0 1-14.293334 1.365334l-1.536-1.365334-138.112-146.858666c-6.592-6.997333-2.666667-18.645333 5.973334-20.16l1.941333-0.170667h276.224-276.224z m146.026667-295.189333l138.112 146.858666c7.04 7.509333 2.069333 20.330667-7.914667 20.330667H373.888c-9.984 0-14.976-12.821333-7.914667-20.330667l138.112-146.858666a10.730667 10.730667 0 0 1 15.829334 0z",
-          fill: "var(--chrome-arrow-fill)"
-        })
-      })
-    }));
-  }
-  function getIsEyeDropperSupported() {
-    return "EyeDropper" in window;
-  }
-  function EyeDropper(props) {
-    var click = () => {
-      if ("EyeDropper" in window) {
-        var eyeDropper = new window.EyeDropper();
-        eyeDropper.open().then((result) => {
-          props.onPickColor == null || props.onPickColor(result.sRGBHex);
-        }).catch((err2) => {
-          if (err2.name === "AbortError") ;
-        });
-      }
-    };
-    return jsxRuntimeExports.jsx("svg", {
-      viewBox: "0 0 512 512",
-      height: "1em",
-      width: "1em",
-      onClick: click,
-      children: jsxRuntimeExports.jsx("path", {
-        fill: "currentColor",
-        d: "M482.8 29.23c38.9 38.98 38.9 102.17 0 141.17L381.2 271.9l9.4 9.5c12.5 12.5 12.5 32.7 0 45.2s-32.7 12.5-45.2 0l-160-160c-12.5-12.5-12.5-32.7 0-45.2s32.7-12.5 45.2 0l9.5 9.4L341.6 29.23c39-38.974 102.2-38.974 141.2 0zM55.43 323.3 176.1 202.6l45.3 45.3-120.7 120.7c-3.01 3-4.7 7-4.7 11.3V416h36.1c4.3 0 8.3-1.7 11.3-4.7l120.7-120.7 45.3 45.3-120.7 120.7c-15 15-35.4 23.4-56.6 23.4H89.69l-39.94 26.6c-12.69 8.5-29.59 6.8-40.377-4-10.786-10.8-12.459-27.7-3.998-40.4L32 422.3v-42.4c0-21.2 8.43-41.6 23.43-56.6z"
-      })
-    });
-  }
-  var _excluded$4 = [
-    "prefixCls",
-    "className",
-    "style",
-    "color",
-    "showEditableInput",
-    "showEyeDropper",
-    "showColorPreview",
-    "showHue",
-    "showAlpha",
-    "inputType",
-    "rectProps",
-    "onChange"
-  ];
-  var ChromeInputType = function(ChromeInputType2) {
-    ChromeInputType2["HEXA"] = "hexa";
-    ChromeInputType2["RGBA"] = "rgba";
-    ChromeInputType2["HSLA"] = "hsla";
-    return ChromeInputType2;
-  }({});
-  var Chrome = React$2.forwardRef((props, ref) => {
-    var { prefixCls = "w-color-chrome", className: className2, style: style2, color: color2, showEditableInput = true, showEyeDropper = true, showColorPreview = true, showHue = true, showAlpha = true, inputType = ChromeInputType.RGBA, rectProps = {}, onChange } = props, other = _objectWithoutPropertiesLoose(props, _excluded$4);
-    var hsva = typeof color2 === "string" && validHex$1(color2) ? hexToHsva(color2) : color2 || {
-      h: 0,
-      s: 0,
-      l: 0,
-      a: 0
-    };
-    var handleChange = (hsv2) => onChange && onChange(color$1(hsv2));
-    var [type, setType] = reactExports.useState(inputType);
-    var handleClick = () => {
-      if (type === ChromeInputType.RGBA) {
-        setType(ChromeInputType.HSLA);
-      }
-      if (type === ChromeInputType.HSLA) {
-        setType(ChromeInputType.HEXA);
-      }
-      if (type === ChromeInputType.HEXA) {
-        setType(ChromeInputType.RGBA);
-      }
-    };
-    var labelStyle = {
-      paddingTop: 6
-    };
-    var inputStyle = {
-      textAlign: "center",
-      paddingTop: 4,
-      paddingBottom: 4
-    };
-    var wrapperStyle = _extends({
-      "--chrome-arrow-fill": "#333",
-      "--chrome-arrow-background-color": "#e8e8e8",
-      borderRadius: 0,
-      flexDirection: "column",
-      width: 230,
-      padding: 0
-    }, style2);
-    var alphaStyle = {
-      "--chrome-alpha-box-shadow": "rgb(0 0 0 / 25%) 0px 0px 1px inset",
-      borderRadius: "50%",
-      background: hsvaToRgbaString(hsva),
-      boxShadow: "var(--chrome-alpha-box-shadow)"
-    };
-    var handleClickColor = (hex) => {
-      var result = hexToHsva(hex);
-      handleChange(_extends({}, result));
-    };
-    var styleSize = {
-      height: 14,
-      width: 14
-    };
-    var pointerProps = {
-      style: _extends({}, styleSize),
-      fillProps: {
-        style: styleSize
-      }
-    };
-    return jsxRuntimeExports.jsx(Github, _extends({
-      ref,
-      color: hsva,
-      style: wrapperStyle,
-      colors: void 0,
-      className: [
-        prefixCls,
+        DIRECTION_CLASS[direction2],
         className2
       ].filter(Boolean).join(" "),
-      placement: GithubPlacement.TopLeft
-    }, other, {
-      addonAfter: jsxRuntimeExports.jsxs(reactExports.Fragment, {
-        children: [
-          jsxRuntimeExports.jsx(Saturation, {
-            hsva,
-            style: {
-              width: "100%",
-              height: 130
-            },
-            onChange: (newColor) => {
-              handleChange(_extends({}, hsva, newColor, {
-                a: hsva.a
-              }));
-            }
-          }),
-          jsxRuntimeExports.jsxs("div", {
-            style: {
-              padding: 15,
-              display: "flex",
-              alignItems: "center",
-              gap: 10
-            },
-            children: [
-              getIsEyeDropperSupported() && showEyeDropper && jsxRuntimeExports.jsx(EyeDropper, {
-                onPickColor: handleClickColor
-              }),
-              showColorPreview && jsxRuntimeExports.jsx(Alpha, {
-                width: 28,
-                height: 28,
-                hsva,
-                radius: 2,
-                style: {
-                  borderRadius: "50%"
-                },
-                bgProps: {
-                  style: {
-                    background: "transparent"
-                  }
-                },
-                innerProps: {
-                  style: alphaStyle
-                },
-                pointer: () => jsxRuntimeExports.jsx(reactExports.Fragment, {})
-              }),
-              jsxRuntimeExports.jsxs("div", {
-                style: {
-                  flex: 1
-                },
-                children: [
-                  showHue == true && jsxRuntimeExports.jsx(Hue, {
-                    hue: hsva.h,
-                    style: {
-                      width: "100%",
-                      height: 12,
-                      borderRadius: 2
-                    },
-                    pointerProps,
-                    bgProps: {
-                      style: {
-                        borderRadius: 2
-                      }
-                    },
-                    onChange: (newHue) => {
-                      handleChange(_extends({}, hsva, newHue));
-                    }
-                  }),
-                  showAlpha == true && jsxRuntimeExports.jsx(Alpha, {
-                    hsva,
-                    style: {
-                      marginTop: 6,
-                      height: 12,
-                      borderRadius: 2
-                    },
-                    pointerProps,
-                    bgProps: {
-                      style: {
-                        borderRadius: 2
-                      }
-                    },
-                    onChange: (newAlpha) => {
-                      handleChange(_extends({}, hsva, newAlpha));
-                    }
-                  })
-                ]
-              })
-            ]
-          }),
-          showEditableInput && jsxRuntimeExports.jsxs("div", {
-            style: {
-              display: "flex",
-              alignItems: "flex-start",
-              padding: "0 15px 15px 15px",
-              userSelect: "none"
-            },
-            children: [
-              jsxRuntimeExports.jsxs("div", {
-                style: {
-                  flex: 1
-                },
-                children: [
-                  type == ChromeInputType.RGBA && jsxRuntimeExports.jsx(EditableInputRGBA, {
-                    hsva,
-                    rProps: {
-                      labelStyle,
-                      inputStyle
-                    },
-                    gProps: {
-                      labelStyle,
-                      inputStyle
-                    },
-                    bProps: {
-                      labelStyle,
-                      inputStyle
-                    },
-                    aProps: showAlpha == false ? false : {
-                      labelStyle,
-                      inputStyle
-                    },
-                    onChange: (reColor) => handleChange(reColor.hsva)
-                  }),
-                  type === ChromeInputType.HEXA && jsxRuntimeExports.jsx(EditableInput, {
-                    label: "HEX",
-                    labelStyle,
-                    inputStyle,
-                    value: hsva.a > 0 && hsva.a < 1 ? hsvaToHexa(hsva).toLocaleUpperCase() : hsvaToHex(hsva).toLocaleUpperCase(),
-                    onChange: (_2, value) => {
-                      if (typeof value === "string") {
-                        handleChange(hexToHsva(/^#/.test(value) ? value : "#" + value));
-                      }
-                    }
-                  }),
-                  type === ChromeInputType.HSLA && jsxRuntimeExports.jsx(EditableInputHSLA, {
-                    hsva,
-                    hProps: {
-                      labelStyle,
-                      inputStyle
-                    },
-                    sProps: {
-                      labelStyle,
-                      inputStyle
-                    },
-                    lProps: {
-                      labelStyle,
-                      inputStyle
-                    },
-                    aProps: showAlpha == false ? false : {
-                      labelStyle,
-                      inputStyle
-                    },
-                    onChange: (reColor) => handleChange(reColor.hsva)
-                  })
-                ]
-              }),
-              jsxRuntimeExports.jsx(Arrow, {
-                onClick: handleClick
-              })
-            ]
-          })
-        ]
-      }),
-      rectRender: () => jsxRuntimeExports.jsx(reactExports.Fragment, {})
-    }));
-  });
-  Chrome.displayName = "Chrome";
+      "aria-hidden": true
+    });
+  }
   const SvgClose = (props) => reactExports.createElement("svg", {
     style: {
       width: 24,
@@ -90586,6 +89738,31 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     flexShrink: 0,
     marginBottom: 0
   };
+  const colorGridStyle = {
+    display: "grid",
+    gap: "0.5em"
+  };
+  const colorShownStyle = {
+    transition: "height 0.33s ease-out, opacity 0.33s ease-out"
+  };
+  const colorHiddenStyle = {
+    height: 0,
+    opacity: 0,
+    pointerEvents: "none",
+    transition: "height 0.33s ease-out, opacity 0.33s ease-out"
+  };
+  const hueRowStyle = {
+    display: "grid",
+    gridTemplateColumns: "1.5em 1fr"
+  };
+  const groupFolderChevron$1 = {
+    all: "unset",
+    display: "grid",
+    gridTemplateColumns: "1fr auto 1fr",
+    cursor: "pointer",
+    color: "#8b949e",
+    lineHeight: 0
+  };
   const closeButtonStyle = {
     display: "flex",
     alignItems: "center",
@@ -90623,6 +89800,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       position2,
       onClose
     ]);
+    const currentColor = color$1(pickerProps.color);
+    const [expanded, setExpanded] = reactExports.useState(false);
+    const hueProps = {
+      hue: currentColor.hsva.h,
+      onChange: ({ h: h2 }) => {
+        const { v: v2, s: s2 } = currentColor.hsva;
+        pickerProps.onChange(color$1({
+          h: h2,
+          v: v2,
+          s: s2,
+          a: 1
+        }));
+      }
+    };
+    const saturationProps = {
+      hsva: currentColor.hsva,
+      onChange: ({ h: h2, v: v2, s: s2, a: a2 }) => {
+        pickerProps.onChange(color$1({
+          h: h2,
+          v: v2,
+          s: s2,
+          a: a2
+        }));
+      },
+      style: expanded ? colorShownStyle : colorHiddenStyle
+    };
     if (!position2 || typeof document === "undefined") return null;
     return reactDomExports.createPortal(jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
@@ -90661,47 +89864,75 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 })
               })
             }),
-            jsxRuntimeExports.jsx(Chrome, {
-              ...pickerProps,
-              showTriangle: false
+            jsxRuntimeExports.jsxs("div", {
+              style: colorGridStyle,
+              children: [
+                jsxRuntimeExports.jsxs("div", {
+                  style: hueRowStyle,
+                  children: [
+                    jsxRuntimeExports.jsxs("button", {
+                      type: "button",
+                      style: groupFolderChevron$1,
+                      "aria-expanded": expanded,
+                      title: expanded ? "Fewer colors" : "More colors",
+                      onClick: () => setExpanded(!expanded),
+                      children: [
+                        jsxRuntimeExports.jsx("div", {}),
+                        jsxRuntimeExports.jsx(ChevronIcon, {
+                          direction: expanded ? "down" : "right"
+                        }),
+                        jsxRuntimeExports.jsx("div", {})
+                      ]
+                    }),
+                    jsxRuntimeExports.jsx(Hue, {
+                      ...hueProps
+                    })
+                  ]
+                }),
+                jsxRuntimeExports.jsx(Saturation, {
+                  ...saturationProps
+                })
+              ]
             })
           ]
         })
       ]
     }), document.body);
   }
-  const channelNameInput = "_channelNameInput_95k2i_3";
-  const channelRowMain = "_channelRowMain_95k2i_12";
-  const channelRowTitle = "_channelRowTitle_95k2i_19";
-  const channelRowMid = "_channelRowMid_95k2i_29";
-  const channelRowMainMask = "_channelRowMainMask_95k2i_37";
-  const channelNameSlot = "_channelNameSlot_95k2i_41";
-  const channelRowTrailing = "_channelRowTrailing_95k2i_56";
-  const channelImageSubtitle = "_channelImageSubtitle_95k2i_72";
-  const maskModeControls = "_maskModeControls_95k2i_85";
-  const maskModeGroup = "_maskModeGroup_95k2i_94";
-  const maskModeGroupLabel = "_maskModeGroupLabel_95k2i_103";
-  const maskOpacityLabel = "_maskOpacityLabel_95k2i_104";
-  const maskControlsPanel = "_maskControlsPanel_95k2i_112";
-  const maskVizToggle = "_maskVizToggle_95k2i_117";
-  const maskOpacityControl = "_maskOpacityControl_95k2i_129";
-  const maskOpacityInputRow = "_maskOpacityInputRow_95k2i_138";
-  const maskOpacitySlider = "_maskOpacitySlider_95k2i_150";
-  const maskOpacityValue = "_maskOpacityValue_95k2i_218";
-  const channelVisibilityButton = "_channelVisibilityButton_95k2i_228";
-  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_95k2i_252";
-  const channelColorSwatch = "_channelColorSwatch_95k2i_256";
-  const channelColorSwatchStatic = "_channelColorSwatchStatic_95k2i_257";
-  const channelColorSwatchUnfilled = "_channelColorSwatchUnfilled_95k2i_270";
-  const detailChannelRowLocked = "_detailChannelRowLocked_95k2i_288";
-  const maskVizOption = "_maskVizOption_95k2i_292";
-  const maskVizOptionActive = "_maskVizOptionActive_95k2i_317";
-  const maskVizIconOutline = "_maskVizIconOutline_95k2i_322";
-  const maskVizIconFull = "_maskVizIconFull_95k2i_323";
-  const maskVizSwatchWhite = "_maskVizSwatchWhite_95k2i_324";
-  const maskVizSwatchRandom = "_maskVizSwatchRandom_95k2i_325";
-  const channelRow = "_channelRow_95k2i_12";
-  const styles$r = {
+  const channelNameInput = "_channelNameInput_10wwp_3";
+  const channelRowMain = "_channelRowMain_10wwp_12";
+  const channelRowTitle = "_channelRowTitle_10wwp_19";
+  const channelRowMid = "_channelRowMid_10wwp_29";
+  const channelRowMainMask = "_channelRowMainMask_10wwp_37";
+  const channelNameSlot = "_channelNameSlot_10wwp_41";
+  const channelRowTrailing = "_channelRowTrailing_10wwp_56";
+  const channelImageSubtitle = "_channelImageSubtitle_10wwp_72";
+  const maskModeControls = "_maskModeControls_10wwp_85";
+  const maskModeGroup = "_maskModeGroup_10wwp_94";
+  const maskModeGroupLabel = "_maskModeGroupLabel_10wwp_103";
+  const maskOpacityLabel = "_maskOpacityLabel_10wwp_104";
+  const maskControlsPanel = "_maskControlsPanel_10wwp_112";
+  const maskVizToggle = "_maskVizToggle_10wwp_117";
+  const maskOpacityControl = "_maskOpacityControl_10wwp_129";
+  const maskOpacityInputRow = "_maskOpacityInputRow_10wwp_138";
+  const maskOpacitySlider = "_maskOpacitySlider_10wwp_150";
+  const maskOpacityValue = "_maskOpacityValue_10wwp_218";
+  const cursorHintHost = "_cursorHintHost_10wwp_228";
+  const cursorHint = "_cursorHint_10wwp_228";
+  const channelVisibilityButton = "_channelVisibilityButton_10wwp_249";
+  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_10wwp_273";
+  const channelColorSwatch = "_channelColorSwatch_10wwp_277";
+  const channelColorSwatchStatic = "_channelColorSwatchStatic_10wwp_278";
+  const channelColorSwatchUnfilled = "_channelColorSwatchUnfilled_10wwp_291";
+  const detailChannelRowLocked = "_detailChannelRowLocked_10wwp_309";
+  const maskVizOption = "_maskVizOption_10wwp_313";
+  const maskVizOptionActive = "_maskVizOptionActive_10wwp_338";
+  const maskVizIconOutline = "_maskVizIconOutline_10wwp_343";
+  const maskVizIconFull = "_maskVizIconFull_10wwp_344";
+  const maskVizSwatchWhite = "_maskVizSwatchWhite_10wwp_345";
+  const maskVizSwatchRandom = "_maskVizSwatchRandom_10wwp_346";
+  const channelRow = "_channelRow_10wwp_12";
+  const styles$q = {
     channelNameInput,
     channelRowMain,
     channelRowTitle,
@@ -90720,6 +89951,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     maskOpacityInputRow,
     maskOpacitySlider,
     maskOpacityValue,
+    cursorHintHost,
+    cursorHint,
     channelVisibilityButton,
     channelVisibilityButtonHidden,
     channelColorSwatch,
@@ -90789,22 +90022,230 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })
     ]
   });
-  function ChannelVisibilitySwatch(props) {
-    const { visible, title: title7, ariaLabel, onClick } = props;
-    return jsxRuntimeExports.jsx("button", {
-      type: "button",
+  function CursorHint(props) {
+    const [pos, setPos] = reactExports.useState(null);
+    const track = (e2) => {
+      setPos({
+        x: e2.clientX,
+        y: e2.clientY
+      });
+    };
+    return jsxRuntimeExports.jsxs("span", {
       className: [
-        minervaTheme.focusRing,
-        styles$r.channelVisibilityButton,
-        visible ? "" : styles$r.channelVisibilityButtonHidden
+        styles$q.cursorHintHost,
+        props.className
       ].filter(Boolean).join(" "),
-      title: title7,
-      "aria-label": ariaLabel,
-      "aria-pressed": visible,
-      onClick,
-      children: visible ? jsxRuntimeExports.jsx(EyeIcon, {}) : jsxRuntimeExports.jsx(EyeOffIcon, {})
+      onPointerEnter: track,
+      onPointerMove: track,
+      onPointerLeave: () => setPos(null),
+      children: [
+        props.children,
+        props.enabled && pos ? reactDomExports.createPortal(jsxRuntimeExports.jsx("output", {
+          className: styles$q.cursorHint,
+          style: {
+            left: pos.x,
+            top: pos.y
+          },
+          children: props.label
+        }), document.body) : null
+      ]
     });
   }
+  function ChannelVisibilitySwatch(props) {
+    const { visible, title: title7, ariaLabel, blocked, onClick } = props;
+    return jsxRuntimeExports.jsx(CursorHint, {
+      enabled: Boolean(blocked),
+      label: VIEWER_INTENSITY_LIMIT_HINT,
+      children: jsxRuntimeExports.jsx("button", {
+        type: "button",
+        className: [
+          minervaTheme.focusRing,
+          styles$q.channelVisibilityButton,
+          visible ? "" : styles$q.channelVisibilityButtonHidden
+        ].filter(Boolean).join(" "),
+        title: blocked ? void 0 : title7,
+        "aria-label": blocked ? VIEWER_INTENSITY_LIMIT_HINT : ariaLabel,
+        "aria-pressed": visible,
+        "aria-disabled": blocked || void 0,
+        onClick: (e2) => {
+          if (blocked) return;
+          onClick(e2);
+        },
+        children: visible ? jsxRuntimeExports.jsx(EyeIcon, {}) : jsxRuntimeExports.jsx(EyeOffIcon, {})
+      })
+    });
+  }
+  function TrashIcon({ title: title7, size = 14 }) {
+    const label2 = title7 ?? "Delete";
+    return jsxRuntimeExports.jsxs("svg", {
+      "aria-hidden": title7 ? void 0 : true,
+      width: size,
+      height: size,
+      viewBox: "0 0 24 24",
+      fill: "currentColor",
+      children: [
+        jsxRuntimeExports.jsx("title", {
+          children: label2
+        }),
+        jsxRuntimeExports.jsx("path", {
+          d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+        })
+      ]
+    });
+  }
+  const stack = "_stack_o8d7w_1";
+  const panelDropActive = "_panelDropActive_o8d7w_11";
+  const addStrip = "_addStrip_o8d7w_16";
+  const addStripRow = "_addStripRow_o8d7w_27";
+  const dropZone = "_dropZone_o8d7w_41";
+  const dropZoneTitle = "_dropZoneTitle_o8d7w_51";
+  const orDivider = "_orDivider_o8d7w_57";
+  const urlRow = "_urlRow_o8d7w_68";
+  const urlField = "_urlField_o8d7w_77";
+  const urlInput = "_urlInput_o8d7w_83";
+  const urlAdd = "_urlAdd_o8d7w_91";
+  const dropZoneActive = "_dropZoneActive_o8d7w_121";
+  const importError = "_importError_o8d7w_175";
+  const fieldLabel = "_fieldLabel_o8d7w_188";
+  const typeOverlay = "_typeOverlay_o8d7w_202";
+  const typeOverlayBackdrop = "_typeOverlayBackdrop_o8d7w_214";
+  const typeOverlayCard = "_typeOverlayCard_o8d7w_220";
+  const typeOverlayFields = "_typeOverlayFields_o8d7w_234";
+  const typeOverlayFile = "_typeOverlayFile_o8d7w_244";
+  const typeRow = "_typeRow_o8d7w_253";
+  const typeChipActive = "_typeChipActive_o8d7w_261";
+  const typeChipSuggested = "_typeChipSuggested_o8d7w_265";
+  const typeChipMuted = "_typeChipMuted_o8d7w_270";
+  const typeFooter = "_typeFooter_o8d7w_284";
+  const typeImport = "_typeImport_o8d7w_293";
+  const typeSection = "_typeSection_o8d7w_300";
+  const imageCard = "_imageCard_o8d7w_308";
+  const fileAccessOverlay = "_fileAccessOverlay_o8d7w_320";
+  const fileAccessAction = "_fileAccessAction_o8d7w_336";
+  const imageCardHeader = "_imageCardHeader_o8d7w_344";
+  const imageCardText = "_imageCardText_o8d7w_352";
+  const imageCardTitle = "_imageCardTitle_o8d7w_360";
+  const imageCardMeta = "_imageCardMeta_o8d7w_368";
+  const imageCardActions = "_imageCardActions_o8d7w_374";
+  const styles$p = {
+    stack,
+    panelDropActive,
+    addStrip,
+    addStripRow,
+    dropZone,
+    dropZoneTitle,
+    orDivider,
+    urlRow,
+    urlField,
+    urlInput,
+    urlAdd,
+    dropZoneActive,
+    importError,
+    fieldLabel,
+    typeOverlay,
+    typeOverlayBackdrop,
+    typeOverlayCard,
+    typeOverlayFields,
+    typeOverlayFile,
+    typeRow,
+    typeChipActive,
+    typeChipSuggested,
+    typeChipMuted,
+    typeFooter,
+    typeImport,
+    typeSection,
+    imageCard,
+    fileAccessOverlay,
+    fileAccessAction,
+    imageCardHeader,
+    imageCardText,
+    imageCardTitle,
+    imageCardMeta,
+    imageCardActions
+  };
+  function ImportOverlay(props) {
+    const busy = props.busy === true;
+    return reactDomExports.createPortal(jsxRuntimeExports.jsxs("div", {
+      className: styles$p.typeOverlay,
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-busy": busy,
+      "aria-labelledby": props.titleId,
+      children: [
+        jsxRuntimeExports.jsx("div", {
+          className: styles$p.typeOverlayBackdrop,
+          "aria-hidden": "true"
+        }),
+        jsxRuntimeExports.jsxs("div", {
+          className: `${minervaTheme.surface} ${styles$p.typeOverlayCard}`,
+          children: [
+            jsxRuntimeExports.jsx("div", {
+              id: props.titleId,
+              className: styles$p.typeOverlayFile,
+              title: props.title,
+              children: props.title
+            }),
+            props.children != null ? jsxRuntimeExports.jsx("fieldset", {
+              disabled: props.importDisabled || busy,
+              className: styles$p.typeOverlayFields,
+              children: props.children
+            }) : null,
+            props.error ? jsxRuntimeExports.jsx("div", {
+              className: styles$p.importError,
+              role: "alert",
+              children: props.error
+            }) : null,
+            jsxRuntimeExports.jsxs("div", {
+              className: styles$p.typeFooter,
+              children: [
+                jsxRuntimeExports.jsx(PanelActionButton, {
+                  type: "button",
+                  onClick: props.onCancel,
+                  disabled: props.cancelDisabled,
+                  children: "Cancel"
+                }),
+                jsxRuntimeExports.jsx(PanelActionButton, {
+                  type: "button",
+                  className: styles$p.typeImport,
+                  disabled: props.importDisabled,
+                  onClick: props.onImport,
+                  children: busy ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+                    children: [
+                      jsxRuntimeExports.jsx("span", {
+                        className: minervaTheme.spinnerSm,
+                        "aria-hidden": "true"
+                      }),
+                      props.busyLabel ?? "Importing\u2026"
+                    ]
+                  }) : "Import"
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    }), document.body);
+  }
+  const SvgFolder = (props) => reactExports.createElement("svg", {
+    width: "1em",
+    height: "1em",
+    viewBox: "0 0 16 16",
+    fill: "currentColor",
+    stroke: "none",
+    ...props
+  }, reactExports.createElement("path", {
+    d: "M.75,3.82c0-.93.75-1.67,1.67-1.67h3.77c.45,0,.86.2,1.14.54l1.23,1.14h5.02c.93,0,1.67.75,1.67,1.67v6.69c0,.93-.75,1.67-1.67,1.67H2.42c-.93,0-1.67-.75-1.67-1.67V3.82Z"
+  }));
+  const authorPanel = "_authorPanel_1yzv8_3";
+  const authorPanelBody = "_authorPanelBody_1yzv8_14";
+  const emptyMessage = "_emptyMessage_1yzv8_21";
+  const thinScrollbar = "_thinScrollbar_1yzv8_29";
+  const panel$1 = {
+    authorPanel,
+    authorPanelBody,
+    emptyMessage,
+    thinScrollbar
+  };
   const DEFAULT_LUMINANCE = new Uint16Array([
     60,
     92
@@ -90813,6 +90254,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const PSUDO_MAX_ITERS = 2700;
   const PSUDO_CONFUSION_BASELINE_SAMPLES = 32;
   const PSUDO_NUM_RESTARTS = 18;
+  const CLASS_PALETTE_MAX_ITERS = 400;
+  const CLASS_PALETTE_CONFUSION_SAMPLES = 16;
+  const CLASS_PALETTE_RESTARTS = 3;
   const PSUDO_CONTRAST_MIN = 0;
   const PSUDO_CONTRAST_MAX = 65535;
   function clampUint16(n2) {
@@ -90885,7 +90329,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const linear = optimized instanceof Float32Array ? optimized : new Float32Array(optimized);
     return linear;
   }
-  async function optimizePaletteSlots(slots, lockedIds = /* @__PURE__ */ new Set()) {
+  async function optimizePaletteSlots(slots, lockedIds = /* @__PURE__ */ new Set(), budget) {
     if (slots.length < 2) {
       throw new Error("At least two channels are required to optimize a palette.");
     }
@@ -90895,6 +90339,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }));
     }
     const inputs = buildOptimizeInputsFromSlots(slots, lockedIds);
+    if (budget) {
+      inputs.maxIters = budget.maxIters;
+      inputs.confusionSamples = budget.confusionSamples;
+      inputs.numRestarts = budget.numRestarts;
+    }
     const nChannels = inputs.colorNames.length;
     const linear = await invokePsudoOptimize(inputs);
     const out = [];
@@ -90923,7 +90372,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       id: String(i2),
       color: seedRgbForGroupChannelIndex(i2)
     }));
-    return optimizePaletteSlots(slots);
+    return optimizePaletteSlots(slots, /* @__PURE__ */ new Set(), {
+      maxIters: CLASS_PALETTE_MAX_ITERS,
+      confusionSamples: CLASS_PALETTE_CONFUSION_SAMPLES,
+      numRestarts: CLASS_PALETTE_RESTARTS
+    });
   }
   function isGroupEligibleForPsudoOptimize(group2, sourceChannels) {
     let imageChannelCount = 0;
@@ -91352,23 +90805,43 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   let nextId = 1;
   let ingestEpoch = 0;
   const ingestListeners = /* @__PURE__ */ new Set();
+  const classIndexCache = /* @__PURE__ */ new Map();
+  const ingestedIds = /* @__PURE__ */ new Set();
   const pending = /* @__PURE__ */ new Map();
-  function subscribeClassTableIngest(onStoreChange) {
+  function subscribeFeatureTableIngest(onStoreChange) {
     ingestListeners.add(onStoreChange);
     return () => {
       ingestListeners.delete(onStoreChange);
     };
   }
-  function getClassTableIngestEpoch() {
+  function getFeatureTableIngestEpoch() {
     return ingestEpoch;
   }
   function noteIngest() {
     ingestEpoch += 1;
     for (const fn of ingestListeners) fn();
   }
+  function stashClassIndex(featureTableId, names, index2, width, height) {
+    if (!index2 || !width || !height) {
+      classIndexCache.delete(featureTableId);
+      return;
+    }
+    classIndexCache.set(featureTableId, {
+      data: index2,
+      width,
+      height,
+      names
+    });
+  }
+  function peekClassIndex(featureTableId) {
+    return classIndexCache.get(featureTableId);
+  }
+  function hasIngestedFeatureTable(featureTableId) {
+    return ingestedIds.has(featureTableId);
+  }
   function ensureWorker() {
     if (worker) return worker;
-    worker = new Worker(new URL("" + new URL("worker-BNB8VcaP.js", import.meta.url).href, import.meta.url), {
+    worker = new Worker(new URL("" + new URL("worker-R4LEwTGc.js", import.meta.url).href, import.meta.url), {
       type: "module"
     });
     worker.onmessage = (e2) => {
@@ -91378,7 +90851,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       waiter.resolve(e2.data);
     };
     worker.onerror = (e2) => {
-      const err2 = new Error(e2.message || "class table worker failed");
+      console.error("[featureTable] worker", e2);
+      const err2 = new Error(e2.message || "feature table worker failed");
       for (const waiter of pending.values()) waiter.reject(err2);
       pending.clear();
       worker = null;
@@ -91399,29 +90873,51 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }, transfer ?? []);
     });
   }
-  async function ingestClassTable(classTableId, bytes, columns) {
-    const copy2 = new Uint8Array(bytes.byteLength);
-    copy2.set(bytes);
-    const msg = await request({
-      type: "ingest",
-      classTableId,
-      bytes: copy2,
-      columns
-    }, [
-      copy2.buffer
-    ]);
+  async function ingestFeatureTable(featureTableId, source2, columns) {
+    const cols = columns ? {
+      id: columns.id,
+      name: columns.name
+    } : void 0;
+    const header = columns == null ? void 0 : columns.header;
+    let msg;
+    if (source2 instanceof File) {
+      msg = await request({
+        type: "ingest",
+        featureTableId,
+        file: source2,
+        columns: cols,
+        header
+      });
+    } else {
+      const copy2 = new Uint8Array(source2.byteLength);
+      copy2.set(source2);
+      msg = await request({
+        type: "ingest",
+        featureTableId,
+        bytes: copy2,
+        columns: cols,
+        header
+      }, [
+        copy2.buffer
+      ]);
+    }
     if (msg.type === "error") throw new Error(msg.message);
     if (msg.type !== "ingested") throw new Error("unexpected ingest reply");
+    ingestedIds.add(featureTableId);
+    stashClassIndex(featureTableId, msg.names, msg.index, msg.indexWidth, msg.indexHeight);
     noteIngest();
     return {
       maxClassId: msg.maxClassId,
-      names: msg.names
+      names: msg.names,
+      persist: msg.persist,
+      columns: msg.columns,
+      header: msg.header
     };
   }
-  async function pageClassTable(classTableId, query, offset, limit) {
+  async function pageFeatureTable(featureTableId, query, offset, limit) {
     const msg = await request({
       type: "page",
-      classTableId,
+      featureTableId,
       query,
       offset,
       limit
@@ -91433,48 +90929,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       total: msg.total
     };
   }
-  async function rebuildClassTableLut(input2) {
+  async function fetchClassIndex(featureTableId) {
+    const hit = classIndexCache.get(featureTableId);
+    if (hit) return hit;
     const msg = await request({
-      type: "rebuildLut",
-      classTableId: input2.classTableId,
-      maxClassId: input2.maxClassId,
-      seed: input2.seed,
-      nameColors: input2.nameColors,
-      vis: !input2.vis || input2.vis.mode === "all" ? {
-        mode: "all"
-      } : {
-        mode: input2.vis.mode,
-        names: [
-          ...input2.vis.names
-        ]
-      }
+      type: "classIndex",
+      featureTableId
     });
     if (msg.type === "error") throw new Error(msg.message);
-    if (msg.type !== "lut") throw new Error("unexpected lut reply");
-    if (msg.strategy === "denseLut") {
-      return {
-        strategy: "denseLut",
-        rgba: msg.rgba,
-        width: msg.width,
-        height: msg.height,
-        rev: input2.rev
-      };
-    }
-    return {
-      strategy: "sparse",
-      missHidden: msg.missHidden,
-      overrides: msg.overrides,
-      rev: input2.rev
-    };
+    if (msg.type !== "classIndex") throw new Error("unexpected classIndex reply");
+    stashClassIndex(featureTableId, msg.names, msg.index, msg.indexWidth, msg.indexHeight);
+    return classIndexCache.get(featureTableId);
   }
-  async function dropClassTable(classTableId) {
+  async function dropFeatureTable(featureTableId) {
+    ingestedIds.delete(featureTableId);
+    classIndexCache.delete(featureTableId);
     const msg = await request({
       type: "drop",
-      classTableId
+      featureTableId
     });
     if (msg.type === "error") throw new Error(msg.message);
   }
-  async function resetClassTables() {
+  async function resetFeatureTables() {
+    ingestedIds.clear();
+    classIndexCache.clear();
     if (!worker) return;
     const msg = await request({
       type: "reset"
@@ -91482,6 +90960,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (msg.type === "error") throw new Error(msg.message);
     noteIngest();
   }
+  const MAX_CLASS_NAMES = 255;
   const ID_ALIASES = /* @__PURE__ */ new Set([
     "classid",
     "classids",
@@ -91546,9 +91025,44 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...guess
     };
   }
-  async function peekClassCsv(file) {
+  async function peekFeatureCsv(file) {
     const bytes = new Uint8Array(await file.slice(0, 8192).arrayBuffer());
     return peekCsvHeaders(bytes);
+  }
+  const attachListeners = /* @__PURE__ */ new Set();
+  const pendingAttachSet = /* @__PURE__ */ new Set();
+  let pendingAttachIds = [];
+  function subscribeFeatureTablePending(onStoreChange) {
+    attachListeners.add(onStoreChange);
+    return () => {
+      attachListeners.delete(onStoreChange);
+    };
+  }
+  function getFeatureTablePendingSourceIds() {
+    return pendingAttachIds;
+  }
+  const emptyAccess = {
+    deniedHandleKeys: [],
+    missingHandleKeys: []
+  };
+  let featureTableAccess = emptyAccess;
+  const accessListeners = /* @__PURE__ */ new Set();
+  function noteAccess(next2) {
+    featureTableAccess = next2;
+    for (const fn of accessListeners) fn();
+  }
+  function subscribeFeatureTableAccess(onStoreChange) {
+    accessListeners.add(onStoreChange);
+    return () => {
+      accessListeners.delete(onStoreChange);
+    };
+  }
+  function getFeatureTableAccess() {
+    return featureTableAccess;
+  }
+  async function dropStoredSource(handleKey) {
+    await deleteBlob(handleKey).catch(() => void 0);
+    await deleteFileHandle(handleKey).catch(() => void 0);
   }
   function classNameVisible(vis, name2) {
     if (!vis || vis.mode === "all") return true;
@@ -91609,25 +91123,49 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       names: current.names.filter((n2) => n2 !== name2)
     };
   }
-  function asColumns(c2) {
-    return (c2 == null ? void 0 : c2.id) && (c2 == null ? void 0 : c2.name) ? {
-      id: c2.id,
-      name: c2.name
-    } : void 0;
+  function featureTableForChannel(sourceChannelId) {
+    return useDocumentStore.getState().featureTables.find((c2) => c2.sourceChannelId === sourceChannelId);
   }
-  function classTableForChannel(sourceChannelId) {
-    return useDocumentStore.getState().classTables.find((c2) => c2.sourceChannelId === sourceChannelId);
-  }
-  async function nameColorsFromNames(names) {
-    const palette = await optimizeDistinctPalette(names.length);
-    return names.map((name2, i2) => ({
-      name: name2,
-      color: palette[i2] ?? {
-        r: 128,
-        g: 128,
-        b: 128
-      }
+  const paletteJobs = /* @__PURE__ */ new Map();
+  function applyNameColors(featureTableId, nameColors) {
+    const doc = useDocumentStore.getState();
+    const current = doc.featureTables.find((c2) => c2.id === featureTableId);
+    if (!current) return;
+    const have = new Map(current.nameColors.map((c2) => [
+      c2.name,
+      c2
+    ]));
+    doc.setFeatureTables(doc.featureTables.map((c2) => {
+      if (c2.id !== featureTableId) return c2;
+      return {
+        ...c2,
+        nameColors: nameColors.map((row2) => have.get(row2.name) ?? row2)
+      };
     }));
+  }
+  function scheduleClassPalette(featureTableId, names) {
+    if (names.length === 0) return;
+    const job = {};
+    paletteJobs.set(featureTableId, job);
+    void optimizeDistinctPalette(names.length).then((palette) => {
+      if (paletteJobs.get(featureTableId) !== job) return;
+      applyNameColors(featureTableId, names.map((name2, i2) => ({
+        name: name2,
+        color: palette[i2] ?? seedRgbForGroupChannelIndex(i2)
+      })));
+    }).catch((e2) => {
+      console.warn("[featureTable] class palette failed", e2);
+      if (paletteJobs.get(featureTableId) !== job) return;
+      applyNameColors(featureTableId, names.map((name2, i2) => ({
+        name: name2,
+        color: seedRgbForGroupChannelIndex(i2)
+      })));
+    }).finally(() => {
+      if (paletteJobs.get(featureTableId) === job) paletteJobs.delete(featureTableId);
+    });
+  }
+  function cancelClassPalette(featureTableId) {
+    paletteJobs.delete(featureTableId);
   }
   async function sha256Hex(bytes) {
     const copy2 = new Uint8Array(bytes.byteLength);
@@ -91637,232 +91175,210 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...new Uint8Array(hash)
     ].map((b2) => b2.toString(16).padStart(2, "0")).join("");
   }
-  const lutCache = /* @__PURE__ */ new Map();
-  const lutPending = /* @__PURE__ */ new Map();
+  const lutPending = /* @__PURE__ */ new Set();
   let lutEpoch = 0;
   const lutListeners = /* @__PURE__ */ new Set();
-  function subscribeClassTableLut(onStoreChange) {
+  function subscribeFeatureTableLut(onStoreChange) {
     lutListeners.add(onStoreChange);
     return () => {
       lutListeners.delete(onStoreChange);
     };
   }
-  function getClassTableLutEpoch() {
+  function getFeatureTableLutEpoch() {
     return lutEpoch;
   }
   function noteLut() {
     lutEpoch += 1;
     for (const fn of lutListeners) fn();
   }
-  function clearLut(classTableId) {
-    lutCache.delete(classTableId);
-    lutPending.delete(classTableId);
-  }
-  function lutRev(classTable, vis, seed) {
+  function paletteRev(featureTable, vis, seed) {
     const visPart = !vis || vis.mode === "all" ? "all" : `${vis.mode}:${vis.names.join("\0")}`;
-    const colors = classTable.nameColors.map((c2) => `${c2.name}:${c2.color.r},${c2.color.g},${c2.color.b}`).join(";");
-    return `${classTable.digest}:${seed}:${visPart}:${colors}`;
+    const colors = featureTable.nameColors.map((c2) => `${c2.name}:${c2.color.r},${c2.color.g},${c2.color.b}`).join(";");
+    return `${featureTable.digest}:${seed}:${visPart}:${colors}`;
   }
-  function fallbackStyle(classTable, vis, seed, rev) {
-    const maxClassId = classTable.maxClassId;
-    if (maxClassId + 1 > 1048576) {
-      return {
-        strategy: "sparse",
-        missHidden: (vis == null ? void 0 : vis.mode) === "show",
-        overrides: new Uint32Array(32),
-        rev
-      };
-    }
-    const unnamedAlpha = (vis == null ? void 0 : vis.mode) === "show" ? 0 : 255;
-    const width = Math.min(1024, Math.max(1, maxClassId + 1));
-    const height = Math.max(1, Math.ceil((maxClassId + 1) / width));
-    const rgba = new Uint8Array(width * height * 4);
-    for (let id2 = 1; id2 <= maxClassId; id2++) {
-      const color2 = defaultClassColor(id2, seed);
-      const x2 = id2 % width;
-      const y2 = Math.floor(id2 / width);
-      const i2 = (y2 * width + x2) * 4;
-      rgba[i2] = color2.r;
-      rgba[i2 + 1] = color2.g;
-      rgba[i2 + 2] = color2.b;
-      rgba[i2 + 3] = unnamedAlpha;
-    }
-    return {
-      strategy: "denseLut",
-      rgba,
-      width,
-      height,
-      rev
-    };
-  }
-  function ensureLut(classTable, vis, seed, rev) {
-    if (lutPending.get(classTable.id) === rev) return;
-    lutPending.set(classTable.id, rev);
-    void rebuildClassTableLut({
-      classTableId: classTable.id,
-      maxClassId: classTable.maxClassId,
-      seed,
-      nameColors: classTable.nameColors.map((c2) => ({
-        name: c2.name,
-        r: c2.color.r,
-        g: c2.color.g,
-        b: c2.color.b
-      })),
-      vis,
-      rev
-    }).then((style2) => {
-      if (lutPending.get(classTable.id) !== rev) return;
-      lutCache.set(classTable.id, style2);
+  function ensureIndex(featureTableId) {
+    if (peekClassIndex(featureTableId) || lutPending.has(featureTableId)) return;
+    lutPending.add(featureTableId);
+    void fetchClassIndex(featureTableId).catch((e2) => {
+      console.error("[featureTable] class index failed", e2);
+    }).finally(() => {
+      lutPending.delete(featureTableId);
       noteLut();
-    }).catch(() => {
-      if (lutPending.get(classTable.id) === rev) lutPending.delete(classTable.id);
     });
   }
-  function gpuStyleForClassTable(classTable, vis, seed) {
-    const rev = lutRev(classTable, vis, seed);
-    const hit = lutCache.get(classTable.id);
-    if (hit && hit.strategy !== "plane" && hit.rev === rev) return hit;
-    ensureLut(classTable, vis, seed, rev);
-    return hit ?? fallbackStyle(classTable, vis, seed, `pending:${rev}`);
-  }
-  async function attachClassTable(input2) {
-    var _a2, _b2, _c2, _d;
-    let bytes;
-    try {
-      bytes = new Uint8Array(await input2.file.arrayBuffer());
-    } catch (e2) {
-      return {
-        ok: false,
-        error: e2 instanceof Error ? e2.message : "Could not read class CSV"
-      };
+  function gpuStyleForFeatureTable(featureTable, vis, seed) {
+    const idx = peekClassIndex(featureTable.id);
+    if (!idx) {
+      ensureIndex(featureTable.id);
+      return void 0;
     }
-    const digest = await sha256Hex(bytes);
-    const existing = classTableForChannel(input2.sourceChannelId);
-    if (existing && existing.digest === digest && ((_a2 = existing.columns) == null ? void 0 : _a2.id) === ((_b2 = input2.columns) == null ? void 0 : _b2.id) && ((_c2 = existing.columns) == null ? void 0 : _c2.name) === ((_d = input2.columns) == null ? void 0 : _d.name)) {
-      try {
-        const ingested = await ingestClassTable(existing.id, bytes, input2.columns ?? asColumns(existing.columns));
-        clearLut(existing.id);
-        if (existing.nameColors.length === 0) {
-          const nameColors2 = await nameColorsFromNames(ingested.names);
-          const classTable2 = {
-            ...existing,
-            nameColors: nameColors2
-          };
-          const doc2 = useDocumentStore.getState();
-          doc2.setClassTables(doc2.classTables.map((c2) => c2.id === classTable2.id ? classTable2 : c2));
-          return {
-            ok: true,
-            classTable: classTable2
-          };
-        }
-      } catch {
-      }
+    const colors = new Map(featureTable.nameColors.map((c2) => [
+      c2.name,
+      c2.color
+    ]));
+    const n2 = Math.min(idx.names.length, MAX_CLASS_NAMES);
+    const palette = new Uint8Array((n2 + 1) * 4);
+    for (let i2 = 0; i2 < n2; i2++) {
+      const name2 = idx.names[i2];
+      const color2 = colors.get(name2) ?? defaultClassColor(i2 + 1, seed);
+      const o2 = (i2 + 1) * 4;
+      palette[o2] = color2.r;
+      palette[o2 + 1] = color2.g;
+      palette[o2 + 2] = color2.b;
+      palette[o2 + 3] = classNameVisible(vis, name2) ? 255 : 0;
+    }
+    return {
+      index: idx.data,
+      width: idx.width,
+      height: idx.height,
+      palette,
+      missHidden: (vis == null ? void 0 : vis.mode) === "show",
+      indexRev: featureTable.digest,
+      rev: paletteRev(featureTable, vis, seed)
+    };
+  }
+  async function completeFeatureTableIngest(sourceChannelId, job) {
+    pendingAttachSet.add(sourceChannelId);
+    pendingAttachIds = [
+      ...pendingAttachSet
+    ];
+    for (const fn of attachListeners) fn();
+    try {
+      const ingested = await job;
+      if (ingested.ok === false) return ingested;
+      return commitIngestedFeatureTable(sourceChannelId, ingested.ingested);
+    } finally {
+      pendingAttachSet.delete(sourceChannelId);
+      pendingAttachIds = [
+        ...pendingAttachSet
+      ];
+      for (const fn of attachListeners) fn();
+    }
+  }
+  async function ingestFeatureCsvFile(file, columns) {
+    const featureTableId = crypto.randomUUID();
+    try {
+      const ingested = await ingestFeatureTable(featureTableId, file, columns);
+      const persist = ingested.persist;
+      if (!persist) throw new Error("Feature table CSV ingest produced no data");
       return {
         ok: true,
-        classTable: existing
+        ingested: {
+          featureTableId,
+          maxClassId: ingested.maxClassId,
+          names: ingested.names,
+          persist,
+          digest: await sha256Hex(persist),
+          columns: ingested.columns,
+          header: ingested.header,
+          handle: file.handle ?? ephemeralFileHandleFromFile(file)
+        }
       };
-    }
-    const classTableId = (existing == null ? void 0 : existing.id) ?? crypto.randomUUID();
-    let maxClassId;
-    let nameColors = [];
-    try {
-      const ingested = await ingestClassTable(classTableId, bytes, input2.columns);
-      maxClassId = ingested.maxClassId;
-      try {
-        nameColors = await nameColorsFromNames(ingested.names);
-      } catch (e2) {
-        if (false) ;
-      }
     } catch (e2) {
+      console.error("[featureTable] ingest failed", e2);
       return {
         ok: false,
-        error: e2 instanceof Error ? e2.message : "Could not index class CSV"
+        error: e2 instanceof Error ? e2.message : "Could not index feature table CSV"
       };
     }
+  }
+  async function commitIngestedFeatureTable(sourceChannelId, ingested) {
+    const existing = featureTableForChannel(sourceChannelId);
+    if (existing && existing.id !== ingested.featureTableId) {
+      cancelClassPalette(existing.id);
+      await dropFeatureTable(existing.id).catch(() => void 0);
+      await dropStoredSource(existing.source.handleKey);
+    }
+    let nameColors = [];
+    const reuse = existing && existing.digest === ingested.digest && existing.nameColors.length > 0;
+    if (reuse) nameColors = existing.nameColors;
     const storyId = useDocumentStore.getState().activeStoryId;
-    const handleKey = storyId ? `story:${storyId}:classTable:${classTableId}` : `classTable:${classTableId}`;
-    await putBlob(handleKey, bytes);
-    const classTable = {
-      id: classTableId,
-      sourceChannelId: input2.sourceChannelId,
+    const handleKey = storyId ? `story:${storyId}:featureTable:${ingested.featureTableId}` : `featureTable:${ingested.featureTableId}`;
+    await putFileHandle(handleKey, ingested.handle);
+    await putBlob(handleKey, ingested.persist);
+    const featureTable = {
+      id: ingested.featureTableId,
+      sourceChannelId,
       source: {
         handleKey
       },
-      maxClassId,
+      maxClassId: ingested.maxClassId,
       nameColors,
-      digest,
-      ...input2.columns ? {
-        columns: input2.columns
-      } : {}
+      digest: ingested.digest,
+      columns: ingested.columns,
+      header: ingested.header
     };
-    clearLut(classTableId);
     const doc = useDocumentStore.getState();
-    const next2 = existing ? doc.classTables.map((c2) => c2.id === classTableId ? classTable : c2) : [
-      ...doc.classTables,
-      classTable
+    const next2 = existing ? doc.featureTables.map((c2) => c2.id === existing.id ? featureTable : c2) : [
+      ...doc.featureTables,
+      featureTable
     ];
-    doc.setClassTables(next2);
+    doc.setFeatureTables(next2);
     const vis = {
-      ...useAppStore.getState().classTableVisibilities
+      ...useAppStore.getState().featureTableVisibilities
     };
-    vis[classTableId] = visibilityAllOn();
+    if (existing) delete vis[existing.id];
+    vis[ingested.featureTableId] = vis[ingested.featureTableId] ?? visibilityAllOn();
     useAppStore.setState({
-      classTableVisibilities: vis
+      featureTableVisibilities: vis
     });
+    if (nameColors.length === 0) {
+      scheduleClassPalette(ingested.featureTableId, ingested.names);
+    }
     return {
       ok: true,
-      classTable
+      featureTable
     };
   }
-  async function detachClassTable(sourceChannelId) {
-    const classTable = classTableForChannel(sourceChannelId);
-    if (!classTable) return;
-    clearLut(classTable.id);
-    await dropClassTable(classTable.id).catch(() => void 0);
-    await deleteBlob(classTable.source.handleKey).catch(() => void 0);
+  async function detachFeatureTable(sourceChannelId) {
+    const featureTable = featureTableForChannel(sourceChannelId);
+    if (!featureTable) return;
+    cancelClassPalette(featureTable.id);
+    await dropFeatureTable(featureTable.id).catch(() => void 0);
+    await dropStoredSource(featureTable.source.handleKey);
     const doc = useDocumentStore.getState();
-    if (doc.classTables.some((c2) => c2.id === classTable.id)) {
-      doc.setClassTables(doc.classTables.filter((c2) => c2.id !== classTable.id));
+    if (doc.featureTables.some((c2) => c2.id === featureTable.id)) {
+      doc.setFeatureTables(doc.featureTables.filter((c2) => c2.id !== featureTable.id));
     }
     const vis = {
-      ...useAppStore.getState().classTableVisibilities
+      ...useAppStore.getState().featureTableVisibilities
     };
-    delete vis[classTable.id];
+    delete vis[featureTable.id];
     useAppStore.setState({
-      classTableVisibilities: vis
+      featureTableVisibilities: vis
     });
   }
-  function detachRemovedClassTables(previous2, remaining) {
-    for (const classTable of previous2) {
-      if (remaining.some((c2) => c2.id === classTable.id)) continue;
-      void detachClassTable(classTable.sourceChannelId);
+  function detachRemovedFeatureTables(previous2, remaining) {
+    for (const featureTable of previous2) {
+      if (remaining.some((c2) => c2.id === featureTable.id)) continue;
+      void detachFeatureTable(featureTable.sourceChannelId);
     }
-    useDocumentStore.getState().setClassTables([
+    useDocumentStore.getState().setFeatureTables([
       ...remaining
     ]);
   }
-  function toggleClassVisible(classTableId, name2) {
+  function toggleClassVisible(featureTableId, name2) {
     const vis = {
-      ...useAppStore.getState().classTableVisibilities
+      ...useAppStore.getState().featureTableVisibilities
     };
-    vis[classTableId] = toggleClassName(vis[classTableId], name2);
+    vis[featureTableId] = toggleClassName(vis[featureTableId], name2);
     useAppStore.setState({
-      classTableVisibilities: vis
+      featureTableVisibilities: vis
     });
   }
-  function setAllClassesVisible(classTableId, visible) {
+  function setAllClassesVisible(featureTableId, visible) {
     const vis = {
-      ...useAppStore.getState().classTableVisibilities
+      ...useAppStore.getState().featureTableVisibilities
     };
-    vis[classTableId] = visible ? visibilityAllOn() : visibilityAllOff();
+    vis[featureTableId] = visible ? visibilityAllOn() : visibilityAllOff();
     useAppStore.setState({
-      classTableVisibilities: vis
+      featureTableVisibilities: vis
     });
   }
-  function setClassColor(classTableId, name2, color2) {
+  function setClassColor(featureTableId, name2, color2) {
     const doc = useDocumentStore.getState();
-    doc.setClassTables(doc.classTables.map((c2) => {
-      if (c2.id !== classTableId) return c2;
+    doc.setFeatureTables(doc.featureTables.map((c2) => {
+      if (c2.id !== featureTableId) return c2;
       const i2 = c2.nameColors.findIndex((o2) => o2.name === name2);
       if (i2 >= 0) {
         const nameColors = c2.nameColors.slice();
@@ -91887,88 +91403,184 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       };
     }));
   }
-  async function hydrateClassTables(classTables, reset) {
+  async function hydrateFeatureTables(featureTables, reset, opts) {
     if (reset) {
-      lutCache.clear();
       lutPending.clear();
-      await resetClassTables();
+      await resetFeatureTables();
     }
-    const next2 = [
-      ...classTables
-    ];
-    let changed = false;
-    for (let i2 = 0; i2 < next2.length; i2++) {
-      const classTable = next2[i2];
-      const bytes = await getBlob$1(classTable.source.handleKey);
-      if (!bytes) continue;
-      try {
-        const ingested = await ingestClassTable(classTable.id, bytes, asColumns(classTable.columns));
-        clearLut(classTable.id);
-        if (classTable.nameColors.length > 0) continue;
-        next2[i2] = {
-          ...classTable,
-          nameColors: await nameColorsFromNames(ingested.names)
-        };
-        changed = true;
-      } catch {
+    const deniedHandleKeys = [];
+    const missingHandleKeys = [];
+    const canAccess = (opts == null ? void 0 : opts.requestPermission) ? ensureFileHandlePermission : hasFileHandlePermission;
+    const ingestSource = async (featureTable, source2) => {
+      const ingested = await ingestFeatureTable(featureTable.id, source2, {
+        id: featureTable.columns.id,
+        name: featureTable.columns.name,
+        header: featureTable.header
+      });
+      noteLut();
+      if (featureTable.nameColors.length === 0) {
+        scheduleClassPalette(featureTable.id, ingested.names);
       }
+    };
+    for (const featureTable of featureTables) {
+      if (!reset && hasIngestedFeatureTable(featureTable.id)) continue;
+      const key2 = featureTable.source.handleKey;
+      const stored = await getFileHandle(key2);
+      if (stored) {
+        const handle2 = stored;
+        if (!await canAccess(handle2)) {
+          deniedHandleKeys.push(key2);
+          continue;
+        }
+        try {
+          if (!await findFile({
+            handle: handle2
+          })) {
+            missingHandleKeys.push(key2);
+            continue;
+          }
+          await ingestSource(featureTable, await handle2.getFile());
+        } catch (e2) {
+          console.error("[featureTable] hydrate failed", featureTable.id, e2);
+          missingHandleKeys.push(key2);
+        }
+        continue;
+      }
+      const bytes = await getBlob$1(key2);
+      if (bytes) {
+        try {
+          await ingestSource(featureTable, bytes);
+        } catch (e2) {
+          console.error("[featureTable] hydrate failed", featureTable.id, e2);
+          missingHandleKeys.push(key2);
+        }
+        continue;
+      }
+      missingHandleKeys.push(key2);
     }
-    if (changed) useDocumentStore.getState().setClassTables(next2);
+    noteAccess({
+      deniedHandleKeys,
+      missingHandleKeys
+    });
   }
-  const actions$2 = "_actions_1h1iv_1";
-  const root$a = "_root_1h1iv_7";
-  const toolbar$1 = "_toolbar_1h1iv_14";
-  const filter$1 = "_filter_1h1iv_21";
-  const toolBtn = "_toolBtn_1h1iv_32";
-  const colPick = "_colPick_1h1iv_43";
-  const scroller = "_scroller_1h1iv_66";
-  const loading = "_loading_1h1iv_74";
-  const row = "_row_1h1iv_84";
-  const swatch$1 = "_swatch_1h1iv_96";
-  const swatchFaded = "_swatchFaded_1h1iv_105";
-  const name$3 = "_name_1h1iv_110";
-  const styles$q = {
-    actions: actions$2,
+  async function requestFeatureTableFileAccess() {
+    await hydrateFeatureTables(useDocumentStore.getState().featureTables, false, {
+      requestPermission: true
+    });
+  }
+  const attach = "_attach_16e0a_1";
+  const attachBtn = "_attachBtn_16e0a_9";
+  const attachLabel = "_attachLabel_16e0a_34";
+  const root$a = "_root_16e0a_42";
+  const toolbar$1 = "_toolbar_16e0a_50";
+  const field$1 = "_field_16e0a_57";
+  const textBtn = "_textBtn_16e0a_79";
+  const colPick = "_colPick_16e0a_95";
+  const scroller = "_scroller_16e0a_118";
+  const accessPrompt = "_accessPrompt_16e0a_126";
+  const loading = "_loading_16e0a_136";
+  const row = "_row_16e0a_150";
+  const swatch$1 = "_swatch_16e0a_162";
+  const swatchPending = "_swatchPending_16e0a_177";
+  const name$3 = "_name_16e0a_182";
+  const styles$o = {
+    attach,
+    attachBtn,
+    attachLabel,
     root: root$a,
     toolbar: toolbar$1,
-    filter: filter$1,
-    toolBtn,
+    field: field$1,
+    textBtn,
     colPick,
     scroller,
+    accessPrompt,
     loading,
     row,
     swatch: swatch$1,
-    swatchFaded,
+    swatchPending,
     name: name$3
   };
   const ROW_H = 22;
   const WINDOW = 80;
-  function mergeClassTableRows(classTable, vis, colorSeed, rows2) {
-    const colors = new Map(classTable.nameColors.map((o2) => [
-      o2.name,
-      o2.color
-    ]));
-    return rows2.map((row2) => {
-      return {
-        name: row2.name,
-        color: colors.get(row2.name) ?? defaultClassColor(1, colorSeed),
-        visible: classNameVisible(vis, row2.name)
-      };
+  const EDGE = 10;
+  async function pickFeatureCsv() {
+    try {
+      return await n$1({
+        description: "Feature table CSV",
+        mimeTypes: [
+          "text/csv"
+        ],
+        extensions: [
+          ".csv"
+        ],
+        multiple: false
+      });
+    } catch (e2) {
+      if (e2 instanceof Error && e2.name === "AbortError") return void 0;
+      throw e2;
+    }
+  }
+  function TableIcon() {
+    return jsxRuntimeExports.jsxs("svg", {
+      width: 12,
+      height: 12,
+      viewBox: "0 0 12 12",
+      "aria-hidden": true,
+      children: [
+        jsxRuntimeExports.jsx("title", {
+          children: "Table"
+        }),
+        jsxRuntimeExports.jsx("rect", {
+          x: "1",
+          y: "1",
+          width: "10",
+          height: "10",
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: "1.25"
+        }),
+        jsxRuntimeExports.jsx("rect", {
+          x: "1",
+          y: "1",
+          width: "10",
+          height: "3",
+          fill: "currentColor"
+        }),
+        jsxRuntimeExports.jsx("path", {
+          d: "M1 7h10M5 4v7",
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: "1.25"
+        })
+      ]
     });
   }
-  const EDGE = 10;
-  function useClassTableList(classTableId) {
+  function TableLoading() {
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$o.loading,
+      children: [
+        jsxRuntimeExports.jsx("div", {
+          className: minervaTheme.spinnerSm,
+          "aria-hidden": "true"
+        }),
+        jsxRuntimeExports.jsx("span", {
+          children: "Loading feature table\u2026"
+        })
+      ]
+    });
+  }
+  function useFeatureTableList(featureTableId) {
     const [filter2, setFilter] = reactExports.useState("");
     const [raw2, setRaw] = reactExports.useState([]);
     const [total, setTotal] = reactExports.useState(0);
     const [loadedOffset, setLoadedOffset] = reactExports.useState(0);
     const [loading2, setLoading] = reactExports.useState(false);
-    const vis = useAppStore((s2) => s2.classTableVisibilities[classTableId]);
-    const classTable = useDocumentStore((s2) => s2.classTables.find((c2) => c2.id === classTableId));
-    const digest = classTable == null ? void 0 : classTable.digest;
-    const ingestEpoch2 = reactExports.useSyncExternalStore(subscribeClassTableIngest, getClassTableIngestEpoch, getClassTableIngestEpoch);
+    const vis = useAppStore((s2) => s2.featureTableVisibilities[featureTableId]);
+    const featureTable = useDocumentStore((s2) => s2.featureTables.find((c2) => c2.id === featureTableId));
+    const digest = featureTable == null ? void 0 : featureTable.digest;
+    const ingestEpoch2 = reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
     const viz = useDocumentStore((s2) => {
-      const sourceId = classTable == null ? void 0 : classTable.sourceChannelId;
+      const sourceId = featureTable == null ? void 0 : featureTable.sourceChannelId;
       if (!sourceId) return void 0;
       for (const g2 of s2.channelGroups) {
         const row2 = g2.channels.find((gc2) => gc2.channelId === sourceId);
@@ -91981,7 +91593,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       return void 0;
     });
-    const seed = (viz == null ? void 0 : viz.colorSeed) ?? 0;
     const fadeColors = ((viz == null ? void 0 : viz.color) ?? "white") === "white";
     const seq = reactExports.useRef(0);
     const windowRef = reactExports.useRef({
@@ -91998,7 +91609,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const fetchPage = reactExports.useCallback((offset, query) => {
       const id2 = ++seq.current;
       setLoading(true);
-      void pageClassTable(classTableId, query, offset, WINDOW).then((page) => {
+      void pageFeatureTable(featureTableId, query, offset, WINDOW).then((page) => {
         if (id2 !== seq.current) return;
         setRaw(page.rows);
         setTotal(page.total);
@@ -92009,7 +91620,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         setLoading(false);
       });
     }, [
-      classTableId
+      featureTableId
     ]);
     reactExports.useEffect(() => {
       const epochOnly = prevEpoch.current !== ingestEpoch2;
@@ -92037,19 +91648,34 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fetchPage
     ]);
     const rows2 = reactExports.useMemo(() => {
-      if (!classTable) return [];
-      return mergeClassTableRows(classTable, vis, seed, raw2);
+      var _a2;
+      if (!featureTable) return [];
+      const names = raw2.length === 0 ? (_a2 = peekClassIndex(featureTableId)) == null ? void 0 : _a2.names : void 0;
+      const source2 = names && names.length > 0 ? names.map((name2) => ({
+        name: name2
+      })) : raw2;
+      const colors = new Map(featureTable.nameColors.map((o2) => [
+        o2.name,
+        o2.color
+      ]));
+      return source2.map((row2) => ({
+        name: row2.name,
+        color: colors.get(row2.name),
+        visible: classNameVisible(vis, row2.name)
+      }));
     }, [
-      classTable,
+      featureTable,
+      featureTableId,
       vis,
-      seed,
-      raw2
+      raw2,
+      ingestEpoch2
     ]);
+    const usingCache = raw2.length === 0 && rows2.length > 0;
     return {
       rows: rows2,
-      total,
+      total: usingCache ? rows2.length : total,
       filter: filter2,
-      loadedOffset,
+      loadedOffset: usingCache ? 0 : loadedOffset,
       loading: loading2,
       fadeColors,
       setFilter,
@@ -92068,15 +91694,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  function ClassCsvColumnPick(props) {
+  function FeatureCsvColumnPick(props) {
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$q.colPick,
+      className: styles$o.colPick,
       children: [
         jsxRuntimeExports.jsxs("label", {
           children: [
             "ID",
             jsxRuntimeExports.jsx("select", {
-              className: styles$q.filter,
+              className: styles$o.field,
               value: props.id,
               "aria-label": "ID column",
               onChange: (e2) => props.onId(e2.target.value),
@@ -92091,7 +91717,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: [
             "Name",
             jsxRuntimeExports.jsx("select", {
-              className: styles$q.filter,
+              className: styles$o.field,
               value: props.name,
               "aria-label": "Name column",
               onChange: (e2) => props.onName(e2.target.value),
@@ -92105,93 +91731,121 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  function classTableRowExtras(sourceChannelId, classTables) {
+  function featureTableRowExtras(sourceChannelId, featureTables) {
     var _a2;
-    const classTableId = (_a2 = classTables.find((c2) => c2.sourceChannelId === sourceChannelId)) == null ? void 0 : _a2.id;
+    const featureTableId = (_a2 = featureTables.find((c2) => c2.sourceChannelId === sourceChannelId)) == null ? void 0 : _a2.id;
     return {
-      classColors: classTableId != null,
-      maskFooter: jsxRuntimeExports.jsx(ClassTableFooter, {
+      maskAction: jsxRuntimeExports.jsx(FeatureTableMaskAction, {
         sourceChannelId,
-        classTableId
-      })
+        featureTableId
+      }),
+      maskFooter: featureTableId ? jsxRuntimeExports.jsx(FeatureTableListBody, {
+        featureTableId
+      }) : void 0
     };
   }
-  function ClassTableFooter(props) {
-    const [busy, setBusy] = reactExports.useState(false);
-    const attached = props.classTableId != null;
-    return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+  function FeatureTableGlyph(props) {
+    const { wait: wait2, folder, title: title7, ariaLabel, onClick } = props;
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$o.attach,
       children: [
-        props.classTableId ? jsxRuntimeExports.jsx(ClassTableListBody, {
-          classTableId: props.classTableId
-        }, props.classTableId) : busy ? jsxRuntimeExports.jsx("div", {
-          className: styles$q.scroller,
-          style: {
-            minHeight: 44
-          },
-          children: jsxRuntimeExports.jsx("div", {
-            className: styles$q.loading,
-            children: jsxRuntimeExports.jsx("div", {
-              className: minervaTheme.spinnerSm
-            })
-          })
-        }) : null,
-        jsxRuntimeExports.jsx(ClassTableControls, {
-          sourceChannelId: props.sourceChannelId,
-          attached,
-          busy,
-          setBusy
+        jsxRuntimeExports.jsx("button", {
+          type: "button",
+          className: `${minervaTheme.focusRing} ${styles$o.attachBtn}${wait2 ? ` ${minervaTheme.busyOverlay}` : ""}`,
+          disabled: wait2 || onClick == null,
+          title: title7,
+          "aria-label": ariaLabel,
+          "aria-busy": wait2 || void 0,
+          "data-channel-drag-ignore": "",
+          onClick,
+          children: folder ? jsxRuntimeExports.jsx(SvgFolder, {
+            width: 12,
+            height: 12,
+            "aria-hidden": true
+          }) : jsxRuntimeExports.jsx(TableIcon, {})
+        }),
+        jsxRuntimeExports.jsx("span", {
+          className: styles$o.attachLabel,
+          children: "Table"
         })
       ]
     });
   }
-  function ClassTableControls(props) {
-    const { sourceChannelId, attached, busy, setBusy } = props;
+  function FeatureTableMaskAction(props) {
+    const { sourceChannelId, featureTableId } = props;
+    reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
+    const access = reactExports.useSyncExternalStore(subscribeFeatureTableAccess, getFeatureTableAccess, getFeatureTableAccess);
+    const handleKey = useDocumentStore((s2) => {
+      var _a2;
+      return featureTableId ? (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.source.handleKey : void 0;
+    });
+    if (featureTableId == null) {
+      return jsxRuntimeExports.jsx(FeatureTableAttach, {
+        sourceChannelId
+      });
+    }
+    if (hasIngestedFeatureTable(featureTableId)) return null;
+    if (handleKey != null && (access.deniedHandleKeys.includes(handleKey) || access.missingHandleKeys.includes(handleKey))) {
+      return null;
+    }
+    return jsxRuntimeExports.jsx(FeatureTableGlyph, {
+      wait: true,
+      folder: true,
+      title: "Loading feature table",
+      ariaLabel: "Loading feature table"
+    });
+  }
+  function FeatureTableAttach(props) {
+    const pendingIds = reactExports.useSyncExternalStore(subscribeFeatureTablePending, getFeatureTablePendingSourceIds, getFeatureTablePendingSourceIds);
+    const [busy, setBusy] = reactExports.useState(false);
+    const wait2 = busy || pendingIds.includes(props.sourceChannelId);
     const [pendingCsv, setPendingCsv] = reactExports.useState(null);
-    const attachFile = async (file, columns) => {
+    const [error2, setError] = reactExports.useState(null);
+    const closePending = () => {
+      setPendingCsv(null);
+      setError(null);
+    };
+    const attachFile = async (file, columns2) => {
+      setPendingCsv(null);
+      setError(null);
       setBusy(true);
       try {
-        const result = await attachClassTable({
-          sourceChannelId,
-          file,
-          columns
-        });
-        if (result.ok === false) window.alert(result.error);
+        const result = await completeFeatureTableIngest(props.sourceChannelId, ingestFeatureCsvFile(file, columns2));
+        if (result.ok === false) setError(result.error);
       } finally {
         setBusy(false);
       }
     };
     const pickAndAttach = async () => {
-      let file;
-      try {
-        file = await n$1({
-          description: "Class table CSV",
-          mimeTypes: [
-            "text/csv"
-          ],
-          extensions: [
-            ".csv"
-          ],
-          multiple: false
-        });
-      } catch (e2) {
-        if (e2 instanceof Error && e2.name === "AbortError") return;
-        throw e2;
-      }
-      const peek = await peekClassCsv(file);
-      if (!peek) {
-        await attachFile(file);
-        return;
-      }
+      const file = await pickFeatureCsv();
+      if (!file) return;
+      const peek = await peekFeatureCsv(file);
+      setError(null);
       setPendingCsv({
         file,
-        ...peek
+        headers: (peek == null ? void 0 : peek.headers) ?? [],
+        id: (peek == null ? void 0 : peek.id) ?? "",
+        name: (peek == null ? void 0 : peek.name) ?? ""
       });
     };
-    if (pendingCsv) {
-      return jsxRuntimeExports.jsxs("div", {
-        className: styles$q.actions,
-        children: [
-          jsxRuntimeExports.jsx(ClassCsvColumnPick, {
+    const columns = pendingCsv && pendingCsv.headers.length >= 2 ? {
+      id: pendingCsv.id,
+      name: pendingCsv.name
+    } : void 0;
+    return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+      children: [
+        jsxRuntimeExports.jsx(FeatureTableGlyph, {
+          wait: wait2,
+          title: error2 ?? "Attach feature table",
+          ariaLabel: wait2 ? "Loading feature table" : "Attach feature table",
+          onClick: () => void pickAndAttach()
+        }),
+        pendingCsv ? jsxRuntimeExports.jsx(ImportOverlay, {
+          title: pendingCsv.file.name,
+          titleId: "feature-table-import-dialog-title",
+          onCancel: closePending,
+          onImport: () => void attachFile(pendingCsv.file, columns),
+          children: pendingCsv.headers.length >= 2 ? jsxRuntimeExports.jsx(FeatureCsvColumnPick, {
             headers: pendingCsv.headers,
             id: pendingCsv.id,
             name: pendingCsv.name,
@@ -92203,70 +91857,55 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ...pendingCsv,
               name: name2
             })
-          }),
-          jsxRuntimeExports.jsx("button", {
-            type: "button",
-            className: `${minervaTheme.focusRing} ${styles$q.toolBtn}`,
-            disabled: busy,
-            onClick: () => {
-              void attachFile(pendingCsv.file, {
-                id: pendingCsv.id,
-                name: pendingCsv.name
-              }).then(() => setPendingCsv(null));
-            },
-            children: "Attach"
-          }),
-          jsxRuntimeExports.jsx("button", {
-            type: "button",
-            className: `${minervaTheme.focusRing} ${styles$q.toolBtn}`,
-            disabled: busy,
-            onClick: () => setPendingCsv(null),
-            children: "Cancel"
-          })
-        ]
-      });
-    }
-    return jsxRuntimeExports.jsxs("div", {
-      className: styles$q.actions,
-      children: [
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: `${minervaTheme.focusRing} ${styles$q.toolBtn}`,
-          disabled: busy,
-          onClick: () => void pickAndAttach(),
-          children: attached ? "Replace class table\u2026" : "Attach class table\u2026"
-        }),
-        attached ? jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: `${minervaTheme.focusRing} ${styles$q.toolBtn}`,
-          disabled: busy,
-          onClick: () => void detachClassTable(sourceChannelId),
-          children: "Remove table"
+          }) : null
         }) : null
       ]
     });
   }
-  function ClassTableListBody(props) {
-    const { classTableId } = props;
-    const list2 = useClassTableList(classTableId);
+  function FeatureTableListBody(props) {
+    const { featureTableId } = props;
+    const list2 = useFeatureTableList(featureTableId);
+    const handleKey = useDocumentStore((s2) => {
+      var _a2;
+      return (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.source.handleKey;
+    });
+    const sourceChannelId = useDocumentStore((s2) => {
+      var _a2;
+      return (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.sourceChannelId;
+    });
+    const access = reactExports.useSyncExternalStore(subscribeFeatureTableAccess, getFeatureTableAccess, getFeatureTableAccess);
+    const needsPermission = handleKey != null && access.deniedHandleKeys.includes(handleKey);
+    const needsReselect = handleKey != null && access.missingHandleKeys.includes(handleKey);
     const scrollerRef = reactExports.useRef(null);
     const [picker, setPicker] = reactExports.useState(null);
     const showBusy = list2.loading && list2.rows.length === 0;
     const fadeColors = list2.fadeColors;
+    const showAccess = needsPermission || needsReselect;
+    const restoreFile = async () => {
+      if (needsReselect) {
+        if (!sourceChannelId) return;
+        const file = await pickFeatureCsv();
+        if (!file) return;
+        await completeFeatureTableIngest(sourceChannelId, ingestFeatureCsvFile(file));
+        return;
+      }
+      await requestFeatureTableFileAccess();
+    };
     reactExports.useEffect(() => {
       if (fadeColors) setPicker(null);
     }, [
       fadeColors
     ]);
+    if (!hasIngestedFeatureTable(featureTableId) && !showAccess) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$q.root,
+      className: styles$o.root,
       "data-channel-drag-ignore": "",
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$q.toolbar,
+          className: styles$o.toolbar,
           children: [
             jsxRuntimeExports.jsx("input", {
-              className: styles$q.filter,
+              className: styles$o.field,
               type: "text",
               value: list2.filter,
               placeholder: "Filter classes\u2026",
@@ -92279,40 +91918,56 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$q.toolBtn}`,
-              onClick: () => setAllClassesVisible(classTableId, true),
+              className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+              onClick: () => setAllClassesVisible(featureTableId, true),
               children: "Show all"
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$q.toolBtn}`,
-              onClick: () => setAllClassesVisible(classTableId, false),
+              className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+              onClick: () => setAllClassesVisible(featureTableId, false),
               children: "Hide all"
+            }),
+            jsxRuntimeExports.jsx(PanelIconButton, {
+              variant: "row",
+              title: "Delete table",
+              "aria-label": "Delete table",
+              onClick: () => {
+                if (sourceChannelId) void detachFeatureTable(sourceChannelId);
+              },
+              children: jsxRuntimeExports.jsx(TrashIcon, {
+                title: "Delete table",
+                size: 14
+              })
             })
           ]
         }),
         jsxRuntimeExports.jsxs("div", {
           ref: scrollerRef,
-          className: styles$q.scroller,
+          className: `${styles$o.scroller} ${panel$1.thinScrollbar}`,
           onScroll: () => {
             const el2 = scrollerRef.current;
             if (!el2) return;
             list2.onScroll(el2.scrollTop, el2.clientHeight);
           },
           children: [
-            showBusy ? jsxRuntimeExports.jsx("div", {
-              className: styles$q.loading,
-              children: jsxRuntimeExports.jsx("div", {
-                className: minervaTheme.spinnerSm
+            showAccess ? jsxRuntimeExports.jsx("div", {
+              className: styles$o.accessPrompt,
+              children: jsxRuntimeExports.jsx("button", {
+                type: "button",
+                className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+                onClick: () => void restoreFile(),
+                children: needsReselect ? "Choose file again" : "Allow file access"
               })
             }) : null,
+            showBusy && !showAccess ? jsxRuntimeExports.jsx(TableLoading, {}) : null,
             jsxRuntimeExports.jsx("div", {
               style: {
-                height: Math.max(list2.total, showBusy ? 2 : 1) * ROW_H,
+                height: Math.max(list2.total, showBusy || showAccess ? 2 : 1) * ROW_H,
                 position: "relative"
               },
               children: list2.rows.map((row2, i2) => jsxRuntimeExports.jsxs("div", {
-                className: styles$q.row,
+                className: styles$o.row,
                 style: {
                   top: (list2.loadedOffset + i2) * ROW_H
                 },
@@ -92321,31 +91976,38 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     visible: row2.visible,
                     title: row2.visible ? `Hide ${row2.name}` : `Show ${row2.name}`,
                     ariaLabel: `Toggle visibility for ${row2.name}`,
-                    onClick: () => toggleClassVisible(classTableId, row2.name)
+                    onClick: () => toggleClassVisible(featureTableId, row2.name)
                   }),
-                  jsxRuntimeExports.jsx("button", {
+                  row2.color ? jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$q.swatch}${fadeColors ? ` ${styles$q.swatchFaded}` : ""}`,
+                    className: `${minervaTheme.focusRing} ${styles$o.swatch}`,
                     style: {
                       backgroundColor: `#${rgbToHex$1(row2.color)}`
                     },
                     "aria-label": `Color for ${row2.name}`,
                     disabled: fadeColors,
                     onClick: (e2) => {
+                      const color2 = row2.color;
+                      if (!color2) return;
                       const pos = colorPickerAnchorPosition(e2.currentTarget.getBoundingClientRect());
                       setPicker({
                         name: row2.name,
-                        hex: rgbToHex$1(row2.color),
+                        hex: rgbToHex$1(color2),
                         ...pos
                       });
                     }
+                  }) : jsxRuntimeExports.jsx("button", {
+                    type: "button",
+                    className: `${styles$o.swatch} ${styles$o.swatchPending} ${minervaTheme.busyOverlay}`,
+                    "aria-label": `Assigning color for ${row2.name}`,
+                    disabled: true
                   }),
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$q.name}`,
+                    className: `${minervaTheme.focusRing} ${styles$o.name}`,
                     title: row2.visible ? `Hide ${row2.name}` : `Show ${row2.name}`,
                     "aria-pressed": row2.visible,
-                    onClick: () => toggleClassVisible(classTableId, row2.name),
+                    onClick: () => toggleClassVisible(featureTableId, row2.name),
                     children: row2.name.trim() ? row2.name : "Unnamed"
                   })
                 ]
@@ -92362,7 +92024,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             const pending2 = picker.pending;
             const name2 = picker.name;
             setPicker(null);
-            if (pending2) setClassColor(classTableId, name2, pending2);
+            if (pending2) setClassColor(featureTableId, name2, pending2);
           },
           color: `#${picker.hex}`,
           showAlpha: false,
@@ -92407,7 +92069,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const rangePan = "_rangePan_opgv4_71";
   const rangeInput = "_rangeInput_opgv4_85";
   const limitInput = "_limitInput_opgv4_131";
-  const styles$p = {
+  const styles$n = {
     wrap: wrap$2,
     histogramHost,
     histogramLoading,
@@ -92760,11 +92422,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const panLeft = `${minFrac * 100}%`;
     const panWidth = `${(maxFrac - minFrac) * 100}%`;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.wrap,
+      className: styles$n.wrap,
       children: [
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$p.limitInput}`,
+          className: `${minervaTheme.input} ${styles$n.limitInput}`,
           value: minInput,
           "aria-label": `${props.channelLabel} contrast minimum value`,
           min: scale2.dtypeMin,
@@ -92782,13 +92444,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$p.histogramHost,
+          className: styles$n.histogramHost,
           style: props.r != null && props.g != null && props.b != null ? {
             "--histogram-color": `rgb(${props.r},${props.g},${props.b})`
           } : void 0,
           children: [
             jsxRuntimeExports.jsxs("svg", {
-              className: styles$p.histogramSvg,
+              className: styles$n.histogramSvg,
               viewBox: "1.15 0 96.7 11",
               preserveAspectRatio: "none",
               role: "img",
@@ -92806,22 +92468,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   })
                 }),
                 jsxRuntimeExports.jsx("path", {
-                  className: `${styles$p.histogramFill} ${styles$p.histogramOutOfRange}`,
+                  className: `${styles$n.histogramFill} ${styles$n.histogramOutOfRange}`,
                   d: histFillPath
                 }),
                 jsxRuntimeExports.jsx("path", {
-                  className: `${styles$p.histogramLine} ${styles$p.histogramOutOfRange}`,
+                  className: `${styles$n.histogramLine} ${styles$n.histogramOutOfRange}`,
                   d: histLinePath
                 }),
                 jsxRuntimeExports.jsxs("g", {
                   clipPath: `url(#${histogramClipId})`,
                   children: [
                     jsxRuntimeExports.jsx("path", {
-                      className: styles$p.histogramFill,
+                      className: styles$n.histogramFill,
                       d: histFillPath
                     }),
                     jsxRuntimeExports.jsx("path", {
-                      className: styles$p.histogramLine,
+                      className: styles$n.histogramLine,
                       d: histLinePath
                     })
                   ]
@@ -92829,7 +92491,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("div", {
-              className: `${styles$p.histogramLoading}${props.histogramLoading ? ` ${styles$p.histogramLoadingVisible}` : ""}`,
+              className: `${styles$n.histogramLoading}${props.histogramLoading ? ` ${styles$n.histogramLoadingVisible}` : ""}`,
               title: "Loading histogram",
               children: jsxRuntimeExports.jsx("div", {
                 className: minervaTheme.spinnerSm
@@ -92837,10 +92499,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsxs("div", {
               ref: sliderRowRef,
-              className: styles$p.sliderRow,
+              className: styles$n.sliderRow,
               children: [
                 sliderMax > sliderMin ? jsxRuntimeExports.jsx("div", {
-                  className: styles$p.rangePan,
+                  className: styles$n.rangePan,
                   style: {
                     left: panLeft,
                     width: panWidth
@@ -92853,7 +92515,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }) : null,
                 jsxRuntimeExports.jsx("input", {
                   type: "range",
-                  className: styles$p.rangeInput,
+                  className: styles$n.rangeInput,
                   min: 0,
                   max: scale2.sliderSteps,
                   value: sliderMin,
@@ -92867,7 +92529,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 jsxRuntimeExports.jsx("input", {
                   type: "range",
-                  className: styles$p.rangeInput,
+                  className: styles$n.rangeInput,
                   min: 0,
                   max: scale2.sliderSteps,
                   value: sliderMax,
@@ -92885,7 +92547,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$p.limitInput}`,
+          className: `${minervaTheme.input} ${styles$n.limitInput}`,
           value: maxInput,
           "aria-label": `${props.channelLabel} contrast maximum value`,
           min: scale2.dtypeMin,
@@ -92912,8 +92574,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       type: "button",
       className: [
         minervaTheme.focusRing,
-        styles$r.channelColorSwatch,
-        fill ? null : styles$r.channelColorSwatchUnfilled,
+        styles$q.channelColorSwatch,
+        fill ? null : styles$q.channelColorSwatchUnfilled,
         busy ? minervaTheme.busyOverlay : null
       ].filter(Boolean).join(" "),
       style: fill ? {
@@ -92930,7 +92592,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function MaskVizButton(props) {
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: `${minervaTheme.focusRing} ${styles$r.maskVizOption}${props.active ? ` ${styles$r.maskVizOptionActive}` : ""}`,
+      className: `${minervaTheme.focusRing} ${styles$q.maskVizOption}${props.active ? ` ${styles$q.maskVizOptionActive}` : ""}`,
       "aria-pressed": props.active,
       title: props.title ?? props.label,
       "aria-label": props.label,
@@ -92970,18 +92632,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onPreview == null ? void 0 : onPreview(null);
     };
     return jsxRuntimeExports.jsxs("label", {
-      className: styles$r.maskOpacityControl,
+      className: styles$q.maskOpacityControl,
       title: `Opacity ${pct}%`,
       style: {
         ["--mask-opacity-pct"]: `${pct}%`
       },
       children: [
         jsxRuntimeExports.jsxs("span", {
-          className: styles$r.maskOpacityInputRow,
+          className: styles$q.maskOpacityInputRow,
           children: [
             jsxRuntimeExports.jsx("input", {
               type: "range",
-              className: styles$r.maskOpacitySlider,
+              className: styles$q.maskOpacitySlider,
               min: 0,
               max: 100,
               step: 1,
@@ -93001,7 +92663,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onBlur: commit
             }),
             jsxRuntimeExports.jsxs("span", {
-              className: styles$r.maskOpacityValue,
+              className: styles$q.maskOpacityValue,
               children: [
                 pct,
                 "%"
@@ -93010,7 +92672,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         jsxRuntimeExports.jsx("span", {
-          className: styles$r.maskOpacityLabel,
+          className: styles$q.maskOpacityLabel,
           children: "Opacity"
         })
       ]
@@ -93020,19 +92682,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const { value, onChange, ariaLabel, classColors } = props;
     const colored = value.color === "random";
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$r.maskModeControls,
+      className: styles$q.maskModeControls,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$r.maskModeGroup,
+          className: styles$q.maskModeGroup,
           children: [
             jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$r.maskVizToggle,
+              className: styles$q.maskVizToggle,
               "aria-label": `${ariaLabel} fill`,
               children: [
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.style === "outline",
                   label: "Outline",
-                  iconClass: styles$r.maskVizIconOutline,
+                  iconClass: styles$q.maskVizIconOutline,
                   onClick: () => onChange({
                     ...value,
                     style: "outline"
@@ -93041,7 +92703,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.style === "full",
                   label: "Full",
-                  iconClass: styles$r.maskVizIconFull,
+                  iconClass: styles$q.maskVizIconFull,
                   onClick: () => onChange({
                     ...value,
                     style: "full"
@@ -93050,22 +92712,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$r.maskModeGroupLabel,
+              className: styles$q.maskModeGroupLabel,
               children: "Fill"
             })
           ]
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$r.maskModeGroup,
+          className: styles$q.maskModeGroup,
           children: [
             jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$r.maskVizToggle,
+              className: styles$q.maskVizToggle,
               "aria-label": `${ariaLabel} color`,
               children: [
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.color === "white",
                   label: "White",
-                  iconClass: styles$r.maskVizSwatchWhite,
+                  iconClass: styles$q.maskVizSwatchWhite,
                   onClick: () => onChange({
                     ...value,
                     color: "white"
@@ -93075,7 +92737,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   active: colored,
                   label: classColors ? "Colored" : colored ? "Random colors, re-seed" : "Random colors",
                   title: classColors ? "Class colors" : colored ? "Random colors (click to re-seed)" : "Random colors",
-                  iconClass: styles$r.maskVizSwatchRandom,
+                  iconClass: styles$q.maskVizSwatchRandom,
                   onClick: () => onChange(classColors ? {
                     ...value,
                     color: "random"
@@ -93084,7 +92746,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$r.maskModeGroupLabel,
+              className: styles$q.maskModeGroupLabel,
               children: "Color"
             })
           ]
@@ -93115,7 +92777,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       props.onBlur(trimmed);
     };
     return jsxRuntimeExports.jsx("input", {
-      className: `${minervaTheme.field} ${styles$r.channelNameInput}`,
+      className: `${minervaTheme.field} ${styles$q.channelNameInput}`,
       type: "text",
       value: draft,
       title: props.name,
@@ -93137,26 +92799,33 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function ChannelRow(props) {
-    const { visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, contrast, trailing, locked, isMask, maskVisualization, onMaskVisualizationChange, onMaskVisualizationPreview, maskFooter, classColors, maskAriaLabel, fixedColorHex, colorHex, colorTitle, busy, onColorClick } = props;
+    const { visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, contrast, trailing, locked, isMask, maskVisualization, onMaskVisualizationChange, onMaskVisualizationPreview, maskFooter, maskAction, maskAriaLabel, fixedColorHex, colorHex, colorTitle, busy, fitting, visibilityBlocked, onColorClick } = props;
     const showMask = isMask && maskVisualization;
     const showColor = !isMask && onColorClick;
     return jsxRuntimeExports.jsxs("div", {
-      className: `${styles$r.channelRow}${locked ? ` ${styles$r.detailChannelRowLocked}` : ""}`,
+      className: [
+        styles$q.channelRow,
+        locked ? styles$q.detailChannelRowLocked : null,
+        fitting ? minervaTheme.busyOverlay : null
+      ].filter(Boolean).join(" "),
+      "aria-busy": fitting || void 0,
+      title: fitting ? "Fitting contrast\u2026" : void 0,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: `${styles$r.channelRowMain}${showMask ? ` ${styles$r.channelRowMainMask}` : ""}`,
+          className: `${styles$q.channelRowMain}${showMask ? ` ${styles$q.channelRowMainMask}` : ""}`,
           children: [
             jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible,
               title: visibilityTitle,
               ariaLabel: visibilityAriaLabel,
+              blocked: visibilityBlocked,
               onClick: onToggleVisibility
             }),
             jsxRuntimeExports.jsxs("div", {
-              className: styles$r.channelRowTitle,
+              className: styles$q.channelRowTitle,
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$r.channelNameSlot,
+                  className: styles$q.channelNameSlot,
                   children: name2.mode === "label" ? jsxRuntimeExports.jsx("span", {
                     className: name2.className,
                     title: name2.title ?? name2.name,
@@ -93166,14 +92835,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   })
                 }),
                 imageSubtitle ? jsxRuntimeExports.jsx("span", {
-                  className: styles$r.channelImageSubtitle,
+                  className: styles$q.channelImageSubtitle,
                   title: `From ${imageSubtitle}`,
                   children: imageSubtitle
                 }) : null
               ]
             }),
             jsxRuntimeExports.jsxs("div", {
-              className: styles$r.channelRowMid,
+              className: styles$q.channelRowMid,
               "data-channel-drag-ignore": "",
               children: [
                 contrast ? jsxRuntimeExports.jsx(ChannelContrastEditor, {
@@ -93182,13 +92851,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 showMask && onMaskVisualizationChange ? jsxRuntimeExports.jsx(MaskModeControls, {
                   value: maskVisualization,
                   ariaLabel: maskAriaLabel ?? name2.name,
-                  classColors,
+                  classColors: maskFooter != null,
                   onChange: onMaskVisualizationChange
                 }) : null
               ]
             }),
             showMask && fixedColorHex ? jsxRuntimeExports.jsx("span", {
-              className: styles$r.channelColorSwatchStatic,
+              className: styles$q.channelColorSwatchStatic,
               style: {
                 backgroundColor: `#${fixedColorHex}`
               },
@@ -93203,7 +92872,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: onColorClick
             }) : null,
             jsxRuntimeExports.jsx("div", {
-              className: styles$r.channelRowTrailing,
+              className: styles$q.channelRowTrailing,
               children: trailing
             }),
             showMask && onMaskVisualizationChange ? jsxRuntimeExports.jsx(MaskOpacityControl, {
@@ -93211,15 +92880,499 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onChange: onMaskVisualizationChange,
               onPreview: onMaskVisualizationPreview,
               ariaLabel: maskAriaLabel ?? name2.name
-            }) : null
+            }) : null,
+            showMask ? maskAction : null
           ]
         }),
         showMask && maskFooter ? jsxRuntimeExports.jsx("div", {
-          className: styles$r.maskControlsPanel,
+          className: styles$q.maskControlsPanel,
           children: maskFooter
         }) : null
       ]
     });
+  }
+  function sanitizeGmmLimits(vmin, vmax) {
+    if (!Number.isFinite(vmin) || !Number.isFinite(vmax)) return null;
+    const lower = Math.max(0, Math.min(65535, Math.round(vmin)));
+    const upperRaw = Math.max(0, Math.min(65535, Math.round(vmax)));
+    const upper = upperRaw <= lower ? Math.min(65535, lower + 1) : upperRaw;
+    if (upper <= lower) return null;
+    return {
+      lower,
+      upper
+    };
+  }
+  function approximateAutoContrastFromUint16Histogram(u16) {
+    const n2 = u16.length;
+    if (n2 === 0) return null;
+    const hist = new Uint32Array(65536);
+    let positive = 0;
+    for (let i2 = 0; i2 < n2; i2++) {
+      const v2 = u16[i2];
+      hist[v2]++;
+      if (v2 > 0) positive++;
+    }
+    const zeroHeavy = hist[0] / n2 >= 1e-3 && positive >= 64;
+    const mass = zeroHeavy ? positive : n2;
+    const startV = zeroHeavy ? 1 : 0;
+    const idxLo = Math.max(0, Math.min(mass - 1, Math.floor(1e-3 * (mass - 1))));
+    const idxHi = Math.min(mass - 1, Math.ceil(0.999 * (mass - 1)));
+    const valuePastSortedIndex = (idx) => {
+      let cum = 0;
+      for (let v2 = startV; v2 < 65536; v2++) {
+        cum += hist[v2];
+        if (cum > idx) return v2;
+      }
+      return 65535;
+    };
+    return sanitizeGmmLimits(valuePastSortedIndex(idxLo), valuePastSortedIndex(idxHi));
+  }
+  async function fitChannelGmmContrastFromUint16(u16) {
+    if (u16.length === 0) return null;
+    const stats = null;
+    try {
+      if (false) ;
+      const psudo = await __vitePreload(() => import("./index-DLxvjXSp.js"), true ? [] : void 0, import.meta.url);
+      await warmupPsudoPalette();
+      if (false) ;
+      const t0 = performance.now();
+      const result = await psudo.channel_gmm(u16, void 0, void 0, 500);
+      const ms = Math.round(performance.now() - t0);
+      if (result && result.length >= 2) {
+        const limits = sanitizeGmmLimits(result[0], result[1]);
+        if (limits) {
+          if (false) ;
+          return limits;
+        }
+      }
+      if (false) ;
+    } catch (e2) {
+    }
+    const fallback = approximateAutoContrastFromUint16Histogram(u16);
+    return fallback;
+  }
+  const FETCH_CONCURRENCY = 4;
+  const FIT_CONCURRENCY = 2;
+  const GMM_MAX_SAMPLES = 4e4;
+  const emptySnapshot = {
+    pendingIds: []
+  };
+  let generation = 0;
+  const loadersByImageId = /* @__PURE__ */ new Map();
+  const jobsByKey = /* @__PURE__ */ new Map();
+  const queue = [];
+  const inFlight = /* @__PURE__ */ new Map();
+  const failedKeys = /* @__PURE__ */ new Set();
+  const listeners = /* @__PURE__ */ new Set();
+  let snapshot = emptySnapshot;
+  let pendingKey = "";
+  const fetchWaiters = [];
+  const fitWaiters = [];
+  const fetchUsedBox = {
+    n: 0
+  };
+  const fitUsedBox = {
+    n: 0
+  };
+  function rasterKey(sourceImageId, index2) {
+    return `${sourceImageId}\0${index2}`;
+  }
+  function limitsEqual(a2, b2) {
+    return a2 != null && a2.lower === b2.lower && a2.upper === b2.upper;
+  }
+  function asWindow(limits) {
+    if ((limits == null ? void 0 : limits.lower) == null || limits.upper == null) return void 0;
+    return {
+      lower: limits.lower,
+      upper: limits.upper
+    };
+  }
+  function documentChannels() {
+    return flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images);
+  }
+  function isEligible(sc2, all2) {
+    return isImageChannel(sc2) && sc2.samples !== 3 && !isRgbDisplayChannel(sc2, all2);
+  }
+  function acquire(used, waiters, max2) {
+    return new Promise((resolve) => {
+      if (used.n < max2) {
+        used.n++;
+        resolve();
+        return;
+      }
+      waiters.push(() => {
+        used.n++;
+        resolve();
+      });
+    });
+  }
+  function release(used, waiters) {
+    var _a2;
+    used.n = Math.max(0, used.n - 1);
+    (_a2 = waiters.shift()) == null ? void 0 : _a2();
+  }
+  function notify() {
+    const pendingIds = [];
+    for (const job of jobsByKey.values()) {
+      for (const id2 of job.guards.keys()) pendingIds.push(id2);
+    }
+    pendingIds.sort();
+    const key2 = pendingIds.join("\0");
+    if (key2 === pendingKey) return;
+    pendingKey = key2;
+    snapshot = {
+      pendingIds
+    };
+    for (const listener of listeners) listener();
+  }
+  function readChannel(channelId) {
+    return documentChannels().find((sc2) => sc2.id === channelId);
+  }
+  function removeFromQueues(key2) {
+    const idx = queue.indexOf(key2);
+    if (idx >= 0) queue.splice(idx, 1);
+  }
+  function enqueue(job) {
+    removeFromQueues(job.rasterKey);
+    queue.push(job.rasterKey);
+  }
+  function finishJob(job, gen) {
+    if (gen !== generation) return;
+    jobsByKey.delete(job.rasterKey);
+    removeFromQueues(job.rasterKey);
+    inFlight.delete(job.rasterKey);
+    notify();
+  }
+  function commitFitted(job, window2) {
+    const doc = useDocumentStore.getState();
+    const channels2 = flattenImageChannelsInDocumentOrder(doc.images);
+    let changed = false;
+    const next2 = channels2.map((sc2) => {
+      if (!job.guards.has(sc2.id)) return sc2;
+      const guard = job.guards.get(sc2.id) ?? {
+        kind: "still-missing"
+      };
+      if (guard.kind === "still-missing") {
+        if (sc2.gmmContrastLimits) return sc2;
+      } else if (!limitsEqual(sc2.gmmContrastLimits, guard.expected)) {
+        return sc2;
+      }
+      changed = true;
+      return {
+        ...sc2,
+        gmmContrastLimits: {
+          lower: window2.lower,
+          upper: window2.upper
+        },
+        lowerLimit: window2.lower,
+        upperLimit: window2.upper
+      };
+    });
+    if (changed) {
+      doc.setImages(applySourceChannelsToImages(doc.images, next2));
+    }
+    let groupsChanged = false;
+    const nextGroups = doc.channelGroups.map((g2) => ({
+      ...g2,
+      channels: g2.channels.map((gc2) => {
+        if (!job.guards.has(gc2.channelId)) return gc2;
+        if (!looksLikeImportDefaultLimits(gc2.lowerLimit, gc2.upperLimit)) {
+          return gc2;
+        }
+        groupsChanged = true;
+        return {
+          ...gc2,
+          lowerLimit: window2.lower,
+          upperLimit: window2.upper
+        };
+      })
+    }));
+    if (groupsChanged) doc.setChannelGroups(nextGroups);
+  }
+  async function fetchCoarsestUint16(loader, sourceIndex) {
+    var _a2;
+    const planes = loader.data;
+    if (!(planes == null ? void 0 : planes.length)) return null;
+    const cIdx = planes[0].labels.indexOf("c");
+    const nC = cIdx >= 0 ? planes[0].shape[cIdx] : 1;
+    if (sourceIndex < 0 || sourceIndex >= nC) return null;
+    let data2;
+    for (let i2 = planes.length - 1; i2 >= 0; i2--) {
+      try {
+        const raster = await planes[i2].getRaster({
+          selection: {
+            t: 0,
+            z: 0,
+            c: sourceIndex
+          }
+        });
+        if ((_a2 = raster == null ? void 0 : raster.data) == null ? void 0 : _a2.length) {
+          data2 = raster.data;
+          break;
+        }
+      } catch {
+      }
+    }
+    if (!(data2 == null ? void 0 : data2.length)) return null;
+    const stride = Math.max(1, Math.ceil(data2.length / GMM_MAX_SAMPLES));
+    const out = new Uint16Array(Math.ceil(data2.length / stride));
+    const u8 = data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray;
+    for (let i2 = 0, o2 = 0; i2 < data2.length; i2 += stride) {
+      const v2 = Number(data2[i2]);
+      out[o2++] = u8 ? v2 << 8 : Number.isFinite(v2) ? Math.max(0, Math.min(65535, Math.round(v2))) : 0;
+    }
+    return out;
+  }
+  async function runJob(job, gen) {
+    await acquire(fetchUsedBox, fetchWaiters, FETCH_CONCURRENCY);
+    let u16 = null;
+    try {
+      if (gen !== generation) return {
+        kind: "failed"
+      };
+      u16 = await fetchCoarsestUint16(job.loader, job.index);
+    } finally {
+      release(fetchUsedBox, fetchWaiters);
+      pump();
+    }
+    if (gen !== generation) return {
+      kind: "failed"
+    };
+    if (!u16) {
+      failedKeys.add(job.rasterKey);
+      finishJob(job, gen);
+      pump();
+      return {
+        kind: "failed"
+      };
+    }
+    await acquire(fitUsedBox, fitWaiters, FIT_CONCURRENCY);
+    let window2 = null;
+    try {
+      if (gen === generation) {
+        window2 = await fitChannelGmmContrastFromUint16(u16);
+      }
+    } finally {
+      release(fitUsedBox, fitWaiters);
+    }
+    if (gen !== generation) return {
+      kind: "failed"
+    };
+    if (!window2) {
+      failedKeys.add(job.rasterKey);
+      finishJob(job, gen);
+      pump();
+      return {
+        kind: "failed"
+      };
+    }
+    commitFitted(job, window2);
+    finishJob(job, gen);
+    pump();
+    return {
+      kind: "fitted",
+      window: window2
+    };
+  }
+  function intern(job) {
+    const existing = inFlight.get(job.rasterKey);
+    if (existing) return existing;
+    removeFromQueues(job.rasterKey);
+    const gen = generation;
+    const promise = runJob(job, gen).catch((error2) => {
+      if (gen === generation) {
+        failedKeys.add(job.rasterKey);
+        finishJob(job, gen);
+        pump();
+      }
+      return {
+        kind: "failed"
+      };
+    });
+    inFlight.set(job.rasterKey, promise);
+    notify();
+    return promise;
+  }
+  function pump() {
+    for (const key2 of [
+      ...queue
+    ]) {
+      const job = jobsByKey.get(key2);
+      if (!job || inFlight.has(key2)) continue;
+      intern(job);
+    }
+  }
+  function attachChannel(job, channelId, guard) {
+    const prev = job.guards.get(channelId);
+    if (!((prev == null ? void 0 : prev.kind) === "unchanged" && guard.kind === "still-missing")) {
+      job.guards.set(channelId, guard);
+    }
+  }
+  function upsertJob(args) {
+    const { sc: sc2, loader, guard, retryFailed } = args;
+    const key2 = rasterKey(sc2.imageId, sc2.index);
+    if (failedKeys.has(key2)) {
+      if (!retryFailed) return null;
+      failedKeys.delete(key2);
+    }
+    const existing = jobsByKey.get(key2);
+    if (existing) {
+      attachChannel(existing, sc2.id, guard);
+      if (!inFlight.has(key2)) enqueue(existing);
+      return existing;
+    }
+    const job = {
+      rasterKey: key2,
+      loader,
+      sourceImageId: sc2.imageId,
+      index: sc2.index,
+      guards: /* @__PURE__ */ new Map([
+        [
+          sc2.id,
+          guard
+        ]
+      ])
+    };
+    jobsByKey.set(key2, job);
+    enqueue(job);
+    return job;
+  }
+  function targetFor(channelId) {
+    const all2 = documentChannels();
+    const sc2 = all2.find((c2) => c2.id === channelId);
+    if (!sc2 || !isEligible(sc2, all2)) return null;
+    const loader = loadersByImageId.get(sc2.imageId);
+    if (!loader) return null;
+    return {
+      sc: sc2,
+      loader
+    };
+  }
+  function reconcileGmm(args) {
+    const { loaderEntries, channels: channels2, visibleChannelIds } = args;
+    loadersByImageId.clear();
+    for (const entry of loaderEntries) {
+      loadersByImageId.set(entry.sourceImageId, entry.loader);
+    }
+    const liveIds = new Set(loaderEntries.map((e2) => e2.sourceImageId));
+    for (const [key2, job] of [
+      ...jobsByKey
+    ]) {
+      if (liveIds.has(job.sourceImageId)) continue;
+      if (!inFlight.has(key2)) {
+        jobsByKey.delete(key2);
+        removeFromQueues(key2);
+      }
+    }
+    for (const sc2 of channels2) {
+      if (!isEligible(sc2, channels2)) continue;
+      if (sc2.gmmContrastLimits) continue;
+      if (!visibleChannelIds.has(sc2.id)) continue;
+      const loader = loadersByImageId.get(sc2.imageId);
+      if (!loader) continue;
+      upsertJob({
+        sc: sc2,
+        loader,
+        guard: {
+          kind: "still-missing"
+        },
+        retryFailed: false
+      });
+    }
+    notify();
+    pump();
+  }
+  async function ensureGmm(channelIds) {
+    const result = /* @__PURE__ */ new Map();
+    const waits = [];
+    for (const channelId of channelIds) {
+      const target = targetFor(channelId);
+      if (!target) continue;
+      const current = asWindow(target.sc.gmmContrastLimits);
+      if (current) {
+        result.set(channelId, {
+          lower: current.lower,
+          upper: current.upper
+        });
+        continue;
+      }
+      const job = upsertJob({
+        sc: target.sc,
+        loader: target.loader,
+        guard: {
+          kind: "still-missing"
+        },
+        retryFailed: true
+      });
+      if (!job) continue;
+      waits.push(intern(job).then(() => {
+        const sc2 = readChannel(channelId);
+        const limits = asWindow(sc2 == null ? void 0 : sc2.gmmContrastLimits);
+        if (limits) result.set(channelId, {
+          lower: limits.lower,
+          upper: limits.upper
+        });
+      }));
+    }
+    notify();
+    pump();
+    await Promise.all(waits);
+    return result;
+  }
+  async function refitGmm(channelId) {
+    const target = targetFor(channelId);
+    if (!target) return null;
+    const key2 = rasterKey(target.sc.imageId, target.sc.index);
+    const running = inFlight.get(key2);
+    if (running) await running;
+    const latest = targetFor(channelId);
+    if (!latest) return null;
+    const expected = asWindow(latest.sc.gmmContrastLimits);
+    const guard = expected ? {
+      kind: "unchanged",
+      expected: {
+        lower: expected.lower,
+        upper: expected.upper
+      }
+    } : {
+      kind: "still-missing"
+    };
+    const job = upsertJob({
+      sc: latest.sc,
+      loader: latest.loader,
+      guard,
+      retryFailed: true
+    });
+    if (!job) return null;
+    notify();
+    const outcome = await intern(job);
+    if (outcome.kind !== "fitted") return null;
+    const sc2 = readChannel(channelId);
+    if (!limitsEqual(sc2 == null ? void 0 : sc2.gmmContrastLimits, outcome.window)) return null;
+    return {
+      lower: outcome.window.lower,
+      upper: outcome.window.upper
+    };
+  }
+  function subscribeGmmFit(onStoreChange) {
+    listeners.add(onStoreChange);
+    return () => {
+      listeners.delete(onStoreChange);
+    };
+  }
+  function getGmmPendingIds() {
+    return snapshot.pendingIds;
+  }
+  function clearGmmScheduler() {
+    generation += 1;
+    loadersByImageId.clear();
+    jobsByKey.clear();
+    queue.length = 0;
+    inFlight.clear();
+    failedKeys.clear();
+    pendingKey = "";
+    snapshot = emptySnapshot;
+    for (const listener of listeners) listener();
   }
   function histogramBinFromPixels(bits, width, data2) {
     const n_bins = 50;
@@ -93931,20 +94084,38 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const nav = useAuthorChannelNav();
     const images = useDocumentStore((s2) => s2.images);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
-    const classTables = useDocumentStore((s2) => s2.classTables);
+    const featureTables = useDocumentStore((s2) => s2.featureTables);
     const setImages = useDocumentStore((s2) => s2.setImages);
     const setImagesAndChannelGroups = useDocumentStore((s2) => s2.setImagesAndChannelGroups);
-    const stackVisibilities = useAppStore((s2) => s2.channelVisibilities);
-    const groupRowVisibilities = useAppStore((s2) => s2.channelGroupRowVisibilities);
+    const storedStackVisibilities = useAppStore((s2) => s2.channelVisibilities);
+    const storedGroupRowVisibilities = useAppStore((s2) => s2.channelGroupRowVisibilities);
     const channelRendering = useAppStore((s2) => s2.channelRendering);
     const setChannelVisibilities = useAppStore((s2) => s2.setChannelVisibilities);
     const setChannelGroupRowVisibilities = useAppStore((s2) => s2.setChannelGroupRowVisibilities);
+    const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const palettePendingIds = reactExports.useSyncExternalStore(subscribeStackPalettePending, getStackPalettePendingIds, getStackPalettePendingIds);
+    const gmmPendingIds = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmPendingIds, getGmmPendingIds);
     const [colorTarget, setColorTarget] = reactExports.useState(null);
     const [colorPos, setColorPos] = reactExports.useState(null);
     const [histogramLoading2, setHistogramLoading] = reactExports.useState(false);
     const sourceChannels = reactExports.useMemo(() => flattenImageChannelsInDocumentOrder(images), [
       images
+    ]);
+    const visKind = Object.keys(storedStackVisibilities).length === 0 ? "fresh" : "sync";
+    const stackVisibilities = reactExports.useMemo(() => applyStackVisibilities(sourceChannels, storedStackVisibilities, {
+      kind: visKind
+    }), [
+      sourceChannels,
+      storedStackVisibilities,
+      visKind
+    ]);
+    const groupRowVisibilities = reactExports.useMemo(() => applyGroupRowVisibilities(channelGroups, storedGroupRowVisibilities, {
+      kind: visKind
+    }, stackVisibilities), [
+      channelGroups,
+      storedGroupRowVisibilities,
+      visKind,
+      stackVisibilities
     ]);
     const sc2 = findSourceChannel(sourceChannels, chip2.sourceId);
     const gc2 = chip2.groupId && chip2.groupRowId ? ((_a2 = channelGroups.find((g2) => g2.id === chip2.groupId)) == null ? void 0 : _a2.channels.find((ch2) => ch2.id === chip2.groupRowId)) ?? null : null;
@@ -93990,31 +94161,61 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       scope: "source",
       sourceId: sc2.id
     };
-    const toggleVisible = () => {
-      if (rgbDisplay) {
-        const next2 = visibilitiesForRgbUnit({
-          rgbChannels: sourceChannels.filter((c2) => c2.imageId === sc2.imageId && isImageChannel(c2)),
-          channelGroups,
-          groupRowVisibilities,
-          stackVisibilities,
-          visible: !visible
-        });
-        setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
-        setChannelVisibilities(next2.channelVisibilities);
-        return;
-      }
-      if (gc2) {
-        setChannelGroupRowVisibilities({
-          ...groupRowVisibilities,
-          [gc2.id]: !visible
-        });
-        return;
-      }
-      setChannelVisibilities({
-        ...stackVisibilities,
-        [sc2.id]: !visible
-      });
+    const capVis = {
+      channels: sourceChannels,
+      activeGroup: channelGroups.find((g2) => g2.id === activeChannelGroupId),
+      channelGroups,
+      stackVisibilities,
+      groupRowVisibilities
     };
+    const fits = (next2) => !vivIntensityCapExceeded(sc2.imageId, {
+      ...capVis,
+      ...next2
+    });
+    const rgbUnit = rgbDisplay ? visibilitiesForRgbUnit({
+      rgbChannels: sourceChannels.filter((c2) => c2.imageId === sc2.imageId && isImageChannel(c2)),
+      channelGroups,
+      groupRowVisibilities,
+      stackVisibilities,
+      visible: !visible
+    }) : null;
+    const nextGroupVis = gc2 ? withGroupRowVisible(groupRowVisibilities, channelGroups, gc2.id, !visible) : null;
+    const nextStackVis = {
+      ...stackVisibilities,
+      [sc2.id]: !visible
+    };
+    const toggleVisible = () => {
+      if (rgbUnit) {
+        if (!visible && !fits({
+          stackVisibilities: rgbUnit.channelVisibilities,
+          groupRowVisibilities: rgbUnit.channelGroupRowVisibilities
+        })) {
+          return;
+        }
+        setChannelGroupRowVisibilities(rgbUnit.channelGroupRowVisibilities);
+        setChannelVisibilities(rgbUnit.channelVisibilities);
+        return;
+      }
+      if (nextGroupVis) {
+        if (!visible && !fits({
+          groupRowVisibilities: nextGroupVis
+        })) return;
+        setChannelGroupRowVisibilities(nextGroupVis);
+        return;
+      }
+      if (!visible && !fits({
+        stackVisibilities: nextStackVis
+      })) return;
+      setChannelVisibilities(nextStackVis);
+    };
+    const showBlocked = Boolean(rgbUnit ? !visible && !fits({
+      stackVisibilities: rgbUnit.channelVisibilities,
+      groupRowVisibilities: rgbUnit.channelGroupRowVisibilities
+    }) : isImageChannel(sc2) && !visible && !fits(nextGroupVis ? {
+      groupRowVisibilities: nextGroupVis
+    } : {
+      stackVisibilities: nextStackVis
+    }));
     const rename = (value) => {
       const trimmed = value.trim();
       if (!trimmed || trimmed === sc2.name) return;
@@ -94060,8 +94261,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         jsxRuntimeExports.jsx(ChannelRow, {
           visible,
+          fitting: gmmPendingIds.includes(sc2.id),
           visibilityTitle: visible ? `Hide ${sc2.name}` : `Show ${sc2.name}`,
           visibilityAriaLabel: `Toggle visibility for ${sc2.name}`,
+          visibilityBlocked: showBlocked,
           onToggleVisibility: toggleVisible,
           name: {
             mode: "editable",
@@ -94074,7 +94277,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             isMask: true,
             maskVisualization: effectiveMaskVisualization(gc2 ?? sc2),
             maskAriaLabel: `Mask display for ${sc2.name}`,
-            ...classTableRowExtras(sc2.id, classTables),
+            ...featureTableRowExtras(sc2.id, featureTables),
             onMaskVisualizationChange: syncMask,
             onMaskVisualizationPreview: (viz) => {
               useAppStore.getState().setMaskVisualizationPreview(viz ? {
@@ -94101,45 +94304,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
         }) : null
       ]
-    });
-  }
-  const SvgChevronDown = (props) => reactExports.createElement("svg", {
-    width: "1em",
-    height: "1em",
-    viewBox: "0 0 12 12",
-    fill: "currentColor",
-    ...props
-  }, reactExports.createElement("path", {
-    d: "M2 4L6 8L10 4",
-    stroke: "currentColor",
-    strokeWidth: 2,
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    fill: "none"
-  }));
-  const chevronRight = "_chevronRight_m5cf6_1";
-  const chevronLeft = "_chevronLeft_m5cf6_2";
-  const chevronDown = "_chevronDown_m5cf6_3";
-  const chevronUp = "_chevronUp_m5cf6_4";
-  const styles$o = {
-    chevronRight,
-    chevronLeft,
-    chevronDown,
-    chevronUp
-  };
-  const DIRECTION_CLASS = {
-    right: styles$o.chevronRight,
-    left: styles$o.chevronLeft,
-    down: styles$o.chevronDown,
-    up: styles$o.chevronUp
-  };
-  function ChevronIcon({ direction: direction2 = "down", className: className2 }) {
-    return jsxRuntimeExports.jsx(SvgChevronDown, {
-      className: [
-        DIRECTION_CLASS[direction2],
-        className2
-      ].filter(Boolean).join(" "),
-      "aria-hidden": true
     });
   }
   function channelNameMatchesQuery(name2, query) {
@@ -94227,22 +94391,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       allChannels
     };
   }
-  const root$9 = "_root_1v5gp_1";
-  const groupCard = "_groupCard_1v5gp_9";
-  const groupHeader = "_groupHeader_1v5gp_16";
-  const channelFilter$1 = "_channelFilter_1v5gp_23";
-  const groupLabel = "_groupLabel_1v5gp_28";
-  const filterEmpty$1 = "_filterEmpty_1v5gp_70";
-  const chipWrap = "_chipWrap_1v5gp_76";
-  const chipCell = "_chipCell_1v5gp_83";
-  const chipOn = "_chipOn_1v5gp_93";
-  const chipOutlined = "_chipOutlined_1v5gp_99";
-  const chipUnassigned = "_chipUnassigned_1v5gp_104";
-  const chip = "_chip_1v5gp_76";
-  const chipMenu = "_chipMenu_1v5gp_110";
-  const chipDim = "_chipDim_1v5gp_148";
-  const editor = "_editor_1v5gp_152";
-  const styles$n = {
+  const root$9 = "_root_1wrg4_1";
+  const groupCard = "_groupCard_1wrg4_9";
+  const groupHeader = "_groupHeader_1wrg4_16";
+  const channelFilter$1 = "_channelFilter_1wrg4_23";
+  const groupLabel = "_groupLabel_1wrg4_28";
+  const filterEmpty$1 = "_filterEmpty_1wrg4_70";
+  const chipWrap = "_chipWrap_1wrg4_76";
+  const chipCell = "_chipCell_1wrg4_83";
+  const chipOn = "_chipOn_1wrg4_93";
+  const chipOutlined = "_chipOutlined_1wrg4_99";
+  const chipUnassigned = "_chipUnassigned_1wrg4_104";
+  const chip = "_chip_1wrg4_76";
+  const chipMenu = "_chipMenu_1wrg4_110";
+  const chipHint = "_chipHint_1wrg4_120";
+  const chipDim = "_chipDim_1wrg4_154";
+  const editor = "_editor_1wrg4_158";
+  const styles$m = {
     root: root$9,
     groupCard,
     groupHeader,
@@ -94256,6 +94421,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     chipUnassigned,
     chip,
     chipMenu,
+    chipHint,
     chipDim,
     editor
   };
@@ -94263,34 +94429,44 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return chip2.visible ? `Hide ${chip2.name}` : `Show ${chip2.name}`;
   }
   function ChipButton(props) {
-    const { chip: chip2, open, dim, colorPending, onClick, onOpenEditor } = props;
-    const pendingLabel2 = `Assigning color to ${chip2.name}`;
+    const { chip: chip2, open, dim, colorPending, gmmPending, shown, showBlocked, onClick, onOpenEditor } = props;
+    const pending2 = colorPending || gmmPending;
+    const pendingLabel2 = gmmPending ? `Fitting contrast for ${chip2.name}` : `Assigning color to ${chip2.name}`;
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$n.chipCell,
-        chip2.visible && chip2.hex ? styles$n.chipOn : null,
-        !chip2.visible && chip2.hex ? styles$n.chipOutlined : null,
-        chip2.hex ? null : styles$n.chipUnassigned,
-        colorPending ? minervaTheme.busyOverlay : null,
-        dim ? styles$n.chipDim : null
+        styles$m.chipCell,
+        chip2.visible && chip2.hex && shown ? styles$m.chipOn : null,
+        chip2.hex && (!chip2.visible || !shown) ? styles$m.chipOutlined : null,
+        chip2.hex ? null : styles$m.chipUnassigned,
+        pending2 ? minervaTheme.busyOverlay : null,
+        dim ? styles$m.chipDim : null
       ].filter(Boolean).join(" "),
       style: chip2.hex ? {
         "--ch": `#${chip2.hex}`
       } : void 0,
-      "aria-busy": colorPending || void 0,
+      "aria-busy": pending2 || void 0,
       children: [
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: `${minervaTheme.focusRing} ${styles$n.chip}`,
-          title: colorPending ? pendingLabel2 : chip2.name,
-          "aria-label": colorPending ? pendingLabel2 : chipAriaLabel(chip2),
-          "aria-pressed": chip2.visible,
-          onClick: () => onClick(chip2),
-          children: chip2.name
+        jsxRuntimeExports.jsx(CursorHint, {
+          enabled: showBlocked,
+          label: VIEWER_INTENSITY_LIMIT_HINT,
+          className: styles$m.chipHint,
+          children: jsxRuntimeExports.jsx("button", {
+            type: "button",
+            className: `${minervaTheme.focusRing} ${styles$m.chip}`,
+            title: pending2 ? pendingLabel2 : void 0,
+            "aria-label": pending2 ? pendingLabel2 : showBlocked ? VIEWER_INTENSITY_LIMIT_HINT : chipAriaLabel(chip2),
+            "aria-pressed": chip2.visible,
+            "aria-disabled": showBlocked || void 0,
+            onClick: () => {
+              if (showBlocked) return;
+              onClick(chip2);
+            },
+            children: chip2.name
+          })
         }),
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$n.chipMenu}`,
+          className: `${minervaTheme.focusRing} ${styles$m.chipMenu}`,
           title: `Edit ${chip2.name}`,
           "aria-label": `Edit ${chip2.name}`,
           "aria-expanded": open,
@@ -94307,12 +94483,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   const CHIP_COLS = 5;
   function ChipGrid(props) {
-    const { chips, openChip } = props;
+    const { chips, openChip, shownIds, blockedIds } = props;
     const pendingIds = reactExports.useSyncExternalStore(subscribeStackPalettePending, getStackPalettePendingIds, getStackPalettePendingIds);
+    const gmmPendingIds = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmPendingIds, getGmmPendingIds);
     const openIndex = openChip ? chips.findIndex((c2) => c2.key === openChip.key) : -1;
     const rowEnd = openIndex < 0 ? -1 : Math.min(chips.length - 1, openIndex - openIndex % CHIP_COLS + CHIP_COLS - 1);
     return jsxRuntimeExports.jsx("div", {
-      className: styles$n.chipWrap,
+      className: styles$m.chipWrap,
       children: chips.map((chip2, i2) => jsxRuntimeExports.jsxs(reactExports.Fragment, {
         children: [
           jsxRuntimeExports.jsx(ChipButton, {
@@ -94320,11 +94497,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             open: (openChip == null ? void 0 : openChip.key) === chip2.key,
             dim: openChip != null && openChip.key !== chip2.key,
             colorPending: pendingIds.includes(chip2.sourceId),
+            gmmPending: gmmPendingIds.includes(chip2.sourceId),
+            shown: shownIds.has(chip2.sourceId),
+            showBlocked: blockedIds.has(chip2.sourceId),
             onClick: props.onChip,
             onOpenEditor: props.onOpenEditor
           }),
           i2 === rowEnd && openChip ? jsxRuntimeExports.jsx("div", {
-            className: styles$n.editor,
+            className: styles$m.editor,
             children: jsxRuntimeExports.jsx(ChannelEditor, {
               chip: openChip
             })
@@ -94337,23 +94517,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const visLabel = props.allVisible ? `Hide every channel in ${props.name}` : `Show every channel in ${props.name}`;
     const filtering = props.onNameFilterChange != null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$n.groupCard,
+      className: styles$m.groupCard,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$n.groupHeader,
+          className: styles$m.groupHeader,
           children: [
             props.onToggleVisibility ? jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible: Boolean(props.allVisible),
               title: visLabel,
               ariaLabel: visLabel,
+              blocked: props.showAllBlocked,
               onClick: props.onToggleVisibility
             }) : null,
             jsxRuntimeExports.jsx("div", {
-              className: styles$n.groupLabel,
+              className: styles$m.groupLabel,
               children: props.name
             }),
             props.onNameFilterChange ? jsxRuntimeExports.jsx("input", {
-              className: styles$n.channelFilter,
+              className: styles$m.channelFilter,
               type: "text",
               value: props.nameFilter ?? "",
               placeholder: "Search...",
@@ -94370,11 +94551,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         filtering && props.chips.length === 0 ? jsxRuntimeExports.jsx("div", {
-          className: styles$n.filterEmpty,
+          className: styles$m.filterEmpty,
           children: "No matching channels"
         }) : jsxRuntimeExports.jsx(ChipGrid, {
           chips: props.chips,
           openChip: props.openChip,
+          shownIds: props.shownIds,
+          blockedIds: props.blockedIds,
           onChip: props.onChip,
           onOpenEditor: props.onOpenEditor
         })
@@ -94382,6 +94565,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function ImageChannelOverviewCard(props) {
+    var _a2;
     const { image: image2 } = props;
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
@@ -94391,7 +94575,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const setChannelGroupRowVisibilities = useAppStore((s2) => s2.setChannelGroupRowVisibilities);
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const nav = useAuthorChannelNav();
-    const [openKey, setOpenKey] = reactExports.useState(null);
+    const [openKey, setOpenKey] = reactExports.useState(void 0);
     const [channelNameFilter, setChannelNameFilter] = reactExports.useState("");
     const allSourceChannels = reactExports.useMemo(() => flattenImageChannelsInDocumentOrder(images), [
       images
@@ -94402,19 +94586,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       allSourceChannels,
       stackVisibilities
     ]);
+    const filledGroupVis = reactExports.useMemo(() => applyGroupRowVisibilities(channelGroups, groupRowVisibilities, {
+      kind: Object.keys(stackVisibilities).length === 0 ? "fresh" : "sync"
+    }, filledStackVis), [
+      channelGroups,
+      groupRowVisibilities,
+      stackVisibilities,
+      filledStackVis
+    ]);
     const model = reactExports.useMemo(() => buildImageChannelOverview({
       image: image2,
       channelGroups,
       allSourceChannels,
       stackVisibilities: filledStackVis,
-      groupRowVisibilities,
+      groupRowVisibilities: filledGroupVis,
       activeChannelGroupId
     }), [
       image2,
       channelGroups,
       allSourceChannels,
       filledStackVis,
-      groupRowVisibilities,
+      filledGroupVis,
       activeChannelGroupId
     ]);
     const filteredAllChannels = reactExports.useMemo(() => model.allChannels.filter((chip2) => channelNameMatchesQuery(chip2.name, channelNameFilter)), [
@@ -94426,32 +94618,58 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       image2
     ]);
     const showAllChannelsStrip = model.allChannels.length > 0 && !isRgbDisplayFullyGrouped(rgbChannels, channelGroups);
-    const openChip = openKey == null ? null : [
+    const overviewChips = [
       ...model.groups.flatMap((g2) => g2.chips),
       ...model.allChannels
-    ].find((c2) => c2.key === openKey) ?? null;
+    ];
+    const maskIds = new Set(image2.channels.filter(isMaskChannel).map((c2) => c2.id));
+    const defaultMaskKey = maskIds.size === 0 ? null : ((_a2 = overviewChips.find((c2) => maskIds.has(c2.sourceId))) == null ? void 0 : _a2.key) ?? null;
+    const resolvedOpenKey = openKey === void 0 ? defaultMaskKey : openKey;
+    const openChip = resolvedOpenKey == null ? null : overviewChips.find((c2) => c2.key === resolvedOpenKey) ?? null;
     const onOpenEditor = (chip2) => {
-      setOpenKey((cur) => cur === chip2.key ? null : chip2.key);
+      setOpenKey((cur) => {
+        const current = cur === void 0 ? defaultMaskKey : cur;
+        return current === chip2.key ? null : chip2.key;
+      });
     };
+    const capVis = {
+      channels: allSourceChannels,
+      activeGroup: channelGroups.find((g2) => g2.id === activeChannelGroupId),
+      channelGroups,
+      stackVisibilities: filledStackVis,
+      groupRowVisibilities: filledGroupVis
+    };
+    const shownIds = vivShownIntensitySourceIds(capVis);
+    const atCap = vivIntensityLayerCount(image2.id, capVis) >= MAX_VIV_INTENSITY_CHANNELS;
+    const fits = (next2) => !vivIntensityCapExceeded(image2.id, {
+      ...capVis,
+      ...next2
+    });
     const applyRgbUnit = (visible) => {
       const next2 = visibilitiesForRgbUnit({
         rgbChannels,
         channelGroups,
-        groupRowVisibilities: useAppStore.getState().channelGroupRowVisibilities,
-        stackVisibilities: useAppStore.getState().channelVisibilities,
+        groupRowVisibilities: filledGroupVis,
+        stackVisibilities: filledStackVis,
         visible
       });
+      if (visible && !fits({
+        stackVisibilities: next2.channelVisibilities,
+        groupRowVisibilities: next2.channelGroupRowVisibilities
+      })) {
+        return;
+      }
       setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
       setChannelVisibilities(next2.channelVisibilities);
     };
     const onGroupChip = (chip2) => {
-      var _a2;
+      var _a3;
       if (!chip2.groupRowId) return;
       if (rgbDisplay) {
         applyRgbUnit(!chip2.visible);
         return;
       }
-      const vis = useAppStore.getState().channelGroupRowVisibilities;
+      const vis = filledGroupVis;
       if (chip2.visible) {
         setChannelGroupRowVisibilities({
           ...vis,
@@ -94459,59 +94677,71 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         });
         return;
       }
-      if (!isGroupRowVisible(vis, chip2.groupRowId)) {
-        setChannelGroupRowVisibilities({
-          ...vis,
-          [chip2.groupRowId]: true
-        });
-      }
-      void ((_a2 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _a2.call(nav, [
+      const next2 = withGroupRowVisible(vis, channelGroups, chip2.groupRowId, true);
+      if (!fits({
+        groupRowVisibilities: next2
+      })) return;
+      setChannelGroupRowVisibilities(next2);
+      void ((_a3 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _a3.call(nav, [
         chip2.sourceId
       ]).catch(() => void 0));
     };
     const onAllChannelsChip = (chip2) => {
-      var _a2, _b2;
+      var _a3, _b2;
       if (rgbDisplay) {
         applyRgbUnit(!chip2.visible);
         return;
       }
       if (chip2.groupRowId) {
-        const vis2 = useAppStore.getState().channelGroupRowVisibilities;
-        const groups = useDocumentStore.getState().channelGroups;
+        const vis2 = filledGroupVis;
         const nextOn = !chip2.visible;
-        const next2 = {
+        const next2 = nextOn ? withGroupRowVisible(vis2, channelGroups, chip2.groupRowId, true) : {
           ...vis2
         };
-        for (const g2 of groups) {
-          for (const gc2 of g2.channels) {
-            if (gc2.channelId === chip2.sourceId) next2[gc2.id] = nextOn;
+        if (!nextOn) {
+          for (const g2 of channelGroups) {
+            for (const gc2 of g2.channels) {
+              if (gc2.channelId === chip2.sourceId) next2[gc2.id] = false;
+            }
           }
         }
+        if (nextOn && !fits({
+          groupRowVisibilities: next2
+        })) return;
         setChannelGroupRowVisibilities(next2);
         if (nextOn) {
-          void ((_a2 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _a2.call(nav, [
+          void ((_a3 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _a3.call(nav, [
             chip2.sourceId
           ]).catch(() => void 0));
         }
         return;
       }
-      const prev = useAppStore.getState().channelVisibilities;
-      const vis = applyStackVisibilities(flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images), prev, {
-        kind: Object.keys(prev).length === 0 ? "fresh" : "sync"
-      });
+      const vis = filledStackVis;
       const turningOn = !isStackVisible(vis, chip2.sourceId);
-      setChannelVisibilities({
+      const nextStack = {
         ...vis,
         [chip2.sourceId]: turningOn
-      });
+      };
+      if (turningOn && !fits({
+        stackVisibilities: nextStack
+      })) return;
+      setChannelVisibilities(nextStack);
       if (!turningOn) return;
       void ((_b2 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _b2.call(nav, [
         chip2.sourceId
       ]).catch(() => void 0));
     };
+    const blockedIds = /* @__PURE__ */ new Set();
+    if (atCap) {
+      for (const chip2 of overviewChips) {
+        if (!chip2.visible && !shownIds.has(chip2.sourceId)) {
+          blockedIds.add(chip2.sourceId);
+        }
+      }
+    }
     if (image2.channels.length === 0) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$n.root,
+      className: styles$m.root,
       children: [
         model.groups.map((group2) => {
           const rgbUnit = rgbDisplay && group2.chips.length > 1 ? [
@@ -94522,11 +94752,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               visible: group2.allVisible
             }
           ] : group2.chips;
+          const docGroup = channelGroups.find((g2) => g2.id === group2.id);
+          const showAllNext = {
+            ...filledGroupVis
+          };
+          if (docGroup) {
+            for (const gc2 of docGroup.channels) showAllNext[gc2.id] = true;
+          }
+          const showAllBlocked = !group2.allVisible && !rgbDisplay && docGroup != null && !fits({
+            groupRowVisibilities: showAllNext
+          });
           return jsxRuntimeExports.jsx(GroupStrip, {
             name: group2.name,
             chips: rgbUnit,
             openChip,
+            shownIds,
+            blockedIds,
             allVisible: group2.allVisible,
+            showAllBlocked,
             onChip: onGroupChip,
             onOpenEditor,
             onToggleVisibility: () => {
@@ -94534,13 +94777,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 applyRgbUnit(!group2.allVisible);
                 return;
               }
-              const docGroup = channelGroups.find((g2) => g2.id === group2.id);
               if (!docGroup || docGroup.channels.length === 0) return;
-              const allOn = docGroup.channels.every((gc2) => isGroupRowVisible(groupRowVisibilities, gc2.id));
+              const allOn = docGroup.channels.every((gc2) => isGroupRowVisible(filledGroupVis, gc2.id));
               const next2 = {
-                ...groupRowVisibilities
+                ...filledGroupVis
               };
               for (const gc2 of docGroup.channels) next2[gc2.id] = !allOn;
+              if (!allOn && !fits({
+                groupRowVisibilities: next2
+              })) return;
               setChannelGroupRowVisibilities(next2);
             }
           }, group2.id);
@@ -94556,6 +94801,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }
           ] : filteredAllChannels,
           openChip,
+          shownIds,
+          blockedIds,
           onChip: onAllChannelsChip,
           onOpenEditor,
           nameFilter: channelNameFilter,
@@ -94564,34 +94811,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  function TrashIcon({ title: title7, size = 14 }) {
-    const label2 = title7 ?? "Delete";
-    return jsxRuntimeExports.jsxs("svg", {
-      "aria-hidden": title7 ? void 0 : true,
-      width: size,
-      height: size,
-      viewBox: "0 0 24 24",
-      fill: "currentColor",
-      children: [
-        jsxRuntimeExports.jsx("title", {
-          children: label2
-        }),
-        jsxRuntimeExports.jsx("path", {
-          d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
-        })
-      ]
-    });
-  }
-  const authorPanel = "_authorPanel_1yzv8_3";
-  const authorPanelBody = "_authorPanelBody_1yzv8_14";
-  const emptyMessage = "_emptyMessage_1yzv8_21";
-  const thinScrollbar = "_thinScrollbar_1yzv8_29";
-  const panel$1 = {
-    authorPanel,
-    authorPanelBody,
-    emptyMessage,
-    thinScrollbar
-  };
   var commonjsGlobal = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
   function getDefaultExportFromCjs(x2) {
     return x2 && x2.__esModule && Object.prototype.hasOwnProperty.call(x2, "default") ? x2["default"] : x2;
@@ -164749,9 +164968,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return loadDicomWebPerInstance(root2);
     }
   };
-  const findDicomWeb = (series) => {
-    return listDicomWeb(series);
-  };
   function isBrightfieldRgb(data2, bitsPerSample = 8) {
     const sampleMax = data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray ? 255 : 2 ** Math.max(1, Math.floor(bitsPerSample) || 8) - 1;
     const dark = 25 / 255 * sampleMax;
@@ -166051,78 +166267,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
     });
   }
-  const stack = "_stack_578vp_1";
-  const panelDropActive = "_panelDropActive_578vp_11";
-  const addStrip = "_addStrip_578vp_16";
-  const addStripRow = "_addStripRow_578vp_27";
-  const dropZone = "_dropZone_578vp_41";
-  const dropZoneTitle = "_dropZoneTitle_578vp_51";
-  const orDivider = "_orDivider_578vp_57";
-  const urlRow = "_urlRow_578vp_68";
-  const urlField = "_urlField_578vp_77";
-  const urlInput = "_urlInput_578vp_83";
-  const urlAdd = "_urlAdd_578vp_91";
-  const dropZoneActive = "_dropZoneActive_578vp_121";
-  const importError = "_importError_578vp_182";
-  const fieldLabel = "_fieldLabel_578vp_195";
-  const typeOverlay = "_typeOverlay_578vp_209";
-  const typeOverlayBackdrop = "_typeOverlayBackdrop_578vp_221";
-  const typeOverlayCard = "_typeOverlayCard_578vp_227";
-  const typeOverlayFields = "_typeOverlayFields_578vp_241";
-  const typeOverlayFile = "_typeOverlayFile_578vp_251";
-  const typeRow = "_typeRow_578vp_260";
-  const typeChipActive = "_typeChipActive_578vp_268";
-  const typeChipSuggested = "_typeChipSuggested_578vp_272";
-  const typeChipMuted = "_typeChipMuted_578vp_277";
-  const typeFooter = "_typeFooter_578vp_291";
-  const typeImport = "_typeImport_578vp_300";
-  const typeSection = "_typeSection_578vp_307";
-  const imageCard = "_imageCard_578vp_315";
-  const fileAccessOverlay = "_fileAccessOverlay_578vp_327";
-  const fileAccessAction = "_fileAccessAction_578vp_343";
-  const imageCardHeader = "_imageCardHeader_578vp_351";
-  const imageCardText = "_imageCardText_578vp_359";
-  const imageCardTitle = "_imageCardTitle_578vp_367";
-  const imageCardMeta = "_imageCardMeta_578vp_375";
-  const imageCardActions = "_imageCardActions_578vp_381";
-  const csvInput = "_csvInput_578vp_390";
-  const styles$m = {
-    stack,
-    panelDropActive,
-    addStrip,
-    addStripRow,
-    dropZone,
-    dropZoneTitle,
-    orDivider,
-    urlRow,
-    urlField,
-    urlInput,
-    urlAdd,
-    dropZoneActive,
-    importError,
-    fieldLabel,
-    typeOverlay,
-    typeOverlayBackdrop,
-    typeOverlayCard,
-    typeOverlayFields,
-    typeOverlayFile,
-    typeRow,
-    typeChipActive,
-    typeChipSuggested,
-    typeChipMuted,
-    typeFooter,
-    typeImport,
-    typeSection,
-    imageCard,
-    fileAccessOverlay,
-    fileAccessAction,
-    imageCardHeader,
-    imageCardText,
-    imageCardTitle,
-    imageCardMeta,
-    imageCardActions,
-    csvInput
-  };
   function ReplaceIcon({ title: title7, size = 14 }) {
     const label2 = title7 ?? "Replace";
     return jsxRuntimeExports.jsxs("svg", {
@@ -166156,9 +166300,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       type: "button",
       "aria-pressed": selected,
       className: [
-        selected ? styles$m.typeChipActive : null,
-        suggested ? styles$m.typeChipSuggested : null,
-        muted ? styles$m.typeChipMuted : null
+        selected ? styles$p.typeChipActive : null,
+        suggested ? styles$p.typeChipSuggested : null,
+        muted ? styles$p.typeChipMuted : null
       ].filter(Boolean).join(" "),
       onClick,
       children: label2
@@ -166231,13 +166375,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [importError2, setImportError] = reactExports.useState(null);
     const [stripErrorAt, setStripErrorAt] = reactExports.useState("drop");
     const [importBusy, setImportBusy] = reactExports.useState(false);
-    const [classCsvFile, setClassCsvFile] = reactExports.useState(null);
-    const [classCsvCols, setClassCsvCols] = reactExports.useState(null);
-    const classCsvInputRef = reactExports.useRef(null);
-    const clearClassCsv = reactExports.useCallback(() => {
-      setClassCsvFile(null);
-      setClassCsvCols(null);
-      if (classCsvInputRef.current) classCsvInputRef.current.value = "";
+    const [featureCsvFile, setFeatureCsvFile] = reactExports.useState(null);
+    const [featureCsvCols, setFeatureCsvCols] = reactExports.useState(null);
+    const clearFeatureCsv = reactExports.useCallback(() => {
+      setFeatureCsvFile(null);
+      setFeatureCsvCols(null);
     }, []);
     const [dragging, setDragging] = reactExports.useState(false);
     const dragDepthRef = reactExports.useRef(0);
@@ -166264,17 +166406,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     reactExports.useEffect(() => {
       if (prevImportRev.current === importRevision) return;
+      if (importBusy) return;
       prevImportRev.current = importRevision;
+      if (importError2) return;
       abortFormatDetect();
       setPending(null);
       setImportError(null);
       setUrlDraft("");
       setImportBusy(false);
-      clearClassCsv();
+      clearFeatureCsv();
     }, [
       abortFormatDetect,
+      importBusy,
+      importError2,
       importRevision,
-      clearClassCsv
+      clearFeatureCsv
     ]);
     const openPending = reactExports.useCallback((next2) => {
       abortFormatDetect();
@@ -166293,7 +166439,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setDetectedRgbDisplay(null);
       setDetecting(false);
       setImportError(null);
-      clearClassCsv();
+      clearFeatureCsv();
       const ac2 = new AbortController();
       formatDetectAbortRef.current = ac2;
       void (async () => {
@@ -166345,16 +166491,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })();
     }, [
       abortFormatDetect,
-      clearClassCsv
+      clearFeatureCsv
     ]);
     const clearPending = reactExports.useCallback(() => {
       abortFormatDetect();
       setPending(null);
       setImportError(null);
-      clearClassCsv();
+      clearFeatureCsv();
     }, [
       abortFormatDetect,
-      clearClassCsv
+      clearFeatureCsv
     ]);
     const acceptLocalHandles = reactExports.useCallback(async (handles) => {
       if (handles.length === 0) return;
@@ -166490,7 +166636,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           return;
         }
         const rgbDisplay = detectedRgbDisplay != null && role === "intensity" ? overlayRgbDisplay : void 0;
-        const beforeMaskIds = role === "segmentation" && classCsvFile ? new Set(flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images).filter(isMaskChannel).map((c2) => c2.id)) : null;
+        const attachCsv = role === "segmentation" ? featureCsvFile : null;
+        const beforeMaskIds = attachCsv ? new Set(flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images).filter(isMaskChannel).map((c2) => c2.id)) : null;
+        const csvJob = attachCsv ? ingestFeatureCsvFile(attachCsv, featureCsvCols ? {
+          id: featureCsvCols.id,
+          name: featureCsvCols.name
+        } : void 0) : null;
         const result = await onImportOme({
           role,
           append: hasImages,
@@ -166509,15 +166660,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           return;
         }
         const sourceChannelId = beforeMaskIds ? (_a2 = flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images).find((c2) => isMaskChannel(c2) && !beforeMaskIds.has(c2.id))) == null ? void 0 : _a2.id : void 0;
-        if ((result == null ? void 0 : result.ok) && classCsvFile && sourceChannelId) {
-          const attached = await attachClassTable({
-            sourceChannelId,
-            file: classCsvFile,
-            columns: classCsvCols ? {
-              id: classCsvCols.id,
-              name: classCsvCols.name
-            } : void 0
-          });
+        if ((result == null ? void 0 : result.ok) && csvJob && sourceChannelId) {
+          const attached = await completeFeatureTableIngest(sourceChannelId, csvJob);
           if (attached.ok === false) setImportError(attached.error);
         }
       } finally {
@@ -166545,27 +166689,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const needsStoryDir = needsStoryRootReconnect && !!onReconnectStoryRoot && ((_c2 = im.source) == null ? void 0 : _c2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
       const showAccessOverlay = needsReselect || needsPermission || needsStoryDir;
       return jsxRuntimeExports.jsxs("article", {
-        className: styles$m.imageCard,
+        className: styles$p.imageCard,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$m.imageCardHeader,
+            className: styles$p.imageCardHeader,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$m.imageCardText,
+                className: styles$p.imageCardText,
                 children: [
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$m.imageCardTitle,
+                    className: styles$p.imageCardTitle,
                     title: title7,
                     children: title7
                   }),
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$m.imageCardMeta,
+                    className: styles$p.imageCardMeta,
                     children: metaParts.join(" \xB7 ")
                   })
                 ]
               }),
               onReplaceImage || onRemoveImage ? jsxRuntimeExports.jsxs("div", {
-                className: styles$m.imageCardActions,
+                className: styles$p.imageCardActions,
                 children: [
                   onReplaceImage && ((_d = im.source) == null ? void 0 : _d.kind) !== "jpeg" && ((_e = im.source) == null ? void 0 : _e.kind) !== "dicomWeb" ? jsxRuntimeExports.jsx(PanelIconButton, {
                     title: `Replace ${title7} with another OME-TIFF`,
@@ -166593,10 +166737,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             image: im
           }),
           showAccessOverlay ? jsxRuntimeExports.jsx("div", {
-            className: styles$m.fileAccessOverlay,
+            className: styles$p.fileAccessOverlay,
             children: jsxRuntimeExports.jsx(PanelActionButton, {
               type: "button",
-              className: styles$m.fileAccessAction,
+              className: styles$p.fileAccessAction,
               onClick: () => {
                 if (needsStoryDir) void (onReconnectStoryRoot == null ? void 0 : onReconnectStoryRoot());
                 else if (needsReselect) void (onReselectFile == null ? void 0 : onReselectFile(im.id));
@@ -166610,18 +166754,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const imageCards = images.length > 0 ? images.map((im, i2) => renderImageCard(im, i2)) : imageLoaded && loadedSource ? [
       jsxRuntimeExports.jsx("article", {
-        className: styles$m.imageCard,
+        className: styles$p.imageCard,
         children: jsxRuntimeExports.jsx("div", {
-          className: styles$m.imageCardHeader,
+          className: styles$p.imageCardHeader,
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$m.imageCardText,
+            className: styles$p.imageCardText,
             children: [
               jsxRuntimeExports.jsx("div", {
-                className: styles$m.imageCardTitle,
+                className: styles$p.imageCardTitle,
                 children: loadedSource.label
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$m.imageCardMeta,
+                className: styles$p.imageCardMeta,
                 children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
               })
             ]
@@ -166640,46 +166784,46 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const urlError = stripError && stripErrorAt === "url" ? stripError : null;
     const addStrip2 = jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$m.addStrip,
-        row2 ? styles$m.addStripRow : "",
-        row2 && dragging ? styles$m.panelDropActive : ""
+        styles$p.addStrip,
+        row2 ? styles$p.addStripRow : "",
+        row2 && dragging ? styles$p.panelDropActive : ""
       ].join(" "),
       ...row2 ? dropHandlers : {},
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
           className: [
-            styles$m.dropZone,
-            dragging ? styles$m.dropZoneActive : ""
+            styles$p.dropZone,
+            dragging ? styles$p.dropZoneActive : ""
           ].join(" "),
           disabled: disabled2,
           "aria-invalid": dropError ? true : void 0,
           onClick: () => void browseLocal(),
           children: jsxRuntimeExports.jsx("span", {
             className: [
-              styles$m.dropZoneTitle,
-              dropError ? styles$m.importError : ""
+              styles$p.dropZoneTitle,
+              dropError ? styles$p.importError : ""
             ].filter(Boolean).join(" "),
             role: dropError ? "alert" : void 0,
             children: dropError ?? "Drop or Browse Image File"
           })
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$m.orDivider,
+          className: styles$p.orDivider,
           children: jsxRuntimeExports.jsx("span", {
             children: "or"
           })
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$m.urlRow,
+          className: styles$p.urlRow,
           children: [
             jsxRuntimeExports.jsxs("div", {
-              className: styles$m.urlField,
+              className: styles$p.urlField,
               children: [
                 jsxRuntimeExports.jsx("input", {
                   id: "upload-add-url",
                   type: "url",
-                  className: `${minervaTheme.input} ${styles$m.urlInput}`,
+                  className: `${minervaTheme.input} ${styles$p.urlInput}`,
                   placeholder: "Image URL (OME-TIFF or DICOMweb)",
                   "aria-label": "Image URL",
                   "aria-invalid": urlError ? true : void 0,
@@ -166698,7 +166842,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 urlDraft.trim() ? jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
-                  className: styles$m.urlAdd,
+                  className: styles$p.urlAdd,
                   disabled: disabled2 || !urlReady,
                   onClick: acceptUrlDraft,
                   children: "Add"
@@ -166706,7 +166850,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             urlError ? jsxRuntimeExports.jsx("div", {
-              className: styles$m.importError,
+              className: styles$p.importError,
               role: "alert",
               children: urlError
             }) : null
@@ -166714,178 +166858,137 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         })
       ]
     });
-    const typeOverlayDialog = showTypeOverlay && pending2 ? jsxRuntimeExports.jsxs("div", {
-      className: styles$m.typeOverlay,
-      role: "dialog",
-      "aria-modal": "true",
-      "aria-busy": importBusy || detecting,
-      "aria-labelledby": "image-import-dialog-title",
+    let overlayBusyLabel = "Importing\u2026";
+    if (detecting) overlayBusyLabel = "Detecting\u2026";
+    else if (featureCsvFile && overlayRole === "segmentation") {
+      overlayBusyLabel = "Loading feature table\u2026";
+    }
+    const typeOverlayDialog = showTypeOverlay && pending2 ? jsxRuntimeExports.jsxs(ImportOverlay, {
+      title: pendingLabel(pending2),
+      titleId: "image-import-dialog-title",
+      error: importError2,
+      busy: importBusy || detecting,
+      busyLabel: overlayBusyLabel,
+      cancelDisabled: importBusy || disabled2,
+      importDisabled: importBusy || detecting || disabled2,
+      onCancel: clearPending,
+      onImport: () => void runImport(),
       children: [
-        jsxRuntimeExports.jsx("div", {
-          className: styles$m.typeOverlayBackdrop,
-          "aria-hidden": "true"
-        }),
         jsxRuntimeExports.jsxs("div", {
-          className: `${minervaTheme.surface} ${styles$m.typeOverlayCard}`,
+          className: styles$p.typeRow,
           children: [
-            jsxRuntimeExports.jsx("div", {
-              id: "image-import-dialog-title",
-              className: styles$m.typeOverlayFile,
-              title: pendingLabel(pending2),
-              children: pendingLabel(pending2)
+            jsxRuntimeExports.jsx("span", {
+              className: styles$p.fieldLabel,
+              children: "Image Type"
             }),
-            jsxRuntimeExports.jsxs("fieldset", {
-              disabled: importBusy || detecting || disabled2,
-              className: styles$m.typeOverlayFields,
-              children: [
-                jsxRuntimeExports.jsxs("div", {
-                  className: styles$m.typeRow,
-                  children: [
-                    jsxRuntimeExports.jsx("span", {
-                      className: styles$m.fieldLabel,
-                      children: "Image Type"
-                    }),
-                    jsxRuntimeExports.jsx(FormatChip, {
-                      label: "Fluorescence",
-                      selected: overlayRole === "intensity" && !overlayRgbDisplay,
-                      suggested: detectedRole === "intensity" && detectedRgbDisplay !== true,
-                      muted: detectedRole !== "intensity" || detectedRgbDisplay === true,
-                      onClick: () => {
-                        roleChosenByUserRef.current = true;
-                        rgbDisplayChosenByUserRef.current = true;
-                        setOverlayRole("intensity");
-                        setOverlayRgbDisplay(false);
-                      }
-                    }),
-                    detectedRgbDisplay != null ? jsxRuntimeExports.jsx(FormatChip, {
-                      label: "Brightfield",
-                      selected: overlayRole === "intensity" && overlayRgbDisplay,
-                      suggested: detectedRole === "intensity" && detectedRgbDisplay === true,
-                      muted: detectedRole !== "intensity" || detectedRgbDisplay !== true,
-                      onClick: () => {
-                        roleChosenByUserRef.current = true;
-                        rgbDisplayChosenByUserRef.current = true;
-                        setOverlayRole("intensity");
-                        setOverlayRgbDisplay(true);
-                      }
-                    }) : null,
-                    jsxRuntimeExports.jsx(FormatChip, {
-                      label: "Segmentation Mask",
-                      selected: overlayRole === "segmentation",
-                      suggested: detectedRole === "segmentation",
-                      muted: detectedRole !== "segmentation",
-                      onClick: () => {
-                        roleChosenByUserRef.current = true;
-                        setOverlayRole("segmentation");
-                        formatChosenByUserRef.current = true;
-                        setOverlayFormat("ome-tiff");
-                      }
-                    })
-                  ]
-                }),
-                dicomAllowed ? jsxRuntimeExports.jsx("div", {
-                  className: styles$m.typeSection,
-                  children: jsxRuntimeExports.jsxs("div", {
-                    className: styles$m.typeRow,
-                    children: [
-                      jsxRuntimeExports.jsx("span", {
-                        className: styles$m.fieldLabel,
-                        children: "Format"
-                      }),
-                      FORMAT_OPTIONS.map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
-                        label: label2,
-                        selected: overlayFormat === format,
-                        suggested: detectedFormat === format,
-                        muted: detectedFormat !== format,
-                        onClick: () => {
-                          formatChosenByUserRef.current = true;
-                          setOverlayFormat(format);
-                        }
-                      }, format))
-                    ]
-                  })
-                }) : null,
-                overlayRole === "segmentation" ? jsxRuntimeExports.jsxs("div", {
-                  className: styles$m.typeRow,
-                  children: [
-                    jsxRuntimeExports.jsx("span", {
-                      className: styles$m.fieldLabel,
-                      children: "Class table"
-                    }),
-                    jsxRuntimeExports.jsx("input", {
-                      ref: classCsvInputRef,
-                      type: "file",
-                      accept: ".csv,text/csv",
-                      className: styles$m.csvInput,
-                      onChange: (e2) => {
-                        var _a2;
-                        const file = ((_a2 = e2.target.files) == null ? void 0 : _a2[0]) ?? null;
-                        setClassCsvFile(file);
-                        if (!file) {
-                          setClassCsvCols(null);
-                          return;
-                        }
-                        void peekClassCsv(file).then(setClassCsvCols);
-                      }
-                    }),
-                    jsxRuntimeExports.jsx(PanelActionButton, {
-                      type: "button",
-                      onClick: () => {
-                        var _a2;
-                        return (_a2 = classCsvInputRef.current) == null ? void 0 : _a2.click();
-                      },
-                      children: classCsvFile ? classCsvFile.name : "Optional CSV\u2026"
-                    })
-                  ]
-                }) : null,
-                overlayRole === "segmentation" && classCsvCols ? jsxRuntimeExports.jsx(ClassCsvColumnPick, {
-                  headers: classCsvCols.headers,
-                  id: classCsvCols.id,
-                  name: classCsvCols.name,
-                  onId: (id2) => setClassCsvCols({
-                    ...classCsvCols,
-                    id: id2
-                  }),
-                  onName: (name2) => setClassCsvCols({
-                    ...classCsvCols,
-                    name: name2
-                  })
-                }) : null
-              ]
+            jsxRuntimeExports.jsx(FormatChip, {
+              label: "Fluorescence",
+              selected: overlayRole === "intensity" && !overlayRgbDisplay,
+              suggested: detectedRole === "intensity" && detectedRgbDisplay !== true,
+              muted: detectedRole !== "intensity" || detectedRgbDisplay === true,
+              onClick: () => {
+                roleChosenByUserRef.current = true;
+                rgbDisplayChosenByUserRef.current = true;
+                setOverlayRole("intensity");
+                setOverlayRgbDisplay(false);
+              }
             }),
-            importError2 ? jsxRuntimeExports.jsx("div", {
-              className: styles$m.importError,
-              role: "alert",
-              children: importError2
+            detectedRgbDisplay != null ? jsxRuntimeExports.jsx(FormatChip, {
+              label: "Brightfield",
+              selected: overlayRole === "intensity" && overlayRgbDisplay,
+              suggested: detectedRole === "intensity" && detectedRgbDisplay === true,
+              muted: detectedRole !== "intensity" || detectedRgbDisplay !== true,
+              onClick: () => {
+                roleChosenByUserRef.current = true;
+                rgbDisplayChosenByUserRef.current = true;
+                setOverlayRole("intensity");
+                setOverlayRgbDisplay(true);
+              }
             }) : null,
-            jsxRuntimeExports.jsxs("div", {
-              className: styles$m.typeFooter,
-              children: [
-                jsxRuntimeExports.jsx(PanelActionButton, {
-                  type: "button",
-                  onClick: clearPending,
-                  disabled: importBusy || disabled2,
-                  children: "Cancel"
-                }),
-                jsxRuntimeExports.jsx(PanelActionButton, {
-                  type: "button",
-                  className: styles$m.typeImport,
-                  disabled: importBusy || detecting || disabled2,
-                  onClick: () => void runImport(),
-                  children: importBusy || detecting ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
-                    children: [
-                      jsxRuntimeExports.jsx("span", {
-                        className: minervaTheme.spinnerSm,
-                        "aria-hidden": "true"
-                      }),
-                      detecting ? "Detecting\u2026" : "Importing\u2026"
-                    ]
-                  }) : "Import"
-                })
-              ]
+            jsxRuntimeExports.jsx(FormatChip, {
+              label: "Segmentation Mask",
+              selected: overlayRole === "segmentation",
+              suggested: detectedRole === "segmentation",
+              muted: detectedRole !== "segmentation",
+              onClick: () => {
+                roleChosenByUserRef.current = true;
+                setOverlayRole("segmentation");
+                formatChosenByUserRef.current = true;
+                setOverlayFormat("ome-tiff");
+              }
             })
           ]
-        })
+        }),
+        dicomAllowed ? jsxRuntimeExports.jsx("div", {
+          className: styles$p.typeSection,
+          children: jsxRuntimeExports.jsxs("div", {
+            className: styles$p.typeRow,
+            children: [
+              jsxRuntimeExports.jsx("span", {
+                className: styles$p.fieldLabel,
+                children: "Format"
+              }),
+              FORMAT_OPTIONS.map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
+                label: label2,
+                selected: overlayFormat === format,
+                suggested: detectedFormat === format,
+                muted: detectedFormat !== format,
+                onClick: () => {
+                  formatChosenByUserRef.current = true;
+                  setOverlayFormat(format);
+                }
+              }, format))
+            ]
+          })
+        }) : null,
+        overlayRole === "segmentation" ? jsxRuntimeExports.jsxs("div", {
+          className: styles$p.typeRow,
+          children: [
+            jsxRuntimeExports.jsx("span", {
+              className: styles$p.fieldLabel,
+              children: "Feature table"
+            }),
+            jsxRuntimeExports.jsx(PanelActionButton, {
+              type: "button",
+              onClick: () => {
+                void (async () => {
+                  let file;
+                  try {
+                    file = await n$1({
+                      description: "Feature table CSV",
+                      mimeTypes: [
+                        "text/csv"
+                      ],
+                      extensions: [
+                        ".csv"
+                      ],
+                      multiple: false
+                    });
+                  } catch (e2) {
+                    if (e2 instanceof Error && e2.name === "AbortError") return;
+                    throw e2;
+                  }
+                  setFeatureCsvFile(file);
+                  void peekFeatureCsv(file).then(setFeatureCsvCols);
+                })();
+              },
+              children: featureCsvFile ? featureCsvFile.name : "Optional CSV\u2026"
+            })
+          ]
+        }) : null,
+        overlayRole === "segmentation" && featureCsvCols ? jsxRuntimeExports.jsx(FeatureCsvColumnPick, {
+          headers: featureCsvCols.headers,
+          id: featureCsvCols.id,
+          name: featureCsvCols.name,
+          onId: (id2) => setFeatureCsvCols({
+            ...featureCsvCols,
+            id: id2
+          }),
+          onName: (name2) => setFeatureCsvCols({
+            ...featureCsvCols,
+            name: name2
+          })
+        }) : null
       ]
     }) : null;
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
@@ -166893,7 +166996,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         row2 ? addStrip2 : jsxRuntimeExports.jsx("div", {
           className: [
             panel$1.authorPanel,
-            dragging ? styles$m.panelDropActive : ""
+            dragging ? styles$p.panelDropActive : ""
           ].join(" "),
           ...dropHandlers,
           children: jsxRuntimeExports.jsx("div", {
@@ -166902,7 +167005,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               panel$1.thinScrollbar
             ].join(" "),
             children: jsxRuntimeExports.jsxs("div", {
-              className: styles$m.stack,
+              className: styles$p.stack,
               children: [
                 imageCards,
                 addStrip2
@@ -166910,7 +167013,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             })
           })
         }),
-        typeOverlayDialog ? reactDomExports.createPortal(typeOverlayDialog, document.body) : null
+        typeOverlayDialog
       ]
     });
   };
@@ -169424,23 +169527,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const pending2 = pendingLibraryImport;
       pendingLibraryImport = null;
       if (!pending2) return;
-      let cancelled = false;
-      void (async () => {
-        const result = pending2.kind === "dicomWeb" ? await importDicomWebRef.current({
-          url: pending2.url
-        }) : await importOmeRef.current({
-          role: pending2.role,
-          append: false,
-          source: pending2.source
-        });
-        if (cancelled) return;
-        if (result.ok === false) window.alert(result.error);
-      })().finally(() => {
-        if (!cancelled) onSettled();
+      const imported = pending2.kind === "dicomWeb" ? importDicomWebRef.current({
+        url: pending2.url
+      }) : importOmeRef.current({
+        role: pending2.role,
+        append: false,
+        source: pending2.source
       });
-      return () => {
-        cancelled = true;
-      };
+      void imported.then((result) => {
+        if (result.ok === false) window.alert(result.error);
+      }).finally(onSettled);
     }, [
       onSettled
     ]);
@@ -169987,6 +170083,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   const WAYPOINT_THUMBNAIL_PIXEL_SIZE = 64;
   const WAYPOINT_THUMBNAIL_JPEG_QUALITY = 0.85;
+  var RGB_MAX = 255;
+  var SV_MAX = 100;
+  var rgbaToHsva = (_ref) => {
+    var { r: r2, g: g2, b: b2, a: a2 } = _ref;
+    var max2 = Math.max(r2, g2, b2);
+    var delta = max2 - Math.min(r2, g2, b2);
+    var hh2 = delta ? max2 === r2 ? (g2 - b2) / delta : max2 === g2 ? 2 + (b2 - r2) / delta : 4 + (r2 - g2) / delta : 0;
+    return {
+      h: 60 * (hh2 < 0 ? hh2 + 6 : hh2),
+      s: max2 ? delta / max2 * SV_MAX : 0,
+      v: max2 / RGB_MAX * SV_MAX,
+      a: a2
+    };
+  };
+  function _objectDestructuringEmpty(t2) {
+    if (null == t2) throw new TypeError("Cannot destructure " + t2);
+  }
   const layersPanel = "_layersPanel_1qxur_1";
   const layersUnifiedTop = "_layersUnifiedTop_1qxur_10";
   const layersToolbarSlot = "_layersToolbarSlot_1qxur_27";
@@ -170307,16 +170420,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ...props
   }, reactExports.createElement("path", {
     d: "M10.83,2.37c-.52-.52-1.36-.52-1.89,0,0,0,0,0,0,0l-6.57,6.57c-.52.52-.52,1.36,0,1.89,0,0,0,0,0,0l2.8,2.8c.52.52,1.36.52,1.89,0,0,0,0,0,0,0l6.57-6.57c.52-.52.52-1.36,0-1.89,0,0,0,0,0,0l-2.8-2.8ZM5.64,12.39l-2.12-2.12,2.75-2.93,2.12,2.12s-2.75,2.93-2.75,2.93ZM9.33,12h4v1.33h-5l1-1.33Z"
-  }));
-  const SvgFolder = (props) => reactExports.createElement("svg", {
-    width: "1em",
-    height: "1em",
-    viewBox: "0 0 16 16",
-    fill: "currentColor",
-    stroke: "none",
-    ...props
-  }, reactExports.createElement("path", {
-    d: "M.75,3.82c0-.93.75-1.67,1.67-1.67h3.77c.45,0,.86.2,1.14.54l1.23,1.14h5.02c.93,0,1.67.75,1.67,1.67v6.69c0,.93-.75,1.67-1.67,1.67H2.42c-.93,0-1.67-.75-1.67-1.67V3.82Z"
   }));
   const SvgLine = (props) => reactExports.createElement("svg", {
     width: "1em",
@@ -244614,537 +244717,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }, reactExports.createElement("path", {
     d: "M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2 .9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z"
   }));
-  function sanitizeGmmLimits(vmin, vmax) {
-    if (!Number.isFinite(vmin) || !Number.isFinite(vmax)) return null;
-    const lower = Math.max(0, Math.min(65535, Math.round(vmin)));
-    const upperRaw = Math.max(0, Math.min(65535, Math.round(vmax)));
-    const upper = upperRaw <= lower ? Math.min(65535, lower + 1) : upperRaw;
-    if (upper <= lower) return null;
-    return {
-      lower,
-      upper
-    };
-  }
-  function approximateAutoContrastFromUint16Histogram(u16) {
-    const n2 = u16.length;
-    if (n2 === 0) return null;
-    const hist = new Uint32Array(65536);
-    let positive = 0;
-    for (let i2 = 0; i2 < n2; i2++) {
-      const v2 = u16[i2];
-      hist[v2]++;
-      if (v2 > 0) positive++;
-    }
-    const zeroHeavy = hist[0] / n2 >= 1e-3 && positive >= 64;
-    const mass = zeroHeavy ? positive : n2;
-    const startV = zeroHeavy ? 1 : 0;
-    const idxLo = Math.max(0, Math.min(mass - 1, Math.floor(1e-3 * (mass - 1))));
-    const idxHi = Math.min(mass - 1, Math.ceil(0.999 * (mass - 1)));
-    const valuePastSortedIndex = (idx) => {
-      let cum = 0;
-      for (let v2 = startV; v2 < 65536; v2++) {
-        cum += hist[v2];
-        if (cum > idx) return v2;
-      }
-      return 65535;
-    };
-    return sanitizeGmmLimits(valuePastSortedIndex(idxLo), valuePastSortedIndex(idxHi));
-  }
-  async function fitChannelGmmContrastFromUint16(u16) {
-    if (u16.length === 0) return null;
-    const stats = null;
-    try {
-      if (false) ;
-      const psudo = await __vitePreload(() => import("./index-DLxvjXSp.js"), true ? [] : void 0, import.meta.url);
-      await warmupPsudoPalette();
-      if (false) ;
-      const t0 = performance.now();
-      const result = await psudo.channel_gmm(u16);
-      const ms = Math.round(performance.now() - t0);
-      if (result && result.length >= 2) {
-        const limits = sanitizeGmmLimits(result[0], result[1]);
-        if (limits) {
-          if (false) ;
-          return limits;
-        }
-      }
-      if (false) ;
-    } catch (e2) {
-    }
-    const fallback = approximateAutoContrastFromUint16Histogram(u16);
-    return fallback;
-  }
-  async function fetchPlaneRaster(loader, sourceIndex, prefs = {}) {
-    var _a2;
-    const planes = loader.data;
-    if (!(planes == null ? void 0 : planes.length)) return null;
-    const first = planes[0];
-    const cIdx = first.labels.indexOf("c");
-    const channelCount = cIdx >= 0 ? first.shape[cIdx] : 1;
-    if (sourceIndex < 0 || sourceIndex >= channelCount) return null;
-    const preferCoarsest = prefs.preferCoarsest ?? false;
-    const order2 = preferCoarsest ? [
-      ...planes.keys()
-    ].reverse() : [
-      ...planes.keys()
-    ];
-    for (const i2 of order2) {
-      const plane = planes[i2];
-      try {
-        const raster = await plane.getRaster({
-          selection: {
-            t: 0,
-            z: 0,
-            c: sourceIndex
-          }
-        });
-        if ((_a2 = raster == null ? void 0 : raster.data) == null ? void 0 : _a2.length) return {
-          raster,
-          plane
-        };
-      } catch {
-      }
-    }
-    return null;
-  }
-  function rasterToUint16Array(data2) {
-    if (data2 instanceof Uint16Array) return data2;
-    const out = new Uint16Array(data2.length);
-    if (data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray) {
-      for (let i2 = 0; i2 < data2.length; i2++) out[i2] = data2[i2] << 8;
-      return out;
-    }
-    for (let i2 = 0; i2 < data2.length; i2++) {
-      const v2 = data2[i2];
-      out[i2] = Number.isFinite(v2) ? Math.max(0, Math.min(65535, Math.round(v2))) : 0;
-    }
-    return out;
-  }
-  const FETCH_CONCURRENCY = 4;
-  const FIT_CONCURRENCY = 1;
-  const emptySnapshot = {
-    holdingLoad: false
-  };
-  let generation = 0;
-  const loadersByImageId = /* @__PURE__ */ new Map();
-  const jobsByKey = /* @__PURE__ */ new Map();
-  const queue = [];
-  const inFlight = /* @__PURE__ */ new Map();
-  const failedKeys = /* @__PURE__ */ new Set();
-  const blockedIds = /* @__PURE__ */ new Set();
-  const listeners = /* @__PURE__ */ new Set();
-  let snapshot = emptySnapshot;
-  let holdingLoad = false;
-  const fetchWaiters = [];
-  const fitWaiters = [];
-  const fetchUsedBox = {
-    n: 0
-  };
-  const fitUsedBox = {
-    n: 0
-  };
-  function rasterKey(sourceImageId, index2) {
-    return `${sourceImageId}\0${index2}`;
-  }
-  function limitsEqual(a2, b2) {
-    return a2 != null && a2.lower === b2.lower && a2.upper === b2.upper;
-  }
-  function asWindow(limits) {
-    if ((limits == null ? void 0 : limits.lower) == null || limits.upper == null) return void 0;
-    return {
-      lower: limits.lower,
-      upper: limits.upper
-    };
-  }
-  function documentChannels() {
-    return flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images);
-  }
-  function isEligible(sc2, all2) {
-    return isImageChannel(sc2) && sc2.samples !== 3 && !isRgbDisplayChannel(sc2, all2);
-  }
-  function acquire(used, waiters, max2) {
-    return new Promise((resolve) => {
-      if (used.n < max2) {
-        used.n++;
-        resolve();
-        return;
-      }
-      waiters.push(() => {
-        used.n++;
-        resolve();
-      });
-    });
-  }
-  function release(used, waiters) {
-    var _a2;
-    used.n = Math.max(0, used.n - 1);
-    (_a2 = waiters.shift()) == null ? void 0 : _a2();
-  }
-  function notify() {
-    if (snapshot.holdingLoad === holdingLoad) return;
-    snapshot = {
-      holdingLoad
-    };
-    for (const listener of listeners) listener();
-  }
-  function readChannel(channelId) {
-    return documentChannels().find((sc2) => sc2.id === channelId);
-  }
-  function removeFromQueues(key2) {
-    const idx = queue.indexOf(key2);
-    if (idx >= 0) queue.splice(idx, 1);
-  }
-  function enqueue(job) {
-    removeFromQueues(job.rasterKey);
-    queue.push(job.rasterKey);
-  }
-  function dropBlocked(channelId) {
-    blockedIds.delete(channelId);
-    if (holdingLoad && blockedIds.size === 0) holdingLoad = false;
-  }
-  function finishJob(job, outcome, gen) {
-    var _a2;
-    if (gen !== generation) return;
-    for (const id2 of job.guards.keys()) {
-      if (outcome.kind === "failed") dropBlocked(id2);
-      else if ((_a2 = readChannel(id2)) == null ? void 0 : _a2.gmmContrastLimits) dropBlocked(id2);
-    }
-    jobsByKey.delete(job.rasterKey);
-    removeFromQueues(job.rasterKey);
-    inFlight.delete(job.rasterKey);
-    notify();
-  }
-  function commitFitted(job, window2) {
-    const doc = useDocumentStore.getState();
-    const channels2 = flattenImageChannelsInDocumentOrder(doc.images);
-    let changed = false;
-    const next2 = channels2.map((sc2) => {
-      if (!job.guards.has(sc2.id)) return sc2;
-      const guard = job.guards.get(sc2.id) ?? {
-        kind: "still-missing"
-      };
-      if (guard.kind === "still-missing") {
-        if (sc2.gmmContrastLimits) return sc2;
-      } else if (!limitsEqual(sc2.gmmContrastLimits, guard.expected)) {
-        return sc2;
-      }
-      changed = true;
-      return {
-        ...sc2,
-        gmmContrastLimits: {
-          lower: window2.lower,
-          upper: window2.upper
-        },
-        lowerLimit: window2.lower,
-        upperLimit: window2.upper
-      };
-    });
-    if (changed) {
-      doc.setImages(applySourceChannelsToImages(doc.images, next2));
-    }
-    let groupsChanged = false;
-    const nextGroups = doc.channelGroups.map((g2) => ({
-      ...g2,
-      channels: g2.channels.map((gc2) => {
-        if (!job.guards.has(gc2.channelId)) return gc2;
-        if (!looksLikeImportDefaultLimits(gc2.lowerLimit, gc2.upperLimit)) {
-          return gc2;
-        }
-        groupsChanged = true;
-        return {
-          ...gc2,
-          lowerLimit: window2.lower,
-          upperLimit: window2.upper
-        };
-      })
-    }));
-    if (groupsChanged) doc.setChannelGroups(nextGroups);
-  }
-  async function runJob(job, gen) {
-    var _a2;
-    await acquire(fetchUsedBox, fetchWaiters, FETCH_CONCURRENCY);
-    let u16 = null;
-    try {
-      if (gen !== generation) return {
-        kind: "failed"
-      };
-      const hit = await fetchPlaneRaster(job.loader, job.index, {
-        preferCoarsest: true
-      });
-      if (((_a2 = hit == null ? void 0 : hit.raster) == null ? void 0 : _a2.data) && hit.raster.data.length > 0) {
-        u16 = rasterToUint16Array(hit.raster.data);
-      }
-    } finally {
-      release(fetchUsedBox, fetchWaiters);
-      pump();
-    }
-    if (gen !== generation) return {
-      kind: "failed"
-    };
-    if (!u16) {
-      failedKeys.add(job.rasterKey);
-      finishJob(job, {
-        kind: "failed"
-      }, gen);
-      pump();
-      return {
-        kind: "failed"
-      };
-    }
-    await acquire(fitUsedBox, fitWaiters, FIT_CONCURRENCY);
-    let window2 = null;
-    try {
-      if (gen === generation) {
-        window2 = await fitChannelGmmContrastFromUint16(u16);
-      }
-    } finally {
-      release(fitUsedBox, fitWaiters);
-    }
-    if (gen !== generation) return {
-      kind: "failed"
-    };
-    if (!window2) {
-      failedKeys.add(job.rasterKey);
-      finishJob(job, {
-        kind: "failed"
-      }, gen);
-      pump();
-      return {
-        kind: "failed"
-      };
-    }
-    commitFitted(job, window2);
-    finishJob(job, {
-      kind: "fitted"
-    }, gen);
-    pump();
-    return {
-      kind: "fitted",
-      window: window2
-    };
-  }
-  function intern(job) {
-    const existing = inFlight.get(job.rasterKey);
-    if (existing) return existing;
-    removeFromQueues(job.rasterKey);
-    const gen = generation;
-    const promise = runJob(job, gen).catch((error2) => {
-      if (gen === generation) {
-        failedKeys.add(job.rasterKey);
-        finishJob(job, {
-          kind: "failed"
-        }, gen);
-        pump();
-      }
-      return {
-        kind: "failed"
-      };
-    });
-    inFlight.set(job.rasterKey, promise);
-    notify();
-    return promise;
-  }
-  function pump() {
-    for (const key2 of [
-      ...queue
-    ]) {
-      const job = jobsByKey.get(key2);
-      if (!job || inFlight.has(key2)) continue;
-      intern(job);
-    }
-  }
-  function attachChannel(job, channelId, guard) {
-    const prev = job.guards.get(channelId);
-    if (!((prev == null ? void 0 : prev.kind) === "unchanged" && guard.kind === "still-missing")) {
-      job.guards.set(channelId, guard);
-    }
-  }
-  function upsertJob(args) {
-    const { sc: sc2, loader, guard, retryFailed } = args;
-    const key2 = rasterKey(sc2.imageId, sc2.index);
-    if (failedKeys.has(key2)) {
-      if (!retryFailed) return null;
-      failedKeys.delete(key2);
-    }
-    const existing = jobsByKey.get(key2);
-    if (existing) {
-      attachChannel(existing, sc2.id, guard);
-      if (!inFlight.has(key2)) enqueue(existing);
-      return existing;
-    }
-    const job = {
-      rasterKey: key2,
-      loader,
-      sourceImageId: sc2.imageId,
-      index: sc2.index,
-      guards: /* @__PURE__ */ new Map([
-        [
-          sc2.id,
-          guard
-        ]
-      ])
-    };
-    jobsByKey.set(key2, job);
-    enqueue(job);
-    return job;
-  }
-  function targetFor(channelId) {
-    const all2 = documentChannels();
-    const sc2 = all2.find((c2) => c2.id === channelId);
-    if (!sc2 || !isEligible(sc2, all2)) return null;
-    const loader = loadersByImageId.get(sc2.imageId);
-    if (!loader) return null;
-    return {
-      sc: sc2,
-      loader
-    };
-  }
-  function blockVisible(channelId) {
-    if (blockedIds.has(channelId)) return;
-    const all2 = documentChannels();
-    const sc2 = all2.find((c2) => c2.id === channelId);
-    if (!sc2 || sc2.gmmContrastLimits || !isEligible(sc2, all2)) return;
-    blockedIds.add(channelId);
-  }
-  function reconcileGmm(args) {
-    const { loaderEntries, channels: channels2, visibleChannelIds } = args;
-    loadersByImageId.clear();
-    for (const entry of loaderEntries) {
-      loadersByImageId.set(entry.sourceImageId, entry.loader);
-    }
-    const liveIds = new Set(loaderEntries.map((e2) => e2.sourceImageId));
-    for (const [key2, job] of [
-      ...jobsByKey
-    ]) {
-      if (liveIds.has(job.sourceImageId)) continue;
-      if (!inFlight.has(key2)) {
-        jobsByKey.delete(key2);
-        removeFromQueues(key2);
-      }
-    }
-    for (const sc2 of channels2) {
-      if (!isEligible(sc2, channels2)) continue;
-      if (sc2.gmmContrastLimits) continue;
-      if (!visibleChannelIds.has(sc2.id)) continue;
-      const loader = loadersByImageId.get(sc2.imageId);
-      if (!loader) continue;
-      const job = upsertJob({
-        sc: sc2,
-        loader,
-        guard: {
-          kind: "still-missing"
-        },
-        retryFailed: false
-      });
-      if (!job) continue;
-      blockVisible(sc2.id);
-    }
-    for (const id2 of [
-      ...blockedIds
-    ]) {
-      const sc2 = channels2.find((c2) => c2.id === id2);
-      if (!sc2 || !visibleChannelIds.has(id2) || sc2.gmmContrastLimits || !isEligible(sc2, channels2)) {
-        blockedIds.delete(id2);
-      }
-    }
-    holdingLoad = blockedIds.size > 0;
-    notify();
-    pump();
-  }
-  async function ensureGmm(channelIds) {
-    const result = /* @__PURE__ */ new Map();
-    const waits = [];
-    for (const channelId of channelIds) {
-      const target = targetFor(channelId);
-      if (!target) continue;
-      const current = asWindow(target.sc.gmmContrastLimits);
-      if (current) {
-        result.set(channelId, {
-          lower: current.lower,
-          upper: current.upper
-        });
-        continue;
-      }
-      const job = upsertJob({
-        sc: target.sc,
-        loader: target.loader,
-        guard: {
-          kind: "still-missing"
-        },
-        retryFailed: true
-      });
-      if (!job) continue;
-      blockVisible(channelId);
-      waits.push(intern(job).then(() => {
-        const sc2 = readChannel(channelId);
-        const limits = asWindow(sc2 == null ? void 0 : sc2.gmmContrastLimits);
-        if (limits) result.set(channelId, {
-          lower: limits.lower,
-          upper: limits.upper
-        });
-      }));
-    }
-    notify();
-    pump();
-    await Promise.all(waits);
-    return result;
-  }
-  async function refitGmm(channelId) {
-    const target = targetFor(channelId);
-    if (!target) return null;
-    const key2 = rasterKey(target.sc.imageId, target.sc.index);
-    const running = inFlight.get(key2);
-    if (running) await running;
-    const latest = targetFor(channelId);
-    if (!latest) return null;
-    const expected = asWindow(latest.sc.gmmContrastLimits);
-    const guard = expected ? {
-      kind: "unchanged",
-      expected: {
-        lower: expected.lower,
-        upper: expected.upper
-      }
-    } : {
-      kind: "still-missing"
-    };
-    const job = upsertJob({
-      sc: latest.sc,
-      loader: latest.loader,
-      guard,
-      retryFailed: true
-    });
-    if (!job) return null;
-    notify();
-    const outcome = await intern(job);
-    if (outcome.kind !== "fitted") return null;
-    const sc2 = readChannel(channelId);
-    if (!limitsEqual(sc2 == null ? void 0 : sc2.gmmContrastLimits, outcome.window)) return null;
-    return {
-      lower: outcome.window.lower,
-      upper: outcome.window.upper
-    };
-  }
-  function subscribeGmmFit(onStoreChange) {
-    listeners.add(onStoreChange);
-    return () => {
-      listeners.delete(onStoreChange);
-    };
-  }
-  function getGmmFitSnapshot() {
-    return snapshot;
-  }
-  function clearGmmScheduler() {
-    generation += 1;
-    loadersByImageId.clear();
-    jobsByKey.clear();
-    queue.length = 0;
-    inFlight.clear();
-    failedKeys.clear();
-    blockedIds.clear();
-    holdingLoad = false;
-    snapshot = emptySnapshot;
-    for (const listener of listeners) listener();
-  }
   const channelActionButton = "_channelActionButton_r32ls_3";
   const colorLockButtonLocked = "_colorLockButtonLocked_r32ls_20";
   const dropHint = "_dropHint_r32ls_29";
@@ -245522,12 +245094,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const imageSelectionMask = useAppStore((s2) => s2.imageSelectionMask);
     const channelVisibilities = useAppStore((s2) => s2.channelVisibilities);
-    const channelGroupRowVisibilities = useAppStore((s2) => s2.channelGroupRowVisibilities);
+    const storedGroupRowVisibilities = useAppStore((s2) => s2.channelGroupRowVisibilities);
     const setChannelGroupRowVisibilities = useAppStore((s2) => s2.setChannelGroupRowVisibilities);
     const channelRendering = useAppStore((s2) => s2.channelRendering);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
-    const classTables = useDocumentStore((s2) => s2.classTables);
+    const featureTables = useDocumentStore((s2) => s2.featureTables);
     const setChannelGroups = useDocumentStore((s2) => s2.setChannelGroups);
     const setImages = useDocumentStore((s2) => s2.setImages);
     const setImagesAndChannelGroups = useDocumentStore((s2) => s2.setImagesAndChannelGroups);
@@ -245548,13 +245120,52 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }, [
       sourceChannels
     ]);
+    const visKind = Object.keys(channelVisibilities).length === 0 ? "fresh" : "sync";
     const stackVisibilities = reactExports.useMemo(() => applyStackVisibilities(sourceChannels, channelVisibilities, {
-      kind: Object.keys(channelVisibilities).length === 0 ? "fresh" : "sync"
+      kind: visKind
     }), [
       sourceChannels,
-      channelVisibilities
+      channelVisibilities,
+      visKind
     ]);
+    const channelGroupRowVisibilities = reactExports.useMemo(() => applyGroupRowVisibilities(channelGroups, storedGroupRowVisibilities, {
+      kind: visKind
+    }, stackVisibilities), [
+      channelGroups,
+      storedGroupRowVisibilities,
+      visKind,
+      stackVisibilities
+    ]);
+    const capVis = {
+      channels: uniqueSourceChannels,
+      activeGroup: channelGroups.find((g2) => g2.id === activeChannelGroupId),
+      channelGroups,
+      stackVisibilities,
+      groupRowVisibilities: channelGroupRowVisibilities
+    };
+    const fitsImage = (imageId, next2) => !vivIntensityCapExceeded(imageId, {
+      ...capVis,
+      ...next2
+    });
+    const applyRgbUnit = (imageId, visible) => {
+      const next2 = visibilitiesForRgbUnit({
+        rgbChannels: sourceChannels.filter((c2) => c2.imageId === imageId && isImageChannel(c2)),
+        channelGroups,
+        groupRowVisibilities: channelGroupRowVisibilities,
+        stackVisibilities,
+        visible
+      });
+      if (visible && !fitsImage(imageId, {
+        stackVisibilities: next2.channelVisibilities,
+        groupRowVisibilities: next2.channelGroupRowVisibilities
+      })) {
+        return;
+      }
+      setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
+      setChannelVisibilities(next2.channelVisibilities);
+    };
     const palettePendingIds = reactExports.useSyncExternalStore(subscribeStackPalettePending, getStackPalettePendingIds, getStackPalettePendingIds);
+    const gmmPendingIds = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmPendingIds, getGmmPendingIds);
     const [loadingHistogramSourceIds, setLoadingHistogramSourceIds] = reactExports.useState([]);
     const [colorPickerTarget, setColorPickerTarget] = reactExports.useState(null);
     const [colorPickerPos, setColorPickerPos] = reactExports.useState(null);
@@ -245701,7 +245312,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }
         setChannelVisibilities(stackOff);
         setChannelGroupRowVisibilities({
-          ...useAppStore.getState().channelGroupRowVisibilities,
+          ...channelGroupRowVisibilities,
           ...Object.fromEntries(seededChannels.map((gc2) => [
             gc2.id,
             true
@@ -245745,28 +245356,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         };
       }));
     };
-    const toggleGroupMasterVisibility = (group2) => {
+    const toggleGroupMasterVisibility = (group2, showAllNext) => {
       if (group2.channels.length === 0) return;
       const allOn = group2.channels.every((gc2) => isGroupRowVisible(channelGroupRowVisibilities, gc2.id));
       const first = findSourceChannel(sourceChannels, group2.channels[0].channelId);
       if (first && isRgbDisplayChannel(first, sourceChannels)) {
-        const next22 = visibilitiesForRgbUnit({
-          rgbChannels: sourceChannels.filter((c2) => c2.imageId === first.imageId && isImageChannel(c2)),
-          channelGroups,
-          groupRowVisibilities: channelGroupRowVisibilities,
-          stackVisibilities,
-          visible: !allOn
-        });
-        setChannelGroupRowVisibilities(next22.channelGroupRowVisibilities);
-        setChannelVisibilities(next22.channelVisibilities);
+        applyRgbUnit(first.imageId, !allOn);
+        return;
+      }
+      if (!allOn) {
+        const imageId = first == null ? void 0 : first.imageId;
+        if (imageId && !fitsImage(imageId, {
+          groupRowVisibilities: showAllNext
+        })) {
+          return;
+        }
+        setChannelGroupRowVisibilities(showAllNext);
         return;
       }
       const next2 = {
         ...channelGroupRowVisibilities
       };
-      for (const gc2 of group2.channels) {
-        next2[gc2.id] = !allOn;
-      }
+      for (const gc2 of group2.channels) next2[gc2.id] = false;
       setChannelGroupRowVisibilities(next2);
     };
     const { ensureChannelHistograms } = useAuthorChannelNav() ?? {};
@@ -245863,7 +245474,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
       const updatedGroup = newGroups.find((g2) => g2.id === groupId);
       setChannelGroupRowVisibilities({
-        ...useAppStore.getState().channelGroupRowVisibilities,
+        ...channelGroupRowVisibilities,
         [newChannel.id]: true
       });
       if (!updatedGroup || isMask || !isGroupEligibleForPsudoOptimize(updatedGroup, sourceChannels)) {
@@ -245890,7 +245501,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       sourceChannels,
       syncGroupState,
       optimizePaletteBusy,
-      setChannelGroupRowVisibilities
+      setChannelGroupRowVisibilities,
+      channelGroupRowVisibilities
     ]);
     const removeChannelFromGroup = (groupId, rowId) => {
       const groups = useDocumentStore.getState().channelGroups;
@@ -246027,31 +245639,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setColorPickerTarget(target);
       setColorPickerPos(colorPickerAnchorPosition(rect));
     };
-    const compositedIntensityLayers = reactExports.useMemo(() => buildCompositedIntensityLayers({
-      onLoader: uniqueSourceChannels.filter((sc2) => isImageChannel(sc2)),
-      activeGroup: activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : void 0,
-      channelGroups,
-      stackVisibilities,
-      groupRowVisibilities: channelGroupRowVisibilities,
-      hasVisibilityMap: Object.keys(stackVisibilities).length > 0
-    }), [
-      uniqueSourceChannels,
-      activeChannelGroupId,
-      channelGroups,
-      stackVisibilities,
-      channelGroupRowVisibilities
-    ]);
-    const visibleIntensitySourceIds = /* @__PURE__ */ new Set();
-    for (let i2 = 0; i2 < compositedIntensityLayers.length; i2++) {
-      if (i2 < MAX_VIV_INTENSITY_CHANNELS) {
-        visibleIntensitySourceIds.add(compositedIntensityLayers[i2].sc.id);
-      }
-    }
     const showImageBadge = images.length > 1;
     const imageLabels = reactExports.useMemo(() => uniqueImageDisplayLabels(images), [
       images
     ]);
     const renderGroupFolder = (group2, groupIndex) => {
+      var _a2, _b2;
       const expanded = group2.expanded ?? groupIndex === 0;
       const isActive = activeChannelGroupId === group2.id;
       const isDropTarget = dragOverGroupId === group2.id;
@@ -246061,6 +245654,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         return src != null && isRgbDisplayChannel(src, sourceChannels);
       });
       const lockedIds = lockedIdsForGroup(group2.id);
+      const allGroupRowsOn = group2.channels.length > 0 && group2.channels.every((gc2) => isGroupRowVisible(channelGroupRowVisibilities, gc2.id));
+      const groupShowAllNext = {
+        ...channelGroupRowVisibilities
+      };
+      for (const gc2 of group2.channels) groupShowAllNext[gc2.id] = true;
+      const groupShowImageId = (_b2 = findSourceChannel(sourceChannels, (_a2 = group2.channels[0]) == null ? void 0 : _a2.channelId)) == null ? void 0 : _b2.imageId;
+      const showAllBlocked = !allGroupRowsOn && groupShowImageId != null && !fitsImage(groupShowImageId, {
+        groupRowVisibilities: groupShowAllNext
+      });
       const folderDropProps = {
         onDragOver: (e2) => {
           if (!isChannelDrag(e2)) return;
@@ -246107,7 +245709,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 visible: rowsVisible,
                 title: "Toggle visibility for all channels in this group",
                 ariaLabel: `Toggle visibility for group ${group2.name}`,
-                onClick: () => toggleGroupMasterVisibility(group2)
+                blocked: showAllBlocked,
+                onClick: () => toggleGroupMasterVisibility(group2, groupShowAllNext)
               }),
               jsxRuntimeExports.jsx("input", {
                 className: `${minervaTheme.input} ${styles$c.groupFolderName}`,
@@ -246168,6 +245771,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
                   const name2 = (sc2 == null ? void 0 : sc2.name) ?? "Unknown";
                   const visible = isGroupRowVisible(channelGroupRowVisibilities, gc2.id);
+                  const nextRowVis = withGroupRowVisible(channelGroupRowVisibilities, channelGroups, gc2.id, true);
+                  const showBlocked = sc2 != null && isImageChannel(sc2) && !visible && !fitsImage(sc2.imageId, {
+                    groupRowVisibilities: nextRowVis
+                  });
                   const hex = sc2 ? assignedDisplayHex(sc2, sourceChannels, gc2) : rgbToHex$1(gc2.color);
                   const palettePending = palettePendingIds.includes(gc2.channelId);
                   const rgbDisplay = sc2 ? isRgbDisplayChannel(sc2, sourceChannels) : false;
@@ -246189,25 +245796,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       onRemoveFromGroup: () => removeChannelFromGroup(group2.id, gc2.id),
                       children: jsxRuntimeExports.jsx(ChannelRow, {
                         visible,
+                        fitting: sc2 ? gmmPendingIds.includes(sc2.id) : false,
                         visibilityTitle: visible ? `Hide ${name2}` : `Show ${name2}`,
                         visibilityAriaLabel: `Toggle visibility for ${name2}`,
+                        visibilityBlocked: showBlocked,
                         onToggleVisibility: (event) => toggleWithScrollOnShow(event, !visible, () => {
                           if (rgbDisplay && sc2) {
-                            const next2 = visibilitiesForRgbUnit({
-                              rgbChannels: sourceChannels.filter((c2) => c2.imageId === sc2.imageId && isImageChannel(c2)),
-                              channelGroups,
-                              groupRowVisibilities: channelGroupRowVisibilities,
-                              stackVisibilities,
-                              visible: !visible
-                            });
-                            setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
-                            setChannelVisibilities(next2.channelVisibilities);
+                            applyRgbUnit(sc2.imageId, !visible);
                             return;
                           }
-                          setChannelGroupRowVisibilities({
+                          setChannelGroupRowVisibilities(visible ? {
                             ...channelGroupRowVisibilities,
-                            [gc2.id]: !visible
-                          });
+                            [gc2.id]: false
+                          } : nextRowVis);
                         }),
                         name: sc2 ? {
                           mode: "editable",
@@ -246227,7 +245828,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           isMask: true,
                           maskVisualization: effectiveMaskVisualization(gc2),
                           maskAriaLabel: `Mask display for ${name2}`,
-                          ...classTableRowExtras(sc2.id, classTables),
+                          ...featureTableRowExtras(sc2.id, featureTables),
                           onMaskVisualizationChange: (viz) => syncMaskVisualization(gc2.channelId, viz, group2.id, gc2.id),
                           onMaskVisualizationPreview: (viz) => {
                             previewMaskVisualization(gc2.channelId, viz);
@@ -246303,31 +245904,41 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const imageSubtitle = imageSubtitleIfDistinct(sc2.name, imageLabel || null);
       const meta = imageLabel ? `${imageLabel} \xB7 index ${sc2.index}` : `Index ${sc2.index}`;
       const visibilityAriaLabel = imageLabel ? `Toggle layer for ${sc2.name} from ${imageLabel}` : `Toggle layer for ${sc2.name}`;
+      const showGroupVis = inAnyGroup ? withGroupRowVisible(channelGroupRowVisibilities, channelGroups, home.row.id, true) : channelGroupRowVisibilities;
+      const showStackVis = inAnyGroup ? stackVisibilities : {
+        ...stackVisibilities,
+        [sc2.id]: true
+      };
       const toggleAllChannelsVisibility = (nextVisible) => {
         if (isRgbDisplayChannel(sc2, sourceChannels)) {
-          const next2 = visibilitiesForRgbUnit({
-            rgbChannels: sourceChannels.filter((c2) => c2.imageId === sc2.imageId && isImageChannel(c2)),
-            channelGroups,
-            groupRowVisibilities: channelGroupRowVisibilities,
-            stackVisibilities,
-            visible: nextVisible
-          });
-          setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
-          setChannelVisibilities(next2.channelVisibilities);
+          applyRgbUnit(sc2.imageId, nextVisible);
           return;
         }
         if (groupRows.length > 0) {
-          const vis = {
+          const vis = nextVisible ? showGroupVis : {
             ...channelGroupRowVisibilities
           };
-          for (const { row: row2 } of groupRows) vis[row2.id] = nextVisible;
+          if (!nextVisible) {
+            for (const { row: row2 } of groupRows) vis[row2.id] = false;
+          }
+          if (nextVisible && !fitsImage(sc2.imageId, {
+            groupRowVisibilities: vis
+          })) {
+            return;
+          }
           setChannelGroupRowVisibilities(vis);
           return;
         }
-        setChannelVisibilities({
+        const nextStack = nextVisible ? showStackVis : {
           ...stackVisibilities,
-          [sc2.id]: nextVisible
-        });
+          [sc2.id]: false
+        };
+        if (nextVisible && !fitsImage(sc2.imageId, {
+          stackVisibilities: nextStack
+        })) {
+          return;
+        }
+        setChannelVisibilities(nextStack);
       };
       const palettePending = palettePendingIds.includes(sc2.id);
       const rgbDisplay = isRgbDisplayChannel(sc2, sourceChannels);
@@ -246353,7 +245964,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }
       };
       const expanded = !inAnyGroup && shownInViewer;
-      const capped = expanded && isImageChannel(sc2) && stackOn && Boolean(sc2.color) && !visibleIntensitySourceIds.has(sc2.id);
+      const showBlocked = isImageChannel(sc2) && !shownInViewer && !fitsImage(sc2.imageId, {
+        stackVisibilities: showStackVis,
+        groupRowVisibilities: showGroupVis
+      });
       const displayColor = effectiveDisplayColor(sc2, sourceChannels, null);
       const displayLimits = effectiveSourceLimits(sc2);
       const contrast = expanded && props.contrastEditable && isImageChannel(sc2) && !rgbDisplay ? {
@@ -246367,8 +245981,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           sourceId: sc2.id,
           children: jsxRuntimeExports.jsx(ChannelRow, {
             visible: shownInViewer,
-            visibilityTitle: capped ? `Over Viv limit (${MAX_VIV_INTENSITY_CHANNELS}) \u2014 hide another channel` : home ? shownInViewer ? `Hide ${sc2.name} in groups` : `Show ${sc2.name} in groups` : stackLayerTitle(sc2, shownInViewer),
+            fitting: gmmPendingIds.includes(sc2.id),
+            visibilityTitle: home ? shownInViewer ? `Hide ${sc2.name} in groups` : `Show ${sc2.name} in groups` : stackLayerTitle(sc2, shownInViewer),
             visibilityAriaLabel,
+            visibilityBlocked: showBlocked,
             onToggleVisibility: expanded ? () => toggleAllChannelsVisibility(false) : (event) => toggleWithScrollOnShow(event, !shownInViewer, () => {
               toggleAllChannelsVisibility(!shownInViewer);
             }),
@@ -246384,7 +246000,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               isMask: true,
               maskVisualization: effectiveMaskVisualization(sc2),
               maskAriaLabel: `Mask display for ${sc2.name}`,
-              ...classTableRowExtras(sc2.id, classTables),
+              ...featureTableRowExtras(sc2.id, featureTables),
               onMaskVisualizationChange: (viz) => syncMaskVisualization(sc2.id, viz),
               onMaskVisualizationPreview: (viz) => previewMaskVisualization(sc2.id, viz)
             } : colorSwatch,
@@ -250052,7 +249668,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return copy2;
   }
   function WorkerWrapper$3(options) {
-    return new Worker("" + new URL("jpegExport.worker-OlBeENjy.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-Q5JYOZj6.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -252473,10 +252089,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       if (c2.group_uuid && c2.channel_uuid) {
         const nextVisible2 = !(channelGroupRowVisibilities[c2.channel_uuid] ?? true);
-        setChannelGroupRowVisibilities({
-          ...channelGroupRowVisibilities,
-          [c2.channel_uuid]: nextVisible2
-        });
+        setChannelGroupRowVisibilities(withGroupRowVisible(channelGroupRowVisibilities, docChannelGroups, c2.channel_uuid, nextVisible2));
         return;
       }
       const nextVisible = !isStackVisible(stackVisibilities, c2.source_uuid);
@@ -252633,61 +252246,39 @@ vec3 randomColor(uint label) {
   return maskViz.uPalette5;
 }
 
-bool isInteriorEdge(uint label, vec2 coord) {
-  uint n = uint(texture(channel0, coord + vec2(0.0, maskViz.uTexelSize.y)).r);
-  uint s = uint(texture(channel0, coord - vec2(0.0, maskViz.uTexelSize.y)).r);
-  uint e = uint(texture(channel0, coord + vec2(maskViz.uTexelSize.x, 0.0)).r);
-  uint w = uint(texture(channel0, coord - vec2(maskViz.uTexelSize.x, 0.0)).r);
-  return n != label || s != label || e != label || w != label;
+uint labelAt(vec2 coord) {
+  return uint(texture(channel0, coord).r);
 }
 
-uint unpackId(vec4 p) {
-  return uint(round(p.r * 255.0))
-    | (uint(round(p.g * 255.0)) << 8u)
-    | (uint(round(p.b * 255.0)) << 16u)
-    | (uint(round(p.a * 255.0)) << 24u);
-}
-
-// ponytail: 8 linear probes at load \u2264 0.5 (table \u2265 2\xD7 entries). A miss
-// falls through to hash / missHidden. Not a 512-id hidden-uniform cap.
-// Upgrade: longer probe or cuckoo if 4k-override tables collide.
-vec4 probeOverride(uint label) {
-  uint tableSize = uint(classStyle.uOverrideCount);
-  if (tableSize == 0u) return vec4(-1.0);
-  uint slot = (label * 2654435761u) % tableSize;
-  for (int k = 0; k < 8; k++) {
-    uint i = (slot + uint(k)) % tableSize;
-    uint id = unpackId(texelFetch(overrideTex, ivec2(int(i), 0), 0));
-    if (id == 0u) return vec4(-1.0);
-    if (id == label) return texelFetch(overrideTex, ivec2(int(i), 1), 0);
-  }
-  return vec4(-1.0);
+bool isOutline(uint label, vec2 coord) {
+  vec2 t = 1.0 / vec2(textureSize(channel0, 0));
+  return
+    labelAt(coord + vec2( t.x, 0.0)) != label ||
+    labelAt(coord + vec2(-t.x, 0.0)) != label ||
+    labelAt(coord + vec2(0.0,  t.y)) != label ||
+    labelAt(coord + vec2(0.0, -t.y)) != label;
 }
 
 void main() {
-  uint label = uint(texture(channel0, vTexCoord).r);
+  uint label = labelAt(vTexCoord);
   if (label == 0u) discard;
-  if (maskViz.uOutline != 0 && !isInteriorEdge(label, vTexCoord)) discard;
+  if (maskViz.uOutline != 0 && !isOutline(label, vTexCoord)) discard;
 
   vec3 rgb;
-  int strategy = classStyle.uClassStrategy;
-  if (strategy == 0) {
+  int w = int(classStyle.uLutSize.x);
+  int h = int(classStyle.uLutSize.y);
+  int y = int(label) / w;
+  uint cls = 0u;
+  if (y < h) {
+    cls = uint(round(texelFetch(classIndex, ivec2(int(label) % w, y), 0).r * 255.0));
+  }
+  if (cls == 0u) {
+    if (classStyle.uMissHidden != 0) discard;
     rgb = maskViz.uRandomColors != 0 ? randomColor(label) : vec3(1.0);
-  } else if (strategy == 1) {
-    int w = int(classStyle.uLutSize.x);
-    vec4 c = texelFetch(classLut, ivec2(int(label) % w, int(label) / w), 0);
+  } else {
+    vec4 c = texelFetch(classPalette, ivec2(int(cls), 0), 0);
     if (c.a == 0.0) discard;
     rgb = maskViz.uRandomColors != 0 ? c.rgb : vec3(1.0);
-  } else {
-    vec4 ov = probeOverride(label);
-    if (ov.a >= 0.0) {
-      if (ov.a == 0.0) discard;
-      rgb = maskViz.uRandomColors != 0 ? ov.rgb : vec3(1.0);
-    } else if (classStyle.uMissHidden != 0) {
-      discard;
-    } else {
-      rgb = maskViz.uRandomColors != 0 ? randomColor(label) : vec3(1.0);
-    }
   }
   float a = (maskViz.uOutline != 0 ? 230.0 : 170.0) / 255.0;
   fragColor = vec4(rgb, a * maskViz.opacity);
@@ -252718,7 +252309,6 @@ void main() {
   int uOutline;
   int uRandomColors;
   float uColorSeed;
-  vec2 uTexelSize;
   float opacity;
   vec3 uPalette0;
   vec3 uPalette1;
@@ -252732,7 +252322,6 @@ void main() {
       uOutline: "i32",
       uRandomColors: "i32",
       uColorSeed: "f32",
-      uTexelSize: "vec2<f32>",
       opacity: "f32",
       uPalette0: "vec3<f32>",
       uPalette1: "vec3<f32>",
@@ -252744,20 +252333,16 @@ void main() {
   };
   const classStyleMod = {
     name: "classStyle",
-    fs: `uniform sampler2D classLut;
-uniform sampler2D overrideTex;
+    fs: `uniform sampler2D classIndex;
+uniform sampler2D classPalette;
 uniform classStyleUniforms {
-  int uClassStrategy;
   vec2 uLutSize;
   int uMissHidden;
-  int uOverrideCount;
 } classStyle;
 `,
     uniformTypes: {
-      uClassStrategy: "i32",
       uLutSize: "vec2<f32>",
-      uMissHidden: "i32",
-      uOverrideCount: "i32"
+      uMissHidden: "i32"
     }
   };
   const DUMMY_RGBA = new Uint8Array([
@@ -252766,59 +252351,61 @@ uniform classStyleUniforms {
     0,
     0
   ]);
-  function sparseToRgba8(overrides, size) {
-    const data2 = new Uint8Array(size * 2 * 4);
-    for (let i2 = 0; i2 < size; i2++) {
-      const id2 = overrides[i2 * 2];
-      const rgba = overrides[i2 * 2 + 1];
-      const o2 = i2 * 4;
-      data2[o2] = id2 & 255;
-      data2[o2 + 1] = id2 >>> 8 & 255;
-      data2[o2 + 2] = id2 >>> 16 & 255;
-      data2[o2 + 3] = id2 >>> 24 & 255;
-      const p2 = (size + i2) * 4;
-      data2[p2] = rgba & 255;
-      data2[p2 + 1] = rgba >>> 8 & 255;
-      data2[p2 + 2] = rgba >>> 16 & 255;
-      data2[p2 + 3] = rgba >>> 24 & 255;
-    }
-    return data2;
-  }
+  const DUMMY_R8 = new Uint8Array([
+    0
+  ]);
   function styleKey(style2) {
-    if (!style2 || style2.strategy === "plane") return "plane";
-    if (style2.strategy === "denseLut") {
-      return `dense:${style2.width}x${style2.height}:${style2.rev}`;
-    }
-    return `sparse:${style2.overrides.length}:${style2.missHidden}:${style2.rev}`;
+    return style2 ? `${style2.indexRev}:${style2.rev}` : "";
   }
-  function destroyTex(tex) {
+  const TEX_CACHE_MAX = 4;
+  const indexTexCache = /* @__PURE__ */ new Map();
+  const paletteTexCache = /* @__PURE__ */ new Map();
+  function rememberTex(cache2, key2, tex) {
     var _a2, _b2;
-    (_a2 = tex == null ? void 0 : tex.destroy) == null ? void 0 : _a2.call(tex);
-    (_b2 = tex == null ? void 0 : tex.delete) == null ? void 0 : _b2.call(tex);
-  }
-  const CLASS_TEX_CACHE_MAX = 4;
-  const classTexCache = /* @__PURE__ */ new Map();
-  function rememberClassTextures(key2, lut, override) {
-    const hit = classTexCache.get(key2);
+    const hit = cache2.get(key2);
     if (hit) {
-      classTexCache.delete(key2);
-      classTexCache.set(key2, hit);
+      cache2.delete(key2);
+      cache2.set(key2, hit);
       return hit;
     }
-    while (classTexCache.size >= CLASS_TEX_CACHE_MAX) {
-      const oldest = classTexCache.keys().next().value;
+    while (cache2.size >= TEX_CACHE_MAX) {
+      const oldest = cache2.keys().next().value;
       if (oldest == null) break;
-      const old = classTexCache.get(oldest);
-      classTexCache.delete(oldest);
-      destroyTex(old == null ? void 0 : old.lut);
-      destroyTex(old == null ? void 0 : old.override);
+      const evicted = cache2.get(oldest);
+      (_a2 = evicted == null ? void 0 : evicted.destroy) == null ? void 0 : _a2.call(evicted);
+      (_b2 = evicted == null ? void 0 : evicted.delete) == null ? void 0 : _b2.call(evicted);
+      cache2.delete(oldest);
     }
-    const entry = {
-      lut,
-      override
-    };
-    classTexCache.set(key2, entry);
-    return entry;
+    cache2.set(key2, tex);
+    return tex;
+  }
+  const NEAREST_SAMPLER = {
+    minFilter: "nearest",
+    magFilter: "nearest",
+    addressModeU: "clamp-to-edge",
+    addressModeV: "clamp-to-edge"
+  };
+  function makeTexture(device, data2, width, height, format) {
+    try {
+      return device.createTexture({
+        data: data2,
+        width,
+        height,
+        format,
+        mipmaps: false,
+        sampler: NEAREST_SAMPLER
+      });
+    } catch (e2) {
+      console.warn("[featureTable] class texture create failed", e2);
+      return device.createTexture({
+        data: format === "r8unorm" ? DUMMY_R8 : DUMMY_RGBA,
+        width: 1,
+        height: 1,
+        format,
+        mipmaps: false,
+        sampler: NEAREST_SAMPLER
+      });
+    }
   }
   const XRLayerBase = XRLayer;
   const layerGetShaders = Object.getPrototypeOf(XRLayerBase.prototype).getShaders;
@@ -252848,52 +252435,22 @@ uniform classStyleUniforms {
     }
     finalizeState() {
       var _a2;
-      this.state.classLutTexture = void 0;
-      this.state.overrideTexture = void 0;
+      this.state.classIndexTexture = void 0;
+      this.state.classPaletteTexture = void 0;
       const proto2 = Object.getPrototypeOf(XRLayerBase.prototype);
       (_a2 = proto2.finalizeState) == null ? void 0 : _a2.call(this);
     }
-    updateState(params) {
-      var _a2;
-      super.updateState(params);
+    writeMaskViz() {
       const { model } = this.state;
       if (!model) return;
-      const channelData = this.props.channelData;
-      const w2 = Math.max(1, (channelData == null ? void 0 : channelData.width) ?? 1);
-      const h2 = Math.max(1, (channelData == null ? void 0 : channelData.height) ?? 1);
       const viz = this.props.visualization ?? DEFAULT_MASK_VISUALIZATION;
       const opacity = Math.min(1, Math.max(0, viz.opacity ?? 1));
-      const style2 = this.props.classStyle ?? {
-        strategy: "plane"
-      };
-      this.ensureClassTextures(style2);
-      let uClassStrategy = 0;
-      let uLutSize = [
-        1,
-        1
-      ];
-      let uMissHidden = 0;
-      let uOverrideCount = 0;
-      if (style2.strategy === "denseLut") {
-        uClassStrategy = 1;
-        uLutSize = [
-          style2.width,
-          style2.height
-        ];
-      } else if (style2.strategy === "sparse") {
-        uClassStrategy = 2;
-        uMissHidden = style2.missHidden ? 1 : 0;
-        uOverrideCount = style2.overrides.length / 2;
-      }
+      const style2 = this.props.classStyle;
       model.shaderInputs.setProps({
         maskViz: {
           uOutline: viz.style === "outline" ? 1 : 0,
           uRandomColors: viz.color === "random" ? 1 : 0,
           uColorSeed: viz.colorSeed ?? 0,
-          uTexelSize: [
-            1 / w2,
-            1 / h2
-          ],
           opacity,
           uPalette0: CELL_OUTLINE_VEC3[0],
           uPalette1: CELL_OUTLINE_VEC3[1],
@@ -252903,87 +252460,52 @@ uniform classStyleUniforms {
           uPalette5: CELL_OUTLINE_VEC3[5]
         },
         classStyle: {
-          uClassStrategy,
-          uLutSize,
-          uMissHidden,
-          uOverrideCount
+          uLutSize: style2 ? [
+            style2.width,
+            style2.height
+          ] : [
+            1,
+            1
+          ],
+          uMissHidden: (style2 == null ? void 0 : style2.missHidden) ? 1 : 0
         }
       });
+    }
+    updateState(params) {
+      var _a2;
+      super.updateState(params);
+      const { model } = this.state;
+      if (!model) return;
+      this.ensureClassTextures(this.props.classStyle);
+      this.writeMaskViz();
       (_a2 = model.setBindings) == null ? void 0 : _a2.call(model, {
-        classLut: this.state.classLutTexture,
-        overrideTex: this.state.overrideTexture
+        classIndex: this.state.classIndexTexture,
+        classPalette: this.state.classPaletteTexture
       });
     }
     ensureClassTextures(style2) {
       const key2 = styleKey(style2);
-      if (this.state.classStyleKey === key2 && this.state.classLutTexture) return;
-      const cached = classTexCache.get(key2);
-      if (cached) {
-        rememberClassTextures(key2, cached.lut, cached.override);
-        this.state.classLutTexture = cached.lut;
-        this.state.overrideTexture = cached.override;
-        this.state.classStyleKey = key2;
-        return;
-      }
+      if (this.state.classStyleKey === key2 && this.state.classIndexTexture) return;
       const device = this.context.device;
-      const make = (data2, width, height) => {
-        try {
-          return device.createTexture({
-            data: data2,
-            width,
-            height,
-            format: "rgba8unorm",
-            mipmaps: false,
-            sampler: {
-              minFilter: "nearest",
-              magFilter: "nearest",
-              addressModeU: "clamp-to-edge",
-              addressModeV: "clamp-to-edge"
-            }
-          });
-        } catch (e2) {
-          console.warn("[classTable] class texture create failed", e2);
-          return device.createTexture({
-            data: DUMMY_RGBA,
-            width: 1,
-            height: 1,
-            format: "rgba8unorm",
-            mipmaps: false,
-            sampler: {
-              minFilter: "nearest",
-              magFilter: "nearest",
-              addressModeU: "clamp-to-edge",
-              addressModeV: "clamp-to-edge"
-            }
-          });
-        }
-      };
-      let lut;
-      let override;
-      if (style2.strategy === "denseLut") {
-        lut = make(style2.rgba, style2.width, style2.height);
-        override = make(DUMMY_RGBA, 1, 1);
-      } else if (style2.strategy === "sparse") {
-        const size = Math.max(1, style2.overrides.length / 2);
-        lut = make(DUMMY_RGBA, 1, 1);
-        override = make(sparseToRgba8(style2.overrides, size), size, 2);
-      } else {
-        lut = make(DUMMY_RGBA, 1, 1);
-        override = make(DUMMY_RGBA, 1, 1);
+      const indexKey = style2 ? `i:${style2.indexRev}:${style2.width}x${style2.height}` : "";
+      const paletteKey = style2 ? `p:${style2.rev}` : "";
+      let index2 = indexTexCache.get(indexKey);
+      if (!index2) {
+        index2 = style2 ? makeTexture(device, style2.index, style2.width, style2.height, "r8unorm") : makeTexture(device, DUMMY_R8, 1, 1, "r8unorm");
       }
-      const entry = rememberClassTextures(key2, lut, override);
-      this.state.classLutTexture = entry.lut;
-      this.state.overrideTexture = entry.override;
+      this.state.classIndexTexture = rememberTex(indexTexCache, indexKey, index2);
+      let palette = paletteTexCache.get(paletteKey);
+      if (!palette) {
+        palette = style2 ? makeTexture(device, style2.palette, Math.max(1, style2.palette.length / 4), 1, "rgba8unorm") : makeTexture(device, DUMMY_RGBA, 1, 1, "rgba8unorm");
+      }
+      this.state.classPaletteTexture = rememberTex(paletteTexCache, paletteKey, palette);
       this.state.classStyleKey = key2;
     }
   }
   __publicField(MaskBitmaskLayer, "layerName", "MaskBitmaskLayer");
   __publicField(MaskBitmaskLayer, "defaultProps", {
     ...BITMASK_PROPS,
-    visualization: DEFAULT_MASK_VISUALIZATION,
-    classStyle: {
-      strategy: "plane"
-    }
+    visualization: DEFAULT_MASK_VISUALIZATION
   });
   function asLabelUint32(data2) {
     if (data2 instanceof Uint32Array) return data2;
@@ -253010,11 +252532,13 @@ uniform classStyleUniforms {
     if (maskW <= 0 || maskH <= 0) return null;
     const modelMatrix = layerModelMatrix(args.loader);
     const { visualization: viz, channelIndex, classStyle } = args;
+    const visible = args.visible !== false;
     return new TileLayer({
       id: args.id,
       tileSize: finest.tileSize,
-      minZoom: -(planes.length - 1),
+      minZoom: Math.round(-(planes.length - 1)),
       maxZoom: 0,
+      zoomOffset: Math.round(Math.log2(modelMatrix.getScale()[0] || 1)),
       extent: [
         0,
         0,
@@ -253022,6 +252546,9 @@ uniform classStyleUniforms {
         maskH
       ],
       modelMatrix,
+      visible,
+      maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
+      maxRequests: 10,
       refinementStrategy: "best-available",
       pickable: false,
       updateTriggers: {
@@ -253033,7 +252560,8 @@ uniform classStyleUniforms {
           viz.color,
           viz.colorSeed ?? 0,
           viz.opacity ?? 1,
-          styleKey(classStyle)
+          styleKey(classStyle),
+          visible
         ]
       },
       getTileData: async ({ index: index2, signal }) => {
@@ -253076,22 +252604,21 @@ uniform classStyleUniforms {
         }
         const bbox = props.tile.bbox;
         if (!("left" in bbox)) return null;
-        const { left, bottom, right, top: top2 } = bbox;
+        const { left, top: top2 } = bbox;
         if ([
           left,
-          bottom,
-          right,
           top2
         ].some((v2) => v2 < 0)) return null;
-        const { tileSize } = finest;
+        const scale2 = 2 ** Math.round(-props.tile.index.z);
         return new MaskBitmaskLayer({
           id: `${args.id}-bitmask-${props.tile.id}`,
           channelData: tileData,
           modelMatrix,
+          visible,
           bounds: [
             left,
-            tileData.height < tileSize ? maskH : bottom,
-            tileData.width < tileSize ? maskW : right,
+            top2 + tileData.height * scale2,
+            left + tileData.width * scale2,
             top2
           ],
           visualization: viz,
@@ -253265,9 +252792,9 @@ uniform classStyleUniforms {
     const selectionMaskVisualizationPreview = (maskVisualizationPreview == null ? void 0 : maskVisualizationPreview.sourceChannelId) === SELECTION_MASK_CHANNEL_KEY ? maskVisualizationPreview.visualization : null;
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
-    const classTables = useDocumentStore((s2) => s2.classTables);
-    const classTableVisibilities = useAppStore((s2) => s2.classTableVisibilities);
-    const classTableLutEpoch = reactExports.useSyncExternalStore(subscribeClassTableLut, getClassTableLutEpoch, getClassTableLutEpoch);
+    const featureTables = useDocumentStore((s2) => s2.featureTables);
+    const featureTableVisibilities = useAppStore((s2) => s2.featureTableVisibilities);
+    const featureTableLutEpoch = reactExports.useSyncExternalStore(subscribeFeatureTableLut, getFeatureTableLutEpoch, getFeatureTableLutEpoch);
     const selectionMaskActive = imageSelectionMask != null && (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
     const maskExtension = reactExports.useMemo(() => new MaskExtension(), []);
     useShapeLayers(authoringWaypointEditorOpen);
@@ -253314,24 +252841,23 @@ uniform classStyleUniforms {
       const layers = [];
       for (const sc2 of flattenImageChannelsInDocumentOrder(images)) {
         if (!isMaskChannel(sc2)) continue;
-        if (!isMaskSourceRendered({
+        const rendered = isMaskSourceRendered({
           sc: sc2,
           channelGroups,
           stackVisibilities: channelVisibilities ?? {},
           groupRowVisibilities: channelGroupRowVisibilities
-        })) {
-          continue;
-        }
+        });
         const entry = omeLoaderEntries.find((e2) => e2.sourceImageId === sc2.imageId);
         if (!(entry == null ? void 0 : entry.loader)) continue;
         const visualization = (maskVisualizationPreview == null ? void 0 : maskVisualizationPreview.sourceChannelId) === sc2.id ? maskVisualizationPreview.visualization : effectiveMaskVisualizationForSource(sc2, channelGroups, activeChannelGroupId);
-        const classTable = classTables.find((c2) => c2.sourceChannelId === sc2.id);
+        const featureTable = featureTables.find((c2) => c2.sourceChannelId === sc2.id);
         const layer = createMaskTileLayer({
           id: `mask-channel-${sc2.id}`,
           loader: entry.loader,
           channelIndex: sc2.index,
           visualization,
-          classStyle: classTable ? gpuStyleForClassTable(classTable, classTableVisibilities[classTable.id], visualization.colorSeed ?? 0) : void 0
+          visible: rendered,
+          classStyle: featureTable ? gpuStyleForFeatureTable(featureTable, featureTableVisibilities[featureTable.id], visualization.colorSeed ?? 0) : void 0
         });
         if (layer) layers.push(layer);
       }
@@ -253344,9 +252870,9 @@ uniform classStyleUniforms {
       activeChannelGroupId,
       channelGroups,
       maskVisualizationPreview,
-      classTables,
-      classTableVisibilities,
-      classTableLutEpoch
+      featureTables,
+      featureTableVisibilities,
+      featureTableLutEpoch
     ]);
     const fitViewState = reactExports.useMemo(() => {
       const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
@@ -254440,12 +253966,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-16T16:18:09.363Z");
+    const label2 = utcShort("2026-09-21T18:01:02.373Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-16T16:18:09.363Z",
+      title: "2026-09-21T18:01:02.373Z",
       children: [
         "Updated ",
         label2,
@@ -255155,180 +254681,6 @@ uniform classStyleUniforms {
       };
     }, []);
   }
-  function isOpts(o2) {
-    if ("onStart" in o2 && typeof o2.onStart === "function") {
-      const h2 = FileSystemFileHandle;
-      if ("formOut" in o2) {
-        if ("handles" in o2 && o2.handles instanceof h2) {
-          return typeof o2.formOut === "object";
-        }
-        if ("url" in o2.formOut) {
-          return true;
-        }
-        if ("ome_tiff_url" in o2.formOut) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-  function isFormOpts(o2) {
-    if (isOpts(o2)) {
-      const fo = o2.formOut || {};
-      return "name" in fo || "url" in fo || "ome_tiff_url" in fo;
-    }
-    return false;
-  }
-  function isAnyOpts(o2) {
-    if (!isFormOpts(o2)) return false;
-    return "path" in o2.formOut;
-  }
-  function isOmeTiffUrlOpts(o2) {
-    if (!isFormOpts(o2)) return false;
-    return "ome_tiff_url" in o2.formOut;
-  }
-  const toValid = (need_keys, keys2) => {
-    return need_keys.reduce((o2, k2) => {
-      o2[k2] = keys2.includes(k2);
-      return o2;
-    }, {});
-  };
-  const validateDicom = async (opts) => {
-    const { formOut, onStart } = opts;
-    const need_keys = [
-      "url",
-      "name"
-    ];
-    const all2 = [
-      ...need_keys
-    ];
-    const valid_keys = await all2.reduce(async (memo, k2) => {
-      const v2 = k2 in formOut ? formOut[k2] : "";
-      const out = await memo;
-      if (typeof v2 !== "string") return out;
-      switch (k2) {
-        case "name":
-          if (v2.length === 0) return out;
-          return [
-            ...out,
-            k2
-          ];
-        case "url":
-          if (v2.length === 0) return out;
-          try {
-            await findDicomWeb(v2);
-            return [
-              ...out,
-              k2
-            ];
-          } catch {
-            return out;
-          }
-      }
-      return out;
-    }, Promise.resolve([]));
-    const validated = need_keys.every((k2) => {
-      return valid_keys.includes(k2);
-    });
-    if (validated && "url" in formOut) {
-      onStart([
-        [
-          formOut.url,
-          "Colorimetric",
-          "DICOM-WEB"
-        ]
-      ]);
-    }
-    return toValid(need_keys, valid_keys);
-  };
-  const validateAny = async (opts) => {
-    const { handles, formOut, onStart } = opts;
-    const need_keys = [
-      "name",
-      "path"
-    ];
-    const all2 = [
-      ...need_keys,
-      "mask",
-      "csv"
-    ];
-    const valid_keys = await all2.reduce(async (memo, k2) => {
-      const v2 = k2 in formOut ? formOut[k2] : "";
-      const out = await memo;
-      if (typeof v2 !== "string") return out;
-      switch (k2) {
-        case "name":
-          if (v2.length === 0) return out;
-          return [
-            ...out,
-            k2
-          ];
-        case "path": {
-          if (handles.length === 0) {
-            return out;
-          }
-          const handle2 = handles[0];
-          const found = await findFile({
-            handle: handle2
-          });
-          return found ? [
-            ...out,
-            k2
-          ] : out;
-        }
-      }
-      return out;
-    }, Promise.resolve([]));
-    const validated = need_keys.every((k2) => {
-      return valid_keys.includes(k2);
-    });
-    if (validated && "path" in formOut) {
-      onStart([
-        [
-          formOut.path,
-          "Colorimetric",
-          "OME-TIFF"
-        ]
-      ]);
-    }
-    return toValid(need_keys, valid_keys);
-  };
-  const validateOmeTiffUrl = async (opts) => {
-    const { formOut, onStart } = opts;
-    const need_keys = [
-      "ome_tiff_url"
-    ];
-    const url = formOut.ome_tiff_url || "";
-    const valid_keys = [];
-    if (/^https?:\/\/.+/.test(url)) {
-      valid_keys.push("ome_tiff_url");
-    }
-    const validated = need_keys.every((k2) => valid_keys.includes(k2));
-    if (validated) {
-      onStart([
-        [
-          url,
-          "Colorimetric",
-          "OME-TIFF-URL"
-        ]
-      ]);
-    }
-    return toValid(need_keys, valid_keys);
-  };
-  const validate = async (opts) => {
-    if (!isFormOpts(opts)) {
-      return toValid([
-        "name"
-      ], []);
-    }
-    if (isOmeTiffUrlOpts(opts)) {
-      return await validateOmeTiffUrl(opts);
-    }
-    if (isAnyOpts(opts)) {
-      return await validateAny(opts);
-    }
-    return await validateDicom(opts);
-  };
   const hasAuthoritativeBounds = (s2) => s2.Bounds != null && typeof s2.Bounds.x0 === "number" && typeof s2.Bounds.x1 === "number" && typeof s2.Bounds.y0 === "number" && typeof s2.Bounds.y1 === "number";
   const needsPanMigration = (s2) => (s2.Pan != null || s2.Zoom != null) && !hasAuthoritativeBounds(s2);
   function planWaypointConfigSeedTick(args) {
@@ -255632,15 +254984,15 @@ uniform classStyleUniforms {
       viewerImageLayersLoaded
     ]);
     const activeStoryId = useDocumentStore((s2) => s2.activeStoryId);
-    const classTableHydrateKey = useDocumentStore((s2) => s2.classTables.map((c2) => `${c2.id}:${c2.digest}`).join("|"));
+    const featureTableHydrateKey = useDocumentStore((s2) => s2.featureTables.map((c2) => `${c2.id}:${c2.digest}`).join("|"));
     const prevStoryIdRef = reactExports.useRef(activeStoryId);
     reactExports.useEffect(() => {
       const storyChanged = prevStoryIdRef.current !== activeStoryId;
       prevStoryIdRef.current = activeStoryId;
-      void hydrateClassTables(useDocumentStore.getState().classTables, storyChanged);
+      void hydrateFeatureTables(useDocumentStore.getState().featureTables, storyChanged);
     }, [
       activeStoryId,
-      classTableHydrateKey
+      featureTableHydrateKey
     ]);
     const namespacedHandleKeys = reactExports.useMemo(() => handleKeys.map((k2) => activeStoryId ? `story:${activeStoryId}:${k2}` : k2), [
       handleKeys,
@@ -255662,7 +255014,6 @@ uniform classStyleUniforms {
       images
     ]);
     const prevGmmShownRef = reactExports.useRef(null);
-    const gmmFit = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmFitSnapshot, getGmmFitSnapshot);
     reactExports.useEffect(() => {
       if (!activeStoryId) {
         clearGmmScheduler();
@@ -255923,7 +255274,7 @@ uniform classStyleUniforms {
       const doc = useDocumentStore.getState();
       const removed = doc.images.find((im) => im.id === imageId);
       if (!removed) return;
-      const result = removeImageFromDocument(doc.images, doc.channelGroups, imageId, doc.classTables);
+      const result = removeImageFromDocument(doc.images, doc.channelGroups, imageId, doc.featureTables);
       if (result.images.length === doc.images.length) return;
       clearRemovedImageState([
         removed
@@ -255940,7 +255291,7 @@ uniform classStyleUniforms {
           kind: "remove"
         }
       });
-      detachRemovedClassTables(doc.classTables, result.classTables);
+      detachRemovedFeatureTables(doc.featureTables, result.featureTables);
       if (result.images.length === 0) {
         setFileName("");
         setLastOmeTiffUrl(null);
@@ -256496,6 +255847,7 @@ uniform classStyleUniforms {
           documentUrl: window.location.href
         });
         applyHydratedLoaders(result);
+        await requestFeatureTableFileAccess();
         if (result.omeLoaderEntries.length + result.jpegLoaderEntries.length + result.dicomIndexList.length > 0) {
           syncRegistryFromDocument();
           setImportRevision((r2) => r2 + 1);
@@ -256667,8 +256019,8 @@ uniform classStyleUniforms {
       let nextChannelGroups = [
         ...doc.channelGroups
       ];
-      let nextClassTables = [
-        ...doc.classTables
+      let nextFeatureTables = [
+        ...doc.featureTables
       ];
       const removedImages = [];
       for (const im of doc.images) {
@@ -256676,10 +256028,10 @@ uniform classStyleUniforms {
         const legacyId = legacyModalityIds.has(im.id);
         if (!sameSeries && !legacyId) continue;
         removedImages.push(im);
-        const removed = removeImageFromDocument(nextDocImages, nextChannelGroups, im.id, nextClassTables);
+        const removed = removeImageFromDocument(nextDocImages, nextChannelGroups, im.id, nextFeatureTables);
         nextDocImages = removed.images;
         nextChannelGroups = removed.channelGroups;
-        nextClassTables = removed.classTables;
+        nextFeatureTables = removed.featureTables;
       }
       const channelsBefore = flattenImageChannelsInDocumentOrder(nextDocImages);
       nextDocImages = applySourceChannelsToImages(nextDocImages, SourceChannels);
@@ -256718,10 +256070,9 @@ uniform classStyleUniforms {
         resetActiveGroup: isFresh || !mergedChannelGroups.some((g2) => g2.id === activeId),
         transition
       });
-      detachRemovedClassTables(doc.classTables, nextClassTables);
+      detachRemovedFeatureTables(doc.featureTables, nextFeatureTables);
       afterImageImportDocumentEffects();
     };
-    const [valid2, setValid] = reactExports.useState({});
     const onStartRef = reactExports.useRef(onStart);
     onStartRef.current = onStart;
     reactExports.useEffect(() => {
@@ -257023,14 +256374,13 @@ uniform classStyleUniforms {
         setPresenting(false);
       });
     }, []);
-    const showImageLoading = isLoadingImage || gmmFit.holdingLoad;
     reactExports.useEffect(() => {
       var _a2;
-      if (!showImageLoading) {
+      if (!isLoadingImage) {
         (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
       }
     }, [
-      showImageLoading
+      isLoadingImage
     ]);
     return jsxRuntimeExports.jsx(FileHandler, {
       handleKeys: namespacedHandleKeys,
@@ -257038,35 +256388,6 @@ uniform classStyleUniforms {
       useLaunchQueue,
       onRestoredHandles: hasDemo ? void 0 : onRestoredOmeHandles,
       children: ({ handles, onAllow }) => {
-        const onSubmit = (event) => {
-          const form = event.currentTarget;
-          const data2 = [
-            ...new FormData(form).entries()
-          ];
-          const formOut = data2.reduce((o2, [k2, v2]) => {
-            o2[k2] = `${v2}`;
-            return o2;
-          }, {
-            url: "",
-            name: ""
-          });
-          const formOpts = {
-            formOut,
-            onStart: (list2) => onStart(list2, handles),
-            handles
-          };
-          if (isOpts(formOpts)) {
-            validate(formOpts).then((valid22) => {
-              setValid(valid22);
-            });
-          }
-          event.preventDefault();
-          event.stopPropagation();
-        };
-        const formProps = {
-          onSubmit,
-          valid: valid2
-        };
         const imageLoaded = !noLoader;
         const handleNamesLabel = handles.map((h2) => h2.name).filter(Boolean).join(", ");
         let loadedSource;
@@ -257203,7 +256524,6 @@ uniform classStyleUniforms {
           }
         };
         const uploadProps = {
-          formProps,
           onAllow,
           importRevision,
           imageLoaded,
@@ -257264,7 +256584,7 @@ uniform classStyleUniforms {
               playbackPreviewDisabled: _waypoints.length === 0
             }) : null,
             imager,
-            showImageLoading ? jsxRuntimeExports.jsxs("output", {
+            isLoadingImage ? jsxRuntimeExports.jsxs("output", {
               className: styles.importLoadingOverlay,
               "aria-busy": "true",
               children: [
