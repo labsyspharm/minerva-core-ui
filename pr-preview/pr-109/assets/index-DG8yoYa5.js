@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-zQ5vlqCq.js","./pako.esm-KbdoS3Oq.js","./lerc-CQ05oLi_.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BKR9X6Mw.js","./pako.esm-KbdoS3Oq.js","./lerc-DZfYBxtb.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -66510,26 +66510,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-B2dCza-S.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CUajq_bi.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CSOWM9UX.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-B8uhoatZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CPZ9aUMa.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-2UI3_yau.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-zQ5vlqCq.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DrHzN9Pg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CQ05oLi_.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BKR9X6Mw.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-Dm8yi3zp.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DZfYBxtb.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Bds4igND.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CriTfSEO.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-u5IAnuKk.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-C2tuleOh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -92127,6 +92127,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const panWidth = `${(maxFrac - minFrac) * 100}%`;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$o.wrap,
+      draggable: false,
       children: [
         jsxRuntimeExports.jsx("input", {
           type: "number",
@@ -92548,6 +92549,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("div", {
               className: styles$q.channelRowMid,
               "data-channel-drag-ignore": "",
+              draggable: false,
               children: [
                 contrast ? jsxRuntimeExports.jsx(ChannelContrastEditor, {
                   ...contrast
@@ -164945,7 +164947,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const channelEls = [
       ...pixels.querySelectorAll(":scope > Channel")
     ];
-    if (channelEls.length === 0) return false;
     const samples = channelEls.map((ch2) => {
       const raw2 = ch2.getAttribute("SamplesPerPixel");
       let n2 = 1;
@@ -164955,43 +164956,67 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       return n2;
     });
-    if (samples.length === 1 && samples[0] === 3) return true;
-    return samples.length === 3 && samples.every((s2) => s2 === 1);
+    const packed = samples.length === 1 && samples[0] === 3;
+    const planar = samples.length === 3 && samples.every((s2) => s2 === 1);
+    const showChips = packed || planar;
+    console.info("[minerva] rgb detect: xml gate", {
+      sizeC: pixels.getAttribute("SizeC"),
+      interleaved: pixels.getAttribute("Interleaved"),
+      channels: samples.length,
+      samplesPerPixel: samples,
+      packed,
+      planar,
+      showChips
+    });
+    return showChips;
   }
-  function isBrightfieldRgb(data2, bitsPerSample = 8) {
-    const sampleMax = data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray ? 255 : 2 ** Math.max(1, Math.floor(bitsPerSample) || 8) - 1;
+  function sampleMaxForBuffer(data2, bitsPerSample) {
+    if (data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray) {
+      return 255;
+    }
+    if (data2 instanceof Float32Array || data2 instanceof Float64Array) {
+      return 1;
+    }
+    return 2 ** Math.max(1, Math.floor(bitsPerSample) || 8) - 1;
+  }
+  function isBrightfieldRgb(data2, opts) {
+    var _a2;
+    const { sampleMax } = opts;
+    const channels2 = Math.max(1, opts.channels);
     const dark = 25 / 255 * sampleMax;
     const light = 220 / 255 * sampleMax;
-    const nPixels = Math.floor(data2.length / 3);
+    const nPixels = Math.floor(data2.length / channels2);
     const stride = Math.max(1, Math.ceil(nPixels / 1e4));
     let nDark = 0;
     let nLight = 0;
-    for (let i2 = 0; i2 + 2 < data2.length; i2 += 3 * stride) {
+    let nSampled = 0;
+    for (let i2 = 0; i2 + channels2 - 1 < data2.length; i2 += channels2 * stride) {
       const r2 = data2[i2];
-      const g2 = data2[i2 + 1];
-      const b2 = data2[i2 + 2];
+      const g2 = channels2 >= 3 ? data2[i2 + 1] : r2;
+      const b2 = channels2 >= 3 ? data2[i2 + 2] : r2;
+      nSampled += 1;
       if (r2 < dark && g2 < dark && b2 < dark) nDark += 1;
       else if (r2 > light && g2 > light && b2 > light) nLight += 1;
     }
-    return nLight > nDark && nDark + nLight > 0;
-  }
-  function scalePlaneToUint8Rgb(plane, bitsPerSample) {
-    const bits = Math.max(1, Math.floor(bitsPerSample) || 8);
-    const sampleMax = 2 ** bits - 1;
-    const n2 = plane.length;
-    const out = new Uint8Array(n2 * 3);
-    for (let i2 = 0; i2 < n2; i2++) {
-      const v2 = Number(plane[i2]);
-      const u8 = sampleMax > 0 && Number.isFinite(v2) ? Math.max(0, Math.min(255, Math.round(v2 / sampleMax * 255))) : 0;
-      const o2 = i2 * 3;
-      out[o2] = u8;
-      out[o2 + 1] = u8;
-      out[o2 + 2] = u8;
-    }
-    return out;
+    const brightfield = nLight > nDark && nDark + nLight > 0;
+    console.info("[minerva] rgb detect: high/low pixels", {
+      nDark,
+      nLight,
+      nMid: nSampled - nDark - nLight,
+      nSampled,
+      nPixels,
+      stride,
+      channels: channels2,
+      dark,
+      light,
+      sampleMax,
+      dtype: (_a2 = data2.constructor) == null ? void 0 : _a2.name,
+      brightfield
+    });
+    return brightfield;
   }
   async function detectOmeTiffBrightfield(source2, signal) {
-    var _a2, _b2, _c2, _d, _e;
+    var _a2, _b2, _c2, _d, _e, _f;
     const tiff = await openOmeTiff(source2, signal);
     const image2 = await getCoarsestTiffImage(tiff);
     if (signal == null ? void 0 : signal.aborted) return false;
@@ -165010,32 +165035,48 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const spp = ((_c2 = image2.fileDirectory) == null ? void 0 : _c2.SamplesPerPixel) ?? 1;
     const bitsRaw = (_e = (_d = image2.fileDirectory) == null ? void 0 : _d.BitsPerSample) == null ? void 0 : _e[0];
     const bits = typeof bitsRaw === "number" ? bitsRaw : 8;
-    if (spp >= 3) {
-      try {
-        const rgb = await image2.readRasters({
-          samples: [
-            0,
-            1,
-            2
-          ],
-          interleave: true,
-          window: window2,
-          signal
-        });
-        return isBrightfieldRgb(rgb, bits);
-      } catch {
-        return false;
-      }
+    const photo = (_f = image2.fileDirectory) == null ? void 0 : _f.PhotometricInterpretation;
+    console.info("[minerva] rgb detect: coarsest tile", {
+      spp,
+      bits,
+      photo,
+      w: w2,
+      h: h2,
+      tileW,
+      tileH,
+      window: window2
+    });
+    try {
+      const rgb = await image2.readRGB({
+        interleave: true,
+        window: window2,
+        signal
+      });
+      return isBrightfieldRgb(rgb, {
+        sampleMax: sampleMaxForBuffer(rgb, bits),
+        channels: 3
+      });
+    } catch (error2) {
+      if (signal == null ? void 0 : signal.aborted) return false;
+      console.warn("[minerva] rgb detect: readRGB failed, falling back to raw samples", error2);
     }
-    const plane = await image2.readRasters({
-      samples: [
-        0
-      ],
+    const samples = spp >= 3 ? [
+      0,
+      1,
+      2
+    ] : [
+      0
+    ];
+    const raw2 = await image2.readRasters({
+      samples,
       interleave: true,
       window: window2,
       signal
     });
-    return isBrightfieldRgb(scalePlaneToUint8Rgb(plane, bits));
+    return isBrightfieldRgb(raw2, {
+      sampleMax: sampleMaxForBuffer(raw2, bits),
+      channels: samples.length
+    });
   }
   async function detectOmeTiffPlanarRgbAmbiguity(source2, signal) {
     const xml2 = await getOmeTiffImageDescriptionOmeXml(source2, {}, signal);
@@ -244693,11 +244734,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fromRowId: props.fromRowId
     };
     const beginDrag = (e2) => startChannelDrag(e2, payload);
+    const ignoreRowDragRef = reactExports.useRef(false);
     return jsxRuntimeExports.jsxs("div", {
       className: styles$c.channelRowWrap,
       draggable: true,
+      onPointerDown: (e2) => {
+        ignoreRowDragRef.current = shouldIgnoreChannelRowDrag(e2.target);
+      },
       onDragStart: (e2) => {
-        if (shouldIgnoreChannelRowDrag(e2.target)) {
+        if (ignoreRowDragRef.current) {
           e2.preventDefault();
           return;
         }
@@ -253979,12 +254024,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-21T14:24:07.887Z");
+    const label2 = utcShort("2026-09-21T15:46:09.086Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-21T14:24:07.887Z",
+      title: "2026-09-21T15:46:09.086Z",
       children: [
         "Updated ",
         label2,
