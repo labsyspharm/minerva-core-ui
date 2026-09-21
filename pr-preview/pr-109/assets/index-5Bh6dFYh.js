@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BWdLlZuQ.js","./pako.esm-KbdoS3Oq.js","./lerc-DMh4dlwC.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BIc2qL_z.js","./pako.esm-KbdoS3Oq.js","./lerc-4dEWaPHk.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -66510,26 +66510,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-Cdrt08Q1.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Q36fH6el.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Bted2vYe.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DH-gWGuN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-Dhzoprzb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-B8CZuYe8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BWdLlZuQ.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BKWcYClM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-DMh4dlwC.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BIc2qL_z.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BqY6JF6M.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-4dEWaPHk.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CTOVuiL6.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Cn18-rwl.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-B-Po-fXz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BKO3eW3Q.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -166732,7 +166732,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     jsxRuntimeExports.jsx(FormatChip, {
                       label: "Fluorescence",
                       selected: overlayRole === "intensity" && !overlayRgbDisplay,
-                      suggested: detectedRole === "intensity" && detectedRgbDisplay !== true,
+                      suggested: overlayRole === "intensity" && !overlayRgbDisplay,
                       muted: detectedRole !== "intensity",
                       onClick: () => {
                         roleChosenByUserRef.current = true;
@@ -166745,7 +166745,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     detectedRgbDisplay != null ? jsxRuntimeExports.jsx(FormatChip, {
                       label: "Brightfield",
                       selected: overlayRole === "intensity" && overlayRgbDisplay,
-                      suggested: detectedRole === "intensity" && detectedRgbDisplay === true,
+                      suggested: overlayRole === "intensity" && overlayRgbDisplay,
                       muted: detectedRole !== "intensity",
                       onClick: () => {
                         roleChosenByUserRef.current = true;
@@ -166758,7 +166758,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     jsxRuntimeExports.jsx(FormatChip, {
                       label: "Segmentation Mask",
                       selected: overlayRole === "segmentation",
-                      suggested: detectedRole === "segmentation",
+                      suggested: overlayRole === "segmentation",
                       muted: detectedRole !== "segmentation",
                       onClick: () => {
                         roleChosenByUserRef.current = true;
@@ -254026,12 +254026,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-21T16:48:35.529Z");
+    const label2 = utcShort("2026-09-21T17:00:05.011Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-21T16:48:35.529Z",
+      title: "2026-09-21T17:00:05.011Z",
       children: [
         "Updated ",
         label2,
