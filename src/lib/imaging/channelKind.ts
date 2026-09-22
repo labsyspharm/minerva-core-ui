@@ -8,8 +8,8 @@ import {
 export type { ImageChannelKind, MaskVisualization };
 
 export const DEFAULT_MASK_VISUALIZATION: MaskVisualization = {
-  style: "outline",
-  color: "white",
+  style: "full",
+  color: "random",
   opacity: 1,
 };
 
