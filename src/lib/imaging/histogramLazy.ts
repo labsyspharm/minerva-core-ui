@@ -8,6 +8,8 @@
 import type { ConfigSourceDistribution } from "../authoring/config";
 import { extractDistributionsForSourceIndices } from "../authoring/config";
 import type { Channel } from "../stores/documentStore";
+import { isFloatDtype } from "./channelKind";
+import { looksLikeImportDefaultLimits } from "./sourceChannelStyle";
 import type { Loader } from "./viv";
 
 export type BackgroundTaskHandle = { cancel: () => void };
@@ -75,7 +77,28 @@ export function mergeHistogramsIntoSourceChannelsByChannelId(
     if (!dist) return sc;
     if (sourceDistributionYValuesLength(sc) > 0) return sc;
     changed = true;
-    return { ...sc, sourceDistribution: dist };
+    const lo = dist.LowerRange;
+    const hi = dist.UpperRange;
+    const seedFloatWindow =
+      isFloatDtype(sc.sourceDataTypeId) &&
+      Number.isFinite(lo) &&
+      Number.isFinite(hi) &&
+      hi > lo &&
+      looksLikeImportDefaultLimits(
+        sc.lowerLimit ?? Number.NaN,
+        sc.upperLimit ?? Number.NaN,
+      );
+    return {
+      ...sc,
+      sourceDistribution: dist,
+      ...(seedFloatWindow
+        ? {
+            lowerLimit: lo,
+            upperLimit: hi,
+            gmmContrastLimits: { lower: lo, upper: hi },
+          }
+        : {}),
+    };
   });
   return changed ? next : channels;
 }

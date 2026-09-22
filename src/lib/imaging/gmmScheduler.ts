@@ -3,6 +3,7 @@ import {
   fitChannelGmmContrastFromUint16,
 } from "@/lib/imaging/autoContrast";
 import {
+  isFloatDtype,
   isImageChannel,
   isRgbDisplayChannel,
   isUint8Dtype,
@@ -88,7 +89,8 @@ function isEligible(sc: Channel, all: readonly Channel[]): boolean {
     isImageChannel(sc) &&
     sc.samples !== 3 &&
     !isRgbDisplayChannel(sc, all) &&
-    !isUint8Dtype(sc.sourceDataTypeId)
+    !isUint8Dtype(sc.sourceDataTypeId) &&
+    !isFloatDtype(sc.sourceDataTypeId)
   );
 }
 

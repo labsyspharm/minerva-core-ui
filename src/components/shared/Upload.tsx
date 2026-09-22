@@ -143,13 +143,11 @@ const FORMAT_OPTIONS: { format: OverlayFormat; label: string }[] = [
 function FormatChip({
   label,
   selected,
-  suggested,
   muted,
   onClick,
 }: {
   label: string;
   selected: boolean;
-  suggested?: boolean;
   muted?: boolean;
   onClick: () => void;
 }) {
@@ -159,7 +157,7 @@ function FormatChip({
       aria-pressed={selected}
       className={[
         selected ? styles.typeChipActive : null,
-        suggested ? styles.typeChipSuggested : null,
+        selected ? styles.typeChipSuggested : null,
         muted ? styles.typeChipMuted : null,
       ]
         .filter(Boolean)
@@ -869,9 +867,6 @@ const Upload = (props: UploadProps) => {
             <FormatChip
               label="Fluorescence"
               selected={overlayRole === "intensity" && !overlayRgbDisplay}
-              suggested={
-                detectedRole === "intensity" && detectedRgbDisplay !== true
-              }
               muted={
                 detectedRole !== "intensity" || detectedRgbDisplay === true
               }
@@ -887,9 +882,6 @@ const Upload = (props: UploadProps) => {
               <FormatChip
                 label="Brightfield"
                 selected={overlayRole === "intensity" && overlayRgbDisplay}
-                suggested={
-                  detectedRole === "intensity" && detectedRgbDisplay === true
-                }
                 muted={
                   detectedRole !== "intensity" || detectedRgbDisplay !== true
                 }
@@ -905,7 +897,6 @@ const Upload = (props: UploadProps) => {
             <FormatChip
               label="Segmentation Mask"
               selected={overlayRole === "segmentation"}
-              suggested={detectedRole === "segmentation"}
               muted={detectedRole !== "segmentation"}
               onClick={() => {
                 roleChosenByUserRef.current = true;
@@ -924,7 +915,6 @@ const Upload = (props: UploadProps) => {
                     key={format}
                     label={label}
                     selected={overlayFormat === format}
-                    suggested={detectedFormat === format}
                     muted={detectedFormat !== format}
                     onClick={() => {
                       formatChosenByUserRef.current = true;

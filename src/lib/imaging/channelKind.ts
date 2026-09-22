@@ -87,6 +87,11 @@ type RgbDisplayChannelFields = {
   rgbDisplay?: boolean;
 };
 
+/** True for Viv/OME float type ids (`Float32`, `float`, …). */
+export function isFloatDtype(dtype: string | undefined): boolean {
+  return dtype != null && /float/i.test(dtype);
+}
+
 /** True for OME/Viv uint8 type ids (`Uint8`, `uint8`, `int8`). */
 export function isUint8Dtype(dtype: string | undefined): boolean {
   if (dtype == null || dtype === "") return false;

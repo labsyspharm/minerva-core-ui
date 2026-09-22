@@ -197,6 +197,9 @@ export async function classify(
 ): Promise<MaskDetectResult> {
   const channels = plane.channels ?? 1;
   if (channels === 3 && plane.uint8) return { label: "rgb", score: null };
+  // Labels are integer IDs. Float planes (probabilities, heatmaps) can be
+  // piecewise-smooth after a blur and would fool neighbour-equality.
+  if (plane.integer === false) return { label: "image", score: null };
   const ch = channels > 1 ? channel : 0;
   return classifyPlane(plane, ch);
 }

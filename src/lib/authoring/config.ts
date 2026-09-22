@@ -1,4 +1,6 @@
 import { getImageSize } from "@hms-dbmi/viv";
+import { isFloatDtype } from "../imaging/channelKind";
+import { histogramLinearFromPixels } from "../imaging/histogramBin";
 import { histogramBinTile } from "../imaging/histogramBinPool";
 import type {
   HasTile,
@@ -325,13 +327,19 @@ const extractDistributionsForSourceIndices = async (
     async (index) => {
       const SourceIndex = index.c;
       let YValues: number[] = [];
-      if (bits != null) {
+      let xScale: string;
+      let lowerRange: number;
+      let upperRange: number;
+      if (isFloatDtype(dtype)) {
+        xScale = "linear";
+        lowerRange = 0;
+        upperRange = 1;
         try {
-          YValues = await bin({
-            bits,
-            index,
-            planes: loader.data,
-          });
+          const tile = await captureTile(index, loader.data);
+          const linear = histogramLinearFromPixels(tile.data, tile.width);
+          YValues = linear.yValues;
+          lowerRange = linear.min;
+          upperRange = linear.max;
         } catch (err) {
           tileErrorCount += 1;
           const msg = err instanceof Error ? err.message : String(err);
@@ -339,16 +347,35 @@ const extractDistributionsForSourceIndices = async (
             `[minerva] histogram: channel ${SourceIndex} tile/bin failed (${msg})`,
           );
         }
+      } else {
+        xScale = bits != null && bits <= 8 ? "linear" : "log";
+        lowerRange = 0;
+        upperRange = bits != null && bits <= 8 ? 2 ** bits - 1 : (bits ?? 0);
+        if (bits != null) {
+          try {
+            YValues = await bin({
+              bits,
+              index,
+              planes: loader.data,
+            });
+          } catch (err) {
+            tileErrorCount += 1;
+            const msg = err instanceof Error ? err.message : String(err);
+            console.warn(
+              `[minerva] histogram: channel ${SourceIndex} tile/bin failed (${msg})`,
+            );
+          }
+        }
       }
       return [
         SourceIndex,
         {
           id: crypto.randomUUID(),
           YValues,
-          XScale: bits != null && bits <= 8 ? "linear" : "log",
+          XScale: xScale,
           YScale: "linear",
-          LowerRange: 0,
-          UpperRange: bits != null && bits <= 8 ? 2 ** bits - 1 : (bits ?? 0),
+          LowerRange: lowerRange,
+          UpperRange: upperRange,
         },
       ] as [number, ConfigSourceDistribution];
     },

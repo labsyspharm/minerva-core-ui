@@ -1,6 +1,6 @@
 import * as React from "react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
-import { sourceDtypeMax } from "@/lib/imaging/channelKind";
+import { isFloatDtype, sourceDtypeMax } from "@/lib/imaging/channelKind";
 import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
 import type { SourceDistributionData } from "@/lib/stores/documentSchema";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
@@ -195,15 +195,24 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
 
   const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
   const eightBit = dtypeMax === 255;
+  const floatWindow = isFloatDtype(props.sourceDataTypeId);
   const scale = React.useMemo(
     () =>
       buildContrastScale({
-        distScale: eightBit ? "linear" : dist.XScale,
+        distScale: eightBit || floatWindow ? "linear" : dist.XScale,
         distMin: eightBit ? 0 : dist.LowerRange,
         distMax: eightBit ? 255 : dist.UpperRange,
-        dtypeMax,
+        dtypeMin: floatWindow ? dist.LowerRange : 0,
+        dtypeMax: floatWindow ? dist.UpperRange : dtypeMax,
       }),
-    [eightBit, dist.XScale, dist.LowerRange, dist.UpperRange, dtypeMax],
+    [
+      eightBit,
+      floatWindow,
+      dist.XScale,
+      dist.LowerRange,
+      dist.UpperRange,
+      dtypeMax,
+    ],
   );
 
   const [sliderMin, setSliderMin] = React.useState(() =>
@@ -217,24 +226,24 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const [minInput, setMinInput] = React.useState(String(props.lowerLimit));
   const [maxInput, setMaxInput] = React.useState(String(props.upperLimit));
   const editingLimitRef = React.useRef(false);
+  const snapLimit = (v: number) => (floatWindow ? v : Math.round(v));
   const lastCommittedRangeRef = React.useRef([
-    Math.round(props.lowerLimit),
-    Math.round(props.upperLimit),
+    snapLimit(props.lowerLimit),
+    snapLimit(props.upperLimit),
   ] as const);
 
   React.useEffect(() => {
     if (editingLimitRef.current) return;
+    const lo = floatWindow ? props.lowerLimit : Math.round(props.lowerLimit);
+    const hi = floatWindow ? props.upperLimit : Math.round(props.upperLimit);
     setSliderMin(scale.toSlider(props.lowerLimit));
     setSliderMax(scale.toSlider(props.upperLimit));
-    setMinInput(String(Math.round(props.lowerLimit)));
-    setMaxInput(String(Math.round(props.upperLimit)));
-    lastCommittedRangeRef.current = [
-      Math.round(props.lowerLimit),
-      Math.round(props.upperLimit),
-    ];
+    setMinInput(String(lo));
+    setMaxInput(String(hi));
+    lastCommittedRangeRef.current = [lo, hi];
     sliderMinRef.current = scale.toSlider(props.lowerLimit);
     sliderMaxRef.current = scale.toSlider(props.upperLimit);
-  }, [props.lowerLimit, props.upperLimit, scale]);
+  }, [props.lowerLimit, props.upperLimit, scale, floatWindow]);
 
   const previewRange = (lower: number, upper: number) => {
     useAppStore.getState().setChannelRendering({
@@ -246,8 +255,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   };
 
   const commitRange = (lower: number, upper: number) => {
-    const lo = Math.round(lower);
-    const hi = Math.round(upper);
+    const lo = snapLimit(lower);
+    const hi = snapLimit(upper);
     const [lastLo, lastHi] = lastCommittedRangeRef.current;
     if (lo === lastLo && hi === lastHi) {
       useAppStore.getState().clearChannelRendering();
@@ -289,8 +298,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   }, [props.sourceChannelId]);
 
   const syncFromSliders = (loStep: number, hiStep: number, commit: boolean) => {
-    const lo = Math.round(scale.fromSlider(loStep));
-    const hi = Math.round(scale.fromSlider(hiStep));
+    const lo = snapLimit(scale.fromSlider(loStep));
+    const hi = snapLimit(scale.fromSlider(hiStep));
     setMinInput(String(lo));
     setMaxInput(String(hi));
     if (commit) {
@@ -326,8 +335,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     let hi = Number.parseFloat(maxInput);
     if (!Number.isFinite(lo)) lo = scale.dtypeMin;
     if (!Number.isFinite(hi)) hi = scale.dtypeMax;
-    lo = Math.round(Math.max(scale.dtypeMin, Math.min(scale.dtypeMax, lo)));
-    hi = Math.round(Math.max(scale.dtypeMin, Math.min(scale.dtypeMax, hi)));
+    lo = snapLimit(Math.max(scale.dtypeMin, Math.min(scale.dtypeMax, lo)));
+    hi = snapLimit(Math.max(scale.dtypeMin, Math.min(scale.dtypeMax, hi)));
     if (lo > hi) {
       const t = lo;
       lo = hi;
@@ -459,6 +468,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
         aria-label={`${props.channelLabel} contrast minimum value`}
         min={scale.dtypeMin}
         max={scale.dtypeMax}
+        step={floatWindow ? "any" : 1}
         onFocus={() => {
           editingLimitRef.current = true;
         }}
@@ -543,9 +553,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
             onKeyUp={onSliderCommit}
             onBlur={onSliderCommit}
             aria-label={`${props.channelLabel} contrast minimum`}
-            aria-valuetext={`${Math.round(
-              scale.fromSlider(sliderMin),
-            )} intensity`}
+            aria-valuetext={`${snapLimit(scale.fromSlider(sliderMin))} intensity`}
           />
           <input
             type="range"
@@ -559,9 +567,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
             onKeyUp={onSliderCommit}
             onBlur={onSliderCommit}
             aria-label={`${props.channelLabel} contrast maximum`}
-            aria-valuetext={`${Math.round(
-              scale.fromSlider(sliderMax),
-            )} intensity`}
+            aria-valuetext={`${snapLimit(scale.fromSlider(sliderMax))} intensity`}
           />
         </div>
       </div>
@@ -572,6 +578,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
         aria-label={`${props.channelLabel} contrast maximum value`}
         min={scale.dtypeMin}
         max={scale.dtypeMax}
+        step={floatWindow ? "any" : 1}
         onFocus={() => {
           editingLimitRef.current = true;
         }}
