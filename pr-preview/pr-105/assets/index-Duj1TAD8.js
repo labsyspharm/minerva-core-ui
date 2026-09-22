@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-zsK_bmWs.js","./pako.esm-KbdoS3Oq.js","./lerc-D3ZvDVqz.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-tEgtOSz7.js","./pako.esm-KbdoS3Oq.js","./lerc-UPuiuSEA.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -66495,26 +66495,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-Tf7nGbze.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BL9GRu5v.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CfuGKKcJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-B4bWanFZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-D1HSTqaK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-PRYzJgJ_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-zsK_bmWs.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BZRQshmg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-D3ZvDVqz.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-tEgtOSz7.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DPp3qq_x.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-UPuiuSEA.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BQnlBLM8.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Cnr5nnFU.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DqHMc23T.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DPE7Dcn8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -83570,39 +83570,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const size = Math.min(tw, th2);
     return 2 ** Math.floor(Math.log2(Math.max(1, size)));
   }
-  async function readTiffRaster(image2, sample) {
-    const raster = await image2.readRasters({
-      samples: [
-        sample
-      ],
-      interleave: true
-    });
-    return {
-      data: raster,
-      width: raster.width ?? image2.getWidth(),
-      height: raster.height ?? image2.getHeight()
-    };
-  }
-  async function readTiffTile(image2, sample, tileX, tileY, tileSize) {
-    const x0 = tileX * tileSize;
-    const y0 = tileY * tileSize;
-    const x1 = Math.min(x0 + tileSize, image2.getWidth());
-    const y1 = Math.min(y0 + tileSize, image2.getHeight());
-    const width = x1 - x0;
-    const height = y1 - y0;
+  async function readTiffSample(image2, sample, window2) {
+    const width = window2 ? window2[2] - window2[0] : image2.getWidth();
+    const height = window2 ? window2[3] - window2[1] : image2.getHeight();
     const raster = await image2.readRasters({
       samples: [
         sample
       ],
       interleave: true,
-      window: [
-        x0,
-        y0,
-        x1,
-        y1
-      ],
-      width,
-      height
+      ...window2 ? {
+        window: window2,
+        width,
+        height
+      } : {}
     });
     return {
       data: raster,
@@ -83633,7 +83613,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const tiled = isTiffTiled(image2);
     const tileSize = tiled ? vivTileSize(image2) : Math.max(width, height, 1);
     const clampC = (c2) => Math.max(0, Math.min(sizeC - 1, c2));
-    const getRaster = ({ selection }) => readTiffRaster(image2, clampC(selection.c));
+    const getRaster = ({ selection }) => readTiffSample(image2, clampC(selection.c));
     return {
       dtype,
       shape: [
@@ -83653,7 +83633,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ],
       onTileError: () => void 0,
       getRaster,
-      getTile: tiled ? ({ x: x2, y: y2, selection }) => readTiffTile(image2, clampC(selection.c), x2, y2, tileSize) : async ({ x: x2, y: y2, selection }) => {
+      getTile: tiled ? ({ x: x2, y: y2, selection }) => {
+        const x0 = x2 * tileSize;
+        const y0 = y2 * tileSize;
+        return readTiffSample(image2, clampC(selection.c), [
+          x0,
+          y0,
+          Math.min(x0 + tileSize, width),
+          Math.min(y0 + tileSize, height)
+        ]);
+      } : async ({ x: x2, y: y2, selection }) => {
         if (x2 !== 0 || y2 !== 0) {
           return {
             data: new Uint8Array(0),
@@ -83835,9 +83824,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       } : {}
     };
   }
-  async function toMaskLoaderFromFile(inFile) {
-    return maskLoaderFromBlob(inFile);
-  }
   async function pickLocalOmeTiffHandle() {
     const picked = await toFile();
     if (picked.length === 0) return null;
@@ -83853,7 +83839,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (source2.kind === "local") {
       const file = await source2.handle.getFile();
       if (role === "segmentation") {
-        return toMaskLoaderFromFile(file);
+        return maskLoaderFromBlob(file);
       }
       return asAppLoader(await loadOmeTiff(file, vivLoadOpts(source2.pool, packedRgb)));
     }
@@ -83862,7 +83848,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (!response.ok) {
         throw new Error(`Failed to fetch mask OME-TIFF (${response.status})`);
       }
-      return toMaskLoaderFromFile(await response.blob());
+      return maskLoaderFromBlob(await response.blob());
     }
     return asAppLoader(await loadOmeTiff(source2.url, vivLoadOpts(source2.pool, packedRgb)));
   }
@@ -91444,19 +91430,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (names.length === 0) return;
     const job = {};
     paletteJobs.set(featureTableId, job);
-    void optimizeDistinctPalette(names.length).then((palette) => {
+    const paint = (palette) => {
       if (paletteJobs.get(featureTableId) !== job) return;
       applyNameColors(featureTableId, names.map((name2, i2) => ({
         name: name2,
-        color: palette[i2] ?? seedRgbForGroupChannelIndex(i2)
+        color: (palette == null ? void 0 : palette[i2]) ?? seedRgbForGroupChannelIndex(i2)
       })));
-    }).catch((e2) => {
+    };
+    void optimizeDistinctPalette(names.length).then(paint).catch((e2) => {
       console.warn("[featureTable] class palette failed", e2);
-      if (paletteJobs.get(featureTableId) !== job) return;
-      applyNameColors(featureTableId, names.map((name2, i2) => ({
-        name: name2,
-        color: seedRgbForGroupChannelIndex(i2)
-      })));
+      paint();
     }).finally(() => {
       if (paletteJobs.get(featureTableId) === job) paletteJobs.delete(featureTableId);
     });
@@ -91992,39 +91975,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   }
   function FeatureCsvColumnPick(props) {
+    const select = (label2, value, onChange) => jsxRuntimeExports.jsxs("label", {
+      children: [
+        label2,
+        jsxRuntimeExports.jsx("select", {
+          className: styles$o.field,
+          value,
+          "aria-label": `${label2} column`,
+          onChange: (e2) => onChange(e2.target.value),
+          children: props.headers.map((h2) => jsxRuntimeExports.jsx("option", {
+            value: h2,
+            children: h2
+          }, `${label2}-${h2}`))
+        })
+      ]
+    });
     return jsxRuntimeExports.jsxs("div", {
       className: styles$o.colPick,
       children: [
-        jsxRuntimeExports.jsxs("label", {
-          children: [
-            "ID",
-            jsxRuntimeExports.jsx("select", {
-              className: styles$o.field,
-              value: props.id,
-              "aria-label": "ID column",
-              onChange: (e2) => props.onId(e2.target.value),
-              children: props.headers.map((h2) => jsxRuntimeExports.jsx("option", {
-                value: h2,
-                children: h2
-              }, `id-${h2}`))
-            })
-          ]
-        }),
-        jsxRuntimeExports.jsxs("label", {
-          children: [
-            "Name",
-            jsxRuntimeExports.jsx("select", {
-              className: styles$o.field,
-              value: props.name,
-              "aria-label": "Name column",
-              onChange: (e2) => props.onName(e2.target.value),
-              children: props.headers.map((h2) => jsxRuntimeExports.jsx("option", {
-                value: h2,
-                children: h2
-              }, `name-${h2}`))
-            })
-          ]
-        })
+        select("ID", props.id, props.onId),
+        select("Name", props.name, props.onName)
       ]
     });
   }
@@ -92032,9 +92002,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     var _a2;
     const featureTableId = (_a2 = featureTables.find((c2) => c2.sourceChannelId === sourceChannelId)) == null ? void 0 : _a2.id;
     return {
-      maskAction: jsxRuntimeExports.jsx(FeatureTableMaskAction, {
-        sourceChannelId,
+      maskAction: featureTableId ? jsxRuntimeExports.jsx(FeatureTableMaskAction, {
         featureTableId
+      }) : jsxRuntimeExports.jsx(FeatureTableAttach, {
+        sourceChannelId
       }),
       maskFooter: featureTableId ? jsxRuntimeExports.jsx(FeatureTableListBody, {
         featureTableId
@@ -92069,18 +92040,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function FeatureTableMaskAction(props) {
-    const { sourceChannelId, featureTableId } = props;
+    const { featureTableId } = props;
     reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
     const access = reactExports.useSyncExternalStore(subscribeFeatureTableAccess, getFeatureTableAccess, getFeatureTableAccess);
     const handleKey = useDocumentStore((s2) => {
       var _a2;
-      return featureTableId ? (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.source.handleKey : void 0;
+      return (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.source.handleKey;
     });
-    if (featureTableId == null) {
-      return jsxRuntimeExports.jsx(FeatureTableAttach, {
-        sourceChannelId
-      });
-    }
     if (hasIngestedFeatureTable(featureTableId)) return null;
     if (handleKey != null && (access.deniedHandleKeys.includes(handleKey) || access.missingHandleKeys.includes(handleKey))) {
       return null;
@@ -166772,7 +166738,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const roleChosenByUserRef = reactExports.useRef(false);
     const rgbDisplayChosenByUserRef = reactExports.useRef(false);
     const overlayRgbDisplayRef = reactExports.useRef(false);
-    const showTypeOverlay = pending2 != null;
     const dicomAllowed = (pending2 == null ? void 0 : pending2.kind) === "url" && overlayRole !== "segmentation";
     const urlReady = /^https?:\/\/.+/.test(urlDraft.trim());
     const abortFormatDetect = reactExports.useCallback(() => {
@@ -166796,7 +166761,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setPending(null);
       setImportError(null);
       setUrlDraft("");
-      setImportBusy(false);
       clearFeatureCsv();
     }, [
       abortFormatDetect,
@@ -167173,7 +167137,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onDragOver,
       onDrop: (e2) => void onDrop(e2)
     };
-    const stripError = importError2 && !showTypeOverlay ? importError2 : null;
+    const stripError = importError2 && !pending2 ? importError2 : null;
     const dropError = stripError && stripErrorAt === "drop" ? stripError : null;
     const urlError = stripError && stripErrorAt === "url" ? stripError : null;
     const addStrip2 = jsxRuntimeExports.jsxs("div", {
@@ -167257,136 +167221,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     else if (featureCsvFile && overlayRole === "segmentation") {
       overlayBusyLabel = "Loading feature table\u2026";
     }
-    const typeOverlayDialog = showTypeOverlay && pending2 ? jsxRuntimeExports.jsxs(ImportOverlay, {
-      title: pendingLabel(pending2),
-      titleId: "image-import-dialog-title",
-      error: importError2,
-      busy: importBusy || detecting,
-      busyLabel: overlayBusyLabel,
-      cancelDisabled: importBusy || disabled2,
-      importDisabled: importBusy || detecting || disabled2,
-      onCancel: clearPending,
-      onImport: () => void runImport(),
-      children: [
-        jsxRuntimeExports.jsxs("div", {
-          className: styles$p.typeRow,
-          children: [
-            jsxRuntimeExports.jsx("span", {
-              className: styles$p.fieldLabel,
-              children: "Image Type"
-            }),
-            jsxRuntimeExports.jsx(FormatChip, {
-              label: "Fluorescence",
-              selected: overlayRole === "intensity" && !overlayRgbDisplay,
-              suggested: detectedRole === "intensity" && detectedRgbDisplay !== true,
-              muted: detectedRole !== "intensity" || detectedRgbDisplay === true,
-              onClick: () => {
-                roleChosenByUserRef.current = true;
-                rgbDisplayChosenByUserRef.current = true;
-                overlayRgbDisplayRef.current = false;
-                setOverlayRole("intensity");
-                setOverlayRgbDisplay(false);
-              }
-            }),
-            detectedRgbDisplay != null ? jsxRuntimeExports.jsx(FormatChip, {
-              label: "Brightfield",
-              selected: overlayRole === "intensity" && overlayRgbDisplay,
-              suggested: detectedRole === "intensity" && detectedRgbDisplay === true,
-              muted: detectedRole !== "intensity" || detectedRgbDisplay !== true,
-              onClick: () => {
-                roleChosenByUserRef.current = true;
-                rgbDisplayChosenByUserRef.current = true;
-                overlayRgbDisplayRef.current = true;
-                setOverlayRole("intensity");
-                setOverlayRgbDisplay(true);
-              }
-            }) : null,
-            jsxRuntimeExports.jsx(FormatChip, {
-              label: "Segmentation Mask",
-              selected: overlayRole === "segmentation",
-              suggested: detectedRole === "segmentation",
-              muted: detectedRole !== "segmentation",
-              onClick: () => {
-                roleChosenByUserRef.current = true;
-                setOverlayRole("segmentation");
-                formatChosenByUserRef.current = true;
-                setOverlayFormat("ome-tiff");
-              }
-            })
-          ]
-        }),
-        dicomAllowed ? jsxRuntimeExports.jsx("div", {
-          className: styles$p.typeSection,
-          children: jsxRuntimeExports.jsxs("div", {
-            className: styles$p.typeRow,
-            children: [
-              jsxRuntimeExports.jsx("span", {
-                className: styles$p.fieldLabel,
-                children: "Format"
-              }),
-              FORMAT_OPTIONS.map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
-                label: label2,
-                selected: overlayFormat === format,
-                suggested: detectedFormat === format,
-                muted: detectedFormat !== format,
-                onClick: () => {
-                  formatChosenByUserRef.current = true;
-                  setOverlayFormat(format);
-                }
-              }, format))
-            ]
-          })
-        }) : null,
-        overlayRole === "segmentation" ? jsxRuntimeExports.jsxs("div", {
-          className: styles$p.typeRow,
-          children: [
-            jsxRuntimeExports.jsx("span", {
-              className: styles$p.fieldLabel,
-              children: "Feature table"
-            }),
-            jsxRuntimeExports.jsx(PanelActionButton, {
-              type: "button",
-              onClick: () => {
-                void (async () => {
-                  let file;
-                  try {
-                    file = await n$1({
-                      description: "Feature table CSV",
-                      mimeTypes: [
-                        "text/csv"
-                      ],
-                      extensions: [
-                        ".csv"
-                      ],
-                      multiple: false
-                    });
-                  } catch (e2) {
-                    if (e2 instanceof Error && e2.name === "AbortError") return;
-                    throw e2;
-                  }
-                  setFeatureCsvFile(file);
-                  void peekFeatureCsv(file).then(setFeatureCsvCols);
-                })();
-              },
-              children: featureCsvFile ? featureCsvFile.name : "Optional CSV\u2026"
-            })
-          ]
-        }) : null,
-        overlayRole === "segmentation" && featureCsvCols ? jsxRuntimeExports.jsx(FeatureCsvColumnPick, {
-          headers: featureCsvCols.headers,
-          id: featureCsvCols.id,
-          name: featureCsvCols.name,
-          onId: (id2) => setFeatureCsvCols({
-            ...featureCsvCols,
-            id: id2
-          }),
-          onName: (name2) => setFeatureCsvCols({
-            ...featureCsvCols,
-            name: name2
-          })
-        }) : null
-      ]
-    }) : null;
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         row2 ? addStrip2 : jsxRuntimeExports.jsx("div", {
@@ -167409,7 +167243,136 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             })
           })
         }),
-        typeOverlayDialog
+        pending2 ? jsxRuntimeExports.jsxs(ImportOverlay, {
+          title: pendingLabel(pending2),
+          titleId: "image-import-dialog-title",
+          error: importError2,
+          busy: importBusy || detecting,
+          busyLabel: overlayBusyLabel,
+          cancelDisabled: importBusy || disabled2,
+          importDisabled: importBusy || detecting || disabled2,
+          onCancel: clearPending,
+          onImport: () => void runImport(),
+          children: [
+            jsxRuntimeExports.jsxs("div", {
+              className: styles$p.typeRow,
+              children: [
+                jsxRuntimeExports.jsx("span", {
+                  className: styles$p.fieldLabel,
+                  children: "Image Type"
+                }),
+                jsxRuntimeExports.jsx(FormatChip, {
+                  label: "Fluorescence",
+                  selected: overlayRole === "intensity" && !overlayRgbDisplay,
+                  suggested: detectedRole === "intensity" && detectedRgbDisplay !== true,
+                  muted: detectedRole !== "intensity" || detectedRgbDisplay === true,
+                  onClick: () => {
+                    roleChosenByUserRef.current = true;
+                    rgbDisplayChosenByUserRef.current = true;
+                    overlayRgbDisplayRef.current = false;
+                    setOverlayRole("intensity");
+                    setOverlayRgbDisplay(false);
+                  }
+                }),
+                detectedRgbDisplay != null ? jsxRuntimeExports.jsx(FormatChip, {
+                  label: "Brightfield",
+                  selected: overlayRole === "intensity" && overlayRgbDisplay,
+                  suggested: detectedRole === "intensity" && detectedRgbDisplay === true,
+                  muted: detectedRole !== "intensity" || detectedRgbDisplay !== true,
+                  onClick: () => {
+                    roleChosenByUserRef.current = true;
+                    rgbDisplayChosenByUserRef.current = true;
+                    overlayRgbDisplayRef.current = true;
+                    setOverlayRole("intensity");
+                    setOverlayRgbDisplay(true);
+                  }
+                }) : null,
+                jsxRuntimeExports.jsx(FormatChip, {
+                  label: "Segmentation Mask",
+                  selected: overlayRole === "segmentation",
+                  suggested: detectedRole === "segmentation",
+                  muted: detectedRole !== "segmentation",
+                  onClick: () => {
+                    roleChosenByUserRef.current = true;
+                    setOverlayRole("segmentation");
+                    formatChosenByUserRef.current = true;
+                    setOverlayFormat("ome-tiff");
+                  }
+                })
+              ]
+            }),
+            dicomAllowed ? jsxRuntimeExports.jsx("div", {
+              className: styles$p.typeSection,
+              children: jsxRuntimeExports.jsxs("div", {
+                className: styles$p.typeRow,
+                children: [
+                  jsxRuntimeExports.jsx("span", {
+                    className: styles$p.fieldLabel,
+                    children: "Format"
+                  }),
+                  FORMAT_OPTIONS.map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
+                    label: label2,
+                    selected: overlayFormat === format,
+                    suggested: detectedFormat === format,
+                    muted: detectedFormat !== format,
+                    onClick: () => {
+                      formatChosenByUserRef.current = true;
+                      setOverlayFormat(format);
+                    }
+                  }, format))
+                ]
+              })
+            }) : null,
+            overlayRole === "segmentation" ? jsxRuntimeExports.jsxs("div", {
+              className: styles$p.typeRow,
+              children: [
+                jsxRuntimeExports.jsx("span", {
+                  className: styles$p.fieldLabel,
+                  children: "Feature table"
+                }),
+                jsxRuntimeExports.jsx(PanelActionButton, {
+                  type: "button",
+                  onClick: () => {
+                    void (async () => {
+                      let file;
+                      try {
+                        file = await n$1({
+                          description: "Feature table CSV",
+                          mimeTypes: [
+                            "text/csv"
+                          ],
+                          extensions: [
+                            ".csv"
+                          ],
+                          multiple: false
+                        });
+                      } catch (e2) {
+                        if (e2 instanceof Error && e2.name === "AbortError") return;
+                        throw e2;
+                      }
+                      setFeatureCsvFile(file);
+                      void peekFeatureCsv(file).then(setFeatureCsvCols);
+                    })();
+                  },
+                  children: featureCsvFile ? featureCsvFile.name : "Optional CSV\u2026"
+                })
+              ]
+            }) : null,
+            overlayRole === "segmentation" && featureCsvCols ? jsxRuntimeExports.jsx(FeatureCsvColumnPick, {
+              headers: featureCsvCols.headers,
+              id: featureCsvCols.id,
+              name: featureCsvCols.name,
+              onId: (id2) => setFeatureCsvCols({
+                ...featureCsvCols,
+                id: id2
+              }),
+              onName: (name2) => setFeatureCsvCols({
+                ...featureCsvCols,
+                name: name2
+              })
+            }) : null
+          ]
+        }) : null
       ]
     });
   };
@@ -254439,12 +254402,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-21T21:12:03.008Z");
+    const label2 = utcShort("2026-09-22T15:04:23.590Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-21T21:12:03.008Z",
+      title: "2026-09-22T15:04:23.590Z",
       children: [
         "Updated ",
         label2,
@@ -256812,35 +256775,28 @@ uniform classStyleUniforms {
           const w2 = (img == null ? void 0 : img.sizeX) ?? 0;
           const h2 = (img == null ? void 0 : img.sizeY) ?? 0;
           const ch2 = (img == null ? void 0 : img.sizeC) ?? 0;
-          const isDemoBootstrap = hasDemo && dicomIndexList.length === 0 && omeLoaderEntries.length === 0;
           if (dicomIndexList.length > 0) {
             loadedSource = {
-              kind: "dicom",
               label: fileName || dicomIndexList.map((d2) => d2.modality ? `${d2.series} (${d2.modality})` : `${d2.series}`).join(", ") || "DICOMweb",
               width: w2,
               height: h2,
-              channelCount: ch2,
-              isDemo: isDemoBootstrap
+              channelCount: ch2
             };
           } else if (omeLoaderEntries.length > 0) {
             const isUrlSource = handles.length === 0;
             const label2 = isUrlSource ? lastOmeTiffUrl || fileName || "Remote OME-TIFF" : fileName || handleNamesLabel || "OME-TIFF";
             loadedSource = {
-              kind: isUrlSource ? "ome-url" : "ome-local",
               label: label2,
               width: w2,
               height: h2,
-              channelCount: ch2,
-              isDemo: isDemoBootstrap
+              channelCount: ch2
             };
           } else {
             loadedSource = {
-              kind: "ome-url",
               label: lastOmeTiffUrl || fileName || handleNamesLabel || "Loading\u2026",
               width: w2,
               height: h2,
-              channelCount: ch2,
-              isDemo: isDemoBootstrap
+              channelCount: ch2
             };
           }
         }
