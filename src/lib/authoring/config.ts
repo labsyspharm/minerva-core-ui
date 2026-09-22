@@ -1,4 +1,5 @@
 import { getImageSize } from "@hms-dbmi/viv";
+import { MAX_HISTOGRAM_TILE_PIXELS } from "../imaging/histogramBin";
 import { histogramBinTile } from "../imaging/histogramBinPool";
 import type {
   HasTile,
@@ -227,8 +228,15 @@ async function mapIndicesInBatches<T>(
 const captureTile: CaptureTile = async (index, planes) => {
   const level = Math.abs(index.z);
   const z_plane = planes[level];
-  const selection = { t: 0, z: 0, c: index.c };
   const { x, y } = index;
+  const { width: pw, height: ph } = getImageSize(z_plane as VivImageSizeInput);
+  const ts = Math.max(1, z_plane.tileSize);
+  const tw = Math.max(0, Math.min(ts, pw - x * ts));
+  const th = Math.max(0, Math.min(ts, ph - y * ts));
+  if (tw * th > MAX_HISTOGRAM_TILE_PIXELS) {
+    return { data: new Uint8Array(0), width: 0, height: 0 };
+  }
+  const selection = { t: 0, z: 0, c: index.c };
   const signal = AbortSignal.timeout(HISTOGRAM_TILE_TIMEOUT_MS);
   const tile = await z_plane.getTile({
     selection,
@@ -241,7 +249,13 @@ const captureTile: CaptureTile = async (index, planes) => {
 };
 
 const bin: Bin = async (inputs) => {
-  const { data, width } = await captureTile(inputs.index, inputs.planes);
+  const { data, width, height } = await captureTile(
+    inputs.index,
+    inputs.planes,
+  );
+  if (!data?.length || width * height > MAX_HISTOGRAM_TILE_PIXELS) {
+    return [];
+  }
   return histogramBinTile(inputs.bits, width, data);
 };
 
