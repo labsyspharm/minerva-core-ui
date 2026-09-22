@@ -170,40 +170,17 @@ function vivTileSize(image: GeoTiffImage): number {
   return 2 ** Math.floor(Math.log2(Math.max(1, size)));
 }
 
-async function readTiffRaster(
+async function readTiffSample(
   image: GeoTiffImage,
   sample: number,
+  window?: [number, number, number, number],
 ): Promise<HasTile> {
+  const width = window ? window[2] - window[0] : image.getWidth();
+  const height = window ? window[3] - window[1] : image.getHeight();
   const raster = (await image.readRasters({
     samples: [sample],
     interleave: true,
-  })) as ArrayLike<number> & { width?: number; height?: number };
-  return {
-    data: raster as unknown as HasTile["data"],
-    width: raster.width ?? image.getWidth(),
-    height: raster.height ?? image.getHeight(),
-  };
-}
-
-async function readTiffTile(
-  image: GeoTiffImage,
-  sample: number,
-  tileX: number,
-  tileY: number,
-  tileSize: number,
-): Promise<HasTile> {
-  const x0 = tileX * tileSize;
-  const y0 = tileY * tileSize;
-  const x1 = Math.min(x0 + tileSize, image.getWidth());
-  const y1 = Math.min(y0 + tileSize, image.getHeight());
-  const width = x1 - x0;
-  const height = y1 - y0;
-  const raster = (await image.readRasters({
-    samples: [sample],
-    interleave: true,
-    window: [x0, y0, x1, y1],
-    width,
-    height,
+    ...(window ? { window, width, height } : {}),
   })) as ArrayLike<number> & { width?: number; height?: number };
   return {
     data: raster as unknown as HasTile["data"],
@@ -254,7 +231,7 @@ function maskPlaneFromImage(
   const tileSize = tiled ? vivTileSize(image) : Math.max(width, height, 1);
   const clampC = (c: number) => Math.max(0, Math.min(sizeC - 1, c));
   const getRaster = ({ selection }: { selection: Selection }) =>
-    readTiffRaster(image, clampC(selection.c));
+    readTiffSample(image, clampC(selection.c));
   return {
     dtype,
     shape: [1, sizeC, 1, height, width],
@@ -263,8 +240,16 @@ function maskPlaneFromImage(
     onTileError: () => undefined,
     getRaster,
     getTile: tiled
-      ? ({ x, y, selection }) =>
-          readTiffTile(image, clampC(selection.c), x, y, tileSize)
+      ? ({ x, y, selection }) => {
+          const x0 = x * tileSize;
+          const y0 = y * tileSize;
+          return readTiffSample(image, clampC(selection.c), [
+            x0,
+            y0,
+            Math.min(x0 + tileSize, width),
+            Math.min(y0 + tileSize, height),
+          ]);
+        }
       : async ({ x, y, selection }) => {
           if (x !== 0 || y !== 0) {
             return { data: new Uint8Array(0), width: 0, height: 0 };
@@ -483,10 +468,6 @@ function vivLoadOpts(pool?: DecodePool | null, packedRgb?: "planar") {
   };
 }
 
-async function toMaskLoaderFromFile(inFile: Blob): Promise<Loader> {
-  return maskLoaderFromBlob(inFile);
-}
-
 type OmeLoaderRole = "intensity" | "segmentation";
 
 /**
@@ -517,7 +498,7 @@ export async function loadOmeLoaderForRole(
   if (source.kind === "local") {
     const file = await source.handle.getFile();
     if (role === "segmentation") {
-      return toMaskLoaderFromFile(file);
+      return maskLoaderFromBlob(file);
     }
     return asAppLoader(
       await loadOmeTiff(file, vivLoadOpts(source.pool, packedRgb)),
@@ -528,7 +509,7 @@ export async function loadOmeLoaderForRole(
     if (!response.ok) {
       throw new Error(`Failed to fetch mask OME-TIFF (${response.status})`);
     }
-    return toMaskLoaderFromFile(await response.blob());
+    return maskLoaderFromBlob(await response.blob());
   }
   return asAppLoader(
     await loadOmeTiff(source.url, vivLoadOpts(source.pool, packedRgb)),

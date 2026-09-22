@@ -66,17 +66,12 @@ function ReplaceIcon({ title, size = 14 }: { title?: string; size?: number }) {
 }
 
 /** How the current viewport image was sourced (for Images tab summary). */
-type LoadedImageKind = "ome-local" | "ome-url" | "dicom";
-
 export type LoadedSourceSummary = {
-  kind: LoadedImageKind;
   /** Primary display name (filename, series list, URL basename, etc.) */
   label: string;
   width: number;
   height: number;
   channelCount: number;
-  /** Set when running demo_url / demo_dicom_web bootstrap */
-  isDemo?: boolean;
 };
 
 /** Intensity stack vs label / segmentation file. */
@@ -89,11 +84,7 @@ export type OmeImportRequest = {
     | { kind: "url"; url: string };
 };
 
-export type DicomWebImportRequest = {
-  url: string;
-};
-
-export type UploadProps = {
+type UploadProps = {
   onAllow: () => Promise<Handle.File[]>;
   /** Bumps after a successful image import; clears pending add state. */
   importRevision?: number;
@@ -107,9 +98,9 @@ export type UploadProps = {
   onImportOme?: (
     req: OmeImportRequest,
   ) => Promise<OmeImportResult | undefined> | OmeImportResult | undefined;
-  onImportDicomWeb?: (
-    req: DicomWebImportRequest,
-  ) => Promise<OmeImportResult | undefined> | OmeImportResult | undefined;
+  onImportDicomWeb?: (req: {
+    url: string;
+  }) => Promise<OmeImportResult | undefined> | OmeImportResult | undefined;
   /** Local handles present but Chrome revoked access after reload. */
   needsFileAccess?: boolean;
   onRequestFileAccess?: () => void | Promise<void>;
@@ -314,7 +305,6 @@ const Upload = (props: UploadProps) => {
   const rgbDisplayChosenByUserRef = useRef(false);
   const overlayRgbDisplayRef = useRef(false);
 
-  const showTypeOverlay = pending != null;
   const dicomAllowed =
     pending?.kind === "url" && overlayRole !== "segmentation";
   const urlReady = /^https?:\/\/.+/.test(urlDraft.trim());
@@ -341,7 +331,6 @@ const Upload = (props: UploadProps) => {
     setPending(null);
     setImportError(null);
     setUrlDraft("");
-    setImportBusy(false);
     clearFeatureCsv();
   }, [
     abortFormatDetect,
@@ -759,7 +748,7 @@ const Upload = (props: UploadProps) => {
     onDragOver,
     onDrop: (e: ReactDragEvent) => void onDrop(e),
   };
-  const stripError = importError && !showTypeOverlay ? importError : null;
+  const stripError = importError && !pending ? importError : null;
   const dropError = stripError && stripErrorAt === "drop" ? stripError : null;
   const urlError = stripError && stripErrorAt === "url" ? stripError : null;
   const addStrip = (
@@ -841,128 +830,6 @@ const Upload = (props: UploadProps) => {
     overlayBusyLabel = "Loading feature table…";
   }
 
-  const typeOverlayDialog =
-    showTypeOverlay && pending ? (
-      <ImportOverlay
-        title={pendingLabel(pending)}
-        titleId="image-import-dialog-title"
-        error={importError}
-        busy={importBusy || detecting}
-        busyLabel={overlayBusyLabel}
-        cancelDisabled={importBusy || disabled}
-        importDisabled={importBusy || detecting || disabled}
-        onCancel={clearPending}
-        onImport={() => void runImport()}
-      >
-        <div className={styles.typeRow}>
-          <span className={styles.fieldLabel}>Image Type</span>
-          <FormatChip
-            label="Fluorescence"
-            selected={overlayRole === "intensity" && !overlayRgbDisplay}
-            suggested={
-              detectedRole === "intensity" && detectedRgbDisplay !== true
-            }
-            muted={detectedRole !== "intensity" || detectedRgbDisplay === true}
-            onClick={() => {
-              roleChosenByUserRef.current = true;
-              rgbDisplayChosenByUserRef.current = true;
-              overlayRgbDisplayRef.current = false;
-              setOverlayRole("intensity");
-              setOverlayRgbDisplay(false);
-            }}
-          />
-          {detectedRgbDisplay != null ? (
-            <FormatChip
-              label="Brightfield"
-              selected={overlayRole === "intensity" && overlayRgbDisplay}
-              suggested={
-                detectedRole === "intensity" && detectedRgbDisplay === true
-              }
-              muted={
-                detectedRole !== "intensity" || detectedRgbDisplay !== true
-              }
-              onClick={() => {
-                roleChosenByUserRef.current = true;
-                rgbDisplayChosenByUserRef.current = true;
-                overlayRgbDisplayRef.current = true;
-                setOverlayRole("intensity");
-                setOverlayRgbDisplay(true);
-              }}
-            />
-          ) : null}
-          <FormatChip
-            label="Segmentation Mask"
-            selected={overlayRole === "segmentation"}
-            suggested={detectedRole === "segmentation"}
-            muted={detectedRole !== "segmentation"}
-            onClick={() => {
-              roleChosenByUserRef.current = true;
-              setOverlayRole("segmentation");
-              formatChosenByUserRef.current = true;
-              setOverlayFormat("ome-tiff");
-            }}
-          />
-        </div>
-        {dicomAllowed ? (
-          <div className={styles.typeSection}>
-            <div className={styles.typeRow}>
-              <span className={styles.fieldLabel}>Format</span>
-              {FORMAT_OPTIONS.map(({ format, label }) => (
-                <FormatChip
-                  key={format}
-                  label={label}
-                  selected={overlayFormat === format}
-                  suggested={detectedFormat === format}
-                  muted={detectedFormat !== format}
-                  onClick={() => {
-                    formatChosenByUserRef.current = true;
-                    setOverlayFormat(format);
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        ) : null}
-        {overlayRole === "segmentation" ? (
-          <div className={styles.typeRow}>
-            <span className={styles.fieldLabel}>Feature table</span>
-            <PanelActionButton
-              type="button"
-              onClick={() => {
-                void (async () => {
-                  let file: File;
-                  try {
-                    file = await fileOpen({
-                      description: "Feature table CSV",
-                      mimeTypes: ["text/csv"],
-                      extensions: [".csv"],
-                      multiple: false,
-                    });
-                  } catch (e) {
-                    if (e instanceof Error && e.name === "AbortError") return;
-                    throw e;
-                  }
-                  setFeatureCsvFile(file);
-                  void peekFeatureCsv(file).then(setFeatureCsvCols);
-                })();
-              }}
-            >
-              {featureCsvFile ? featureCsvFile.name : "Optional CSV…"}
-            </PanelActionButton>
-          </div>
-        ) : null}
-        {overlayRole === "segmentation" && featureCsvCols ? (
-          <FeatureCsvColumnPick
-            headers={featureCsvCols.headers}
-            id={featureCsvCols.id}
-            name={featureCsvCols.name}
-            onId={(id) => setFeatureCsvCols({ ...featureCsvCols, id })}
-            onName={(name) => setFeatureCsvCols({ ...featureCsvCols, name })}
-          />
-        ) : null}
-      </ImportOverlay>
-    ) : null;
-
   return (
     <>
       {row ? (
@@ -985,7 +852,128 @@ const Upload = (props: UploadProps) => {
           </div>
         </div>
       )}
-      {typeOverlayDialog}
+      {pending ? (
+        <ImportOverlay
+          title={pendingLabel(pending)}
+          titleId="image-import-dialog-title"
+          error={importError}
+          busy={importBusy || detecting}
+          busyLabel={overlayBusyLabel}
+          cancelDisabled={importBusy || disabled}
+          importDisabled={importBusy || detecting || disabled}
+          onCancel={clearPending}
+          onImport={() => void runImport()}
+        >
+          <div className={styles.typeRow}>
+            <span className={styles.fieldLabel}>Image Type</span>
+            <FormatChip
+              label="Fluorescence"
+              selected={overlayRole === "intensity" && !overlayRgbDisplay}
+              suggested={
+                detectedRole === "intensity" && detectedRgbDisplay !== true
+              }
+              muted={
+                detectedRole !== "intensity" || detectedRgbDisplay === true
+              }
+              onClick={() => {
+                roleChosenByUserRef.current = true;
+                rgbDisplayChosenByUserRef.current = true;
+                overlayRgbDisplayRef.current = false;
+                setOverlayRole("intensity");
+                setOverlayRgbDisplay(false);
+              }}
+            />
+            {detectedRgbDisplay != null ? (
+              <FormatChip
+                label="Brightfield"
+                selected={overlayRole === "intensity" && overlayRgbDisplay}
+                suggested={
+                  detectedRole === "intensity" && detectedRgbDisplay === true
+                }
+                muted={
+                  detectedRole !== "intensity" || detectedRgbDisplay !== true
+                }
+                onClick={() => {
+                  roleChosenByUserRef.current = true;
+                  rgbDisplayChosenByUserRef.current = true;
+                  overlayRgbDisplayRef.current = true;
+                  setOverlayRole("intensity");
+                  setOverlayRgbDisplay(true);
+                }}
+              />
+            ) : null}
+            <FormatChip
+              label="Segmentation Mask"
+              selected={overlayRole === "segmentation"}
+              suggested={detectedRole === "segmentation"}
+              muted={detectedRole !== "segmentation"}
+              onClick={() => {
+                roleChosenByUserRef.current = true;
+                setOverlayRole("segmentation");
+                formatChosenByUserRef.current = true;
+                setOverlayFormat("ome-tiff");
+              }}
+            />
+          </div>
+          {dicomAllowed ? (
+            <div className={styles.typeSection}>
+              <div className={styles.typeRow}>
+                <span className={styles.fieldLabel}>Format</span>
+                {FORMAT_OPTIONS.map(({ format, label }) => (
+                  <FormatChip
+                    key={format}
+                    label={label}
+                    selected={overlayFormat === format}
+                    suggested={detectedFormat === format}
+                    muted={detectedFormat !== format}
+                    onClick={() => {
+                      formatChosenByUserRef.current = true;
+                      setOverlayFormat(format);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {overlayRole === "segmentation" ? (
+            <div className={styles.typeRow}>
+              <span className={styles.fieldLabel}>Feature table</span>
+              <PanelActionButton
+                type="button"
+                onClick={() => {
+                  void (async () => {
+                    let file: File;
+                    try {
+                      file = await fileOpen({
+                        description: "Feature table CSV",
+                        mimeTypes: ["text/csv"],
+                        extensions: [".csv"],
+                        multiple: false,
+                      });
+                    } catch (e) {
+                      if (e instanceof Error && e.name === "AbortError") return;
+                      throw e;
+                    }
+                    setFeatureCsvFile(file);
+                    void peekFeatureCsv(file).then(setFeatureCsvCols);
+                  })();
+                }}
+              >
+                {featureCsvFile ? featureCsvFile.name : "Optional CSV…"}
+              </PanelActionButton>
+            </div>
+          ) : null}
+          {overlayRole === "segmentation" && featureCsvCols ? (
+            <FeatureCsvColumnPick
+              headers={featureCsvCols.headers}
+              id={featureCsvCols.id}
+              name={featureCsvCols.name}
+              onId={(id) => setFeatureCsvCols({ ...featureCsvCols, id })}
+              onName={(name) => setFeatureCsvCols({ ...featureCsvCols, name })}
+            />
+          ) : null}
+        </ImportOverlay>
+      ) : null}
     </>
   );
 };

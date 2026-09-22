@@ -233,38 +233,31 @@ export function FeatureCsvColumnPick(props: {
   onId: (value: string) => void;
   onName: (value: string) => void;
 }) {
+  const select = (
+    label: string,
+    value: string,
+    onChange: (value: string) => void,
+  ) => (
+    <label>
+      {label}
+      <select
+        className={styles.field}
+        value={value}
+        aria-label={`${label} column`}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {props.headers.map((h) => (
+          <option key={`${label}-${h}`} value={h}>
+            {h}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
   return (
     <div className={styles.colPick}>
-      <label>
-        ID
-        <select
-          className={styles.field}
-          value={props.id}
-          aria-label="ID column"
-          onChange={(e) => props.onId(e.target.value)}
-        >
-          {props.headers.map((h) => (
-            <option key={`id-${h}`} value={h}>
-              {h}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Name
-        <select
-          className={styles.field}
-          value={props.name}
-          aria-label="Name column"
-          onChange={(e) => props.onName(e.target.value)}
-        >
-          {props.headers.map((h) => (
-            <option key={`name-${h}`} value={h}>
-              {h}
-            </option>
-          ))}
-        </select>
-      </label>
+      {select("ID", props.id, props.onId)}
+      {select("Name", props.name, props.onName)}
     </div>
   );
 }
@@ -277,11 +270,10 @@ export function featureTableRowExtras(
     (c) => c.sourceChannelId === sourceChannelId,
   )?.id;
   return {
-    maskAction: (
-      <FeatureTableMaskAction
-        sourceChannelId={sourceChannelId}
-        featureTableId={featureTableId}
-      />
+    maskAction: featureTableId ? (
+      <FeatureTableMaskAction featureTableId={featureTableId} />
+    ) : (
+      <FeatureTableAttach sourceChannelId={sourceChannelId} />
     ),
     maskFooter: featureTableId ? (
       <FeatureTableListBody featureTableId={featureTableId} />
@@ -322,11 +314,8 @@ function FeatureTableGlyph(props: {
   );
 }
 
-function FeatureTableMaskAction(props: {
-  sourceChannelId: string;
-  featureTableId?: string;
-}) {
-  const { sourceChannelId, featureTableId } = props;
+function FeatureTableMaskAction(props: { featureTableId: string }) {
+  const { featureTableId } = props;
   const ingestEpoch = useSyncExternalStore(
     subscribeFeatureTableIngest,
     getFeatureTableIngestEpoch,
@@ -337,14 +326,10 @@ function FeatureTableMaskAction(props: {
     getFeatureTableAccess,
     getFeatureTableAccess,
   );
-  const handleKey = useDocumentStore((s) =>
-    featureTableId
-      ? s.featureTables.find((c) => c.id === featureTableId)?.source.handleKey
-      : undefined,
+  const handleKey = useDocumentStore(
+    (s) =>
+      s.featureTables.find((c) => c.id === featureTableId)?.source.handleKey,
   );
-  if (featureTableId == null) {
-    return <FeatureTableAttach sourceChannelId={sourceChannelId} />;
-  }
   void ingestEpoch;
   if (hasIngestedFeatureTable(featureTableId)) return null;
   if (

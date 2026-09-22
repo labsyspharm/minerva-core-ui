@@ -186,27 +186,21 @@ function scheduleClassPalette(
   if (names.length === 0) return;
   const job = {};
   paletteJobs.set(featureTableId, job);
+  const paint = (palette?: readonly { r: number; g: number; b: number }[]) => {
+    if (paletteJobs.get(featureTableId) !== job) return;
+    applyNameColors(
+      featureTableId,
+      names.map((name, i) => ({
+        name,
+        color: palette?.[i] ?? seedRgbForGroupChannelIndex(i),
+      })),
+    );
+  };
   void optimizeDistinctPalette(names.length)
-    .then((palette) => {
-      if (paletteJobs.get(featureTableId) !== job) return;
-      applyNameColors(
-        featureTableId,
-        names.map((name, i) => ({
-          name,
-          color: palette[i] ?? seedRgbForGroupChannelIndex(i),
-        })),
-      );
-    })
+    .then(paint)
     .catch((e) => {
       console.warn("[featureTable] class palette failed", e);
-      if (paletteJobs.get(featureTableId) !== job) return;
-      applyNameColors(
-        featureTableId,
-        names.map((name, i) => ({
-          name,
-          color: seedRgbForGroupChannelIndex(i),
-        })),
-      );
+      paint();
     })
     .finally(() => {
       if (paletteJobs.get(featureTableId) === job)

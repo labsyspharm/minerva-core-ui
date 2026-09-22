@@ -2111,14 +2111,8 @@ const Content = (props: Props) => {
           const w = img?.sizeX ?? 0;
           const h = img?.sizeY ?? 0;
           const ch = img?.sizeC ?? 0;
-          /** Only while demo bootstrap has not produced loaders yet — not “always” when demo_url is set. */
-          const isDemoBootstrap =
-            hasDemo &&
-            dicomIndexList.length === 0 &&
-            omeLoaderEntries.length === 0;
           if (dicomIndexList.length > 0) {
             loadedSource = {
-              kind: "dicom",
               label:
                 fileName ||
                 dicomIndexList
@@ -2130,7 +2124,6 @@ const Content = (props: Props) => {
               width: w,
               height: h,
               channelCount: ch,
-              isDemo: isDemoBootstrap,
             };
           } else if (omeLoaderEntries.length > 0) {
             const isUrlSource = handles.length === 0;
@@ -2138,22 +2131,18 @@ const Content = (props: Props) => {
               ? lastOmeTiffUrl || fileName || "Remote OME-TIFF"
               : fileName || handleNamesLabel || "OME-TIFF";
             loadedSource = {
-              kind: isUrlSource ? "ome-url" : "ome-local",
               label,
               width: w,
               height: h,
               channelCount: ch,
-              isDemo: isDemoBootstrap,
             };
           } else {
             loadedSource = {
-              kind: "ome-url",
               label:
                 lastOmeTiffUrl || fileName || handleNamesLabel || "Loading…",
               width: w,
               height: h,
               channelCount: ch,
-              isDemo: isDemoBootstrap,
             };
           }
         }
