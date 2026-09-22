@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-J2aMes5p.js","./pako.esm-KbdoS3Oq.js","./lerc-ONPHTOb-.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DW4VkGu_.js","./pako.esm-KbdoS3Oq.js","./lerc-C4Lxi1Ws.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -13233,7 +13233,7 @@ let __tla = (async () => {
   const wordmark$1 = "_wordmark_68zcf_20";
   const wordmarkDisplay = "_wordmarkDisplay_68zcf_32";
   const title$2 = "_title_68zcf_36";
-  const field$1 = "_field_68zcf_37";
+  const field$2 = "_field_68zcf_37";
   const input$1 = "_input_68zcf_62";
   const surface = "_surface_68zcf_82";
   const selectLeft = "_selectLeft_68zcf_89";
@@ -13258,7 +13258,7 @@ let __tla = (async () => {
     wordmark: wordmark$1,
     wordmarkDisplay,
     title: title$2,
-    field: field$1,
+    field: field$2,
     input: input$1,
     surface,
     selectLeft,
@@ -17260,22 +17260,6 @@ let __tla = (async () => {
       next2.channelGroups = next2.groups;
       delete next2.groups;
     }
-    if ("maskCatalogs" in next2 && !("classTables" in next2)) {
-      next2.classTables = next2.maskCatalogs;
-      delete next2.maskCatalogs;
-    }
-    if (Array.isArray(next2.classTables)) {
-      next2.classTables = next2.classTables.map((raw22) => {
-        if (raw22 === null || typeof raw22 !== "object" || Array.isArray(raw22)) {
-          return raw22;
-        }
-        const ct = raw22;
-        return {
-          ...ct,
-          nameColors: Array.isArray(ct.nameColors) ? ct.nameColors : []
-        };
-      });
-    }
     const shapes = next2.shapes;
     const waypoints = next2.waypoints;
     if (Array.isArray(shapes)) {
@@ -17469,7 +17453,7 @@ let __tla = (async () => {
     channels: arrayType(ChannelGroupChannelSchema)
   });
   const ClassIdSchema = numberType().int().positive().max(4294967295);
-  const ClassTableSchema = objectType({
+  const FeatureTableSchema = objectType({
     id: IdSchema,
     sourceChannelId: IdSchema,
     source: objectType({
@@ -17484,7 +17468,8 @@ let __tla = (async () => {
     columns: objectType({
       id: stringType().min(1),
       name: stringType().min(1)
-    }).optional()
+    }),
+    header: booleanType()
   });
   const waypointObjectZ = objectType({
     id: IdSchema,
@@ -17568,7 +17553,7 @@ let __tla = (async () => {
     shapes: arrayType(ShapeSchema),
     channelGroups: arrayType(ChannelGroupSchema),
     images: arrayType(ImageSchema$1),
-    classTables: arrayType(ClassTableSchema).default([])
+    featureTables: arrayType(FeatureTableSchema).default([])
   }));
   const jsonExportCoreSchema = objectType({
     version: unionType([
@@ -66510,26 +66495,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BsOqOA9S.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DMlDsMgt.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CczVzfYV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Vkn0MVMh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CTgMfFZl.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-D41CpDn4.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-J2aMes5p.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-xbXC4CEF.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-ONPHTOb-.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DW4VkGu_.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-Dpugnb7l.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-C4Lxi1Ws.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DClCjS8N.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BZmUouId.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DpZgQZI2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-Cc0ueavA.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -74362,7 +74347,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
   const OUTER_POLYGON_WINDING = WINDING.CLOCKWISE;
   const HOLE_POLYGON_WINDING = WINDING.COUNTER_CLOCKWISE;
   const windingOptions = {};
-  function validate$1(polygon) {
+  function validate(polygon) {
     polygon = polygon && polygon.positions || polygon;
     if (!Array.isArray(polygon) && !ArrayBuffer.isView(polygon)) {
       throw new Error("invalid polygon");
@@ -74434,7 +74419,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     return targetIndex;
   }
   function normalize$3(polygon, positionSize) {
-    validate$1(polygon);
+    validate(polygon);
     const positions = [];
     const holeIndices = [];
     if ("positions" in polygon) {
@@ -83468,8 +83453,87 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     __proto__: null,
     default: P
   };
+  function sanitizeOmeXml(raw2) {
+    let s2 = raw2.replaceAll("\0", "").trim();
+    if (!s2) return s2;
+    const endTag2 = s2.search(/<\/(?:ome:)?OME\s*>/i);
+    if (endTag2 >= 0) {
+      const gt = s2.indexOf(">", endTag2);
+      if (gt >= 0) s2 = s2.slice(0, gt + 1);
+    }
+    return s2.trim();
+  }
+  function parseOmeXml(raw2) {
+    const xml2 = sanitizeOmeXml(raw2);
+    if (!xml2) return null;
+    const doc = new DOMParser().parseFromString(xml2, "application/xml");
+    if (doc.getElementsByTagName("parsererror").length > 0) return null;
+    return doc;
+  }
+  function omePixelsElement(doc) {
+    return doc.getElementsByTagNameNS("*", "Pixels")[0] ?? null;
+  }
+  function omeChannelElements(pixels) {
+    return [
+      ...pixels.getElementsByTagNameNS("*", "Channel")
+    ].filter((el2) => el2.parentElement === pixels);
+  }
   function asAppLoader(image2) {
     return image2;
+  }
+  function tiffRational(tag) {
+    if (typeof tag === "number" && Number.isFinite(tag)) return tag;
+    if (tag != null && typeof tag === "object" && "length" in tag) {
+      const arr = tag;
+      if (arr.length < 1) return null;
+      const n2 = Number(arr[0]);
+      const d2 = arr.length >= 2 ? Number(arr[1]) : 1;
+      if (!Number.isFinite(n2) || !Number.isFinite(d2) || d2 === 0) return null;
+      return n2 / d2;
+    }
+    return null;
+  }
+  function isUnitlessPlaceholderResolution(fd2) {
+    if (fd2.ResolutionUnit !== 1) return false;
+    return tiffRational(fd2.XResolution) === 1 && tiffRational(fd2.YResolution) === 1;
+  }
+  function dtypeFromTiffDirectory(fileDirectory) {
+    var _a2, _b2;
+    const bits = ((_a2 = fileDirectory.BitsPerSample) == null ? void 0 : _a2[0]) ?? 16;
+    const sampleFormat = ((_b2 = fileDirectory.SampleFormat) == null ? void 0 : _b2[0]) ?? 1;
+    if (sampleFormat === 3) return bits === 64 ? "Float64" : "Float32";
+    if (sampleFormat === 2) {
+      if (bits <= 8) return "Int8";
+      if (bits <= 16) return "Int16";
+      return "Int32";
+    }
+    if (bits <= 8) return "Uint8";
+    if (bits <= 16) return "Uint16";
+    return "Uint32";
+  }
+  function parseFirstOmeImagePixels(imageDescription) {
+    if (typeof imageDescription !== "string" || imageDescription.trim() === "") {
+      return null;
+    }
+    const doc = parseOmeXml(imageDescription);
+    const pixels = doc ? omePixelsElement(doc) : null;
+    if (!pixels) return null;
+    const num2 = (name2) => {
+      const value = pixels.getAttribute(name2);
+      return value == null ? void 0 : Number(value);
+    };
+    const channelCount = omeChannelElements(pixels).length;
+    return {
+      ID: pixels.getAttribute("ID") ?? void 0,
+      Type: pixels.getAttribute("Type") ?? void 0,
+      SizeC: num2("SizeC") ?? (channelCount > 0 ? channelCount : void 0),
+      PhysicalSizeX: num2("PhysicalSizeX"),
+      PhysicalSizeY: num2("PhysicalSizeY"),
+      PhysicalSizeXUnit: pixels.getAttribute("PhysicalSizeXUnit") ?? void 0,
+      PhysicalSizeYUnit: pixels.getAttribute("PhysicalSizeYUnit") ?? void 0,
+      PhysicalSizeZUnit: pixels.getAttribute("PhysicalSizeZUnit") ?? void 0,
+      BigEndian: false
+    };
   }
   const FALLBACK_MAX_TEXTURE_SIZE = 4096;
   let cachedMaxTextureSize;
@@ -83500,16 +83564,149 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const offsets = image2.fileDirectory.SubIFDs;
     return Array.isArray(offsets) && offsets.length > 0;
   }
-  async function assertMaskFitsGpu(inFile) {
-    const tiff = await fromBlob(inFile);
-    const image2 = await tiff.getImage(0);
-    if (isTiffPyramided(image2) || isTiffTiled(image2)) return;
+  function vivTileSize(image2) {
+    const tw = image2.getTileWidth();
+    const th2 = image2.getTileHeight();
+    const size = Math.min(tw, th2);
+    return 2 ** Math.floor(Math.log2(Math.max(1, size)));
+  }
+  async function readTiffSample(image2, sample, window2) {
+    const width = window2 ? window2[2] - window2[0] : image2.getWidth();
+    const height = window2 ? window2[3] - window2[1] : image2.getHeight();
+    const raster = await image2.readRasters({
+      samples: [
+        sample
+      ],
+      interleave: true,
+      ...window2 ? {
+        window: window2,
+        width,
+        height
+      } : {}
+    });
+    return {
+      data: raster,
+      width: raster.width ?? width,
+      height: raster.height ?? height
+    };
+  }
+  async function resolveMaskPyramidImages(tiff, baseImage) {
+    const images = [
+      baseImage
+    ];
+    const offsets = baseImage.fileDirectory.SubIFDs;
+    if (!Array.isArray(offsets) || offsets.length === 0) return images;
+    const internals = tiff;
+    const baseInternals = baseImage;
+    if (typeof internals.parseFileDirectoryAt !== "function") return images;
+    const source2 = baseInternals.source ?? internals.source;
+    if (source2 == null) return images;
+    for (const offset of offsets) {
+      const parsed = await internals.parseFileDirectoryAt(offset);
+      images.push(new GeoTIFFImage(parsed.fileDirectory, parsed.geoKeyDirectory, baseInternals.dataView ?? internals.dataView, baseInternals.littleEndian ?? internals.littleEndian ?? true, baseInternals.cache ?? internals.cache, source2));
+    }
+    return images;
+  }
+  function maskPlaneFromImage(image2, sizeC, dtype) {
     const width = image2.getWidth();
     const height = image2.getHeight();
-    const maxTextureSize = queryMaxTextureSize();
-    if (width > maxTextureSize || height > maxTextureSize) {
-      throw new Error(`This mask is not tiled or pyramided and is too large for the GPU (${width}\xD7${height}; max texture ${maxTextureSize}). Export it as a tiled OME-TIFF pyramid and import again.`);
+    const tiled = isTiffTiled(image2);
+    const tileSize = tiled ? vivTileSize(image2) : Math.max(width, height, 1);
+    const clampC = (c2) => Math.max(0, Math.min(sizeC - 1, c2));
+    const getRaster = ({ selection }) => readTiffSample(image2, clampC(selection.c));
+    return {
+      dtype,
+      shape: [
+        1,
+        sizeC,
+        1,
+        height,
+        width
+      ],
+      tileSize,
+      labels: [
+        "t",
+        "c",
+        "z",
+        "y",
+        "x"
+      ],
+      onTileError: () => void 0,
+      getRaster,
+      getTile: tiled ? ({ x: x2, y: y2, selection }) => {
+        const x0 = x2 * tileSize;
+        const y0 = y2 * tileSize;
+        return readTiffSample(image2, clampC(selection.c), [
+          x0,
+          y0,
+          Math.min(x0 + tileSize, width),
+          Math.min(y0 + tileSize, height)
+        ]);
+      } : async ({ x: x2, y: y2, selection }) => {
+        if (x2 !== 0 || y2 !== 0) {
+          return {
+            data: new Uint8Array(0),
+            width: 0,
+            height: 0
+          };
+        }
+        return getRaster({
+          selection
+        });
+      }
+    };
+  }
+  async function maskLoaderFromBlob(inFile) {
+    const tiff = await fromBlob(inFile);
+    const baseImage = await tiff.getImage(0);
+    const fd2 = baseImage.fileDirectory;
+    const width = baseImage.getWidth();
+    const height = baseImage.getHeight();
+    if (!isTiffPyramided(baseImage) && !isTiffTiled(baseImage)) {
+      const maxTextureSize = queryMaxTextureSize();
+      if (width > maxTextureSize || height > maxTextureSize) {
+        throw new Error(`This mask is not tiled or pyramided and is too large for the GPU (${width}\xD7${height}; max texture ${maxTextureSize}). Export it as a tiled OME-TIFF pyramid and import again.`);
+      }
     }
+    const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
+    const dtype = dtypeFromTiffDirectory(fd2);
+    const ome = parseFirstOmeImagePixels(fd2.ImageDescription);
+    const sizeC = Math.max(1, (ome == null ? void 0 : ome.SizeC) ?? fd2.SamplesPerPixel ?? 1);
+    const channels2 = Array.from({
+      length: sizeC
+    }, (_2, i2) => ({
+      ID: `Channel:0:${i2}`,
+      Name: sizeC === 1 ? "Mask" : `Mask ${i2 + 1}`,
+      SamplesPerPixel: 1
+    }));
+    const pixels = {
+      ID: (ome == null ? void 0 : ome.ID) ?? "Pixels:0",
+      DimensionOrder: "XYZCT",
+      Type: (ome == null ? void 0 : ome.Type) ?? dtype,
+      SizeT: 1,
+      SizeC: sizeC,
+      SizeZ: 1,
+      SizeY: height,
+      SizeX: width,
+      PhysicalSizeX: (ome == null ? void 0 : ome.PhysicalSizeX) ?? (isUnitlessPlaceholderResolution(fd2) ? 0 : 1),
+      PhysicalSizeY: (ome == null ? void 0 : ome.PhysicalSizeY) ?? (isUnitlessPlaceholderResolution(fd2) ? 0 : 1),
+      PhysicalSizeXUnit: (ome == null ? void 0 : ome.PhysicalSizeXUnit) ?? "\xB5m",
+      PhysicalSizeYUnit: (ome == null ? void 0 : ome.PhysicalSizeYUnit) ?? "\xB5m",
+      PhysicalSizeZUnit: (ome == null ? void 0 : ome.PhysicalSizeZUnit) ?? "\xB5m",
+      BigEndian: (ome == null ? void 0 : ome.BigEndian) ?? false,
+      TiffData: [],
+      Channels: channels2
+    };
+    return {
+      data: pyramidImages.map((image2) => maskPlaneFromImage(image2, channels2.length, dtype)),
+      metadata: {
+        ID: "Image:0",
+        AquisitionDate: "",
+        Description: "",
+        Pixels: pixels,
+        ROIs: []
+      }
+    };
   }
   function hasDirectoryPickerAccess() {
     return typeof window !== "undefined" && "showDirectoryPicker" in window;
@@ -83627,13 +83824,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       } : {}
     };
   }
-  async function toMaskLoaderFromFile(inFile, pool) {
-    await assertMaskFitsGpu(inFile);
-    const file = inFile instanceof File ? inFile : new File([
-      inFile
-    ], "mask.ome.tif");
-    return asAppLoader(await loadOmeTiff(file, vivLoadOpts(pool)));
-  }
   async function pickLocalOmeTiffHandle() {
     const picked = await toFile();
     if (picked.length === 0) return null;
@@ -83649,7 +83839,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (source2.kind === "local") {
       const file = await source2.handle.getFile();
       if (role === "segmentation") {
-        return toMaskLoaderFromFile(file, source2.pool);
+        return maskLoaderFromBlob(file);
       }
       return asAppLoader(await loadOmeTiff(file, vivLoadOpts(source2.pool, packedRgb)));
     }
@@ -83658,7 +83848,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (!response.ok) {
         throw new Error(`Failed to fetch mask OME-TIFF (${response.status})`);
       }
-      return toMaskLoaderFromFile(await response.blob(), source2.pool);
+      return maskLoaderFromBlob(await response.blob());
     }
     return asAppLoader(await loadOmeTiff(source2.url, vivLoadOpts(source2.pool, packedRgb)));
   }
@@ -83696,6 +83886,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     if (handle2.kind === "file") return handle2;
     return void 0;
+  }
+  async function deleteFileHandle(id2) {
+    sessionHandles.delete(id2);
+    await storyDb.handles.delete(id2);
   }
   async function deleteFileHandlesForStory(storyId) {
     const prefix = `story:${storyId}:`;
@@ -84216,14 +84410,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     next2[idx] = replacement;
     return next2;
   }
-  function removeImageFromDocument(images, channelGroups, imageId, classTables) {
+  function removeImageFromDocument(images, channelGroups, imageId, featureTables) {
     const image2 = images.find((im) => im.id === imageId);
     if (!image2) {
       return {
         images,
         channelGroups,
         removedChannelIds: [],
-        classTables
+        featureTables
       };
     }
     const removedChannelIds = image2.channels.map((ch2) => ch2.id);
@@ -84235,7 +84429,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         channels: g2.channels.filter((gc2) => !removed.has(gc2.channelId))
       })).filter((g2) => g2.channels.length > 0),
       removedChannelIds,
-      classTables: classTables.filter((c2) => !removed.has(c2.sourceChannelId))
+      featureTables: featureTables.filter((c2) => !removed.has(c2.sourceChannelId))
     };
   }
   function basenameImportLabel(basename2) {
@@ -85220,7 +85414,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (Array.isArray(sids)) for (const sid of sids) note(sid);
     }
     for (const s2 of data2.shapes) note(s2 == null ? void 0 : s2.id);
-    for (const raw2 of data2.classTables ?? []) {
+    for (const raw2 of data2.featureTables ?? []) {
       const row2 = raw2;
       note(row2 == null ? void 0 : row2.id);
       if ((row2 == null ? void 0 : row2.sourceChannelId) != null) note(row2.sourceChannelId);
@@ -85286,19 +85480,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const cgSame = channelGroups.every((g2, i2) => g2 === data2.channelGroups[i2]);
     const wpSame = waypoints.every((w2, i2) => w2 === data2.waypoints[i2]);
     const seenChannel = /* @__PURE__ */ new Set();
-    const classTables = data2.classTables.filter((c2) => {
+    const featureTables = data2.featureTables.filter((c2) => {
       if (!imageChannelIds.has(c2.sourceChannelId)) return false;
       if (seenChannel.has(c2.sourceChannelId)) return false;
       seenChannel.add(c2.sourceChannelId);
       return true;
     });
-    const tablesSame = classTables.length === data2.classTables.length;
+    const tablesSame = featureTables.length === data2.featureTables.length;
     if (cgSame && wpSame && tablesSame) return data2;
     return {
       ...data2,
       channelGroups,
       waypoints,
-      classTables
+      featureTables
     };
   }
   function validateDocumentRelations(data2) {
@@ -85334,7 +85528,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         shapes: candidate.shapes,
         channelGroups: [],
         images: [],
-        classTables: []
+        featureTables: []
       };
     } else if (candidate !== null && typeof candidate === "object" && !Array.isArray(candidate) && Array.isArray(candidate.waypoints) && Array.isArray(candidate.shapes) && (Array.isArray(candidate.groups) || Array.isArray(candidate.channelGroups)) && Array.isArray(candidate.sourceChannels) && !(Array.isArray(candidate.images) && candidate.images.some((im) => im && Array.isArray(im.channels) && im.channels.length > 0))) {
       candidate = normalizeLegacySnapshot(candidate);
@@ -85368,7 +85562,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       shapes: shapesIn.filter((s2) => s2 != null && typeof s2 === "object" && !Array.isArray(s2) && typeof s2.type === "string"),
       channelGroups: Array.isArray(rawCg) ? rawCg : [],
       images: imagesDraft,
-      classTables: Array.isArray(asRecord.classTables) ? asRecord.classTables : []
+      featureTables: Array.isArray(asRecord.featureTables) ? asRecord.featureTables : []
     };
     for (const im of draft.images) {
       if (!Array.isArray(im.channels)) im.channels = [];
@@ -85431,7 +85625,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       shapes: [],
       channelGroups: [],
       images: [],
-      classTables: []
+      featureTables: []
     };
   }
   async function setActiveStoryId(id2) {
@@ -85510,7 +85704,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       shapes: [],
       channelGroups: [],
       images: [],
-      classTables: [],
+      featureTables: [],
       metadata: {}
     };
   }
@@ -85530,9 +85724,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return s2.shapes;
   }
   function documentUndoEquality(past, current) {
-    if (past.classTables !== current.classTables) return false;
-    const { classTables: _p, ...p2 } = past;
-    const { classTables: _c2, ...c2 } = current;
+    if (past.featureTables !== current.featureTables) return false;
+    const { featureTables: _p, ...p2 } = past;
+    const { featureTables: _c2, ...c2 } = current;
     return stableHash(p2) === stableHash(c2);
   }
   const documentTemporalOptions = {
@@ -85541,7 +85735,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       shapes: state.shapes,
       channelGroups: state.channelGroups,
       images: state.images,
-      classTables: state.classTables,
+      featureTables: state.featureTables,
       metadata: state.metadata
     }),
     limit: 100,
@@ -85569,8 +85763,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         images: [
           ...data2.images
         ],
-        classTables: [
-          ...data2.classTables
+        featureTables: [
+          ...data2.featureTables
         ],
         metadata: {
           ...m2,
@@ -85596,8 +85790,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           images: [
             ...data2.images
           ],
-          classTables: [
-            ...data2.classTables
+          featureTables: [
+            ...data2.featureTables
           ],
           metadata: {
             ...m2,
@@ -85626,8 +85820,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         images: [
           ...s2.images
         ],
-        classTables: [
-          ...s2.classTables
+        featureTables: [
+          ...s2.featureTables
         ]
       };
     },
@@ -85669,8 +85863,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         images: [
           ...rec.data.images
         ],
-        classTables: [
-          ...rec.data.classTables ?? []
+        featureTables: [
+          ...rec.data.featureTables ?? []
         ],
         metadata: {
           ...rec.data.metadata
@@ -85699,8 +85893,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         images: [
           ...rec.data.images
         ],
-        classTables: [
-          ...rec.data.classTables ?? []
+        featureTables: [
+          ...rec.data.featureTables ?? []
         ],
         metadata: {
           ...rec.data.metadata
@@ -85733,8 +85927,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           images: [
             ...rec2.data.images
           ],
-          classTables: [
-            ...rec2.data.classTables ?? []
+          featureTables: [
+            ...rec2.data.featureTables ?? []
           ],
           metadata: {
             ...rec2.data.metadata
@@ -85766,8 +85960,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         images: [
           ...rec.data.images
         ],
-        classTables: [
-          ...rec.data.classTables ?? []
+        featureTables: [
+          ...rec.data.featureTables ?? []
         ],
         metadata: {
           ...rec.data.metadata
@@ -85795,9 +85989,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         ...images
       ]
     })),
-    setClassTables: (classTables) => set2(() => ({
-      classTables: [
-        ...classTables
+    setFeatureTables: (featureTables) => set2(() => ({
+      featureTables: [
+        ...featureTables
       ]
     })),
     setImagesAndChannelGroups: (images, channelGroups) => set2(() => ({
@@ -86395,7 +86589,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     channelRendering: null,
     maskVisualizationPreview: null,
     channelVisibilities: {},
-    classTableVisibilities: {},
+    featureTableVisibilities: {},
     channelGroupRowVisibilities: {},
     groupNames: {},
     targetWaypointCamera: null,
@@ -86661,7 +86855,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         imageSelectionMask: null,
         maskVisualizationPreview: null,
         channelVisibilities: vis,
-        classTableVisibilities: {},
+        featureTableVisibilities: {},
         activeStoryIndex: null,
         waypointAuthoring: /* @__PURE__ */ new Map(),
         authoringWaypointShapesIndex: null,
@@ -87727,19 +87921,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     const { channelVisibilities } = visibility;
     delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
-    const classTableIds = new Set(doc.classTables.map((c2) => c2.id));
-    const classTableVisibilities = {
-      ...app.classTableVisibilities
+    const featureTableIds = new Set(doc.featureTables.map((c2) => c2.id));
+    const featureTableVisibilities = {
+      ...app.featureTableVisibilities
     };
-    for (const id2 of Object.keys(classTableVisibilities)) {
-      if (!classTableIds.has(id2)) delete classTableVisibilities[id2];
+    for (const id2 of Object.keys(featureTableVisibilities)) {
+      if (!featureTableIds.has(id2)) delete featureTableVisibilities[id2];
     }
     const activeId = app.activeChannelGroupId;
     const nextActiveId = activeId && groups.some((g2) => g2.id === activeId) ? activeId : ((_a2 = groups[0]) == null ? void 0 : _a2.id) ?? null;
     useAppStore.setState({
       groupNames,
       channelVisibilities,
-      classTableVisibilities,
+      featureTableVisibilities,
       channelGroupRowVisibilities: visibility.channelGroupRowVisibilities,
       activeChannelGroupId: nextActiveId
     });
@@ -90164,6 +90358,177 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })
     });
   }
+  function TrashIcon({ title: title7, size = 14 }) {
+    const label2 = title7 ?? "Delete";
+    return jsxRuntimeExports.jsxs("svg", {
+      "aria-hidden": title7 ? void 0 : true,
+      width: size,
+      height: size,
+      viewBox: "0 0 24 24",
+      fill: "currentColor",
+      children: [
+        jsxRuntimeExports.jsx("title", {
+          children: label2
+        }),
+        jsxRuntimeExports.jsx("path", {
+          d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+        })
+      ]
+    });
+  }
+  const stack = "_stack_o8d7w_1";
+  const panelDropActive = "_panelDropActive_o8d7w_11";
+  const addStrip = "_addStrip_o8d7w_16";
+  const addStripRow = "_addStripRow_o8d7w_27";
+  const dropZone = "_dropZone_o8d7w_41";
+  const dropZoneTitle = "_dropZoneTitle_o8d7w_51";
+  const orDivider = "_orDivider_o8d7w_57";
+  const urlRow = "_urlRow_o8d7w_68";
+  const urlField = "_urlField_o8d7w_77";
+  const urlInput = "_urlInput_o8d7w_83";
+  const urlAdd = "_urlAdd_o8d7w_91";
+  const dropZoneActive = "_dropZoneActive_o8d7w_121";
+  const importError = "_importError_o8d7w_175";
+  const fieldLabel = "_fieldLabel_o8d7w_188";
+  const typeOverlay = "_typeOverlay_o8d7w_202";
+  const typeOverlayBackdrop = "_typeOverlayBackdrop_o8d7w_214";
+  const typeOverlayCard = "_typeOverlayCard_o8d7w_220";
+  const typeOverlayFields = "_typeOverlayFields_o8d7w_234";
+  const typeOverlayFile = "_typeOverlayFile_o8d7w_244";
+  const typeRow = "_typeRow_o8d7w_253";
+  const typeChipActive = "_typeChipActive_o8d7w_261";
+  const typeChipSuggested = "_typeChipSuggested_o8d7w_265";
+  const typeChipMuted = "_typeChipMuted_o8d7w_270";
+  const typeFooter = "_typeFooter_o8d7w_284";
+  const typeImport = "_typeImport_o8d7w_293";
+  const typeSection = "_typeSection_o8d7w_300";
+  const imageCard = "_imageCard_o8d7w_308";
+  const fileAccessOverlay = "_fileAccessOverlay_o8d7w_320";
+  const fileAccessAction = "_fileAccessAction_o8d7w_336";
+  const imageCardHeader = "_imageCardHeader_o8d7w_344";
+  const imageCardText = "_imageCardText_o8d7w_352";
+  const imageCardTitle = "_imageCardTitle_o8d7w_360";
+  const imageCardMeta = "_imageCardMeta_o8d7w_368";
+  const imageCardActions = "_imageCardActions_o8d7w_374";
+  const styles$p = {
+    stack,
+    panelDropActive,
+    addStrip,
+    addStripRow,
+    dropZone,
+    dropZoneTitle,
+    orDivider,
+    urlRow,
+    urlField,
+    urlInput,
+    urlAdd,
+    dropZoneActive,
+    importError,
+    fieldLabel,
+    typeOverlay,
+    typeOverlayBackdrop,
+    typeOverlayCard,
+    typeOverlayFields,
+    typeOverlayFile,
+    typeRow,
+    typeChipActive,
+    typeChipSuggested,
+    typeChipMuted,
+    typeFooter,
+    typeImport,
+    typeSection,
+    imageCard,
+    fileAccessOverlay,
+    fileAccessAction,
+    imageCardHeader,
+    imageCardText,
+    imageCardTitle,
+    imageCardMeta,
+    imageCardActions
+  };
+  function ImportOverlay(props) {
+    const busy = props.busy === true;
+    return reactDomExports.createPortal(jsxRuntimeExports.jsxs("div", {
+      className: styles$p.typeOverlay,
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-busy": busy,
+      "aria-labelledby": props.titleId,
+      children: [
+        jsxRuntimeExports.jsx("div", {
+          className: styles$p.typeOverlayBackdrop,
+          "aria-hidden": "true"
+        }),
+        jsxRuntimeExports.jsxs("div", {
+          className: `${minervaTheme.surface} ${styles$p.typeOverlayCard}`,
+          children: [
+            jsxRuntimeExports.jsx("div", {
+              id: props.titleId,
+              className: styles$p.typeOverlayFile,
+              title: props.title,
+              children: props.title
+            }),
+            props.children != null ? jsxRuntimeExports.jsx("fieldset", {
+              disabled: props.importDisabled || busy,
+              className: styles$p.typeOverlayFields,
+              children: props.children
+            }) : null,
+            props.error ? jsxRuntimeExports.jsx("div", {
+              className: styles$p.importError,
+              role: "alert",
+              children: props.error
+            }) : null,
+            jsxRuntimeExports.jsxs("div", {
+              className: styles$p.typeFooter,
+              children: [
+                jsxRuntimeExports.jsx(PanelActionButton, {
+                  type: "button",
+                  onClick: props.onCancel,
+                  disabled: props.cancelDisabled,
+                  children: "Cancel"
+                }),
+                jsxRuntimeExports.jsx(PanelActionButton, {
+                  type: "button",
+                  className: styles$p.typeImport,
+                  disabled: props.importDisabled,
+                  onClick: props.onImport,
+                  children: busy ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+                    children: [
+                      jsxRuntimeExports.jsx("span", {
+                        className: minervaTheme.spinnerSm,
+                        "aria-hidden": "true"
+                      }),
+                      props.busyLabel ?? "Importing\u2026"
+                    ]
+                  }) : "Import"
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    }), document.body);
+  }
+  const SvgFolder = (props) => reactExports.createElement("svg", {
+    width: "1em",
+    height: "1em",
+    viewBox: "0 0 16 16",
+    fill: "currentColor",
+    stroke: "none",
+    ...props
+  }, reactExports.createElement("path", {
+    d: "M.75,3.82c0-.93.75-1.67,1.67-1.67h3.77c.45,0,.86.2,1.14.54l1.23,1.14h5.02c.93,0,1.67.75,1.67,1.67v6.69c0,.93-.75,1.67-1.67,1.67H2.42c-.93,0-1.67-.75-1.67-1.67V3.82Z"
+  }));
+  const authorPanel = "_authorPanel_1yzv8_3";
+  const authorPanelBody = "_authorPanelBody_1yzv8_14";
+  const emptyMessage = "_emptyMessage_1yzv8_21";
+  const thinScrollbar = "_thinScrollbar_1yzv8_29";
+  const panel$1 = {
+    authorPanel,
+    authorPanelBody,
+    emptyMessage,
+    thinScrollbar
+  };
   const DEFAULT_LUMINANCE = new Uint16Array([
     60,
     92
@@ -90172,6 +90537,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const PSUDO_MAX_ITERS = 2700;
   const PSUDO_CONFUSION_BASELINE_SAMPLES = 32;
   const PSUDO_NUM_RESTARTS = 18;
+  const CLASS_PALETTE_MAX_ITERS = 400;
+  const CLASS_PALETTE_CONFUSION_SAMPLES = 16;
+  const CLASS_PALETTE_RESTARTS = 3;
   const PSUDO_CONTRAST_MIN = 0;
   const PSUDO_CONTRAST_MAX = 65535;
   function clampUint16(n2) {
@@ -90244,7 +90612,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const linear = optimized instanceof Float32Array ? optimized : new Float32Array(optimized);
     return linear;
   }
-  async function optimizePaletteSlots(slots, lockedIds = /* @__PURE__ */ new Set()) {
+  async function optimizePaletteSlots(slots, lockedIds = /* @__PURE__ */ new Set(), budget) {
     if (slots.length < 2) {
       throw new Error("At least two channels are required to optimize a palette.");
     }
@@ -90254,6 +90622,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }));
     }
     const inputs = buildOptimizeInputsFromSlots(slots, lockedIds);
+    if (budget) {
+      inputs.maxIters = budget.maxIters;
+      inputs.confusionSamples = budget.confusionSamples;
+      inputs.numRestarts = budget.numRestarts;
+    }
     const nChannels = inputs.colorNames.length;
     const linear = await invokePsudoOptimize(inputs);
     const out = [];
@@ -90282,7 +90655,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       id: String(i2),
       color: seedRgbForGroupChannelIndex(i2)
     }));
-    return optimizePaletteSlots(slots);
+    return optimizePaletteSlots(slots, /* @__PURE__ */ new Set(), {
+      maxIters: CLASS_PALETTE_MAX_ITERS,
+      confusionSamples: CLASS_PALETTE_CONFUSION_SAMPLES,
+      numRestarts: CLASS_PALETTE_RESTARTS
+    });
   }
   function isGroupEligibleForPsudoOptimize(group2, sourceChannels) {
     let imageChannelCount = 0;
@@ -90711,23 +91088,43 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   let nextId = 1;
   let ingestEpoch = 0;
   const ingestListeners = /* @__PURE__ */ new Set();
+  const classIndexCache = /* @__PURE__ */ new Map();
+  const ingestedIds = /* @__PURE__ */ new Set();
   const pending = /* @__PURE__ */ new Map();
-  function subscribeClassTableIngest(onStoreChange) {
+  function subscribeFeatureTableIngest(onStoreChange) {
     ingestListeners.add(onStoreChange);
     return () => {
       ingestListeners.delete(onStoreChange);
     };
   }
-  function getClassTableIngestEpoch() {
+  function getFeatureTableIngestEpoch() {
     return ingestEpoch;
   }
   function noteIngest() {
     ingestEpoch += 1;
     for (const fn of ingestListeners) fn();
   }
+  function stashClassIndex(featureTableId, names, index2, width, height) {
+    if (!index2 || !width || !height) {
+      classIndexCache.delete(featureTableId);
+      return;
+    }
+    classIndexCache.set(featureTableId, {
+      data: index2,
+      width,
+      height,
+      names
+    });
+  }
+  function peekClassIndex(featureTableId) {
+    return classIndexCache.get(featureTableId);
+  }
+  function hasIngestedFeatureTable(featureTableId) {
+    return ingestedIds.has(featureTableId);
+  }
   function ensureWorker() {
     if (worker) return worker;
-    worker = new Worker(new URL("" + new URL("worker-BNB8VcaP.js", import.meta.url).href, import.meta.url), {
+    worker = new Worker(new URL("" + new URL("worker-R4LEwTGc.js", import.meta.url).href, import.meta.url), {
       type: "module"
     });
     worker.onmessage = (e2) => {
@@ -90737,7 +91134,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       waiter.resolve(e2.data);
     };
     worker.onerror = (e2) => {
-      const err2 = new Error(e2.message || "class table worker failed");
+      console.error("[featureTable] worker", e2);
+      const err2 = new Error(e2.message || "feature table worker failed");
       for (const waiter of pending.values()) waiter.reject(err2);
       pending.clear();
       worker = null;
@@ -90758,29 +91156,51 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }, transfer ?? []);
     });
   }
-  async function ingestClassTable(classTableId, bytes, columns) {
-    const copy2 = new Uint8Array(bytes.byteLength);
-    copy2.set(bytes);
-    const msg = await request({
-      type: "ingest",
-      classTableId,
-      bytes: copy2,
-      columns
-    }, [
-      copy2.buffer
-    ]);
+  async function ingestFeatureTable(featureTableId, source2, columns) {
+    const cols = columns ? {
+      id: columns.id,
+      name: columns.name
+    } : void 0;
+    const header = columns == null ? void 0 : columns.header;
+    let msg;
+    if (source2 instanceof File) {
+      msg = await request({
+        type: "ingest",
+        featureTableId,
+        file: source2,
+        columns: cols,
+        header
+      });
+    } else {
+      const copy2 = new Uint8Array(source2.byteLength);
+      copy2.set(source2);
+      msg = await request({
+        type: "ingest",
+        featureTableId,
+        bytes: copy2,
+        columns: cols,
+        header
+      }, [
+        copy2.buffer
+      ]);
+    }
     if (msg.type === "error") throw new Error(msg.message);
     if (msg.type !== "ingested") throw new Error("unexpected ingest reply");
+    ingestedIds.add(featureTableId);
+    stashClassIndex(featureTableId, msg.names, msg.index, msg.indexWidth, msg.indexHeight);
     noteIngest();
     return {
       maxClassId: msg.maxClassId,
-      names: msg.names
+      names: msg.names,
+      persist: msg.persist,
+      columns: msg.columns,
+      header: msg.header
     };
   }
-  async function pageClassTable(classTableId, query, offset, limit) {
+  async function pageFeatureTable(featureTableId, query, offset, limit) {
     const msg = await request({
       type: "page",
-      classTableId,
+      featureTableId,
       query,
       offset,
       limit
@@ -90792,48 +91212,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       total: msg.total
     };
   }
-  async function rebuildClassTableLut(input2) {
+  async function fetchClassIndex(featureTableId) {
+    const hit = classIndexCache.get(featureTableId);
+    if (hit) return hit;
     const msg = await request({
-      type: "rebuildLut",
-      classTableId: input2.classTableId,
-      maxClassId: input2.maxClassId,
-      seed: input2.seed,
-      nameColors: input2.nameColors,
-      vis: !input2.vis || input2.vis.mode === "all" ? {
-        mode: "all"
-      } : {
-        mode: input2.vis.mode,
-        names: [
-          ...input2.vis.names
-        ]
-      }
+      type: "classIndex",
+      featureTableId
     });
     if (msg.type === "error") throw new Error(msg.message);
-    if (msg.type !== "lut") throw new Error("unexpected lut reply");
-    if (msg.strategy === "denseLut") {
-      return {
-        strategy: "denseLut",
-        rgba: msg.rgba,
-        width: msg.width,
-        height: msg.height,
-        rev: input2.rev
-      };
-    }
-    return {
-      strategy: "sparse",
-      missHidden: msg.missHidden,
-      overrides: msg.overrides,
-      rev: input2.rev
-    };
+    if (msg.type !== "classIndex") throw new Error("unexpected classIndex reply");
+    stashClassIndex(featureTableId, msg.names, msg.index, msg.indexWidth, msg.indexHeight);
+    return classIndexCache.get(featureTableId);
   }
-  async function dropClassTable(classTableId) {
+  async function dropFeatureTable(featureTableId) {
+    ingestedIds.delete(featureTableId);
+    classIndexCache.delete(featureTableId);
     const msg = await request({
       type: "drop",
-      classTableId
+      featureTableId
     });
     if (msg.type === "error") throw new Error(msg.message);
   }
-  async function resetClassTables() {
+  async function resetFeatureTables() {
+    ingestedIds.clear();
+    classIndexCache.clear();
     if (!worker) return;
     const msg = await request({
       type: "reset"
@@ -90841,6 +91243,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (msg.type === "error") throw new Error(msg.message);
     noteIngest();
   }
+  const MAX_CLASS_NAMES = 255;
   const ID_ALIASES = /* @__PURE__ */ new Set([
     "classid",
     "classids",
@@ -90905,9 +91308,44 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...guess
     };
   }
-  async function peekClassCsv(file) {
+  async function peekFeatureCsv(file) {
     const bytes = new Uint8Array(await file.slice(0, 8192).arrayBuffer());
     return peekCsvHeaders(bytes);
+  }
+  const attachListeners = /* @__PURE__ */ new Set();
+  const pendingAttachSet = /* @__PURE__ */ new Set();
+  let pendingAttachIds = [];
+  function subscribeFeatureTablePending(onStoreChange) {
+    attachListeners.add(onStoreChange);
+    return () => {
+      attachListeners.delete(onStoreChange);
+    };
+  }
+  function getFeatureTablePendingSourceIds() {
+    return pendingAttachIds;
+  }
+  const emptyAccess = {
+    deniedHandleKeys: [],
+    missingHandleKeys: []
+  };
+  let featureTableAccess = emptyAccess;
+  const accessListeners = /* @__PURE__ */ new Set();
+  function noteAccess(next2) {
+    featureTableAccess = next2;
+    for (const fn of accessListeners) fn();
+  }
+  function subscribeFeatureTableAccess(onStoreChange) {
+    accessListeners.add(onStoreChange);
+    return () => {
+      accessListeners.delete(onStoreChange);
+    };
+  }
+  function getFeatureTableAccess() {
+    return featureTableAccess;
+  }
+  async function dropStoredSource(handleKey) {
+    await deleteBlob(handleKey).catch(() => void 0);
+    await deleteFileHandle(handleKey).catch(() => void 0);
   }
   function classNameVisible(vis, name2) {
     if (!vis || vis.mode === "all") return true;
@@ -90968,25 +91406,46 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       names: current.names.filter((n2) => n2 !== name2)
     };
   }
-  function asColumns(c2) {
-    return (c2 == null ? void 0 : c2.id) && (c2 == null ? void 0 : c2.name) ? {
-      id: c2.id,
-      name: c2.name
-    } : void 0;
+  function featureTableForChannel(sourceChannelId) {
+    return useDocumentStore.getState().featureTables.find((c2) => c2.sourceChannelId === sourceChannelId);
   }
-  function classTableForChannel(sourceChannelId) {
-    return useDocumentStore.getState().classTables.find((c2) => c2.sourceChannelId === sourceChannelId);
-  }
-  async function nameColorsFromNames(names) {
-    const palette = await optimizeDistinctPalette(names.length);
-    return names.map((name2, i2) => ({
-      name: name2,
-      color: palette[i2] ?? {
-        r: 128,
-        g: 128,
-        b: 128
-      }
+  const paletteJobs = /* @__PURE__ */ new Map();
+  function applyNameColors(featureTableId, nameColors) {
+    const doc = useDocumentStore.getState();
+    const current = doc.featureTables.find((c2) => c2.id === featureTableId);
+    if (!current) return;
+    const have = new Map(current.nameColors.map((c2) => [
+      c2.name,
+      c2
+    ]));
+    doc.setFeatureTables(doc.featureTables.map((c2) => {
+      if (c2.id !== featureTableId) return c2;
+      return {
+        ...c2,
+        nameColors: nameColors.map((row2) => have.get(row2.name) ?? row2)
+      };
     }));
+  }
+  function scheduleClassPalette(featureTableId, names) {
+    if (names.length === 0) return;
+    const job = {};
+    paletteJobs.set(featureTableId, job);
+    const paint = (palette) => {
+      if (paletteJobs.get(featureTableId) !== job) return;
+      applyNameColors(featureTableId, names.map((name2, i2) => ({
+        name: name2,
+        color: (palette == null ? void 0 : palette[i2]) ?? seedRgbForGroupChannelIndex(i2)
+      })));
+    };
+    void optimizeDistinctPalette(names.length).then(paint).catch((e2) => {
+      console.warn("[featureTable] class palette failed", e2);
+      paint();
+    }).finally(() => {
+      if (paletteJobs.get(featureTableId) === job) paletteJobs.delete(featureTableId);
+    });
+  }
+  function cancelClassPalette(featureTableId) {
+    paletteJobs.delete(featureTableId);
   }
   async function sha256Hex(bytes) {
     const copy2 = new Uint8Array(bytes.byteLength);
@@ -90996,232 +91455,210 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...new Uint8Array(hash)
     ].map((b2) => b2.toString(16).padStart(2, "0")).join("");
   }
-  const lutCache = /* @__PURE__ */ new Map();
-  const lutPending = /* @__PURE__ */ new Map();
+  const lutPending = /* @__PURE__ */ new Set();
   let lutEpoch = 0;
   const lutListeners = /* @__PURE__ */ new Set();
-  function subscribeClassTableLut(onStoreChange) {
+  function subscribeFeatureTableLut(onStoreChange) {
     lutListeners.add(onStoreChange);
     return () => {
       lutListeners.delete(onStoreChange);
     };
   }
-  function getClassTableLutEpoch() {
+  function getFeatureTableLutEpoch() {
     return lutEpoch;
   }
   function noteLut() {
     lutEpoch += 1;
     for (const fn of lutListeners) fn();
   }
-  function clearLut(classTableId) {
-    lutCache.delete(classTableId);
-    lutPending.delete(classTableId);
-  }
-  function lutRev(classTable, vis, seed) {
+  function paletteRev(featureTable, vis, seed) {
     const visPart = !vis || vis.mode === "all" ? "all" : `${vis.mode}:${vis.names.join("\0")}`;
-    const colors = classTable.nameColors.map((c2) => `${c2.name}:${c2.color.r},${c2.color.g},${c2.color.b}`).join(";");
-    return `${classTable.digest}:${seed}:${visPart}:${colors}`;
+    const colors = featureTable.nameColors.map((c2) => `${c2.name}:${c2.color.r},${c2.color.g},${c2.color.b}`).join(";");
+    return `${featureTable.digest}:${seed}:${visPart}:${colors}`;
   }
-  function fallbackStyle(classTable, vis, seed, rev) {
-    const maxClassId = classTable.maxClassId;
-    if (maxClassId + 1 > 1048576) {
-      return {
-        strategy: "sparse",
-        missHidden: (vis == null ? void 0 : vis.mode) === "show",
-        overrides: new Uint32Array(32),
-        rev
-      };
-    }
-    const unnamedAlpha = (vis == null ? void 0 : vis.mode) === "show" ? 0 : 255;
-    const width = Math.min(1024, Math.max(1, maxClassId + 1));
-    const height = Math.max(1, Math.ceil((maxClassId + 1) / width));
-    const rgba = new Uint8Array(width * height * 4);
-    for (let id2 = 1; id2 <= maxClassId; id2++) {
-      const color2 = defaultClassColor(id2, seed);
-      const x2 = id2 % width;
-      const y2 = Math.floor(id2 / width);
-      const i2 = (y2 * width + x2) * 4;
-      rgba[i2] = color2.r;
-      rgba[i2 + 1] = color2.g;
-      rgba[i2 + 2] = color2.b;
-      rgba[i2 + 3] = unnamedAlpha;
-    }
-    return {
-      strategy: "denseLut",
-      rgba,
-      width,
-      height,
-      rev
-    };
-  }
-  function ensureLut(classTable, vis, seed, rev) {
-    if (lutPending.get(classTable.id) === rev) return;
-    lutPending.set(classTable.id, rev);
-    void rebuildClassTableLut({
-      classTableId: classTable.id,
-      maxClassId: classTable.maxClassId,
-      seed,
-      nameColors: classTable.nameColors.map((c2) => ({
-        name: c2.name,
-        r: c2.color.r,
-        g: c2.color.g,
-        b: c2.color.b
-      })),
-      vis,
-      rev
-    }).then((style2) => {
-      if (lutPending.get(classTable.id) !== rev) return;
-      lutCache.set(classTable.id, style2);
+  function ensureIndex(featureTableId) {
+    if (peekClassIndex(featureTableId) || lutPending.has(featureTableId)) return;
+    lutPending.add(featureTableId);
+    void fetchClassIndex(featureTableId).catch((e2) => {
+      console.error("[featureTable] class index failed", e2);
+    }).finally(() => {
+      lutPending.delete(featureTableId);
       noteLut();
-    }).catch(() => {
-      if (lutPending.get(classTable.id) === rev) lutPending.delete(classTable.id);
     });
   }
-  function gpuStyleForClassTable(classTable, vis, seed) {
-    const rev = lutRev(classTable, vis, seed);
-    const hit = lutCache.get(classTable.id);
-    if (hit && hit.strategy !== "plane" && hit.rev === rev) return hit;
-    ensureLut(classTable, vis, seed, rev);
-    return hit ?? fallbackStyle(classTable, vis, seed, `pending:${rev}`);
-  }
-  async function attachClassTable(input2) {
-    var _a2, _b2, _c2, _d;
-    let bytes;
-    try {
-      bytes = new Uint8Array(await input2.file.arrayBuffer());
-    } catch (e2) {
-      return {
-        ok: false,
-        error: e2 instanceof Error ? e2.message : "Could not read class CSV"
-      };
+  function gpuStyleForFeatureTable(featureTable, vis, seed) {
+    const idx = peekClassIndex(featureTable.id);
+    if (!idx) {
+      ensureIndex(featureTable.id);
+      return void 0;
     }
-    const digest = await sha256Hex(bytes);
-    const existing = classTableForChannel(input2.sourceChannelId);
-    if (existing && existing.digest === digest && ((_a2 = existing.columns) == null ? void 0 : _a2.id) === ((_b2 = input2.columns) == null ? void 0 : _b2.id) && ((_c2 = existing.columns) == null ? void 0 : _c2.name) === ((_d = input2.columns) == null ? void 0 : _d.name)) {
-      try {
-        const ingested = await ingestClassTable(existing.id, bytes, input2.columns ?? asColumns(existing.columns));
-        clearLut(existing.id);
-        if (existing.nameColors.length === 0) {
-          const nameColors2 = await nameColorsFromNames(ingested.names);
-          const classTable2 = {
-            ...existing,
-            nameColors: nameColors2
-          };
-          const doc2 = useDocumentStore.getState();
-          doc2.setClassTables(doc2.classTables.map((c2) => c2.id === classTable2.id ? classTable2 : c2));
-          return {
-            ok: true,
-            classTable: classTable2
-          };
-        }
-      } catch {
-      }
+    const colors = new Map(featureTable.nameColors.map((c2) => [
+      c2.name,
+      c2.color
+    ]));
+    const n2 = Math.min(idx.names.length, MAX_CLASS_NAMES);
+    const palette = new Uint8Array((n2 + 1) * 4);
+    for (let i2 = 0; i2 < n2; i2++) {
+      const name2 = idx.names[i2];
+      const color2 = colors.get(name2) ?? defaultClassColor(i2 + 1, seed);
+      const o2 = (i2 + 1) * 4;
+      palette[o2] = color2.r;
+      palette[o2 + 1] = color2.g;
+      palette[o2 + 2] = color2.b;
+      palette[o2 + 3] = classNameVisible(vis, name2) ? 255 : 0;
+    }
+    return {
+      index: idx.data,
+      width: idx.width,
+      height: idx.height,
+      palette,
+      missHidden: (vis == null ? void 0 : vis.mode) === "show",
+      indexRev: featureTable.digest,
+      rev: paletteRev(featureTable, vis, seed)
+    };
+  }
+  async function completeFeatureTableIngest(sourceChannelId, job) {
+    pendingAttachSet.add(sourceChannelId);
+    pendingAttachIds = [
+      ...pendingAttachSet
+    ];
+    for (const fn of attachListeners) fn();
+    try {
+      const ingested = await job;
+      if (ingested.ok === false) return ingested;
+      return commitIngestedFeatureTable(sourceChannelId, ingested.ingested);
+    } finally {
+      pendingAttachSet.delete(sourceChannelId);
+      pendingAttachIds = [
+        ...pendingAttachSet
+      ];
+      for (const fn of attachListeners) fn();
+    }
+  }
+  async function ingestFeatureCsvFile(file, columns) {
+    const featureTableId = crypto.randomUUID();
+    try {
+      const ingested = await ingestFeatureTable(featureTableId, file, columns);
+      const persist = ingested.persist;
+      if (!persist) throw new Error("Feature table CSV ingest produced no data");
       return {
         ok: true,
-        classTable: existing
+        ingested: {
+          featureTableId,
+          maxClassId: ingested.maxClassId,
+          names: ingested.names,
+          persist,
+          digest: await sha256Hex(persist),
+          columns: ingested.columns,
+          header: ingested.header,
+          handle: file.handle ?? ephemeralFileHandleFromFile(file)
+        }
       };
-    }
-    const classTableId = (existing == null ? void 0 : existing.id) ?? crypto.randomUUID();
-    let maxClassId;
-    let nameColors = [];
-    try {
-      const ingested = await ingestClassTable(classTableId, bytes, input2.columns);
-      maxClassId = ingested.maxClassId;
-      try {
-        nameColors = await nameColorsFromNames(ingested.names);
-      } catch (e2) {
-        if (false) ;
-      }
     } catch (e2) {
+      console.error("[featureTable] ingest failed", e2);
       return {
         ok: false,
-        error: e2 instanceof Error ? e2.message : "Could not index class CSV"
+        error: e2 instanceof Error ? e2.message : "Could not index feature table CSV"
       };
     }
+  }
+  async function commitIngestedFeatureTable(sourceChannelId, ingested) {
+    const existing = featureTableForChannel(sourceChannelId);
+    if (existing && existing.id !== ingested.featureTableId) {
+      cancelClassPalette(existing.id);
+      await dropFeatureTable(existing.id).catch(() => void 0);
+      await dropStoredSource(existing.source.handleKey);
+    }
+    let nameColors = [];
+    const reuse = existing && existing.digest === ingested.digest && existing.nameColors.length > 0;
+    if (reuse) nameColors = existing.nameColors;
     const storyId = useDocumentStore.getState().activeStoryId;
-    const handleKey = storyId ? `story:${storyId}:classTable:${classTableId}` : `classTable:${classTableId}`;
-    await putBlob(handleKey, bytes);
-    const classTable = {
-      id: classTableId,
-      sourceChannelId: input2.sourceChannelId,
+    const handleKey = storyId ? `story:${storyId}:featureTable:${ingested.featureTableId}` : `featureTable:${ingested.featureTableId}`;
+    await putFileHandle(handleKey, ingested.handle);
+    await putBlob(handleKey, ingested.persist);
+    const featureTable = {
+      id: ingested.featureTableId,
+      sourceChannelId,
       source: {
         handleKey
       },
-      maxClassId,
+      maxClassId: ingested.maxClassId,
       nameColors,
-      digest,
-      ...input2.columns ? {
-        columns: input2.columns
-      } : {}
+      digest: ingested.digest,
+      columns: ingested.columns,
+      header: ingested.header
     };
-    clearLut(classTableId);
     const doc = useDocumentStore.getState();
-    const next2 = existing ? doc.classTables.map((c2) => c2.id === classTableId ? classTable : c2) : [
-      ...doc.classTables,
-      classTable
+    const next2 = existing ? doc.featureTables.map((c2) => c2.id === existing.id ? featureTable : c2) : [
+      ...doc.featureTables,
+      featureTable
     ];
-    doc.setClassTables(next2);
+    doc.setFeatureTables(next2);
     const vis = {
-      ...useAppStore.getState().classTableVisibilities
+      ...useAppStore.getState().featureTableVisibilities
     };
-    vis[classTableId] = visibilityAllOn();
+    if (existing) delete vis[existing.id];
+    vis[ingested.featureTableId] = vis[ingested.featureTableId] ?? visibilityAllOn();
     useAppStore.setState({
-      classTableVisibilities: vis
+      featureTableVisibilities: vis
     });
+    if (nameColors.length === 0) {
+      scheduleClassPalette(ingested.featureTableId, ingested.names);
+    }
     return {
       ok: true,
-      classTable
+      featureTable
     };
   }
-  async function detachClassTable(sourceChannelId) {
-    const classTable = classTableForChannel(sourceChannelId);
-    if (!classTable) return;
-    clearLut(classTable.id);
-    await dropClassTable(classTable.id).catch(() => void 0);
-    await deleteBlob(classTable.source.handleKey).catch(() => void 0);
+  async function detachFeatureTable(sourceChannelId) {
+    const featureTable = featureTableForChannel(sourceChannelId);
+    if (!featureTable) return;
+    cancelClassPalette(featureTable.id);
+    await dropFeatureTable(featureTable.id).catch(() => void 0);
+    await dropStoredSource(featureTable.source.handleKey);
     const doc = useDocumentStore.getState();
-    if (doc.classTables.some((c2) => c2.id === classTable.id)) {
-      doc.setClassTables(doc.classTables.filter((c2) => c2.id !== classTable.id));
+    if (doc.featureTables.some((c2) => c2.id === featureTable.id)) {
+      doc.setFeatureTables(doc.featureTables.filter((c2) => c2.id !== featureTable.id));
     }
     const vis = {
-      ...useAppStore.getState().classTableVisibilities
+      ...useAppStore.getState().featureTableVisibilities
     };
-    delete vis[classTable.id];
+    delete vis[featureTable.id];
     useAppStore.setState({
-      classTableVisibilities: vis
+      featureTableVisibilities: vis
     });
   }
-  function detachRemovedClassTables(previous2, remaining) {
-    for (const classTable of previous2) {
-      if (remaining.some((c2) => c2.id === classTable.id)) continue;
-      void detachClassTable(classTable.sourceChannelId);
+  function detachRemovedFeatureTables(previous2, remaining) {
+    for (const featureTable of previous2) {
+      if (remaining.some((c2) => c2.id === featureTable.id)) continue;
+      void detachFeatureTable(featureTable.sourceChannelId);
     }
-    useDocumentStore.getState().setClassTables([
+    useDocumentStore.getState().setFeatureTables([
       ...remaining
     ]);
   }
-  function toggleClassVisible(classTableId, name2) {
+  function toggleClassVisible(featureTableId, name2) {
     const vis = {
-      ...useAppStore.getState().classTableVisibilities
+      ...useAppStore.getState().featureTableVisibilities
     };
-    vis[classTableId] = toggleClassName(vis[classTableId], name2);
+    vis[featureTableId] = toggleClassName(vis[featureTableId], name2);
     useAppStore.setState({
-      classTableVisibilities: vis
+      featureTableVisibilities: vis
     });
   }
-  function setAllClassesVisible(classTableId, visible) {
+  function setAllClassesVisible(featureTableId, visible) {
     const vis = {
-      ...useAppStore.getState().classTableVisibilities
+      ...useAppStore.getState().featureTableVisibilities
     };
-    vis[classTableId] = visible ? visibilityAllOn() : visibilityAllOff();
+    vis[featureTableId] = visible ? visibilityAllOn() : visibilityAllOff();
     useAppStore.setState({
-      classTableVisibilities: vis
+      featureTableVisibilities: vis
     });
   }
-  function setClassColor(classTableId, name2, color2) {
+  function setClassColor(featureTableId, name2, color2) {
     const doc = useDocumentStore.getState();
-    doc.setClassTables(doc.classTables.map((c2) => {
-      if (c2.id !== classTableId) return c2;
+    doc.setFeatureTables(doc.featureTables.map((c2) => {
+      if (c2.id !== featureTableId) return c2;
       const i2 = c2.nameColors.findIndex((o2) => o2.name === name2);
       if (i2 >= 0) {
         const nameColors = c2.nameColors.slice();
@@ -91246,88 +91683,184 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       };
     }));
   }
-  async function hydrateClassTables(classTables, reset) {
+  async function hydrateFeatureTables(featureTables, reset, opts) {
     if (reset) {
-      lutCache.clear();
       lutPending.clear();
-      await resetClassTables();
+      await resetFeatureTables();
     }
-    const next2 = [
-      ...classTables
-    ];
-    let changed = false;
-    for (let i2 = 0; i2 < next2.length; i2++) {
-      const classTable = next2[i2];
-      const bytes = await getBlob$1(classTable.source.handleKey);
-      if (!bytes) continue;
-      try {
-        const ingested = await ingestClassTable(classTable.id, bytes, asColumns(classTable.columns));
-        clearLut(classTable.id);
-        if (classTable.nameColors.length > 0) continue;
-        next2[i2] = {
-          ...classTable,
-          nameColors: await nameColorsFromNames(ingested.names)
-        };
-        changed = true;
-      } catch {
+    const deniedHandleKeys = [];
+    const missingHandleKeys = [];
+    const canAccess = (opts == null ? void 0 : opts.requestPermission) ? ensureFileHandlePermission : hasFileHandlePermission;
+    const ingestSource = async (featureTable, source2) => {
+      const ingested = await ingestFeatureTable(featureTable.id, source2, {
+        id: featureTable.columns.id,
+        name: featureTable.columns.name,
+        header: featureTable.header
+      });
+      noteLut();
+      if (featureTable.nameColors.length === 0) {
+        scheduleClassPalette(featureTable.id, ingested.names);
       }
+    };
+    for (const featureTable of featureTables) {
+      if (!reset && hasIngestedFeatureTable(featureTable.id)) continue;
+      const key2 = featureTable.source.handleKey;
+      const stored = await getFileHandle(key2);
+      if (stored) {
+        const handle2 = stored;
+        if (!await canAccess(handle2)) {
+          deniedHandleKeys.push(key2);
+          continue;
+        }
+        try {
+          if (!await findFile({
+            handle: handle2
+          })) {
+            missingHandleKeys.push(key2);
+            continue;
+          }
+          await ingestSource(featureTable, await handle2.getFile());
+        } catch (e2) {
+          console.error("[featureTable] hydrate failed", featureTable.id, e2);
+          missingHandleKeys.push(key2);
+        }
+        continue;
+      }
+      const bytes = await getBlob$1(key2);
+      if (bytes) {
+        try {
+          await ingestSource(featureTable, bytes);
+        } catch (e2) {
+          console.error("[featureTable] hydrate failed", featureTable.id, e2);
+          missingHandleKeys.push(key2);
+        }
+        continue;
+      }
+      missingHandleKeys.push(key2);
     }
-    if (changed) useDocumentStore.getState().setClassTables(next2);
+    noteAccess({
+      deniedHandleKeys,
+      missingHandleKeys
+    });
   }
-  const actions$2 = "_actions_1h1iv_1";
-  const root$a = "_root_1h1iv_7";
-  const toolbar$1 = "_toolbar_1h1iv_14";
-  const filter$1 = "_filter_1h1iv_21";
-  const toolBtn = "_toolBtn_1h1iv_32";
-  const colPick = "_colPick_1h1iv_43";
-  const scroller = "_scroller_1h1iv_66";
-  const loading = "_loading_1h1iv_74";
-  const row = "_row_1h1iv_84";
-  const swatch$1 = "_swatch_1h1iv_96";
-  const swatchFaded = "_swatchFaded_1h1iv_105";
-  const name$3 = "_name_1h1iv_110";
-  const styles$p = {
-    actions: actions$2,
+  async function requestFeatureTableFileAccess() {
+    await hydrateFeatureTables(useDocumentStore.getState().featureTables, false, {
+      requestPermission: true
+    });
+  }
+  const attach = "_attach_16e0a_1";
+  const attachBtn = "_attachBtn_16e0a_9";
+  const attachLabel = "_attachLabel_16e0a_34";
+  const root$a = "_root_16e0a_42";
+  const toolbar$1 = "_toolbar_16e0a_50";
+  const field$1 = "_field_16e0a_57";
+  const textBtn = "_textBtn_16e0a_79";
+  const colPick = "_colPick_16e0a_95";
+  const scroller = "_scroller_16e0a_118";
+  const accessPrompt = "_accessPrompt_16e0a_126";
+  const loading = "_loading_16e0a_136";
+  const row = "_row_16e0a_150";
+  const swatch$1 = "_swatch_16e0a_162";
+  const swatchPending = "_swatchPending_16e0a_177";
+  const name$3 = "_name_16e0a_182";
+  const styles$o = {
+    attach,
+    attachBtn,
+    attachLabel,
     root: root$a,
     toolbar: toolbar$1,
-    filter: filter$1,
-    toolBtn,
+    field: field$1,
+    textBtn,
     colPick,
     scroller,
+    accessPrompt,
     loading,
     row,
     swatch: swatch$1,
-    swatchFaded,
+    swatchPending,
     name: name$3
   };
   const ROW_H = 22;
   const WINDOW = 80;
-  function mergeClassTableRows(classTable, vis, colorSeed, rows2) {
-    const colors = new Map(classTable.nameColors.map((o2) => [
-      o2.name,
-      o2.color
-    ]));
-    return rows2.map((row2) => {
-      return {
-        name: row2.name,
-        color: colors.get(row2.name) ?? defaultClassColor(1, colorSeed),
-        visible: classNameVisible(vis, row2.name)
-      };
+  const EDGE = 10;
+  async function pickFeatureCsv() {
+    try {
+      return await n$1({
+        description: "Feature table CSV",
+        mimeTypes: [
+          "text/csv"
+        ],
+        extensions: [
+          ".csv"
+        ],
+        multiple: false
+      });
+    } catch (e2) {
+      if (e2 instanceof Error && e2.name === "AbortError") return void 0;
+      throw e2;
+    }
+  }
+  function TableIcon() {
+    return jsxRuntimeExports.jsxs("svg", {
+      width: 12,
+      height: 12,
+      viewBox: "0 0 12 12",
+      "aria-hidden": true,
+      children: [
+        jsxRuntimeExports.jsx("title", {
+          children: "Table"
+        }),
+        jsxRuntimeExports.jsx("rect", {
+          x: "1",
+          y: "1",
+          width: "10",
+          height: "10",
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: "1.25"
+        }),
+        jsxRuntimeExports.jsx("rect", {
+          x: "1",
+          y: "1",
+          width: "10",
+          height: "3",
+          fill: "currentColor"
+        }),
+        jsxRuntimeExports.jsx("path", {
+          d: "M1 7h10M5 4v7",
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: "1.25"
+        })
+      ]
     });
   }
-  const EDGE = 10;
-  function useClassTableList(classTableId) {
+  function TableLoading() {
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$o.loading,
+      children: [
+        jsxRuntimeExports.jsx("div", {
+          className: minervaTheme.spinnerSm,
+          "aria-hidden": "true"
+        }),
+        jsxRuntimeExports.jsx("span", {
+          children: "Loading feature table\u2026"
+        })
+      ]
+    });
+  }
+  function useFeatureTableList(featureTableId) {
     const [filter2, setFilter] = reactExports.useState("");
     const [raw2, setRaw] = reactExports.useState([]);
     const [total, setTotal] = reactExports.useState(0);
     const [loadedOffset, setLoadedOffset] = reactExports.useState(0);
     const [loading2, setLoading] = reactExports.useState(false);
-    const vis = useAppStore((s2) => s2.classTableVisibilities[classTableId]);
-    const classTable = useDocumentStore((s2) => s2.classTables.find((c2) => c2.id === classTableId));
-    const digest = classTable == null ? void 0 : classTable.digest;
-    const ingestEpoch2 = reactExports.useSyncExternalStore(subscribeClassTableIngest, getClassTableIngestEpoch, getClassTableIngestEpoch);
+    const vis = useAppStore((s2) => s2.featureTableVisibilities[featureTableId]);
+    const featureTable = useDocumentStore((s2) => s2.featureTables.find((c2) => c2.id === featureTableId));
+    const digest = featureTable == null ? void 0 : featureTable.digest;
+    const ingestEpoch2 = reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
     const viz = useDocumentStore((s2) => {
-      const sourceId = classTable == null ? void 0 : classTable.sourceChannelId;
+      const sourceId = featureTable == null ? void 0 : featureTable.sourceChannelId;
       if (!sourceId) return void 0;
       for (const g2 of s2.channelGroups) {
         const row2 = g2.channels.find((gc2) => gc2.channelId === sourceId);
@@ -91340,7 +91873,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       return void 0;
     });
-    const seed = (viz == null ? void 0 : viz.colorSeed) ?? 0;
     const fadeColors = ((viz == null ? void 0 : viz.color) ?? "white") === "white";
     const seq = reactExports.useRef(0);
     const windowRef = reactExports.useRef({
@@ -91357,7 +91889,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const fetchPage = reactExports.useCallback((offset, query) => {
       const id2 = ++seq.current;
       setLoading(true);
-      void pageClassTable(classTableId, query, offset, WINDOW).then((page) => {
+      void pageFeatureTable(featureTableId, query, offset, WINDOW).then((page) => {
         if (id2 !== seq.current) return;
         setRaw(page.rows);
         setTotal(page.total);
@@ -91368,7 +91900,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         setLoading(false);
       });
     }, [
-      classTableId
+      featureTableId
     ]);
     reactExports.useEffect(() => {
       const epochOnly = prevEpoch.current !== ingestEpoch2;
@@ -91396,19 +91928,34 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fetchPage
     ]);
     const rows2 = reactExports.useMemo(() => {
-      if (!classTable) return [];
-      return mergeClassTableRows(classTable, vis, seed, raw2);
+      var _a2;
+      if (!featureTable) return [];
+      const names = raw2.length === 0 ? (_a2 = peekClassIndex(featureTableId)) == null ? void 0 : _a2.names : void 0;
+      const source2 = names && names.length > 0 ? names.map((name2) => ({
+        name: name2
+      })) : raw2;
+      const colors = new Map(featureTable.nameColors.map((o2) => [
+        o2.name,
+        o2.color
+      ]));
+      return source2.map((row2) => ({
+        name: row2.name,
+        color: colors.get(row2.name),
+        visible: classNameVisible(vis, row2.name)
+      }));
     }, [
-      classTable,
+      featureTable,
+      featureTableId,
       vis,
-      seed,
-      raw2
+      raw2,
+      ingestEpoch2
     ]);
+    const usingCache = raw2.length === 0 && rows2.length > 0;
     return {
       rows: rows2,
-      total,
+      total: usingCache ? rows2.length : total,
       filter: filter2,
-      loadedOffset,
+      loadedOffset: usingCache ? 0 : loadedOffset,
       loading: loading2,
       fadeColors,
       setFilter,
@@ -91427,130 +91974,141 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  function ClassCsvColumnPick(props) {
-    return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.colPick,
+  function FeatureCsvColumnPick(props) {
+    const select = (label2, value, onChange) => jsxRuntimeExports.jsxs("label", {
       children: [
-        jsxRuntimeExports.jsxs("label", {
-          children: [
-            "ID",
-            jsxRuntimeExports.jsx("select", {
-              className: styles$p.filter,
-              value: props.id,
-              "aria-label": "ID column",
-              onChange: (e2) => props.onId(e2.target.value),
-              children: props.headers.map((h2) => jsxRuntimeExports.jsx("option", {
-                value: h2,
-                children: h2
-              }, `id-${h2}`))
-            })
-          ]
-        }),
-        jsxRuntimeExports.jsxs("label", {
-          children: [
-            "Name",
-            jsxRuntimeExports.jsx("select", {
-              className: styles$p.filter,
-              value: props.name,
-              "aria-label": "Name column",
-              onChange: (e2) => props.onName(e2.target.value),
-              children: props.headers.map((h2) => jsxRuntimeExports.jsx("option", {
-                value: h2,
-                children: h2
-              }, `name-${h2}`))
-            })
-          ]
+        label2,
+        jsxRuntimeExports.jsx("select", {
+          className: styles$o.field,
+          value,
+          "aria-label": `${label2} column`,
+          onChange: (e2) => onChange(e2.target.value),
+          children: props.headers.map((h2) => jsxRuntimeExports.jsx("option", {
+            value: h2,
+            children: h2
+          }, `${label2}-${h2}`))
         })
       ]
     });
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$o.colPick,
+      children: [
+        select("ID", props.id, props.onId),
+        select("Name", props.name, props.onName)
+      ]
+    });
   }
-  function classTableRowExtras(sourceChannelId, classTables) {
+  function featureTableRowExtras(sourceChannelId, featureTables) {
     var _a2;
-    const classTableId = (_a2 = classTables.find((c2) => c2.sourceChannelId === sourceChannelId)) == null ? void 0 : _a2.id;
+    const featureTableId = (_a2 = featureTables.find((c2) => c2.sourceChannelId === sourceChannelId)) == null ? void 0 : _a2.id;
     return {
-      classColors: classTableId != null,
-      maskFooter: jsxRuntimeExports.jsx(ClassTableFooter, {
-        sourceChannelId,
-        classTableId
-      })
+      maskAction: featureTableId ? jsxRuntimeExports.jsx(FeatureTableMaskAction, {
+        featureTableId
+      }) : jsxRuntimeExports.jsx(FeatureTableAttach, {
+        sourceChannelId
+      }),
+      maskFooter: featureTableId ? jsxRuntimeExports.jsx(FeatureTableListBody, {
+        featureTableId
+      }) : void 0
     };
   }
-  function ClassTableFooter(props) {
-    const [busy, setBusy] = reactExports.useState(false);
-    const attached = props.classTableId != null;
-    return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+  function FeatureTableGlyph(props) {
+    const { wait: wait2, folder, title: title7, ariaLabel, onClick } = props;
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$o.attach,
       children: [
-        props.classTableId ? jsxRuntimeExports.jsx(ClassTableListBody, {
-          classTableId: props.classTableId
-        }, props.classTableId) : busy ? jsxRuntimeExports.jsx("div", {
-          className: styles$p.scroller,
-          style: {
-            minHeight: 44
-          },
-          children: jsxRuntimeExports.jsx("div", {
-            className: styles$p.loading,
-            children: jsxRuntimeExports.jsx("div", {
-              className: minervaTheme.spinnerSm
-            })
-          })
-        }) : null,
-        jsxRuntimeExports.jsx(ClassTableControls, {
-          sourceChannelId: props.sourceChannelId,
-          attached,
-          busy,
-          setBusy
+        jsxRuntimeExports.jsx("button", {
+          type: "button",
+          className: `${minervaTheme.focusRing} ${styles$o.attachBtn}${wait2 ? ` ${minervaTheme.busyOverlay}` : ""}`,
+          disabled: wait2 || onClick == null,
+          title: title7,
+          "aria-label": ariaLabel,
+          "aria-busy": wait2 || void 0,
+          "data-channel-drag-ignore": "",
+          onClick,
+          children: folder ? jsxRuntimeExports.jsx(SvgFolder, {
+            width: 12,
+            height: 12,
+            "aria-hidden": true
+          }) : jsxRuntimeExports.jsx(TableIcon, {})
+        }),
+        jsxRuntimeExports.jsx("span", {
+          className: styles$o.attachLabel,
+          children: "Table"
         })
       ]
     });
   }
-  function ClassTableControls(props) {
-    const { sourceChannelId, attached, busy, setBusy } = props;
+  function FeatureTableMaskAction(props) {
+    const { featureTableId } = props;
+    reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
+    const access = reactExports.useSyncExternalStore(subscribeFeatureTableAccess, getFeatureTableAccess, getFeatureTableAccess);
+    const handleKey = useDocumentStore((s2) => {
+      var _a2;
+      return (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.source.handleKey;
+    });
+    if (hasIngestedFeatureTable(featureTableId)) return null;
+    if (handleKey != null && (access.deniedHandleKeys.includes(handleKey) || access.missingHandleKeys.includes(handleKey))) {
+      return null;
+    }
+    return jsxRuntimeExports.jsx(FeatureTableGlyph, {
+      wait: true,
+      folder: true,
+      title: "Loading feature table",
+      ariaLabel: "Loading feature table"
+    });
+  }
+  function FeatureTableAttach(props) {
+    const pendingIds = reactExports.useSyncExternalStore(subscribeFeatureTablePending, getFeatureTablePendingSourceIds, getFeatureTablePendingSourceIds);
+    const [busy, setBusy] = reactExports.useState(false);
+    const wait2 = busy || pendingIds.includes(props.sourceChannelId);
     const [pendingCsv, setPendingCsv] = reactExports.useState(null);
-    const attachFile = async (file, columns) => {
+    const [error2, setError] = reactExports.useState(null);
+    const closePending = () => {
+      setPendingCsv(null);
+      setError(null);
+    };
+    const attachFile = async (file, columns2) => {
+      setPendingCsv(null);
+      setError(null);
       setBusy(true);
       try {
-        const result = await attachClassTable({
-          sourceChannelId,
-          file,
-          columns
-        });
-        if (result.ok === false) window.alert(result.error);
+        const result = await completeFeatureTableIngest(props.sourceChannelId, ingestFeatureCsvFile(file, columns2));
+        if (result.ok === false) setError(result.error);
       } finally {
         setBusy(false);
       }
     };
     const pickAndAttach = async () => {
-      let file;
-      try {
-        file = await n$1({
-          description: "Class table CSV",
-          mimeTypes: [
-            "text/csv"
-          ],
-          extensions: [
-            ".csv"
-          ],
-          multiple: false
-        });
-      } catch (e2) {
-        if (e2 instanceof Error && e2.name === "AbortError") return;
-        throw e2;
-      }
-      const peek = await peekClassCsv(file);
-      if (!peek) {
-        await attachFile(file);
-        return;
-      }
+      const file = await pickFeatureCsv();
+      if (!file) return;
+      const peek = await peekFeatureCsv(file);
+      setError(null);
       setPendingCsv({
         file,
-        ...peek
+        headers: (peek == null ? void 0 : peek.headers) ?? [],
+        id: (peek == null ? void 0 : peek.id) ?? "",
+        name: (peek == null ? void 0 : peek.name) ?? ""
       });
     };
-    if (pendingCsv) {
-      return jsxRuntimeExports.jsxs("div", {
-        className: styles$p.actions,
-        children: [
-          jsxRuntimeExports.jsx(ClassCsvColumnPick, {
+    const columns = pendingCsv && pendingCsv.headers.length >= 2 ? {
+      id: pendingCsv.id,
+      name: pendingCsv.name
+    } : void 0;
+    return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+      children: [
+        jsxRuntimeExports.jsx(FeatureTableGlyph, {
+          wait: wait2,
+          title: error2 ?? "Attach feature table",
+          ariaLabel: wait2 ? "Loading feature table" : "Attach feature table",
+          onClick: () => void pickAndAttach()
+        }),
+        pendingCsv ? jsxRuntimeExports.jsx(ImportOverlay, {
+          title: pendingCsv.file.name,
+          titleId: "feature-table-import-dialog-title",
+          onCancel: closePending,
+          onImport: () => void attachFile(pendingCsv.file, columns),
+          children: pendingCsv.headers.length >= 2 ? jsxRuntimeExports.jsx(FeatureCsvColumnPick, {
             headers: pendingCsv.headers,
             id: pendingCsv.id,
             name: pendingCsv.name,
@@ -91562,70 +92120,55 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ...pendingCsv,
               name: name2
             })
-          }),
-          jsxRuntimeExports.jsx("button", {
-            type: "button",
-            className: `${minervaTheme.focusRing} ${styles$p.toolBtn}`,
-            disabled: busy,
-            onClick: () => {
-              void attachFile(pendingCsv.file, {
-                id: pendingCsv.id,
-                name: pendingCsv.name
-              }).then(() => setPendingCsv(null));
-            },
-            children: "Attach"
-          }),
-          jsxRuntimeExports.jsx("button", {
-            type: "button",
-            className: `${minervaTheme.focusRing} ${styles$p.toolBtn}`,
-            disabled: busy,
-            onClick: () => setPendingCsv(null),
-            children: "Cancel"
-          })
-        ]
-      });
-    }
-    return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.actions,
-      children: [
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: `${minervaTheme.focusRing} ${styles$p.toolBtn}`,
-          disabled: busy,
-          onClick: () => void pickAndAttach(),
-          children: attached ? "Replace class table\u2026" : "Attach class table\u2026"
-        }),
-        attached ? jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: `${minervaTheme.focusRing} ${styles$p.toolBtn}`,
-          disabled: busy,
-          onClick: () => void detachClassTable(sourceChannelId),
-          children: "Remove table"
+          }) : null
         }) : null
       ]
     });
   }
-  function ClassTableListBody(props) {
-    const { classTableId } = props;
-    const list2 = useClassTableList(classTableId);
+  function FeatureTableListBody(props) {
+    const { featureTableId } = props;
+    const list2 = useFeatureTableList(featureTableId);
+    const handleKey = useDocumentStore((s2) => {
+      var _a2;
+      return (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.source.handleKey;
+    });
+    const sourceChannelId = useDocumentStore((s2) => {
+      var _a2;
+      return (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.sourceChannelId;
+    });
+    const access = reactExports.useSyncExternalStore(subscribeFeatureTableAccess, getFeatureTableAccess, getFeatureTableAccess);
+    const needsPermission = handleKey != null && access.deniedHandleKeys.includes(handleKey);
+    const needsReselect = handleKey != null && access.missingHandleKeys.includes(handleKey);
     const scrollerRef = reactExports.useRef(null);
     const [picker, setPicker] = reactExports.useState(null);
     const showBusy = list2.loading && list2.rows.length === 0;
     const fadeColors = list2.fadeColors;
+    const showAccess = needsPermission || needsReselect;
+    const restoreFile = async () => {
+      if (needsReselect) {
+        if (!sourceChannelId) return;
+        const file = await pickFeatureCsv();
+        if (!file) return;
+        await completeFeatureTableIngest(sourceChannelId, ingestFeatureCsvFile(file));
+        return;
+      }
+      await requestFeatureTableFileAccess();
+    };
     reactExports.useEffect(() => {
       if (fadeColors) setPicker(null);
     }, [
       fadeColors
     ]);
+    if (!hasIngestedFeatureTable(featureTableId) && !showAccess) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.root,
+      className: styles$o.root,
       "data-channel-drag-ignore": "",
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$p.toolbar,
+          className: styles$o.toolbar,
           children: [
             jsxRuntimeExports.jsx("input", {
-              className: styles$p.filter,
+              className: styles$o.field,
               type: "text",
               value: list2.filter,
               placeholder: "Filter classes\u2026",
@@ -91638,40 +92181,56 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$p.toolBtn}`,
-              onClick: () => setAllClassesVisible(classTableId, true),
+              className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+              onClick: () => setAllClassesVisible(featureTableId, true),
               children: "Show all"
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$p.toolBtn}`,
-              onClick: () => setAllClassesVisible(classTableId, false),
+              className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+              onClick: () => setAllClassesVisible(featureTableId, false),
               children: "Hide all"
+            }),
+            jsxRuntimeExports.jsx(PanelIconButton, {
+              variant: "row",
+              title: "Delete table",
+              "aria-label": "Delete table",
+              onClick: () => {
+                if (sourceChannelId) void detachFeatureTable(sourceChannelId);
+              },
+              children: jsxRuntimeExports.jsx(TrashIcon, {
+                title: "Delete table",
+                size: 14
+              })
             })
           ]
         }),
         jsxRuntimeExports.jsxs("div", {
           ref: scrollerRef,
-          className: styles$p.scroller,
+          className: `${styles$o.scroller} ${panel$1.thinScrollbar}`,
           onScroll: () => {
             const el2 = scrollerRef.current;
             if (!el2) return;
             list2.onScroll(el2.scrollTop, el2.clientHeight);
           },
           children: [
-            showBusy ? jsxRuntimeExports.jsx("div", {
-              className: styles$p.loading,
-              children: jsxRuntimeExports.jsx("div", {
-                className: minervaTheme.spinnerSm
+            showAccess ? jsxRuntimeExports.jsx("div", {
+              className: styles$o.accessPrompt,
+              children: jsxRuntimeExports.jsx("button", {
+                type: "button",
+                className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+                onClick: () => void restoreFile(),
+                children: needsReselect ? "Choose file again" : "Allow file access"
               })
             }) : null,
+            showBusy && !showAccess ? jsxRuntimeExports.jsx(TableLoading, {}) : null,
             jsxRuntimeExports.jsx("div", {
               style: {
-                height: Math.max(list2.total, showBusy ? 2 : 1) * ROW_H,
+                height: Math.max(list2.total, showBusy || showAccess ? 2 : 1) * ROW_H,
                 position: "relative"
               },
               children: list2.rows.map((row2, i2) => jsxRuntimeExports.jsxs("div", {
-                className: styles$p.row,
+                className: styles$o.row,
                 style: {
                   top: (list2.loadedOffset + i2) * ROW_H
                 },
@@ -91680,31 +92239,38 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     visible: row2.visible,
                     title: row2.visible ? `Hide ${row2.name}` : `Show ${row2.name}`,
                     ariaLabel: `Toggle visibility for ${row2.name}`,
-                    onClick: () => toggleClassVisible(classTableId, row2.name)
+                    onClick: () => toggleClassVisible(featureTableId, row2.name)
                   }),
-                  jsxRuntimeExports.jsx("button", {
+                  row2.color ? jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$p.swatch}${fadeColors ? ` ${styles$p.swatchFaded}` : ""}`,
+                    className: `${minervaTheme.focusRing} ${styles$o.swatch}`,
                     style: {
                       backgroundColor: `#${rgbToHex$1(row2.color)}`
                     },
                     "aria-label": `Color for ${row2.name}`,
                     disabled: fadeColors,
                     onClick: (e2) => {
+                      const color2 = row2.color;
+                      if (!color2) return;
                       const pos = colorPickerAnchorPosition(e2.currentTarget.getBoundingClientRect());
                       setPicker({
                         name: row2.name,
-                        hex: rgbToHex$1(row2.color),
+                        hex: rgbToHex$1(color2),
                         ...pos
                       });
                     }
+                  }) : jsxRuntimeExports.jsx("button", {
+                    type: "button",
+                    className: `${styles$o.swatch} ${styles$o.swatchPending} ${minervaTheme.busyOverlay}`,
+                    "aria-label": `Assigning color for ${row2.name}`,
+                    disabled: true
                   }),
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$p.name}`,
+                    className: `${minervaTheme.focusRing} ${styles$o.name}`,
                     title: row2.visible ? `Hide ${row2.name}` : `Show ${row2.name}`,
                     "aria-pressed": row2.visible,
-                    onClick: () => toggleClassVisible(classTableId, row2.name),
+                    onClick: () => toggleClassVisible(featureTableId, row2.name),
                     children: row2.name.trim() ? row2.name : "Unnamed"
                   })
                 ]
@@ -91721,7 +92287,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             const pending2 = picker.pending;
             const name2 = picker.name;
             setPicker(null);
-            if (pending2) setClassColor(classTableId, name2, pending2);
+            if (pending2) setClassColor(featureTableId, name2, pending2);
           },
           color: `#${picker.hex}`,
           showAlpha: false,
@@ -91766,7 +92332,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const rangePan = "_rangePan_opgv4_71";
   const rangeInput = "_rangeInput_opgv4_85";
   const limitInput = "_limitInput_opgv4_131";
-  const styles$o = {
+  const styles$n = {
     wrap: wrap$2,
     histogramHost,
     histogramLoading,
@@ -92126,12 +92692,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const panLeft = `${minFrac * 100}%`;
     const panWidth = `${(maxFrac - minFrac) * 100}%`;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$o.wrap,
+      className: styles$n.wrap,
       draggable: false,
       children: [
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$o.limitInput}`,
+          className: `${minervaTheme.input} ${styles$n.limitInput}`,
           value: minInput,
           "aria-label": `${props.channelLabel} contrast minimum value`,
           min: scale2.dtypeMin,
@@ -92149,13 +92715,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$o.histogramHost,
+          className: styles$n.histogramHost,
           style: props.r != null && props.g != null && props.b != null ? {
             "--histogram-color": `rgb(${props.r},${props.g},${props.b})`
           } : void 0,
           children: [
             jsxRuntimeExports.jsxs("svg", {
-              className: styles$o.histogramSvg,
+              className: styles$n.histogramSvg,
               viewBox: "1.15 0 96.7 11",
               preserveAspectRatio: "none",
               role: "img",
@@ -92173,22 +92739,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   })
                 }),
                 jsxRuntimeExports.jsx("path", {
-                  className: `${styles$o.histogramFill} ${styles$o.histogramOutOfRange}`,
+                  className: `${styles$n.histogramFill} ${styles$n.histogramOutOfRange}`,
                   d: histFillPath
                 }),
                 jsxRuntimeExports.jsx("path", {
-                  className: `${styles$o.histogramLine} ${styles$o.histogramOutOfRange}`,
+                  className: `${styles$n.histogramLine} ${styles$n.histogramOutOfRange}`,
                   d: histLinePath
                 }),
                 jsxRuntimeExports.jsxs("g", {
                   clipPath: `url(#${histogramClipId})`,
                   children: [
                     jsxRuntimeExports.jsx("path", {
-                      className: styles$o.histogramFill,
+                      className: styles$n.histogramFill,
                       d: histFillPath
                     }),
                     jsxRuntimeExports.jsx("path", {
-                      className: styles$o.histogramLine,
+                      className: styles$n.histogramLine,
                       d: histLinePath
                     })
                   ]
@@ -92196,7 +92762,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("div", {
-              className: `${styles$o.histogramLoading}${props.histogramLoading ? ` ${styles$o.histogramLoadingVisible}` : ""}`,
+              className: `${styles$n.histogramLoading}${props.histogramLoading ? ` ${styles$n.histogramLoadingVisible}` : ""}`,
               title: "Loading histogram",
               children: jsxRuntimeExports.jsx("div", {
                 className: minervaTheme.spinnerSm
@@ -92204,10 +92770,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsxs("div", {
               ref: sliderRowRef,
-              className: styles$o.sliderRow,
+              className: styles$n.sliderRow,
               children: [
                 sliderMax > sliderMin ? jsxRuntimeExports.jsx("div", {
-                  className: styles$o.rangePan,
+                  className: styles$n.rangePan,
                   style: {
                     left: panLeft,
                     width: panWidth
@@ -92220,7 +92786,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }) : null,
                 jsxRuntimeExports.jsx("input", {
                   type: "range",
-                  className: styles$o.rangeInput,
+                  className: styles$n.rangeInput,
                   min: 0,
                   max: scale2.sliderSteps,
                   value: sliderMin,
@@ -92234,7 +92800,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 jsxRuntimeExports.jsx("input", {
                   type: "range",
-                  className: styles$o.rangeInput,
+                  className: styles$n.rangeInput,
                   min: 0,
                   max: scale2.sliderSteps,
                   value: sliderMax,
@@ -92252,7 +92818,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$o.limitInput}`,
+          className: `${minervaTheme.input} ${styles$n.limitInput}`,
           value: maxInput,
           "aria-label": `${props.channelLabel} contrast maximum value`,
           min: scale2.dtypeMin,
@@ -92504,7 +93070,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function ChannelRow(props) {
-    const { visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, contrast, trailing, locked, isMask, maskVisualization, onMaskVisualizationChange, onMaskVisualizationPreview, maskFooter, classColors, maskAriaLabel, fixedColorHex, colorHex, colorTitle, busy, fitting, visibilityBlocked, onColorClick } = props;
+    const { visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, contrast, trailing, locked, isMask, maskVisualization, onMaskVisualizationChange, onMaskVisualizationPreview, maskFooter, maskAction, maskAriaLabel, fixedColorHex, colorHex, colorTitle, busy, fitting, visibilityBlocked, onColorClick } = props;
     const showMask = isMask && maskVisualization;
     const showColor = !isMask && onColorClick;
     return jsxRuntimeExports.jsxs("div", {
@@ -92557,7 +93123,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 showMask && onMaskVisualizationChange ? jsxRuntimeExports.jsx(MaskModeControls, {
                   value: maskVisualization,
                   ariaLabel: maskAriaLabel ?? name2.name,
-                  classColors,
+                  classColors: maskFooter != null,
                   onChange: onMaskVisualizationChange
                 }) : null
               ]
@@ -92586,7 +93152,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onChange: onMaskVisualizationChange,
               onPreview: onMaskVisualizationPreview,
               ariaLabel: maskAriaLabel ?? name2.name
-            }) : null
+            }) : null,
+            showMask ? maskAction : null
           ]
         }),
         showMask && maskFooter ? jsxRuntimeExports.jsx("div", {
@@ -93789,7 +94356,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const nav = useAuthorChannelNav();
     const images = useDocumentStore((s2) => s2.images);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
-    const classTables = useDocumentStore((s2) => s2.classTables);
+    const featureTables = useDocumentStore((s2) => s2.featureTables);
     const setImages = useDocumentStore((s2) => s2.setImages);
     const setImagesAndChannelGroups = useDocumentStore((s2) => s2.setImagesAndChannelGroups);
     const storedStackVisibilities = useAppStore((s2) => s2.channelVisibilities);
@@ -93982,7 +94549,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             isMask: true,
             maskVisualization: effectiveMaskVisualization(gc2 ?? sc2),
             maskAriaLabel: `Mask display for ${sc2.name}`,
-            ...classTableRowExtras(sc2.id, classTables),
+            ...featureTableRowExtras(sc2.id, featureTables),
             onMaskVisualizationChange: syncMask,
             onMaskVisualizationPreview: (viz) => {
               useAppStore.getState().setMaskVisualizationPreview(viz ? {
@@ -94112,7 +94679,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const chipHint = "_chipHint_1wrg4_120";
   const chipDim = "_chipDim_1wrg4_154";
   const editor = "_editor_1wrg4_158";
-  const styles$n = {
+  const styles$m = {
     root: root$9,
     groupCard,
     groupHeader,
@@ -94150,12 +94717,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showEditor = !chip2.key.endsWith(":rgb");
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$n.chipCell,
-        chip2.visible && chip2.hex && shown ? styles$n.chipOn : null,
-        chip2.hex && (!chip2.visible || !shown) ? styles$n.chipOutlined : null,
-        chip2.hex ? null : styles$n.chipUnassigned,
+        styles$m.chipCell,
+        chip2.visible && chip2.hex && shown ? styles$m.chipOn : null,
+        chip2.hex && (!chip2.visible || !shown) ? styles$m.chipOutlined : null,
+        chip2.hex ? null : styles$m.chipUnassigned,
         pending2 ? minervaTheme.busyOverlay : null,
-        dim ? styles$n.chipDim : null
+        dim ? styles$m.chipDim : null
       ].filter(Boolean).join(" "),
       style: chip2.hex ? {
         "--ch": `#${chip2.hex}`
@@ -94165,10 +94732,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         jsxRuntimeExports.jsx(CursorHint, {
           enabled: showBlocked,
           label: VIEWER_INTENSITY_LIMIT_HINT,
-          className: styles$n.chipHint,
+          className: styles$m.chipHint,
           children: jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$n.chip}`,
+            className: `${minervaTheme.focusRing} ${styles$m.chip}`,
             title: pending2 ? pendingLabel2 : void 0,
             "aria-label": pending2 ? pendingLabel2 : showBlocked ? VIEWER_INTENSITY_LIMIT_HINT : chipAriaLabel(chip2),
             "aria-pressed": chip2.visible,
@@ -94182,7 +94749,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         showEditor ? jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$n.chipMenu}`,
+          className: `${minervaTheme.focusRing} ${styles$m.chipMenu}`,
           title: `Edit ${chip2.name}`,
           "aria-label": `Edit ${chip2.name}`,
           "aria-expanded": open,
@@ -94205,7 +94772,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const openIndex = openChip ? chips.findIndex((c2) => c2.key === openChip.key) : -1;
     const rowEnd = openIndex < 0 ? -1 : Math.min(chips.length - 1, openIndex - openIndex % CHIP_COLS + CHIP_COLS - 1);
     return jsxRuntimeExports.jsx("div", {
-      className: styles$n.chipWrap,
+      className: styles$m.chipWrap,
       children: chips.map((chip2, i2) => jsxRuntimeExports.jsxs(reactExports.Fragment, {
         children: [
           jsxRuntimeExports.jsx(ChipButton, {
@@ -94220,7 +94787,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             onOpenEditor: props.onOpenEditor
           }),
           i2 === rowEnd && openChip ? jsxRuntimeExports.jsx("div", {
-            className: styles$n.editor,
+            className: styles$m.editor,
             children: jsxRuntimeExports.jsx(ChannelEditor, {
               chip: openChip
             })
@@ -94233,10 +94800,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const visLabel = props.allVisible ? `Hide every channel in ${props.name}` : `Show every channel in ${props.name}`;
     const filtering = props.onNameFilterChange != null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$n.groupCard,
+      className: styles$m.groupCard,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$n.groupHeader,
+          className: styles$m.groupHeader,
           children: [
             props.onToggleVisibility ? jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible: Boolean(props.allVisible),
@@ -94246,11 +94813,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: props.onToggleVisibility
             }) : null,
             jsxRuntimeExports.jsx("div", {
-              className: styles$n.groupLabel,
+              className: styles$m.groupLabel,
               children: props.name
             }),
             props.onNameFilterChange ? jsxRuntimeExports.jsx("input", {
-              className: styles$n.channelFilter,
+              className: styles$m.channelFilter,
               type: "text",
               value: props.nameFilter ?? "",
               placeholder: "Search...",
@@ -94267,7 +94834,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         filtering && props.chips.length === 0 ? jsxRuntimeExports.jsx("div", {
-          className: styles$n.filterEmpty,
+          className: styles$m.filterEmpty,
           children: "No matching channels"
         }) : jsxRuntimeExports.jsx(ChipGrid, {
           chips: props.chips,
@@ -94281,6 +94848,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function ImageChannelOverviewCard(props) {
+    var _a2;
     const { image: image2 } = props;
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
@@ -94290,7 +94858,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const setChannelGroupRowVisibilities = useAppStore((s2) => s2.setChannelGroupRowVisibilities);
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const nav = useAuthorChannelNav();
-    const [openKey, setOpenKey] = reactExports.useState(null);
+    const [openKey, setOpenKey] = reactExports.useState(void 0);
     const [channelNameFilter, setChannelNameFilter] = reactExports.useState("");
     const allSourceChannels = reactExports.useMemo(() => flattenImageChannelsInDocumentOrder(images), [
       images
@@ -94337,9 +94905,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...model.groups.flatMap((g2) => g2.chips),
       ...model.allChannels
     ];
-    const openChip = openKey == null ? null : overviewChips.find((c2) => c2.key === openKey) ?? null;
+    const maskIds = new Set(image2.channels.filter(isMaskChannel).map((c2) => c2.id));
+    const defaultMaskKey = maskIds.size === 0 ? null : ((_a2 = overviewChips.find((c2) => maskIds.has(c2.sourceId))) == null ? void 0 : _a2.key) ?? null;
+    const resolvedOpenKey = openKey === void 0 ? defaultMaskKey : openKey;
+    const openChip = resolvedOpenKey == null ? null : overviewChips.find((c2) => c2.key === resolvedOpenKey) ?? null;
     const onOpenEditor = (chip2) => {
-      setOpenKey((cur) => cur === chip2.key ? null : chip2.key);
+      setOpenKey((cur) => {
+        const current = cur === void 0 ? defaultMaskKey : cur;
+        return current === chip2.key ? null : chip2.key;
+      });
     };
     const capVis = {
       channels: allSourceChannels,
@@ -94372,7 +94946,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setChannelVisibilities(next2.channelVisibilities);
     };
     const onGroupChip = (chip2) => {
-      var _a2;
+      var _a3;
       if (!chip2.groupRowId) return;
       if (rgbDisplay) {
         applyRgbUnit(!chip2.visible);
@@ -94391,12 +94965,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         groupRowVisibilities: next2
       })) return;
       setChannelGroupRowVisibilities(next2);
-      void ((_a2 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _a2.call(nav, [
+      void ((_a3 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _a3.call(nav, [
         chip2.sourceId
       ]).catch(() => void 0));
     };
     const onAllChannelsChip = (chip2) => {
-      var _a2, _b2;
+      var _a3, _b2;
       if (rgbDisplay) {
         applyRgbUnit(!chip2.visible);
         return;
@@ -94419,7 +94993,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         })) return;
         setChannelGroupRowVisibilities(next2);
         if (nextOn) {
-          void ((_a2 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _a2.call(nav, [
+          void ((_a3 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _a3.call(nav, [
             chip2.sourceId
           ]).catch(() => void 0));
         }
@@ -94450,7 +95024,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     if (image2.channels.length === 0) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$n.root,
+      className: styles$m.root,
       children: [
         model.groups.map((group2) => {
           const rgbUnit = rgbDisplay && group2.chips[0] ? [
@@ -94510,34 +95084,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  function TrashIcon({ title: title7, size = 14 }) {
-    const label2 = title7 ?? "Delete";
-    return jsxRuntimeExports.jsxs("svg", {
-      "aria-hidden": title7 ? void 0 : true,
-      width: size,
-      height: size,
-      viewBox: "0 0 24 24",
-      fill: "currentColor",
-      children: [
-        jsxRuntimeExports.jsx("title", {
-          children: label2
-        }),
-        jsxRuntimeExports.jsx("path", {
-          d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
-        })
-      ]
-    });
-  }
-  const authorPanel = "_authorPanel_1yzv8_3";
-  const authorPanelBody = "_authorPanelBody_1yzv8_14";
-  const emptyMessage = "_emptyMessage_1yzv8_21";
-  const thinScrollbar = "_thinScrollbar_1yzv8_29";
-  const panel$1 = {
-    authorPanel,
-    authorPanelBody,
-    emptyMessage,
-    thinScrollbar
-  };
   var commonjsGlobal = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
   function getDefaultExportFromCjs(x2) {
     return x2 && x2.__esModule && Object.prototype.hasOwnProperty.call(x2, "default") ? x2["default"] : x2;
@@ -164697,9 +165243,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return loadDicomWebPerInstance(root2);
     }
   };
-  const findDicomWeb = (series) => {
-    return listDicomWeb(series);
-  };
   const EQ_THRESHOLD = 0.5;
   const MIN_PAIRS = 1e5;
   const MAX_TILES = 6;
@@ -164850,31 +165393,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const ch2 = channels2 > 1 ? channel : 0;
     return classifyPlane(plane, ch2);
-  }
-  function sanitizeOmeXml(raw2) {
-    let s2 = raw2.replaceAll("\0", "").trim();
-    if (!s2) return s2;
-    const endTag2 = s2.search(/<\/(?:ome:)?OME\s*>/i);
-    if (endTag2 >= 0) {
-      const gt = s2.indexOf(">", endTag2);
-      if (gt >= 0) s2 = s2.slice(0, gt + 1);
-    }
-    return s2.trim();
-  }
-  function parseOmeXml(raw2) {
-    const xml2 = sanitizeOmeXml(raw2);
-    if (!xml2) return null;
-    const doc = new DOMParser().parseFromString(xml2, "application/xml");
-    if (doc.getElementsByTagName("parsererror").length > 0) return null;
-    return doc;
-  }
-  function omePixelsElement(doc) {
-    return doc.getElementsByTagNameNS("*", "Pixels")[0] ?? null;
-  }
-  function omeChannelElements(pixels) {
-    return [
-      ...pixels.getElementsByTagNameNS("*", "Channel")
-    ].filter((el2) => el2.parentElement === pixels);
   }
   async function openOmeTiff(source2, signal) {
     return typeof source2 === "string" ? await fromUrl(source2, {}, signal) : await fromBlob(source2, signal);
@@ -166097,78 +166615,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
     });
   }
-  const stack = "_stack_578vp_1";
-  const panelDropActive = "_panelDropActive_578vp_11";
-  const addStrip = "_addStrip_578vp_16";
-  const addStripRow = "_addStripRow_578vp_27";
-  const dropZone = "_dropZone_578vp_41";
-  const dropZoneTitle = "_dropZoneTitle_578vp_51";
-  const orDivider = "_orDivider_578vp_57";
-  const urlRow = "_urlRow_578vp_68";
-  const urlField = "_urlField_578vp_77";
-  const urlInput = "_urlInput_578vp_83";
-  const urlAdd = "_urlAdd_578vp_91";
-  const dropZoneActive = "_dropZoneActive_578vp_121";
-  const importError = "_importError_578vp_182";
-  const fieldLabel = "_fieldLabel_578vp_195";
-  const typeOverlay = "_typeOverlay_578vp_209";
-  const typeOverlayBackdrop = "_typeOverlayBackdrop_578vp_221";
-  const typeOverlayCard = "_typeOverlayCard_578vp_227";
-  const typeOverlayFields = "_typeOverlayFields_578vp_241";
-  const typeOverlayFile = "_typeOverlayFile_578vp_251";
-  const typeRow = "_typeRow_578vp_260";
-  const typeChipActive = "_typeChipActive_578vp_268";
-  const typeChipSuggested = "_typeChipSuggested_578vp_272";
-  const typeChipMuted = "_typeChipMuted_578vp_277";
-  const typeFooter = "_typeFooter_578vp_291";
-  const typeImport = "_typeImport_578vp_300";
-  const typeSection = "_typeSection_578vp_307";
-  const imageCard = "_imageCard_578vp_315";
-  const fileAccessOverlay = "_fileAccessOverlay_578vp_327";
-  const fileAccessAction = "_fileAccessAction_578vp_343";
-  const imageCardHeader = "_imageCardHeader_578vp_351";
-  const imageCardText = "_imageCardText_578vp_359";
-  const imageCardTitle = "_imageCardTitle_578vp_367";
-  const imageCardMeta = "_imageCardMeta_578vp_375";
-  const imageCardActions = "_imageCardActions_578vp_381";
-  const csvInput = "_csvInput_578vp_390";
-  const styles$m = {
-    stack,
-    panelDropActive,
-    addStrip,
-    addStripRow,
-    dropZone,
-    dropZoneTitle,
-    orDivider,
-    urlRow,
-    urlField,
-    urlInput,
-    urlAdd,
-    dropZoneActive,
-    importError,
-    fieldLabel,
-    typeOverlay,
-    typeOverlayBackdrop,
-    typeOverlayCard,
-    typeOverlayFields,
-    typeOverlayFile,
-    typeRow,
-    typeChipActive,
-    typeChipSuggested,
-    typeChipMuted,
-    typeFooter,
-    typeImport,
-    typeSection,
-    imageCard,
-    fileAccessOverlay,
-    fileAccessAction,
-    imageCardHeader,
-    imageCardText,
-    imageCardTitle,
-    imageCardMeta,
-    imageCardActions,
-    csvInput
-  };
   function ReplaceIcon({ title: title7, size = 14 }) {
     const label2 = title7 ?? "Replace";
     return jsxRuntimeExports.jsxs("svg", {
@@ -166202,9 +166648,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       type: "button",
       "aria-pressed": selected,
       className: [
-        selected ? styles$m.typeChipActive : null,
-        suggested ? styles$m.typeChipSuggested : null,
-        muted ? styles$m.typeChipMuted : null
+        selected ? styles$p.typeChipActive : null,
+        suggested ? styles$p.typeChipSuggested : null,
+        muted ? styles$p.typeChipMuted : null
       ].filter(Boolean).join(" "),
       onClick,
       children: label2
@@ -166277,13 +166723,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [importError2, setImportError] = reactExports.useState(null);
     const [stripErrorAt, setStripErrorAt] = reactExports.useState("drop");
     const [importBusy, setImportBusy] = reactExports.useState(false);
-    const [classCsvFile, setClassCsvFile] = reactExports.useState(null);
-    const [classCsvCols, setClassCsvCols] = reactExports.useState(null);
-    const classCsvInputRef = reactExports.useRef(null);
-    const clearClassCsv = reactExports.useCallback(() => {
-      setClassCsvFile(null);
-      setClassCsvCols(null);
-      if (classCsvInputRef.current) classCsvInputRef.current.value = "";
+    const [featureCsvFile, setFeatureCsvFile] = reactExports.useState(null);
+    const [featureCsvCols, setFeatureCsvCols] = reactExports.useState(null);
+    const clearFeatureCsv = reactExports.useCallback(() => {
+      setFeatureCsvFile(null);
+      setFeatureCsvCols(null);
     }, []);
     const [dragging, setDragging] = reactExports.useState(false);
     const dragDepthRef = reactExports.useRef(0);
@@ -166294,7 +166738,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const roleChosenByUserRef = reactExports.useRef(false);
     const rgbDisplayChosenByUserRef = reactExports.useRef(false);
     const overlayRgbDisplayRef = reactExports.useRef(false);
-    const showTypeOverlay = pending2 != null;
     const dicomAllowed = (pending2 == null ? void 0 : pending2.kind) === "url" && overlayRole !== "segmentation";
     const urlReady = /^https?:\/\/.+/.test(urlDraft.trim());
     const abortFormatDetect = reactExports.useCallback(() => {
@@ -166311,17 +166754,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     reactExports.useEffect(() => {
       if (prevImportRev.current === importRevision) return;
+      if (importBusy) return;
       prevImportRev.current = importRevision;
+      if (importError2) return;
       abortFormatDetect();
       setPending(null);
       setImportError(null);
       setUrlDraft("");
-      setImportBusy(false);
-      clearClassCsv();
+      clearFeatureCsv();
     }, [
       abortFormatDetect,
+      importBusy,
+      importError2,
       importRevision,
-      clearClassCsv
+      clearFeatureCsv
     ]);
     const openPending = reactExports.useCallback((next2) => {
       abortFormatDetect();
@@ -166341,7 +166787,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setDetectedRgbDisplay(null);
       setDetecting(false);
       setImportError(null);
-      clearClassCsv();
+      clearFeatureCsv();
       const ac2 = new AbortController();
       formatDetectAbortRef.current = ac2;
       void (async () => {
@@ -166403,16 +166849,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })();
     }, [
       abortFormatDetect,
-      clearClassCsv
+      clearFeatureCsv
     ]);
     const clearPending = reactExports.useCallback(() => {
       abortFormatDetect();
       setPending(null);
       setImportError(null);
-      clearClassCsv();
+      clearFeatureCsv();
     }, [
       abortFormatDetect,
-      clearClassCsv
+      clearFeatureCsv
     ]);
     const acceptLocalHandles = reactExports.useCallback(async (handles) => {
       if (handles.length === 0) return;
@@ -166548,7 +166994,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           return;
         }
         const rgbDisplay = detectedRgbDisplay != null && role === "intensity" ? overlayRgbDisplayRef.current : void 0;
-        const beforeMaskIds = role === "segmentation" && classCsvFile ? new Set(flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images).filter(isMaskChannel).map((c2) => c2.id)) : null;
+        const attachCsv = role === "segmentation" ? featureCsvFile : null;
+        const beforeMaskIds = attachCsv ? new Set(flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images).filter(isMaskChannel).map((c2) => c2.id)) : null;
+        const csvJob = attachCsv ? ingestFeatureCsvFile(attachCsv, featureCsvCols ? {
+          id: featureCsvCols.id,
+          name: featureCsvCols.name
+        } : void 0) : null;
         const result = await onImportOme({
           role,
           append: hasImages,
@@ -166567,15 +167018,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           return;
         }
         const sourceChannelId = beforeMaskIds ? (_a2 = flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images).find((c2) => isMaskChannel(c2) && !beforeMaskIds.has(c2.id))) == null ? void 0 : _a2.id : void 0;
-        if ((result == null ? void 0 : result.ok) && classCsvFile && sourceChannelId) {
-          const attached = await attachClassTable({
-            sourceChannelId,
-            file: classCsvFile,
-            columns: classCsvCols ? {
-              id: classCsvCols.id,
-              name: classCsvCols.name
-            } : void 0
-          });
+        if ((result == null ? void 0 : result.ok) && csvJob && sourceChannelId) {
+          const attached = await completeFeatureTableIngest(sourceChannelId, csvJob);
           if (attached.ok === false) setImportError(attached.error);
         }
       } finally {
@@ -166603,27 +167047,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const needsStoryDir = needsStoryRootReconnect && !!onReconnectStoryRoot && ((_c2 = im.source) == null ? void 0 : _c2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
       const showAccessOverlay = needsReselect || needsPermission || needsStoryDir;
       return jsxRuntimeExports.jsxs("article", {
-        className: styles$m.imageCard,
+        className: styles$p.imageCard,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$m.imageCardHeader,
+            className: styles$p.imageCardHeader,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$m.imageCardText,
+                className: styles$p.imageCardText,
                 children: [
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$m.imageCardTitle,
+                    className: styles$p.imageCardTitle,
                     title: title7,
                     children: title7
                   }),
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$m.imageCardMeta,
+                    className: styles$p.imageCardMeta,
                     children: metaParts.join(" \xB7 ")
                   })
                 ]
               }),
               onReplaceImage || onRemoveImage ? jsxRuntimeExports.jsxs("div", {
-                className: styles$m.imageCardActions,
+                className: styles$p.imageCardActions,
                 children: [
                   onReplaceImage && ((_d = im.source) == null ? void 0 : _d.kind) !== "jpeg" && ((_e = im.source) == null ? void 0 : _e.kind) !== "dicomWeb" ? jsxRuntimeExports.jsx(PanelIconButton, {
                     title: `Replace ${title7} with another OME-TIFF`,
@@ -166651,10 +167095,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             image: im
           }),
           showAccessOverlay ? jsxRuntimeExports.jsx("div", {
-            className: styles$m.fileAccessOverlay,
+            className: styles$p.fileAccessOverlay,
             children: jsxRuntimeExports.jsx(PanelActionButton, {
               type: "button",
-              className: styles$m.fileAccessAction,
+              className: styles$p.fileAccessAction,
               onClick: () => {
                 if (needsStoryDir) void (onReconnectStoryRoot == null ? void 0 : onReconnectStoryRoot());
                 else if (needsReselect) void (onReselectFile == null ? void 0 : onReselectFile(im.id));
@@ -166668,18 +167112,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const imageCards = images.length > 0 ? images.map((im, i2) => renderImageCard(im, i2)) : imageLoaded && loadedSource ? [
       jsxRuntimeExports.jsx("article", {
-        className: styles$m.imageCard,
+        className: styles$p.imageCard,
         children: jsxRuntimeExports.jsx("div", {
-          className: styles$m.imageCardHeader,
+          className: styles$p.imageCardHeader,
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$m.imageCardText,
+            className: styles$p.imageCardText,
             children: [
               jsxRuntimeExports.jsx("div", {
-                className: styles$m.imageCardTitle,
+                className: styles$p.imageCardTitle,
                 children: loadedSource.label
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$m.imageCardMeta,
+                className: styles$p.imageCardMeta,
                 children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
               })
             ]
@@ -166693,51 +167137,51 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onDragOver,
       onDrop: (e2) => void onDrop(e2)
     };
-    const stripError = importError2 && !showTypeOverlay ? importError2 : null;
+    const stripError = importError2 && !pending2 ? importError2 : null;
     const dropError = stripError && stripErrorAt === "drop" ? stripError : null;
     const urlError = stripError && stripErrorAt === "url" ? stripError : null;
     const addStrip2 = jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$m.addStrip,
-        row2 ? styles$m.addStripRow : "",
-        row2 && dragging ? styles$m.panelDropActive : ""
+        styles$p.addStrip,
+        row2 ? styles$p.addStripRow : "",
+        row2 && dragging ? styles$p.panelDropActive : ""
       ].join(" "),
       ...row2 ? dropHandlers : {},
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
           className: [
-            styles$m.dropZone,
-            dragging ? styles$m.dropZoneActive : ""
+            styles$p.dropZone,
+            dragging ? styles$p.dropZoneActive : ""
           ].join(" "),
           disabled: disabled2,
           "aria-invalid": dropError ? true : void 0,
           onClick: () => void browseLocal(),
           children: jsxRuntimeExports.jsx("span", {
             className: [
-              styles$m.dropZoneTitle,
-              dropError ? styles$m.importError : ""
+              styles$p.dropZoneTitle,
+              dropError ? styles$p.importError : ""
             ].filter(Boolean).join(" "),
             role: dropError ? "alert" : void 0,
             children: dropError ?? "Drop or Browse Image File"
           })
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$m.orDivider,
+          className: styles$p.orDivider,
           children: jsxRuntimeExports.jsx("span", {
             children: "or"
           })
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$m.urlRow,
+          className: styles$p.urlRow,
           children: [
             jsxRuntimeExports.jsxs("div", {
-              className: styles$m.urlField,
+              className: styles$p.urlField,
               children: [
                 jsxRuntimeExports.jsx("input", {
                   id: "upload-add-url",
                   type: "url",
-                  className: `${minervaTheme.input} ${styles$m.urlInput}`,
+                  className: `${minervaTheme.input} ${styles$p.urlInput}`,
                   placeholder: "Image URL (OME-TIFF or DICOMweb)",
                   "aria-label": "Image URL",
                   "aria-invalid": urlError ? true : void 0,
@@ -166756,7 +167200,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 urlDraft.trim() ? jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
-                  className: styles$m.urlAdd,
+                  className: styles$p.urlAdd,
                   disabled: disabled2 || !urlReady,
                   onClick: acceptUrlDraft,
                   children: "Add"
@@ -166764,7 +167208,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             urlError ? jsxRuntimeExports.jsx("div", {
-              className: styles$m.importError,
+              className: styles$p.importError,
               role: "alert",
               children: urlError
             }) : null
@@ -166772,188 +167216,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         })
       ]
     });
-    const typeOverlayDialog = showTypeOverlay && pending2 ? jsxRuntimeExports.jsxs("div", {
-      className: styles$m.typeOverlay,
-      role: "dialog",
-      "aria-modal": "true",
-      "aria-busy": importBusy || detecting,
-      "aria-labelledby": "image-import-dialog-title",
-      children: [
-        jsxRuntimeExports.jsx("div", {
-          className: styles$m.typeOverlayBackdrop,
-          "aria-hidden": "true"
-        }),
-        jsxRuntimeExports.jsxs("div", {
-          className: `${minervaTheme.surface} ${styles$m.typeOverlayCard}`,
-          children: [
-            jsxRuntimeExports.jsx("div", {
-              id: "image-import-dialog-title",
-              className: styles$m.typeOverlayFile,
-              title: pendingLabel(pending2),
-              children: pendingLabel(pending2)
-            }),
-            jsxRuntimeExports.jsxs("fieldset", {
-              disabled: importBusy || detecting || disabled2,
-              className: styles$m.typeOverlayFields,
-              children: [
-                jsxRuntimeExports.jsxs("div", {
-                  className: styles$m.typeRow,
-                  children: [
-                    jsxRuntimeExports.jsx("span", {
-                      className: styles$m.fieldLabel,
-                      children: "Image Type"
-                    }),
-                    jsxRuntimeExports.jsx(FormatChip, {
-                      label: "Fluorescence",
-                      selected: overlayRole === "intensity" && !overlayRgbDisplay,
-                      suggested: overlayRole === "intensity" && !overlayRgbDisplay,
-                      muted: detectedRole !== "intensity",
-                      onClick: () => {
-                        roleChosenByUserRef.current = true;
-                        rgbDisplayChosenByUserRef.current = true;
-                        overlayRgbDisplayRef.current = false;
-                        setOverlayRole("intensity");
-                        setOverlayRgbDisplay(false);
-                      }
-                    }),
-                    detectedRgbDisplay != null ? jsxRuntimeExports.jsx(FormatChip, {
-                      label: "Brightfield",
-                      selected: overlayRole === "intensity" && overlayRgbDisplay,
-                      suggested: overlayRole === "intensity" && overlayRgbDisplay,
-                      muted: detectedRole !== "intensity",
-                      onClick: () => {
-                        roleChosenByUserRef.current = true;
-                        rgbDisplayChosenByUserRef.current = true;
-                        overlayRgbDisplayRef.current = true;
-                        setOverlayRole("intensity");
-                        setOverlayRgbDisplay(true);
-                      }
-                    }) : null,
-                    jsxRuntimeExports.jsx(FormatChip, {
-                      label: "Segmentation Mask",
-                      selected: overlayRole === "segmentation",
-                      suggested: overlayRole === "segmentation",
-                      muted: detectedRole !== "segmentation",
-                      onClick: () => {
-                        roleChosenByUserRef.current = true;
-                        setOverlayRole("segmentation");
-                        formatChosenByUserRef.current = true;
-                        setOverlayFormat("ome-tiff");
-                      }
-                    })
-                  ]
-                }),
-                dicomAllowed ? jsxRuntimeExports.jsx("div", {
-                  className: styles$m.typeSection,
-                  children: jsxRuntimeExports.jsxs("div", {
-                    className: styles$m.typeRow,
-                    children: [
-                      jsxRuntimeExports.jsx("span", {
-                        className: styles$m.fieldLabel,
-                        children: "Format"
-                      }),
-                      FORMAT_OPTIONS.map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
-                        label: label2,
-                        selected: overlayFormat === format,
-                        suggested: detectedFormat === format,
-                        muted: detectedFormat !== format,
-                        onClick: () => {
-                          formatChosenByUserRef.current = true;
-                          setOverlayFormat(format);
-                        }
-                      }, format))
-                    ]
-                  })
-                }) : null,
-                overlayRole === "segmentation" ? jsxRuntimeExports.jsxs("div", {
-                  className: styles$m.typeRow,
-                  children: [
-                    jsxRuntimeExports.jsx("span", {
-                      className: styles$m.fieldLabel,
-                      children: "Class table"
-                    }),
-                    jsxRuntimeExports.jsx("input", {
-                      ref: classCsvInputRef,
-                      type: "file",
-                      accept: ".csv,text/csv",
-                      className: styles$m.csvInput,
-                      onChange: (e2) => {
-                        var _a2;
-                        const file = ((_a2 = e2.target.files) == null ? void 0 : _a2[0]) ?? null;
-                        setClassCsvFile(file);
-                        if (!file) {
-                          setClassCsvCols(null);
-                          return;
-                        }
-                        void peekClassCsv(file).then(setClassCsvCols);
-                      }
-                    }),
-                    jsxRuntimeExports.jsx(PanelActionButton, {
-                      type: "button",
-                      onClick: () => {
-                        var _a2;
-                        return (_a2 = classCsvInputRef.current) == null ? void 0 : _a2.click();
-                      },
-                      children: classCsvFile ? classCsvFile.name : "Optional CSV\u2026"
-                    })
-                  ]
-                }) : null,
-                overlayRole === "segmentation" && classCsvCols ? jsxRuntimeExports.jsx(ClassCsvColumnPick, {
-                  headers: classCsvCols.headers,
-                  id: classCsvCols.id,
-                  name: classCsvCols.name,
-                  onId: (id2) => setClassCsvCols({
-                    ...classCsvCols,
-                    id: id2
-                  }),
-                  onName: (name2) => setClassCsvCols({
-                    ...classCsvCols,
-                    name: name2
-                  })
-                }) : null
-              ]
-            }),
-            importError2 ? jsxRuntimeExports.jsx("div", {
-              className: styles$m.importError,
-              role: "alert",
-              children: importError2
-            }) : null,
-            jsxRuntimeExports.jsxs("div", {
-              className: styles$m.typeFooter,
-              children: [
-                jsxRuntimeExports.jsx(PanelActionButton, {
-                  type: "button",
-                  onClick: clearPending,
-                  disabled: importBusy || disabled2,
-                  children: "Cancel"
-                }),
-                jsxRuntimeExports.jsx(PanelActionButton, {
-                  type: "button",
-                  className: styles$m.typeImport,
-                  disabled: importBusy || detecting || disabled2,
-                  onClick: () => void runImport(),
-                  children: importBusy || detecting ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
-                    children: [
-                      jsxRuntimeExports.jsx("span", {
-                        className: minervaTheme.spinnerSm,
-                        "aria-hidden": "true"
-                      }),
-                      detecting ? "Detecting\u2026" : "Importing\u2026"
-                    ]
-                  }) : "Import"
-                })
-              ]
-            })
-          ]
-        })
-      ]
-    }) : null;
+    let overlayBusyLabel = "Importing\u2026";
+    if (detecting) overlayBusyLabel = "Detecting\u2026";
+    else if (featureCsvFile && overlayRole === "segmentation") {
+      overlayBusyLabel = "Loading feature table\u2026";
+    }
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         row2 ? addStrip2 : jsxRuntimeExports.jsx("div", {
           className: [
             panel$1.authorPanel,
-            dragging ? styles$m.panelDropActive : ""
+            dragging ? styles$p.panelDropActive : ""
           ].join(" "),
           ...dropHandlers,
           children: jsxRuntimeExports.jsx("div", {
@@ -166962,7 +167235,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               panel$1.thinScrollbar
             ].join(" "),
             children: jsxRuntimeExports.jsxs("div", {
-              className: styles$m.stack,
+              className: styles$p.stack,
               children: [
                 imageCards,
                 addStrip2
@@ -166970,7 +167243,136 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             })
           })
         }),
-        typeOverlayDialog ? reactDomExports.createPortal(typeOverlayDialog, document.body) : null
+        pending2 ? jsxRuntimeExports.jsxs(ImportOverlay, {
+          title: pendingLabel(pending2),
+          titleId: "image-import-dialog-title",
+          error: importError2,
+          busy: importBusy || detecting,
+          busyLabel: overlayBusyLabel,
+          cancelDisabled: importBusy || disabled2,
+          importDisabled: importBusy || detecting || disabled2,
+          onCancel: clearPending,
+          onImport: () => void runImport(),
+          children: [
+            jsxRuntimeExports.jsxs("div", {
+              className: styles$p.typeRow,
+              children: [
+                jsxRuntimeExports.jsx("span", {
+                  className: styles$p.fieldLabel,
+                  children: "Image Type"
+                }),
+                jsxRuntimeExports.jsx(FormatChip, {
+                  label: "Fluorescence",
+                  selected: overlayRole === "intensity" && !overlayRgbDisplay,
+                  suggested: detectedRole === "intensity" && detectedRgbDisplay !== true,
+                  muted: detectedRole !== "intensity" || detectedRgbDisplay === true,
+                  onClick: () => {
+                    roleChosenByUserRef.current = true;
+                    rgbDisplayChosenByUserRef.current = true;
+                    overlayRgbDisplayRef.current = false;
+                    setOverlayRole("intensity");
+                    setOverlayRgbDisplay(false);
+                  }
+                }),
+                detectedRgbDisplay != null ? jsxRuntimeExports.jsx(FormatChip, {
+                  label: "Brightfield",
+                  selected: overlayRole === "intensity" && overlayRgbDisplay,
+                  suggested: detectedRole === "intensity" && detectedRgbDisplay === true,
+                  muted: detectedRole !== "intensity" || detectedRgbDisplay !== true,
+                  onClick: () => {
+                    roleChosenByUserRef.current = true;
+                    rgbDisplayChosenByUserRef.current = true;
+                    overlayRgbDisplayRef.current = true;
+                    setOverlayRole("intensity");
+                    setOverlayRgbDisplay(true);
+                  }
+                }) : null,
+                jsxRuntimeExports.jsx(FormatChip, {
+                  label: "Segmentation Mask",
+                  selected: overlayRole === "segmentation",
+                  suggested: detectedRole === "segmentation",
+                  muted: detectedRole !== "segmentation",
+                  onClick: () => {
+                    roleChosenByUserRef.current = true;
+                    setOverlayRole("segmentation");
+                    formatChosenByUserRef.current = true;
+                    setOverlayFormat("ome-tiff");
+                  }
+                })
+              ]
+            }),
+            dicomAllowed ? jsxRuntimeExports.jsx("div", {
+              className: styles$p.typeSection,
+              children: jsxRuntimeExports.jsxs("div", {
+                className: styles$p.typeRow,
+                children: [
+                  jsxRuntimeExports.jsx("span", {
+                    className: styles$p.fieldLabel,
+                    children: "Format"
+                  }),
+                  FORMAT_OPTIONS.map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
+                    label: label2,
+                    selected: overlayFormat === format,
+                    suggested: detectedFormat === format,
+                    muted: detectedFormat !== format,
+                    onClick: () => {
+                      formatChosenByUserRef.current = true;
+                      setOverlayFormat(format);
+                    }
+                  }, format))
+                ]
+              })
+            }) : null,
+            overlayRole === "segmentation" ? jsxRuntimeExports.jsxs("div", {
+              className: styles$p.typeRow,
+              children: [
+                jsxRuntimeExports.jsx("span", {
+                  className: styles$p.fieldLabel,
+                  children: "Feature table"
+                }),
+                jsxRuntimeExports.jsx(PanelActionButton, {
+                  type: "button",
+                  onClick: () => {
+                    void (async () => {
+                      let file;
+                      try {
+                        file = await n$1({
+                          description: "Feature table CSV",
+                          mimeTypes: [
+                            "text/csv"
+                          ],
+                          extensions: [
+                            ".csv"
+                          ],
+                          multiple: false
+                        });
+                      } catch (e2) {
+                        if (e2 instanceof Error && e2.name === "AbortError") return;
+                        throw e2;
+                      }
+                      setFeatureCsvFile(file);
+                      void peekFeatureCsv(file).then(setFeatureCsvCols);
+                    })();
+                  },
+                  children: featureCsvFile ? featureCsvFile.name : "Optional CSV\u2026"
+                })
+              ]
+            }) : null,
+            overlayRole === "segmentation" && featureCsvCols ? jsxRuntimeExports.jsx(FeatureCsvColumnPick, {
+              headers: featureCsvCols.headers,
+              id: featureCsvCols.id,
+              name: featureCsvCols.name,
+              onId: (id2) => setFeatureCsvCols({
+                ...featureCsvCols,
+                id: id2
+              }),
+              onName: (name2) => setFeatureCsvCols({
+                ...featureCsvCols,
+                name: name2
+              })
+            }) : null
+          ]
+        }) : null
       ]
     });
   };
@@ -169484,19 +169886,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const pending2 = pendingLibraryImport;
       pendingLibraryImport = null;
       if (!pending2) return;
-      void (async () => {
-        const result = pending2.kind === "dicomWeb" ? await importDicomWebRef.current({
-          url: pending2.url
-        }) : await importOmeRef.current({
-          role: pending2.role,
-          append: false,
-          rgbDisplay: pending2.rgbDisplay,
-          source: pending2.source
-        });
-        if (result.ok === false) window.alert(result.error);
-      })().finally(() => {
-        onSettled();
+      const imported = pending2.kind === "dicomWeb" ? importDicomWebRef.current({
+        url: pending2.url
+      }) : importOmeRef.current({
+        role: pending2.role,
+        append: false,
+        rgbDisplay: pending2.rgbDisplay,
+        source: pending2.source
       });
+      void imported.then((result) => {
+        if (result.ok === false) window.alert(result.error);
+      }).finally(onSettled);
     }, [
       onSettled
     ]);
@@ -170381,16 +170781,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ...props
   }, reactExports.createElement("path", {
     d: "M10.83,2.37c-.52-.52-1.36-.52-1.89,0,0,0,0,0,0,0l-6.57,6.57c-.52.52-.52,1.36,0,1.89,0,0,0,0,0,0l2.8,2.8c.52.52,1.36.52,1.89,0,0,0,0,0,0,0l6.57-6.57c.52-.52.52-1.36,0-1.89,0,0,0,0,0,0l-2.8-2.8ZM5.64,12.39l-2.12-2.12,2.75-2.93,2.12,2.12s-2.75,2.93-2.75,2.93ZM9.33,12h4v1.33h-5l1-1.33Z"
-  }));
-  const SvgFolder = (props) => reactExports.createElement("svg", {
-    width: "1em",
-    height: "1em",
-    viewBox: "0 0 16 16",
-    fill: "currentColor",
-    stroke: "none",
-    ...props
-  }, reactExports.createElement("path", {
-    d: "M.75,3.82c0-.93.75-1.67,1.67-1.67h3.77c.45,0,.86.2,1.14.54l1.23,1.14h5.02c.93,0,1.67.75,1.67,1.67v6.69c0,.93-.75,1.67-1.67,1.67H2.42c-.93,0-1.67-.75-1.67-1.67V3.82Z"
   }));
   const SvgLine = (props) => reactExports.createElement("svg", {
     width: "1em",
@@ -245073,7 +245463,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const channelRendering = useAppStore((s2) => s2.channelRendering);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
-    const classTables = useDocumentStore((s2) => s2.classTables);
+    const featureTables = useDocumentStore((s2) => s2.featureTables);
     const setChannelGroups = useDocumentStore((s2) => s2.setChannelGroups);
     const setImages = useDocumentStore((s2) => s2.setImages);
     const setImagesAndChannelGroups = useDocumentStore((s2) => s2.setImagesAndChannelGroups);
@@ -245802,7 +246192,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           isMask: true,
                           maskVisualization: effectiveMaskVisualization(gc2),
                           maskAriaLabel: `Mask display for ${name2}`,
-                          ...classTableRowExtras(sc2.id, classTables),
+                          ...featureTableRowExtras(sc2.id, featureTables),
                           onMaskVisualizationChange: (viz) => syncMaskVisualization(gc2.channelId, viz, group2.id, gc2.id),
                           onMaskVisualizationPreview: (viz) => {
                             previewMaskVisualization(gc2.channelId, viz);
@@ -245974,7 +246364,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               isMask: true,
               maskVisualization: effectiveMaskVisualization(sc2),
               maskAriaLabel: `Mask display for ${sc2.name}`,
-              ...classTableRowExtras(sc2.id, classTables),
+              ...featureTableRowExtras(sc2.id, featureTables),
               onMaskVisualizationChange: (viz) => syncMaskVisualization(sc2.id, viz),
               onMaskVisualizationPreview: (viz) => previewMaskVisualization(sc2.id, viz)
             } : colorSwatch,
@@ -249638,7 +250028,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return copy2;
   }
   function WorkerWrapper$2(options) {
-    return new Worker("" + new URL("jpegExport.worker-aOipBGJ9.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-CSW9_LSR.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -252212,61 +252602,39 @@ vec3 randomColor(uint label) {
   return maskViz.uPalette5;
 }
 
-bool isInteriorEdge(uint label, vec2 coord) {
-  uint n = uint(texture(channel0, coord + vec2(0.0, maskViz.uTexelSize.y)).r);
-  uint s = uint(texture(channel0, coord - vec2(0.0, maskViz.uTexelSize.y)).r);
-  uint e = uint(texture(channel0, coord + vec2(maskViz.uTexelSize.x, 0.0)).r);
-  uint w = uint(texture(channel0, coord - vec2(maskViz.uTexelSize.x, 0.0)).r);
-  return n != label || s != label || e != label || w != label;
+uint labelAt(vec2 coord) {
+  return uint(texture(channel0, coord).r);
 }
 
-uint unpackId(vec4 p) {
-  return uint(round(p.r * 255.0))
-    | (uint(round(p.g * 255.0)) << 8u)
-    | (uint(round(p.b * 255.0)) << 16u)
-    | (uint(round(p.a * 255.0)) << 24u);
-}
-
-// ponytail: 8 linear probes at load \u2264 0.5 (table \u2265 2\xD7 entries). A miss
-// falls through to hash / missHidden. Not a 512-id hidden-uniform cap.
-// Upgrade: longer probe or cuckoo if 4k-override tables collide.
-vec4 probeOverride(uint label) {
-  uint tableSize = uint(classStyle.uOverrideCount);
-  if (tableSize == 0u) return vec4(-1.0);
-  uint slot = (label * 2654435761u) % tableSize;
-  for (int k = 0; k < 8; k++) {
-    uint i = (slot + uint(k)) % tableSize;
-    uint id = unpackId(texelFetch(overrideTex, ivec2(int(i), 0), 0));
-    if (id == 0u) return vec4(-1.0);
-    if (id == label) return texelFetch(overrideTex, ivec2(int(i), 1), 0);
-  }
-  return vec4(-1.0);
+bool isOutline(uint label, vec2 coord) {
+  vec2 t = 1.0 / vec2(textureSize(channel0, 0));
+  return
+    labelAt(coord + vec2( t.x, 0.0)) != label ||
+    labelAt(coord + vec2(-t.x, 0.0)) != label ||
+    labelAt(coord + vec2(0.0,  t.y)) != label ||
+    labelAt(coord + vec2(0.0, -t.y)) != label;
 }
 
 void main() {
-  uint label = uint(texture(channel0, vTexCoord).r);
+  uint label = labelAt(vTexCoord);
   if (label == 0u) discard;
-  if (maskViz.uOutline != 0 && !isInteriorEdge(label, vTexCoord)) discard;
+  if (maskViz.uOutline != 0 && !isOutline(label, vTexCoord)) discard;
 
   vec3 rgb;
-  int strategy = classStyle.uClassStrategy;
-  if (strategy == 0) {
+  int w = int(classStyle.uLutSize.x);
+  int h = int(classStyle.uLutSize.y);
+  int y = int(label) / w;
+  uint cls = 0u;
+  if (y < h) {
+    cls = uint(round(texelFetch(classIndex, ivec2(int(label) % w, y), 0).r * 255.0));
+  }
+  if (cls == 0u) {
+    if (classStyle.uMissHidden != 0) discard;
     rgb = maskViz.uRandomColors != 0 ? randomColor(label) : vec3(1.0);
-  } else if (strategy == 1) {
-    int w = int(classStyle.uLutSize.x);
-    vec4 c = texelFetch(classLut, ivec2(int(label) % w, int(label) / w), 0);
+  } else {
+    vec4 c = texelFetch(classPalette, ivec2(int(cls), 0), 0);
     if (c.a == 0.0) discard;
     rgb = maskViz.uRandomColors != 0 ? c.rgb : vec3(1.0);
-  } else {
-    vec4 ov = probeOverride(label);
-    if (ov.a >= 0.0) {
-      if (ov.a == 0.0) discard;
-      rgb = maskViz.uRandomColors != 0 ? ov.rgb : vec3(1.0);
-    } else if (classStyle.uMissHidden != 0) {
-      discard;
-    } else {
-      rgb = maskViz.uRandomColors != 0 ? randomColor(label) : vec3(1.0);
-    }
   }
   float a = (maskViz.uOutline != 0 ? 230.0 : 170.0) / 255.0;
   fragColor = vec4(rgb, a * maskViz.opacity);
@@ -252297,7 +252665,6 @@ void main() {
   int uOutline;
   int uRandomColors;
   float uColorSeed;
-  vec2 uTexelSize;
   float opacity;
   vec3 uPalette0;
   vec3 uPalette1;
@@ -252311,7 +252678,6 @@ void main() {
       uOutline: "i32",
       uRandomColors: "i32",
       uColorSeed: "f32",
-      uTexelSize: "vec2<f32>",
       opacity: "f32",
       uPalette0: "vec3<f32>",
       uPalette1: "vec3<f32>",
@@ -252323,20 +252689,16 @@ void main() {
   };
   const classStyleMod = {
     name: "classStyle",
-    fs: `uniform sampler2D classLut;
-uniform sampler2D overrideTex;
+    fs: `uniform sampler2D classIndex;
+uniform sampler2D classPalette;
 uniform classStyleUniforms {
-  int uClassStrategy;
   vec2 uLutSize;
   int uMissHidden;
-  int uOverrideCount;
 } classStyle;
 `,
     uniformTypes: {
-      uClassStrategy: "i32",
       uLutSize: "vec2<f32>",
-      uMissHidden: "i32",
-      uOverrideCount: "i32"
+      uMissHidden: "i32"
     }
   };
   const DUMMY_RGBA = new Uint8Array([
@@ -252345,59 +252707,61 @@ uniform classStyleUniforms {
     0,
     0
   ]);
-  function sparseToRgba8(overrides, size) {
-    const data2 = new Uint8Array(size * 2 * 4);
-    for (let i2 = 0; i2 < size; i2++) {
-      const id2 = overrides[i2 * 2];
-      const rgba = overrides[i2 * 2 + 1];
-      const o2 = i2 * 4;
-      data2[o2] = id2 & 255;
-      data2[o2 + 1] = id2 >>> 8 & 255;
-      data2[o2 + 2] = id2 >>> 16 & 255;
-      data2[o2 + 3] = id2 >>> 24 & 255;
-      const p2 = (size + i2) * 4;
-      data2[p2] = rgba & 255;
-      data2[p2 + 1] = rgba >>> 8 & 255;
-      data2[p2 + 2] = rgba >>> 16 & 255;
-      data2[p2 + 3] = rgba >>> 24 & 255;
-    }
-    return data2;
-  }
+  const DUMMY_R8 = new Uint8Array([
+    0
+  ]);
   function styleKey(style2) {
-    if (!style2 || style2.strategy === "plane") return "plane";
-    if (style2.strategy === "denseLut") {
-      return `dense:${style2.width}x${style2.height}:${style2.rev}`;
-    }
-    return `sparse:${style2.overrides.length}:${style2.missHidden}:${style2.rev}`;
+    return style2 ? `${style2.indexRev}:${style2.rev}` : "";
   }
-  function destroyTex(tex) {
+  const TEX_CACHE_MAX = 4;
+  const indexTexCache = /* @__PURE__ */ new Map();
+  const paletteTexCache = /* @__PURE__ */ new Map();
+  function rememberTex(cache2, key2, tex) {
     var _a2, _b2;
-    (_a2 = tex == null ? void 0 : tex.destroy) == null ? void 0 : _a2.call(tex);
-    (_b2 = tex == null ? void 0 : tex.delete) == null ? void 0 : _b2.call(tex);
-  }
-  const CLASS_TEX_CACHE_MAX = 4;
-  const classTexCache = /* @__PURE__ */ new Map();
-  function rememberClassTextures(key2, lut, override) {
-    const hit = classTexCache.get(key2);
+    const hit = cache2.get(key2);
     if (hit) {
-      classTexCache.delete(key2);
-      classTexCache.set(key2, hit);
+      cache2.delete(key2);
+      cache2.set(key2, hit);
       return hit;
     }
-    while (classTexCache.size >= CLASS_TEX_CACHE_MAX) {
-      const oldest = classTexCache.keys().next().value;
+    while (cache2.size >= TEX_CACHE_MAX) {
+      const oldest = cache2.keys().next().value;
       if (oldest == null) break;
-      const old = classTexCache.get(oldest);
-      classTexCache.delete(oldest);
-      destroyTex(old == null ? void 0 : old.lut);
-      destroyTex(old == null ? void 0 : old.override);
+      const evicted = cache2.get(oldest);
+      (_a2 = evicted == null ? void 0 : evicted.destroy) == null ? void 0 : _a2.call(evicted);
+      (_b2 = evicted == null ? void 0 : evicted.delete) == null ? void 0 : _b2.call(evicted);
+      cache2.delete(oldest);
     }
-    const entry = {
-      lut,
-      override
-    };
-    classTexCache.set(key2, entry);
-    return entry;
+    cache2.set(key2, tex);
+    return tex;
+  }
+  const NEAREST_SAMPLER = {
+    minFilter: "nearest",
+    magFilter: "nearest",
+    addressModeU: "clamp-to-edge",
+    addressModeV: "clamp-to-edge"
+  };
+  function makeTexture(device, data2, width, height, format) {
+    try {
+      return device.createTexture({
+        data: data2,
+        width,
+        height,
+        format,
+        mipmaps: false,
+        sampler: NEAREST_SAMPLER
+      });
+    } catch (e2) {
+      console.warn("[featureTable] class texture create failed", e2);
+      return device.createTexture({
+        data: format === "r8unorm" ? DUMMY_R8 : DUMMY_RGBA,
+        width: 1,
+        height: 1,
+        format,
+        mipmaps: false,
+        sampler: NEAREST_SAMPLER
+      });
+    }
   }
   const XRLayerBase = XRLayer;
   const layerGetShaders = Object.getPrototypeOf(XRLayerBase.prototype).getShaders;
@@ -252427,52 +252791,22 @@ uniform classStyleUniforms {
     }
     finalizeState() {
       var _a2;
-      this.state.classLutTexture = void 0;
-      this.state.overrideTexture = void 0;
+      this.state.classIndexTexture = void 0;
+      this.state.classPaletteTexture = void 0;
       const proto2 = Object.getPrototypeOf(XRLayerBase.prototype);
       (_a2 = proto2.finalizeState) == null ? void 0 : _a2.call(this);
     }
-    updateState(params) {
-      var _a2;
-      super.updateState(params);
+    writeMaskViz() {
       const { model } = this.state;
       if (!model) return;
-      const channelData = this.props.channelData;
-      const w2 = Math.max(1, (channelData == null ? void 0 : channelData.width) ?? 1);
-      const h2 = Math.max(1, (channelData == null ? void 0 : channelData.height) ?? 1);
       const viz = this.props.visualization ?? DEFAULT_MASK_VISUALIZATION;
       const opacity = Math.min(1, Math.max(0, viz.opacity ?? 1));
-      const style2 = this.props.classStyle ?? {
-        strategy: "plane"
-      };
-      this.ensureClassTextures(style2);
-      let uClassStrategy = 0;
-      let uLutSize = [
-        1,
-        1
-      ];
-      let uMissHidden = 0;
-      let uOverrideCount = 0;
-      if (style2.strategy === "denseLut") {
-        uClassStrategy = 1;
-        uLutSize = [
-          style2.width,
-          style2.height
-        ];
-      } else if (style2.strategy === "sparse") {
-        uClassStrategy = 2;
-        uMissHidden = style2.missHidden ? 1 : 0;
-        uOverrideCount = style2.overrides.length / 2;
-      }
+      const style2 = this.props.classStyle;
       model.shaderInputs.setProps({
         maskViz: {
           uOutline: viz.style === "outline" ? 1 : 0,
           uRandomColors: viz.color === "random" ? 1 : 0,
           uColorSeed: viz.colorSeed ?? 0,
-          uTexelSize: [
-            1 / w2,
-            1 / h2
-          ],
           opacity,
           uPalette0: CELL_OUTLINE_VEC3[0],
           uPalette1: CELL_OUTLINE_VEC3[1],
@@ -252482,87 +252816,52 @@ uniform classStyleUniforms {
           uPalette5: CELL_OUTLINE_VEC3[5]
         },
         classStyle: {
-          uClassStrategy,
-          uLutSize,
-          uMissHidden,
-          uOverrideCount
+          uLutSize: style2 ? [
+            style2.width,
+            style2.height
+          ] : [
+            1,
+            1
+          ],
+          uMissHidden: (style2 == null ? void 0 : style2.missHidden) ? 1 : 0
         }
       });
+    }
+    updateState(params) {
+      var _a2;
+      super.updateState(params);
+      const { model } = this.state;
+      if (!model) return;
+      this.ensureClassTextures(this.props.classStyle);
+      this.writeMaskViz();
       (_a2 = model.setBindings) == null ? void 0 : _a2.call(model, {
-        classLut: this.state.classLutTexture,
-        overrideTex: this.state.overrideTexture
+        classIndex: this.state.classIndexTexture,
+        classPalette: this.state.classPaletteTexture
       });
     }
     ensureClassTextures(style2) {
       const key2 = styleKey(style2);
-      if (this.state.classStyleKey === key2 && this.state.classLutTexture) return;
-      const cached = classTexCache.get(key2);
-      if (cached) {
-        rememberClassTextures(key2, cached.lut, cached.override);
-        this.state.classLutTexture = cached.lut;
-        this.state.overrideTexture = cached.override;
-        this.state.classStyleKey = key2;
-        return;
-      }
+      if (this.state.classStyleKey === key2 && this.state.classIndexTexture) return;
       const device = this.context.device;
-      const make = (data2, width, height) => {
-        try {
-          return device.createTexture({
-            data: data2,
-            width,
-            height,
-            format: "rgba8unorm",
-            mipmaps: false,
-            sampler: {
-              minFilter: "nearest",
-              magFilter: "nearest",
-              addressModeU: "clamp-to-edge",
-              addressModeV: "clamp-to-edge"
-            }
-          });
-        } catch (e2) {
-          console.warn("[classTable] class texture create failed", e2);
-          return device.createTexture({
-            data: DUMMY_RGBA,
-            width: 1,
-            height: 1,
-            format: "rgba8unorm",
-            mipmaps: false,
-            sampler: {
-              minFilter: "nearest",
-              magFilter: "nearest",
-              addressModeU: "clamp-to-edge",
-              addressModeV: "clamp-to-edge"
-            }
-          });
-        }
-      };
-      let lut;
-      let override;
-      if (style2.strategy === "denseLut") {
-        lut = make(style2.rgba, style2.width, style2.height);
-        override = make(DUMMY_RGBA, 1, 1);
-      } else if (style2.strategy === "sparse") {
-        const size = Math.max(1, style2.overrides.length / 2);
-        lut = make(DUMMY_RGBA, 1, 1);
-        override = make(sparseToRgba8(style2.overrides, size), size, 2);
-      } else {
-        lut = make(DUMMY_RGBA, 1, 1);
-        override = make(DUMMY_RGBA, 1, 1);
+      const indexKey = style2 ? `i:${style2.indexRev}:${style2.width}x${style2.height}` : "";
+      const paletteKey = style2 ? `p:${style2.rev}` : "";
+      let index2 = indexTexCache.get(indexKey);
+      if (!index2) {
+        index2 = style2 ? makeTexture(device, style2.index, style2.width, style2.height, "r8unorm") : makeTexture(device, DUMMY_R8, 1, 1, "r8unorm");
       }
-      const entry = rememberClassTextures(key2, lut, override);
-      this.state.classLutTexture = entry.lut;
-      this.state.overrideTexture = entry.override;
+      this.state.classIndexTexture = rememberTex(indexTexCache, indexKey, index2);
+      let palette = paletteTexCache.get(paletteKey);
+      if (!palette) {
+        palette = style2 ? makeTexture(device, style2.palette, Math.max(1, style2.palette.length / 4), 1, "rgba8unorm") : makeTexture(device, DUMMY_RGBA, 1, 1, "rgba8unorm");
+      }
+      this.state.classPaletteTexture = rememberTex(paletteTexCache, paletteKey, palette);
       this.state.classStyleKey = key2;
     }
   }
   __publicField(MaskBitmaskLayer, "layerName", "MaskBitmaskLayer");
   __publicField(MaskBitmaskLayer, "defaultProps", {
     ...BITMASK_PROPS,
-    visualization: DEFAULT_MASK_VISUALIZATION,
-    classStyle: {
-      strategy: "plane"
-    }
+    visualization: DEFAULT_MASK_VISUALIZATION
   });
   function asLabelUint32(data2) {
     if (data2 instanceof Uint32Array) return data2;
@@ -252589,11 +252888,13 @@ uniform classStyleUniforms {
     if (maskW <= 0 || maskH <= 0) return null;
     const modelMatrix = layerModelMatrix(args.loader);
     const { visualization: viz, channelIndex, classStyle } = args;
+    const visible = args.visible !== false;
     return new TileLayer({
       id: args.id,
       tileSize: finest.tileSize,
-      minZoom: -(planes.length - 1),
+      minZoom: Math.round(-(planes.length - 1)),
       maxZoom: 0,
+      zoomOffset: Math.round(Math.log2(modelMatrix.getScale()[0] || 1)),
       extent: [
         0,
         0,
@@ -252601,6 +252902,8 @@ uniform classStyleUniforms {
         maskH
       ],
       modelMatrix,
+      visible,
+      maxRequests: 10,
       refinementStrategy: "best-available",
       pickable: false,
       ...TILE_CACHE_PROPS,
@@ -252613,7 +252916,8 @@ uniform classStyleUniforms {
           viz.color,
           viz.colorSeed ?? 0,
           viz.opacity ?? 1,
-          styleKey(classStyle)
+          styleKey(classStyle),
+          visible
         ]
       },
       getTileData: async ({ index: index2, signal }) => {
@@ -252656,22 +252960,21 @@ uniform classStyleUniforms {
         }
         const bbox = props.tile.bbox;
         if (!("left" in bbox)) return null;
-        const { left, bottom, right, top: top2 } = bbox;
+        const { left, top: top2 } = bbox;
         if ([
           left,
-          bottom,
-          right,
           top2
         ].some((v2) => v2 < 0)) return null;
-        const { tileSize } = finest;
+        const scale2 = 2 ** Math.round(-props.tile.index.z);
         return new MaskBitmaskLayer({
           id: `${args.id}-bitmask-${props.tile.id}`,
           channelData: tileData,
           modelMatrix,
+          visible,
           bounds: [
             left,
-            tileData.height < tileSize ? maskH : bottom,
-            tileData.width < tileSize ? maskW : right,
+            top2 + tileData.height * scale2,
+            left + tileData.width * scale2,
             top2
           ],
           visualization: viz,
@@ -252906,9 +253209,9 @@ uniform classStyleUniforms {
     const selectionMaskVisualizationPreview = (maskVisualizationPreview == null ? void 0 : maskVisualizationPreview.sourceChannelId) === SELECTION_MASK_CHANNEL_KEY ? maskVisualizationPreview.visualization : null;
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
-    const classTables = useDocumentStore((s2) => s2.classTables);
-    const classTableVisibilities = useAppStore((s2) => s2.classTableVisibilities);
-    const classTableLutEpoch = reactExports.useSyncExternalStore(subscribeClassTableLut, getClassTableLutEpoch, getClassTableLutEpoch);
+    const featureTables = useDocumentStore((s2) => s2.featureTables);
+    const featureTableVisibilities = useAppStore((s2) => s2.featureTableVisibilities);
+    const featureTableLutEpoch = reactExports.useSyncExternalStore(subscribeFeatureTableLut, getFeatureTableLutEpoch, getFeatureTableLutEpoch);
     const selectionMaskActive = imageSelectionMask != null && (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
     const maskExtension = reactExports.useMemo(() => new MaskExtension(), []);
     useShapeLayers(authoringWaypointEditorOpen);
@@ -252967,24 +253270,23 @@ uniform classStyleUniforms {
       const layers = [];
       for (const sc2 of flattenImageChannelsInDocumentOrder(images)) {
         if (!isMaskChannel(sc2)) continue;
-        if (!isMaskSourceRendered({
+        const rendered = isMaskSourceRendered({
           sc: sc2,
           channelGroups,
           stackVisibilities: channelVisibilities ?? {},
           groupRowVisibilities: channelGroupRowVisibilities
-        })) {
-          continue;
-        }
+        });
         const entry = omeLoaderEntries.find((e2) => e2.sourceImageId === sc2.imageId);
         if (!(entry == null ? void 0 : entry.loader)) continue;
         const visualization = (maskVisualizationPreview == null ? void 0 : maskVisualizationPreview.sourceChannelId) === sc2.id ? maskVisualizationPreview.visualization : effectiveMaskVisualizationForSource(sc2, channelGroups, activeChannelGroupId);
-        const classTable = classTables.find((c2) => c2.sourceChannelId === sc2.id);
+        const featureTable = featureTables.find((c2) => c2.sourceChannelId === sc2.id);
         const layer = createMaskTileLayer({
           id: `mask-channel-${sc2.id}`,
           loader: entry.loader,
           channelIndex: sc2.index,
           visualization,
-          classStyle: classTable ? gpuStyleForClassTable(classTable, classTableVisibilities[classTable.id], visualization.colorSeed ?? 0) : void 0
+          visible: rendered,
+          classStyle: featureTable ? gpuStyleForFeatureTable(featureTable, featureTableVisibilities[featureTable.id], visualization.colorSeed ?? 0) : void 0
         });
         if (layer) layers.push(layer);
       }
@@ -252997,9 +253299,9 @@ uniform classStyleUniforms {
       activeChannelGroupId,
       channelGroups,
       maskVisualizationPreview,
-      classTables,
-      classTableVisibilities,
-      classTableLutEpoch
+      featureTables,
+      featureTableVisibilities,
+      featureTableLutEpoch
     ]);
     const fitViewState = reactExports.useMemo(() => {
       const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
@@ -254100,12 +254402,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-21T19:37:06.639Z");
+    const label2 = utcShort("2026-09-22T15:05:03.595Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-21T19:37:06.639Z",
+      title: "2026-09-22T15:05:03.595Z",
       children: [
         "Updated ",
         label2,
@@ -254767,180 +255069,6 @@ uniform classStyleUniforms {
       };
     }, []);
   }
-  function isOpts(o2) {
-    if ("onStart" in o2 && typeof o2.onStart === "function") {
-      const h2 = FileSystemFileHandle;
-      if ("formOut" in o2) {
-        if ("handles" in o2 && o2.handles instanceof h2) {
-          return typeof o2.formOut === "object";
-        }
-        if ("url" in o2.formOut) {
-          return true;
-        }
-        if ("ome_tiff_url" in o2.formOut) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-  function isFormOpts(o2) {
-    if (isOpts(o2)) {
-      const fo = o2.formOut || {};
-      return "name" in fo || "url" in fo || "ome_tiff_url" in fo;
-    }
-    return false;
-  }
-  function isAnyOpts(o2) {
-    if (!isFormOpts(o2)) return false;
-    return "path" in o2.formOut;
-  }
-  function isOmeTiffUrlOpts(o2) {
-    if (!isFormOpts(o2)) return false;
-    return "ome_tiff_url" in o2.formOut;
-  }
-  const toValid = (need_keys, keys2) => {
-    return need_keys.reduce((o2, k2) => {
-      o2[k2] = keys2.includes(k2);
-      return o2;
-    }, {});
-  };
-  const validateDicom = async (opts) => {
-    const { formOut, onStart } = opts;
-    const need_keys = [
-      "url",
-      "name"
-    ];
-    const all2 = [
-      ...need_keys
-    ];
-    const valid_keys = await all2.reduce(async (memo, k2) => {
-      const v2 = k2 in formOut ? formOut[k2] : "";
-      const out = await memo;
-      if (typeof v2 !== "string") return out;
-      switch (k2) {
-        case "name":
-          if (v2.length === 0) return out;
-          return [
-            ...out,
-            k2
-          ];
-        case "url":
-          if (v2.length === 0) return out;
-          try {
-            await findDicomWeb(v2);
-            return [
-              ...out,
-              k2
-            ];
-          } catch {
-            return out;
-          }
-      }
-      return out;
-    }, Promise.resolve([]));
-    const validated = need_keys.every((k2) => {
-      return valid_keys.includes(k2);
-    });
-    if (validated && "url" in formOut) {
-      onStart([
-        [
-          formOut.url,
-          "Colorimetric",
-          "DICOM-WEB"
-        ]
-      ]);
-    }
-    return toValid(need_keys, valid_keys);
-  };
-  const validateAny = async (opts) => {
-    const { handles, formOut, onStart } = opts;
-    const need_keys = [
-      "name",
-      "path"
-    ];
-    const all2 = [
-      ...need_keys,
-      "mask",
-      "csv"
-    ];
-    const valid_keys = await all2.reduce(async (memo, k2) => {
-      const v2 = k2 in formOut ? formOut[k2] : "";
-      const out = await memo;
-      if (typeof v2 !== "string") return out;
-      switch (k2) {
-        case "name":
-          if (v2.length === 0) return out;
-          return [
-            ...out,
-            k2
-          ];
-        case "path": {
-          if (handles.length === 0) {
-            return out;
-          }
-          const handle2 = handles[0];
-          const found = await findFile({
-            handle: handle2
-          });
-          return found ? [
-            ...out,
-            k2
-          ] : out;
-        }
-      }
-      return out;
-    }, Promise.resolve([]));
-    const validated = need_keys.every((k2) => {
-      return valid_keys.includes(k2);
-    });
-    if (validated && "path" in formOut) {
-      onStart([
-        [
-          formOut.path,
-          "Colorimetric",
-          "OME-TIFF"
-        ]
-      ]);
-    }
-    return toValid(need_keys, valid_keys);
-  };
-  const validateOmeTiffUrl = async (opts) => {
-    const { formOut, onStart } = opts;
-    const need_keys = [
-      "ome_tiff_url"
-    ];
-    const url = formOut.ome_tiff_url || "";
-    const valid_keys = [];
-    if (/^https?:\/\/.+/.test(url)) {
-      valid_keys.push("ome_tiff_url");
-    }
-    const validated = need_keys.every((k2) => valid_keys.includes(k2));
-    if (validated) {
-      onStart([
-        [
-          url,
-          "Colorimetric",
-          "OME-TIFF-URL"
-        ]
-      ]);
-    }
-    return toValid(need_keys, valid_keys);
-  };
-  const validate = async (opts) => {
-    if (!isFormOpts(opts)) {
-      return toValid([
-        "name"
-      ], []);
-    }
-    if (isOmeTiffUrlOpts(opts)) {
-      return await validateOmeTiffUrl(opts);
-    }
-    if (isAnyOpts(opts)) {
-      return await validateAny(opts);
-    }
-    return await validateDicom(opts);
-  };
   const hasAuthoritativeBounds = (s2) => s2.Bounds != null && typeof s2.Bounds.x0 === "number" && typeof s2.Bounds.x1 === "number" && typeof s2.Bounds.y0 === "number" && typeof s2.Bounds.y1 === "number";
   const needsPanMigration = (s2) => (s2.Pan != null || s2.Zoom != null) && !hasAuthoritativeBounds(s2);
   function planWaypointConfigSeedTick(args) {
@@ -255244,15 +255372,15 @@ uniform classStyleUniforms {
       viewerImageLayersLoaded
     ]);
     const activeStoryId = useDocumentStore((s2) => s2.activeStoryId);
-    const classTableHydrateKey = useDocumentStore((s2) => s2.classTables.map((c2) => `${c2.id}:${c2.digest}`).join("|"));
+    const featureTableHydrateKey = useDocumentStore((s2) => s2.featureTables.map((c2) => `${c2.id}:${c2.digest}`).join("|"));
     const prevStoryIdRef = reactExports.useRef(activeStoryId);
     reactExports.useEffect(() => {
       const storyChanged = prevStoryIdRef.current !== activeStoryId;
       prevStoryIdRef.current = activeStoryId;
-      void hydrateClassTables(useDocumentStore.getState().classTables, storyChanged);
+      void hydrateFeatureTables(useDocumentStore.getState().featureTables, storyChanged);
     }, [
       activeStoryId,
-      classTableHydrateKey
+      featureTableHydrateKey
     ]);
     const namespacedHandleKeys = reactExports.useMemo(() => handleKeys.map((k2) => activeStoryId ? `story:${activeStoryId}:${k2}` : k2), [
       handleKeys,
@@ -255534,7 +255662,7 @@ uniform classStyleUniforms {
       const doc = useDocumentStore.getState();
       const removed = doc.images.find((im) => im.id === imageId);
       if (!removed) return;
-      const result = removeImageFromDocument(doc.images, doc.channelGroups, imageId, doc.classTables);
+      const result = removeImageFromDocument(doc.images, doc.channelGroups, imageId, doc.featureTables);
       if (result.images.length === doc.images.length) return;
       clearRemovedImageState([
         removed
@@ -255551,7 +255679,7 @@ uniform classStyleUniforms {
           kind: "remove"
         }
       });
-      detachRemovedClassTables(doc.classTables, result.classTables);
+      detachRemovedFeatureTables(doc.featureTables, result.featureTables);
       if (result.images.length === 0) {
         setFileName("");
         setLastOmeTiffUrl(null);
@@ -256098,6 +256226,7 @@ uniform classStyleUniforms {
           documentUrl: window.location.href
         });
         applyHydratedLoaders(result);
+        await requestFeatureTableFileAccess();
         if (result.omeLoaderEntries.length + result.jpegLoaderEntries.length + result.dicomIndexList.length > 0) {
           syncRegistryFromDocument();
           setImportRevision((r2) => r2 + 1);
@@ -256269,8 +256398,8 @@ uniform classStyleUniforms {
       let nextChannelGroups = [
         ...doc.channelGroups
       ];
-      let nextClassTables = [
-        ...doc.classTables
+      let nextFeatureTables = [
+        ...doc.featureTables
       ];
       const removedImages = [];
       for (const im of doc.images) {
@@ -256278,10 +256407,10 @@ uniform classStyleUniforms {
         const legacyId = legacyModalityIds.has(im.id);
         if (!sameSeries && !legacyId) continue;
         removedImages.push(im);
-        const removed = removeImageFromDocument(nextDocImages, nextChannelGroups, im.id, nextClassTables);
+        const removed = removeImageFromDocument(nextDocImages, nextChannelGroups, im.id, nextFeatureTables);
         nextDocImages = removed.images;
         nextChannelGroups = removed.channelGroups;
-        nextClassTables = removed.classTables;
+        nextFeatureTables = removed.featureTables;
       }
       const channelsBefore = flattenImageChannelsInDocumentOrder(nextDocImages);
       nextDocImages = applySourceChannelsToImages(nextDocImages, SourceChannels);
@@ -256320,10 +256449,9 @@ uniform classStyleUniforms {
         resetActiveGroup: isFresh || !mergedChannelGroups.some((g2) => g2.id === activeId),
         transition
       });
-      detachRemovedClassTables(doc.classTables, nextClassTables);
+      detachRemovedFeatureTables(doc.featureTables, nextFeatureTables);
       afterImageImportDocumentEffects();
     };
-    const [valid2, setValid] = reactExports.useState({});
     const onStartRef = reactExports.useRef(onStart);
     onStartRef.current = onStart;
     reactExports.useEffect(() => {
@@ -256639,35 +256767,6 @@ uniform classStyleUniforms {
       useLaunchQueue,
       onRestoredHandles: hasDemo ? void 0 : onRestoredOmeHandles,
       children: ({ handles, onAllow }) => {
-        const onSubmit = (event) => {
-          const form = event.currentTarget;
-          const data2 = [
-            ...new FormData(form).entries()
-          ];
-          const formOut = data2.reduce((o2, [k2, v2]) => {
-            o2[k2] = `${v2}`;
-            return o2;
-          }, {
-            url: "",
-            name: ""
-          });
-          const formOpts = {
-            formOut,
-            onStart: (list2) => onStart(list2, handles),
-            handles
-          };
-          if (isOpts(formOpts)) {
-            validate(formOpts).then((valid22) => {
-              setValid(valid22);
-            });
-          }
-          event.preventDefault();
-          event.stopPropagation();
-        };
-        const formProps = {
-          onSubmit,
-          valid: valid2
-        };
         const imageLoaded = !noLoader;
         const handleNamesLabel = handles.map((h2) => h2.name).filter(Boolean).join(", ");
         let loadedSource;
@@ -256676,35 +256775,28 @@ uniform classStyleUniforms {
           const w2 = (img == null ? void 0 : img.sizeX) ?? 0;
           const h2 = (img == null ? void 0 : img.sizeY) ?? 0;
           const ch2 = (img == null ? void 0 : img.sizeC) ?? 0;
-          const isDemoBootstrap = hasDemo && dicomIndexList.length === 0 && omeLoaderEntries.length === 0;
           if (dicomIndexList.length > 0) {
             loadedSource = {
-              kind: "dicom",
               label: fileName || dicomIndexList.map((d2) => d2.modality ? `${d2.series} (${d2.modality})` : `${d2.series}`).join(", ") || "DICOMweb",
               width: w2,
               height: h2,
-              channelCount: ch2,
-              isDemo: isDemoBootstrap
+              channelCount: ch2
             };
           } else if (omeLoaderEntries.length > 0) {
             const isUrlSource = handles.length === 0;
             const label2 = isUrlSource ? lastOmeTiffUrl || fileName || "Remote OME-TIFF" : fileName || handleNamesLabel || "OME-TIFF";
             loadedSource = {
-              kind: isUrlSource ? "ome-url" : "ome-local",
               label: label2,
               width: w2,
               height: h2,
-              channelCount: ch2,
-              isDemo: isDemoBootstrap
+              channelCount: ch2
             };
           } else {
             loadedSource = {
-              kind: "ome-url",
               label: lastOmeTiffUrl || fileName || handleNamesLabel || "Loading\u2026",
               width: w2,
               height: h2,
-              channelCount: ch2,
-              isDemo: isDemoBootstrap
+              channelCount: ch2
             };
           }
         }
@@ -256804,7 +256896,6 @@ uniform classStyleUniforms {
           }
         };
         const uploadProps = {
-          formProps,
           onAllow,
           importRevision,
           imageLoaded,

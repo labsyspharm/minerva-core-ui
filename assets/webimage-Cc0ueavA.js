@@ -1,4 +1,4 @@
-import { B as BaseDecoder } from "./index-DW0PN4Mv.js";
+import { B as BaseDecoder } from "./index-fr08FaDE.js";
 class WebImageDecoder extends BaseDecoder {
   constructor() {
     super();

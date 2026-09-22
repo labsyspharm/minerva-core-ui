@@ -4080,22 +4080,6 @@ function preprocessDocumentDataRaw(raw) {
     next.channelGroups = next.groups;
     delete next.groups;
   }
-  if ("maskCatalogs" in next && !("classTables" in next)) {
-    next.classTables = next.maskCatalogs;
-    delete next.maskCatalogs;
-  }
-  if (Array.isArray(next.classTables)) {
-    next.classTables = next.classTables.map((raw2) => {
-      if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
-        return raw2;
-      }
-      const ct = raw2;
-      return {
-        ...ct,
-        nameColors: Array.isArray(ct.nameColors) ? ct.nameColors : []
-      };
-    });
-  }
   const shapes = next.shapes;
   const waypoints = next.waypoints;
   if (Array.isArray(shapes)) {
@@ -4283,7 +4267,7 @@ const ChannelGroupSchema = objectType({
   channels: arrayType(ChannelGroupChannelSchema)
 });
 const ClassIdSchema = numberType().int().positive().max(4294967295);
-const ClassTableSchema = objectType({
+const FeatureTableSchema = objectType({
   id: IdSchema,
   sourceChannelId: IdSchema,
   source: objectType({ handleKey: stringType().min(1) }),
@@ -4296,7 +4280,9 @@ const ClassTableSchema = objectType({
   ),
   /** SHA-256 of the attached CSV bytes. */
   digest: stringType().min(1),
-  columns: objectType({ id: stringType().min(1), name: stringType().min(1) }).optional()
+  columns: objectType({ id: stringType().min(1), name: stringType().min(1) }),
+  /** False when the CSV has no header row (`column0`,`column1`). */
+  header: booleanType()
 });
 const waypointObjectZ = objectType({
   id: IdSchema,
@@ -4388,7 +4374,7 @@ preprocessType(
     shapes: arrayType(ShapeSchema),
     channelGroups: arrayType(ChannelGroupSchema),
     images: arrayType(ImageSchema),
-    classTables: arrayType(ClassTableSchema).default([])
+    featureTables: arrayType(FeatureTableSchema).default([])
   })
 );
 const jsonExportCoreSchema = objectType({
