@@ -69,13 +69,8 @@ export function emptyDocumentData(): DocumentData {
     shapes: [],
     channelGroups: [],
     images: [],
-    classTables: [],
+    featureTables: [],
   };
-}
-
-/** Validates `data` from IndexedDB (migration-safe). */
-export function parseStoredDocument(data: unknown): DocumentData {
-  return validateDocumentData(data);
 }
 
 export async function getActiveStoryId(): Promise<string | null> {

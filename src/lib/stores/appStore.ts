@@ -788,9 +788,9 @@ export interface AppStore {
   ) => void;
   channelVisibilities: Record<string, boolean>;
   /**
-   * Session-only per-class-table class visibility. Missing key ≡ all visible.
+   * Session-only per-feature-table class visibility. Missing key ≡ all visible.
    */
-  classTableVisibilities: Record<string, ClassVisibility>;
+  featureTableVisibilities: Record<string, ClassVisibility>;
   groupNames: Record<string, string>;
 
   finalizeEllipse: () => void;
@@ -932,7 +932,7 @@ const overlayInitialState = {
   channelRendering: null,
   maskVisualizationPreview: null,
   channelVisibilities: {},
-  classTableVisibilities: {},
+  featureTableVisibilities: {},
   channelGroupRowVisibilities: {},
   groupNames: {},
   targetWaypointCamera: null,
@@ -1205,7 +1205,7 @@ export const useAppStore = create<AppStore>()(
           imageSelectionMask: null,
           maskVisualizationPreview: null,
           channelVisibilities: vis,
-          classTableVisibilities: {},
+          featureTableVisibilities: {},
           activeStoryIndex: null,
           waypointAuthoring: new Map(),
           authoringWaypointShapesIndex: null,

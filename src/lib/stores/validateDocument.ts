@@ -333,7 +333,7 @@ function buildIdReplacementMap(data: {
     channels?: unknown[];
   }[];
   images: { id: string; channels?: unknown[] }[];
-  classTables?: unknown[];
+  featureTables?: unknown[];
 }): Map<string, string> {
   const map = new Map<string, string>();
 
@@ -368,7 +368,7 @@ function buildIdReplacementMap(data: {
     if (Array.isArray(sids)) for (const sid of sids) note(sid);
   }
   for (const s of data.shapes) note(s?.id);
-  for (const raw of data.classTables ?? []) {
+  for (const raw of data.featureTables ?? []) {
     const row = raw as { id?: string; sourceChannelId?: string };
     note(row?.id);
     if (row?.sourceChannelId != null) note(row.sourceChannelId);
@@ -451,15 +451,15 @@ function repairDocumentReferenceDrift(data: DocumentData): DocumentData {
   const cgSame = channelGroups.every((g, i) => g === data.channelGroups[i]);
   const wpSame = waypoints.every((w, i) => w === data.waypoints[i]);
   const seenChannel = new Set<string>();
-  const classTables = data.classTables.filter((c) => {
+  const featureTables = data.featureTables.filter((c) => {
     if (!imageChannelIds.has(c.sourceChannelId)) return false;
     if (seenChannel.has(c.sourceChannelId)) return false;
     seenChannel.add(c.sourceChannelId);
     return true;
   });
-  const tablesSame = classTables.length === data.classTables.length;
+  const tablesSame = featureTables.length === data.featureTables.length;
   if (cgSame && wpSame && tablesSame) return data;
-  return { ...data, channelGroups, waypoints, classTables };
+  return { ...data, channelGroups, waypoints, featureTables };
 }
 
 function validateDocumentRelations(data: DocumentData): DocumentData {
@@ -510,7 +510,7 @@ export function validateDocumentData(input: unknown): DocumentData {
       shapes: candidate.shapes,
       channelGroups: [],
       images: [],
-      classTables: [],
+      featureTables: [],
     };
   } else if (
     candidate !== null &&
@@ -592,8 +592,8 @@ export function validateDocumentData(input: unknown): DocumentData {
       channels: Record<string, unknown>[];
     }[],
     images: imagesDraft,
-    classTables: Array.isArray(asRecord.classTables)
-      ? asRecord.classTables
+    featureTables: Array.isArray(asRecord.featureTables)
+      ? asRecord.featureTables
       : [],
   };
 

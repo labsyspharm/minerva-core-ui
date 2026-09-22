@@ -17,10 +17,10 @@ import { MaskExtension } from "@deck.gl/extensions";
 import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import {
-  getClassTableLutEpoch,
-  gpuStyleForClassTable,
-  subscribeClassTableLut,
-} from "@/lib/classTable";
+  getFeatureTableLutEpoch,
+  gpuStyleForFeatureTable,
+  subscribeFeatureTableLut,
+} from "@/lib/featureTable";
 import { isMaskSourceRendered } from "@/lib/imaging/channelCompositor";
 import {
   DEFAULT_MASK_VISUALIZATION,
@@ -421,12 +421,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
       : null;
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
-  const classTables = useDocumentStore((s) => s.classTables);
-  const classTableVisibilities = useAppStore((s) => s.classTableVisibilities);
-  const classTableLutEpoch = useSyncExternalStore(
-    subscribeClassTableLut,
-    getClassTableLutEpoch,
-    getClassTableLutEpoch,
+  const featureTables = useDocumentStore((s) => s.featureTables);
+  const featureTableVisibilities = useAppStore(
+    (s) => s.featureTableVisibilities,
+  );
+  const featureTableLutEpoch = useSyncExternalStore(
+    subscribeFeatureTableLut,
+    getFeatureTableLutEpoch,
+    getFeatureTableLutEpoch,
   );
   const selectionMaskActive =
     imageSelectionMask != null &&
@@ -487,22 +489,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }, [frame, setViewerWorldFrame]);
 
   const maskDisplayLayers = useMemo(() => {
-    void classTableLutEpoch;
+    void featureTableLutEpoch;
     if (omeLoaderEntries.length === 0) return [];
 
     const layers: Layer[] = [];
     for (const sc of flattenImageChannelsInDocumentOrder(images)) {
       if (!isMaskChannel(sc)) continue;
-      if (
-        !isMaskSourceRendered({
-          sc,
-          channelGroups,
-          stackVisibilities: channelVisibilities ?? {},
-          groupRowVisibilities: channelGroupRowVisibilities,
-        })
-      ) {
-        continue;
-      }
+      const rendered = isMaskSourceRendered({
+        sc,
+        channelGroups,
+        stackVisibilities: channelVisibilities ?? {},
+        groupRowVisibilities: channelGroupRowVisibilities,
+      });
       const entry = omeLoaderEntries.find(
         (e) => e.sourceImageId === sc.imageId,
       );
@@ -515,16 +513,19 @@ export const ImageViewer = (props: ImageViewerProps) => {
               channelGroups,
               activeChannelGroupId,
             );
-      const classTable = classTables.find((c) => c.sourceChannelId === sc.id);
+      const featureTable = featureTables.find(
+        (c) => c.sourceChannelId === sc.id,
+      );
       const layer = createMaskTileLayer({
         id: `mask-channel-${sc.id}`,
         loader: entry.loader,
         channelIndex: sc.index,
         visualization,
-        classStyle: classTable
-          ? gpuStyleForClassTable(
-              classTable,
-              classTableVisibilities[classTable.id],
+        visible: rendered,
+        classStyle: featureTable
+          ? gpuStyleForFeatureTable(
+              featureTable,
+              featureTableVisibilities[featureTable.id],
               visualization.colorSeed ?? 0,
             )
           : undefined,
@@ -540,9 +541,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
     activeChannelGroupId,
     channelGroups,
     maskVisualizationPreview,
-    classTables,
-    classTableVisibilities,
-    classTableLutEpoch,
+    featureTables,
+    featureTableVisibilities,
+    featureTableLutEpoch,
   ]);
 
   // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last

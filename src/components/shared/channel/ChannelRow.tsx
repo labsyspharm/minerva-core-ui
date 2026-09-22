@@ -245,7 +245,7 @@ type ChannelRowProps = {
   onMaskVisualizationChange?: (viz: MaskVisualization) => void;
   onMaskVisualizationPreview?: (viz: MaskVisualization | null) => void;
   maskFooter?: ReactNode;
-  classColors?: boolean;
+  maskAction?: ReactNode;
   maskAriaLabel?: string;
   /** Non-interactive swatch when the row has no color picker (e.g. selection mask). */
   fixedColorHex?: string;
@@ -324,7 +324,7 @@ export function ChannelRow(props: ChannelRowProps) {
     onMaskVisualizationChange,
     onMaskVisualizationPreview,
     maskFooter,
-    classColors,
+    maskAction,
     maskAriaLabel,
     fixedColorHex,
     colorHex,
@@ -391,7 +391,7 @@ export function ChannelRow(props: ChannelRowProps) {
             <MaskModeControls
               value={maskVisualization}
               ariaLabel={maskAriaLabel ?? name.name}
-              classColors={classColors}
+              classColors={maskFooter != null}
               onChange={onMaskVisualizationChange}
             />
           ) : null}
@@ -422,6 +422,7 @@ export function ChannelRow(props: ChannelRowProps) {
             ariaLabel={maskAriaLabel ?? name.name}
           />
         ) : null}
+        {showMask ? maskAction : null}
       </div>
       {showMask && maskFooter ? (
         <div className={styles.maskControlsPanel}>{maskFooter}</div>

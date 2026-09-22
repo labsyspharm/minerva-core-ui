@@ -94,22 +94,6 @@ export function preprocessDocumentDataRaw(raw: unknown): unknown {
     next.channelGroups = next.groups;
     delete next.groups;
   }
-  if ("maskCatalogs" in next && !("classTables" in next)) {
-    next.classTables = next.maskCatalogs;
-    delete next.maskCatalogs;
-  }
-  if (Array.isArray(next.classTables)) {
-    next.classTables = next.classTables.map((raw) => {
-      if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-        return raw;
-      }
-      const ct = raw as Record<string, unknown>;
-      return {
-        ...ct,
-        nameColors: Array.isArray(ct.nameColors) ? ct.nameColors : [],
-      };
-    });
-  }
   const shapes = next.shapes;
   const waypoints = next.waypoints;
   if (Array.isArray(shapes)) {

@@ -57,22 +57,22 @@ export function ConsumePendingLibraryImport({
     // invalidate hydrate / eager-GMM epochs on every story open.
     if (!pending) return;
 
-    // Don't skip onSettled on effect cleanup: React Strict Mode remounts this
-    // after consuming pending, and the overlay would stay up forever.
-    void (async () => {
-      const result =
-        pending.kind === "dicomWeb"
-          ? await importDicomWebRef.current({ url: pending.url })
-          : await importOmeRef.current({
-              role: pending.role,
-              append: false,
-              rgbDisplay: pending.rgbDisplay,
-              source: pending.source,
-            });
-      if (result.ok === false) window.alert(result.error);
-    })().finally(() => {
-      onSettled();
-    });
+    const imported =
+      pending.kind === "dicomWeb"
+        ? importDicomWebRef.current({ url: pending.url })
+        : importOmeRef.current({
+            role: pending.role,
+            append: false,
+            rgbDisplay: pending.rgbDisplay,
+            source: pending.source,
+          });
+    // Always settle — Strict Mode remounts this effect after pending is already
+    // taken; skipping onSettled leaves the story "Loading…" overlay stuck.
+    void imported
+      .then((result) => {
+        if (result.ok === false) window.alert(result.error);
+      })
+      .finally(onSettled);
   }, [onSettled]);
 
   return null;

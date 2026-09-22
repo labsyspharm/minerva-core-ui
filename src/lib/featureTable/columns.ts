@@ -15,7 +15,7 @@ function normHeader(h: string): string {
     .replace(/[\s_-]+/g, "");
 }
 
-export function pickClassColumns(
+function pickClassColumns(
   headers: string[],
 ): { id: string; name: string } | null {
   const id = headers.find((h) => ID_ALIASES.has(normHeader(h)));
@@ -24,7 +24,7 @@ export function pickClassColumns(
   return { id, name };
 }
 
-function parseCsvLine(line: string): string[] {
+export function parseCsvLine(line: string): string[] {
   const out: string[] = [];
   let cur = "";
   let quoted = false;
@@ -47,7 +47,7 @@ function parseCsvLine(line: string): string[] {
 }
 
 /** First row looks like headers (not `1,Tumor` data). */
-function peekCsvHeaders(bytes: Uint8Array): {
+export function peekCsvHeaders(bytes: Uint8Array): {
   headers: string[];
   id: string;
   name: string;
@@ -66,7 +66,7 @@ function peekCsvHeaders(bytes: Uint8Array): {
   return { headers, ...guess };
 }
 
-export async function peekClassCsv(file: File): Promise<{
+export async function peekFeatureCsv(file: File): Promise<{
   headers: string[];
   id: string;
   name: string;

@@ -154,13 +154,6 @@
   flex-shrink: 0;
 }
 
-.formatRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  min-width: 0;
-}
-
 .urlRow {
   display: flex;
   flex-wrap: wrap;
@@ -385,16 +378,4 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-}
-
-.csvInput {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }

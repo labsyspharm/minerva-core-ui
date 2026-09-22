@@ -10,7 +10,7 @@ import {
   renderingForSource,
 } from "@/components/shared/channel/ChannelContrastEditor";
 import { ChannelRow } from "@/components/shared/channel/ChannelRow";
-import { classTableRowExtras } from "@/components/shared/channel/ClassTable";
+import { featureTableRowExtras } from "@/components/shared/channel/FeatureTable";
 import {
   applyGroupRowVisibilities,
   applyStackVisibilities,
@@ -202,7 +202,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
   const nav = useAuthorChannelNav();
   const images = useDocumentStore((s) => s.images);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
-  const classTables = useDocumentStore((s) => s.classTables);
+  const featureTables = useDocumentStore((s) => s.featureTables);
   const setImages = useDocumentStore((s) => s.setImages);
   const setImagesAndChannelGroups = useDocumentStore(
     (s) => s.setImagesAndChannelGroups,
@@ -461,7 +461,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
               isMask: true as const,
               maskVisualization: effectiveMaskVisualization(gc ?? sc),
               maskAriaLabel: `Mask display for ${sc.name}`,
-              ...classTableRowExtras(sc.id, classTables),
+              ...featureTableRowExtras(sc.id, featureTables),
               onMaskVisualizationChange: syncMask,
               onMaskVisualizationPreview: (viz: MaskVisualization | null) => {
                 useAppStore
