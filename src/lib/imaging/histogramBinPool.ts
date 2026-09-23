@@ -1,4 +1,7 @@
-import { histogramBinFromPixels } from "./histogramBin";
+import {
+  histogramBinFromPixels,
+  MAX_HISTOGRAM_TILE_PIXELS,
+} from "./histogramBin";
 import HistogramWorker from "./workers/histogram.worker?worker";
 
 type OutMsg = {
@@ -74,6 +77,7 @@ export async function histogramBinTile(
     byteLength: number;
   },
 ): Promise<number[]> {
+  if (data.length > MAX_HISTOGRAM_TILE_PIXELS) return [];
   const pool = getHistogramBinPool();
   if (pool) {
     try {

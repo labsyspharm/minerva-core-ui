@@ -16,9 +16,12 @@ import {
 } from "@/lib/stores/documentStore";
 import { applySourceChannelsToImages } from "@/lib/stores/storeUtils";
 
-const FETCH_CONCURRENCY = 4;
+const FETCH_CONCURRENCY = 1;
 const FIT_CONCURRENCY = 2;
 const GMM_MAX_SAMPLES = 40_000;
+/** Skip a tile/plane decode above this (uint16 4MP ≈ 8MB). */
+const GMM_MAX_DECODE_PIXELS = 4_000_000;
+const GMM_MAX_TILES = 8;
 
 type WriteGuard =
   | { kind: "still-missing" }
@@ -189,7 +192,52 @@ function commitFitted(job: Job, window: ContrastLimits): void {
   if (groupsChanged) doc.setChannelGroups(nextGroups);
 }
 
-/** Coarsest pyramid plane, at most GMM_MAX_SAMPLES uint16 samples. */
+function planeSize(plane: Loader["data"][number]): {
+  width: number;
+  height: number;
+} {
+  const xi = plane.labels.indexOf("x");
+  const yi = plane.labels.indexOf("y");
+  return {
+    width: xi >= 0 ? plane.shape[xi] : 0,
+    height: yi >= 0 ? plane.shape[yi] : 0,
+  };
+}
+
+function pickTileCoords(nx: number, ny: number): [number, number][] {
+  if (nx <= 0 || ny <= 0) return [];
+  const cx = Math.floor(nx / 2);
+  const cy = Math.floor(ny / 2);
+  const out: [number, number][] = [];
+  const seen = new Set<string>();
+  const add = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= nx || y >= ny || out.length >= GMM_MAX_TILES) {
+      return;
+    }
+    const k = `${x},${y}`;
+    if (seen.has(k)) return;
+    seen.add(k);
+    out.push([x, y]);
+  };
+  add(cx, cy);
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) add(cx + dx, cy + dy);
+  }
+  const sx = Math.max(1, Math.floor(nx / 3));
+  const sy = Math.max(1, Math.floor(ny / 3));
+  for (let y = 0; y < ny; y += sy) {
+    for (let x = 0; x < nx; x += sx) add(x, y);
+  }
+  return out;
+}
+
+function sampleToUint16(v: number, u8: boolean): number {
+  if (u8) return v << 8;
+  if (!Number.isFinite(v)) return 0;
+  return Math.max(0, Math.min(65535, Math.round(v)));
+}
+
+/** Coarsest pyramid tiles, at most GMM_MAX_SAMPLES uint16 samples. Never getRaster. */
 async function fetchCoarsestUint16(
   loader: Loader,
   sourceIndex: number,
@@ -200,34 +248,43 @@ async function fetchCoarsestUint16(
   const nC = cIdx >= 0 ? planes[0].shape[cIdx] : 1;
   if (sourceIndex < 0 || sourceIndex >= nC) return null;
 
-  let data: ArrayLike<number> | undefined;
-  for (let i = planes.length - 1; i >= 0; i--) {
-    try {
-      const raster = await planes[i].getRaster({
-        selection: { t: 0, z: 0, c: sourceIndex },
-      });
-      if (raster?.data?.length) {
-        data = raster.data;
-        break;
-      }
-    } catch {
-      /* missing pyramid level */
-    }
-  }
-  if (!data?.length) return null;
+  const selection = { t: 0, z: 0, c: sourceIndex };
+  const out = new Uint16Array(GMM_MAX_SAMPLES);
 
-  const stride = Math.max(1, Math.ceil(data.length / GMM_MAX_SAMPLES));
-  const out = new Uint16Array(Math.ceil(data.length / stride));
-  const u8 = data instanceof Uint8Array || data instanceof Uint8ClampedArray;
-  for (let i = 0, o = 0; i < data.length; i += stride) {
-    const v = Number(data[i]);
-    out[o++] = u8
-      ? v << 8
-      : Number.isFinite(v)
-        ? Math.max(0, Math.min(65535, Math.round(v)))
-        : 0;
+  for (let i = planes.length - 1; i >= 0; i--) {
+    const plane = planes[i];
+    const { width, height } = planeSize(plane);
+    if (width <= 0 || height <= 0) continue;
+    const ts = Math.max(1, plane.tileSize || Math.max(width, height));
+    const nx = Math.ceil(width / ts);
+    const ny = Math.ceil(height / ts);
+    const maxTile = Math.min(ts, width) * Math.min(ts, height);
+    if (maxTile > GMM_MAX_DECODE_PIXELS) continue;
+
+    let o = 0;
+    for (const [x, y] of pickTileCoords(nx, ny)) {
+      if (o >= GMM_MAX_SAMPLES) break;
+      let data: ArrayLike<number> | undefined;
+      try {
+        const tile = await plane.getTile({ x, y, selection });
+        if (tile?.data?.length) data = tile.data;
+      } catch {
+        continue;
+      }
+      if (!data?.length || data.length > GMM_MAX_DECODE_PIXELS) continue;
+      const u8 =
+        data instanceof Uint8Array || data instanceof Uint8ClampedArray;
+      const stride = Math.max(
+        1,
+        Math.ceil(data.length / (GMM_MAX_SAMPLES - o)),
+      );
+      for (let p = 0; p < data.length && o < GMM_MAX_SAMPLES; p += stride) {
+        out[o++] = sampleToUint16(Number(data[p]), u8);
+      }
+    }
+    if (o > 0) return o < GMM_MAX_SAMPLES ? out.subarray(0, o) : out;
   }
-  return out;
+  return null;
 }
 
 async function runJob(job: Job, gen: number): Promise<FitOutcome> {
