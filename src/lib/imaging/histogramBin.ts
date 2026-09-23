@@ -22,7 +22,7 @@ export function histogramBinFromPixels(
   let indices = [...new Array(len).keys()]
     .filter((i) => i % step === 0 || Math.floor(i / width) % step === 0)
     .filter((i) => data[i] > 0);
-  return thresholds.reduce((binned: number[], threshold, t) => {
+  const out = thresholds.reduce((binned: number[], threshold, t) => {
     if (t > 0 && thresholds[t - 1] === threshold) {
       return binned.concat(binned.slice(-1));
     }
@@ -32,4 +32,7 @@ export function histogramBinFromPixels(
     binned.push(pixel_count);
     return binned;
   }, []);
+  const nothing = (0.001 * data.length) / step ** 2;
+  const first = out.findIndex((x) => x >= nothing);
+  return out.slice(Math.max(0, first));
 }
