@@ -60,6 +60,7 @@ export default defineConfig(({ command }) => {
         "@deck.gl/core",
         "@deck.gl/layers",
         "@deck.gl/react",
+        "geotiff",
       ],
     },
     resolve: {
