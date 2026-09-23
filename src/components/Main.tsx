@@ -1,4 +1,3 @@
-import type { FormEventHandler } from "react";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
@@ -15,7 +14,6 @@ import type {
   LoadedSourceSummary,
   OmeImportRequest,
   OmeImportResult,
-  ValidObj,
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
 import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
@@ -24,6 +22,11 @@ import type {
   ConfigWaypoint,
 } from "@/lib/authoring/config";
 import { extractChannels } from "@/lib/authoring/config";
+import {
+  detachRemovedFeatureTables,
+  hydrateFeatureTables,
+  requestFeatureTableFileAccess,
+} from "@/lib/featureTable";
 import {
   applyVisibilityTransition,
   buildCompositedIntensityLayers,
@@ -73,6 +76,7 @@ import {
   useSyncJpegChannelFolders,
 } from "@/lib/imaging/loadJpegFromDocument";
 import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/maskLayers";
+import { createOmeDecodePool } from "@/lib/imaging/omeDecodePool";
 import {
   applyPaletteToFlatImportImages,
   buildOmeImportSlice,
@@ -88,7 +92,6 @@ import {
   warmupPsudoPalette,
 } from "@/lib/imaging/psudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
-import { Pool } from "@/lib/imaging/workers/pool";
 import { effectiveWorldFrame } from "@/lib/imaging/worldFrame";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
@@ -104,7 +107,7 @@ import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
 import { applyOmeRoisFromLoaderToFirstWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentSchema";
-import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
+import type { ChannelGroup } from "@/lib/stores/documentStore";
 import {
   documentShapes,
   documentSourceChannels,
@@ -139,7 +142,6 @@ import {
   type StoryExportMode,
   writeStoryBundleSidecars,
 } from "@/lib/storyExport/storyBundle";
-import { isOpts, validate } from "@/lib/validate";
 import {
   applyWaypointSeedAction,
   planWaypointConfigSeedTick,
@@ -280,7 +282,7 @@ async function hydrateLoadersFromImages(
   const result = await hydrateDocumentLoaders(images, {
     channelGroups: opts?.channelGroups ?? [],
     documentUrl: opts?.documentUrl ?? window.location.href,
-    pool: new Pool(),
+    pool: createOmeDecodePool(),
     requestPermission,
     includeLocal: true,
     imageSource: useDocumentStore.getState().metadata.imageSource,
@@ -401,6 +403,20 @@ const Content = (props: Props) => {
     };
   }, [viewerImageLayersLoaded]);
   const activeStoryId = useDocumentStore((s) => s.activeStoryId);
+  const featureTableHydrateKey = useDocumentStore((s) =>
+    s.featureTables.map((c) => `${c.id}:${c.digest}`).join("|"),
+  );
+  const prevStoryIdRef = React.useRef(activeStoryId);
+  // Digest key retriggers ingest without depending on featureTables identity (color edits).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: featureTableHydrateKey
+  React.useEffect(() => {
+    const storyChanged = prevStoryIdRef.current !== activeStoryId;
+    prevStoryIdRef.current = activeStoryId;
+    void hydrateFeatureTables(
+      useDocumentStore.getState().featureTables,
+      storyChanged,
+    );
+  }, [activeStoryId, featureTableHydrateKey]);
   const namespacedHandleKeys = React.useMemo(
     () =>
       handleKeys.map((k) =>
@@ -758,6 +774,7 @@ const Content = (props: Props) => {
         doc.images,
         doc.channelGroups,
         imageId,
+        doc.featureTables,
       );
       if (result.images.length === doc.images.length) return;
       clearRemovedImageState([removed]);
@@ -781,6 +798,7 @@ const Content = (props: Props) => {
         resetActiveGroup: !activeStillExists,
         transition: { kind: "remove" },
       });
+      detachRemovedFeatureTables(doc.featureTables, result.featureTables);
 
       if (result.images.length === 0) {
         setFileName("");
@@ -857,7 +875,7 @@ const Content = (props: Props) => {
           images: doc.images,
           imageId,
           handle,
-          pool: new Pool(),
+          pool: createOmeDecodePool(),
         });
         if (prep.ok === false) {
           if (prep.error) window.alert(prep.error);
@@ -966,9 +984,6 @@ const Content = (props: Props) => {
     setLastOmeTiffUrl(null);
     const relevant_groups = [] as ConfigGroup[];
     let nextImages: Image[] = [];
-    let registry = {
-      SourceChannels: [] as Channel[],
-    };
     const entries: OmeLoaderEntry[] = [];
 
     for (let i = 0; i < handles.length; i++) {
@@ -976,8 +991,8 @@ const Content = (props: Props) => {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "local",
         handle,
-        in_f: i === 0 ? in_f : handle.name,
-        pool: new Pool(),
+        pool: createOmeDecodePool(),
+        rgbDisplay,
       });
       const sourceImageId = crypto.randomUUID();
       const basename = i === 0 ? in_f : handle.name;
@@ -991,9 +1006,6 @@ const Content = (props: Props) => {
         rgbDisplay,
       });
       nextImages = slice.nextImages;
-      registry = {
-        SourceChannels: [...registry.SourceChannels, ...slice.sourceChannels],
-      };
       entries.push({ loader, sourceImageId });
     }
 
@@ -1008,14 +1020,10 @@ const Content = (props: Props) => {
       });
     }
 
-    const { SourceChannels } = registry;
     // Fresh local replace: flat channels + shared palette; user creates groups in the panel.
     const ChannelGroups: ChannelGroup[] = [];
     if (role !== "segmentation") {
-      nextImages = await applyPaletteToFlatImportImages(
-        nextImages,
-        SourceChannels,
-      );
+      nextImages = await applyPaletteToFlatImportImages(nextImages);
     }
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries(entries);
@@ -1070,8 +1078,8 @@ const Content = (props: Props) => {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "local",
         handle,
-        in_f: basename,
-        pool: new Pool(),
+        pool: createOmeDecodePool(),
+        rgbDisplay,
       });
       const sourceImageId = crypto.randomUUID();
       const slice = buildOmeImportSlice({
@@ -1097,10 +1105,7 @@ const Content = (props: Props) => {
         if (slice.extractedGroups.length > 0) {
           newIntensityGroups.push(...slice.extractedGroups);
         } else {
-          nextImages = await applyPaletteToFlatImportImages(
-            nextImages,
-            slice.sourceChannels,
-          );
+          nextImages = await applyPaletteToFlatImportImages(nextImages);
         }
       }
     }
@@ -1193,7 +1198,8 @@ const Content = (props: Props) => {
     const loader = await loadOmeLoaderForRole(role, {
       kind: "url",
       url,
-      pool: new Pool(),
+      pool: createOmeDecodePool(),
+      rgbDisplay,
     });
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return;
@@ -1215,7 +1221,7 @@ const Content = (props: Props) => {
       relevantGroups: relevant_groups,
       rgbDisplay,
     });
-    let SourceChannels = slice.sourceChannels;
+    const SourceChannels = slice.sourceChannels;
     let nextImages = slice.nextImages;
     let ChannelGroups: ChannelGroup[];
     if (role === "segmentation") {
@@ -1226,11 +1232,7 @@ const Content = (props: Props) => {
         SourceChannels,
       );
     } else {
-      nextImages = await applyPaletteToFlatImportImages(
-        nextImages,
-        SourceChannels,
-      );
-      SourceChannels = flattenImageChannelsInDocumentOrder(nextImages);
+      nextImages = await applyPaletteToFlatImportImages(nextImages);
       ChannelGroups = [];
     }
     nextImages = setImageSource(nextImages, sourceImageId, {
@@ -1264,7 +1266,8 @@ const Content = (props: Props) => {
     const loader = await loadOmeLoaderForRole(role, {
       kind: "url",
       url,
-      pool: new Pool(),
+      pool: createOmeDecodePool(),
+      rgbDisplay,
     });
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
       return { ok: false, error: "Import was superseded by a newer request." };
@@ -1289,10 +1292,7 @@ const Content = (props: Props) => {
       url,
     });
     if (role !== "segmentation" && slice.extractedGroups.length === 0) {
-      nextImages = await applyPaletteToFlatImportImages(
-        nextImages,
-        slice.sourceChannels,
-      );
+      nextImages = await applyPaletteToFlatImportImages(nextImages);
     }
     const ChannelGroups = await finalizeAppendedIntensityGroups({
       mergedGroups,
@@ -1399,6 +1399,7 @@ const Content = (props: Props) => {
         documentUrl: window.location.href,
       });
       applyHydratedLoaders(result);
+      await requestFeatureTableFileAccess();
       if (
         result.omeLoaderEntries.length +
           result.jpegLoaderEntries.length +
@@ -1634,6 +1635,7 @@ const Content = (props: Props) => {
     const legacyModalityIds = new Set(indexList.map((d) => d.modality));
     let nextDocImages = [...doc.images];
     let nextChannelGroups = [...doc.channelGroups];
+    let nextFeatureTables = [...doc.featureTables];
     const removedImages: Image[] = [];
     for (const im of doc.images) {
       const sameSeries =
@@ -1647,9 +1649,11 @@ const Content = (props: Props) => {
         nextDocImages,
         nextChannelGroups,
         im.id,
+        nextFeatureTables,
       );
       nextDocImages = removed.images;
       nextChannelGroups = removed.channelGroups;
+      nextFeatureTables = removed.featureTables;
     }
     const channelsBefore = flattenImageChannelsInDocumentOrder(nextDocImages);
     nextDocImages = applySourceChannelsToImages(nextDocImages, SourceChannels);
@@ -1714,10 +1718,9 @@ const Content = (props: Props) => {
         isFresh || !mergedChannelGroups.some((g) => g.id === activeId),
       transition,
     });
+    detachRemovedFeatureTables(doc.featureTables, nextFeatureTables);
     afterImageImportDocumentEffects();
   };
-
-  const [valid, setValid] = useState({} as ValidObj);
 
   const onStartRef = React.useRef(onStart);
   onStartRef.current = onStart;
@@ -2100,34 +2103,6 @@ const Content = (props: Props) => {
       onRestoredHandles={hasDemo ? undefined : onRestoredOmeHandles}
     >
       {({ handles, onAllow }) => {
-        const onSubmit: FormEventHandler = (event) => {
-          const form = event.currentTarget as HTMLFormElement;
-          const data = [...new FormData(form).entries()];
-          const formOut = data.reduce(
-            (o, [k, v]) => {
-              o[k] = `${v}`;
-              return o;
-            },
-            {
-              url: "",
-              name: "",
-            },
-          );
-          const formOpts = {
-            formOut,
-            onStart: (list) => onStart(list, handles),
-            handles,
-          };
-          if (isOpts(formOpts)) {
-            validate(formOpts).then((valid: ValidObj) => {
-              setValid(valid);
-            });
-          }
-          event.preventDefault();
-          event.stopPropagation();
-        };
-
-        const formProps = { onSubmit, valid };
         const imageLoaded = !noLoader;
         const handleNamesLabel = handles
           .map((h) => h.name)
@@ -2139,14 +2114,8 @@ const Content = (props: Props) => {
           const w = img?.sizeX ?? 0;
           const h = img?.sizeY ?? 0;
           const ch = img?.sizeC ?? 0;
-          /** Only while demo bootstrap has not produced loaders yet — not “always” when demo_url is set. */
-          const isDemoBootstrap =
-            hasDemo &&
-            dicomIndexList.length === 0 &&
-            omeLoaderEntries.length === 0;
           if (dicomIndexList.length > 0) {
             loadedSource = {
-              kind: "dicom",
               label:
                 fileName ||
                 dicomIndexList
@@ -2158,7 +2127,6 @@ const Content = (props: Props) => {
               width: w,
               height: h,
               channelCount: ch,
-              isDemo: isDemoBootstrap,
             };
           } else if (omeLoaderEntries.length > 0) {
             const isUrlSource = handles.length === 0;
@@ -2166,22 +2134,18 @@ const Content = (props: Props) => {
               ? lastOmeTiffUrl || fileName || "Remote OME-TIFF"
               : fileName || handleNamesLabel || "OME-TIFF";
             loadedSource = {
-              kind: isUrlSource ? "ome-url" : "ome-local",
               label,
               width: w,
               height: h,
               channelCount: ch,
-              isDemo: isDemoBootstrap,
             };
           } else {
             loadedSource = {
-              kind: "ome-url",
               label:
                 lastOmeTiffUrl || fileName || handleNamesLabel || "Loading…",
               width: w,
               height: h,
               channelCount: ch,
-              isDemo: isDemoBootstrap,
             };
           }
         }
@@ -2301,7 +2265,6 @@ const Content = (props: Props) => {
         };
 
         const uploadProps = {
-          formProps,
           onAllow,
           importRevision,
           imageLoaded,

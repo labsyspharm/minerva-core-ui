@@ -22,6 +22,7 @@ import {
   withGroupRowVisible,
 } from "@/lib/imaging/channelCompositor";
 import {
+  isMaskChannel,
   isRgbDisplayImage,
   MAX_VIV_INTENSITY_CHANNELS,
   VIEWER_INTENSITY_LIMIT_HINT,
@@ -43,6 +44,17 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import styles from "./ImageChannelOverview.module.css";
+
+/** Packed-RGB / H&E unit chip — same magenta as `samples === 3` default tint. */
+const HE_CHIP_HEX = "cc00ff";
+
+function heUnitChip(
+  base: ImageChannelChip,
+  key: string,
+  visible: boolean,
+): ImageChannelChip {
+  return { ...base, key, name: "H&E", hex: HE_CHIP_HEX, visible };
+}
 
 function chipAriaLabel(chip: ImageChannelChip): string {
   return chip.visible ? `Hide ${chip.name}` : `Show ${chip.name}`;
@@ -74,6 +86,7 @@ function ChipButton(props: {
   const pendingLabel = gmmPending
     ? `Fitting contrast for ${chip.name}`
     : `Assigning color to ${chip.name}`;
+  const showEditor = !chip.key.endsWith(":rgb");
   return (
     <div
       className={[
@@ -117,19 +130,21 @@ function ChipButton(props: {
           {chip.name}
         </button>
       </CursorHint>
-      <button
-        type="button"
-        className={`${minervaTheme.focusRing} ${styles.chipMenu}`}
-        title={`Edit ${chip.name}`}
-        aria-label={`Edit ${chip.name}`}
-        aria-expanded={open}
-        onClick={(e) => {
-          e.stopPropagation();
-          onOpenEditor(chip);
-        }}
-      >
-        <ChevronIcon direction={open ? "up" : "down"} />
-      </button>
+      {showEditor ? (
+        <button
+          type="button"
+          className={`${minervaTheme.focusRing} ${styles.chipMenu}`}
+          title={`Edit ${chip.name}`}
+          aria-label={`Edit ${chip.name}`}
+          aria-expanded={open}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenEditor(chip);
+          }}
+        >
+          <ChevronIcon direction={open ? "up" : "down"} />
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -268,7 +283,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
   );
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const nav = useAuthorChannelNav();
-  const [openKey, setOpenKey] = useState<string | null>(null);
+  const [openKey, setOpenKey] = useState<string | null | undefined>(undefined);
   const [channelNameFilter, setChannelNameFilter] = useState("");
 
   const allSourceChannels = useMemo(
@@ -331,13 +346,25 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     ...model.groups.flatMap((g) => g.chips),
     ...model.allChannels,
   ];
-  const openChip =
-    openKey == null
+  const maskIds = new Set(
+    image.channels.filter(isMaskChannel).map((c) => c.id),
+  );
+  const defaultMaskKey =
+    maskIds.size === 0
       ? null
-      : (overviewChips.find((c) => c.key === openKey) ?? null);
+      : (overviewChips.find((c) => maskIds.has(c.sourceId))?.key ?? null);
+  const resolvedOpenKey = openKey === undefined ? defaultMaskKey : openKey;
+
+  const openChip =
+    resolvedOpenKey == null
+      ? null
+      : (overviewChips.find((c) => c.key === resolvedOpenKey) ?? null);
 
   const onOpenEditor = (chip: ImageChannelChip) => {
-    setOpenKey((cur) => (cur === chip.key ? null : chip.key));
+    setOpenKey((cur) => {
+      const current = cur === undefined ? defaultMaskKey : cur;
+      return current === chip.key ? null : chip.key;
+    });
   };
 
   const capVis: VivIntensityCapVis = {
@@ -448,14 +475,13 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     <div className={styles.root}>
       {model.groups.map((group) => {
         const rgbUnit =
-          rgbDisplay && group.chips.length > 1
+          rgbDisplay && group.chips[0]
             ? [
-                {
-                  ...group.chips[0],
-                  key: `g:${group.id}:rgb`,
-                  name: "H&E",
-                  visible: group.allVisible,
-                },
+                heUnitChip(
+                  group.chips[0],
+                  `g:${group.id}:rgb`,
+                  group.allVisible,
+                ),
               ]
             : group.chips;
         const docGroup = channelGroups.find((g) => g.id === group.id);
@@ -501,14 +527,13 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
         <GroupStrip
           name="All channels"
           chips={
-            rgbDisplay && filteredAllChannels.length > 1
+            rgbDisplay && filteredAllChannels[0]
               ? [
-                  {
-                    ...filteredAllChannels[0],
-                    key: "e:rgb",
-                    name: "H&E",
-                    visible: filteredAllChannels.every((c) => c.visible),
-                  },
+                  heUnitChip(
+                    filteredAllChannels[0],
+                    "e:rgb",
+                    filteredAllChannels.every((c) => c.visible),
+                  ),
                 ]
               : filteredAllChannels
           }

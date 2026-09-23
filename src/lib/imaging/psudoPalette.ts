@@ -38,6 +38,10 @@ const PSUDO_CONFUSION_BASELINE_SAMPLES = 32;
 /** Matches psudo 0.15+ / palette_study (× n/3, max 40 inside WASM). */
 const PSUDO_NUM_RESTARTS = 18;
 
+const CLASS_PALETTE_MAX_ITERS = 400;
+const CLASS_PALETTE_CONFUSION_SAMPLES = 16;
+const CLASS_PALETTE_RESTARTS = 3;
+
 const PSUDO_CONTRAST_MIN = 0;
 const PSUDO_CONTRAST_MAX = 65535;
 
@@ -179,6 +183,11 @@ async function invokePsudoOptimize(
 async function optimizePaletteSlots(
   slots: readonly PaletteSlot[],
   lockedIds: ReadonlySet<string> = new Set(),
+  budget?: {
+    maxIters: number;
+    confusionSamples: number;
+    numRestarts: number;
+  },
 ): Promise<RgbColor[]> {
   if (slots.length < 2) {
     throw new Error(
@@ -189,6 +198,11 @@ async function optimizePaletteSlots(
     return slots.map((slot) => ({ ...slot.color }));
   }
   const inputs = buildOptimizeInputsFromSlots(slots, lockedIds);
+  if (budget) {
+    inputs.maxIters = budget.maxIters;
+    inputs.confusionSamples = budget.confusionSamples;
+    inputs.numRestarts = budget.numRestarts;
+  }
   const nChannels = inputs.colorNames.length;
   const linear = await invokePsudoOptimize(inputs);
   const out: RgbColor[] = [];
@@ -205,6 +219,23 @@ async function optimizePaletteSlots(
     }
   }
   return out;
+}
+
+/** One psudo color per distinct class name (n=1 skips optimize). */
+export async function optimizeDistinctPalette(
+  count: number,
+): Promise<RgbColor[]> {
+  if (count <= 0) return [];
+  if (count === 1) return [seedRgbForGroupChannelIndex(0)];
+  const slots: PaletteSlot[] = Array.from({ length: count }, (_, i) => ({
+    id: String(i),
+    color: seedRgbForGroupChannelIndex(i),
+  }));
+  return optimizePaletteSlots(slots, new Set(), {
+    maxIters: CLASS_PALETTE_MAX_ITERS,
+    confusionSamples: CLASS_PALETTE_CONFUSION_SAMPLES,
+    numRestarts: CLASS_PALETTE_RESTARTS,
+  });
 }
 
 export function isGroupEligibleForPsudoOptimize(

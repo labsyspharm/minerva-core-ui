@@ -43,6 +43,7 @@ import type {
   ArrowShape,
   Channel,
   ChannelGroup,
+  FeatureTable,
   Image,
   ImageChannel,
   ImageOrientation,
@@ -305,14 +306,16 @@ export function removeImageFromDocument(
   images: Image[],
   channelGroups: ChannelGroup[],
   imageId: string,
+  featureTables: FeatureTable[],
 ): {
   images: Image[];
   channelGroups: ChannelGroup[];
   removedChannelIds: string[];
+  featureTables: FeatureTable[];
 } {
   const image = images.find((im) => im.id === imageId);
   if (!image) {
-    return { images, channelGroups, removedChannelIds: [] };
+    return { images, channelGroups, removedChannelIds: [], featureTables };
   }
   const removedChannelIds = image.channels.map((ch) => ch.id);
   const removed = new Set(removedChannelIds);
@@ -325,6 +328,7 @@ export function removeImageFromDocument(
       }))
       .filter((g) => g.channels.length > 0),
     removedChannelIds,
+    featureTables: featureTables.filter((c) => !removed.has(c.sourceChannelId)),
   };
 }
 

@@ -2,53 +2,32 @@ import { loadOmeTiff } from "@hms-dbmi/viv";
 import { fileOpen } from "browser-fs-access";
 import { fromBlob, GeoTIFFImage } from "geotiff";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
+import type { DecodePool } from "./omeDecodePool";
+import { omeChannelElements, omePixelsElement, parseOmeXml } from "./omeXml";
 import type { Loader } from "./viv";
-import type { PoolClass } from "./workers/pool";
 
 type GeoTiff = Awaited<ReturnType<typeof fromBlob>>;
 type GeoTiffImage = Awaited<ReturnType<GeoTiff["getImage"]>>;
 
 /** Fields geotiff uses when constructing SubIFD images (not in public typings). */
 type GeoTiffInternals = GeoTiff & {
-  dataView: DataView;
-  littleEndian: boolean;
-  cache: unknown;
-  source: unknown;
-  parseFileDirectoryAt: (offset: number) => Promise<{
+  dataView?: DataView;
+  littleEndian?: boolean;
+  cache?: unknown;
+  source?: unknown;
+  parseFileDirectoryAt?: (offset: number) => Promise<{
     fileDirectory: GeoTiffImage["fileDirectory"];
     geoKeyDirectory: unknown;
   }>;
 };
 
-type FindFileIn = {
-  handle: Handle.File;
-};
-type FindFile = (i: FindFileIn) => Promise<boolean>;
-type ToFiles = () => Promise<Handle.File[]>;
-type LoaderIn = {
-  in_f: string;
-  handle: Handle.File;
-  pool?: PoolClass;
-};
-type ToLoader = (i: LoaderIn) => Promise<Loader>;
-type ToMaskLoader = (i: LoaderIn) => Promise<Loader>;
-
-/** Viv's published OME metadata types are looser than our app `Loader` shape. */
-function asAppLoader(image: Awaited<ReturnType<typeof loadOmeTiff>>): Loader {
-  return image as Loader;
-}
-export type Selection = {
+type Selection = {
   t: number;
   z: number;
   c: number;
 };
-type TileConfig = {
-  x: number;
-  y: number;
-  signal: AbortSignal;
-  selection: Selection;
-};
-export type Dtype =
+
+type Dtype =
   | "Uint8"
   | "Uint16"
   | "Uint32"
@@ -57,7 +36,44 @@ export type Dtype =
   | "Int32"
   | "Float32"
   | "Float64";
+
 type OmePixelMetadata = Loader["metadata"]["Pixels"];
+
+type FindFileIn = {
+  handle: Handle.File;
+};
+type FindFile = (i: FindFileIn) => Promise<boolean>;
+type ToFiles = () => Promise<Handle.File[]>;
+
+/** Viv's published OME metadata types are looser than our app `Loader` shape. */
+function asAppLoader(image: Awaited<ReturnType<typeof loadOmeTiff>>): Loader {
+  return image as Loader;
+}
+
+function tiffRational(tag: unknown): number | null {
+  if (typeof tag === "number" && Number.isFinite(tag)) return tag;
+  if (tag != null && typeof tag === "object" && "length" in tag) {
+    const arr = tag as ArrayLike<unknown>;
+    if (arr.length < 1) return null;
+    const n = Number(arr[0]);
+    const d = arr.length >= 2 ? Number(arr[1]) : 1;
+    if (!Number.isFinite(n) || !Number.isFinite(d) || d === 0) return null;
+    return n / d;
+  }
+  return null;
+}
+
+/** TIFF ResolutionUnit 1 = none; writers often emit X/YResolution 1/1 as a stub. */
+function isUnitlessPlaceholderResolution(fd: {
+  ResolutionUnit?: number;
+  XResolution?: unknown;
+  YResolution?: unknown;
+}): boolean {
+  if (fd.ResolutionUnit !== 1) return false;
+  return (
+    tiffRational(fd.XResolution) === 1 && tiffRational(fd.YResolution) === 1
+  );
+}
 
 function dtypeFromTiffDirectory(fileDirectory: {
   BitsPerSample?: number[];
@@ -83,17 +99,14 @@ function parseFirstOmeImagePixels(
   if (typeof imageDescription !== "string" || imageDescription.trim() === "") {
     return null;
   }
-  const doc = new DOMParser().parseFromString(
-    imageDescription,
-    "application/xml",
-  );
-  const pixels = doc.querySelector("Image")?.querySelector("Pixels");
+  const doc = parseOmeXml(imageDescription);
+  const pixels = doc ? omePixelsElement(doc) : null;
   if (!pixels) return null;
   const num = (name: string) => {
     const value = pixels.getAttribute(name);
     return value == null ? undefined : Number(value);
   };
-  const channelCount = pixels.querySelectorAll("Channel").length;
+  const channelCount = omeChannelElements(pixels).length;
   return {
     ID: pixels.getAttribute("ID") ?? undefined,
     Type: pixels.getAttribute("Type") ?? undefined,
@@ -157,40 +170,17 @@ function vivTileSize(image: GeoTiffImage): number {
   return 2 ** Math.floor(Math.log2(Math.max(1, size)));
 }
 
-async function readTiffRaster(
+async function readTiffSample(
   image: GeoTiffImage,
   sample: number,
+  window?: [number, number, number, number],
 ): Promise<HasTile> {
+  const width = window ? window[2] - window[0] : image.getWidth();
+  const height = window ? window[3] - window[1] : image.getHeight();
   const raster = (await image.readRasters({
     samples: [sample],
     interleave: true,
-  })) as ArrayLike<number> & { width?: number; height?: number };
-  return {
-    data: raster as unknown as HasTile["data"],
-    width: raster.width ?? image.getWidth(),
-    height: raster.height ?? image.getHeight(),
-  };
-}
-
-async function readTiffTile(
-  image: GeoTiffImage,
-  sample: number,
-  tileX: number,
-  tileY: number,
-  tileSize: number,
-): Promise<HasTile> {
-  const x0 = tileX * tileSize;
-  const y0 = tileY * tileSize;
-  const x1 = Math.min(x0 + tileSize, image.getWidth());
-  const y1 = Math.min(y0 + tileSize, image.getHeight());
-  const width = x1 - x0;
-  const height = y1 - y0;
-  const raster = (await image.readRasters({
-    samples: [sample],
-    interleave: true,
-    window: [x0, y0, x1, y1],
-    width,
-    height,
+    ...(window ? { window, width, height } : {}),
   })) as ArrayLike<number> & { width?: number; height?: number };
   return {
     data: raster as unknown as HasTile["data"],
@@ -209,16 +199,21 @@ async function resolveMaskPyramidImages(
   if (!Array.isArray(offsets) || offsets.length === 0) return images;
 
   const internals = tiff as GeoTiffInternals;
+  const baseInternals = baseImage as GeoTiffImage & GeoTiffInternals;
+  if (typeof internals.parseFileDirectoryAt !== "function") return images;
+  const source = baseInternals.source ?? internals.source;
+  if (source == null) return images;
+
   for (const offset of offsets) {
     const parsed = await internals.parseFileDirectoryAt(offset);
     images.push(
       new GeoTIFFImage(
-        parsed.fileDirectory,
-        parsed.geoKeyDirectory,
-        internals.dataView,
-        internals.littleEndian,
-        internals.cache,
-        internals.source,
+        parsed.fileDirectory as never,
+        parsed.geoKeyDirectory as never,
+        (baseInternals.dataView ?? internals.dataView) as never,
+        (baseInternals.littleEndian ?? internals.littleEndian ?? true) as never,
+        (baseInternals.cache ?? internals.cache) as never,
+        source as never,
       ) as unknown as GeoTiffImage,
     );
   }
@@ -236,7 +231,7 @@ function maskPlaneFromImage(
   const tileSize = tiled ? vivTileSize(image) : Math.max(width, height, 1);
   const clampC = (c: number) => Math.max(0, Math.min(sizeC - 1, c));
   const getRaster = ({ selection }: { selection: Selection }) =>
-    readTiffRaster(image, clampC(selection.c));
+    readTiffSample(image, clampC(selection.c));
   return {
     dtype,
     shape: [1, sizeC, 1, height, width],
@@ -245,8 +240,16 @@ function maskPlaneFromImage(
     onTileError: () => undefined,
     getRaster,
     getTile: tiled
-      ? ({ x, y, selection }) =>
-          readTiffTile(image, clampC(selection.c), x, y, tileSize)
+      ? ({ x, y, selection }) => {
+          const x0 = x * tileSize;
+          const y0 = y * tileSize;
+          return readTiffSample(image, clampC(selection.c), [
+            x0,
+            y0,
+            Math.min(x0 + tileSize, width),
+            Math.min(y0 + tileSize, height),
+          ]);
+        }
       : async ({ x, y, selection }) => {
           if (x !== 0 || y !== 0) {
             return { data: new Uint8Array(0), width: 0, height: 0 };
@@ -254,6 +257,68 @@ function maskPlaneFromImage(
           return getRaster({ selection });
         },
   };
+}
+
+/**
+ * Viv `loadOmeTiff` requires OME-XML `<Pixels>`. Mask TIFFs (tifffile JSON
+ * ImageDescription, or OME-XML with extra non-IFD `<Image>` entries) go
+ * through IFD0 + SubIFDs instead; OME Pixels is size/units only.
+ */
+async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
+  const tiff = await fromBlob(inFile);
+  const baseImage = await tiff.getImage(0);
+  const fd = baseImage.fileDirectory;
+  const width = baseImage.getWidth();
+  const height = baseImage.getHeight();
+  if (!isTiffPyramided(baseImage) && !isTiffTiled(baseImage)) {
+    const maxTextureSize = queryMaxTextureSize();
+    if (width > maxTextureSize || height > maxTextureSize) {
+      throw new Error(
+        `This mask is not tiled or pyramided and is too large for the GPU (${width}×${height}; max texture ${maxTextureSize}). Export it as a tiled OME-TIFF pyramid and import again.`,
+      );
+    }
+  }
+  const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
+  const dtype = dtypeFromTiffDirectory(fd);
+  const ome = parseFirstOmeImagePixels(fd.ImageDescription);
+  const sizeC = Math.max(1, ome?.SizeC ?? fd.SamplesPerPixel ?? 1);
+  const channels = Array.from({ length: sizeC }, (_, i) => ({
+    ID: `Channel:0:${i}`,
+    Name: sizeC === 1 ? "Mask" : `Mask ${i + 1}`,
+    SamplesPerPixel: 1,
+  }));
+  const pixels: OmePixelMetadata = {
+    ID: ome?.ID ?? "Pixels:0",
+    DimensionOrder: "XYZCT",
+    Type: ome?.Type ?? dtype,
+    SizeT: 1,
+    SizeC: sizeC,
+    SizeZ: 1,
+    SizeY: height,
+    SizeX: width,
+    PhysicalSizeX:
+      ome?.PhysicalSizeX ?? (isUnitlessPlaceholderResolution(fd) ? 0 : 1),
+    PhysicalSizeY:
+      ome?.PhysicalSizeY ?? (isUnitlessPlaceholderResolution(fd) ? 0 : 1),
+    PhysicalSizeXUnit: ome?.PhysicalSizeXUnit ?? "µm",
+    PhysicalSizeYUnit: ome?.PhysicalSizeYUnit ?? "µm",
+    PhysicalSizeZUnit: ome?.PhysicalSizeZUnit ?? "µm",
+    BigEndian: ome?.BigEndian ?? false,
+    TiffData: [],
+    Channels: channels,
+  };
+  return {
+    data: pyramidImages.map((image) =>
+      maskPlaneFromImage(image, channels.length, dtype),
+    ),
+    metadata: {
+      ID: "Image:0",
+      AquisitionDate: "",
+      Description: "",
+      Pixels: pixels,
+      ROIs: [],
+    },
+  } as Loader;
 }
 
 /** Directory picker — required for batch export to a chosen folder (Chromium-class browsers). */
@@ -396,88 +461,14 @@ const toFile: ToFiles = async () => {
   }
 };
 
-const toLoader: ToLoader = async ({ handle, pool = null }) => {
-  const in_file = await handle.getFile();
-  if (pool) {
-    // @vivjs/loaders types geotiff@2.1.3 Pool; app uses geotiff@2.1.4-beta (different .d.ts).
-    return asAppLoader(await loadOmeTiff(in_file, { pool: pool as never }));
-  }
-  return asAppLoader(await loadOmeTiff(in_file));
-};
-
-/**
- * Viv `loadOmeTiff` misreads mask files whose OME-XML lists extra `Image`
- * entries that are not real IFDs. Build a pyramid from IFD0 + SubIFDs instead;
- * OME Pixels is used for channel count / units only (names come later).
- */
-async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
-  const tiff = await fromBlob(inFile);
-  const baseImage = await tiff.getImage(0);
-  const fd = baseImage.fileDirectory;
-  const width = baseImage.getWidth();
-  const height = baseImage.getHeight();
-  if (!isTiffPyramided(baseImage) && !isTiffTiled(baseImage)) {
-    const maxTextureSize = queryMaxTextureSize();
-    if (width > maxTextureSize || height > maxTextureSize) {
-      throw new Error(
-        `This mask is not tiled or pyramided and is too large for the GPU (${width}×${height}; max texture ${maxTextureSize}). Export it as a tiled OME-TIFF pyramid and import again.`,
-      );
-    }
-  }
-  const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
-  const dtype = dtypeFromTiffDirectory(fd);
-  const ome = parseFirstOmeImagePixels(fd.ImageDescription);
-  const sizeC = Math.max(1, ome?.SizeC ?? fd.SamplesPerPixel ?? 1);
-  const channels = Array.from({ length: sizeC }, (_, i) => ({
-    ID: `Channel:0:${i}`,
-    Name: sizeC === 1 ? "Mask" : `Mask ${i + 1}`,
-    SamplesPerPixel: 1,
-  }));
-  const pixels: OmePixelMetadata = {
-    ID: ome?.ID ?? "Pixels:0",
-    DimensionOrder: "XYZCT",
-    Type: ome?.Type ?? dtype,
-    SizeT: 1,
-    SizeC: sizeC,
-    SizeZ: 1,
-    SizeY: height,
-    SizeX: width,
-    PhysicalSizeX: ome?.PhysicalSizeX ?? 1,
-    PhysicalSizeY: ome?.PhysicalSizeY ?? 1,
-    PhysicalSizeXUnit: ome?.PhysicalSizeXUnit ?? "µm",
-    PhysicalSizeYUnit: ome?.PhysicalSizeYUnit ?? "µm",
-    PhysicalSizeZUnit: ome?.PhysicalSizeZUnit ?? "µm",
-    BigEndian: ome?.BigEndian ?? false,
-    TiffData: [],
-    Channels: channels,
-  };
+function vivLoadOpts(pool?: DecodePool | null, packedRgb?: "planar") {
   return {
-    data: pyramidImages.map((image) =>
-      maskPlaneFromImage(image, channels.length, dtype),
-    ),
-    metadata: {
-      ID: "Image:0",
-      AquisitionDate: "",
-      Description: "",
-      Pixels: pixels,
-      ROIs: [],
-    },
-  } as Loader;
+    ...(pool ? { pool } : {}),
+    ...(packedRgb ? { packedRgb } : {}),
+  };
 }
 
-const toMaskLoader: ToMaskLoader = async ({ handle }) => {
-  return maskLoaderFromBlob(await handle.getFile());
-};
-
-const toMaskLoaderFromUrl = async (url: string): Promise<Loader> => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch mask OME-TIFF (${response.status})`);
-  }
-  return maskLoaderFromBlob(await response.blob());
-};
-
-export type OmeLoaderRole = "intensity" | "segmentation";
+type OmeLoaderRole = "intensity" | "segmentation";
 
 /**
  * Open the OME-TIFF file picker, then verify permission and that the file
@@ -492,41 +483,38 @@ export async function pickLocalOmeTiffHandle(): Promise<Handle.File | null> {
   return handle;
 }
 
-/** Pick Viv vs minimal mask loader for local file or remote URL. */
 export async function loadOmeLoaderForRole(
   role: OmeLoaderRole,
   source:
-    | { kind: "local"; handle: Handle.File; in_f: string; pool?: PoolClass }
-    | { kind: "url"; url: string; pool?: PoolClass },
+    | {
+        kind: "local";
+        handle: Handle.File;
+        pool?: DecodePool;
+        rgbDisplay?: boolean;
+      }
+    | { kind: "url"; url: string; pool?: DecodePool; rgbDisplay?: boolean },
 ): Promise<Loader> {
-  const isMask = role === "segmentation";
+  const packedRgb = source.rgbDisplay === false ? "planar" : undefined;
   if (source.kind === "local") {
-    return isMask
-      ? toMaskLoader({
-          handle: source.handle,
-          in_f: source.in_f,
-          pool: source.pool,
-        })
-      : toLoader({
-          handle: source.handle,
-          in_f: source.in_f,
-          pool: source.pool,
-        });
+    const file = await source.handle.getFile();
+    if (role === "segmentation") {
+      return maskLoaderFromBlob(file);
+    }
+    return asAppLoader(
+      await loadOmeTiff(file, vivLoadOpts(source.pool, packedRgb)),
+    );
   }
-  return isMask
-    ? toMaskLoaderFromUrl(source.url)
-    : toLoaderFromUrl(source.url, source.pool);
+  if (role === "segmentation") {
+    const response = await fetch(source.url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch mask OME-TIFF (${response.status})`);
+    }
+    return maskLoaderFromBlob(await response.blob());
+  }
+  return asAppLoader(
+    await loadOmeTiff(source.url, vivLoadOpts(source.pool, packedRgb)),
+  );
 }
-
-const toLoaderFromUrl = async (
-  url: string,
-  pool?: PoolClass,
-): Promise<Loader> => {
-  if (pool) {
-    return asAppLoader(await loadOmeTiff(url, { pool: pool as never }));
-  }
-  return asAppLoader(await loadOmeTiff(url));
-};
 
 export {
   hasAuthorShellSupport,
@@ -536,7 +524,6 @@ export {
   hasFileHandlePermission,
   ensureFileHandlePermission,
   findFile,
-  toLoader,
   toFile,
   ephemeralFileHandleFromFile,
   fileHandleFromDataTransferItem,

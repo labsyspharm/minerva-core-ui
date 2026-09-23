@@ -23,6 +23,33 @@ export const CELL_OUTLINE_RGB = [
   [255, 0, 255], // #ff00ff
 ] as const;
 
+/** Same XOR palette index as the mask fragment shader `randomColor`. */
+export function defaultClassColor(
+  classId: number,
+  colorSeed: number,
+): { r: number; g: number; b: number } {
+  const i = ((classId ^ colorSeed) >>> 0) % CELL_OUTLINE_RGB.length;
+  const [r, g, b] = CELL_OUTLINE_RGB[i];
+  return { r, g, b };
+}
+
+export type ClassVisibility =
+  | { mode: "all" }
+  | { mode: "hide"; names: readonly string[] }
+  | { mode: "show"; names: readonly string[] };
+
+export type MaskGpuStyle = {
+  /** R8, class index per cell id. 0 = unnamed. */
+  index: Uint8Array;
+  width: number;
+  height: number;
+  /** RGBA8, row of class colors. Texel 0 unused. */
+  palette: Uint8Array;
+  missHidden: boolean;
+  indexRev: string;
+  rev: string;
+};
+
 function cellOutlineRgbFromSeed(seed: string): [number, number, number] {
   let h = 2166136261;
   for (let i = 0; i < seed.length; i++) {

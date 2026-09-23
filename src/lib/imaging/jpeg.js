@@ -6,7 +6,7 @@ import {
   JPEG_PYRAMID_TILE_SIZE,
   jpegPyramidLevels,
 } from "./jpegPyramid";
-import { VIV_TILE_MAX_CACHE_SIZE } from "./viv";
+import { TILE_CACHE_PROPS } from "./viv";
 
 function createJpegLayers(meta) {
   const { channelsVisible, colors, selections } = meta.settings;
@@ -20,7 +20,7 @@ function createJpegLayers(meta) {
     excludeBackground: true,
     loader: meta.jpegLoader,
     refinementStrategy: "no-overlap",
-    maxCacheSize: VIV_TILE_MAX_CACHE_SIZE,
+    ...TILE_CACHE_PROPS,
     id: meta.layerId,
     channelsVisible,
     colors,

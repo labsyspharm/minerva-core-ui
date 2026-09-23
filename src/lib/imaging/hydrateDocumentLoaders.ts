@@ -21,9 +21,8 @@ import {
   jpegTransferFromImageSource,
 } from "./cubeRootEncoding";
 import type { JpegLoaderEntry, OmeLoaderEntry } from "./loaderEntries";
+import { createOmeDecodePool, type DecodePool } from "./omeDecodePool";
 import type { Loader } from "./viv";
-import type { PoolClass } from "./workers/pool";
-import { Pool } from "./workers/pool";
 import { wrapOmeLoaderJpegExport } from "./wrapOmeLoaderCubeRoot";
 
 export type HydrateDocumentLoadersResult = {
@@ -42,7 +41,7 @@ export type HydrateDocumentLoadersOpts = {
   /** Used when source.url is relative (e.g. document.json URL or page URL). */
   documentUrl?: string;
   /** When omitted, a default worker pool is created for OME decode. Pass `null` to skip pooling. */
-  pool?: PoolClass | null;
+  pool?: DecodePool | null;
   requestPermission?: boolean;
   /** When false, skip `local` file-handle sources (CDN / URL-only stories). */
   includeLocal?: boolean;
@@ -105,7 +104,8 @@ export async function hydrateDocumentLoaders(
   const deniedHandleKeys: string[] = [];
   const missingHandleKeys: string[] = [];
   const loaderErrors: string[] = [];
-  const pool = opts.pool === null ? undefined : (opts.pool ?? new Pool());
+  const pool =
+    opts.pool === null ? undefined : (opts.pool ?? createOmeDecodePool());
   const dicomSeriesSeen = new Set<string>();
   const requestPermission = opts.requestPermission ?? false;
   const includeLocal = opts.includeLocal ?? true;
@@ -140,6 +140,7 @@ export async function hydrateDocumentLoaders(
             kind: "url",
             url: resolveOmeSourceUrl(documentUrl, im.source.url),
             ...(pool ? { pool } : {}),
+            rgbDisplay: im.rgbDisplay,
           });
           omeLoaderEntries.push({
             ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
@@ -165,13 +166,12 @@ export async function hydrateDocumentLoaders(
           break;
         }
         if (!(await findFile({ handle }))) break;
-        const file = await handle.getFile();
         try {
           const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
             kind: "local",
             handle,
-            in_f: file.name,
             ...(pool ? { pool } : {}),
+            rgbDisplay: im.rgbDisplay,
           });
           omeLoaderEntries.push({
             ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),

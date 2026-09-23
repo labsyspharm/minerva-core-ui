@@ -3,6 +3,7 @@ import { getImageSize } from "@hms-dbmi/viv";
 import {
   effectiveChannelKind,
   isRgbDisplayImage,
+  sourceDtypeMax,
 } from "@/lib/imaging/channelKind";
 import type {
   ChannelGroup,
@@ -27,12 +28,6 @@ export type OmeExportLevelSize = {
 
 /** Unsigned label dtypes supported by zlib mask OME-TIFF export. */
 export type LabelDtype = "Uint8" | "Uint16" | "Uint32";
-
-/** Max raw intensity for contrast mapping (8-bit vs everything else as 16-bit). */
-export function dtypeMaxForChannel(sourceDataTypeId?: string): number {
-  if (sourceDataTypeId === "Uint8" || sourceDataTypeId === "Int8") return 255;
-  return 65535;
-}
 
 export function bitsPerSampleFromDtype(dtype: string): 8 | 16 | 32 {
   if (dtype === "Uint8" || dtype === "Int8") return 8;
@@ -303,7 +298,7 @@ export function contrastLimitsForExportedChannel(
       return { lowerLimit: row.lowerLimit, upperLimit: row.upperLimit };
     }
   }
-  const max = dtypeMaxForChannel(channel.sourceDataTypeId);
+  const max = sourceDtypeMax(channel.sourceDataTypeId);
   return {
     lowerLimit: channel.lowerLimit ?? 0,
     upperLimit: channel.upperLimit ?? max,

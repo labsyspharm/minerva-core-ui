@@ -3,6 +3,7 @@ import {
   DEFAULT_MASK_VISUALIZATION,
   isImageChannel,
   isMaskChannel,
+  isUint8Dtype,
   normalizeMaskVisualization,
   planarRgbDisplayColor,
 } from "@/lib/imaging/channelKind";
@@ -21,6 +22,14 @@ export const IMPORT_DEFAULT_SEED_HEX = [
 
 export const IMPORT_DEFAULT_LOWER_LIMIT = 2 ** 5;
 export const IMPORT_DEFAULT_UPPER_LIMIT = 2 ** 14;
+
+/** 8-bit planes use the full 0–255 window; 16-bit keeps the IF GMM seed. */
+function defaultSourceContrastLimits(
+  sourceDataTypeId?: string,
+): [number, number] {
+  if (isUint8Dtype(sourceDataTypeId)) return [0, 255];
+  return [IMPORT_DEFAULT_LOWER_LIMIT, IMPORT_DEFAULT_UPPER_LIMIT];
+}
 
 export function looksLikeImportDefaultLimits(
   lower: number,
@@ -115,9 +124,8 @@ export function effectiveSourceLimits(channel: Channel): [number, number] {
   if (channel.gmmContrastLimits) {
     return [channel.gmmContrastLimits.lower, channel.gmmContrastLimits.upper];
   }
-  const lo = channel.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT;
-  const hi = channel.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT;
-  return [lo, hi];
+  const [defLo, defHi] = defaultSourceContrastLimits(channel.sourceDataTypeId);
+  return [channel.lowerLimit ?? defLo, channel.upperLimit ?? defHi];
 }
 
 export function effectiveMaskVisualization(row: {
@@ -165,6 +173,7 @@ export function seedDefaultSourceChannelStyles(
 ): Channel[] {
   let paletteIndex = 0;
   return sourceChannels.map((sc) => {
+    const [defLo, defHi] = defaultSourceContrastLimits(sc.sourceDataTypeId);
     if (sc.samples === 3) {
       return {
         ...sc,
@@ -182,21 +191,13 @@ export function seedDefaultSourceChannelStyles(
         maskVisualization: sc.maskVisualization ?? DEFAULT_MASK_VISUALIZATION,
       };
     }
-    const planar = planarRgbDisplayColor(sc, sourceChannels);
-    if (planar) {
+    const tint = sc.color ?? planarRgbDisplayColor(sc, sourceChannels);
+    if (tint) {
       return {
         ...sc,
-        color: sc.color ?? planar,
-        lowerLimit: sc.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
-        upperLimit: sc.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT,
-      };
-    }
-    if (sc.color) {
-      return {
-        ...sc,
-        color: sc.color,
-        lowerLimit: sc.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
-        upperLimit: sc.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT,
+        color: tint,
+        lowerLimit: sc.lowerLimit ?? defLo,
+        upperLimit: sc.upperLimit ?? defHi,
       };
     }
     const fromPalette =
@@ -208,8 +209,8 @@ export function seedDefaultSourceChannelStyles(
       ...(fromPalette
         ? { color: { r: fromPalette.r, g: fromPalette.g, b: fromPalette.b } }
         : {}),
-      lowerLimit: sc.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
-      upperLimit: sc.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT,
+      lowerLimit: sc.lowerLimit ?? defLo,
+      upperLimit: sc.upperLimit ?? defHi,
     };
   });
 }

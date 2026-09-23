@@ -154,13 +154,6 @@
   flex-shrink: 0;
 }
 
-.formatRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  min-width: 0;
-}
-
 .urlRow {
   display: flex;
   flex-wrap: wrap;

@@ -5,8 +5,8 @@ import {
   resolveImageImportRole,
 } from "@/lib/imaging/channelKind";
 import { loadOmeLoaderForRole } from "@/lib/imaging/filesystem";
+import type { DecodePool } from "@/lib/imaging/omeDecodePool";
 import type { Loader } from "@/lib/imaging/viv";
-import type { PoolClass } from "@/lib/imaging/workers/pool";
 import type { ConfigGroup } from "@/lib/legacy/exhibit";
 import type { Image } from "@/lib/stores/documentSchema";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
@@ -26,6 +26,30 @@ import {
   applySharedImportPaletteToSourceChannels,
 } from "./psudoPalette";
 import { seedMaskSourceChannelStyles } from "./sourceChannelStyle";
+
+const PACKED_RGB_IF_NAMES = new Set(["r", "g", "b"]);
+
+/** Viv planar packed RGB names the planes R/G/B; IF import uses Channel 1/2/3. */
+function namePackedRgbIfChannels(channels: Channel[]): Channel[] {
+  const intensity = channels
+    .filter(isImageChannel)
+    .sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+  if (intensity.length !== 3) return channels;
+  if (
+    !intensity.every((c) =>
+      PACKED_RGB_IF_NAMES.has((c.name ?? "").trim().toLowerCase()),
+    )
+  ) {
+    return channels;
+  }
+  const names = new Map(
+    intensity.map((c, i) => [c.id, `Channel ${i + 1}`] as const),
+  );
+  return channels.map((c) => {
+    const name = names.get(c.id);
+    return name ? { ...c, name } : c;
+  });
+}
 
 export type BuiltOmeImportSlice = {
   sourceChannels: Channel[];
@@ -72,10 +96,17 @@ export function buildOmeImportSlice(args: {
     basename,
     existingImages,
   );
+  let extractedGroups = extracted.ChannelGroups;
+  if (role === "intensity" && rgbDisplay === false) {
+    sourceChannels = namePackedRgbIfChannels(sourceChannels);
+    sourceChannels = sourceChannels.map((c, i) =>
+      c.name === "H&E" ? { ...c, name: `Channel ${i + 1}` } : c,
+    );
+    extractedGroups = [];
+  }
   if (role === "segmentation") {
     sourceChannels = seedMaskSourceChannelStyles(sourceChannels);
   }
-  let extractedGroups = extracted.ChannelGroups;
   const taggedForRgb =
     rgbDisplay == null
       ? sourceChannels
@@ -90,7 +121,7 @@ export function buildOmeImportSlice(args: {
     loader,
     basename,
     role,
-    sourceChannels,
+    taggedForRgb,
     persistRgbDisplay,
   );
   if (
@@ -115,7 +146,7 @@ export function buildOmeImportSlice(args: {
     ];
   }
   return {
-    sourceChannels,
+    sourceChannels: taggedForRgb,
     extractedGroups,
     nextImages,
   };
@@ -140,9 +171,9 @@ export async function finalizeAppendedIntensityGroups(args: {
 /** Re-apply source-channel palette into images (fresh replace, no groups). */
 export async function applyPaletteToFlatImportImages(
   images: Image[],
-  sourceChannels: Channel[],
 ): Promise<Image[]> {
-  const styled = await applySharedImportPaletteToSourceChannels(sourceChannels);
+  const flat = flattenImageChannelsInDocumentOrder(images);
+  const styled = await applySharedImportPaletteToSourceChannels(flat);
   return applySourceChannelsToImages(images, styled);
 }
 
@@ -167,7 +198,7 @@ export async function replaceOmeLocalImageInDocument(args: {
   images: Image[];
   imageId: string;
   handle: Handle.File;
-  pool?: PoolClass;
+  pool?: DecodePool;
 }): Promise<ReplaceOmeLocalImageResult> {
   const { images, imageId, handle, pool } = args;
   const oldImage = images.find((im) => im.id === imageId);
@@ -189,8 +220,8 @@ export async function replaceOmeLocalImageInDocument(args: {
   const loader = await loadOmeLoaderForRole(role, {
     kind: "local",
     handle,
-    in_f: file.name,
     pool,
+    rgbDisplay: oldImage.rgbDisplay,
   });
   const newImageId = crypto.randomUUID();
   const withoutOld = images.filter((im) => im.id !== imageId);

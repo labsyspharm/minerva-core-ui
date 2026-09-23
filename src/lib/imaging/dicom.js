@@ -4,6 +4,7 @@ import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 import * as dcmjs from "dcmjs";
 import { DicomPixelSource } from "./dicomPixelSource";
 import { DicomTIFFImage } from "./dicomTiffImage";
+import { TILE_CACHE_PROPS } from "./viv";
 
 const { naturalizeDataset } = dcmjs.data.DicomMetaDictionary;
 
@@ -781,6 +782,7 @@ function createTileLayers(meta) {
       visible: anyChannelVisible,
       id: "rgb_image",
       modelMatrix: meta.modelMatrix,
+      ...TILE_CACHE_PROPS,
       getTileData: async ({ index, signal }) => {
         const { x, y, z } = index;
         const source = loaderPlanes[Math.abs(-z)];
@@ -830,6 +832,7 @@ function createTileLayers(meta) {
     visible: true,
     loader: loaderPlanes,
     refinementStrategy: "best-available",
+    ...TILE_CACHE_PROPS,
     // Contrast limits in ID force layer recreate (avoids flash on group switch).
     id: `${imageID}-${contrastLimits.map(([l, u]) => `${l}-${u}`).join("-")}`,
     channelsVisible,

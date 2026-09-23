@@ -6,6 +6,7 @@ import { applyStackVisibilities } from "../imaging/channelCompositor";
 import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
 import {
+  type ClassVisibility,
   type ImageSelectionMask,
   polygonRingFromShape,
   rasterizePolygonToImageMask,
@@ -795,6 +796,10 @@ export interface AppStore {
   imageOrientationPreview: ImageOrientationPreview | null;
   setImageOrientationPreview: (preview: ImageOrientationPreview | null) => void;
   channelVisibilities: Record<string, boolean>;
+  /**
+   * Session-only per-feature-table class visibility. Missing key ≡ all visible.
+   */
+  featureTableVisibilities: Record<string, ClassVisibility>;
   groupNames: Record<string, string>;
 
   finalizeEllipse: () => void;
@@ -937,6 +942,7 @@ const overlayInitialState = {
   maskVisualizationPreview: null,
   imageOrientationPreview: null,
   channelVisibilities: {},
+  featureTableVisibilities: {},
   channelGroupRowVisibilities: {},
   groupNames: {},
   targetWaypointCamera: null,
@@ -1209,6 +1215,7 @@ export const useAppStore = create<AppStore>()(
           imageSelectionMask: null,
           maskVisualizationPreview: null,
           channelVisibilities: vis,
+          featureTableVisibilities: {},
           activeStoryIndex: null,
           waypointAuthoring: new Map(),
           authoringWaypointShapesIndex: null,
