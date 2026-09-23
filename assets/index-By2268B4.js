@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BF5w7TDe.js","./pako.esm-KbdoS3Oq.js","./lerc-BrwXMAO1.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-9iF7Qrw4.js","./pako.esm-KbdoS3Oq.js","./lerc-DqGHb9oH.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -66495,26 +66495,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DsKSNuz9.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-B6o2vmVV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DOKodgMD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-D7KjBaWw.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-D90ld6PX.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DACMlbg5.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BF5w7TDe.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CJD2Qql0.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BrwXMAO1.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-9iF7Qrw4.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BAz8hZr-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DqGHb9oH.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CDR5B-0j.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-ISX6mzcX.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-Dw_IuWhf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CqjSelHa.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -93223,9 +93223,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const fallback = approximateAutoContrastFromUint16Histogram(u16);
     return fallback;
   }
-  const FETCH_CONCURRENCY = 4;
+  const FETCH_CONCURRENCY = 1;
   const FIT_CONCURRENCY = 2;
   const GMM_MAX_SAMPLES = 4e4;
+  const GMM_MAX_DECODE_PIXELS = 4e6;
+  const GMM_MAX_TILES = 8;
   const emptySnapshot = {
     pendingIds: []
   };
@@ -93361,6 +93363,48 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }));
     if (groupsChanged) doc.setChannelGroups(nextGroups);
   }
+  function planeSize$1(plane) {
+    const xi2 = plane.labels.indexOf("x");
+    const yi2 = plane.labels.indexOf("y");
+    return {
+      width: xi2 >= 0 ? plane.shape[xi2] : 0,
+      height: yi2 >= 0 ? plane.shape[yi2] : 0
+    };
+  }
+  function pickTileCoords(nx, ny) {
+    if (nx <= 0 || ny <= 0) return [];
+    const cx = Math.floor(nx / 2);
+    const cy = Math.floor(ny / 2);
+    const out = [];
+    const seen2 = /* @__PURE__ */ new Set();
+    const add2 = (x2, y2) => {
+      if (x2 < 0 || y2 < 0 || x2 >= nx || y2 >= ny || out.length >= GMM_MAX_TILES) {
+        return;
+      }
+      const k2 = `${x2},${y2}`;
+      if (seen2.has(k2)) return;
+      seen2.add(k2);
+      out.push([
+        x2,
+        y2
+      ]);
+    };
+    add2(cx, cy);
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) add2(cx + dx, cy + dy);
+    }
+    const sx = Math.max(1, Math.floor(nx / 3));
+    const sy = Math.max(1, Math.floor(ny / 3));
+    for (let y2 = 0; y2 < ny; y2 += sy) {
+      for (let x2 = 0; x2 < nx; x2 += sx) add2(x2, y2);
+    }
+    return out;
+  }
+  function sampleToUint16(v2, u8) {
+    if (u8) return v2 << 8;
+    if (!Number.isFinite(v2)) return 0;
+    return Math.max(0, Math.min(65535, Math.round(v2)));
+  }
   async function fetchCoarsestUint16(loader, sourceIndex) {
     var _a2;
     const planes = loader.data;
@@ -93368,32 +93412,45 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const cIdx = planes[0].labels.indexOf("c");
     const nC = cIdx >= 0 ? planes[0].shape[cIdx] : 1;
     if (sourceIndex < 0 || sourceIndex >= nC) return null;
-    let data2;
+    const selection = {
+      t: 0,
+      z: 0,
+      c: sourceIndex
+    };
+    const out = new Uint16Array(GMM_MAX_SAMPLES);
     for (let i2 = planes.length - 1; i2 >= 0; i2--) {
-      try {
-        const raster = await planes[i2].getRaster({
-          selection: {
-            t: 0,
-            z: 0,
-            c: sourceIndex
-          }
-        });
-        if ((_a2 = raster == null ? void 0 : raster.data) == null ? void 0 : _a2.length) {
-          data2 = raster.data;
-          break;
+      const plane = planes[i2];
+      const { width, height } = planeSize$1(plane);
+      if (width <= 0 || height <= 0) continue;
+      const ts = Math.max(1, plane.tileSize || Math.max(width, height));
+      const nx = Math.ceil(width / ts);
+      const ny = Math.ceil(height / ts);
+      const maxTile = Math.min(ts, width) * Math.min(ts, height);
+      if (maxTile > GMM_MAX_DECODE_PIXELS) continue;
+      let o2 = 0;
+      for (const [x2, y2] of pickTileCoords(nx, ny)) {
+        if (o2 >= GMM_MAX_SAMPLES) break;
+        let data2;
+        try {
+          const tile = await plane.getTile({
+            x: x2,
+            y: y2,
+            selection
+          });
+          if ((_a2 = tile == null ? void 0 : tile.data) == null ? void 0 : _a2.length) data2 = tile.data;
+        } catch {
+          continue;
         }
-      } catch {
+        if (!(data2 == null ? void 0 : data2.length) || data2.length > GMM_MAX_DECODE_PIXELS) continue;
+        const u8 = data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray;
+        const stride = Math.max(1, Math.ceil(data2.length / (GMM_MAX_SAMPLES - o2)));
+        for (let p2 = 0; p2 < data2.length && o2 < GMM_MAX_SAMPLES; p2 += stride) {
+          out[o2++] = sampleToUint16(Number(data2[p2]), u8);
+        }
       }
+      if (o2 > 0) return o2 < GMM_MAX_SAMPLES ? out.subarray(0, o2) : out;
     }
-    if (!(data2 == null ? void 0 : data2.length)) return null;
-    const stride = Math.max(1, Math.ceil(data2.length / GMM_MAX_SAMPLES));
-    const out = new Uint16Array(Math.ceil(data2.length / stride));
-    const u8 = data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray;
-    for (let i2 = 0, o2 = 0; i2 < data2.length; i2 += stride) {
-      const v2 = Number(data2[i2]);
-      out[o2++] = u8 ? v2 << 8 : Number.isFinite(v2) ? Math.max(0, Math.min(65535, Math.round(v2))) : 0;
-    }
-    return out;
+    return null;
   }
   async function runJob(job, gen) {
     await acquire(fetchUsedBox, fetchWaiters, FETCH_CONCURRENCY);
@@ -93646,35 +93703,41 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     snapshot = emptySnapshot;
     for (const listener of listeners) listener();
   }
+  const MAX_HISTOGRAM_TILE_PIXELS = 4e6;
   function histogramBinFromPixels(bits, width, data2) {
-    const n_bins = 50;
-    const max_power = bits;
-    const thresholds = [
-      ...new Set([
-        ...new Array(n_bins).keys()
-      ].map((x2) => {
-        return Math.floor(2 ** (max_power * x2 / n_bins));
-      }))
-    ];
-    thresholds.sort((a2, b2) => a2 - b2);
-    const step = 4;
     const len2 = data2.length;
-    let indices = [
-      ...new Array(len2).keys()
-    ].filter((i2) => i2 % step === 0 || Math.floor(i2 / width) % step === 0).filter((i2) => data2[i2] > 0);
-    return thresholds.reduce((binned, threshold, t2) => {
-      if (t2 > 0 && thresholds[t2 - 1] === threshold) {
-        return binned.concat(binned.slice(-1));
+    if (len2 === 0 || len2 > MAX_HISTOGRAM_TILE_PIXELS) return [];
+    const n_bins = 50;
+    const seen2 = /* @__PURE__ */ new Set();
+    const thresholds = [];
+    for (let x2 = 0; x2 < n_bins; x2++) {
+      const t2 = Math.floor(2 ** (bits * x2 / n_bins));
+      if (seen2.has(t2)) continue;
+      seen2.add(t2);
+      thresholds.push(t2);
+    }
+    thresholds.sort((a2, b2) => a2 - b2);
+    const counts = new Array(thresholds.length).fill(0);
+    const step = 4;
+    const w2 = Math.max(1, width);
+    const nTh = thresholds.length;
+    for (let i2 = 0; i2 < len2; i2++) {
+      if (i2 % step !== 0 && Math.floor(i2 / w2) % step !== 0) continue;
+      const v2 = data2[i2];
+      if (!(v2 > 0)) continue;
+      let lo = 0;
+      let hi2 = nTh;
+      while (lo < hi2) {
+        const mid = lo + hi2 >> 1;
+        if (v2 <= thresholds[mid]) hi2 = mid;
+        else lo = mid + 1;
       }
-      const outside_indices = indices.filter((i2) => data2[i2] > threshold);
-      const pixel_count = indices.length - outside_indices.length;
-      indices = outside_indices;
-      binned.push(pixel_count);
-      return binned;
-    }, []);
+      if (lo < nTh) counts[lo]++;
+    }
+    return counts;
   }
   function WorkerWrapper$3(options) {
-    return new Worker("" + new URL("histogram.worker-gh7SAJl9.js", import.meta.url).href, {
+    return new Worker("" + new URL("histogram.worker-DEu4r50S.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -93734,6 +93797,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return singleton$1;
   }
   async function histogramBinTile(bits, width, data2) {
+    if (data2.length > MAX_HISTOGRAM_TILE_PIXELS) return [];
     const pool = getHistogramBinPool();
     if (pool) {
       try {
@@ -93902,12 +93966,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const captureTile = async (index2, planes) => {
     const level = Math.abs(index2.z);
     const z_plane = planes[level];
+    const { x: x2, y: y2 } = index2;
+    const { width: pw, height: ph2 } = getImageSize(z_plane);
+    const ts = Math.max(1, z_plane.tileSize);
+    const tw = Math.max(0, Math.min(ts, pw - x2 * ts));
+    const th2 = Math.max(0, Math.min(ts, ph2 - y2 * ts));
+    if (tw * th2 > MAX_HISTOGRAM_TILE_PIXELS) {
+      return {
+        data: new Uint8Array(0),
+        width: 0,
+        height: 0
+      };
+    }
     const selection = {
       t: 0,
       z: 0,
       c: index2.c
     };
-    const { x: x2, y: y2 } = index2;
     const signal = AbortSignal.timeout(HISTOGRAM_TILE_TIMEOUT_MS);
     const tile = await z_plane.getTile({
       selection,
@@ -93923,7 +93998,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   };
   const bin = async (inputs) => {
-    const { data: data2, width } = await captureTile(inputs.index, inputs.planes);
+    const { data: data2, width, height } = await captureTile(inputs.index, inputs.planes);
+    if (!(data2 == null ? void 0 : data2.length) || width * height > MAX_HISTOGRAM_TILE_PIXELS) {
+      return [];
+    }
     return histogramBinTile(inputs.bits, width, data2);
   };
   const toTilePlane$1 = (zoom, planes) => {
@@ -254402,12 +254480,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-22T15:08:19.740Z");
+    const label2 = utcShort("2026-09-23T18:15:58.163Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-22T15:08:19.740Z",
+      title: "2026-09-23T18:15:58.163Z",
       children: [
         "Updated ",
         label2,
