@@ -2,7 +2,7 @@ const MAX_HISTOGRAM_TILE_PIXELS = 4e6;
 function histogramBinFromPixels(bits, width, data) {
   const len = data.length;
   if (len === 0 || len > MAX_HISTOGRAM_TILE_PIXELS) return [];
-  const n_bins = 50;
+  const n_bins = 100;
   const seen = /* @__PURE__ */ new Set();
   const thresholds = [];
   for (let x = 0; x < n_bins; x++) {
