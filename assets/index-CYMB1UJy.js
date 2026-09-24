@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-B4qSSr9l.js","./pako.esm-KbdoS3Oq.js","./lerc-B_TIRq4V.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BHiQMuVx.js","./pako.esm-KbdoS3Oq.js","./lerc-LdkRe7XC.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -17693,7 +17693,7 @@ let __tla = (async () => {
     return PLANAR_RGB_DISPLAY_COLORS[slot];
   }
   function isGmmEligible(channel, allChannels) {
-    return isImageChannel(channel) && channel.samples !== 3 && !isRgbDisplayChannel(channel, allChannels) && !isUint8Dtype(channel.sourceDataTypeId);
+    return isImageChannel(channel) && channel.samples !== 3 && !isRgbDisplayChannel(channel, allChannels) && planarRgbSlotFromName(channel.name ?? "") == null && !isUint8Dtype(channel.sourceDataTypeId);
   }
   function isRgbDisplayChannel(channel, allChannels) {
     if (!isImageChannel(channel)) return false;
@@ -18299,7 +18299,8 @@ let __tla = (async () => {
       channelGroups: vis.channelGroups,
       stackVisibilities: vis.stackVisibilities,
       groupRowVisibilities: vis.groupRowVisibilities,
-      hasVisibilityMap: true
+      hasVisibilityMap: true,
+      requireColor: false
     });
   }
   function vivShownIntensitySourceIds(vis) {
@@ -21899,29 +21900,6 @@ let __tla = (async () => {
     maxCacheByteSize: VIV_TILE_MAX_CACHE_BYTE_SIZE,
     onTileLoad: stampDeckTileByteLength
   };
-  function mergeStickyIntensityOccupancy(args) {
-    const preferredVisible = args.visibleSourceIds.slice(0, args.maxChannels);
-    const visibleSet = new Set(preferredVisible);
-    const ids = args.stickySourceIds.filter((id2) => args.loaderSourceIds.has(id2));
-    for (const id2 of preferredVisible) {
-      if (!ids.includes(id2)) ids.push(id2);
-    }
-    while (ids.length > args.maxChannels) {
-      let dropAt = -1;
-      for (let i2 = ids.length - 1; i2 >= 0; i2--) {
-        if (!visibleSet.has(ids[i2])) {
-          dropAt = i2;
-          break;
-        }
-      }
-      if (dropAt < 0) dropAt = ids.length - 1;
-      ids.splice(dropAt, 1);
-    }
-    return {
-      sourceChannelIds: ids,
-      channelsVisible: ids.map((id2) => visibleSet.has(id2))
-    };
-  }
   function loaderPixelSizeXY(loader) {
     var _a2, _b2;
     const px = (_a2 = loader.metadata) == null ? void 0 : _a2.Pixels;
@@ -21993,7 +21971,7 @@ let __tla = (async () => {
     };
   };
   const toSettings = (opts) => {
-    return (activeChannelGroupId, modality, loader, channelVisibilities, loaderSourceImageId, channelGroupRowVisibilities = {}, stickySourceChannelIds = [], hideUntilGmm = false) => {
+    return (activeChannelGroupId, modality, loader, channelVisibilities, loaderSourceImageId, channelGroupRowVisibilities = {}) => {
       const { SourceChannels, channelGroups = [] } = opts;
       if (!loader) return toDefaultSettings(3);
       const sourceImageMatches = (image_id) => loaderSourceImageId !== void 0 && loaderSourceImageId !== "" ? image_id === loaderSourceImageId : image_id === modality;
@@ -22013,31 +21991,13 @@ let __tla = (async () => {
         hasVisibilityMap: true
       });
       if (composited.length > MAX_VIV_INTENSITY_CHANNELS && false) ;
-      const byId = new Map(composited.map((layer) => [
-        layer.sc.id,
-        layer
-      ]));
-      const onLoaderById = new Map(onLoader.map((sc2) => [
-        sc2.id,
-        sc2
-      ]));
-      const { sourceChannelIds, channelsVisible } = mergeStickyIntensityOccupancy({
-        visibleSourceIds: composited.map((layer) => layer.sc.id),
-        stickySourceIds: stickySourceChannelIds,
-        maxChannels: MAX_VIV_INTENSITY_CHANNELS,
-        loaderSourceIds: new Set(onLoader.map((sc2) => sc2.id))
-      });
+      const layers = composited.slice(0, MAX_VIV_INTENSITY_CHANNELS);
       const selections = [];
       const colors = [];
       const contrastLimits = [];
-      for (let i2 = 0; i2 < sourceChannelIds.length; i2++) {
-        const id2 = sourceChannelIds[i2];
-        const visibleLayer = byId.get(id2);
-        const sc2 = (visibleLayer == null ? void 0 : visibleLayer.sc) ?? onLoaderById.get(id2);
-        if (!sc2) {
-          throw new Error(`[viv] sticky source ${id2} missing from loader`);
-        }
-        const gc2 = (visibleLayer == null ? void 0 : visibleLayer.gc) ?? (activeGroup == null ? void 0 : activeGroup.channels.find((row2) => row2.channelId === id2)) ?? null;
+      const channelsVisible = [];
+      const sourceChannelIds = [];
+      for (const { sc: sc2, gc: gc2 } of layers) {
         const [lo, hi2] = gc2 ? [
           gc2.lowerLimit,
           gc2.upperLimit
@@ -22057,9 +22017,8 @@ let __tla = (async () => {
           lo,
           hi2
         ]);
-        if (hideUntilGmm && isGmmEligible(sc2, SourceChannels) && sc2.gmmContrastLimits == null) {
-          channelsVisible[i2] = false;
-        }
+        channelsVisible.push(true);
+        sourceChannelIds.push(sc2.id);
       }
       return {
         selections,
@@ -66497,26 +66456,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-Cq4GafVE.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-wV54S2GY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DUxrOSjB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CdcdB6HI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-wwsYMuQE.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DKXw19AN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-B4qSSr9l.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CMs0qDo8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-B_TIRq4V.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BHiQMuVx.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DEIKQy8Y.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-LdkRe7XC.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Dr-rroNV.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Db3CLKsD.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DBD6ppbr.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-0S9BeMI_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -90180,39 +90139,39 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     }), document.body);
   }
-  const channelNameInput = "_channelNameInput_m65vh_3";
-  const channelRowMain = "_channelRowMain_m65vh_12";
-  const channelRowTitle = "_channelRowTitle_m65vh_19";
-  const channelRowMid = "_channelRowMid_m65vh_29";
-  const channelRowMainMask = "_channelRowMainMask_m65vh_37";
-  const channelNameSlot = "_channelNameSlot_m65vh_45";
-  const channelRowTrailing = "_channelRowTrailing_m65vh_60";
-  const channelImageSubtitle = "_channelImageSubtitle_m65vh_76";
-  const maskModeControls = "_maskModeControls_m65vh_89";
-  const maskModeGroup = "_maskModeGroup_m65vh_98";
-  const maskModeGroupLabel = "_maskModeGroupLabel_m65vh_107";
-  const maskOpacityLabel = "_maskOpacityLabel_m65vh_108";
-  const maskControlsPanel = "_maskControlsPanel_m65vh_116";
-  const maskVizToggle = "_maskVizToggle_m65vh_121";
-  const maskOpacityControl = "_maskOpacityControl_m65vh_133";
-  const maskOpacityInputRow = "_maskOpacityInputRow_m65vh_142";
-  const maskOpacitySlider = "_maskOpacitySlider_m65vh_154";
-  const maskOpacityValue = "_maskOpacityValue_m65vh_222";
-  const cursorHintHost = "_cursorHintHost_m65vh_232";
-  const cursorHint = "_cursorHint_m65vh_232";
-  const channelVisibilityButton = "_channelVisibilityButton_m65vh_253";
-  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_m65vh_277";
-  const channelColorSwatch = "_channelColorSwatch_m65vh_281";
-  const channelColorSwatchStatic = "_channelColorSwatchStatic_m65vh_282";
-  const channelColorSwatchUnfilled = "_channelColorSwatchUnfilled_m65vh_295";
-  const detailChannelRowLocked = "_detailChannelRowLocked_m65vh_313";
-  const maskVizOption = "_maskVizOption_m65vh_317";
-  const maskVizOptionActive = "_maskVizOptionActive_m65vh_342";
-  const maskVizIconOutline = "_maskVizIconOutline_m65vh_347";
-  const maskVizIconFull = "_maskVizIconFull_m65vh_348";
-  const maskVizSwatchWhite = "_maskVizSwatchWhite_m65vh_349";
-  const maskVizSwatchRandom = "_maskVizSwatchRandom_m65vh_350";
-  const channelRow = "_channelRow_m65vh_12";
+  const channelNameInput = "_channelNameInput_1d485_3";
+  const channelRowMain = "_channelRowMain_1d485_12";
+  const channelRowTitle = "_channelRowTitle_1d485_19";
+  const channelRowMid = "_channelRowMid_1d485_29";
+  const channelRowMainMask = "_channelRowMainMask_1d485_37";
+  const channelNameSlot = "_channelNameSlot_1d485_45";
+  const channelRowTrailing = "_channelRowTrailing_1d485_60";
+  const channelImageSubtitle = "_channelImageSubtitle_1d485_76";
+  const maskModeControls = "_maskModeControls_1d485_89";
+  const maskModeGroup = "_maskModeGroup_1d485_98";
+  const maskModeGroupLabel = "_maskModeGroupLabel_1d485_107";
+  const maskOpacityLabel = "_maskOpacityLabel_1d485_108";
+  const maskControlsPanel = "_maskControlsPanel_1d485_116";
+  const maskVizToggle = "_maskVizToggle_1d485_121";
+  const maskOpacityControl = "_maskOpacityControl_1d485_133";
+  const maskOpacityInputRow = "_maskOpacityInputRow_1d485_142";
+  const maskOpacitySlider = "_maskOpacitySlider_1d485_154";
+  const maskOpacityValue = "_maskOpacityValue_1d485_222";
+  const cursorHintHost = "_cursorHintHost_1d485_232";
+  const cursorHint = "_cursorHint_1d485_232";
+  const channelVisibilityButton = "_channelVisibilityButton_1d485_259";
+  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_1d485_283";
+  const channelColorSwatch = "_channelColorSwatch_1d485_287";
+  const channelColorSwatchStatic = "_channelColorSwatchStatic_1d485_288";
+  const channelColorSwatchUnfilled = "_channelColorSwatchUnfilled_1d485_301";
+  const detailChannelRowLocked = "_detailChannelRowLocked_1d485_319";
+  const maskVizOption = "_maskVizOption_1d485_323";
+  const maskVizOptionActive = "_maskVizOptionActive_1d485_348";
+  const maskVizIconOutline = "_maskVizIconOutline_1d485_353";
+  const maskVizIconFull = "_maskVizIconFull_1d485_354";
+  const maskVizSwatchWhite = "_maskVizSwatchWhite_1d485_355";
+  const maskVizSwatchRandom = "_maskVizSwatchRandom_1d485_356";
+  const channelRow = "_channelRow_1d485_12";
   const styles$q = {
     channelNameInput,
     channelRowMain,
@@ -90324,8 +90283,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         props.enabled && pos ? reactDomExports.createPortal(jsxRuntimeExports.jsx("output", {
           className: styles$q.cursorHint,
           style: {
-            left: pos.x,
-            top: pos.y
+            "--hint-x": `${pos.x}px`,
+            "--hint-y": `${pos.y}px`
           },
           children: props.label
         }), document.body) : null
@@ -90550,6 +90509,38 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       b: color2.b ?? 0
     };
   }
+  const STACK_SEED_COLORS = [
+    ...IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex)),
+    {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    {
+      r: 255,
+      g: 0,
+      b: 0
+    },
+    {
+      r: 0,
+      g: 255,
+      b: 0
+    },
+    {
+      r: 0,
+      g: 0,
+      b: 255
+    },
+    {
+      r: 255,
+      g: 255,
+      b: 0
+    }
+  ];
+  const STACK_SEED_HEX = new Set(STACK_SEED_COLORS.map((c2) => rgbToHex$1(c2)));
+  function isStackSeedColor(color2) {
+    return STACK_SEED_HEX.has(rgbToHex$1(color2));
+  }
   function defaultContrastLimits(nChannels) {
     const out = new Uint16Array(nChannels * 2);
     for (let i2 = 0; i2 < nChannels; i2++) {
@@ -90597,18 +90588,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   let psudoWarmupPromise = null;
   function warmupPsudoPalette() {
     if (!psudoWarmupPromise) {
-      psudoWarmupPromise = __vitePreload(() => import("./index-DLxvjXSp.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.warmup());
+      psudoWarmupPromise = __vitePreload(() => import("./index-B19y9REJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.warmup());
     }
     return psudoWarmupPromise;
   }
   async function invokePsudoOptimize(inputs) {
-    const psudo = await __vitePreload(() => import("./index-DLxvjXSp.js"), true ? [] : void 0, import.meta.url);
+    const psudo = await __vitePreload(() => import("./index-B19y9REJ.js"), true ? [] : void 0, import.meta.url);
     await warmupPsudoPalette();
-    inputs.colorNames.length;
-    performance.now();
     const optimized = await psudo.optimize(inputs.colors, inputs.locked, inputs.intensities, inputs.contrastLimits, inputs.luminance, inputs.excluded, inputs.colorNames, inputs.maxIters, inputs.confusionSamples, inputs.spatial, inputs.numRestarts);
-    const linear = optimized instanceof Float32Array ? optimized : new Float32Array(optimized);
-    return linear;
+    return optimized instanceof Float32Array ? optimized : new Float32Array(optimized);
   }
   async function optimizePaletteSlots(slots, lockedIds = /* @__PURE__ */ new Set(), budget) {
     if (slots.length < 2) {
@@ -90734,35 +90722,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }, (_2, i2) => seedRgbForGroupChannelIndex(i2));
   }
   function startingColorAwayFromLocked(lockedColors) {
-    const candidates = [
-      ...IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex)),
-      {
-        r: 255,
-        g: 255,
-        b: 255
-      },
-      {
-        r: 255,
-        g: 0,
-        b: 0
-      },
-      {
-        r: 0,
-        g: 255,
-        b: 0
-      },
-      {
-        r: 0,
-        g: 0,
-        b: 255
-      },
-      {
-        r: 255,
-        g: 255,
-        b: 0
-      }
-    ];
-    return candidates.find((c2) => !lockedColors.some((locked) => locked.r === c2.r && locked.g === c2.g && locked.b === c2.b)) ?? {
+    return STACK_SEED_COLORS.find((c2) => !lockedColors.some((locked) => locked.r === c2.r && locked.g === c2.g && locked.b === c2.b)) ?? {
       r: 255,
       g: 255,
       b: 255
@@ -90962,6 +90922,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function getStackPalettePendingIds() {
     return stackPalettePendingSnapshot;
   }
+  function assignUngroupedStackSeedColor(sourceChannelId) {
+    const doc = useDocumentStore.getState();
+    if (sourceChannelInAnyGroup(doc.channelGroups, sourceChannelId)) return false;
+    const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+    const shown = sourceChannels.find((sc2) => sc2.id === sourceChannelId);
+    if (!shown || shown.color || !isImageChannel(shown) || shown.samples === 3 || isRgbDisplayChannel(shown, sourceChannels)) {
+      return false;
+    }
+    const locked = [];
+    for (const sc2 of sourceChannels) {
+      if (sc2.color) locked.push(asRgbColor(sc2.color));
+    }
+    for (const group2 of doc.channelGroups) {
+      for (const gc2 of group2.channels) locked.push(asRgbColor(gc2.color));
+    }
+    const color2 = startingColorAwayFromLocked(locked);
+    doc.setImages(applySourceChannelsToImages(doc.images, sourceChannels.map((sc2) => sc2.id === sourceChannelId ? {
+      ...sc2,
+      color: color2
+    } : sc2)));
+    return true;
+  }
   function markStackPalettePendingIfNeeded(sourceChannelId) {
     const doc = useDocumentStore.getState();
     if (sourceChannelInAnyGroup(doc.channelGroups, sourceChannelId)) return false;
@@ -90970,13 +90952,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!shown || !isImageChannel(shown) || shown.samples === 3 || isRgbDisplayChannel(shown, sourceChannels)) {
       return false;
     }
-    if (shown.color) return false;
+    if (shown.color && !isStackSeedColor(shown.color)) return false;
     setStackPalettePendingMany([
       shown.id
     ], true);
     return true;
   }
-  function ensurePaletteForNewlyVisibleStackChannels(sourceChannelId) {
+  function optimizeUngroupedStackChannel(sourceChannelId) {
     const pending2 = markStackPalettePendingIfNeeded(sourceChannelId);
     const run = stackPaletteChain.then(async () => {
       try {
@@ -91000,7 +90982,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     for (const sc2 of sourceChannels) {
       if (sourceChannelInAnyGroup(doc.channelGroups, sc2.id)) continue;
       if (isStackVisible(prev, sc2.id) || !isStackVisible(vis, sc2.id)) continue;
-      void ensurePaletteForNewlyVisibleStackChannels(sc2.id);
+      void optimizeUngroupedStackChannel(sc2.id);
     }
   }
   async function runEnsureStackPalette(sourceChannelId) {
@@ -91008,22 +90990,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (sourceChannelInAnyGroup(doc.channelGroups, sourceChannelId)) return;
     const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
     const shown = sourceChannels.find((sc2) => sc2.id === sourceChannelId);
-    if (!shown || !isImageChannel(shown) || shown.samples === 3 || isRgbDisplayChannel(shown, sourceChannels) || shown.color) {
+    if (!shown || !isImageChannel(shown) || shown.samples === 3 || isRgbDisplayChannel(shown, sourceChannels)) {
       return;
     }
+    if (shown.color && !isStackSeedColor(shown.color)) return;
     const groups = doc.channelGroups;
     const app = useAppStore.getState();
+    const visibility = applyVisibilityTransition(sourceChannels, groups, app.channelVisibilities, app.channelGroupRowVisibilities, {
+      kind: "sync"
+    });
     const lockedSlots = [];
-    const unlocked = [];
-    const seen2 = /* @__PURE__ */ new Set();
+    const seen2 = /* @__PURE__ */ new Set([
+      shown.id
+    ]);
     for (const { sc: sc2, gc: gc2 } of buildCompositedIntensityLayers({
       onLoader: sourceChannels.filter(isImageChannel),
       activeGroup: groups.find((g2) => g2.id === app.activeChannelGroupId),
       channelGroups: groups,
-      stackVisibilities: app.channelVisibilities,
-      groupRowVisibilities: app.channelGroupRowVisibilities,
-      hasVisibilityMap: true,
-      requireColor: false
+      stackVisibilities: visibility.channelVisibilities,
+      groupRowVisibilities: visibility.channelGroupRowVisibilities,
+      hasVisibilityMap: true
     })) {
       if (seen2.has(sc2.id)) continue;
       if (sc2.samples === 3 || isRgbDisplayChannel(sc2, sourceChannels)) continue;
@@ -91034,40 +91020,39 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           id: sc2.id,
           color: asRgbColor(color2)
         });
-      } else if (!gc2) {
-        unlocked.push(sc2);
       }
     }
-    if (!seen2.has(shown.id)) unlocked.push(shown);
-    if (unlocked.length === 0) return;
     const lockedIds = new Set(lockedSlots.map((slot) => slot.id));
-    const unlockedStart = startingColorAwayFromLocked(lockedSlots.map((slot) => slot.color));
+    const unlockedStart = shown.color ? asRgbColor(shown.color) : startingColorAwayFromLocked(lockedSlots.map((slot) => slot.color));
     const slots = [
       ...lockedSlots,
-      ...unlocked.map((sc2) => ({
-        id: sc2.id,
+      {
+        id: shown.id,
         color: unlockedStart
-      }))
+      }
     ];
+    if (slots.length < 2) {
+      if (shown.color) return;
+      doc.setImages(applySourceChannelsToImages(doc.images, sourceChannels.map((sc2) => sc2.id === shown.id ? {
+        ...sc2,
+        color: unlockedStart
+      } : sc2)));
+      return;
+    }
     let colors;
     try {
-      colors = slots.length < 2 ? slots.map((slot) => slot.color) : await optimizePaletteSlots(slots, lockedIds);
+      colors = await optimizePaletteSlots(slots, lockedIds);
     } catch (e2) {
       return;
     }
     const docNow = useDocumentStore.getState();
     const sourcesNow = flattenImageChannelsInDocumentOrder(docNow.images);
-    const unlockedIds = new Set(unlocked.map((sc2) => sc2.id));
-    const indexById = new Map(slots.map((slot, i2) => [
-      slot.id,
-      i2
-    ]));
+    const unlockedIdx = slots.length - 1;
     let changed = false;
     const next2 = sourcesNow.map((sc2) => {
-      if (!unlockedIds.has(sc2.id) || sc2.color) return sc2;
-      const idx = indexById.get(sc2.id);
-      if (idx == null) return sc2;
-      const c2 = colors[idx];
+      if (sc2.id !== shown.id) return sc2;
+      if (sc2.color && !isStackSeedColor(sc2.color)) return sc2;
+      const c2 = colors[unlockedIdx];
       if (!c2) return sc2;
       changed = true;
       return {
@@ -93200,9 +93185,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   async function fitChannelGmmContrastFromUint16(u16) {
     if (u16.length === 0) return null;
     try {
-      const psudo = await __vitePreload(() => import("./index-DLxvjXSp.js"), true ? [] : void 0, import.meta.url);
+      const psudo = await __vitePreload(() => import("./index-B19y9REJ.js"), true ? [] : void 0, import.meta.url);
       await warmupPsudoPalette();
-      const result = await psudo.channel_gmm(u16, void 0, void 0, 500);
+      const result = await psudo.channel_gmm(u16, void 0, void 0, 40, 2);
       if (result && result.length >= 2) {
         const limits = sanitizeGmmLimits(result[0], result[1]);
         if (limits) return limits;
@@ -95077,6 +95062,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (turningOn && !fits({
         stackVisibilities: nextStack
       })) return;
+      if (turningOn && !chip2.hex) {
+        assignUngroupedStackSeedColor(chip2.sourceId);
+        void optimizeUngroupedStackChannel(chip2.sourceId);
+      }
       setChannelVisibilities(nextStack);
       if (!turningOn) return;
       void ((_b2 = nav == null ? void 0 : nav.ensureChannelHistograms) == null ? void 0 : _b2.call(nav, [
@@ -252968,7 +252957,6 @@ uniform classStyleUniforms {
       ],
       modelMatrix,
       visible,
-      maxRequests: 10,
       refinementStrategy: "best-available",
       pickable: false,
       ...TILE_CACHE_PROPS,
@@ -254163,8 +254151,6 @@ uniform classStyleUniforms {
         var _a2;
         const settings = omeSettingsList[i2];
         if (!((_a2 = settings == null ? void 0 : settings.selections) == null ? void 0 : _a2.length)) return [];
-        const anyVisible = (settings.channelsVisible ?? []).some(Boolean);
-        if (!anyVisible) return [];
         const overlay = omeVisiblePainted > 0;
         omeVisiblePainted += 1;
         return [
@@ -254181,8 +254167,9 @@ uniform classStyleUniforms {
         ];
       }),
       ...jpegLoaderEntries.flatMap((entry, i2) => {
+        var _a2;
         const settings = jpegSettingsList[i2];
-        if (!((settings == null ? void 0 : settings.channelsVisible) ?? []).some(Boolean)) return [];
+        if (!((_a2 = settings == null ? void 0 : settings.selections) == null ? void 0 : _a2.length)) return [];
         return [
           createEncodedImageLayer({
             entry,
@@ -254222,20 +254209,12 @@ uniform classStyleUniforms {
       omeLoaderEntries,
       jpegLoaderEntries
     ]);
-    const prevSettingsRef = reactExports.useRef(/* @__PURE__ */ new Map());
     const { dicomSettingsList, omeSettingsList, jpegSettingsList } = reactExports.useMemo(() => {
-      const withSticky = (loaderKey, modality, loader, sourceImageId, hideUntilGmm = false) => {
-        const prevIds = prevSettingsRef.current.get(loaderKey) ?? [];
-        const built = toDocSettings(activeChannelGroupId, modality, loader, channelVisibilities, sourceImageId, channelGroupRowVisibilities, prevIds, hideUntilGmm);
-        prevSettingsRef.current.set(loaderKey, [
-          ...built.sourceChannelIds ?? []
-        ]);
-        return built;
-      };
+      const settingsFor = (modality, loader, sourceImageId) => toDocSettings(activeChannelGroupId, modality, loader, channelVisibilities, sourceImageId, channelGroupRowVisibilities);
       return {
-        dicomSettingsList: dicomIndexList.map(({ loader, modality, sourceImageId }, i2) => withSticky(sourceImageId || `dicom-${i2}`, modality, loader, sourceImageId || void 0)),
-        omeSettingsList: omeLoaderEntries.map(({ loader, sourceImageId }) => withSticky(sourceImageId, "Colorimetric", loader, sourceImageId, true)),
-        jpegSettingsList: jpegLoaderEntries.map(({ loader, sourceImageId }) => withSticky(sourceImageId, "Colorimetric", loader, sourceImageId))
+        dicomSettingsList: dicomIndexList.map(({ loader, modality, sourceImageId }) => settingsFor(modality, loader, sourceImageId || void 0)),
+        omeSettingsList: omeLoaderEntries.map(({ loader, sourceImageId }) => settingsFor("Colorimetric", loader, sourceImageId)),
+        jpegSettingsList: jpegLoaderEntries.map(({ loader, sourceImageId }) => settingsFor("Colorimetric", loader, sourceImageId))
       };
     }, [
       dicomIndexList,
@@ -254467,12 +254446,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-24T15:01:54.789Z");
+    const label2 = utcShort("2026-09-24T20:00:59.621Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-24T15:01:54.789Z",
+      title: "2026-09-24T20:00:59.621Z",
       children: [
         "Updated ",
         label2,
@@ -255355,7 +255334,7 @@ uniform classStyleUniforms {
       hasVisibilityMap: true,
       requireColor: false
     });
-    return new Set(layers.map((l2) => l2.sc.id));
+    return new Set(layers.filter((l2) => isGmmEligible(l2.sc, channels2)).map((l2) => l2.sc.id));
   }
   const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
   async function pickExportFolder() {

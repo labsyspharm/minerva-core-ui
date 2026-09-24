@@ -294,12 +294,13 @@ function calculate_palette_loss(intensities, colors, contrast_limits, luminance_
  * @param {number | null} [subsample]
  * @param {number | null} [tol]
  * @param {number | null} [max_iter]
+ * @param {number | null} [n_runs]
  * @returns {Float32Array}
  */
-function channel_gmm(array, subsample, tol, max_iter) {
+function channel_gmm(array, subsample, tol, max_iter, n_runs) {
     const ptr0 = passArray16ToWasm0(array, wasm.__wbindgen_malloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.channel_gmm(ptr0, len0, isLikeNone(subsample) ? Number.MAX_SAFE_INTEGER : (subsample) >>> 0, isLikeNone(tol) ? Number.MAX_SAFE_INTEGER : Math.fround(tol), isLikeNone(max_iter) ? Number.MAX_SAFE_INTEGER : (max_iter) >>> 0);
+    const ret = wasm.channel_gmm(ptr0, len0, isLikeNone(subsample) ? Number.MAX_SAFE_INTEGER : (subsample) >>> 0, isLikeNone(tol) ? Number.MAX_SAFE_INTEGER : Math.fround(tol), isLikeNone(max_iter) ? Number.MAX_SAFE_INTEGER : (max_iter) >>> 0, isLikeNone(n_runs) ? Number.MAX_SAFE_INTEGER : (n_runs) >>> 0);
     var v2 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v2;
@@ -949,7 +950,7 @@ async function __wbg_init(module_or_path) {
     }
 
     if (module_or_path === undefined) {
-        module_or_path = new URL(""+new URL('psudo_bg-UUUkz8kj.wasm', import.meta.url).href+"", import.meta.url);
+        module_or_path = new URL(""+new URL('psudo_bg-DCsE2R2g.wasm', import.meta.url).href+"", import.meta.url);
     }
     const imports = __wbg_get_imports();
 
@@ -1131,7 +1132,7 @@ self.onmessage = async (event) => {
         result = optimize_in_lens(args[0], args[1], args[2], args[3]);
         break;
       case "channel_gmm":
-        result = channel_gmm(args[0], args[1], args[2], args[3]);
+        result = channel_gmm(args[0], args[1], args[2], args[3], args[4]);
         break;
       case "ln":
         result = ln(args[0]);

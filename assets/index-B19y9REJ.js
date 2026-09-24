@@ -35,6 +35,17 @@ let configuredWorkerPoolSize = null;
 function supportsWorker() {
   return typeof Worker !== "undefined" && typeof window !== "undefined";
 }
+function abortError() {
+  if (typeof DOMException !== "undefined") {
+    try {
+      return new DOMException("Aborted", "AbortError");
+    } catch {
+    }
+  }
+  const err = new Error("Aborted");
+  err.name = "AbortError";
+  return err;
+}
 function defaultPoolSize() {
   if (configuredWorkerPoolSize !== null) {
     return configuredWorkerPoolSize;
@@ -64,6 +75,52 @@ function countFreeChannels(locked_colors, channels) {
   }
   return free;
 }
+function spawnWorkerClient() {
+  const w = new Worker(new URL(
+    /* @vite-ignore */
+    "" + new URL("psudo.worker-8ndXPfy3.js", import.meta.url).href,
+    import.meta.url
+  ), {
+    type: "module"
+  });
+  return new WorkerClient(w);
+}
+function replaceBusyClients(tracked, error) {
+  const pool = workerPool;
+  if (!pool) return;
+  for (let i = 0; i < pool.length; i++) {
+    const client = pool[i];
+    if (!tracked.has(client) || client.pending.size === 0) continue;
+    client.worker.onmessage = null;
+    client.worker.onerror = null;
+    client.rejectAll(error);
+    client.worker.terminate();
+    pool[i] = spawnWorkerClient();
+  }
+}
+function createAbortScope(signal) {
+  const tracked = /* @__PURE__ */ new Set();
+  let aborted = false;
+  const onAbort = () => {
+    if (aborted) return;
+    aborted = true;
+    replaceBusyClients(tracked, abortError());
+  };
+  if (signal) {
+    signal.addEventListener("abort", onAbort);
+  }
+  return {
+    get aborted() {
+      return aborted || Boolean(signal == null ? void 0 : signal.aborted);
+    },
+    track(client) {
+      tracked.add(client);
+    },
+    dispose() {
+      if (signal) signal.removeEventListener("abort", onAbort);
+    }
+  };
+}
 class WorkerClient {
   constructor(worker) {
     this.worker = worker;
@@ -90,13 +147,17 @@ class WorkerClient {
     for (const [, entry] of this.pending) entry.reject(error);
     this.pending.clear();
   }
-  call(method, args) {
+  call(method, args, scope) {
     if (this.failed) {
       return Promise.reject(new Error("psudo worker is unavailable"));
+    }
+    if (scope == null ? void 0 : scope.aborted) {
+      return Promise.reject(abortError());
     }
     const id = this.nextId++;
     return new Promise((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
+      if (scope) scope.track(this);
       this.worker.postMessage({ id, method, args });
     });
   }
@@ -118,22 +179,13 @@ function getWorkerPool() {
   }
   if (!workerPool) {
     const n = defaultPoolSize();
-    workerPool = Array.from({ length: n }, () => {
-      const w = new Worker(new URL(
-        /* @vite-ignore */
-        "" + new URL("psudo.worker-D1iEKPGu.js", import.meta.url).href,
-        import.meta.url
-      ), {
-        type: "module"
-      });
-      return new WorkerClient(w);
-    });
+    workerPool = Array.from({ length: n }, () => spawnWorkerClient());
   }
   return workerPool;
 }
-function callAny(method, args) {
+function callAny(method, args, scope) {
   const pool = getWorkerPool();
-  return pool[0].call(method, args);
+  return pool[0].call(method, args, scope);
 }
 function restartArgs(colors, locked_colors, intensities, contrast_limits, luminance_values, excluded_colors, color_names, max_iters, confusion_baseline_samples, include_spatial_channel_overlap, restartIndex, seedSalt, rescueRandomInit, profiled, polishEachRestart) {
   return [
@@ -161,11 +213,12 @@ function pickBest(outcomes) {
   }
   return best;
 }
-async function runRestartWave(pool, commonArgs, count, seedSalt, rescueRandomInit, profiled, polishEachRestart) {
+async function runRestartWave(pool, commonArgs, count, seedSalt, rescueRandomInit, profiled, polishEachRestart, scope) {
   let next = 0;
   const results = new Array(count);
   async function runOnClient(client) {
     while (true) {
+      if (scope == null ? void 0 : scope.aborted) throw abortError();
       const i = next;
       next += 1;
       if (i >= count) break;
@@ -177,13 +230,13 @@ async function runRestartWave(pool, commonArgs, count, seedSalt, rescueRandomIni
         profiled,
         polishEachRestart
       );
-      results[i] = await client.call("nmRestart", args);
+      results[i] = await client.call("nmRestart", args, scope);
     }
   }
   await Promise.all(pool.map((client) => runOnClient(client)));
   return results;
 }
-async function optimizeParallel(colors, locked_colors, intensities, contrast_limits, luminance_values, excluded_colors, color_names, max_iters, confusion_baseline_samples, include_spatial_channel_overlap, num_restarts, profiled = false, polishEachRestart = true) {
+async function optimizeParallel(colors, locked_colors, intensities, contrast_limits, luminance_values, excluded_colors, color_names, max_iters, confusion_baseline_samples, include_spatial_channel_overlap, num_restarts, profiled = false, polishEachRestart = true, signal) {
   const channels = colors.length / 3;
   const nFree = countFreeChannels(locked_colors, channels);
   if (nFree === 0) {
@@ -202,93 +255,109 @@ async function optimizeParallel(colors, locked_colors, intensities, contrast_lim
     confusion_baseline_samples,
     include_spatial_channel_overlap
   ];
-  await Promise.all(getWorkerPool().map((c) => c.call("warmup", [])));
-  const pool = getWorkerPool();
-  const restartStarted = performance.now();
-  const primary = await runRestartWave(
-    pool,
-    commonArgs,
-    nRestarts,
-    0,
-    false,
-    profiled,
-    polishEachRestart
-  );
-  const allOutcomes = [...primary];
-  let best = pickBest(primary);
-  if (nFree >= 6) {
-    const { lTotRescue, rgbRescue } = adaptiveRescueBand(primary);
-    const softRgb = MIN_DISPLAY_RGB_DISTANCE * 0.9;
-    const rescueRestarts = Math.max(
-      4,
-      scaledBudget(HIGH_CH_RESCUE_RESTARTS_BASE, nFree)
+  const scope = signal ? createAbortScope(signal) : null;
+  try {
+    await Promise.all(
+      getWorkerPool().map((c) => c.call("warmup", [], scope))
     );
-    let preferRandom = best.min_display_rgb_distance < softRgb;
-    const salts = [RESCUE_SEED_SALT_1, RESCUE_SEED_SALT_2];
-    for (let wave = 0; wave < 2; wave++) {
-      if (!outsideAdaptiveBand(
-        best.total,
-        best.min_display_rgb_distance,
-        lTotRescue,
-        rgbRescue
-      )) {
-        break;
-      }
-      const rescue = await runRestartWave(
-        pool,
-        commonArgs,
-        rescueRestarts,
-        salts[wave],
-        preferRandom,
-        profiled,
-        polishEachRestart
+    const pool = getWorkerPool();
+    const restartStarted = performance.now();
+    const primary = await runRestartWave(
+      pool,
+      commonArgs,
+      nRestarts,
+      0,
+      false,
+      profiled,
+      polishEachRestart,
+      scope
+    );
+    const allOutcomes = [...primary];
+    let best = pickBest(primary);
+    if (nFree >= 6) {
+      const { lTotRescue, rgbRescue } = adaptiveRescueBand(primary);
+      const softRgb = MIN_DISPLAY_RGB_DISTANCE * 0.9;
+      const rescueRestarts = Math.max(
+        4,
+        scaledBudget(HIGH_CH_RESCUE_RESTARTS_BASE, nFree)
       );
-      allOutcomes.push(...rescue);
-      preferRandom = !preferRandom;
-      const rescueBest = pickBest(rescue);
-      if (rescueBest.total < best.total) best = rescueBest;
+      let preferRandom = best.min_display_rgb_distance < softRgb;
+      const salts = [RESCUE_SEED_SALT_1, RESCUE_SEED_SALT_2];
+      for (let wave = 0; wave < 2; wave++) {
+        if (scope == null ? void 0 : scope.aborted) throw abortError();
+        if (!outsideAdaptiveBand(
+          best.total,
+          best.min_display_rgb_distance,
+          lTotRescue,
+          rgbRescue
+        )) {
+          break;
+        }
+        const rescue = await runRestartWave(
+          pool,
+          commonArgs,
+          rescueRestarts,
+          salts[wave],
+          preferRandom,
+          profiled,
+          polishEachRestart,
+          scope
+        );
+        allOutcomes.push(...rescue);
+        preferRandom = !preferRandom;
+        const rescueBest = pickBest(rescue);
+        if (rescueBest.total < best.total) best = rescueBest;
+      }
     }
+    if (scope == null ? void 0 : scope.aborted) throw abortError();
+    const restartWallMs = performance.now() - restartStarted;
+    if (!profiled) {
+      return pool[0].call(
+        "finalizePalette",
+        [...commonArgs, best.oklab],
+        scope
+      );
+    }
+    const finalizeStarted = performance.now();
+    const finalized = await pool[0].call(
+      "finalizePaletteProfiled",
+      [...commonArgs, best.oklab],
+      scope
+    );
+    const finalizeWallMs = performance.now() - finalizeStarted;
+    return {
+      ...finalized,
+      phases: {
+        ...finalized.phases,
+        restart_wall_ms: restartWallMs,
+        finalize_wall_ms: finalizeWallMs,
+        restart_context_worker_ms: allOutcomes.reduce(
+          (sum, outcome) => sum + outcome.context_ms,
+          0
+        ),
+        solver_worker_ms: allOutcomes.reduce(
+          (sum, outcome) => sum + outcome.solver_ms,
+          0
+        ),
+        restart_polish_worker_ms: allOutcomes.reduce(
+          (sum, outcome) => sum + outcome.polish_ms,
+          0
+        ),
+        solver_objective_evaluations: allOutcomes.reduce(
+          (sum, outcome) => sum + outcome.solver_objective_evaluations,
+          0
+        ),
+        restart_polish_objective_evaluations: allOutcomes.reduce(
+          (sum, outcome) => sum + outcome.polish_objective_evaluations,
+          0
+        ),
+        restarts_completed: allOutcomes.length
+      },
+      restart_metrics: allOutcomes
+    };
+  } finally {
+    scope == null ? void 0 : scope.dispose();
   }
-  const restartWallMs = performance.now() - restartStarted;
-  if (!profiled) {
-    return pool[0].call("finalizePalette", [...commonArgs, best.oklab]);
-  }
-  const finalizeStarted = performance.now();
-  const finalized = await pool[0].call("finalizePaletteProfiled", [
-    ...commonArgs,
-    best.oklab
-  ]);
-  const finalizeWallMs = performance.now() - finalizeStarted;
-  return {
-    ...finalized,
-    phases: {
-      ...finalized.phases,
-      restart_wall_ms: restartWallMs,
-      finalize_wall_ms: finalizeWallMs,
-      restart_context_worker_ms: allOutcomes.reduce(
-        (sum, outcome) => sum + outcome.context_ms,
-        0
-      ),
-      solver_worker_ms: allOutcomes.reduce(
-        (sum, outcome) => sum + outcome.solver_ms,
-        0
-      ),
-      restart_polish_worker_ms: allOutcomes.reduce(
-        (sum, outcome) => sum + outcome.polish_ms,
-        0
-      ),
-      solver_objective_evaluations: allOutcomes.reduce(
-        (sum, outcome) => sum + outcome.solver_objective_evaluations,
-        0
-      ),
-      restart_polish_objective_evaluations: allOutcomes.reduce(
-        (sum, outcome) => sum + outcome.polish_objective_evaluations,
-        0
-      ),
-      restarts_completed: allOutcomes.length
-    },
-    restart_metrics: allOutcomes
-  };
 }
 function setParallelMultistart(enabled) {
   parallelMultistart = Boolean(enabled);
@@ -308,7 +377,23 @@ function setWorkerPoolSize(size) {
 function warmup() {
   return Promise.all(getWorkerPool().map((c) => c.call("warmup", [])));
 }
-function optimize(colors, locked_colors, intensities, contrast_limits, luminance_values, excluded_colors, color_names, max_iters, confusion_baseline_samples, include_spatial_channel_overlap, num_restarts) {
+function optimize(colors, locked_colors, intensities, contrast_limits, luminance_values, excluded_colors, color_names, max_iters, confusion_baseline_samples, include_spatial_channel_overlap, num_restarts, signal) {
+  if (signal == null ? void 0 : signal.aborted) {
+    return Promise.reject(abortError());
+  }
+  const args = [
+    colors,
+    locked_colors,
+    intensities,
+    contrast_limits,
+    luminance_values,
+    excluded_colors,
+    color_names,
+    max_iters,
+    confusion_baseline_samples,
+    include_spatial_channel_overlap,
+    num_restarts
+  ];
   if (parallelMultistart && supportsWorker()) {
     return optimizeParallel(
       colors,
@@ -321,42 +406,29 @@ function optimize(colors, locked_colors, intensities, contrast_limits, luminance
       max_iters,
       confusion_baseline_samples,
       include_spatial_channel_overlap,
-      num_restarts
+      num_restarts,
+      false,
+      true,
+      signal
     ).catch((err) => {
+      if ((err == null ? void 0 : err.name) === "AbortError") throw err;
       console.warn(
         "[psudo] parallel optimize failed, falling back to single worker:",
         err
       );
-      return callAny("optimize", [
-        colors,
-        locked_colors,
-        intensities,
-        contrast_limits,
-        luminance_values,
-        excluded_colors,
-        color_names,
-        max_iters,
-        confusion_baseline_samples,
-        include_spatial_channel_overlap,
-        num_restarts
-      ]);
+      if (!signal) return callAny("optimize", args);
+      const scope2 = createAbortScope(signal);
+      return callAny("optimize", args, scope2).finally(() => scope2.dispose());
     });
   }
-  return callAny("optimize", [
-    colors,
-    locked_colors,
-    intensities,
-    contrast_limits,
-    luminance_values,
-    excluded_colors,
-    color_names,
-    max_iters,
-    confusion_baseline_samples,
-    include_spatial_channel_overlap,
-    num_restarts
-  ]);
+  if (!signal) return callAny("optimize", args);
+  const scope = createAbortScope(signal);
+  return callAny("optimize", args, scope).finally(() => scope.dispose());
 }
-function optimize_profiled(colors, locked_colors, intensities, contrast_limits, luminance_values, excluded_colors, color_names, max_iters, confusion_baseline_samples, include_spatial_channel_overlap, num_restarts, polish_each_restart = true) {
+function optimize_profiled(colors, locked_colors, intensities, contrast_limits, luminance_values, excluded_colors, color_names, max_iters, confusion_baseline_samples, include_spatial_channel_overlap, num_restarts, polish_each_restart = true, signal) {
+  if (signal == null ? void 0 : signal.aborted) {
+    return Promise.reject(abortError());
+  }
   if (!supportsWorker()) {
     throw new Error("optimize_profiled requires the browser worker-backed API.");
   }
@@ -373,7 +445,8 @@ function optimize_profiled(colors, locked_colors, intensities, contrast_limits, 
     include_spatial_channel_overlap,
     num_restarts,
     true,
-    polish_each_restart
+    polish_each_restart,
+    signal
   );
 }
 function calculate_palette_loss(intensities, colors, contrast_limits, luminance_values, excluded_colors, color_names, include_spatial_channel_overlap) {
@@ -395,8 +468,8 @@ function optimize_in_lens(intensities, colors, contrast_limits, luminance_values
     luminance_values
   ]);
 }
-function channel_gmm(array, subsample, tol, max_iter) {
-  return callAny("channel_gmm", [array, subsample, tol, max_iter]);
+function channel_gmm(array, subsample, tol, max_iter, n_runs) {
+  return callAny("channel_gmm", [array, subsample, tol, max_iter, n_runs]);
 }
 function ln(array) {
   return callAny("ln", [array]);
