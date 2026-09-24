@@ -11,7 +11,7 @@
 
 .channelRowMain {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 4px;
   min-width: 0;
 }
@@ -32,6 +32,10 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.channelRowMainMask {
+  align-items: flex-start;
 }
 
 .channelRowMainMask .channelRowMid {

@@ -297,6 +297,7 @@ export function useViewerLayers(args: {
         modality: string,
         loader: Loader | undefined,
         sourceImageId?: string,
+        hideUntilGmm = false,
       ) => {
         const prevIds = prevSettingsRef.current.get(loaderKey) ?? [];
         const built = toDocSettings(
@@ -307,6 +308,7 @@ export function useViewerLayers(args: {
           sourceImageId,
           channelGroupRowVisibilities,
           prevIds,
+          hideUntilGmm,
         ) as MainSettings;
         prevSettingsRef.current.set(loaderKey, [
           ...(built.sourceChannelIds ?? []),
@@ -325,7 +327,13 @@ export function useViewerLayers(args: {
             ),
         ),
         omeSettingsList: omeLoaderEntries.map(({ loader, sourceImageId }) =>
-          withSticky(sourceImageId, "Colorimetric", loader, sourceImageId),
+          withSticky(
+            sourceImageId,
+            "Colorimetric",
+            loader,
+            sourceImageId,
+            true,
+          ),
         ),
         jpegSettingsList: jpegLoaderEntries.map(({ loader, sourceImageId }) =>
           withSticky(sourceImageId, "Colorimetric", loader, sourceImageId),

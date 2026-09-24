@@ -328,7 +328,6 @@ const extractDistributionsForSourceIndices = async (
     return new Map();
   }
 
-  let tileErrorCount = 0;
   const indexObjs = filtered.flatMap((c) => {
     const idx = indexByC.get(c);
     return idx ? [idx] : [];
@@ -347,7 +346,6 @@ const extractDistributionsForSourceIndices = async (
             planes: loader.data,
           });
         } catch (err) {
-          tileErrorCount += 1;
           const msg = err instanceof Error ? err.message : String(err);
           console.warn(
             `[minerva] histogram: channel ${SourceIndex} tile/bin failed (${msg})`,
@@ -366,13 +364,6 @@ const extractDistributionsForSourceIndices = async (
         },
       ] as [number, ConfigSourceDistribution];
     },
-  );
-
-  const nonEmpty = entries.filter(([, d]) => d.YValues.length > 0).length;
-  const emptyCurves = entries.length - nonEmpty;
-  const skippedNoBits = bits == null ? filtered.length : 0;
-  console.log(
-    `[minerva] histogram extract: dtype=${dtype} effectiveBits=${bits ?? "none"} requested=${sourceIndices.length} resolved=${filtered.length} nonEmpty=${nonEmpty} emptyCurve=${emptyCurves} tileErrors=${tileErrorCount} skippedNoBits=${skippedNoBits}`,
   );
 
   return new Map<number, ConfigSourceDistribution>(entries);

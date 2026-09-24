@@ -188,6 +188,19 @@ export function planarRgbDisplayColor(
   return PLANAR_RGB_DISPLAY_COLORS[slot];
 }
 
+/** Packed RGB, planar H&E, and 8-bit (full 0–255 window) are not GMM channels. */
+export function isGmmEligible(
+  channel: RgbDisplayChannelFields,
+  allChannels: readonly RgbDisplayChannelFields[],
+): boolean {
+  return (
+    isImageChannel(channel) &&
+    channel.samples !== 3 &&
+    !isRgbDisplayChannel(channel, allChannels) &&
+    !isUint8Dtype(channel.sourceDataTypeId)
+  );
+}
+
 /** Whether histogram / contrast controls should be hidden for this channel. */
 export function isRgbDisplayChannel(
   channel: RgbDisplayChannelFields,

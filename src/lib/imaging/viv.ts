@@ -7,7 +7,11 @@ import {
   applyVisibilityTransition,
   buildCompositedIntensityLayers,
 } from "./channelCompositor";
-import { isImageChannel, MAX_VIV_INTENSITY_CHANNELS } from "./channelKind";
+import {
+  isGmmEligible,
+  isImageChannel,
+  MAX_VIV_INTENSITY_CHANNELS,
+} from "./channelKind";
 import type { LoaderPlane } from "./loaderTypes";
 import {
   effectiveDisplayColor,
@@ -219,12 +223,10 @@ const toSettings = (opts: ToSettingsOpts) => {
     loaderSourceImageId?: string,
     channelGroupRowVisibilities: Record<string, boolean> = {},
     stickySourceChannelIds: readonly string[] = [],
+    hideUntilGmm = false,
   ) => {
     const { SourceChannels, channelGroups = [] } = opts;
     if (!loader) return toDefaultSettings(3);
-    const full_level = loader.data[0];
-    const { labels, shape } = full_level;
-    const c_idx = labels.indexOf("c");
     const sourceImageMatches = (image_id: string) =>
       loaderSourceImageId !== undefined && loaderSourceImageId !== ""
         ? image_id === loaderSourceImageId
@@ -300,11 +302,16 @@ const toSettings = (opts: ToSettingsOpts) => {
       selections.push({ z: 0, t: 0, c: sc.index });
       colors.push([r, g, b]);
       contrastLimits.push([lo, hi]);
+      if (
+        hideUntilGmm &&
+        isGmmEligible(sc, SourceChannels) &&
+        sc.gmmContrastLimits == null
+      ) {
+        channelsVisible[i] = false;
+      }
     }
 
-    const n_channels = c_idx >= 0 ? shape[c_idx] || 0 : 1;
     return {
-      ...toDefaultSettings(n_channels),
       selections,
       colors,
       contrastLimits,

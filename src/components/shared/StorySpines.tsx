@@ -1,22 +1,10 @@
-import { useDocumentStore } from "@/lib/stores/documentStore";
 import styles from "./StorySpines.module.css";
 
+const SPINE_CLOTH = [1, 4, 5] as const;
 const SPINE_HEIGHTS = [0.72, 1, 0.86] as const;
-
-function clothIndex(seed: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0) % 6;
-}
 
 /** Tiny cloth-spine cluster — same motif as the library shelf. */
 export function StorySpines() {
-  const seed =
-    useDocumentStore((s) => s.activeStoryId ?? s.metadata.id) ?? "story";
-  const start = clothIndex(seed);
   return (
     <span className={styles.volume} aria-hidden>
       {SPINE_HEIGHTS.map((frac, i) => (
@@ -25,7 +13,7 @@ export function StorySpines() {
           className={styles.spine}
           style={{
             height: `${frac * 100}%`,
-            background: `var(--cloth-${((start + i) % 6) + 1})`,
+            background: `var(--cloth-${SPINE_CLOTH[i]})`,
           }}
         />
       ))}

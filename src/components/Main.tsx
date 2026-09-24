@@ -501,12 +501,7 @@ const Content = (props: Props) => {
     prevGmmShownRef.current = shown;
     if (prev === null) return;
     const newly = [...shown].filter((id) => !prev.has(id));
-    if (newly.length > 0) {
-      if (import.meta.env.DEV) {
-        console.log("[psudo] gmm show", newly);
-      }
-      void ensureGmm(newly);
-    }
+    if (newly.length > 0) void ensureGmm(newly);
   }, [
     activeStoryId,
     omeLoaderEntries,

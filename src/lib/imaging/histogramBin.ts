@@ -14,7 +14,7 @@ export function histogramBinFromPixels(
   const len = data.length;
   if (len === 0 || len > MAX_HISTOGRAM_TILE_PIXELS) return [];
 
-  const n_bins = 50;
+  const n_bins = 100;
   const seen = new Set<number>();
   const thresholds: number[] = [];
   for (let x = 0; x < n_bins; x++) {

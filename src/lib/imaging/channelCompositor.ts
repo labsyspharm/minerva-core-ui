@@ -410,45 +410,42 @@ export function applyGroupRowVisibilities(
   channelGroups: ChannelGroup[],
   prev: Record<string, boolean>,
   transition: VisibilityTransition,
-  stackVisibilities?: Record<string, boolean>,
 ): Record<string, boolean> {
   const rowIds = new Set(
     channelGroups.flatMap((g) => g.channels.map((gc) => gc.id)),
   );
 
-  if (transition.kind === "remove") {
-    const out: Record<string, boolean> = {};
-    for (const [id, visible] of Object.entries(prev)) {
-      if (rowIds.has(id)) out[id] = visible;
-    }
-    return out;
-  }
-
   const out: Record<string, boolean> = {};
-  if (transition.kind !== "fresh") {
-    for (const [id, visible] of Object.entries(prev)) {
-      if (rowIds.has(id)) out[id] = visible;
-    }
+  for (const [id, visible] of Object.entries(prev)) {
+    if (rowIds.has(id)) out[id] = visible;
   }
+  if (transition.kind === "remove") return out;
 
   const newRowIds =
     transition.kind === "appendIntensity"
       ? new Set(transition.newGroupRowIds)
       : null;
+  const defaultGroupId = channelGroups[0]?.id;
+  const inherited = Object.keys(out).length > 0;
 
   for (const group of channelGroups) {
     for (const gc of group.channels) {
       if (out[gc.id] !== undefined) continue;
-      if (transition.kind === "fresh") {
-        out[gc.id] = stackVisibilities?.[gc.channelId] ?? false;
-      } else if (newRowIds?.has(gc.id)) {
+      if (newRowIds?.has(gc.id)) {
         out[gc.id] = false;
       } else {
-        out[gc.id] = true;
+        out[gc.id] = inherited || group.id === defaultGroupId;
       }
     }
   }
   return out;
+}
+
+/** Empty session map → first-group / import defaults. A written map is kept. */
+export function visibilityKindForMap(
+  map: Record<string, boolean>,
+): VisibilityTransition {
+  return Object.keys(map).length === 0 ? { kind: "fresh" } : { kind: "sync" };
 }
 
 export function applyVisibilityTransition(
@@ -458,10 +455,11 @@ export function applyVisibilityTransition(
   groupRowVisibilities: Record<string, boolean>,
   transition: VisibilityTransition,
 ) {
+  const useStored = transition.kind === "fresh" || transition.kind === "sync";
   const channelVisibilities = applyStackVisibilities(
     sourceChannels,
     stackVisibilities,
-    transition,
+    useStored ? visibilityKindForMap(stackVisibilities) : transition,
   );
   return {
     channelVisibilities,
@@ -469,7 +467,6 @@ export function applyVisibilityTransition(
       channelGroups,
       groupRowVisibilities,
       transition,
-      channelVisibilities,
     ),
   };
 }

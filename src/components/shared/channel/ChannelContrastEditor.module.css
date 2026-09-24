@@ -6,7 +6,7 @@
     minmax(0, 1fr)
     var(--range-input-width);
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -38,6 +38,7 @@
   width: 100%;
   height: 18px;
   display: block;
+  margin-top: -3px;
 }
 
 .histogramFill {
@@ -48,7 +49,7 @@
 .histogramLine {
   fill: none;
   stroke: var(--minerva-ink);
-  stroke-width: 0.65;
+  stroke-width: 0.35;
   stroke-linejoin: round;
 }
 

@@ -95,7 +95,7 @@ function histogramSparklinePaths(
     const x = Math.min(Math.max(i / (len - 3), 0), 1);
     const y = Math.min(Math.max(1 - v / max, 0), 1);
     const action = d.length ? "L" : "M";
-    return `${d} ${action} ${width * x} ${2 + (height - 2) * y}`;
+    return `${d} ${action} ${width * x} ${height * y}`;
   }, "");
   const fillPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
   return { linePath, fillPath };

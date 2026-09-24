@@ -13,36 +13,6 @@ function sanitizeGmmLimits(vmin: number, vmax: number): ContrastLimits | null {
   return { lower, upper };
 }
 
-/** DEV diagnostics for why `channel_gmm` may refuse a plane. */
-function summarizeUint16ForGmm(u16: Uint16Array): {
-  pixels: number;
-  positiveCount: number;
-  uniquePositive: number;
-  positiveMin: number | null;
-  positiveMax: number | null;
-} {
-  const pixels = u16.length;
-  let positiveCount = 0;
-  let positiveMin = Number.POSITIVE_INFINITY;
-  let positiveMax = Number.NEGATIVE_INFINITY;
-  const seen = new Set<number>();
-  for (let i = 0; i < pixels; i++) {
-    const v = u16[i];
-    if (v <= 0) continue;
-    positiveCount++;
-    if (v < positiveMin) positiveMin = v;
-    if (v > positiveMax) positiveMax = v;
-    if (seen.size < 64) seen.add(v);
-  }
-  return {
-    pixels,
-    positiveCount,
-    uniquePositive: seen.size,
-    positiveMin: positiveCount > 0 ? positiveMin : null,
-    positiveMax: positiveCount > 0 ? positiveMax : null,
-  };
-}
-
 /**
  * Fallback when `psudo.channel_gmm` returns empty / throws (degenerate planes).
  * 0.1% / 99.9% ranks; if a heavy zero peak would pin lower at 0, fit on
@@ -89,56 +59,15 @@ export async function fitChannelGmmContrastFromUint16(
   u16: Uint16Array,
 ): Promise<ContrastLimits | null> {
   if (u16.length === 0) return null;
-  const stats = import.meta.env.DEV ? summarizeUint16ForGmm(u16) : null;
 
   try {
-    if (import.meta.env.DEV && stats) {
-      console.log("[psudo] channel_gmm input", stats);
-    }
     const psudo = await import("psudo");
     await warmupPsudoPalette();
-    if (import.meta.env.DEV) {
-      console.log("[psudo] channel_gmm start", { pixels: u16.length });
-    }
-    const t0 = performance.now();
     const result = await psudo.channel_gmm(u16, undefined, undefined, 500);
-    const ms = Math.round(performance.now() - t0);
     if (result && result.length >= 2) {
       const limits = sanitizeGmmLimits(result[0], result[1]);
-      if (limits) {
-        if (import.meta.env.DEV) {
-          console.log("[psudo] channel_gmm done", {
-            ms,
-            pixels: u16.length,
-            lower: limits.lower,
-            upper: limits.upper,
-          });
-        }
-        return limits;
-      }
+      if (limits) return limits;
     }
-    if (import.meta.env.DEV) {
-      console.log("[psudo] channel_gmm empty", {
-        ms,
-        ...(stats ?? { pixels: u16.length }),
-      });
-    }
-  } catch (e) {
-    if (import.meta.env.DEV) {
-      console.warn("[psudo] channel_gmm failed; using histogram fallback", {
-        ...(stats ?? {}),
-        error: e,
-      });
-    }
-  }
-
-  const fallback = approximateAutoContrastFromUint16Histogram(u16);
-  if (import.meta.env.DEV && fallback) {
-    console.log("[psudo] auto contrast (histogram fallback)", {
-      ...(stats ?? { pixels: u16.length }),
-      lower: fallback.lower,
-      upper: fallback.upper,
-    });
-  }
-  return fallback;
+  } catch {}
+  return approximateAutoContrastFromUint16Histogram(u16);
 }
