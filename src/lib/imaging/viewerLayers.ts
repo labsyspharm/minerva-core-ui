@@ -201,8 +201,6 @@ function buildImageLayers(args: {
       const settings = omeSettingsList[i] as MainSettings | undefined;
       // Mask-only loaders have no intensity selections; painted by createMaskTileLayer.
       if (!settings?.selections?.length) return [];
-      const anyVisible = (settings.channelsVisible ?? []).some(Boolean);
-      if (!anyVisible) return [];
       const overlay = omeVisiblePainted > 0;
       omeVisiblePainted += 1;
       return [
@@ -288,55 +286,32 @@ export function useViewerLayers(args: {
     [dicomIndexList, omeLoaderEntries, jpegLoaderEntries],
   );
 
-  const prevSettingsRef = useRef<Map<string, string[]>>(new Map());
-
   const { dicomSettingsList, omeSettingsList, jpegSettingsList } =
     useMemo(() => {
-      const withSticky = (
-        loaderKey: string,
+      const settingsFor = (
         modality: string,
         loader: Loader | undefined,
         sourceImageId?: string,
-        hideUntilGmm = false,
-      ) => {
-        const prevIds = prevSettingsRef.current.get(loaderKey) ?? [];
-        const built = toDocSettings(
+      ) =>
+        toDocSettings(
           activeChannelGroupId,
           modality,
           loader,
           channelVisibilities,
           sourceImageId,
           channelGroupRowVisibilities,
-          prevIds,
-          hideUntilGmm,
         ) as MainSettings;
-        prevSettingsRef.current.set(loaderKey, [
-          ...(built.sourceChannelIds ?? []),
-        ]);
-        return built;
-      };
 
       return {
         dicomSettingsList: dicomIndexList.map(
-          ({ loader, modality, sourceImageId }, i) =>
-            withSticky(
-              sourceImageId || `dicom-${i}`,
-              modality,
-              loader,
-              sourceImageId || undefined,
-            ),
+          ({ loader, modality, sourceImageId }) =>
+            settingsFor(modality, loader, sourceImageId || undefined),
         ),
         omeSettingsList: omeLoaderEntries.map(({ loader, sourceImageId }) =>
-          withSticky(
-            sourceImageId,
-            "Colorimetric",
-            loader,
-            sourceImageId,
-            true,
-          ),
+          settingsFor("Colorimetric", loader, sourceImageId),
         ),
         jpegSettingsList: jpegLoaderEntries.map(({ loader, sourceImageId }) =>
-          withSticky(sourceImageId, "Colorimetric", loader, sourceImageId),
+          settingsFor("Colorimetric", loader, sourceImageId),
         ),
       };
     }, [

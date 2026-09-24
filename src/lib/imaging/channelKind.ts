@@ -197,6 +197,7 @@ export function isGmmEligible(
     isImageChannel(channel) &&
     channel.samples !== 3 &&
     !isRgbDisplayChannel(channel, allChannels) &&
+    planarRgbSlotFromName(channel.name ?? "") == null &&
     !isUint8Dtype(channel.sourceDataTypeId)
   );
 }

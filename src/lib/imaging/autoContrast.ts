@@ -63,7 +63,7 @@ export async function fitChannelGmmContrastFromUint16(
   try {
     const psudo = await import("psudo");
     await warmupPsudoPalette();
-    const result = await psudo.channel_gmm(u16, undefined, undefined, 500);
+    const result = await psudo.channel_gmm(u16, undefined, undefined, 40, 2);
     if (result && result.length >= 2) {
       const limits = sanitizeGmmLimits(result[0], result[1]);
       if (limits) return limits;

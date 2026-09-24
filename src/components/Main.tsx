@@ -34,7 +34,7 @@ import {
   diffGroupRowIds,
   type VisibilityTransition,
 } from "@/lib/imaging/channelCompositor";
-import { isImageChannel } from "@/lib/imaging/channelKind";
+import { isGmmEligible, isImageChannel } from "@/lib/imaging/channelKind";
 import {
   isJpegOmeTiffImageSource,
   JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE,
@@ -325,9 +325,10 @@ function visibleGmmIds(images: Image[]): Set<string> {
     stackVisibilities: visibility.channelVisibilities,
     groupRowVisibilities: visibility.channelGroupRowVisibilities,
     hasVisibilityMap: true,
-    requireColor: false,
   });
-  return new Set(layers.map((l) => l.sc.id));
+  return new Set(
+    layers.filter((l) => isGmmEligible(l.sc, channels)).map((l) => l.sc.id),
+  );
 }
 
 const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();

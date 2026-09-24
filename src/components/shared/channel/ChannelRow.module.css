@@ -236,11 +236,17 @@
 
 .cursorHint {
   position: fixed;
+  left: 0;
+  top: 0;
   z-index: 10000;
   margin: 0;
   padding: 3px 6px;
   pointer-events: none;
-  transform: translate(-50%, calc(-100% - 8px));
+  /* Percentages in translate() are the hint box, so clamp keeps all edges on-screen. */
+  transform: translate(
+    clamp(8px, calc(var(--hint-x) - 50%), calc(100vw - 100% - 8px)),
+    clamp(8px, calc(var(--hint-y) - 100% - 8px), calc(100vh - 100% - 8px))
+  );
   background: var(--minerva-ink);
   color: var(--minerva-paper);
   font-size: 12px;

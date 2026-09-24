@@ -43,7 +43,9 @@ import {
   type ImageChannelChip,
 } from "@/lib/imaging/imageChannelOverview";
 import {
+  assignUngroupedStackSeedColor,
   getStackPalettePendingIds,
+  optimizeUngroupedStackChannel,
   subscribeStackPalettePending,
 } from "@/lib/imaging/psudoPalette";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -492,6 +494,10 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     const turningOn = !isStackVisible(vis, chip.sourceId);
     const nextStack = { ...vis, [chip.sourceId]: turningOn };
     if (turningOn && !fits({ stackVisibilities: nextStack })) return;
+    if (turningOn && !chip.hex) {
+      assignUngroupedStackSeedColor(chip.sourceId);
+      void optimizeUngroupedStackChannel(chip.sourceId);
+    }
     setChannelVisibilities(nextStack);
     if (!turningOn) return;
     void nav?.ensureChannelHistograms?.([chip.sourceId]).catch(() => undefined);

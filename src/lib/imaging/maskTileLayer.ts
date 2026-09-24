@@ -431,7 +431,6 @@ export function createMaskTileLayer(args: {
     extent: [0, 0, maskW, maskH],
     modelMatrix,
     visible,
-    maxRequests: 10,
     refinementStrategy: "best-available",
     pickable: false,
     ...TILE_CACHE_PROPS,

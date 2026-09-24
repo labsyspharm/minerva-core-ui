@@ -237,10 +237,11 @@ function compositedForImage(imageId: string, vis: VivIntensityCapVis) {
     stackVisibilities: vis.stackVisibilities,
     groupRowVisibilities: vis.groupRowVisibilities,
     hasVisibilityMap: true,
+    requireColor: false,
   });
 }
 
-/** Source ids actually drawn per image (first `MAX_VIV_INTENSITY_CHANNELS`). */
+/** Source ids occupying a Viv slot per image (first `MAX_VIV_INTENSITY_CHANNELS`). */
 export function vivShownIntensitySourceIds(
   vis: VivIntensityCapVis,
 ): Set<string> {
