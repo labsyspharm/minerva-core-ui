@@ -216,7 +216,7 @@ function buildImageLayers(args: {
     }),
     ...jpegLoaderEntries.flatMap((entry, i) => {
       const settings = jpegSettingsList[i] as MainSettings | undefined;
-      if (!(settings?.channelsVisible ?? []).some(Boolean)) return [];
+      if (!settings?.selections?.length) return [];
       return [
         createEncodedImageLayer({
           entry,

@@ -325,6 +325,7 @@ function visibleGmmIds(images: Image[]): Set<string> {
     stackVisibilities: visibility.channelVisibilities,
     groupRowVisibilities: visibility.channelGroupRowVisibilities,
     hasVisibilityMap: true,
+    requireColor: false,
   });
   return new Set(
     layers.filter((l) => isGmmEligible(l.sc, channels)).map((l) => l.sc.id),
