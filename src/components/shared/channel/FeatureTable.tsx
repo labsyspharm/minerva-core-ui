@@ -300,7 +300,6 @@ function FeatureTableGlyph(props: {
         title={title}
         aria-label={ariaLabel}
         aria-busy={wait || undefined}
-        data-channel-drag-ignore=""
         onClick={onClick}
       >
         {folder ? (
@@ -490,7 +489,7 @@ function FeatureTableListBody(props: { featureTableId: string }) {
   if (!hasIngestedFeatureTable(featureTableId) && !showAccess) return null;
 
   return (
-    <div className={styles.root} data-channel-drag-ignore="">
+    <div className={styles.root}>
       <div className={styles.toolbar}>
         <input
           className={styles.field}

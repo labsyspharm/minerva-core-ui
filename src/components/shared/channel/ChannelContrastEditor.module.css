@@ -1,5 +1,5 @@
 .wrap {
-  --range-input-width: 2.5rem;
+  --range-input-width: 3.25rem;
   display: grid;
   grid-template-columns:
     var(--range-input-width)
@@ -11,10 +11,26 @@
 }
 
 .histogramHost {
-  position: relative;
   width: 100%;
   min-width: 0;
+  padding-right: 8px;
   --handle-width: 0.5rem;
+  --handle-min: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpolygon points='7.5,0.5 7.5,7.5 0.5,7.5' fill='none' stroke='black' stroke-width='1.25' stroke-linejoin='miter'/%3E%3C/svg%3E");
+  --handle-max: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpolygon points='0.5,0.5 7.5,7.5 0.5,7.5' fill='none' stroke='black' stroke-width='1.25' stroke-linejoin='miter'/%3E%3C/svg%3E");
+}
+
+.histogramPlot {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 28px;
+  min-width: 0;
+  padding-top: 5px;
+}
+
+.histogramPlotTrimmed {
+  width: calc(100% - 32px);
+  margin-left: 32px;
 }
 
 .histogramLoading {
@@ -38,7 +54,32 @@
   width: 100%;
   height: 18px;
   display: block;
-  margin-top: -3px;
+  overflow: visible;
+}
+
+.axisBreak {
+  position: absolute;
+  left: -32px;
+  bottom: 0.5px;
+  z-index: 4;
+  display: block;
+  width: 32px;
+  height: 9px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  appearance: none;
+  line-height: 0;
+  background: transparent;
+  color: var(--minerva-ink);
+  opacity: 0.25;
+  cursor: pointer;
+}
+
+.axisBreak svg {
+  display: block;
+  width: 32px;
+  height: 9px;
 }
 
 .histogramFill {
@@ -49,7 +90,7 @@
 .histogramLine {
   fill: none;
   stroke: var(--minerva-ink);
-  stroke-width: 0.35;
+  stroke-width: 0.7;
   stroke-linejoin: round;
 }
 
@@ -60,27 +101,13 @@
 .sliderRow {
   position: absolute;
   right: 0;
-  bottom: 0;
+  bottom: 5px;
   left: 0;
   width: 100%;
   height: var(--handle-width);
   padding: 0;
   box-sizing: border-box;
-  z-index: 2;
-}
-
-.rangePan {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  background: transparent;
-  cursor: grab;
-  touch-action: none;
-  z-index: 1;
-}
-
-.rangePan:active {
-  cursor: grabbing;
+  z-index: 5;
 }
 
 .rangeInput {
@@ -102,21 +129,47 @@
   appearance: none;
   width: var(--handle-width);
   height: var(--handle-width);
+  border: none;
   border-radius: 0;
-  border: 1px solid var(--minerva-ink);
-  background: color-mix(in srgb, var(--minerva-paper) 75%, transparent);
+  background: transparent;
   cursor: pointer;
   pointer-events: auto;
+}
+
+.rangeInputMin::-webkit-slider-thumb {
+  margin-left: calc(var(--handle-width) / -2);
+  background-color: var(--minerva-ink);
+  -webkit-mask: var(--handle-min) center / 100% 100% no-repeat;
+  mask: var(--handle-min) center / 100% 100% no-repeat;
+}
+
+.rangeInputMax::-webkit-slider-thumb {
+  margin-left: calc(var(--handle-width) / 2);
+  background-color: var(--minerva-ink);
+  -webkit-mask: var(--handle-max) center / 100% 100% no-repeat;
+  mask: var(--handle-max) center / 100% 100% no-repeat;
 }
 
 .rangeInput::-moz-range-thumb {
   width: var(--handle-width);
   height: var(--handle-width);
+  border: none;
   border-radius: 0;
-  border: 1px solid var(--minerva-ink);
-  background: color-mix(in srgb, var(--minerva-paper) 75%, transparent);
+  background: transparent;
   cursor: pointer;
   pointer-events: auto;
+}
+
+.rangeInputMin::-moz-range-thumb {
+  margin-left: calc(var(--handle-width) / -2);
+  background-color: var(--minerva-ink);
+  mask: var(--handle-min) center / 100% 100% no-repeat;
+}
+
+.rangeInputMax::-moz-range-thumb {
+  margin-left: calc(var(--handle-width) / 2);
+  background-color: var(--minerva-ink);
+  mask: var(--handle-max) center / 100% 100% no-repeat;
 }
 
 .rangeInput::-webkit-slider-runnable-track {
@@ -134,7 +187,7 @@
   min-width: 0;
   box-sizing: border-box;
   padding: 2px 3px;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1.2;
   text-align: center;
   font-variant-numeric: tabular-nums;

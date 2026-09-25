@@ -161,16 +161,6 @@ function isChannelDrag(e: React.DragEvent) {
   return types.includes(CHANNEL_DRAG_MIME) || types.includes("text/plain");
 }
 
-function shouldIgnoreChannelRowDrag(target: EventTarget | null) {
-  if (!(target instanceof Element)) return false;
-  if (target.closest(`.${styles.dragHandle}`)) return false;
-  return Boolean(
-    target.closest(
-      "input, textarea, select, button, a, label, [contenteditable], [data-channel-drag-ignore]",
-    ),
-  );
-}
-
 function previewUngroupWhileDragging(row: HTMLElement) {
   const onOver = (ev: DragEvent) => {
     const el = document.elementFromPoint(ev.clientX, ev.clientY);
@@ -200,41 +190,27 @@ function DraggableChannelRow(props: {
     fromGroupId: props.fromGroupId,
     fromRowId: props.fromRowId,
   };
-  const beginDrag = (e: React.DragEvent) => startChannelDrag(e, payload);
-  // dragstart.target is this wrap (the draggable), not the histogram/input under the cursor.
-  const ignoreRowDragRef = React.useRef(false);
+  const beginDrag = (e: React.DragEvent) => {
+    startChannelDrag(e, payload);
+    if (!props.onRemoveFromGroup) return;
+    const row = e.currentTarget.closest(`.${styles.channelRowWrap}`);
+    if (row instanceof HTMLElement) previewUngroupWhileDragging(row);
+  };
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: grip button is the AT control; the row is a mouse drag hit target
-    <div
-      className={styles.channelRowWrap}
-      draggable
-      onPointerDown={(e) => {
-        ignoreRowDragRef.current = shouldIgnoreChannelRowDrag(e.target);
-      }}
-      onDragStart={(e) => {
-        if (ignoreRowDragRef.current) {
-          e.preventDefault();
-          return;
-        }
-        beginDrag(e);
-        if (props.onRemoveFromGroup) {
-          previewUngroupWhileDragging(e.currentTarget);
-        }
-      }}
-      onDragEnd={(e) => {
-        if (!props.onRemoveFromGroup) return;
-        if (e.dataTransfer.dropEffect !== "none") return;
-        const el = document.elementFromPoint(e.clientX, e.clientY);
-        const folder = e.currentTarget.closest(`.${styles.groupFolder}`);
-        if (folder && el && folder.contains(el)) return;
-        props.onRemoveFromGroup();
-      }}
-    >
+    <div className={styles.channelRowWrap}>
       <button
         type="button"
         className={styles.dragHandle}
         draggable
         onDragStart={beginDrag}
+        onDragEnd={(e) => {
+          if (!props.onRemoveFromGroup) return;
+          if (e.dataTransfer.dropEffect !== "none") return;
+          const el = document.elementFromPoint(e.clientX, e.clientY);
+          const folder = e.currentTarget.closest(`.${styles.groupFolder}`);
+          if (folder && el && folder.contains(el)) return;
+          props.onRemoveFromGroup();
+        }}
         title={`Drag ${props.label}`}
         aria-label={`Drag ${props.label}`}
       >
@@ -1144,29 +1120,34 @@ export const ChannelGroupsMasterDetail = (
   };
 
   const visibleHistogramTargets = React.useMemo(() => {
-    const group =
-      channelGroups.find((g) => g.id === activeChannelGroupId) ??
-      channelGroups[0];
-    if (!group) return [];
-    const ids: string[] = [];
-    for (const gc of group.channels) {
-      if (!isGroupRowVisible(channelGroupRowVisibilities, gc.id)) continue;
-      const sc = uniqueSourceChannels.find((c) => c.id === gc.channelId);
-      if (
-        !sc ||
-        !isImageChannel(sc) ||
-        isRgbDisplayChannel(sc, sourceChannels)
-      ) {
-        continue;
+    const seen = new Set<string>();
+    const consider = (
+      sc: (typeof uniqueSourceChannels)[number] | undefined,
+    ) => {
+      if (!sc || seen.has(sc.id)) return;
+      if (!isImageChannel(sc) || isRgbDisplayChannel(sc, sourceChannels))
+        return;
+      if (sourceDistributionYValuesLength(sc) > 0) return;
+      seen.add(sc.id);
+    };
+    for (const group of channelGroups) {
+      for (const gc of group.channels) {
+        if (!isGroupRowVisible(channelGroupRowVisibilities, gc.id)) continue;
+        consider(uniqueSourceChannels.find((c) => c.id === gc.channelId));
       }
-      if (sourceDistributionYValuesLength(sc) > 0) continue;
-      ids.push(sc.id);
     }
-    return ids;
+    for (const sc of uniqueSourceChannels) {
+      const inGroup = channelGroups.some((g) =>
+        g.channels.some((gc) => gc.channelId === sc.id),
+      );
+      if (inGroup || !isStackVisible(stackVisibilities, sc.id)) continue;
+      consider(sc);
+    }
+    return [...seen];
   }, [
     channelGroups,
-    activeChannelGroupId,
     channelGroupRowVisibilities,
+    stackVisibilities,
     uniqueSourceChannels,
     sourceChannels,
   ]);

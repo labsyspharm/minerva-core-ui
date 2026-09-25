@@ -192,7 +192,7 @@ const HISTOGRAM_TILE_TIMEOUT_MS = 10_000;
 const HISTOGRAM_EXTRACT_CONCURRENCY = 6;
 
 /**
- * Bit depth passed to `histogramBinFromPixels` (log-spaced thresholds up to 2^bits).
+ * Bit depth passed to `histogramBinFromPixels` (linear ≤8-bit, log2 >8-bit).
  * Integer dtypes parse from the Viv dtype string; float planes use a nominal depth
  * so we still produce a curve instead of skipping (NaN from `parseInt` on "Float32").
  */
