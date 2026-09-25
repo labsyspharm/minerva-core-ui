@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Cq5I4KP4.js","./pako.esm-KbdoS3Oq.js","./lerc-BnEZfvD4.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BGfmiMEz.js","./pako.esm-KbdoS3Oq.js","./lerc-DnIq5wQy.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -66456,26 +66456,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BRgcphMl.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BbGaYPWd.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CX-ZOy0h.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DFzFxO5g.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-D23NHF7Y.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BTbuGJ0t.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-Cq5I4KP4.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-zS9BgHIS.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BnEZfvD4.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BGfmiMEz.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BBvVV44A.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DnIq5wQy.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DGczApVq.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-C5t0jBta.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DEDB6Dm8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CV0vHXEs.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -92007,7 +92007,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           title: title7,
           "aria-label": ariaLabel,
           "aria-busy": wait2 || void 0,
-          "data-channel-drag-ignore": "",
           onClick,
           children: folder ? jsxRuntimeExports.jsx(SvgFolder, {
             width: 12,
@@ -92145,7 +92144,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!hasIngestedFeatureTable(featureTableId) && !showAccess) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$o.root,
-      "data-channel-drag-ignore": "",
       children: [
         jsxRuntimeExports.jsxs("div", {
           className: styles$o.toolbar,
@@ -92350,23 +92348,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  const wrap$2 = "_wrap_1o8fb_1";
-  const histogramHost = "_histogramHost_1o8fb_13";
-  const histogramPlot = "_histogramPlot_1o8fb_22";
-  const histogramPlotTrimmed = "_histogramPlotTrimmed_1o8fb_31";
-  const histogramLoading = "_histogramLoading_1o8fb_35";
-  const histogramLoadingVisible = "_histogramLoadingVisible_1o8fb_47";
-  const histogramSvg = "_histogramSvg_1o8fb_51";
-  const axisBreak = "_axisBreak_1o8fb_58";
-  const histogramFill = "_histogramFill_1o8fb_80";
-  const histogramLine = "_histogramLine_1o8fb_85";
-  const histogramOutOfRange = "_histogramOutOfRange_1o8fb_92";
-  const sliderRow = "_sliderRow_1o8fb_96";
-  const rangePan = "_rangePan_1o8fb_108";
-  const rangeInput = "_rangeInput_1o8fb_122";
-  const rangeInputMin = "_rangeInputMin_1o8fb_148";
-  const rangeInputMax = "_rangeInputMax_1o8fb_155";
-  const limitInput = "_limitInput_1o8fb_194";
+  const wrap$2 = "_wrap_1dboy_1";
+  const histogramHost = "_histogramHost_1dboy_13";
+  const histogramPlot = "_histogramPlot_1dboy_22";
+  const histogramPlotTrimmed = "_histogramPlotTrimmed_1dboy_31";
+  const histogramLoading = "_histogramLoading_1dboy_36";
+  const histogramLoadingVisible = "_histogramLoadingVisible_1dboy_48";
+  const histogramSvg = "_histogramSvg_1dboy_52";
+  const axisBreak = "_axisBreak_1dboy_60";
+  const histogramFill = "_histogramFill_1dboy_85";
+  const histogramLine = "_histogramLine_1dboy_90";
+  const histogramOutOfRange = "_histogramOutOfRange_1dboy_97";
+  const sliderRow = "_sliderRow_1dboy_101";
+  const rangeInput = "_rangeInput_1dboy_113";
+  const rangeInputMin = "_rangeInputMin_1dboy_139";
+  const rangeInputMax = "_rangeInputMax_1dboy_146";
+  const limitInput = "_limitInput_1dboy_185";
   const styles$n = {
     wrap: wrap$2,
     histogramHost,
@@ -92380,7 +92377,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     histogramLine,
     histogramOutOfRange,
     sliderRow,
-    rangePan,
     rangeInput,
     rangeInputMin,
     rangeInputMax,
@@ -92658,101 +92654,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const minFrac = sliderMin / scale2.sliderSteps;
     const maxFrac = sliderMax / scale2.sliderSteps;
-    const sliderRowRef = reactExports.useRef(null);
-    const panDragRef = reactExports.useRef(null);
-    const panMovedRef = reactExports.useRef(false);
     const { linePath: histLinePath, fillPath: histFillPath } = histogramSparklinePaths(chart.yValues);
     const histogramClipId = reactExports.useId();
     const histogramViewX = 1.15;
     const histogramViewWidth = 96.7;
     const histogramClipX = histogramViewX + minFrac * histogramViewWidth;
     const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
-    const stepFromClientX = (clientX) => {
-      const row2 = sliderRowRef.current;
-      if (!row2) return 0;
-      const rect = row2.getBoundingClientRect();
-      const x2 = clientX - rect.left;
-      const frac = Math.min(1, Math.max(0, x2 / Math.max(1, rect.width)));
-      return Math.round(frac * scale2.sliderSteps);
-    };
-    const onRangePanPointerDown = (e2) => {
-      if (e2.button !== 0) return;
-      e2.preventDefault();
-      editingLimitRef.current = true;
-      panMovedRef.current = false;
-      panDragRef.current = {
-        active: true,
-        pointerId: e2.pointerId,
-        startX: e2.clientX,
-        startMin: sliderMin,
-        startMax: sliderMax
-      };
-      e2.currentTarget.setPointerCapture(e2.pointerId);
-    };
-    const onRangePanPointerMove = (e2) => {
-      const drag = panDragRef.current;
-      if (!(drag == null ? void 0 : drag.active) || drag.pointerId !== e2.pointerId) return;
-      if (Math.abs(e2.clientX - drag.startX) > 2) {
-        panMovedRef.current = true;
-      }
-      const row2 = sliderRowRef.current;
-      if (!row2) return;
-      const rect = row2.getBoundingClientRect();
-      const deltaSteps = Math.round((e2.clientX - drag.startX) / Math.max(1, rect.width) * scale2.sliderSteps);
-      const span = drag.startMax - drag.startMin;
-      let lo = drag.startMin + deltaSteps;
-      let hi2 = drag.startMax + deltaSteps;
-      if (lo < 0) {
-        lo = 0;
-        hi2 = span;
-      }
-      if (hi2 > scale2.sliderSteps) {
-        hi2 = scale2.sliderSteps;
-        lo = scale2.sliderSteps - span;
-      }
-      sliderMinRef.current = lo;
-      sliderMaxRef.current = hi2;
-      setSliderMin(lo);
-      setSliderMax(hi2);
-      syncFromSliders(lo, hi2, false);
-    };
-    const endRangePan = (e2) => {
-      const drag = panDragRef.current;
-      if (!(drag == null ? void 0 : drag.active) || drag.pointerId !== e2.pointerId) return;
-      if (e2.currentTarget.hasPointerCapture(e2.pointerId)) {
-        e2.currentTarget.releasePointerCapture(e2.pointerId);
-      }
-      if (!panMovedRef.current) {
-        const step = stepFromClientX(e2.clientX);
-        const span = drag.startMax - drag.startMin;
-        let lo = Math.round(step - span / 2);
-        let hi2 = lo + span;
-        if (lo < 0) {
-          lo = 0;
-          hi2 = span;
-        }
-        if (hi2 > scale2.sliderSteps) {
-          hi2 = scale2.sliderSteps;
-          lo = scale2.sliderSteps - span;
-        }
-        sliderMinRef.current = lo;
-        sliderMaxRef.current = hi2;
-        setSliderMin(lo);
-        setSliderMax(hi2);
-        editingLimitRef.current = false;
-        syncFromSliders(lo, hi2, true);
-      } else {
-        onSliderCommit();
-      }
-      panDragRef.current = null;
-      panMovedRef.current = false;
-      editingLimitRef.current = false;
-    };
-    const panLeft = `${minFrac * 100}%`;
-    const panWidth = `${(maxFrac - minFrac) * 100}%`;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$n.wrap,
-      draggable: false,
       children: [
         jsxRuntimeExports.jsx("input", {
           type: "number",
@@ -92796,35 +92705,51 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 role: "img",
                 "aria-label": `${props.channelLabel} intensity histogram`,
                 children: [
-                  jsxRuntimeExports.jsx("defs", {
-                    children: jsxRuntimeExports.jsx("clipPath", {
-                      id: histogramClipId,
-                      children: jsxRuntimeExports.jsx("rect", {
-                        x: histogramClipX,
-                        y: 0,
-                        width: histogramClipWidth,
-                        height: 11
+                  jsxRuntimeExports.jsxs("defs", {
+                    children: [
+                      jsxRuntimeExports.jsx("clipPath", {
+                        id: `${histogramClipId}-frame`,
+                        children: jsxRuntimeExports.jsx("rect", {
+                          x: histogramViewX,
+                          y: -1,
+                          width: histogramViewWidth,
+                          height: 13
+                        })
+                      }),
+                      jsxRuntimeExports.jsx("clipPath", {
+                        id: histogramClipId,
+                        children: jsxRuntimeExports.jsx("rect", {
+                          x: histogramClipX,
+                          y: 0,
+                          width: histogramClipWidth,
+                          height: 11
+                        })
                       })
-                    })
-                  }),
-                  jsxRuntimeExports.jsx("path", {
-                    className: `${styles$n.histogramFill} ${styles$n.histogramOutOfRange}`,
-                    d: histFillPath
-                  }),
-                  jsxRuntimeExports.jsx("path", {
-                    className: `${styles$n.histogramLine} ${styles$n.histogramOutOfRange}`,
-                    d: histLinePath
+                    ]
                   }),
                   jsxRuntimeExports.jsxs("g", {
-                    clipPath: `url(#${histogramClipId})`,
+                    clipPath: `url(#${histogramClipId}-frame)`,
                     children: [
                       jsxRuntimeExports.jsx("path", {
-                        className: styles$n.histogramFill,
+                        className: `${styles$n.histogramFill} ${styles$n.histogramOutOfRange}`,
                         d: histFillPath
                       }),
                       jsxRuntimeExports.jsx("path", {
-                        className: styles$n.histogramLine,
+                        className: `${styles$n.histogramLine} ${styles$n.histogramOutOfRange}`,
                         d: histLinePath
+                      }),
+                      jsxRuntimeExports.jsxs("g", {
+                        clipPath: `url(#${histogramClipId})`,
+                        children: [
+                          jsxRuntimeExports.jsx("path", {
+                            className: styles$n.histogramFill,
+                            d: histFillPath
+                          }),
+                          jsxRuntimeExports.jsx("path", {
+                            className: styles$n.histogramLine,
+                            d: histLinePath
+                          })
+                        ]
                       })
                     ]
                   })
@@ -92838,21 +92763,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 })
               }),
               jsxRuntimeExports.jsxs("div", {
-                ref: sliderRowRef,
                 className: styles$n.sliderRow,
                 children: [
-                  sliderMax > sliderMin ? jsxRuntimeExports.jsx("div", {
-                    className: styles$n.rangePan,
-                    style: {
-                      left: panLeft,
-                      width: panWidth
-                    },
-                    onPointerDown: onRangePanPointerDown,
-                    onPointerMove: onRangePanPointerMove,
-                    onPointerUp: endRangePan,
-                    onPointerCancel: endRangePan,
-                    "aria-hidden": true
-                  }) : null,
                   jsxRuntimeExports.jsx("input", {
                     type: "range",
                     className: `${styles$n.rangeInput} ${styles$n.rangeInputMin}`,
@@ -93184,8 +93096,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsxs("div", {
               className: styles$q.channelRowMid,
-              "data-channel-drag-ignore": "",
-              draggable: false,
               children: [
                 contrast ? jsxRuntimeExports.jsx(ChannelContrastEditor, {
                   ...contrast
@@ -245215,30 +245125,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }, reactExports.createElement("path", {
     d: "M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2 .9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z"
   }));
-  const channelActionButton = "_channelActionButton_r32ls_3";
-  const colorLockButtonLocked = "_colorLockButtonLocked_r32ls_20";
-  const dropHint = "_dropHint_r32ls_29";
-  const groupFolders = "_groupFolders_r32ls_36";
-  const groupFolder = "_groupFolder_r32ls_36";
-  const dropTargetActive = "_dropTargetActive_r32ls_51";
-  const groupFolderHeader = "_groupFolderHeader_r32ls_56";
-  const groupFolderActivate = "_groupFolderActivate_r32ls_68";
-  const groupFolderChevron = "_groupFolderChevron_r32ls_89";
-  const groupFolderName = "_groupFolderName_r32ls_107";
-  const groupFolderTrailing = "_groupFolderTrailing_r32ls_114";
-  const groupFolderBody = "_groupFolderBody_r32ls_121";
-  const groupChildList = "_groupChildList_r32ls_126";
-  const groupChildBlock = "_groupChildBlock_r32ls_132";
-  const channelRowWrap = "_channelRowWrap_r32ls_140";
-  const ungrouping = "_ungrouping_r32ls_149";
-  const groupChildName = "_groupChildName_r32ls_166";
-  const dragHandle = "_dragHandle_r32ls_176";
-  const treeSeparator = "_treeSeparator_r32ls_199";
-  const treeSeparatorLabel = "_treeSeparatorLabel_r32ls_213";
-  const channelFilter = "_channelFilter_r32ls_218";
-  const filterEmpty = "_filterEmpty_r32ls_241";
-  const rootChannelList = "_rootChannelList_r32ls_248";
-  const rootChannelBlock = "_rootChannelBlock_r32ls_256";
+  const channelActionButton = "_channelActionButton_1wvsk_3";
+  const colorLockButtonLocked = "_colorLockButtonLocked_1wvsk_20";
+  const dropHint = "_dropHint_1wvsk_29";
+  const groupFolders = "_groupFolders_1wvsk_36";
+  const groupFolder = "_groupFolder_1wvsk_36";
+  const dropTargetActive = "_dropTargetActive_1wvsk_51";
+  const groupFolderHeader = "_groupFolderHeader_1wvsk_56";
+  const groupFolderActivate = "_groupFolderActivate_1wvsk_68";
+  const groupFolderChevron = "_groupFolderChevron_1wvsk_89";
+  const groupFolderName = "_groupFolderName_1wvsk_107";
+  const groupFolderTrailing = "_groupFolderTrailing_1wvsk_114";
+  const groupFolderBody = "_groupFolderBody_1wvsk_121";
+  const groupChildList = "_groupChildList_1wvsk_126";
+  const groupChildBlock = "_groupChildBlock_1wvsk_132";
+  const channelRowWrap = "_channelRowWrap_1wvsk_140";
+  const ungrouping = "_ungrouping_1wvsk_148";
+  const groupChildName = "_groupChildName_1wvsk_165";
+  const dragHandle = "_dragHandle_1wvsk_175";
+  const treeSeparator = "_treeSeparator_1wvsk_198";
+  const treeSeparatorLabel = "_treeSeparatorLabel_1wvsk_212";
+  const channelFilter = "_channelFilter_1wvsk_217";
+  const filterEmpty = "_filterEmpty_1wvsk_240";
+  const rootChannelList = "_rootChannelList_1wvsk_247";
+  const rootChannelBlock = "_rootChannelBlock_1wvsk_255";
   const styles$c = {
     channelActionButton,
     colorLockButtonLocked,
@@ -245311,11 +245221,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const types2 = Array.from(e2.dataTransfer.types);
     return types2.includes(CHANNEL_DRAG_MIME) || types2.includes("text/plain");
   }
-  function shouldIgnoreChannelRowDrag(target) {
-    if (!(target instanceof Element)) return false;
-    if (target.closest(`.${styles$c.dragHandle}`)) return false;
-    return Boolean(target.closest("input, textarea, select, button, a, label, [contenteditable], [data-channel-drag-ignore]"));
-  }
   function previewUngroupWhileDragging(row2) {
     const onOver = (ev) => {
       const el2 = document.elementFromPoint(ev.clientX, ev.clientY);
@@ -245336,38 +245241,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fromGroupId: props.fromGroupId,
       fromRowId: props.fromRowId
     };
-    const beginDrag = (e2) => startChannelDrag(e2, payload);
-    const ignoreRowDragRef = reactExports.useRef(false);
+    const beginDrag = (e2) => {
+      startChannelDrag(e2, payload);
+      if (!props.onRemoveFromGroup) return;
+      const row2 = e2.currentTarget.closest(`.${styles$c.channelRowWrap}`);
+      if (row2 instanceof HTMLElement) previewUngroupWhileDragging(row2);
+    };
     return jsxRuntimeExports.jsxs("div", {
       className: styles$c.channelRowWrap,
-      draggable: true,
-      onPointerDown: (e2) => {
-        ignoreRowDragRef.current = shouldIgnoreChannelRowDrag(e2.target);
-      },
-      onDragStart: (e2) => {
-        if (ignoreRowDragRef.current) {
-          e2.preventDefault();
-          return;
-        }
-        beginDrag(e2);
-        if (props.onRemoveFromGroup) {
-          previewUngroupWhileDragging(e2.currentTarget);
-        }
-      },
-      onDragEnd: (e2) => {
-        if (!props.onRemoveFromGroup) return;
-        if (e2.dataTransfer.dropEffect !== "none") return;
-        const el2 = document.elementFromPoint(e2.clientX, e2.clientY);
-        const folder = e2.currentTarget.closest(`.${styles$c.groupFolder}`);
-        if (folder && el2 && folder.contains(el2)) return;
-        props.onRemoveFromGroup();
-      },
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
           className: styles$c.dragHandle,
           draggable: true,
           onDragStart: beginDrag,
+          onDragEnd: (e2) => {
+            if (!props.onRemoveFromGroup) return;
+            if (e2.dataTransfer.dropEffect !== "none") return;
+            const el2 = document.elementFromPoint(e2.clientX, e2.clientY);
+            const folder = e2.currentTarget.closest(`.${styles$c.groupFolder}`);
+            if (folder && el2 && folder.contains(el2)) return;
+            props.onRemoveFromGroup();
+          },
           title: `Drag ${props.label}`,
           "aria-label": `Drag ${props.label}`,
           children: "\u22EE\u22EE"
@@ -246080,23 +245975,31 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       removeChannelFromGroup(payload.fromGroupId, payload.fromRowId);
     };
     const visibleHistogramTargets = reactExports.useMemo(() => {
-      const group2 = channelGroups.find((g2) => g2.id === activeChannelGroupId) ?? channelGroups[0];
-      if (!group2) return [];
-      const ids = [];
-      for (const gc2 of group2.channels) {
-        if (!isGroupRowVisible(channelGroupRowVisibilities, gc2.id)) continue;
-        const sc2 = uniqueSourceChannels.find((c2) => c2.id === gc2.channelId);
-        if (!sc2 || !isImageChannel(sc2) || isRgbDisplayChannel(sc2, sourceChannels)) {
-          continue;
+      const seen2 = /* @__PURE__ */ new Set();
+      const consider = (sc2) => {
+        if (!sc2 || seen2.has(sc2.id)) return;
+        if (!isImageChannel(sc2) || isRgbDisplayChannel(sc2, sourceChannels)) return;
+        if (sourceDistributionYValuesLength(sc2) > 0) return;
+        seen2.add(sc2.id);
+      };
+      for (const group2 of channelGroups) {
+        for (const gc2 of group2.channels) {
+          if (!isGroupRowVisible(channelGroupRowVisibilities, gc2.id)) continue;
+          consider(uniqueSourceChannels.find((c2) => c2.id === gc2.channelId));
         }
-        if (sourceDistributionYValuesLength(sc2) > 0) continue;
-        ids.push(sc2.id);
       }
-      return ids;
+      for (const sc2 of uniqueSourceChannels) {
+        const inGroup = channelGroups.some((g2) => g2.channels.some((gc2) => gc2.channelId === sc2.id));
+        if (inGroup || !isStackVisible(stackVisibilities, sc2.id)) continue;
+        consider(sc2);
+      }
+      return [
+        ...seen2
+      ];
     }, [
       channelGroups,
-      activeChannelGroupId,
       channelGroupRowVisibilities,
+      stackVisibilities,
       uniqueSourceChannels,
       sourceChannels
     ]);
@@ -254523,12 +254426,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-25T15:59:13.756Z");
+    const label2 = utcShort("2026-09-25T20:17:32.995Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-25T15:59:13.756Z",
+      title: "2026-09-25T20:17:32.995Z",
       children: [
         "Updated ",
         label2,
