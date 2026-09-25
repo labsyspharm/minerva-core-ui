@@ -364,15 +364,6 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
 
   const minFrac = sliderMin / scale.sliderSteps;
   const maxFrac = sliderMax / scale.sliderSteps;
-  const sliderRowRef = React.useRef<HTMLDivElement>(null);
-  const panDragRef = React.useRef<{
-    active: boolean;
-    pointerId: number;
-    startX: number;
-    startMin: number;
-    startMax: number;
-  } | null>(null);
-  const panMovedRef = React.useRef(false);
 
   const { linePath: histLinePath, fillPath: histFillPath } =
     histogramSparklinePaths(chart.yValues);
@@ -382,98 +373,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const histogramClipX = histogramViewX + minFrac * histogramViewWidth;
   const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
 
-  const stepFromClientX = (clientX: number) => {
-    const row = sliderRowRef.current;
-    if (!row) return 0;
-    const rect = row.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const frac = Math.min(1, Math.max(0, x / Math.max(1, rect.width)));
-    return Math.round(frac * scale.sliderSteps);
-  };
-
-  const onRangePanPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    editingLimitRef.current = true;
-    panMovedRef.current = false;
-    panDragRef.current = {
-      active: true,
-      pointerId: e.pointerId,
-      startX: e.clientX,
-      startMin: sliderMin,
-      startMax: sliderMax,
-    };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-
-  const onRangePanPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const drag = panDragRef.current;
-    if (!drag?.active || drag.pointerId !== e.pointerId) return;
-    if (Math.abs(e.clientX - drag.startX) > 2) {
-      panMovedRef.current = true;
-    }
-    const row = sliderRowRef.current;
-    if (!row) return;
-    const rect = row.getBoundingClientRect();
-    const deltaSteps = Math.round(
-      ((e.clientX - drag.startX) / Math.max(1, rect.width)) * scale.sliderSteps,
-    );
-    const span = drag.startMax - drag.startMin;
-    let lo = drag.startMin + deltaSteps;
-    let hi = drag.startMax + deltaSteps;
-    if (lo < 0) {
-      lo = 0;
-      hi = span;
-    }
-    if (hi > scale.sliderSteps) {
-      hi = scale.sliderSteps;
-      lo = scale.sliderSteps - span;
-    }
-    sliderMinRef.current = lo;
-    sliderMaxRef.current = hi;
-    setSliderMin(lo);
-    setSliderMax(hi);
-    syncFromSliders(lo, hi, false);
-  };
-
-  const endRangePan = (e: React.PointerEvent<HTMLDivElement>) => {
-    const drag = panDragRef.current;
-    if (!drag?.active || drag.pointerId !== e.pointerId) return;
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    }
-    if (!panMovedRef.current) {
-      const step = stepFromClientX(e.clientX);
-      const span = drag.startMax - drag.startMin;
-      let lo = Math.round(step - span / 2);
-      let hi = lo + span;
-      if (lo < 0) {
-        lo = 0;
-        hi = span;
-      }
-      if (hi > scale.sliderSteps) {
-        hi = scale.sliderSteps;
-        lo = scale.sliderSteps - span;
-      }
-      sliderMinRef.current = lo;
-      sliderMaxRef.current = hi;
-      setSliderMin(lo);
-      setSliderMax(hi);
-      editingLimitRef.current = false;
-      syncFromSliders(lo, hi, true);
-    } else {
-      onSliderCommit();
-    }
-    panDragRef.current = null;
-    panMovedRef.current = false;
-    editingLimitRef.current = false;
-  };
-
-  const panLeft = `${minFrac * 100}%`;
-  const panWidth = `${(maxFrac - minFrac) * 100}%`;
-
   return (
-    <div className={styles.wrap} draggable={false}>
+    <div className={styles.wrap}>
       <input
         type="number"
         className={`${minervaTheme.input} ${styles.limitInput}`}
@@ -529,6 +430,14 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
             aria-label={`${props.channelLabel} intensity histogram`}
           >
             <defs>
+              <clipPath id={`${histogramClipId}-frame`}>
+                <rect
+                  x={histogramViewX}
+                  y={-1}
+                  width={histogramViewWidth}
+                  height={13}
+                />
+              </clipPath>
               <clipPath id={histogramClipId}>
                 <rect
                   x={histogramClipX}
@@ -538,17 +447,19 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
                 />
               </clipPath>
             </defs>
-            <path
-              className={`${styles.histogramFill} ${styles.histogramOutOfRange}`}
-              d={histFillPath}
-            />
-            <path
-              className={`${styles.histogramLine} ${styles.histogramOutOfRange}`}
-              d={histLinePath}
-            />
-            <g clipPath={`url(#${histogramClipId})`}>
-              <path className={styles.histogramFill} d={histFillPath} />
-              <path className={styles.histogramLine} d={histLinePath} />
+            <g clipPath={`url(#${histogramClipId}-frame)`}>
+              <path
+                className={`${styles.histogramFill} ${styles.histogramOutOfRange}`}
+                d={histFillPath}
+              />
+              <path
+                className={`${styles.histogramLine} ${styles.histogramOutOfRange}`}
+                d={histLinePath}
+              />
+              <g clipPath={`url(#${histogramClipId})`}>
+                <path className={styles.histogramFill} d={histFillPath} />
+                <path className={styles.histogramLine} d={histLinePath} />
+              </g>
             </g>
           </svg>
           <div
@@ -559,18 +470,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
           >
             <div className={minervaTheme.spinnerSm} />
           </div>
-          <div ref={sliderRowRef} className={styles.sliderRow}>
-            {sliderMax > sliderMin ? (
-              <div
-                className={styles.rangePan}
-                style={{ left: panLeft, width: panWidth }}
-                onPointerDown={onRangePanPointerDown}
-                onPointerMove={onRangePanPointerMove}
-                onPointerUp={endRangePan}
-                onPointerCancel={endRangePan}
-                aria-hidden
-              />
-            ) : null}
+          <div className={styles.sliderRow}>
             <input
               type="range"
               className={`${styles.rangeInput} ${styles.rangeInputMin}`}

@@ -21,14 +21,15 @@
 
 .histogramPlot {
   position: relative;
-  display: flex;
-  align-items: center;
+  box-sizing: border-box;
   width: 100%;
   height: 28px;
   min-width: 0;
+  padding-top: 5px;
 }
 
 .histogramPlotTrimmed {
+  width: calc(100% - 32px);
   margin-left: 32px;
 }
 
@@ -53,6 +54,7 @@
   width: 100%;
   height: 18px;
   display: block;
+  overflow: visible;
 }
 
 .axisBreak {
@@ -66,8 +68,11 @@
   margin: 0;
   padding: 0;
   border: none;
+  appearance: none;
+  line-height: 0;
   background: transparent;
   color: var(--minerva-ink);
+  opacity: 0.25;
   cursor: pointer;
 }
 
@@ -102,21 +107,7 @@
   height: var(--handle-width);
   padding: 0;
   box-sizing: border-box;
-  z-index: 2;
-}
-
-.rangePan {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  background: transparent;
-  cursor: grab;
-  touch-action: none;
-  z-index: 1;
-}
-
-.rangePan:active {
-  cursor: grabbing;
+  z-index: 5;
 }
 
 .rangeInput {
@@ -146,14 +137,14 @@
 }
 
 .rangeInputMin::-webkit-slider-thumb {
-  transform: translateX(calc(var(--handle-width) / -2));
+  margin-left: calc(var(--handle-width) / -2);
   background-color: var(--minerva-ink);
   -webkit-mask: var(--handle-min) center / 100% 100% no-repeat;
   mask: var(--handle-min) center / 100% 100% no-repeat;
 }
 
 .rangeInputMax::-webkit-slider-thumb {
-  transform: translateX(calc(var(--handle-width) / 2));
+  margin-left: calc(var(--handle-width) / 2);
   background-color: var(--minerva-ink);
   -webkit-mask: var(--handle-max) center / 100% 100% no-repeat;
   mask: var(--handle-max) center / 100% 100% no-repeat;
@@ -170,13 +161,13 @@
 }
 
 .rangeInputMin::-moz-range-thumb {
-  transform: translateX(calc(var(--handle-width) / -2));
+  margin-left: calc(var(--handle-width) / -2);
   background-color: var(--minerva-ink);
   mask: var(--handle-min) center / 100% 100% no-repeat;
 }
 
 .rangeInputMax::-moz-range-thumb {
-  transform: translateX(calc(var(--handle-width) / 2));
+  margin-left: calc(var(--handle-width) / 2);
   background-color: var(--minerva-ink);
   mask: var(--handle-max) center / 100% 100% no-repeat;
 }
