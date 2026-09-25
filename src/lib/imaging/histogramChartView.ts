@@ -12,10 +12,10 @@ type HistogramChartView = {
 };
 
 type DistSlice = {
-  YValues: readonly number[];
-  XScale: string;
-  LowerRange: number;
-  UpperRange: number;
+  YValues?: readonly number[] | null;
+  XScale?: string | null;
+  LowerRange?: number | null;
+  UpperRange?: number | null;
 };
 
 /**
@@ -44,14 +44,14 @@ export function resolveHistogramChartView(
     lowerLimit: number;
   },
 ): HistogramChartView {
-  const y = dist.YValues;
+  const y = dist.YValues ?? [];
   const fullScale: "linear" | "log" = opts.eightBit
     ? "linear"
     : dist.XScale === "linear"
       ? "linear"
       : "log";
-  const fullMin = opts.eightBit ? 0 : dist.LowerRange;
-  const fullMax = opts.eightBit ? 255 : dist.UpperRange;
+  const fullMin = opts.eightBit ? 0 : (dist.LowerRange ?? 0);
+  const fullMax = opts.eightBit ? 255 : (dist.UpperRange ?? 0);
   const span = fullMax - fullMin;
   const trimAt = y.length === 0 ? 0 : firstTrimBin(y, HISTOGRAM_TRIM_FRACTION);
   const valueBin =
