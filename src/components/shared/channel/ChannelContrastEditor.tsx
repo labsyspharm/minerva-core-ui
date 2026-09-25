@@ -1,6 +1,8 @@
 import * as React from "react";
+import AxisBreakIcon from "@/components/shared/icons/axis-break.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { sourceDtypeMax } from "@/lib/imaging/channelKind";
+import { resolveHistogramChartView } from "@/lib/imaging/histogramChartView";
 import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
 import type { SourceDistributionData } from "@/lib/stores/documentSchema";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
@@ -32,6 +34,15 @@ type ContrastScale = {
 
 const DEFAULT_DTYPE_MIN = 0;
 const DEFAULT_DTYPE_MAX = 65535;
+
+const EMPTY_DIST: SourceDistributionData = {
+  id: "",
+  YValues: [],
+  XScale: "log",
+  YScale: "linear",
+  LowerRange: 0,
+  UpperRange: 16,
+};
 
 /** Map slider steps ↔ intensity values (linear or log axis). Ported from range-editor-element.js */
 function buildContrastScale(input: ContrastScaleInput): ContrastScale {
@@ -82,7 +93,7 @@ function buildContrastScale(input: ContrastScaleInput): ContrastScale {
 
 /** Build SVG paths for histogram sparkline (channel-item-element chartTemplate). */
 function histogramSparklinePaths(
-  values: number[] | undefined,
+  values: readonly number[] | undefined,
   width = 100,
   height = 11,
 ): { linePath: string; fillPath: string } {
@@ -184,26 +195,25 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
   const setImages = useDocumentStore((s) => s.setImages);
 
-  const dist = props.distribution ?? {
-    id: "",
-    YValues: [] as number[],
-    XScale: "log",
-    YScale: "linear",
-    LowerRange: 0,
-    UpperRange: 16,
-  };
+  const dist = props.distribution ?? EMPTY_DIST;
+
+  const [expanded, setExpanded] = React.useState(false);
 
   const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
   const eightBit = dtypeMax === 255;
-  const scale = React.useMemo(
+  const chart = React.useMemo(
     () =>
-      buildContrastScale({
-        distScale: eightBit ? "linear" : dist.XScale,
-        distMin: eightBit ? 0 : dist.LowerRange,
-        distMax: eightBit ? 255 : dist.UpperRange,
+      resolveHistogramChartView(dist, {
+        eightBit,
         dtypeMax,
+        expanded,
+        lowerLimit: props.lowerLimit,
       }),
-    [eightBit, dist.XScale, dist.LowerRange, dist.UpperRange, dtypeMax],
+    [dist, expanded, eightBit, dtypeMax, props.lowerLimit],
+  );
+  const scale = React.useMemo(
+    () => buildContrastScale(chart.scaleInput),
+    [chart.scaleInput],
   );
 
   const [sliderMin, setSliderMin] = React.useState(() =>
@@ -214,9 +224,21 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   );
   const sliderMinRef = React.useRef(sliderMin);
   const sliderMaxRef = React.useRef(sliderMax);
+  const editingLimitRef = React.useRef(false);
+  const scaleRef = React.useRef(scale);
+  if (scaleRef.current !== scale) {
+    scaleRef.current = scale;
+    if (!editingLimitRef.current) {
+      const lo = scale.toSlider(props.lowerLimit);
+      const hi = scale.toSlider(props.upperLimit);
+      sliderMinRef.current = lo;
+      sliderMaxRef.current = hi;
+      if (lo !== sliderMin) setSliderMin(lo);
+      if (hi !== sliderMax) setSliderMax(hi);
+    }
+  }
   const [minInput, setMinInput] = React.useState(String(props.lowerLimit));
   const [maxInput, setMaxInput] = React.useState(String(props.upperLimit));
-  const editingLimitRef = React.useRef(false);
   const lastCommittedRangeRef = React.useRef([
     Math.round(props.lowerLimit),
     Math.round(props.upperLimit),
@@ -353,7 +375,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const panMovedRef = React.useRef(false);
 
   const { linePath: histLinePath, fillPath: histFillPath } =
-    histogramSparklinePaths(dist.YValues);
+    histogramSparklinePaths(chart.yValues);
   const histogramClipId = React.useId();
   const histogramViewX = 1.15;
   const histogramViewWidth = 96.7;
@@ -481,88 +503,107 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
             : undefined
         }
       >
-        <svg
-          className={styles.histogramSvg}
-          viewBox="1.15 0 96.7 11"
-          preserveAspectRatio="none"
-          role="img"
-          aria-label={`${props.channelLabel} intensity histogram`}
-        >
-          <defs>
-            <clipPath id={histogramClipId}>
-              <rect
-                x={histogramClipX}
-                y={0}
-                width={histogramClipWidth}
-                height={11}
-              />
-            </clipPath>
-          </defs>
-          <path
-            className={`${styles.histogramFill} ${styles.histogramOutOfRange}`}
-            d={histFillPath}
-          />
-          <path
-            className={`${styles.histogramLine} ${styles.histogramOutOfRange}`}
-            d={histLinePath}
-          />
-          <g clipPath={`url(#${histogramClipId})`}>
-            <path className={styles.histogramFill} d={histFillPath} />
-            <path className={styles.histogramLine} d={histLinePath} />
-          </g>
-        </svg>
         <div
-          className={`${styles.histogramLoading}${
-            props.histogramLoading ? ` ${styles.histogramLoadingVisible}` : ""
-          }`}
-          title="Loading histogram"
+          className={
+            !expanded && chart.startBin > 0
+              ? `${styles.histogramPlot} ${styles.histogramPlotTrimmed}`
+              : styles.histogramPlot
+          }
         >
-          <div className={minervaTheme.spinnerSm} />
-        </div>
-        <div ref={sliderRowRef} className={styles.sliderRow}>
-          {sliderMax > sliderMin ? (
-            <div
-              className={styles.rangePan}
-              style={{ left: panLeft, width: panWidth }}
-              onPointerDown={onRangePanPointerDown}
-              onPointerMove={onRangePanPointerMove}
-              onPointerUp={endRangePan}
-              onPointerCancel={endRangePan}
-              aria-hidden
-            />
+          {!expanded && chart.startBin > 0 ? (
+            <button
+              type="button"
+              className={`${minervaTheme.focusRing} ${styles.axisBreak}`}
+              title="Full range"
+              aria-label={`${props.channelLabel} full histogram range`}
+              onClick={() => setExpanded(true)}
+            >
+              <AxisBreakIcon />
+            </button>
           ) : null}
-          <input
-            type="range"
-            className={styles.rangeInput}
-            min={0}
-            max={scale.sliderSteps}
-            value={sliderMin}
-            onChange={onMinSlider}
-            onMouseUp={onSliderCommit}
-            onTouchEnd={onSliderCommit}
-            onKeyUp={onSliderCommit}
-            onBlur={onSliderCommit}
-            aria-label={`${props.channelLabel} contrast minimum`}
-            aria-valuetext={`${Math.round(
-              scale.fromSlider(sliderMin),
-            )} intensity`}
-          />
-          <input
-            type="range"
-            className={styles.rangeInput}
-            min={0}
-            max={scale.sliderSteps}
-            value={sliderMax}
-            onChange={onMaxSlider}
-            onMouseUp={onSliderCommit}
-            onTouchEnd={onSliderCommit}
-            onKeyUp={onSliderCommit}
-            onBlur={onSliderCommit}
-            aria-label={`${props.channelLabel} contrast maximum`}
-            aria-valuetext={`${Math.round(
-              scale.fromSlider(sliderMax),
-            )} intensity`}
-          />
+          <svg
+            className={styles.histogramSvg}
+            viewBox="1.15 0 96.7 11"
+            preserveAspectRatio="none"
+            role="img"
+            aria-label={`${props.channelLabel} intensity histogram`}
+          >
+            <defs>
+              <clipPath id={histogramClipId}>
+                <rect
+                  x={histogramClipX}
+                  y={0}
+                  width={histogramClipWidth}
+                  height={11}
+                />
+              </clipPath>
+            </defs>
+            <path
+              className={`${styles.histogramFill} ${styles.histogramOutOfRange}`}
+              d={histFillPath}
+            />
+            <path
+              className={`${styles.histogramLine} ${styles.histogramOutOfRange}`}
+              d={histLinePath}
+            />
+            <g clipPath={`url(#${histogramClipId})`}>
+              <path className={styles.histogramFill} d={histFillPath} />
+              <path className={styles.histogramLine} d={histLinePath} />
+            </g>
+          </svg>
+          <div
+            className={`${styles.histogramLoading}${
+              props.histogramLoading ? ` ${styles.histogramLoadingVisible}` : ""
+            }`}
+            title="Loading histogram"
+          >
+            <div className={minervaTheme.spinnerSm} />
+          </div>
+          <div ref={sliderRowRef} className={styles.sliderRow}>
+            {sliderMax > sliderMin ? (
+              <div
+                className={styles.rangePan}
+                style={{ left: panLeft, width: panWidth }}
+                onPointerDown={onRangePanPointerDown}
+                onPointerMove={onRangePanPointerMove}
+                onPointerUp={endRangePan}
+                onPointerCancel={endRangePan}
+                aria-hidden
+              />
+            ) : null}
+            <input
+              type="range"
+              className={`${styles.rangeInput} ${styles.rangeInputMin}`}
+              min={0}
+              max={scale.sliderSteps}
+              value={sliderMin}
+              onChange={onMinSlider}
+              onMouseUp={onSliderCommit}
+              onTouchEnd={onSliderCommit}
+              onKeyUp={onSliderCommit}
+              onBlur={onSliderCommit}
+              aria-label={`${props.channelLabel} contrast minimum`}
+              aria-valuetext={`${Math.round(
+                scale.fromSlider(sliderMin),
+              )} intensity`}
+            />
+            <input
+              type="range"
+              className={`${styles.rangeInput} ${styles.rangeInputMax}`}
+              min={0}
+              max={scale.sliderSteps}
+              value={sliderMax}
+              onChange={onMaxSlider}
+              onMouseUp={onSliderCommit}
+              onTouchEnd={onSliderCommit}
+              onKeyUp={onSliderCommit}
+              onBlur={onSliderCommit}
+              aria-label={`${props.channelLabel} contrast maximum`}
+              aria-valuetext={`${Math.round(
+                scale.fromSlider(sliderMax),
+              )} intensity`}
+            />
+          </div>
         </div>
       </div>
       <input
