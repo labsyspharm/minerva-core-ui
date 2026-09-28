@@ -38,6 +38,27 @@ function snapContrastLimit(value: number, fractional: boolean): number {
   return Number(value.toPrecision(6));
 }
 
+/**
+ * Decimal places so the field resolves about a thousandth of the float span.
+ * 0–1 shows thousandths; a span of 1000 shows whole numbers. Drop digits, then
+ * scientific notation, when the text would no longer fit the box.
+ */
+function formatContrastLimit(
+  value: number,
+  range: { min: number; max: number } | null,
+): string {
+  if (!Number.isFinite(value)) return "";
+  if (!range) return String(Math.round(value));
+  const span = range.max - range.min;
+  const exp = Math.floor(Math.log10(span));
+  const wanted = Number.isFinite(exp) ? Math.max(0, 3 - exp) : 3;
+  for (let decimals = Math.min(wanted, 6); decimals >= 0; decimals--) {
+    const text = value.toFixed(decimals);
+    if (text.length <= 6 && (Number(text) !== 0 || value === 0)) return text;
+  }
+  return value.toExponential(2);
+}
+
 const EMPTY_DIST: SourceDistributionData = {
   id: "",
   YValues: [],
@@ -207,25 +228,24 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
 
   const rangeMin = props.floatRange?.min;
   const rangeMax = props.floatRange?.max;
-  const fractional = rangeMin != null && rangeMax != null;
+  const range = React.useMemo(
+    () =>
+      rangeMin != null && rangeMax != null
+        ? { min: rangeMin, max: rangeMax }
+        : null,
+    [rangeMin, rangeMax],
+  );
+  const fractional = range != null;
   const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
   const chart = React.useMemo(
     () =>
       resolveHistogramChartView(dist, {
-        floatRange: fractional ? { min: rangeMin, max: rangeMax } : null,
+        floatRange: range,
         dtypeMax,
         expanded,
         lowerLimit: props.lowerLimit,
       }),
-    [
-      dist,
-      expanded,
-      fractional,
-      rangeMin,
-      rangeMax,
-      dtypeMax,
-      props.lowerLimit,
-    ],
+    [dist, expanded, range, dtypeMax, props.lowerLimit],
   );
   const scale = React.useMemo(
     () => buildContrastScale(chart.scaleInput),
@@ -253,8 +273,12 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
       if (hi !== sliderMax) setSliderMax(hi);
     }
   }
-  const [minInput, setMinInput] = React.useState(String(props.lowerLimit));
-  const [maxInput, setMaxInput] = React.useState(String(props.upperLimit));
+  const [minInput, setMinInput] = React.useState(() =>
+    formatContrastLimit(props.lowerLimit, range),
+  );
+  const [maxInput, setMaxInput] = React.useState(() =>
+    formatContrastLimit(props.upperLimit, range),
+  );
   const lastCommittedRangeRef = React.useRef([
     snapContrastLimit(props.lowerLimit, fractional),
     snapContrastLimit(props.upperLimit, fractional),
@@ -268,12 +292,12 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     const hiStep = scale.toSlider(props.upperLimit);
     setSliderMin(loStep);
     setSliderMax(hiStep);
-    setMinInput(String(lo));
-    setMaxInput(String(hi));
+    setMinInput(formatContrastLimit(lo, range));
+    setMaxInput(formatContrastLimit(hi, range));
     lastCommittedRangeRef.current = [lo, hi];
     sliderMinRef.current = loStep;
     sliderMaxRef.current = hiStep;
-  }, [props.lowerLimit, props.upperLimit, scale, fractional]);
+  }, [props.lowerLimit, props.upperLimit, scale, fractional, range]);
 
   const previewRange = (lower: number, upper: number) => {
     useAppStore.getState().setChannelRendering({
@@ -330,8 +354,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const syncFromSliders = (loStep: number, hiStep: number, commit: boolean) => {
     const lo = snapContrastLimit(scale.fromSlider(loStep), fractional);
     const hi = snapContrastLimit(scale.fromSlider(hiStep), fractional);
-    setMinInput(String(lo));
-    setMaxInput(String(hi));
+    setMinInput(formatContrastLimit(lo, range));
+    setMaxInput(formatContrastLimit(hi, range));
     if (commit) {
       commitRange(lo, hi);
     } else {
@@ -361,8 +385,22 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   };
 
   const commitFromInputs = () => {
-    let lo = Number.parseFloat(minInput);
-    let hi = Number.parseFloat(maxInput);
+    const preciseLo = snapContrastLimit(
+      scale.fromSlider(sliderMinRef.current),
+      fractional,
+    );
+    const preciseHi = snapContrastLimit(
+      scale.fromSlider(sliderMaxRef.current),
+      fractional,
+    );
+    let lo =
+      minInput === formatContrastLimit(preciseLo, range)
+        ? preciseLo
+        : Number.parseFloat(minInput);
+    let hi =
+      maxInput === formatContrastLimit(preciseHi, range)
+        ? preciseHi
+        : Number.parseFloat(maxInput);
     if (!Number.isFinite(lo)) lo = scale.dtypeMin;
     if (!Number.isFinite(hi)) hi = scale.dtypeMax;
     lo = snapContrastLimit(
@@ -380,8 +418,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     }
     setSliderMin(scale.toSlider(lo));
     setSliderMax(scale.toSlider(hi));
-    setMinInput(String(lo));
-    setMaxInput(String(hi));
+    setMinInput(formatContrastLimit(lo, range));
+    setMaxInput(formatContrastLimit(hi, range));
     commitRange(lo, hi);
   };
 
@@ -508,8 +546,9 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
               onKeyUp={onSliderCommit}
               onBlur={onSliderCommit}
               aria-label={`${props.channelLabel} contrast minimum`}
-              aria-valuetext={`${Math.round(
+              aria-valuetext={`${formatContrastLimit(
                 scale.fromSlider(sliderMin),
+                range,
               )} intensity`}
             />
             <input
@@ -524,8 +563,9 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
               onKeyUp={onSliderCommit}
               onBlur={onSliderCommit}
               aria-label={`${props.channelLabel} contrast maximum`}
-              aria-valuetext={`${Math.round(
+              aria-valuetext={`${formatContrastLimit(
                 scale.fromSlider(sliderMax),
+                range,
               )} intensity`}
             />
           </div>
