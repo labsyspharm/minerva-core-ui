@@ -34,7 +34,7 @@ import {
   diffGroupRowIds,
   type VisibilityTransition,
 } from "@/lib/imaging/channelCompositor";
-import { isImageChannel } from "@/lib/imaging/channelKind";
+import { isGmmEligible, isImageChannel } from "@/lib/imaging/channelKind";
 import {
   isJpegOmeTiffImageSource,
   JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE,
@@ -327,7 +327,9 @@ function visibleGmmIds(images: Image[]): Set<string> {
     hasVisibilityMap: true,
     requireColor: false,
   });
-  return new Set(layers.map((l) => l.sc.id));
+  return new Set(
+    layers.filter((l) => isGmmEligible(l.sc, channels)).map((l) => l.sc.id),
+  );
 }
 
 const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
@@ -502,12 +504,7 @@ const Content = (props: Props) => {
     prevGmmShownRef.current = shown;
     if (prev === null) return;
     const newly = [...shown].filter((id) => !prev.has(id));
-    if (newly.length > 0) {
-      if (import.meta.env.DEV) {
-        console.log("[psudo] gmm show", newly);
-      }
-      void ensureGmm(newly);
-    }
+    if (newly.length > 0) void ensureGmm(newly);
   }, [
     activeStoryId,
     omeLoaderEntries,

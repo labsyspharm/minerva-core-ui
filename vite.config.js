@@ -61,6 +61,7 @@ export default defineConfig(({ command }) => {
         "@deck.gl/layers",
         "@deck.gl/react",
         "geotiff",
+        "lzw-tiff-decoder",
       ],
     },
     resolve: {

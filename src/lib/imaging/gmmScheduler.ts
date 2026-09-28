@@ -2,19 +2,15 @@ import {
   type ContrastLimits,
   fitChannelGmmContrastFromUint16,
 } from "@/lib/imaging/autoContrast";
-import {
-  isImageChannel,
-  isRgbDisplayChannel,
-  isUint8Dtype,
-} from "@/lib/imaging/channelKind";
+import { isGmmEligible } from "@/lib/imaging/channelKind";
 import { looksLikeImportDefaultLimits } from "@/lib/imaging/sourceChannelStyle";
-import type { Loader } from "@/lib/imaging/viv";
 import type { Channel } from "@/lib/stores/documentStore";
 import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import { applySourceChannelsToImages } from "@/lib/stores/storeUtils";
+import type { LoaderPlane } from "./loaderTypes";
 
 const FETCH_CONCURRENCY = 1;
 const FIT_CONCURRENCY = 2;
@@ -22,6 +18,8 @@ const GMM_MAX_SAMPLES = 40_000;
 /** Skip a tile/plane decode above this (uint16 4MP ≈ 8MB). */
 const GMM_MAX_DECODE_PIXELS = 4_000_000;
 const GMM_MAX_TILES = 8;
+
+type Loader = { data: LoaderPlane[] };
 
 type WriteGuard =
   | { kind: "still-missing" }
@@ -82,16 +80,6 @@ function asWindow(
 function documentChannels(): Channel[] {
   return flattenImageChannelsInDocumentOrder(
     useDocumentStore.getState().images,
-  );
-}
-
-/** Packed RGB, planar H&E, and 8-bit (full 0–255 window) — no GMM. */
-function isEligible(sc: Channel, all: readonly Channel[]): boolean {
-  return (
-    isImageChannel(sc) &&
-    sc.samples !== 3 &&
-    !isRgbDisplayChannel(sc, all) &&
-    !isUint8Dtype(sc.sourceDataTypeId)
   );
 }
 
@@ -399,7 +387,7 @@ function upsertJob(args: {
 function targetFor(channelId: string): { sc: Channel; loader: Loader } | null {
   const all = documentChannels();
   const sc = all.find((c) => c.id === channelId);
-  if (!sc || !isEligible(sc, all)) return null;
+  if (!sc || !isGmmEligible(sc, all)) return null;
   const loader = loadersByImageId.get(sc.imageId);
   if (!loader) return null;
   return { sc, loader };
@@ -425,7 +413,7 @@ export function reconcileGmm(args: {
   }
 
   for (const sc of channels) {
-    if (!isEligible(sc, channels)) continue;
+    if (!isGmmEligible(sc, channels)) continue;
     if (sc.gmmContrastLimits) continue;
     if (!visibleChannelIds.has(sc.id)) continue;
     const loader = loadersByImageId.get(sc.imageId);

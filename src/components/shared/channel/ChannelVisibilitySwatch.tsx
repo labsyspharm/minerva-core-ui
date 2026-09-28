@@ -1,4 +1,9 @@
-import type { MouseEventHandler, PointerEvent, ReactNode } from "react";
+import type {
+  CSSProperties,
+  MouseEventHandler,
+  PointerEvent,
+  ReactNode,
+} from "react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
@@ -75,7 +80,12 @@ export function CursorHint(props: {
         ? createPortal(
             <output
               className={styles.cursorHint}
-              style={{ left: pos.x, top: pos.y }}
+              style={
+                {
+                  "--hint-x": `${pos.x}px`,
+                  "--hint-y": `${pos.y}px`,
+                } as CSSProperties
+              }
             >
               {props.label}
             </output>,

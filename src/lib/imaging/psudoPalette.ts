@@ -1,4 +1,5 @@
 import {
+  applyVisibilityTransition,
   buildCompositedIntensityLayers,
   isStackVisible,
   sourceChannelInAnyGroup,
@@ -69,6 +70,24 @@ function clampUint16(n: number): number {
 
 function asRgbColor(color: { r?: number; g?: number; b?: number }): RgbColor {
   return { r: color.r ?? 0, g: color.g ?? 0, b: color.b ?? 0 };
+}
+
+const STACK_SEED_COLORS: RgbColor[] = [
+  ...IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex)),
+  { r: 255, g: 255, b: 255 },
+  { r: 255, g: 0, b: 0 },
+  { r: 0, g: 255, b: 0 },
+  { r: 0, g: 0, b: 255 },
+  { r: 255, g: 255, b: 0 },
+];
+const STACK_SEED_HEX = new Set(STACK_SEED_COLORS.map((c) => rgbToHex(c)));
+
+function isStackSeedColor(color: {
+  r?: number;
+  g?: number;
+  b?: number;
+}): boolean {
+  return STACK_SEED_HEX.has(rgbToHex(color));
 }
 
 function defaultContrastLimits(nChannels: number): Uint16Array {
@@ -145,8 +164,6 @@ async function invokePsudoOptimize(
 ): Promise<Float32Array> {
   const psudo = await import("psudo");
   await warmupPsudoPalette();
-  const n = inputs.colorNames.length;
-  const t0 = performance.now();
   const optimized = await psudo.optimize(
     inputs.colors,
     inputs.locked,
@@ -160,24 +177,9 @@ async function invokePsudoOptimize(
     inputs.spatial,
     inputs.numRestarts,
   );
-  const linear =
-    optimized instanceof Float32Array
-      ? optimized
-      : new Float32Array(optimized as ArrayLike<number>);
-  if (import.meta.env.DEV) {
-    const colors: string[] = [];
-    for (let i = 0; i < n; i++) {
-      colors.push(`#${rgbToHex(linearToDisplayRgb(linear, i))}`);
-    }
-    console.log("[psudo] optimize done", {
-      ms: Math.round(performance.now() - t0),
-      n,
-      locked: [...inputs.locked].filter((v) => v === 1).length,
-      spatial: inputs.spatial,
-      colors,
-    });
-  }
-  return linear;
+  return optimized instanceof Float32Array
+    ? optimized
+    : new Float32Array(optimized as ArrayLike<number>);
 }
 
 async function optimizePaletteSlots(
@@ -343,16 +345,8 @@ function seedPaletteForPicked(count: number): RgbColor[] {
 function startingColorAwayFromLocked(
   lockedColors: readonly RgbColor[],
 ): RgbColor {
-  const candidates: RgbColor[] = [
-    ...IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex)),
-    { r: 255, g: 255, b: 255 },
-    { r: 255, g: 0, b: 0 },
-    { r: 0, g: 255, b: 0 },
-    { r: 0, g: 0, b: 255 },
-    { r: 255, g: 255, b: 0 },
-  ];
   return (
-    candidates.find(
+    STACK_SEED_COLORS.find(
       (c) =>
         !lockedColors.some(
           (locked) => locked.r === c.r && locked.g === c.g && locked.b === c.b,
@@ -585,6 +579,41 @@ export function getStackPalettePendingIds(): readonly string[] {
   return stackPalettePendingSnapshot;
 }
 
+export function assignUngroupedStackSeedColor(
+  sourceChannelId: string,
+): boolean {
+  const doc = useDocumentStore.getState();
+  if (sourceChannelInAnyGroup(doc.channelGroups, sourceChannelId)) return false;
+  const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+  const shown = sourceChannels.find((sc) => sc.id === sourceChannelId);
+  if (
+    !shown ||
+    shown.color ||
+    !isImageChannel(shown) ||
+    shown.samples === 3 ||
+    isRgbDisplayChannel(shown, sourceChannels)
+  ) {
+    return false;
+  }
+  const locked: RgbColor[] = [];
+  for (const sc of sourceChannels) {
+    if (sc.color) locked.push(asRgbColor(sc.color));
+  }
+  for (const group of doc.channelGroups) {
+    for (const gc of group.channels) locked.push(asRgbColor(gc.color));
+  }
+  const color = startingColorAwayFromLocked(locked);
+  doc.setImages(
+    applySourceChannelsToImages(
+      doc.images,
+      sourceChannels.map((sc) =>
+        sc.id === sourceChannelId ? { ...sc, color } : sc,
+      ),
+    ),
+  );
+  return true;
+}
+
 function markStackPalettePendingIfNeeded(sourceChannelId: string): boolean {
   const doc = useDocumentStore.getState();
   if (sourceChannelInAnyGroup(doc.channelGroups, sourceChannelId)) return false;
@@ -598,12 +627,12 @@ function markStackPalettePendingIfNeeded(sourceChannelId: string): boolean {
   ) {
     return false;
   }
-  if (shown.color) return false;
+  if (shown.color && !isStackSeedColor(shown.color)) return false;
   setStackPalettePendingMany([shown.id], true);
   return true;
 }
 
-function ensurePaletteForNewlyVisibleStackChannels(
+export function optimizeUngroupedStackChannel(
   sourceChannelId: string,
 ): Promise<void> {
   const pending = markStackPalettePendingIfNeeded(sourceChannelId);
@@ -633,7 +662,7 @@ export function reconcileUngroupedStackPalette(
   for (const sc of sourceChannels) {
     if (sourceChannelInAnyGroup(doc.channelGroups, sc.id)) continue;
     if (isStackVisible(prev, sc.id) || !isStackVisible(vis, sc.id)) continue;
-    void ensurePaletteForNewlyVisibleStackChannels(sc.id);
+    void optimizeUngroupedStackChannel(sc.id);
   }
 }
 
@@ -646,25 +675,30 @@ async function runEnsureStackPalette(sourceChannelId: string): Promise<void> {
     !shown ||
     !isImageChannel(shown) ||
     shown.samples === 3 ||
-    isRgbDisplayChannel(shown, sourceChannels) ||
-    shown.color
+    isRgbDisplayChannel(shown, sourceChannels)
   ) {
     return;
   }
+  if (shown.color && !isStackSeedColor(shown.color)) return;
 
   const groups = doc.channelGroups;
   const app = useAppStore.getState();
+  const visibility = applyVisibilityTransition(
+    sourceChannels,
+    groups,
+    app.channelVisibilities,
+    app.channelGroupRowVisibilities,
+    { kind: "sync" },
+  );
   const lockedSlots: PaletteSlot[] = [];
-  const unlocked: Channel[] = [];
-  const seen = new Set<string>();
+  const seen = new Set<string>([shown.id]);
   for (const { sc, gc } of buildCompositedIntensityLayers({
     onLoader: sourceChannels.filter(isImageChannel),
     activeGroup: groups.find((g) => g.id === app.activeChannelGroupId),
     channelGroups: groups,
-    stackVisibilities: app.channelVisibilities,
-    groupRowVisibilities: app.channelGroupRowVisibilities,
+    stackVisibilities: visibility.channelVisibilities,
+    groupRowVisibilities: visibility.channelGroupRowVisibilities,
     hasVisibilityMap: true,
-    requireColor: false,
   })) {
     if (seen.has(sc.id)) continue;
     if (sc.samples === 3 || isRgbDisplayChannel(sc, sourceChannels)) continue;
@@ -672,28 +706,34 @@ async function runEnsureStackPalette(sourceChannelId: string): Promise<void> {
     const color = gc?.color ?? sc.color;
     if (color) {
       lockedSlots.push({ id: sc.id, color: asRgbColor(color) });
-    } else if (!gc) {
-      unlocked.push(sc);
     }
   }
-  if (!seen.has(shown.id)) unlocked.push(shown);
-  if (unlocked.length === 0) return;
 
   const lockedIds = new Set(lockedSlots.map((slot) => slot.id));
-  const unlockedStart = startingColorAwayFromLocked(
-    lockedSlots.map((slot) => slot.color),
-  );
+  const unlockedStart = shown.color
+    ? asRgbColor(shown.color)
+    : startingColorAwayFromLocked(lockedSlots.map((slot) => slot.color));
   const slots: PaletteSlot[] = [
     ...lockedSlots,
-    ...unlocked.map((sc) => ({ id: sc.id, color: unlockedStart })),
+    { id: shown.id, color: unlockedStart },
   ];
+
+  if (slots.length < 2) {
+    if (shown.color) return;
+    doc.setImages(
+      applySourceChannelsToImages(
+        doc.images,
+        sourceChannels.map((sc) =>
+          sc.id === shown.id ? { ...sc, color: unlockedStart } : sc,
+        ),
+      ),
+    );
+    return;
+  }
 
   let colors: RgbColor[];
   try {
-    colors =
-      slots.length < 2
-        ? slots.map((slot) => slot.color)
-        : await optimizePaletteSlots(slots, lockedIds);
+    colors = await optimizePaletteSlots(slots, lockedIds);
   } catch (e) {
     if (import.meta.env.DEV) {
       console.warn("[psudo] stack palette optimization failed", e);
@@ -703,15 +743,13 @@ async function runEnsureStackPalette(sourceChannelId: string): Promise<void> {
 
   const docNow = useDocumentStore.getState();
   const sourcesNow = flattenImageChannelsInDocumentOrder(docNow.images);
-  const unlockedIds = new Set(unlocked.map((sc) => sc.id));
-  const indexById = new Map(slots.map((slot, i) => [slot.id, i] as const));
+  const unlockedIdx = slots.length - 1;
 
   let changed = false;
   const next = sourcesNow.map((sc) => {
-    if (!unlockedIds.has(sc.id) || sc.color) return sc;
-    const idx = indexById.get(sc.id);
-    if (idx == null) return sc;
-    const c = colors[idx];
+    if (sc.id !== shown.id) return sc;
+    if (sc.color && !isStackSeedColor(sc.color)) return sc;
+    const c = colors[unlockedIdx];
     if (!c) return sc;
     changed = true;
     return { ...sc, color: { r: c.r, g: c.g, b: c.b } };

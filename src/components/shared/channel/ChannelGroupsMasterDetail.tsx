@@ -33,6 +33,7 @@ import {
   isStackVisible,
   type VivIntensityCapVis,
   visibilitiesForRgbUnit,
+  visibilityKindForMap,
   vivIntensityCapExceeded,
   withGroupRowVisible,
 } from "@/lib/imaging/channelCompositor";
@@ -558,24 +559,23 @@ export const ChannelGroupsMasterDetail = (
     return out;
   }, [sourceChannels]);
 
-  const visKind =
-    Object.keys(channelVisibilities).length === 0 ? "fresh" : "sync";
   const stackVisibilities = React.useMemo(
     () =>
-      applyStackVisibilities(sourceChannels, channelVisibilities, {
-        kind: visKind,
-      }),
-    [sourceChannels, channelVisibilities, visKind],
+      applyStackVisibilities(
+        sourceChannels,
+        channelVisibilities,
+        visibilityKindForMap(channelVisibilities),
+      ),
+    [sourceChannels, channelVisibilities],
   );
   const channelGroupRowVisibilities = React.useMemo(
     () =>
       applyGroupRowVisibilities(
         channelGroups,
         storedGroupRowVisibilities,
-        { kind: visKind },
-        stackVisibilities,
+        visibilityKindForMap(storedGroupRowVisibilities),
       ),
-    [channelGroups, storedGroupRowVisibilities, visKind, stackVisibilities],
+    [channelGroups, storedGroupRowVisibilities],
   );
 
   const capVis: VivIntensityCapVis = {
@@ -1144,29 +1144,30 @@ export const ChannelGroupsMasterDetail = (
   };
 
   const visibleHistogramTargets = React.useMemo(() => {
+    const group =
+      channelGroups.find((g) => g.id === activeChannelGroupId) ??
+      channelGroups[0];
+    if (!group) return [];
     const ids: string[] = [];
-    for (const sc of uniqueSourceChannels) {
-      if (!isImageChannel(sc)) continue;
-      if (isRgbDisplayChannel(sc, sourceChannels)) continue;
+    for (const gc of group.channels) {
+      if (!isGroupRowVisible(channelGroupRowVisibilities, gc.id)) continue;
+      const sc = uniqueSourceChannels.find((c) => c.id === gc.channelId);
+      if (
+        !sc ||
+        !isImageChannel(sc) ||
+        isRgbDisplayChannel(sc, sourceChannels)
+      ) {
+        continue;
+      }
       if (sourceDistributionYValuesLength(sc) > 0) continue;
-
-      const stackOn = isStackVisible(stackVisibilities, sc.id);
-      const groupRowOn = channelGroups.some((g) =>
-        g.channels.some(
-          (gc) =>
-            gc.channelId === sc.id &&
-            isGroupRowVisible(channelGroupRowVisibilities, gc.id),
-        ),
-      );
-      if (!stackOn && !groupRowOn) continue;
       ids.push(sc.id);
     }
     return ids;
   }, [
-    uniqueSourceChannels,
-    stackVisibilities,
-    channelGroupRowVisibilities,
     channelGroups,
+    activeChannelGroupId,
+    channelGroupRowVisibilities,
+    uniqueSourceChannels,
     sourceChannels,
   ]);
 

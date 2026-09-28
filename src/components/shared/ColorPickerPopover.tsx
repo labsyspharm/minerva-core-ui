@@ -150,6 +150,7 @@ export function ColorPickerPopover({
         onClick={onClose}
       />
       <div
+        data-minerva-color-picker=""
         style={{
           position: "fixed",
           top: position.top,

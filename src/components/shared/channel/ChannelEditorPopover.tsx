@@ -18,6 +18,7 @@ import {
   isStackVisible,
   type VivIntensityCapVis,
   visibilitiesForRgbUnit,
+  visibilityKindForMap,
   vivIntensityCapExceeded,
   withGroupRowVisible,
 } from "@/lib/imaging/channelCompositor";
@@ -239,24 +240,23 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
-  const visKind =
-    Object.keys(storedStackVisibilities).length === 0 ? "fresh" : "sync";
   const stackVisibilities = React.useMemo(
     () =>
-      applyStackVisibilities(sourceChannels, storedStackVisibilities, {
-        kind: visKind,
-      }),
-    [sourceChannels, storedStackVisibilities, visKind],
+      applyStackVisibilities(
+        sourceChannels,
+        storedStackVisibilities,
+        visibilityKindForMap(storedStackVisibilities),
+      ),
+    [sourceChannels, storedStackVisibilities],
   );
   const groupRowVisibilities = React.useMemo(
     () =>
       applyGroupRowVisibilities(
         channelGroups,
         storedGroupRowVisibilities,
-        { kind: visKind },
-        stackVisibilities,
+        visibilityKindForMap(storedGroupRowVisibilities),
       ),
-    [channelGroups, storedGroupRowVisibilities, visKind, stackVisibilities],
+    [channelGroups, storedGroupRowVisibilities],
   );
   const sc = findSourceChannel(sourceChannels, chip.sourceId);
   const gc =

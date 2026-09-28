@@ -1,5 +1,13 @@
 import type { CSSProperties } from "react";
-import { Fragment, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useAuthorChannelNav } from "@/components/shared/channel/AuthorChannelNav";
 import { ChannelEditor } from "@/components/shared/channel/ChannelEditorPopover";
 import {
@@ -16,6 +24,7 @@ import {
   isStackVisible,
   type VivIntensityCapVis,
   visibilitiesForRgbUnit,
+  visibilityKindForMap,
   vivIntensityCapExceeded,
   vivIntensityLayerCount,
   vivShownIntensitySourceIds,
@@ -34,7 +43,9 @@ import {
   type ImageChannelChip,
 } from "@/lib/imaging/imageChannelOverview";
 import {
+  assignUngroupedStackSeedColor,
   getStackPalettePendingIds,
+  optimizeUngroupedStackChannel,
   subscribeStackPalettePending,
 } from "@/lib/imaging/psudoPalette";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -159,8 +170,10 @@ function ChipGrid(props: {
   blockedIds: ReadonlySet<string>;
   onChip: (chip: ImageChannelChip) => void;
   onOpenEditor: (chip: ImageChannelChip) => void;
+  onDismissEditor: () => void;
 }) {
-  const { chips, openChip, shownIds, blockedIds } = props;
+  const { chips, openChip, shownIds, blockedIds, onDismissEditor } = props;
+  const editorRef = useRef<HTMLDivElement>(null);
   const pendingIds = useSyncExternalStore(
     subscribeStackPalettePending,
     getStackPalettePendingIds,
@@ -181,6 +194,30 @@ function ChipGrid(props: {
           chips.length - 1,
           openIndex - (openIndex % CHIP_COLS) + CHIP_COLS - 1,
         );
+  useEffect(() => {
+    if (openIndex < 0) return;
+    const onDoc = (e: MouseEvent) => {
+      const root = editorRef.current;
+      if (!root) return;
+      const t = e.target;
+      if (t instanceof Node && root.contains(t)) return;
+      if (t instanceof Element && t.closest("[data-minerva-color-picker]")) {
+        return;
+      }
+      const r = root.getBoundingClientRect();
+      if (
+        e.clientX >= r.left &&
+        e.clientX <= r.right &&
+        e.clientY >= r.top &&
+        e.clientY <= r.bottom
+      ) {
+        return;
+      }
+      onDismissEditor();
+    };
+    document.addEventListener("click", onDoc);
+    return () => document.removeEventListener("click", onDoc);
+  }, [openIndex, onDismissEditor]);
   return (
     <div className={styles.chipWrap}>
       {chips.map((chip, i) => (
@@ -197,7 +234,7 @@ function ChipGrid(props: {
             onOpenEditor={props.onOpenEditor}
           />
           {i === rowEnd && openChip ? (
-            <div className={styles.editor}>
+            <div ref={editorRef} className={styles.editor}>
               <ChannelEditor chip={openChip} />
             </div>
           ) : null}
@@ -215,6 +252,7 @@ function GroupStrip(props: {
   blockedIds: ReadonlySet<string>;
   onChip: (chip: ImageChannelChip) => void;
   onOpenEditor: (chip: ImageChannelChip) => void;
+  onDismissEditor: () => void;
   allVisible?: boolean;
   showAllBlocked?: boolean;
   onToggleVisibility?: () => void;
@@ -263,6 +301,7 @@ function GroupStrip(props: {
           blockedIds={props.blockedIds}
           onChip={props.onChip}
           onOpenEditor={props.onOpenEditor}
+          onDismissEditor={props.onDismissEditor}
         />
       )}
     </div>
@@ -292,9 +331,11 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
   );
   const filledStackVis = useMemo(
     () =>
-      applyStackVisibilities(allSourceChannels, stackVisibilities, {
-        kind: Object.keys(stackVisibilities).length === 0 ? "fresh" : "sync",
-      }),
+      applyStackVisibilities(
+        allSourceChannels,
+        stackVisibilities,
+        visibilityKindForMap(stackVisibilities),
+      ),
     [allSourceChannels, stackVisibilities],
   );
   const filledGroupVis = useMemo(
@@ -302,12 +343,9 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
       applyGroupRowVisibilities(
         channelGroups,
         groupRowVisibilities,
-        {
-          kind: Object.keys(stackVisibilities).length === 0 ? "fresh" : "sync",
-        },
-        filledStackVis,
+        visibilityKindForMap(groupRowVisibilities),
       ),
-    [channelGroups, groupRowVisibilities, stackVisibilities, filledStackVis],
+    [channelGroups, groupRowVisibilities],
   );
   const model = useMemo(
     () =>
@@ -366,6 +404,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
       return current === chip.key ? null : chip.key;
     });
   };
+  const dismissEditor = useCallback(() => setOpenKey(null), []);
 
   const capVis: VivIntensityCapVis = {
     channels: allSourceChannels,
@@ -455,6 +494,10 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     const turningOn = !isStackVisible(vis, chip.sourceId);
     const nextStack = { ...vis, [chip.sourceId]: turningOn };
     if (turningOn && !fits({ stackVisibilities: nextStack })) return;
+    if (turningOn && !chip.hex) {
+      assignUngroupedStackSeedColor(chip.sourceId);
+      void optimizeUngroupedStackChannel(chip.sourceId);
+    }
     setChannelVisibilities(nextStack);
     if (!turningOn) return;
     void nav?.ensureChannelHistograms?.([chip.sourceId]).catch(() => undefined);
@@ -506,6 +549,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
             showAllBlocked={showAllBlocked}
             onChip={onGroupChip}
             onOpenEditor={onOpenEditor}
+            onDismissEditor={dismissEditor}
             onToggleVisibility={() => {
               if (rgbDisplay) {
                 applyRgbUnit(!group.allVisible);
@@ -542,6 +586,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
           blockedIds={blockedIds}
           onChip={onAllChannelsChip}
           onOpenEditor={onOpenEditor}
+          onDismissEditor={dismissEditor}
           nameFilter={channelNameFilter}
           onNameFilterChange={setChannelNameFilter}
         />

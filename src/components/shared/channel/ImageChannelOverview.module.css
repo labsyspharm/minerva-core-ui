@@ -81,11 +81,12 @@
 }
 
 .chipCell {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   height: 22px;
   box-sizing: border-box;
-  border: 1.5px solid #fff;
+  border: 1px solid #fff;
   background: transparent;
   color: var(--minerva-quiet);
 }
@@ -118,27 +119,32 @@
 }
 
 .chipHint {
-  display: flex;
-  flex: 1 1 0;
+  grid-column: 1;
+  grid-row: 1;
   min-width: 0;
 }
 
 .chip {
-  flex: 1 1 0;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
   min-width: 0;
   height: 100%;
-  padding: 0 2px 0 4px;
+  padding: 0 14px;
   font-size: 13px;
   line-height: 19px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-align: left;
+  text-align: center;
 }
 
 .chipMenu {
+  grid-column: 1;
+  grid-row: 1;
+  z-index: 1;
+  justify-self: end;
   display: flex;
-  flex: 0 0 14px;
   align-items: center;
   justify-content: center;
   width: 14px;
@@ -161,4 +167,5 @@
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  border: 1px solid #fff;
 }
