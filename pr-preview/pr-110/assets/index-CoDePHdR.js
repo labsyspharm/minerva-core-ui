@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DxhjJHtO.js","./pako.esm-KbdoS3Oq.js","./lerc-Dxe3F5ef.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DdCvjV0c.js","./pako.esm-KbdoS3Oq.js","./lerc-BRWrvPZP.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -66460,26 +66460,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-D5lMnAiC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-ClWHPai4.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BiE97nTn.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-6Y14FNDI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CgYZKr6U.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-goYVOP_E.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DxhjJHtO.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DSpZYFYo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Dxe3F5ef.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DdCvjV0c.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-B79Imd4u.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BRWrvPZP.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-R6kxCRe5.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-B2y5qh5z.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DgGBNsJo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DEAq7h1o.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -92455,6 +92455,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!fractional) return Math.round(value);
     return Number(value.toPrecision(6));
   }
+  function formatContrastLimit(value, range2) {
+    if (!Number.isFinite(value)) return "";
+    if (!range2) return String(Math.round(value));
+    const span = range2.max - range2.min;
+    const exp = Math.floor(Math.log10(span));
+    const wanted = Number.isFinite(exp) ? Math.max(0, 3 - exp) : 3;
+    for (let decimals = Math.min(wanted, 6); decimals >= 0; decimals--) {
+      const text2 = value.toFixed(decimals);
+      if (text2.length <= 6 && (Number(text2) !== 0 || value === 0)) return text2;
+    }
+    return value.toExponential(2);
+  }
   const EMPTY_DIST = {
     id: "",
     YValues: [],
@@ -92579,22 +92591,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [expanded, setExpanded] = reactExports.useState(false);
     const rangeMin = (_a2 = props.floatRange) == null ? void 0 : _a2.min;
     const rangeMax = (_b2 = props.floatRange) == null ? void 0 : _b2.max;
-    const fractional = rangeMin != null && rangeMax != null;
+    const range2 = reactExports.useMemo(() => rangeMin != null && rangeMax != null ? {
+      min: rangeMin,
+      max: rangeMax
+    } : null, [
+      rangeMin,
+      rangeMax
+    ]);
+    const fractional = range2 != null;
     const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
     const chart = reactExports.useMemo(() => resolveHistogramChartView(dist2, {
-      floatRange: fractional ? {
-        min: rangeMin,
-        max: rangeMax
-      } : null,
+      floatRange: range2,
       dtypeMax,
       expanded,
       lowerLimit: props.lowerLimit
     }), [
       dist2,
       expanded,
-      fractional,
-      rangeMin,
-      rangeMax,
+      range2,
       dtypeMax,
       props.lowerLimit
     ]);
@@ -92618,8 +92632,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         if (hi2 !== sliderMax) setSliderMax(hi2);
       }
     }
-    const [minInput, setMinInput] = reactExports.useState(String(props.lowerLimit));
-    const [maxInput, setMaxInput] = reactExports.useState(String(props.upperLimit));
+    const [minInput, setMinInput] = reactExports.useState(() => formatContrastLimit(props.lowerLimit, range2));
+    const [maxInput, setMaxInput] = reactExports.useState(() => formatContrastLimit(props.upperLimit, range2));
     const lastCommittedRangeRef = reactExports.useRef([
       snapContrastLimit(props.lowerLimit, fractional),
       snapContrastLimit(props.upperLimit, fractional)
@@ -92632,8 +92646,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const hiStep = scale2.toSlider(props.upperLimit);
       setSliderMin(loStep);
       setSliderMax(hiStep);
-      setMinInput(String(lo));
-      setMaxInput(String(hi2));
+      setMinInput(formatContrastLimit(lo, range2));
+      setMaxInput(formatContrastLimit(hi2, range2));
       lastCommittedRangeRef.current = [
         lo,
         hi2
@@ -92644,7 +92658,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       props.lowerLimit,
       props.upperLimit,
       scale2,
-      fractional
+      fractional,
+      range2
     ]);
     const previewRange = (lower, upper) => {
       useAppStore.getState().setChannelRendering({
@@ -92692,8 +92707,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const syncFromSliders = (loStep, hiStep, commit) => {
       const lo = snapContrastLimit(scale2.fromSlider(loStep), fractional);
       const hi2 = snapContrastLimit(scale2.fromSlider(hiStep), fractional);
-      setMinInput(String(lo));
-      setMaxInput(String(hi2));
+      setMinInput(formatContrastLimit(lo, range2));
+      setMaxInput(formatContrastLimit(hi2, range2));
       if (commit) {
         commitRange(lo, hi2);
       } else {
@@ -92719,8 +92734,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       syncFromSliders(sliderMinRef.current, sliderMaxRef.current, true);
     };
     const commitFromInputs = () => {
-      let lo = Number.parseFloat(minInput);
-      let hi2 = Number.parseFloat(maxInput);
+      const preciseLo = snapContrastLimit(scale2.fromSlider(sliderMinRef.current), fractional);
+      const preciseHi = snapContrastLimit(scale2.fromSlider(sliderMaxRef.current), fractional);
+      let lo = minInput === formatContrastLimit(preciseLo, range2) ? preciseLo : Number.parseFloat(minInput);
+      let hi2 = maxInput === formatContrastLimit(preciseHi, range2) ? preciseHi : Number.parseFloat(maxInput);
       if (!Number.isFinite(lo)) lo = scale2.dtypeMin;
       if (!Number.isFinite(hi2)) hi2 = scale2.dtypeMax;
       lo = snapContrastLimit(Math.max(scale2.dtypeMin, Math.min(scale2.dtypeMax, lo)), fractional);
@@ -92732,8 +92749,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       setSliderMin(scale2.toSlider(lo));
       setSliderMax(scale2.toSlider(hi2));
-      setMinInput(String(lo));
-      setMaxInput(String(hi2));
+      setMinInput(formatContrastLimit(lo, range2));
+      setMaxInput(formatContrastLimit(hi2, range2));
       commitRange(lo, hi2);
     };
     const minFrac = sliderMin / scale2.sliderSteps;
@@ -92863,7 +92880,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     onKeyUp: onSliderCommit,
                     onBlur: onSliderCommit,
                     "aria-label": `${props.channelLabel} contrast minimum`,
-                    "aria-valuetext": `${Math.round(scale2.fromSlider(sliderMin))} intensity`
+                    "aria-valuetext": `${formatContrastLimit(scale2.fromSlider(sliderMin), range2)} intensity`
                   }),
                   jsxRuntimeExports.jsx("input", {
                     type: "range",
@@ -92877,7 +92894,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     onKeyUp: onSliderCommit,
                     onBlur: onSliderCommit,
                     "aria-label": `${props.channelLabel} contrast maximum`,
-                    "aria-valuetext": `${Math.round(scale2.fromSlider(sliderMax))} intensity`
+                    "aria-valuetext": `${formatContrastLimit(scale2.fromSlider(sliderMax), range2)} intensity`
                   })
                 ]
               })
@@ -165593,8 +165610,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         score: null
       };
     }
+    const threshold = plane.integer === false ? 0.9 : EQ_THRESHOLD;
     return {
-      label: score > EQ_THRESHOLD ? "mask" : "image",
+      label: score > threshold ? "mask" : "image",
       score
     };
   }
@@ -167045,9 +167063,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           const result = await detectOmeTiffMask(source2, ac2.signal);
           if (ac2.signal.aborted) return;
           if (!roleChosenByUserRef.current && (result.score != null || result.label === "rgb")) {
-            const role2 = result.label === "mask" ? "segmentation" : "intensity";
-            setDetectedRole(role2);
-            setOverlayRole(role2);
+            const detected = result.label === "mask" ? "segmentation" : "intensity";
+            setDetectedRole(detected);
+            setOverlayRole(detected);
           }
         } catch (error2) {
           if (!ac2.signal.aborted) {
@@ -167477,7 +167495,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 jsxRuntimeExports.jsx(FormatChip, {
                   label: "Fluorescence",
                   selected: overlayRole === "intensity" && !overlayRgbDisplay,
-                  suggested: detectedRole === "intensity" && detectedRgbDisplay !== true,
+                  suggested: overlayRole === "intensity" && !overlayRgbDisplay,
                   muted: detectedRgbDisplay === true,
                   onClick: () => {
                     roleChosenByUserRef.current = true;
@@ -167490,7 +167508,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 detectedRgbDisplay != null ? jsxRuntimeExports.jsx(FormatChip, {
                   label: "Brightfield",
                   selected: overlayRole === "intensity" && overlayRgbDisplay,
-                  suggested: detectedRole === "intensity" && detectedRgbDisplay === true,
+                  suggested: overlayRole === "intensity" && overlayRgbDisplay,
                   muted: detectedRole !== "intensity" || detectedRgbDisplay !== true,
                   onClick: () => {
                     roleChosenByUserRef.current = true;
@@ -167503,7 +167521,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 jsxRuntimeExports.jsx(FormatChip, {
                   label: "Segmentation Mask",
                   selected: overlayRole === "segmentation",
-                  suggested: detectedRole === "segmentation",
+                  suggested: overlayRole === "segmentation",
                   onClick: () => {
                     roleChosenByUserRef.current = true;
                     setOverlayRole("segmentation");
@@ -254595,12 +254613,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-28T16:19:47.880Z");
+    const label2 = utcShort("2026-09-28T16:58:09.995Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-28T16:19:47.880Z",
+      title: "2026-09-28T16:58:09.995Z",
       children: [
         "Updated ",
         label2,
