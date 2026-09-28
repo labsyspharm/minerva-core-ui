@@ -7,6 +7,7 @@ type HistogramChartView = {
     distScale: "linear" | "log";
     distMin: number;
     distMax: number;
+    dtypeMin: number;
     dtypeMax: number;
   };
 };
@@ -19,14 +20,14 @@ type DistSlice = {
 };
 
 /**
- * Smallest index i where sum(y[0..i]) >= fraction * sum(y).
- * Empty leading bins add 0. If total is 0, return 0. Crossing bin stays visible.
+ * Smallest index where the cumulative count reaches 0.5% of the total.
+ * Empty leading bins add 0. If the total is 0, return 0. The crossing bin stays visible.
  */
-function firstTrimBin(yValues: readonly number[], fraction: number): number {
+function firstTrimBin(yValues: readonly number[]): number {
   let total = 0;
   for (const y of yValues) total += y;
   if (total === 0) return 0;
-  const threshold = fraction * total;
+  const threshold = HISTOGRAM_TRIM_FRACTION * total;
   let sum = 0;
   for (let i = 0; i < yValues.length; i++) {
     sum += yValues[i];
@@ -38,22 +39,21 @@ function firstTrimBin(yValues: readonly number[], fraction: number): number {
 export function resolveHistogramChartView(
   dist: DistSlice,
   opts: {
-    eightBit: boolean;
+    floatRange?: { min: number; max: number } | null;
     dtypeMax: number;
     expanded: boolean;
     lowerLimit: number;
   },
 ): HistogramChartView {
   const y = dist.YValues ?? [];
-  const fullScale: "linear" | "log" = opts.eightBit
-    ? "linear"
-    : dist.XScale === "linear"
-      ? "linear"
-      : "log";
-  const fullMin = opts.eightBit ? 0 : (dist.LowerRange ?? 0);
-  const fullMax = opts.eightBit ? 255 : (dist.UpperRange ?? 0);
+  const full =
+    opts.floatRange ?? (opts.dtypeMax === 255 ? { min: 0, max: 255 } : null);
+  const fullScale: "linear" | "log" =
+    full || dist.XScale === "linear" ? "linear" : "log";
+  const fullMin = full?.min ?? dist.LowerRange ?? 0;
+  const fullMax = full?.max ?? dist.UpperRange ?? 0;
   const span = fullMax - fullMin;
-  const trimAt = y.length === 0 ? 0 : firstTrimBin(y, HISTOGRAM_TRIM_FRACTION);
+  const trimAt = firstTrimBin(y);
   const valueBin =
     y.length === 0 || span === 0
       ? 0
@@ -74,7 +74,8 @@ export function resolveHistogramChartView(
       distScale: fullScale,
       distMin,
       distMax: fullMax,
-      dtypeMax: opts.dtypeMax,
+      dtypeMin: full?.min ?? 0,
+      dtypeMax: full?.max ?? opts.dtypeMax,
     },
   };
 }

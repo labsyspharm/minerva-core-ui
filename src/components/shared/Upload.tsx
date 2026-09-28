@@ -872,9 +872,7 @@ const Upload = (props: UploadProps) => {
               suggested={
                 detectedRole === "intensity" && detectedRgbDisplay !== true
               }
-              muted={
-                detectedRole !== "intensity" || detectedRgbDisplay === true
-              }
+              muted={detectedRgbDisplay === true}
               onClick={() => {
                 roleChosenByUserRef.current = true;
                 rgbDisplayChosenByUserRef.current = true;
@@ -906,7 +904,6 @@ const Upload = (props: UploadProps) => {
               label="Segmentation Mask"
               selected={overlayRole === "segmentation"}
               suggested={detectedRole === "segmentation"}
-              muted={detectedRole !== "segmentation"}
               onClick={() => {
                 roleChosenByUserRef.current = true;
                 setOverlayRole("segmentation");

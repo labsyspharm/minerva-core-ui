@@ -2,6 +2,7 @@ import * as React from "react";
 import AxisBreakIcon from "@/components/shared/icons/axis-break.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { sourceDtypeMax } from "@/lib/imaging/channelKind";
+import { channelFloatRange } from "@/lib/imaging/floatRange";
 import { resolveHistogramChartView } from "@/lib/imaging/histogramChartView";
 import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
 import type { SourceDistributionData } from "@/lib/stores/documentSchema";
@@ -20,8 +21,8 @@ type ContrastScaleInput = {
   distScale: string;
   distMin: number;
   distMax: number;
-  dtypeMin?: number;
-  dtypeMax?: number;
+  dtypeMin: number;
+  dtypeMax: number;
 };
 
 type ContrastScale = {
@@ -32,8 +33,10 @@ type ContrastScale = {
   dtypeMax: number;
 };
 
-const DEFAULT_DTYPE_MIN = 0;
-const DEFAULT_DTYPE_MAX = 65535;
+function snapContrastLimit(value: number, fractional: boolean): number {
+  if (!fractional) return Math.round(value);
+  return Number(value.toPrecision(6));
+}
 
 const EMPTY_DIST: SourceDistributionData = {
   id: "",
@@ -46,8 +49,7 @@ const EMPTY_DIST: SourceDistributionData = {
 
 /** Map slider steps ↔ intensity values (linear or log axis). Ported from range-editor-element.js */
 function buildContrastScale(input: ContrastScaleInput): ContrastScale {
-  const dtypeMin = input.dtypeMin ?? DEFAULT_DTYPE_MIN;
-  const dtypeMax = input.dtypeMax ?? DEFAULT_DTYPE_MAX;
+  const { dtypeMin, dtypeMax } = input;
   const chart_x_steps = SLIDER_DOMAIN_STEPS;
   const chart_x_max = input.distMax;
   const chart_x_origin = input.distMin;
@@ -93,11 +95,11 @@ function buildContrastScale(input: ContrastScaleInput): ContrastScale {
 
 /** Build SVG paths for histogram sparkline (channel-item-element chartTemplate). */
 function histogramSparklinePaths(
-  values: readonly number[] | undefined,
+  values: readonly number[],
   width = 100,
   height = 11,
 ): { linePath: string; fillPath: string } {
-  const line = [0, ...(values || []), 0];
+  const line = [0, ...values, 0];
   const flat = line.slice(1, -1).every((v) => v === line[1]);
   const max = Math.max(1, ...(flat ? [2 * line[1]] : line));
   const len = Math.max(2, line.length);
@@ -125,6 +127,8 @@ export type ChannelContrastEditorProps = {
   histogramLoading?: boolean;
   distribution?: SourceDistributionData | null;
   sourceDataTypeId?: string;
+  /** Finite sample span for a float plane. Absent for integer dtypes. */
+  floatRange?: { min: number; max: number } | null;
 };
 
 export function renderingForSource<K extends ChannelRendering["kind"]>(
@@ -159,6 +163,7 @@ export function contrastEditorPropsForSource(
     upperLimit: liveContrast ? liveContrast.upper : limits[1],
     distribution: sc.sourceDistribution ?? null,
     sourceDataTypeId: sc.sourceDataTypeId,
+    floatRange: channelFloatRange(sc),
   };
 }
 
@@ -188,6 +193,7 @@ export function contrastEditorPropsForGroupRow(
     upperLimit: liveContrast ? liveContrast.upper : gc.upperLimit,
     distribution: sc?.sourceDistribution ?? null,
     sourceDataTypeId: sc?.sourceDataTypeId,
+    floatRange: sc ? channelFloatRange(sc) : null,
   };
 }
 
@@ -199,17 +205,27 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
 
   const [expanded, setExpanded] = React.useState(false);
 
+  const rangeMin = props.floatRange?.min;
+  const rangeMax = props.floatRange?.max;
+  const fractional = rangeMin != null && rangeMax != null;
   const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
-  const eightBit = dtypeMax === 255;
   const chart = React.useMemo(
     () =>
       resolveHistogramChartView(dist, {
-        eightBit,
+        floatRange: fractional ? { min: rangeMin, max: rangeMax } : null,
         dtypeMax,
         expanded,
         lowerLimit: props.lowerLimit,
       }),
-    [dist, expanded, eightBit, dtypeMax, props.lowerLimit],
+    [
+      dist,
+      expanded,
+      fractional,
+      rangeMin,
+      rangeMax,
+      dtypeMax,
+      props.lowerLimit,
+    ],
   );
   const scale = React.useMemo(
     () => buildContrastScale(chart.scaleInput),
@@ -240,23 +256,24 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const [minInput, setMinInput] = React.useState(String(props.lowerLimit));
   const [maxInput, setMaxInput] = React.useState(String(props.upperLimit));
   const lastCommittedRangeRef = React.useRef([
-    Math.round(props.lowerLimit),
-    Math.round(props.upperLimit),
+    snapContrastLimit(props.lowerLimit, fractional),
+    snapContrastLimit(props.upperLimit, fractional),
   ] as const);
 
   React.useEffect(() => {
     if (editingLimitRef.current) return;
-    setSliderMin(scale.toSlider(props.lowerLimit));
-    setSliderMax(scale.toSlider(props.upperLimit));
-    setMinInput(String(Math.round(props.lowerLimit)));
-    setMaxInput(String(Math.round(props.upperLimit)));
-    lastCommittedRangeRef.current = [
-      Math.round(props.lowerLimit),
-      Math.round(props.upperLimit),
-    ];
-    sliderMinRef.current = scale.toSlider(props.lowerLimit);
-    sliderMaxRef.current = scale.toSlider(props.upperLimit);
-  }, [props.lowerLimit, props.upperLimit, scale]);
+    const lo = snapContrastLimit(props.lowerLimit, fractional);
+    const hi = snapContrastLimit(props.upperLimit, fractional);
+    const loStep = scale.toSlider(props.lowerLimit);
+    const hiStep = scale.toSlider(props.upperLimit);
+    setSliderMin(loStep);
+    setSliderMax(hiStep);
+    setMinInput(String(lo));
+    setMaxInput(String(hi));
+    lastCommittedRangeRef.current = [lo, hi];
+    sliderMinRef.current = loStep;
+    sliderMaxRef.current = hiStep;
+  }, [props.lowerLimit, props.upperLimit, scale, fractional]);
 
   const previewRange = (lower: number, upper: number) => {
     useAppStore.getState().setChannelRendering({
@@ -268,8 +285,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   };
 
   const commitRange = (lower: number, upper: number) => {
-    const lo = Math.round(lower);
-    const hi = Math.round(upper);
+    const lo = snapContrastLimit(lower, fractional);
+    const hi = snapContrastLimit(upper, fractional);
     const [lastLo, lastHi] = lastCommittedRangeRef.current;
     if (lo === lastLo && hi === lastHi) {
       useAppStore.getState().clearChannelRendering();
@@ -311,8 +328,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   }, [props.sourceChannelId]);
 
   const syncFromSliders = (loStep: number, hiStep: number, commit: boolean) => {
-    const lo = Math.round(scale.fromSlider(loStep));
-    const hi = Math.round(scale.fromSlider(hiStep));
+    const lo = snapContrastLimit(scale.fromSlider(loStep), fractional);
+    const hi = snapContrastLimit(scale.fromSlider(hiStep), fractional);
     setMinInput(String(lo));
     setMaxInput(String(hi));
     if (commit) {
@@ -348,8 +365,14 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     let hi = Number.parseFloat(maxInput);
     if (!Number.isFinite(lo)) lo = scale.dtypeMin;
     if (!Number.isFinite(hi)) hi = scale.dtypeMax;
-    lo = Math.round(Math.max(scale.dtypeMin, Math.min(scale.dtypeMax, lo)));
-    hi = Math.round(Math.max(scale.dtypeMin, Math.min(scale.dtypeMax, hi)));
+    lo = snapContrastLimit(
+      Math.max(scale.dtypeMin, Math.min(scale.dtypeMax, lo)),
+      fractional,
+    );
+    hi = snapContrastLimit(
+      Math.max(scale.dtypeMin, Math.min(scale.dtypeMax, hi)),
+      fractional,
+    );
     if (lo > hi) {
       const t = lo;
       lo = hi;
@@ -372,6 +395,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const histogramViewWidth = 96.7;
   const histogramClipX = histogramViewX + minFrac * histogramViewWidth;
   const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
+  const trimmed = chart.startBin > 0;
 
   return (
     <div className={styles.wrap}>
@@ -382,6 +406,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
         aria-label={`${props.channelLabel} contrast minimum value`}
         min={scale.dtypeMin}
         max={scale.dtypeMax}
+        step={fractional ? "any" : 1}
         onFocus={() => {
           editingLimitRef.current = true;
         }}
@@ -406,12 +431,12 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
       >
         <div
           className={
-            !expanded && chart.startBin > 0
+            trimmed
               ? `${styles.histogramPlot} ${styles.histogramPlotTrimmed}`
               : styles.histogramPlot
           }
         >
-          {!expanded && chart.startBin > 0 ? (
+          {trimmed ? (
             <button
               type="button"
               className={`${minervaTheme.focusRing} ${styles.axisBreak}`}
@@ -513,6 +538,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
         aria-label={`${props.channelLabel} contrast maximum value`}
         min={scale.dtypeMin}
         max={scale.dtypeMax}
+        step={fractional ? "any" : 1}
         onFocus={() => {
           editingLimitRef.current = true;
         }}

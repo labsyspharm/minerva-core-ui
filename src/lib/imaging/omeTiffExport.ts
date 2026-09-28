@@ -287,7 +287,7 @@ export function groupMaskChannelsForOmeExport(
   return intensity.length === 0 ? channelsOfKind(image, "mask") : [];
 }
 
-/** Group-row contrast, else source limits, else 0…dtypeMax (RGB / ungrouped IF). */
+/** Group-row contrast, else source limits, else the stored float span, else 0…dtypeMax. */
 export function contrastLimitsForExportedChannel(
   channel: ImageChannel,
   channelGroups: ChannelGroup[],
@@ -298,9 +298,10 @@ export function contrastLimitsForExportedChannel(
       return { lowerLimit: row.lowerLimit, upperLimit: row.upperLimit };
     }
   }
-  const max = sourceDtypeMax(channel.sourceDataTypeId);
+  const max =
+    channel.floatRange?.max ?? sourceDtypeMax(channel.sourceDataTypeId);
   return {
-    lowerLimit: channel.lowerLimit ?? 0,
+    lowerLimit: channel.lowerLimit ?? channel.floatRange?.min ?? 0,
     upperLimit: channel.upperLimit ?? max,
   };
 }

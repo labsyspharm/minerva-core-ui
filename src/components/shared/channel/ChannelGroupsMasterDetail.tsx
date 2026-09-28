@@ -46,6 +46,7 @@ import {
   type MaskVisualization,
   planarRgbDisplayColor,
 } from "@/lib/imaging/channelKind";
+import { channelFloatRange, isFloatDtype } from "@/lib/imaging/floatRange";
 import {
   ensureGmm,
   getGmmPendingIds,
@@ -190,19 +191,18 @@ function DraggableChannelRow(props: {
     fromGroupId: props.fromGroupId,
     fromRowId: props.fromRowId,
   };
-  const beginDrag = (e: React.DragEvent) => {
-    startChannelDrag(e, payload);
-    if (!props.onRemoveFromGroup) return;
-    const row = e.currentTarget.closest(`.${styles.channelRowWrap}`);
-    if (row instanceof HTMLElement) previewUngroupWhileDragging(row);
-  };
   return (
     <div className={styles.channelRowWrap}>
       <button
         type="button"
         className={styles.dragHandle}
         draggable
-        onDragStart={beginDrag}
+        onDragStart={(e) => {
+          startChannelDrag(e, payload);
+          if (!props.onRemoveFromGroup) return;
+          const row = e.currentTarget.closest(`.${styles.channelRowWrap}`);
+          if (row instanceof HTMLElement) previewUngroupWhileDragging(row);
+        }}
         onDragEnd={(e) => {
           if (!props.onRemoveFromGroup) return;
           if (e.dataTransfer.dropEffect !== "none") return;
@@ -1127,7 +1127,18 @@ export const ChannelGroupsMasterDetail = (
       if (!sc || seen.has(sc.id)) return;
       if (!isImageChannel(sc) || isRgbDisplayChannel(sc, sourceChannels))
         return;
-      if (sourceDistributionYValuesLength(sc) > 0) return;
+      if (sourceDistributionYValuesLength(sc) > 0) {
+        const range = channelFloatRange(sc);
+        const dist = sc.sourceDistribution;
+        const axisMatches =
+          dist?.XScale === "linear" &&
+          dist.LowerRange === range?.min &&
+          dist.UpperRange === range?.max;
+        const stale = range
+          ? !axisMatches
+          : isFloatDtype(sc.sourceDataTypeId) && dist?.XScale === "log";
+        if (!stale) return;
+      }
       seen.add(sc.id);
     };
     for (const group of channelGroups) {

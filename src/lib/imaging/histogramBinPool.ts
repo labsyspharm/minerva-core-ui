@@ -45,12 +45,23 @@ export class HistogramBinPool {
     width: number,
     buffer: ArrayBuffer,
     arrayCtorName: string,
+    range?: { min: number; max: number } | null,
   ): Promise<number[]> {
     const jobId = this.nextId++;
     const w = this.workers[this.rr++ % this.workers.length];
     return new Promise((resolve, reject) => {
       this.pending.set(jobId, { resolve, reject });
-      w.postMessage({ jobId, bits, width, buffer, arrayCtorName }, [buffer]);
+      w.postMessage(
+        {
+          jobId,
+          bits,
+          width,
+          buffer,
+          arrayCtorName,
+          range,
+        },
+        [buffer],
+      );
     });
   }
 }
@@ -76,6 +87,7 @@ export async function histogramBinTile(
     byteOffset: number;
     byteLength: number;
   },
+  range?: { min: number; max: number } | null,
 ): Promise<number[]> {
   if (data.length > MAX_HISTOGRAM_TILE_PIXELS) return [];
   const pool = getHistogramBinPool();
@@ -85,7 +97,7 @@ export async function histogramBinTile(
         data.byteOffset,
         data.byteOffset + data.byteLength,
       );
-      return await pool.run(bits, width, copy, data.constructor.name);
+      return await pool.run(bits, width, copy, data.constructor.name, range);
     } catch (err) {
       console.warn(
         "[minerva] histogram worker failed, using main thread:",
@@ -93,5 +105,5 @@ export async function histogramBinTile(
       );
     }
   }
-  return histogramBinFromPixels(bits, width, data);
+  return histogramBinFromPixels(bits, width, data, range);
 }

@@ -10,6 +10,13 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import { applySourceChannelsToImages } from "@/lib/stores/storeUtils";
+import {
+  dequantizeFromUint16,
+  type FloatRange,
+  finiteSampleRange,
+  isFloatDtype,
+  quantizeFloatToUint16,
+} from "./floatRange";
 import type { LoaderPlane } from "./loaderTypes";
 
 const FETCH_CONCURRENCY = 1;
@@ -137,7 +144,11 @@ function finishJob(job: Job, gen: number) {
   notify();
 }
 
-function commitFitted(job: Job, window: ContrastLimits): void {
+function commitFitted(
+  job: Job,
+  window: ContrastLimits,
+  range: FloatRange | null,
+): void {
   const doc = useDocumentStore.getState();
   const channels = flattenImageChannelsInDocumentOrder(doc.images);
   let changed = false;
@@ -150,11 +161,19 @@ function commitFitted(job: Job, window: ContrastLimits): void {
       return sc;
     }
     changed = true;
+    const dist = sc.sourceDistribution;
+    const distMatches =
+      range != null &&
+      dist?.XScale === "linear" &&
+      dist.LowerRange === range.min &&
+      dist.UpperRange === range.max;
     return {
       ...sc,
       gmmContrastLimits: { lower: window.lower, upper: window.upper },
       lowerLimit: window.lower,
       upperLimit: window.upper,
+      ...(range ? { floatRange: range } : {}),
+      ...(range && !distMatches ? { sourceDistribution: undefined } : {}),
     };
   });
   if (changed) {
@@ -225,11 +244,13 @@ function sampleToUint16(v: number, u8: boolean): number {
   return Math.max(0, Math.min(65535, Math.round(v)));
 }
 
-/** Coarsest pyramid tiles, at most GMM_MAX_SAMPLES uint16 samples. Never getRaster. */
+type CoarsestSample = { u16: Uint16Array; range: FloatRange | null };
+
+/** Coarsest pyramid tiles, at most GMM_MAX_SAMPLES. Never getRaster. */
 async function fetchCoarsestUint16(
   loader: Loader,
   sourceIndex: number,
-): Promise<Uint16Array | null> {
+): Promise<CoarsestSample | null> {
   const planes = loader.data;
   if (!planes?.length) return null;
   const cIdx = planes[0].labels.indexOf("c");
@@ -237,7 +258,7 @@ async function fetchCoarsestUint16(
   if (sourceIndex < 0 || sourceIndex >= nC) return null;
 
   const selection = { t: 0, z: 0, c: sourceIndex };
-  const out = new Uint16Array(GMM_MAX_SAMPLES);
+  const raw = new Float64Array(GMM_MAX_SAMPLES);
 
   for (let i = planes.length - 1; i >= 0; i--) {
     const plane = planes[i];
@@ -250,6 +271,7 @@ async function fetchCoarsestUint16(
     if (maxTile > GMM_MAX_DECODE_PIXELS) continue;
 
     let o = 0;
+    let sawU8 = false;
     for (const [x, y] of pickTileCoords(nx, ny)) {
       if (o >= GMM_MAX_SAMPLES) break;
       let data: ArrayLike<number> | undefined;
@@ -260,34 +282,44 @@ async function fetchCoarsestUint16(
         continue;
       }
       if (!data?.length || data.length > GMM_MAX_DECODE_PIXELS) continue;
-      const u8 =
-        data instanceof Uint8Array || data instanceof Uint8ClampedArray;
+      if (data instanceof Uint8Array || data instanceof Uint8ClampedArray) {
+        sawU8 = true;
+      }
       const stride = Math.max(
         1,
         Math.ceil(data.length / (GMM_MAX_SAMPLES - o)),
       );
       for (let p = 0; p < data.length && o < GMM_MAX_SAMPLES; p += stride) {
-        out[o++] = sampleToUint16(Number(data[p]), u8);
+        raw[o++] = Number(data[p]);
       }
     }
-    if (o > 0) return o < GMM_MAX_SAMPLES ? out.subarray(0, o) : out;
+    if (o === 0) continue;
+    const samples = raw.subarray(0, o);
+    const range = isFloatDtype(plane.dtype) ? finiteSampleRange(samples) : null;
+    const u16 = new Uint16Array(o);
+    for (let s = 0; s < o; s++) {
+      u16[s] = range
+        ? quantizeFloatToUint16(samples[s], range)
+        : sampleToUint16(samples[s], sawU8);
+    }
+    return { u16, range };
   }
   return null;
 }
 
 async function runJob(job: Job, gen: number): Promise<FitOutcome> {
   await acquire(fetchUsedBox, fetchWaiters, FETCH_CONCURRENCY);
-  let u16: Uint16Array | null = null;
+  let sampled: CoarsestSample | null = null;
   try {
     if (gen !== generation) return { kind: "failed" };
-    u16 = await fetchCoarsestUint16(job.loader, job.index);
+    sampled = await fetchCoarsestUint16(job.loader, job.index);
   } finally {
     release(fetchUsedBox, fetchWaiters);
     pump();
   }
 
   if (gen !== generation) return { kind: "failed" };
-  if (!u16) {
+  if (!sampled) {
     failedKeys.add(job.rasterKey);
     finishJob(job, gen);
     pump();
@@ -298,13 +330,26 @@ async function runJob(job: Job, gen: number): Promise<FitOutcome> {
   let window: ContrastLimits | null = null;
   try {
     if (gen === generation) {
-      window = await fitChannelGmmContrastFromUint16(u16);
+      window = await fitChannelGmmContrastFromUint16(sampled.u16);
     }
   } finally {
     release(fitUsedBox, fitWaiters);
   }
 
   if (gen !== generation) return { kind: "failed" };
+  if (sampled.range) {
+    const range = sampled.range;
+    if (window) {
+      window = {
+        lower: dequantizeFromUint16(window.lower, range),
+        upper: dequantizeFromUint16(window.upper, range),
+      };
+    }
+    if (!window || !(window.upper > window.lower)) {
+      window = { lower: range.min, upper: range.max };
+    }
+  }
+
   if (!window) {
     failedKeys.add(job.rasterKey);
     finishJob(job, gen);
@@ -312,7 +357,7 @@ async function runJob(job: Job, gen: number): Promise<FitOutcome> {
     return { kind: "failed" };
   }
 
-  commitFitted(job, window);
+  commitFitted(job, window, sampled.range);
   finishJob(job, gen);
   pump();
   return { kind: "fitted", window };
