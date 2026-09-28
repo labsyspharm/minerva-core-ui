@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CCkqpbus.js","./pako.esm-KbdoS3Oq.js","./lerc-Bck9uuzU.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DxhjJHtO.js","./pako.esm-KbdoS3Oq.js","./lerc-Dxe3F5ef.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -66460,26 +66460,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-Dg3QR7qU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-lDMkMvOR.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-D5lMnAiC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-ClWHPai4.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-COvE6-pq.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CgYZKr6U.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CCkqpbus.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-D_5GvVUh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Bck9uuzU.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DxhjJHtO.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DSpZYFYo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Dxe3F5ef.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DpYkNHcj.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-R6kxCRe5.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-Cxvn8SwM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DgGBNsJo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -92416,22 +92416,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  const wrap$2 = "_wrap_18aib_1";
-  const histogramHost = "_histogramHost_18aib_13";
-  const histogramPlot = "_histogramPlot_18aib_22";
-  const histogramPlotTrimmed = "_histogramPlotTrimmed_18aib_30";
-  const histogramLoading = "_histogramLoading_18aib_35";
-  const histogramLoadingVisible = "_histogramLoadingVisible_18aib_47";
-  const histogramSvg = "_histogramSvg_18aib_51";
-  const axisBreak = "_axisBreak_18aib_59";
-  const histogramFill = "_histogramFill_18aib_89";
-  const histogramLine = "_histogramLine_18aib_94";
-  const histogramOutOfRange = "_histogramOutOfRange_18aib_101";
-  const sliderRow = "_sliderRow_18aib_105";
-  const rangeInput = "_rangeInput_18aib_117";
-  const rangeInputMin = "_rangeInputMin_18aib_142";
-  const rangeInputMax = "_rangeInputMax_18aib_149";
-  const limitInput = "_limitInput_18aib_187";
+  const wrap$2 = "_wrap_sur29_1";
+  const histogramHost = "_histogramHost_sur29_13";
+  const histogramPlot = "_histogramPlot_sur29_22";
+  const histogramPlotTrimmed = "_histogramPlotTrimmed_sur29_30";
+  const histogramLoading = "_histogramLoading_sur29_35";
+  const histogramLoadingVisible = "_histogramLoadingVisible_sur29_47";
+  const histogramSvg = "_histogramSvg_sur29_51";
+  const axisBreak = "_axisBreak_sur29_59";
+  const histogramFill = "_histogramFill_sur29_84";
+  const histogramLine = "_histogramLine_sur29_89";
+  const histogramOutOfRange = "_histogramOutOfRange_sur29_96";
+  const sliderRow = "_sliderRow_sur29_100";
+  const rangeInput = "_rangeInput_sur29_112";
+  const rangeInputMin = "_rangeInputMin_sur29_137";
+  const rangeInputMax = "_rangeInputMax_sur29_144";
+  const limitInput = "_limitInput_sur29_182";
   const styles$n = {
     wrap: wrap$2,
     histogramHost,
@@ -254595,12 +254595,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-28T15:31:47.978Z");
+    const label2 = utcShort("2026-09-28T16:19:47.880Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-28T15:31:47.978Z",
+      title: "2026-09-28T16:19:47.880Z",
       children: [
         "Updated ",
         label2,

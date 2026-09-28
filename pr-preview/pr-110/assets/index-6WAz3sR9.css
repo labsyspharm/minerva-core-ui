@@ -1594,7 +1594,7 @@ body {
   font: inherit;
   cursor: pointer;
 }
-._wrap_18aib_1 {
+._wrap_sur29_1 {
   --range-input-width: 3.25rem;
   display: grid;
   grid-template-columns:
@@ -1606,7 +1606,7 @@ body {
   width: 100%;
 }
 
-._histogramHost_18aib_13 {
+._histogramHost_sur29_13 {
   width: 100%;
   min-width: 0;
   padding-right: 8px;
@@ -1615,7 +1615,7 @@ body {
   --handle-max: url("./histogram-handle-max-CwFVdUGP.svg");
 }
 
-._histogramPlot_18aib_22 {
+._histogramPlot_sur29_22 {
   position: relative;
   box-sizing: border-box;
   width: 100%;
@@ -1623,12 +1623,12 @@ body {
   padding-top: 5px;
 }
 
-._histogramPlotTrimmed_18aib_30 {
+._histogramPlotTrimmed_sur29_30 {
   width: calc(100% - 32px);
   margin-left: 32px;
 }
 
-._histogramLoading_18aib_35 {
+._histogramLoading_sur29_35 {
   display: none;
   position: absolute;
   inset: 0;
@@ -1640,11 +1640,11 @@ body {
   pointer-events: none;
 }
 
-._histogramLoadingVisible_18aib_47 {
+._histogramLoadingVisible_sur29_47 {
   display: flex;
 }
 
-._histogramSvg_18aib_51 {
+._histogramSvg_sur29_51 {
   background: transparent;
   width: 100%;
   height: 18px;
@@ -1652,11 +1652,11 @@ body {
   overflow: visible;
 }
 
-._axisBreak_18aib_59 {
+._axisBreak_sur29_59 {
   position: absolute;
   left: -32px;
   bottom: 0.5px;
-  z-index: 4;
+  z-index: 6;
   display: block;
   width: 32px;
   height: 9px;
@@ -1670,35 +1670,30 @@ body {
   cursor: pointer;
 }
 
-._axisBreak_18aib_59 svg {
+._axisBreak_sur29_59 svg {
   display: block;
   width: 100%;
   height: 100%;
-  -webkit-mask:
-    linear-gradient(to right, #000 55%, transparent) center / 100% 100%
-    no-repeat;
-  mask:
-    linear-gradient(to right, #000 55%, transparent) center / 100% 100%
-    no-repeat;
+  cursor: pointer;
 }
 
-._histogramFill_18aib_89 {
+._histogramFill_sur29_84 {
   fill: var(--histogram-color, none);
   stroke: none;
 }
 
-._histogramLine_18aib_94 {
+._histogramLine_sur29_89 {
   fill: none;
   stroke: var(--minerva-ink);
   stroke-width: 0.7;
   stroke-linejoin: round;
 }
 
-._histogramOutOfRange_18aib_101 {
+._histogramOutOfRange_sur29_96 {
   opacity: 0.25;
 }
 
-._sliderRow_18aib_105 {
+._sliderRow_sur29_100 {
   position: absolute;
   right: 0;
   bottom: 5px;
@@ -1710,7 +1705,7 @@ body {
   z-index: 5;
 }
 
-._rangeInput_18aib_117 {
+._rangeInput_sur29_112 {
   position: absolute;
   left: calc(var(--handle-width) / -2);
   top: 0;
@@ -1724,7 +1719,7 @@ body {
   pointer-events: none;
 }
 
-._rangeInput_18aib_117::-webkit-slider-thumb {
+._rangeInput_sur29_112::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: var(--handle-width);
@@ -1735,21 +1730,21 @@ body {
   pointer-events: auto;
 }
 
-._rangeInputMin_18aib_142::-webkit-slider-thumb {
+._rangeInputMin_sur29_137::-webkit-slider-thumb {
   margin-left: calc(var(--handle-width) / -2);
   background-color: var(--minerva-ink);
   -webkit-mask: var(--handle-min) center / 100% 100% no-repeat;
   mask: var(--handle-min) center / 100% 100% no-repeat;
 }
 
-._rangeInputMax_18aib_149::-webkit-slider-thumb {
+._rangeInputMax_sur29_144::-webkit-slider-thumb {
   margin-left: calc(var(--handle-width) / 2);
   background-color: var(--minerva-ink);
   -webkit-mask: var(--handle-max) center / 100% 100% no-repeat;
   mask: var(--handle-max) center / 100% 100% no-repeat;
 }
 
-._rangeInput_18aib_117::-moz-range-thumb {
+._rangeInput_sur29_112::-moz-range-thumb {
   width: var(--handle-width);
   height: var(--handle-width);
   border: none;
@@ -1758,29 +1753,29 @@ body {
   pointer-events: auto;
 }
 
-._rangeInputMin_18aib_142::-moz-range-thumb {
+._rangeInputMin_sur29_137::-moz-range-thumb {
   margin-left: calc(var(--handle-width) / -2);
   background-color: var(--minerva-ink);
   mask: var(--handle-min) center / 100% 100% no-repeat;
 }
 
-._rangeInputMax_18aib_149::-moz-range-thumb {
+._rangeInputMax_sur29_144::-moz-range-thumb {
   margin-left: calc(var(--handle-width) / 2);
   background-color: var(--minerva-ink);
   mask: var(--handle-max) center / 100% 100% no-repeat;
 }
 
-._rangeInput_18aib_117::-webkit-slider-runnable-track {
+._rangeInput_sur29_112::-webkit-slider-runnable-track {
   height: var(--handle-width);
   background: transparent;
 }
 
-._rangeInput_18aib_117::-moz-range-track {
+._rangeInput_sur29_112::-moz-range-track {
   height: var(--handle-width);
   background: transparent;
 }
 
-._limitInput_18aib_187 {
+._limitInput_sur29_182 {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -1791,8 +1786,8 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-._limitInput_18aib_187::-webkit-outer-spin-button,
-._limitInput_18aib_187::-webkit-inner-spin-button {
+._limitInput_sur29_182::-webkit-outer-spin-button,
+._limitInput_sur29_182::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
