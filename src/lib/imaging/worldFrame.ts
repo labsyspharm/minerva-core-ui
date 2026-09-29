@@ -118,16 +118,20 @@ export function worldFrameFromLoader(loader: Loader): WorldFrame {
   );
 }
 
-/** World frame from the document image. `scaleX` / `scaleY` are µm/px. */
+/**
+ * World frame from the document image. `scaleX` / `scaleY` are µm/px.
+ * Missing fields follow the schema defaults (size 0, scale 1). Zod's output
+ * type marks every image field optional, so the parameter matches that.
+ */
 export function worldFrameFromImage(image: {
-  sizeX: number;
-  sizeY: number;
-  scaleX: number;
-  scaleY: number;
+  sizeX?: number;
+  sizeY?: number;
+  scaleX?: number;
+  scaleY?: number;
 }): WorldFrame {
-  return frameFromPixels(image.sizeX, image.sizeY, {
-    umPerPixelX: image.scaleX,
-    umPerPixelY: image.scaleY,
+  return frameFromPixels(image.sizeX ?? 0, image.sizeY ?? 0, {
+    umPerPixelX: image.scaleX ?? 1,
+    umPerPixelY: image.scaleY ?? 1,
   });
 }
 
