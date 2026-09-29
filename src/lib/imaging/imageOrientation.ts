@@ -15,29 +15,18 @@ function finiteScale(n: number | undefined): number {
   return typeof n === "number" && Number.isFinite(n) && n > 0 ? n : 1;
 }
 
-/**
- * Fold both-flips into +180° so the dial never reads 0° while the image is
- * upside-down. `scaleX` / `scaleY` are µm/px copied from the image.
- */
+/** Normalize placement. `scaleX` / `scaleY` are µm/px copied from the image. */
 export function effectiveOrientation(o: PlacementInput): ImageOrientation {
-  let rotationDegrees = o?.rotationDegrees ?? 0;
-  let flipHorizontal = o?.flipHorizontal ?? false;
-  let flipVertical = o?.flipVertical ?? false;
-  if (flipHorizontal && flipVertical) {
-    rotationDegrees += 180;
-    flipHorizontal = false;
-    flipVertical = false;
-  }
   return {
-    rotationDegrees: wrapDisplayDeg(rotationDegrees),
-    flipHorizontal,
-    flipVertical,
+    rotationDegrees: wrapDisplayDeg(o?.rotationDegrees ?? 0),
+    flipHorizontal: o?.flipHorizontal ?? false,
+    flipVertical: o?.flipVertical ?? false,
     scaleX: finiteScale(o?.scaleX),
     scaleY: finiteScale(o?.scaleY),
   };
 }
 
-/** Replace rotation or a flip, then fold both-flips into +180°. */
+/** Replace rotation or a flip. */
 export function withOrientation(
   o: PlacementInput,
   patch: Partial<
@@ -47,8 +36,7 @@ export function withOrientation(
     >
   >,
 ): ImageOrientation {
-  const cur = effectiveOrientation(o);
-  return effectiveOrientation({ ...cur, ...patch });
+  return effectiveOrientation({ ...o, ...patch });
 }
 
 export function isIdentityOrientation(o: PlacementInput): boolean {
