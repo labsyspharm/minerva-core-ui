@@ -186,10 +186,10 @@ export const ImageSchema = z.object({
   flipHorizontal: z.boolean().default(false),
   /** Omitted input parses as false. */
   flipVertical: z.boolean().default(false),
-  /** Multiplier on the file's µm/px. Always a number; omitted input parses as 1. */
-  scaleX: z.number().default(1),
-  /** Multiplier on the file's µm/px. Always a number; omitted input parses as 1. */
-  scaleY: z.number().default(1),
+  /** µm per pixel, copied from OME PhysicalSize. 1 when the file has none. */
+  scaleX: z.number().positive().default(1),
+  /** µm per pixel, copied from OME PhysicalSize. 1 when the file has none. */
+  scaleY: z.number().positive().default(1),
   channels: z.array(ImageChannelSchema),
   source: ImageSourceSchema.optional(),
 });
@@ -326,12 +326,11 @@ export const DocumentDataSchema = z.preprocess(
       return raw;
     }
     const r = raw as Record<string, unknown>;
-    let next = r;
-    if ("groups" in next && !("channelGroups" in next)) {
-      const { groups, ...rest } = next;
-      next = { ...rest, channelGroups: groups };
+    if ("groups" in r && !("channelGroups" in r)) {
+      const { groups, ...rest } = r;
+      return { ...rest, channelGroups: groups };
     }
-    return next;
+    return r;
   },
   z.object({
     metadata: DocumentMetadataSchema.default({}),
@@ -359,7 +358,7 @@ export type Shape = z.infer<typeof ShapeSchema>;
 
 export type Image = z.infer<typeof ImageSchema>;
 export type ImageSource = z.infer<typeof ImageSourceSchema>;
-/** Resolved placement. Each field is always a number or boolean. */
+/** Resolved placement plus µm/px. Each field is always a number or boolean. */
 export type ImageOrientation = {
   rotationDegrees: number;
   flipHorizontal: boolean;

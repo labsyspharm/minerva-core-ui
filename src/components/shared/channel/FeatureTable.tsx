@@ -55,7 +55,7 @@ type FeatureTableRow = {
 
 const EDGE = 10;
 
-async function pickFeatureCsv(): Promise<File | undefined> {
+export async function pickFeatureCsv(): Promise<File | undefined> {
   try {
     return await fileOpen({
       description: "Feature table CSV",

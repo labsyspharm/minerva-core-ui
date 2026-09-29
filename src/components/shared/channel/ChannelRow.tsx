@@ -151,6 +151,15 @@ function MaskModeControls(props: {
 }) {
   const { value, onChange, ariaLabel, classColors } = props;
   const colored = value.color === "random";
+  let colorLabel = "Random colors";
+  let colorTitle = "Random colors";
+  if (classColors) {
+    colorLabel = "Colored";
+    colorTitle = "Class colors";
+  } else if (colored) {
+    colorLabel = "Random colors, re-seed";
+    colorTitle = "Random colors (click to re-seed)";
+  }
   return (
     <div className={styles.maskModeControls}>
       <div className={styles.maskModeGroup}>
@@ -186,20 +195,8 @@ function MaskModeControls(props: {
           />
           <MaskVizButton
             active={colored}
-            label={
-              classColors
-                ? "Colored"
-                : colored
-                  ? "Random colors, re-seed"
-                  : "Random colors"
-            }
-            title={
-              classColors
-                ? "Class colors"
-                : colored
-                  ? "Random colors (click to re-seed)"
-                  : "Random colors"
-            }
+            label={colorLabel}
+            title={colorTitle}
             iconClass={styles.maskVizSwatchRandom}
             onClick={() =>
               onChange(

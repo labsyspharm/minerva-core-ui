@@ -7,7 +7,10 @@ import type {
   MainSettings,
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
-import type { ChannelRendering } from "@/lib/stores/appStore";
+import type {
+  ChannelRendering,
+  ImageOrientationPreview,
+} from "@/lib/stores/appStore";
 import type {
   Channel,
   ChannelGroup,
@@ -188,10 +191,7 @@ function buildImageLayers(args: {
   jpegSettingsList?: unknown[];
   remountKey?: string | number;
   images?: Image[];
-  orientationPreview?: {
-    imageId: string;
-    orientation: ImageOrientation;
-  } | null;
+  orientationPreview?: ImageOrientationPreview | null;
 }): Layer[] {
   const dicomIndexList = args.dicomIndexList ?? [];
   const omeLoaderEntries = args.omeLoaderEntries ?? [];
@@ -273,10 +273,7 @@ export function useViewerLayers(args: {
   /** Document images (for per-image orientation → modelMatrix). */
   images?: Image[];
   /** Authoring: live orientation drag preview (CDN omits). */
-  orientationPreview?: {
-    imageId: string;
-    orientation: ImageOrientation;
-  } | null;
+  orientationPreview?: ImageOrientationPreview | null;
   /** Authoring: bump after export to recreate GL layers (CDN omits). */
   remountKey?: string | number;
 }) {

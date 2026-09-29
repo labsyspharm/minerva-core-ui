@@ -924,13 +924,8 @@ const loadDicomWeb = async (series) => {
   }
 };
 
-const findDicomWeb = (series) => {
-  return listDicomWeb(series);
-};
-
 export {
   loadDicomWeb,
-  findDicomWeb,
   normalizeDicomWebSeriesUrl,
   isDicomWebSeriesUrl,
   isDicomWeb,

@@ -6,17 +6,15 @@ import Rotate90CcwIcon from "@/components/shared/icons/rotate-90-ccw.svg?react";
 import Rotate90CwIcon from "@/components/shared/icons/rotate-90-cw.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
+import { useClickOutside } from "@/components/shared/useClickOutside";
 import {
   effectiveOrientation,
   isIdentityOrientation,
-  withFlipHorizontal,
-  withFlipVertical,
-  withRotationDeg,
-  withRotationDelta,
+  withOrientation,
   wrapDisplayDeg,
 } from "@/lib/imaging/imageOrientation";
 import { useAppStore } from "@/lib/stores/appStore";
-import type { Image, ImageOrientation } from "@/lib/stores/documentSchema";
+import type { Image } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { setImageOrientation } from "@/lib/stores/storeUtils";
 import styles from "./ImageOrientationRow.module.css";
@@ -184,15 +182,7 @@ export function ImageOrientationRow(props: {
     onOpenChangeRef.current?.(open);
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      const w = wrapRef.current;
-      if (w && !w.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [open]);
+  useClickOutside(open, () => setOpen(false), [wrapRef]);
 
   useEffect(() => {
     if (preview) return;
@@ -200,33 +190,33 @@ export function ImageOrientationRow(props: {
   }, [committed.rotationDegrees, preview]);
 
   const commit = useCallback(
-    (next: ImageOrientation) => {
+    (patch: Parameters<typeof withOrientation>[1]) => {
+      const next = withOrientation(live, patch);
       setPreview(null);
       setImages(
         setImageOrientation(useDocumentStore.getState().images, image.id, next),
       );
       setTextDraft(formatDeg(next.rotationDegrees));
     },
-    [image.id, setImages, setPreview],
+    [image.id, live, setImages, setPreview],
   );
 
   const previewLive = useCallback(
-    (next: ImageOrientation) => {
+    (patch: Parameters<typeof withOrientation>[1]) => {
+      const next = withOrientation(live, patch);
       setPreview({ imageId: image.id, orientation: next });
       setTextDraft(formatDeg(next.rotationDegrees));
     },
-    [image.id, setPreview],
+    [image.id, live, setPreview],
   );
 
-  const commitText = (raw?: string) => {
-    const parsed = Number.parseFloat(
-      (raw ?? textDraft).replace(/°/g, "").trim(),
-    );
+  const commitText = (raw: string) => {
+    const parsed = Number.parseFloat(raw.replace(/°/g, "").trim());
     if (!Number.isFinite(parsed)) {
       setTextDraft(formatDeg(live.rotationDegrees));
       return;
     }
-    commit(withRotationDeg(live, parsed));
+    commit({ rotationDegrees: parsed });
   };
 
   return (
@@ -254,7 +244,7 @@ export function ImageOrientationRow(props: {
                 aria-label="Flip horizontal"
                 aria-pressed={live.flipHorizontal}
                 active={live.flipHorizontal}
-                onClick={() => commit(withFlipHorizontal(live))}
+                onClick={() => commit({ flipHorizontal: !live.flipHorizontal })}
               >
                 <ReflectHorizontalIcon aria-hidden />
               </PanelIconButton>
@@ -263,7 +253,7 @@ export function ImageOrientationRow(props: {
                 aria-label="Flip vertical"
                 aria-pressed={live.flipVertical}
                 active={live.flipVertical}
-                onClick={() => commit(withFlipVertical(live))}
+                onClick={() => commit({ flipVertical: !live.flipVertical })}
               >
                 <ReflectVerticalIcon aria-hidden />
               </PanelIconButton>
@@ -276,41 +266,44 @@ export function ImageOrientationRow(props: {
               <PanelIconButton
                 title="Rotate 90° counter-clockwise"
                 aria-label="Rotate 90 degrees counter-clockwise"
-                onClick={() => commit(withRotationDelta(live, -90))}
+                onClick={() =>
+                  commit({ rotationDegrees: live.rotationDegrees - 90 })
+                }
               >
                 <Rotate90CcwIcon aria-hidden />
               </PanelIconButton>
               <RotationKnob
                 degrees={live.rotationDegrees}
-                onLive={(deg) => previewLive(withRotationDeg(committed, deg))}
-                onCommit={(deg) => commit(withRotationDeg(committed, deg))}
-                onResetAngle={() => commit(withRotationDeg(live, 0))}
+                onLive={(deg) => previewLive({ rotationDegrees: deg })}
+                onCommit={(deg) => commit({ rotationDegrees: deg })}
+                onResetAngle={() => commit({ rotationDegrees: 0 })}
               />
               <PanelIconButton
                 title="Rotate 90° clockwise"
                 aria-label="Rotate 90 degrees clockwise"
-                onClick={() => commit(withRotationDelta(live, 90))}
+                onClick={() =>
+                  commit({ rotationDegrees: live.rotationDegrees + 90 })
+                }
               >
                 <Rotate90CwIcon aria-hidden />
               </PanelIconButton>
               <div className={styles.degField}>
                 <input
-                  id={`orient-deg-${image.id}`}
                   className={`${minervaTheme.input} ${styles.degInput}`}
                   type="text"
                   inputMode="decimal"
                   value={textDraft}
                   aria-label="Rotation degrees"
                   onChange={(e) => setTextDraft(e.target.value)}
-                  onBlur={(e) => commitText(e.target.value)}
+                  onBlur={(e) => commitText(e.currentTarget.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      commitText((e.target as HTMLInputElement).value);
-                      (e.target as HTMLInputElement).blur();
+                      commitText(e.currentTarget.value);
+                      e.currentTarget.blur();
                     } else if (e.key === "Escape") {
                       setTextDraft(formatDeg(live.rotationDegrees));
-                      (e.target as HTMLInputElement).blur();
+                      e.currentTarget.blur();
                     }
                   }}
                 />

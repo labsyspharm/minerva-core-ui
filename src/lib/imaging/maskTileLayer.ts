@@ -427,7 +427,7 @@ export function createMaskTileLayer(args: {
   return new TileLayer<MaskTileData>({
     id: args.id,
     tileSize: finest.tileSize,
-    minZoom: Math.round(-(planes.length - 1)),
+    minZoom: -(planes.length - 1),
     maxZoom: 0,
     zoomOffset: Math.round(Math.log2(modelMatrix.getScale()[0] || 1)),
     extent: [0, 0, maskW, maskH],

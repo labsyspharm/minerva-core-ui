@@ -118,6 +118,19 @@ export function worldFrameFromLoader(loader: Loader): WorldFrame {
   );
 }
 
+/** World frame from the document image. `scaleX` / `scaleY` are µm/px. */
+export function worldFrameFromImage(image: {
+  sizeX: number;
+  sizeY: number;
+  scaleX: number;
+  scaleY: number;
+}): WorldFrame {
+  return frameFromPixels(image.sizeX, image.sizeY, {
+    umPerPixelX: image.scaleX,
+    umPerPixelY: image.scaleY,
+  });
+}
+
 /**
  * Unitless 1,1 / identity µm/px copies µm/px from *any* other open image
  * with the same pixel size and a real physical scale.
@@ -167,8 +180,8 @@ export function effectiveWorldFrame(
 
 /**
  * Deck model matrix.
- * `scale(µm/px · scaleX, µm/px · scaleY) · T(center) · R · S(flip) · T(−center)`.
- * `scaleX` / `scaleY` are document multipliers (1 = file size).
+ * `scale(µm/px) · T(center) · R · S(flip) · T(−center)`.
+ * µm/px is the document image's `scaleX` / `scaleY` when orientation is passed.
  */
 export function layerModelMatrix(
   loader: Loader,
@@ -176,21 +189,19 @@ export function layerModelMatrix(
 ): Matrix4 {
   const frame = worldFrameFromLoader(loader);
   const o = effectiveOrientation(orientation);
-  const scaleX = frame.umPerPixelX * o.scaleX;
-  const scaleY = frame.umPerPixelY * o.scaleY;
-  const { rotationDegrees, flipHorizontal, flipVertical } = o;
+  const scaleX = orientation ? o.scaleX : frame.umPerPixelX;
+  const scaleY = orientation ? o.scaleY : frame.umPerPixelY;
   const m = new Matrix4().scale([scaleX, scaleY, 1]);
-  const pivoted = rotationDegrees !== 0 || flipHorizontal || flipVertical;
+  const pivoted = o.rotationDegrees !== 0 || o.flipHorizontal || o.flipVertical;
   if (pivoted) {
     const cx = frame.pixelWidth / 2;
     const cy = frame.pixelHeight / 2;
     // Y-down image space: +rotateZ is clockwise on screen (matches CW button).
     m.translate([cx, cy, 0])
-      .rotateZ((rotationDegrees * Math.PI) / 180)
-      .scale([flipHorizontal ? -1 : 1, flipVertical ? -1 : 1, 1])
+      .rotateZ((o.rotationDegrees * Math.PI) / 180)
+      .scale([o.flipHorizontal ? -1 : 1, o.flipVertical ? -1 : 1, 1])
       .translate([-cx, -cy, 0]);
   }
-  console.info("[minerva] deck modelMatrix", Array.from(m.toArray()));
   return m;
 }
 

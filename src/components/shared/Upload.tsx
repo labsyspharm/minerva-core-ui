@@ -1,7 +1,9 @@
-import { fileOpen } from "browser-fs-access";
 import type { DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FeatureCsvColumnPick } from "@/components/shared/channel/FeatureTable";
+import {
+  FeatureCsvColumnPick,
+  pickFeatureCsv,
+} from "@/components/shared/channel/FeatureTable";
 import { ImageChannelOverviewCard } from "@/components/shared/channel/ImageChannelOverview";
 import { ImageOrientationRow } from "@/components/shared/channel/ImageOrientationRow";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
@@ -75,8 +77,8 @@ export type LoadedSourceSummary = {
   channelCount: number;
 };
 
-/** Intensity stack vs label / segmentation file. */
 export type OmeImportRequest = {
+  /** Intensity stack vs label / segmentation file. */
   role: OmeImageImportRole;
   append: boolean;
   rgbDisplay?: boolean;
@@ -300,12 +302,12 @@ const Upload = (props: UploadProps) => {
   const [orientMenuImageId, setOrientMenuImageId] = useState<string | null>(
     null,
   );
-  const onOrientMenu = useCallback((imageId: string, open: boolean) => {
+  const onOrientMenu = (imageId: string, open: boolean) => {
     setOrientMenuImageId((cur) => {
       if (open) return imageId;
       return cur === imageId ? null : cur;
     });
-  }, []);
+  };
   const dragDepthRef = useRef(0);
   const localPickInFlightRef = useRef(false);
   const prevImportRev = useRef(importRevision);
@@ -313,7 +315,6 @@ const Upload = (props: UploadProps) => {
   const formatChosenByUserRef = useRef(false);
   const roleChosenByUserRef = useRef(false);
   const rgbDisplayChosenByUserRef = useRef(false);
-  const overlayRgbDisplayRef = useRef(false);
 
   const dicomAllowed =
     pending?.kind === "url" && overlayRole !== "segmentation";
@@ -356,7 +357,6 @@ const Upload = (props: UploadProps) => {
       formatChosenByUserRef.current = false;
       roleChosenByUserRef.current = false;
       rgbDisplayChosenByUserRef.current = false;
-      overlayRgbDisplayRef.current = false;
       const role = resolveImportRole("intensity", pendingLabel(next));
       let format = inferFormat(next);
       if (role === "segmentation") format = "ome-tiff";
@@ -412,7 +412,6 @@ const Upload = (props: UploadProps) => {
               if (ac.signal.aborted) return;
               setDetectedRgbDisplay(isBrightfield);
               if (!rgbDisplayChosenByUserRef.current) {
-                overlayRgbDisplayRef.current = isBrightfield;
                 setOverlayRgbDisplay(isBrightfield);
               }
             } catch (error) {
@@ -585,7 +584,7 @@ const Upload = (props: UploadProps) => {
       }
       const rgbDisplay =
         detectedRgbDisplay != null && role === "intensity"
-          ? overlayRgbDisplayRef.current
+          ? overlayRgbDisplay
           : undefined;
       const attachCsv = role === "segmentation" ? featureCsvFile : null;
       const beforeMaskIds = attachCsv
@@ -922,7 +921,6 @@ const Upload = (props: UploadProps) => {
               onClick={() => {
                 roleChosenByUserRef.current = true;
                 rgbDisplayChosenByUserRef.current = true;
-                overlayRgbDisplayRef.current = false;
                 setOverlayRole("intensity");
                 setOverlayRgbDisplay(false);
               }}
@@ -940,7 +938,6 @@ const Upload = (props: UploadProps) => {
                 onClick={() => {
                   roleChosenByUserRef.current = true;
                   rgbDisplayChosenByUserRef.current = true;
-                  overlayRgbDisplayRef.current = true;
                   setOverlayRole("intensity");
                   setOverlayRgbDisplay(true);
                 }}
@@ -986,18 +983,8 @@ const Upload = (props: UploadProps) => {
                 type="button"
                 onClick={() => {
                   void (async () => {
-                    let file: File;
-                    try {
-                      file = await fileOpen({
-                        description: "Feature table CSV",
-                        mimeTypes: ["text/csv"],
-                        extensions: [".csv"],
-                        multiple: false,
-                      });
-                    } catch (e) {
-                      if (e instanceof Error && e.name === "AbortError") return;
-                      throw e;
-                    }
+                    const file = await pickFeatureCsv();
+                    if (!file) return;
                     setFeatureCsvFile(file);
                     void peekFeatureCsv(file).then(setFeatureCsvCols);
                   })();
