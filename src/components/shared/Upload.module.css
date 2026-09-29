@@ -349,6 +349,16 @@
   padding: 10px 12px;
 }
 
+.imageCardHeaderOpen {
+  position: relative;
+  z-index: 3;
+}
+
+/* Same fade as a channel dropdown dimming the other chips. */
+.panelDim {
+  opacity: 0.28;
+}
+
 .imageCardText {
   display: flex;
   flex-direction: column;
@@ -375,6 +385,12 @@
   position: relative;
   z-index: 2;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.imageCardActionRest {
   display: inline-flex;
   align-items: center;
   gap: 2px;

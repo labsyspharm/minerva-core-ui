@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import MoveIcon from "@/components/shared/icons/move.svg?react";
+import OrientationIcon from "@/components/shared/icons/orientation.svg?react";
 import ReflectHorizontalIcon from "@/components/shared/icons/reflect-horizontal.svg?react";
 import ReflectVerticalIcon from "@/components/shared/icons/reflect-vertical.svg?react";
 import Rotate90CcwIcon from "@/components/shared/icons/rotate-90-ccw.svg?react";
@@ -156,9 +156,14 @@ function RotationKnob(props: {
   );
 }
 
-export function ImageOrientationRow(props: { image: Image }) {
-  const { image } = props;
+export function ImageOrientationRow(props: {
+  image: Image;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const { image, onOpenChange } = props;
   const [open, setOpen] = useState(false);
+  const onOpenChangeRef = useRef(onOpenChange);
+  onOpenChangeRef.current = onOpenChange;
   const wrapRef = useRef<HTMLDivElement>(null);
   const setImages = useDocumentStore((s) => s.setImages);
   const preview = useAppStore((s) =>
@@ -168,10 +173,16 @@ export function ImageOrientationRow(props: { image: Image }) {
   );
   const setPreview = useAppStore((s) => s.setImageOrientationPreview);
 
-  const committed = effectiveOrientation(image.orientation);
+  const committed = effectiveOrientation(image);
   const live = preview ?? committed;
-  const [textDraft, setTextDraft] = useState(() => formatDeg(live.rotationDeg));
+  const [textDraft, setTextDraft] = useState(() =>
+    formatDeg(live.rotationDegrees),
+  );
   const nonIdentity = !isIdentityOrientation(live);
+
+  useEffect(() => {
+    onOpenChangeRef.current?.(open);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -185,8 +196,8 @@ export function ImageOrientationRow(props: { image: Image }) {
 
   useEffect(() => {
     if (preview) return;
-    setTextDraft(formatDeg(committed.rotationDeg));
-  }, [committed.rotationDeg, preview]);
+    setTextDraft(formatDeg(committed.rotationDegrees));
+  }, [committed.rotationDegrees, preview]);
 
   const commit = useCallback(
     (next: ImageOrientation) => {
@@ -194,7 +205,7 @@ export function ImageOrientationRow(props: { image: Image }) {
       setImages(
         setImageOrientation(useDocumentStore.getState().images, image.id, next),
       );
-      setTextDraft(formatDeg(effectiveOrientation(next).rotationDeg));
+      setTextDraft(formatDeg(next.rotationDegrees));
     },
     [image.id, setImages, setPreview],
   );
@@ -202,7 +213,7 @@ export function ImageOrientationRow(props: { image: Image }) {
   const previewLive = useCallback(
     (next: ImageOrientation) => {
       setPreview({ imageId: image.id, orientation: next });
-      setTextDraft(formatDeg(next.rotationDeg));
+      setTextDraft(formatDeg(next.rotationDegrees));
     },
     [image.id, setPreview],
   );
@@ -212,7 +223,7 @@ export function ImageOrientationRow(props: { image: Image }) {
       (raw ?? textDraft).replace(/°/g, "").trim(),
     );
     if (!Number.isFinite(parsed)) {
-      setTextDraft(formatDeg(live.rotationDeg));
+      setTextDraft(formatDeg(live.rotationDegrees));
       return;
     }
     commit(withRotationDeg(live, parsed));
@@ -231,7 +242,7 @@ export function ImageOrientationRow(props: { image: Image }) {
           setOpen((v) => !v);
         }}
       >
-        <MoveIcon aria-hidden />
+        <OrientationIcon aria-hidden />
       </PanelIconButton>
       {open ? (
         <div className={`${minervaTheme.menu} ${styles.menu}`}>
@@ -270,7 +281,7 @@ export function ImageOrientationRow(props: { image: Image }) {
                 <Rotate90CcwIcon aria-hidden />
               </PanelIconButton>
               <RotationKnob
-                degrees={live.rotationDeg}
+                degrees={live.rotationDegrees}
                 onLive={(deg) => previewLive(withRotationDeg(committed, deg))}
                 onCommit={(deg) => commit(withRotationDeg(committed, deg))}
                 onResetAngle={() => commit(withRotationDeg(live, 0))}
@@ -298,7 +309,7 @@ export function ImageOrientationRow(props: { image: Image }) {
                       commitText((e.target as HTMLInputElement).value);
                       (e.target as HTMLInputElement).blur();
                     } else if (e.key === "Escape") {
-                      setTextDraft(formatDeg(live.rotationDeg));
+                      setTextDraft(formatDeg(live.rotationDegrees));
                       (e.target as HTMLInputElement).blur();
                     }
                   }}

@@ -18,23 +18,11 @@ import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
+import { orientationForImage } from "./imageOrientation";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
 import { type Loader, TILE_CACHE_PROPS, toSettings } from "./viv";
 import { inheritUnitlessPhysicalSize, layerModelMatrix } from "./worldFrame";
-
-function orientationForImage(
-  images: Image[] | undefined,
-  sourceImageId: string | undefined,
-  preview:
-    | { imageId: string; orientation: ImageOrientation }
-    | null
-    | undefined,
-): ImageOrientation | undefined {
-  if (!sourceImageId) return undefined;
-  if (preview?.imageId === sourceImageId) return preview.orientation;
-  return images?.find((im) => im.id === sourceImageId)?.orientation;
-}
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
 function applyChannelRendering<S extends MainSettings>(

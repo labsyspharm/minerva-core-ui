@@ -50,8 +50,8 @@ import styles from "./Upload.module.css";
 
 export type { OmeImportResult };
 
-function ReplaceIcon({ title, size = 14 }: { title?: string; size?: number }) {
-  const label = title ?? "Replace";
+function BrowseIcon({ title, size = 14 }: { title?: string; size?: number }) {
+  const label = title ?? "Browse for image";
   return (
     <svg
       aria-hidden={title ? undefined : true}
@@ -61,7 +61,7 @@ function ReplaceIcon({ title, size = 14 }: { title?: string; size?: number }) {
       fill="currentColor"
     >
       <title>{label}</title>
-      <path d="M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l1.46 1.46C18.69 15.33 19 14.2 19 13c0-3.87-3.13-7-7-7zm0 10c-2.76 0-5-2.24-5-5 0-.65.13-1.26.36-1.83L5.9 7.71C5.31 8.67 5 9.8 5 11c0 3.87 3.13 7 7 7v3l4-4-4-4v3z" />
+      <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
     </svg>
   );
 }
@@ -297,6 +297,15 @@ const Upload = (props: UploadProps) => {
     setFeatureCsvCols(null);
   }, []);
   const [dragging, setDragging] = useState(false);
+  const [orientMenuImageId, setOrientMenuImageId] = useState<string | null>(
+    null,
+  );
+  const onOrientMenu = useCallback((imageId: string, open: boolean) => {
+    setOrientMenuImageId((cur) => {
+      if (open) return imageId;
+      return cur === imageId ? null : cur;
+    });
+  }, []);
   const dragDepthRef = useRef(0);
   const localPickInFlightRef = useRef(false);
   const prevImportRev = useRef(importRevision);
@@ -661,40 +670,72 @@ const Upload = (props: UploadProps) => {
       jpegSourceNeedsLocalRoot(im.source.url);
     const showAccessOverlay = needsReselect || needsPermission || needsStoryDir;
 
+    const orientOpen = orientMenuImageId === im.id;
+    const panelDimmed = orientMenuImageId != null && !orientOpen;
     return (
-      <article key={im.id} className={styles.imageCard}>
-        <div className={styles.imageCardHeader}>
-          <div className={styles.imageCardText}>
+      <article
+        key={im.id}
+        className={[styles.imageCard, panelDimmed ? styles.panelDim : ""]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <div
+          className={[
+            styles.imageCardHeader,
+            orientOpen ? styles.imageCardHeaderOpen : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <div
+            className={[styles.imageCardText, orientOpen ? styles.panelDim : ""]
+              .filter(Boolean)
+              .join(" ")}
+          >
             <div className={styles.imageCardTitle} title={title}>
               {title}
             </div>
             <div className={styles.imageCardMeta}>{metaParts.join(" · ")}</div>
           </div>
           <div className={styles.imageCardActions}>
-            <ImageOrientationRow image={im} />
-            {onReplaceImage &&
-            im.source?.kind !== "jpeg" &&
-            im.source?.kind !== "dicomWeb" ? (
-              <PanelIconButton
-                title={`Replace ${title} with another OME-TIFF`}
-                aria-label={`Replace ${title}`}
-                onClick={() => void onReplaceImage(im.id)}
-              >
-                <ReplaceIcon title="Replace image" size={14} />
-              </PanelIconButton>
-            ) : null}
-            {onRemoveImage ? (
-              <PanelIconButton
-                title={`Delete ${title}`}
-                aria-label={`Delete ${title}`}
-                onClick={() => void onRemoveImage(im.id)}
-              >
-                <TrashIcon title="Delete" size={14} />
-              </PanelIconButton>
-            ) : null}
+            <ImageOrientationRow
+              image={im}
+              onOpenChange={(open) => onOrientMenu(im.id, open)}
+            />
+            <span
+              className={[
+                styles.imageCardActionRest,
+                orientOpen ? styles.panelDim : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              {onReplaceImage &&
+              im.source?.kind !== "jpeg" &&
+              im.source?.kind !== "dicomWeb" ? (
+                <PanelIconButton
+                  title={`Browse for an image to replace ${title}`}
+                  aria-label={`Browse for an image to replace ${title}`}
+                  onClick={() => void onReplaceImage(im.id)}
+                >
+                  <BrowseIcon title="Browse for image" size={14} />
+                </PanelIconButton>
+              ) : null}
+              {onRemoveImage ? (
+                <PanelIconButton
+                  title={`Delete ${title}`}
+                  aria-label={`Delete ${title}`}
+                  onClick={() => void onRemoveImage(im.id)}
+                >
+                  <TrashIcon title="Delete" size={14} />
+                </PanelIconButton>
+              ) : null}
+            </span>
           </div>
         </div>
-        <ImageChannelOverviewCard image={im} />
+        <div className={orientOpen ? styles.panelDim : undefined}>
+          <ImageChannelOverviewCard image={im} />
+        </div>
         {showAccessOverlay ? (
           <div className={styles.fileAccessOverlay}>
             <PanelActionButton
@@ -757,7 +798,10 @@ const Upload = (props: UploadProps) => {
         styles.addStrip,
         row ? styles.addStripRow : "",
         row && dragging ? styles.panelDropActive : "",
-      ].join(" ")}
+        !row && orientMenuImageId ? styles.panelDim : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       {...(row ? dropHandlers : {})}
     >
       <button

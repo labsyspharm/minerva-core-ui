@@ -160,16 +160,6 @@ export const ImageSourceSchema = z.discriminatedUnion("kind", [
   ImageSourceDicomWebSchema,
 ]);
 
-/**
- * Authoring orientation for an image (applied via Viv/deck `modelMatrix`).
- * Omitted when identity. Both flips are canonicalized to +180° rotation.
- */
-export const ImageOrientationSchema = z.object({
-  rotationDeg: z.number(),
-  flipHorizontal: z.boolean(),
-  flipVertical: z.boolean(),
-});
-
 export const ImageSchema = z.object({
   id: IdSchema,
   sizeX: z.number().int().positive(),
@@ -190,8 +180,16 @@ export const ImageSchema = z.object({
    * false = independent IF channels. Undefined → runtime heuristics.
    */
   rgbDisplay: z.boolean().optional(),
-  /** Rotate / reflect around the pixel center; omitted when identity. */
-  orientation: ImageOrientationSchema.optional(),
+  /** Degrees clockwise around the pixel center. Omitted input parses as 0. */
+  rotationDegrees: z.number().default(0),
+  /** Omitted input parses as false. */
+  flipHorizontal: z.boolean().default(false),
+  /** Omitted input parses as false. */
+  flipVertical: z.boolean().default(false),
+  /** Multiplier on the file's µm/px. Always a number; omitted input parses as 1. */
+  scaleX: z.number().default(1),
+  /** Multiplier on the file's µm/px. Always a number; omitted input parses as 1. */
+  scaleY: z.number().default(1),
   channels: z.array(ImageChannelSchema),
   source: ImageSourceSchema.optional(),
 });
@@ -361,7 +359,14 @@ export type Shape = z.infer<typeof ShapeSchema>;
 
 export type Image = z.infer<typeof ImageSchema>;
 export type ImageSource = z.infer<typeof ImageSourceSchema>;
-export type ImageOrientation = z.infer<typeof ImageOrientationSchema>;
+/** Resolved placement. Each field is always a number or boolean. */
+export type ImageOrientation = {
+  rotationDegrees: number;
+  flipHorizontal: boolean;
+  flipVertical: boolean;
+  scaleX: number;
+  scaleY: number;
+};
 export type ImageChannel = z.infer<typeof ImageChannelSchema>;
 export type ImageChannelKind = z.infer<typeof ImageChannelKindSchema>;
 export type MaskVisualization = z.infer<typeof MaskVisualizationSchema>;

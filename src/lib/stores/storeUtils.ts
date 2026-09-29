@@ -15,7 +15,7 @@
  */
 
 import type { ConfigWaypoint } from "../authoring/config";
-import { orientationOrOmit } from "../imaging/imageOrientation";
+import { orientationFields } from "../imaging/imageOrientation";
 import { type Loader, loaderPixelSizeXY } from "../imaging/viv";
 import {
   importedLineStyle,
@@ -177,6 +177,11 @@ export function applySourceChannelsToImages(
           sizeC: chans.length,
           omeXmlHash: "",
           basename: "",
+          rotationDegrees: 0,
+          flipHorizontal: false,
+          flipVertical: false,
+          scaleX: 1,
+          scaleY: 1,
           channels: chans,
         },
       ];
@@ -226,24 +231,25 @@ export function setImageBasename(
   return next;
 }
 
-/** Set or clear image orientation (omit field when identity). */
+/** Write placement onto one image. Defaults are stored. */
 export function setImageOrientation(
   images: Image[],
   imageId: string,
-  orientation: ImageOrientation | null | undefined,
+  orientation: ImageOrientation,
 ): Image[] {
   const idx = images.findIndex((im) => im.id === imageId);
   if (idx < 0) return images;
   const next = [...images];
   const cur = next[idx];
-  const omit = orientationOrOmit(orientation ?? undefined);
-  if (omit === undefined) {
-    if (cur.orientation === undefined) return images;
-    const { orientation: _drop, ...rest } = cur;
-    next[idx] = rest;
-  } else {
-    next[idx] = { ...cur, orientation: omit };
-  }
+  const {
+    rotationDegrees: _rotation,
+    flipHorizontal: _flipH,
+    flipVertical: _flipV,
+    scaleX: _scaleX,
+    scaleY: _scaleY,
+    ...rest
+  } = cur;
+  next[idx] = { ...rest, ...orientationFields(orientation) };
   return next;
 }
 

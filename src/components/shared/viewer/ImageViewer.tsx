@@ -26,6 +26,7 @@ import {
   DEFAULT_MASK_VISUALIZATION,
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
+import { orientationForImage } from "@/lib/imaging/imageOrientation";
 import type { LoaderList } from "@/lib/imaging/loaderEntries";
 import {
   IMAGE_SELECTION_MASK_LAYER_ID,
@@ -514,13 +515,11 @@ export const ImageViewer = (props: ImageViewerProps) => {
               channelGroups,
               activeChannelGroupId,
             );
-      const docOrientation = images.find(
-        (im) => im.id === sc.imageId,
-      )?.orientation;
-      const orientation =
-        imageOrientationPreview?.imageId === sc.imageId
-          ? imageOrientationPreview.orientation
-          : docOrientation;
+      const orientation = orientationForImage(
+        images,
+        sc.imageId,
+        imageOrientationPreview,
+      );
       const featureTable = featureTables.find(
         (c) => c.sourceChannelId === sc.id,
       );

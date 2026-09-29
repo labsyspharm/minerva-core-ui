@@ -1,8 +1,5 @@
 import { Matrix4 } from "@math.gl/core";
-import {
-  effectiveOrientation,
-  isIdentityOrientation,
-} from "@/lib/imaging/imageOrientation";
+import { effectiveOrientation } from "@/lib/imaging/imageOrientation";
 import { type Loader, loaderPixelSizeXY } from "@/lib/imaging/viv";
 import type { ImageOrientation } from "@/lib/stores/documentSchema";
 import type { ViewRect } from "@/lib/viewer/samViewport";
@@ -169,28 +166,32 @@ export function effectiveWorldFrame(
 }
 
 /**
- * Pixel → world transform for a Viv/deck image layer.
- * `scale(µm/px) · T(center) · R(θ) · S(flip) · T(−center)` so rotation/flip
- * pivot on the pixel center and the image does not jump.
+ * Deck model matrix.
+ * `scale(µm/px · scaleX, µm/px · scaleY) · T(center) · R · S(flip) · T(−center)`.
+ * `scaleX` / `scaleY` are document multipliers (1 = file size).
  */
 export function layerModelMatrix(
   loader: Loader,
-  orientation?: ImageOrientation | null,
+  orientation?: Partial<ImageOrientation> | null,
 ): Matrix4 {
   const frame = worldFrameFromLoader(loader);
-  const { umPerPixelX, umPerPixelY, pixelWidth, pixelHeight } = frame;
-  const m = new Matrix4().scale([umPerPixelX, umPerPixelY, 1]);
-  if (isIdentityOrientation(orientation)) return m;
-
   const o = effectiveOrientation(orientation);
-  const cx = pixelWidth / 2;
-  const cy = pixelHeight / 2;
-  // Y-down image space: +rotateZ is clockwise on screen (matches CW button).
-  return m
-    .translate([cx, cy, 0])
-    .rotateZ((o.rotationDeg * Math.PI) / 180)
-    .scale([o.flipHorizontal ? -1 : 1, o.flipVertical ? -1 : 1, 1])
-    .translate([-cx, -cy, 0]);
+  const scaleX = frame.umPerPixelX * o.scaleX;
+  const scaleY = frame.umPerPixelY * o.scaleY;
+  const { rotationDegrees, flipHorizontal, flipVertical } = o;
+  const m = new Matrix4().scale([scaleX, scaleY, 1]);
+  const pivoted = rotationDegrees !== 0 || flipHorizontal || flipVertical;
+  if (pivoted) {
+    const cx = frame.pixelWidth / 2;
+    const cy = frame.pixelHeight / 2;
+    // Y-down image space: +rotateZ is clockwise on screen (matches CW button).
+    m.translate([cx, cy, 0])
+      .rotateZ((rotationDegrees * Math.PI) / 180)
+      .scale([flipHorizontal ? -1 : 1, flipVertical ? -1 : 1, 1])
+      .translate([-cx, -cy, 0]);
+  }
+  console.info("[minerva] deck modelMatrix", Array.from(m.toArray()));
+  return m;
 }
 
 function isIdentityScale(scale: PhysicalScale): boolean {

@@ -10,24 +10,28 @@
   right: 0;
   left: auto;
   min-width: 0;
-  padding: 8px 10px;
+  padding: 6px 8px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 0;
 }
 
 .section {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
   margin: 0;
-  padding: 6px 0;
+  padding: 0;
   border: none;
   min-width: 0;
 }
 
 .section + .section {
-  border-top: 1px solid var(--minerva-edge);
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid var(--minerva-edge);
 }
 
 .sectionLabel {
@@ -39,6 +43,7 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .row {
@@ -106,19 +111,20 @@
 .degField {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  margin-left: 4px;
+  gap: 1px;
+  margin-left: 2px;
   min-width: 0;
 }
 
 .degInput {
   box-sizing: border-box;
-  width: 4.25rem;
+  width: 3.15rem;
   height: 26px;
-  padding: 0 6px;
+  padding: 0 2px;
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
   text-align: right;
   line-height: 24px;
 }
