@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BAO-9nK4.js","./pako.esm-KbdoS3Oq.js","./lerc-BQe2oyfQ.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-If_En6r2.js","./pako.esm-KbdoS3Oq.js","./lerc-D9LgciVm.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -21725,26 +21725,17 @@ let __tla = (async () => {
     return typeof n2 === "number" && Number.isFinite(n2) && n2 > 0 ? n2 : 1;
   }
   function effectiveOrientation(o2) {
-    let rotationDegrees = (o2 == null ? void 0 : o2.rotationDegrees) ?? 0;
-    let flipHorizontal = (o2 == null ? void 0 : o2.flipHorizontal) ?? false;
-    let flipVertical = (o2 == null ? void 0 : o2.flipVertical) ?? false;
-    if (flipHorizontal && flipVertical) {
-      rotationDegrees += 180;
-      flipHorizontal = false;
-      flipVertical = false;
-    }
     return {
-      rotationDegrees: wrapDisplayDeg(rotationDegrees),
-      flipHorizontal,
-      flipVertical,
+      rotationDegrees: wrapDisplayDeg((o2 == null ? void 0 : o2.rotationDegrees) ?? 0),
+      flipHorizontal: (o2 == null ? void 0 : o2.flipHorizontal) ?? false,
+      flipVertical: (o2 == null ? void 0 : o2.flipVertical) ?? false,
       scaleX: finiteScale(o2 == null ? void 0 : o2.scaleX),
       scaleY: finiteScale(o2 == null ? void 0 : o2.scaleY)
     };
   }
   function withOrientation(o2, patch2) {
-    const cur = effectiveOrientation(o2);
     return effectiveOrientation({
-      ...cur,
+      ...o2,
       ...patch2
     });
   }
@@ -66532,26 +66523,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DK9sJ2Pw.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-omR3DDyB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-C7h6yPBR.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Cc3x25DV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-skBQGZ9F.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CWuQ3f91.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BAO-9nK4.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CnFMeDde.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BQe2oyfQ.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-If_En6r2.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-D9IrnCWf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-D9LgciVm.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CEebEAm2.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Iqq3z0JZ.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-Bua320Yq.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-yPJkc0q3.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -254987,12 +254978,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-29T15:28:17.241Z");
+    const label2 = utcShort("2026-09-29T15:55:45.197Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-29T15:28:17.241Z",
+      title: "2026-09-29T15:55:45.197Z",
       children: [
         "Updated ",
         label2,
