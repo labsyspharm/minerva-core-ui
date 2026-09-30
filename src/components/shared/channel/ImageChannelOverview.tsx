@@ -163,6 +163,21 @@ function ChipButton(props: {
 /** Keep in sync with `repeat(5, …)` on `.chipWrap`. */
 const CHIP_COLS = 5;
 
+function pointerInEditor(e: MouseEvent, root: HTMLElement): boolean {
+  const t = e.target;
+  if (t instanceof Node && root.contains(t)) return true;
+  if (t instanceof Element && t.closest("[data-minerva-color-picker]")) {
+    return true;
+  }
+  const r = root.getBoundingClientRect();
+  return (
+    e.clientX >= r.left &&
+    e.clientX <= r.right &&
+    e.clientY >= r.top &&
+    e.clientY <= r.bottom
+  );
+}
+
 function ChipGrid(props: {
   chips: ImageChannelChip[];
   openChip: ImageChannelChip | null;
@@ -196,27 +211,26 @@ function ChipGrid(props: {
         );
   useEffect(() => {
     if (openIndex < 0) return;
-    const onDoc = (e: MouseEvent) => {
+    let downInside = false;
+    const onDown = (e: MouseEvent) => {
       const root = editorRef.current;
-      if (!root) return;
-      const t = e.target;
-      if (t instanceof Node && root.contains(t)) return;
-      if (t instanceof Element && t.closest("[data-minerva-color-picker]")) {
+      downInside = root != null && pointerInEditor(e, root);
+    };
+    const onDoc = (e: MouseEvent) => {
+      if (downInside) {
+        downInside = false;
         return;
       }
-      const r = root.getBoundingClientRect();
-      if (
-        e.clientX >= r.left &&
-        e.clientX <= r.right &&
-        e.clientY >= r.top &&
-        e.clientY <= r.bottom
-      ) {
-        return;
-      }
+      const root = editorRef.current;
+      if (!root || pointerInEditor(e, root)) return;
       onDismissEditor();
     };
+    document.addEventListener("mousedown", onDown);
     document.addEventListener("click", onDoc);
-    return () => document.removeEventListener("click", onDoc);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("click", onDoc);
+    };
   }, [openIndex, onDismissEditor]);
   return (
     <div className={styles.chipWrap}>

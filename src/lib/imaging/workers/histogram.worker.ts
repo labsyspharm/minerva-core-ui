@@ -6,6 +6,7 @@ type InMsg = {
   width: number;
   buffer: ArrayBuffer;
   arrayCtorName: string;
+  range?: { min: number; max: number } | null;
 };
 
 const CTORS: Record<string, new (buf: ArrayBuffer) => ArrayLike<number>> = {
@@ -27,14 +28,14 @@ type WorkerGlobal = typeof globalThis & {
 const w = globalThis as WorkerGlobal;
 
 w.onmessage = (e: MessageEvent<InMsg>) => {
-  const { jobId, bits, width, buffer, arrayCtorName } = e.data;
+  const { jobId, bits, width, buffer, arrayCtorName, range } = e.data;
   try {
     const Ctor = CTORS[arrayCtorName];
     if (!Ctor) {
       throw new Error(`histogram.worker: unsupported array ${arrayCtorName}`);
     }
     const view = new Ctor(buffer);
-    const y = histogramBinFromPixels(bits, width, view);
+    const y = histogramBinFromPixels(bits, width, view, range);
     w.postMessage({ jobId, y });
   } catch (err) {
     w.postMessage({

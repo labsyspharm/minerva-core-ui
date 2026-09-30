@@ -188,7 +188,9 @@ async function classifyPlane(
     }
     return { label: integer ? "mask" : "image", score: null };
   }
-  return { label: score > EQ_THRESHOLD ? "mask" : "image", score };
+  // Integer stays at 0.5. Float needs 0.9; a blur can score just above 0.5.
+  const threshold = plane.integer === false ? 0.9 : EQ_THRESHOLD;
+  return { label: score > threshold ? "mask" : "image", score };
 }
 
 export async function classify(

@@ -1,4 +1,9 @@
 import { getImageSize } from "@hms-dbmi/viv";
+import {
+  type FloatRange,
+  finiteSampleRange,
+  isFloatDtype,
+} from "../imaging/floatRange";
 import { MAX_HISTOGRAM_TILE_PIXELS } from "../imaging/histogramBin";
 import { histogramBinTile } from "../imaging/histogramBinPool";
 import type {
@@ -98,8 +103,10 @@ type Initialize = (i: InitIn) => FullState;
 type BinIn = InitIn & {
   bits: number;
   index: Index;
+  /** When set, bin linearly across this span instead of the dtype. */
+  range?: FloatRange | null;
 };
-type Bin = (i: BinIn) => Promise<number[]>;
+type Bin = (i: BinIn) => Promise<{ y: number[]; range: FloatRange | null }>;
 type CaptureTile = (i: Index, planes: LoaderPlane[]) => Promise<HasTile>;
 
 export type ConfigProps = {
@@ -192,7 +199,7 @@ const HISTOGRAM_TILE_TIMEOUT_MS = 10_000;
 const HISTOGRAM_EXTRACT_CONCURRENCY = 6;
 
 /**
- * Bit depth passed to `histogramBinFromPixels` (log-spaced thresholds up to 2^bits).
+ * Bit depth passed to `histogramBinFromPixels` (linear ≤8-bit, log2 >8-bit).
  * Integer dtypes parse from the Viv dtype string; float planes use a nominal depth
  * so we still produce a curve instead of skipping (NaN from `parseInt` on "Float32").
  */
@@ -203,9 +210,7 @@ function histogramBitsFromDtype(dtype: string | undefined): number | null {
   }
   const parsed = parseInt(dtype.replace(/.?int/, ""), 10);
   if (!Number.isNaN(parsed)) return parsed;
-  if (/float/i.test(dtype)) {
-    return 16;
-  }
+  if (isFloatDtype(dtype)) return 16;
   console.warn(
     `[minerva] histogram: unsupported dtype "${dtype}" (expected Uint*/Int* or Float*)`,
   );
@@ -254,9 +259,18 @@ const bin: Bin = async (inputs) => {
     inputs.planes,
   );
   if (!data?.length || width * height > MAX_HISTOGRAM_TILE_PIXELS) {
-    return [];
+    return { y: [], range: null };
   }
-  return histogramBinTile(inputs.bits, width, data);
+  const dtype = inputs.planes[Math.abs(inputs.index.z)].dtype;
+  const range =
+    inputs.range ??
+    (isFloatDtype(dtype) ||
+    data instanceof Float32Array ||
+    data instanceof Float64Array
+      ? finiteSampleRange(data)
+      : null);
+  const y = await histogramBinTile(inputs.bits, width, data, range);
+  return { y, range };
 };
 
 const toTilePlane: ToTilePlane = (zoom, planes) => {
@@ -318,6 +332,7 @@ const initialize: Initialize = (inputs) => {
 const extractDistributionsForSourceIndices = async (
   loader: Loader,
   sourceIndices: readonly number[],
+  ranges?: ReadonlyMap<number, FloatRange>,
 ): Promise<Map<number, ConfigSourceDistribution>> => {
   const init = initialize({ planes: loader.data });
   const dtype = init.tileProps.dtype;
@@ -338,13 +353,17 @@ const extractDistributionsForSourceIndices = async (
     async (index) => {
       const SourceIndex = index.c;
       let YValues: number[] = [];
+      let range: FloatRange | null = null;
       if (bits != null) {
         try {
-          YValues = await bin({
+          const binned = await bin({
             bits,
             index,
             planes: loader.data,
+            range: ranges?.get(SourceIndex) ?? null,
           });
+          YValues = binned.y;
+          range = binned.range;
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.warn(
@@ -352,15 +371,22 @@ const extractDistributionsForSourceIndices = async (
           );
         }
       }
+      const floatPlane =
+        isFloatDtype(dtype) || isFloatDtype(loader.metadata?.Pixels?.Type);
+      const linear = range != null || floatPlane || (bits != null && bits <= 8);
       return [
         SourceIndex,
         {
           id: crypto.randomUUID(),
           YValues,
-          XScale: bits != null && bits <= 8 ? "linear" : "log",
+          XScale: linear ? "linear" : "log",
           YScale: "linear",
-          LowerRange: 0,
-          UpperRange: bits != null && bits <= 8 ? 2 ** bits - 1 : (bits ?? 0),
+          LowerRange: range?.min ?? 0,
+          UpperRange: range
+            ? range.max
+            : bits != null && bits <= 8
+              ? 2 ** bits - 1
+              : (bits ?? 0),
         },
       ] as [number, ConfigSourceDistribution];
     },

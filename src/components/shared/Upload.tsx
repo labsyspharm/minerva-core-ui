@@ -421,9 +421,10 @@ const Upload = (props: UploadProps) => {
             !roleChosenByUserRef.current &&
             (result.score != null || result.label === "rgb")
           ) {
-            const role = result.label === "mask" ? "segmentation" : "intensity";
-            setDetectedRole(role);
-            setOverlayRole(role);
+            const detected =
+              result.label === "mask" ? "segmentation" : "intensity";
+            setDetectedRole(detected);
+            setOverlayRole(detected);
           }
         } catch (error) {
           if (!ac.signal.aborted) {
@@ -869,12 +870,8 @@ const Upload = (props: UploadProps) => {
             <FormatChip
               label="Fluorescence"
               selected={overlayRole === "intensity" && !overlayRgbDisplay}
-              suggested={
-                detectedRole === "intensity" && detectedRgbDisplay !== true
-              }
-              muted={
-                detectedRole !== "intensity" || detectedRgbDisplay === true
-              }
+              suggested={overlayRole === "intensity" && !overlayRgbDisplay}
+              muted={detectedRgbDisplay === true}
               onClick={() => {
                 roleChosenByUserRef.current = true;
                 rgbDisplayChosenByUserRef.current = true;
@@ -887,9 +884,7 @@ const Upload = (props: UploadProps) => {
               <FormatChip
                 label="Brightfield"
                 selected={overlayRole === "intensity" && overlayRgbDisplay}
-                suggested={
-                  detectedRole === "intensity" && detectedRgbDisplay === true
-                }
+                suggested={overlayRole === "intensity" && overlayRgbDisplay}
                 muted={
                   detectedRole !== "intensity" || detectedRgbDisplay !== true
                 }
@@ -905,8 +900,7 @@ const Upload = (props: UploadProps) => {
             <FormatChip
               label="Segmentation Mask"
               selected={overlayRole === "segmentation"}
-              suggested={detectedRole === "segmentation"}
-              muted={detectedRole !== "segmentation"}
+              suggested={overlayRole === "segmentation"}
               onClick={() => {
                 roleChosenByUserRef.current = true;
                 setOverlayRole("segmentation");
