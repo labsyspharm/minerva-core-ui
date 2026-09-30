@@ -4201,6 +4201,11 @@ const ImageChannelSchema = objectType({
   sourceDataTypeId: stringType().optional(),
   sourceDistribution: SourceDistributionSchema.optional(),
   gmmContrastLimits: GmmContrastLimitsSchema.optional(),
+  /** Min/max of finite coarsest-plane samples. Float contrast uses this domain. */
+  floatRange: objectType({
+    min: numberType(),
+    max: numberType()
+  }).optional(),
   /** Pseudocolor / mask display (napari-style layer list; persisted on source). */
   color: ColorSchema.optional(),
   lowerLimit: numberType().optional(),

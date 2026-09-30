@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BHiQMuVx.js","./pako.esm-KbdoS3Oq.js","./lerc-LdkRe7XC.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-ECnlCbAT.js","./pako.esm-KbdoS3Oq.js","./lerc-MOOKRuGH.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -17391,6 +17391,10 @@ let __tla = (async () => {
     sourceDataTypeId: stringType().optional(),
     sourceDistribution: SourceDistributionSchema.optional(),
     gmmContrastLimits: GmmContrastLimitsSchema.optional(),
+    floatRange: objectType({
+      min: numberType(),
+      max: numberType()
+    }).optional(),
     color: ColorSchema.optional(),
     lowerLimit: numberType().optional(),
     upperLimit: numberType().optional(),
@@ -66456,26 +66460,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DUxrOSjB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CdcdB6HI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DdfxVd1C.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DoMt82Zd.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DKXw19AN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-D82Ts2vb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BHiQMuVx.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DEIKQy8Y.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-LdkRe7XC.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-ECnlCbAT.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DNPPeXyo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-MOOKRuGH.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Db3CLKsD.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-4s8gWL2K.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-0S9BeMI_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-bB20qtN5.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -84217,7 +84221,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function applySourceChannelsToImages(currentImages, flatChannels) {
     const byImage = /* @__PURE__ */ new Map();
     for (const row2 of flatChannels) {
-      const { id: id2, imageId, index: index2, name: name2, kind, samples, sourceDataTypeId, sourceDistribution, gmmContrastLimits, color: color2, lowerLimit, upperLimit, maskVisualization } = row2;
+      const { id: id2, imageId, index: index2, name: name2, kind, samples, sourceDataTypeId, sourceDistribution, gmmContrastLimits, floatRange, color: color2, lowerLimit, upperLimit, maskVisualization } = row2;
       const slice = {
         id: id2 && id2.length > 0 ? id2 : crypto.randomUUID(),
         index: index2,
@@ -84236,6 +84240,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         } : {},
         ...gmmContrastLimits !== void 0 ? {
           gmmContrastLimits
+        } : {},
+        ...floatRange !== void 0 ? {
+          floatRange
         } : {},
         ...color2 !== void 0 ? {
           color: color2
@@ -84352,6 +84359,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         lowerLimit: prev.lowerLimit ?? ch2.lowerLimit,
         upperLimit: prev.upperLimit ?? ch2.upperLimit,
         gmmContrastLimits: prev.gmmContrastLimits ?? ch2.gmmContrastLimits,
+        floatRange: prev.floatRange ?? ch2.floatRange,
         maskVisualization: prev.maskVisualization ?? ch2.maskVisualization
       };
     });
@@ -92007,7 +92015,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           title: title7,
           "aria-label": ariaLabel,
           "aria-busy": wait2 || void 0,
-          "data-channel-drag-ignore": "",
           onClick,
           children: folder ? jsxRuntimeExports.jsx(SvgFolder, {
             width: 12,
@@ -92145,7 +92152,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!hasIngestedFeatureTable(featureTableId) && !showAccess) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$o.root,
-      "data-channel-drag-ignore": "",
       children: [
         jsxRuntimeExports.jsxs("div", {
           className: styles$o.toolbar,
@@ -92303,38 +92309,174 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function useAuthorChannelNav() {
     return reactExports.useContext(AuthorChannelNavContext);
   }
-  const wrap$2 = "_wrap_g1gme_1";
-  const histogramHost = "_histogramHost_g1gme_13";
-  const histogramLoading = "_histogramLoading_g1gme_20";
-  const histogramLoadingVisible = "_histogramLoadingVisible_g1gme_32";
-  const histogramSvg = "_histogramSvg_g1gme_36";
-  const histogramFill = "_histogramFill_g1gme_44";
-  const histogramLine = "_histogramLine_g1gme_49";
-  const histogramOutOfRange = "_histogramOutOfRange_g1gme_56";
-  const sliderRow = "_sliderRow_g1gme_60";
-  const rangePan = "_rangePan_g1gme_72";
-  const rangeInput = "_rangeInput_g1gme_86";
-  const limitInput = "_limitInput_g1gme_132";
+  const SvgAxisBreak = (props) => reactExports.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg",
+    viewBox: "0 0 180 50",
+    fill: "none",
+    width: "1em",
+    height: "1em",
+    ...props
+  }, reactExports.createElement("path", {
+    d: "M0 25H54M78 25H180M48 45L60 5M72 45L84 5",
+    stroke: "currentColor",
+    strokeWidth: 6,
+    strokeLinejoin: "miter"
+  }));
+  function isFloatDtype(dtype) {
+    return dtype != null && /float/i.test(dtype);
+  }
+  const UNIT_INTERVAL_SLACK = 1e-3;
+  function snapUnitInterval(range2) {
+    if (range2.min >= -1e-3 && range2.max <= 1 + UNIT_INTERVAL_SLACK) {
+      return {
+        min: 0,
+        max: 1
+      };
+    }
+    return range2;
+  }
+  function finiteSampleRange(samples) {
+    let min2 = Infinity;
+    let max2 = -Infinity;
+    for (let i2 = 0; i2 < samples.length; i2++) {
+      const v2 = samples[i2];
+      if (!Number.isFinite(v2)) continue;
+      if (v2 < min2) min2 = v2;
+      if (v2 > max2) max2 = v2;
+    }
+    if (!(max2 > min2)) return null;
+    return snapUnitInterval({
+      min: min2,
+      max: max2
+    });
+  }
+  function quantizeFloatToUint16(v2, range2) {
+    if (!Number.isFinite(v2)) return 0;
+    const t2 = (v2 - range2.min) / (range2.max - range2.min);
+    const x2 = t2 <= 0 ? 0 : t2 >= 1 ? 1 : t2;
+    return Math.round(x2 * 65535);
+  }
+  function dequantizeFromUint16(q2, range2) {
+    return range2.min + q2 / 65535 * (range2.max - range2.min);
+  }
+  function channelFloatRange(channel) {
+    const stored = channel.floatRange;
+    if ((stored == null ? void 0 : stored.min) != null && stored.max != null && Number.isFinite(stored.min) && Number.isFinite(stored.max) && stored.max > stored.min) {
+      return snapUnitInterval({
+        min: stored.min,
+        max: stored.max
+      });
+    }
+    if (!isFloatDtype(channel.sourceDataTypeId)) return null;
+    const dist2 = channel.sourceDistribution;
+    if ((dist2 == null ? void 0 : dist2.XScale) === "linear" && dist2.LowerRange != null && dist2.UpperRange != null && dist2.UpperRange > dist2.LowerRange) {
+      return snapUnitInterval({
+        min: dist2.LowerRange,
+        max: dist2.UpperRange
+      });
+    }
+    return null;
+  }
+  const HISTOGRAM_TRIM_FRACTION = 5e-3;
+  function firstTrimBin(yValues) {
+    let total = 0;
+    for (const y2 of yValues) total += y2;
+    if (total === 0) return 0;
+    const threshold = HISTOGRAM_TRIM_FRACTION * total;
+    let sum2 = 0;
+    for (let i2 = 0; i2 < yValues.length; i2++) {
+      sum2 += yValues[i2];
+      if (sum2 >= threshold) return i2;
+    }
+    return 0;
+  }
+  function resolveHistogramChartView(dist2, opts) {
+    const y2 = dist2.YValues ?? [];
+    const full2 = opts.floatRange ?? (opts.dtypeMax === 255 ? {
+      min: 0,
+      max: 255
+    } : null);
+    const fullScale = full2 || dist2.XScale === "linear" ? "linear" : "log";
+    const fullMin = (full2 == null ? void 0 : full2.min) ?? dist2.LowerRange ?? 0;
+    const fullMax = (full2 == null ? void 0 : full2.max) ?? dist2.UpperRange ?? 0;
+    const span = fullMax - fullMin;
+    const trimAt = firstTrimBin(y2);
+    const valueBin = y2.length === 0 || span === 0 ? 0 : Math.min(y2.length, Math.max(0, Math.floor((opts.lowerLimit - fullMin) / span * y2.length)));
+    const start = opts.expanded ? 0 : Math.min(trimAt, valueBin);
+    const distMin = y2.length === 0 ? fullMin : fullMin + span * (start / y2.length);
+    return {
+      yValues: start > 0 ? y2.slice(start) : y2,
+      startBin: start,
+      scaleInput: {
+        distScale: fullScale,
+        distMin,
+        distMax: fullMax,
+        dtypeMin: (full2 == null ? void 0 : full2.min) ?? 0,
+        dtypeMax: (full2 == null ? void 0 : full2.max) ?? opts.dtypeMax
+      }
+    };
+  }
+  const wrap$2 = "_wrap_sur29_1";
+  const histogramHost = "_histogramHost_sur29_13";
+  const histogramPlot = "_histogramPlot_sur29_22";
+  const histogramPlotTrimmed = "_histogramPlotTrimmed_sur29_30";
+  const histogramLoading = "_histogramLoading_sur29_35";
+  const histogramLoadingVisible = "_histogramLoadingVisible_sur29_47";
+  const histogramSvg = "_histogramSvg_sur29_51";
+  const axisBreak = "_axisBreak_sur29_59";
+  const histogramFill = "_histogramFill_sur29_84";
+  const histogramLine = "_histogramLine_sur29_89";
+  const histogramOutOfRange = "_histogramOutOfRange_sur29_96";
+  const sliderRow = "_sliderRow_sur29_100";
+  const rangeInput = "_rangeInput_sur29_112";
+  const rangeInputMin = "_rangeInputMin_sur29_137";
+  const rangeInputMax = "_rangeInputMax_sur29_144";
+  const limitInput = "_limitInput_sur29_182";
   const styles$n = {
     wrap: wrap$2,
     histogramHost,
+    histogramPlot,
+    histogramPlotTrimmed,
     histogramLoading,
     histogramLoadingVisible,
     histogramSvg,
+    axisBreak,
     histogramFill,
     histogramLine,
     histogramOutOfRange,
     sliderRow,
-    rangePan,
     rangeInput,
+    rangeInputMin,
+    rangeInputMax,
     limitInput
   };
   const SLIDER_DOMAIN_STEPS = 8192;
-  const DEFAULT_DTYPE_MIN = 0;
-  const DEFAULT_DTYPE_MAX = 65535;
+  function snapContrastLimit(value, fractional) {
+    if (!fractional) return Math.round(value);
+    return Number(value.toPrecision(6));
+  }
+  function formatContrastLimit(value, range2) {
+    if (!Number.isFinite(value)) return "";
+    if (!range2) return String(Math.round(value));
+    const span = range2.max - range2.min;
+    const exp = Math.floor(Math.log10(span));
+    const wanted = Number.isFinite(exp) ? Math.max(0, 3 - exp) : 3;
+    for (let decimals = Math.min(wanted, 6); decimals >= 0; decimals--) {
+      const text2 = value.toFixed(decimals);
+      if (text2.length <= 6 && (Number(text2) !== 0 || value === 0)) return text2;
+    }
+    return value.toExponential(2);
+  }
+  const EMPTY_DIST = {
+    id: "",
+    YValues: [],
+    XScale: "log",
+    YScale: "linear",
+    LowerRange: 0,
+    UpperRange: 16
+  };
   function buildContrastScale(input2) {
-    const dtypeMin = input2.dtypeMin ?? DEFAULT_DTYPE_MIN;
-    const dtypeMax = input2.dtypeMax ?? DEFAULT_DTYPE_MAX;
+    const { dtypeMin, dtypeMax } = input2;
     const chart_x_steps = SLIDER_DOMAIN_STEPS;
     const chart_x_max = input2.distMax;
     const chart_x_origin = input2.distMin;
@@ -92375,7 +92517,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function histogramSparklinePaths(values, width = 100, height = 11) {
     const line = [
       0,
-      ...values || [],
+      ...values,
       0
     ];
     const flat = line.slice(1, -1).every((v2) => v2 === line[1]);
@@ -92417,7 +92559,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       lowerLimit: liveContrast ? liveContrast.lower : limits[0],
       upperLimit: liveContrast ? liveContrast.upper : limits[1],
       distribution: sc2.sourceDistribution ?? null,
-      sourceDataTypeId: sc2.sourceDataTypeId
+      sourceDataTypeId: sc2.sourceDataTypeId,
+      floatRange: channelFloatRange(sc2)
     };
   }
   function contrastEditorPropsForGroupRow(channelRendering, groupId, gc2, sc2) {
@@ -92436,59 +92579,87 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       lowerLimit: liveContrast ? liveContrast.lower : gc2.lowerLimit,
       upperLimit: liveContrast ? liveContrast.upper : gc2.upperLimit,
       distribution: (sc2 == null ? void 0 : sc2.sourceDistribution) ?? null,
-      sourceDataTypeId: sc2 == null ? void 0 : sc2.sourceDataTypeId
+      sourceDataTypeId: sc2 == null ? void 0 : sc2.sourceDataTypeId,
+      floatRange: sc2 ? channelFloatRange(sc2) : null
     };
   }
   function ChannelContrastEditor(props) {
+    var _a2, _b2;
     const setChannelGroups = useDocumentStore((s2) => s2.setChannelGroups);
     const setImages = useDocumentStore((s2) => s2.setImages);
-    const dist2 = props.distribution ?? {
-      YValues: [],
-      XScale: "log",
-      LowerRange: 0,
-      UpperRange: 16
-    };
+    const dist2 = props.distribution ?? EMPTY_DIST;
+    const [expanded, setExpanded] = reactExports.useState(false);
+    const rangeMin = (_a2 = props.floatRange) == null ? void 0 : _a2.min;
+    const rangeMax = (_b2 = props.floatRange) == null ? void 0 : _b2.max;
+    const range2 = reactExports.useMemo(() => rangeMin != null && rangeMax != null ? {
+      min: rangeMin,
+      max: rangeMax
+    } : null, [
+      rangeMin,
+      rangeMax
+    ]);
+    const fractional = range2 != null;
     const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
-    const eightBit = dtypeMax === 255;
-    const scale2 = reactExports.useMemo(() => buildContrastScale({
-      distScale: eightBit ? "linear" : dist2.XScale,
-      distMin: eightBit ? 0 : dist2.LowerRange,
-      distMax: eightBit ? 255 : dist2.UpperRange,
-      dtypeMax
+    const chart = reactExports.useMemo(() => resolveHistogramChartView(dist2, {
+      floatRange: range2,
+      dtypeMax,
+      expanded,
+      lowerLimit: props.lowerLimit
     }), [
-      eightBit,
-      dist2.XScale,
-      dist2.LowerRange,
-      dist2.UpperRange,
-      dtypeMax
+      dist2,
+      expanded,
+      range2,
+      dtypeMax,
+      props.lowerLimit
+    ]);
+    const scale2 = reactExports.useMemo(() => buildContrastScale(chart.scaleInput), [
+      chart.scaleInput
     ]);
     const [sliderMin, setSliderMin] = reactExports.useState(() => scale2.toSlider(props.lowerLimit));
     const [sliderMax, setSliderMax] = reactExports.useState(() => scale2.toSlider(props.upperLimit));
     const sliderMinRef = reactExports.useRef(sliderMin);
     const sliderMaxRef = reactExports.useRef(sliderMax);
-    const [minInput, setMinInput] = reactExports.useState(String(props.lowerLimit));
-    const [maxInput, setMaxInput] = reactExports.useState(String(props.upperLimit));
     const editingLimitRef = reactExports.useRef(false);
+    const scaleRef = reactExports.useRef(scale2);
+    if (scaleRef.current !== scale2) {
+      scaleRef.current = scale2;
+      if (!editingLimitRef.current) {
+        const lo = scale2.toSlider(props.lowerLimit);
+        const hi2 = scale2.toSlider(props.upperLimit);
+        sliderMinRef.current = lo;
+        sliderMaxRef.current = hi2;
+        if (lo !== sliderMin) setSliderMin(lo);
+        if (hi2 !== sliderMax) setSliderMax(hi2);
+      }
+    }
+    const [minInput, setMinInput] = reactExports.useState(() => formatContrastLimit(props.lowerLimit, range2));
+    const [maxInput, setMaxInput] = reactExports.useState(() => formatContrastLimit(props.upperLimit, range2));
     const lastCommittedRangeRef = reactExports.useRef([
-      Math.round(props.lowerLimit),
-      Math.round(props.upperLimit)
+      snapContrastLimit(props.lowerLimit, fractional),
+      snapContrastLimit(props.upperLimit, fractional)
     ]);
     reactExports.useEffect(() => {
       if (editingLimitRef.current) return;
-      setSliderMin(scale2.toSlider(props.lowerLimit));
-      setSliderMax(scale2.toSlider(props.upperLimit));
-      setMinInput(String(Math.round(props.lowerLimit)));
-      setMaxInput(String(Math.round(props.upperLimit)));
+      const lo = snapContrastLimit(props.lowerLimit, fractional);
+      const hi2 = snapContrastLimit(props.upperLimit, fractional);
+      const loStep = scale2.toSlider(props.lowerLimit);
+      const hiStep = scale2.toSlider(props.upperLimit);
+      setSliderMin(loStep);
+      setSliderMax(hiStep);
+      setMinInput(formatContrastLimit(lo, range2));
+      setMaxInput(formatContrastLimit(hi2, range2));
       lastCommittedRangeRef.current = [
-        Math.round(props.lowerLimit),
-        Math.round(props.upperLimit)
+        lo,
+        hi2
       ];
-      sliderMinRef.current = scale2.toSlider(props.lowerLimit);
-      sliderMaxRef.current = scale2.toSlider(props.upperLimit);
+      sliderMinRef.current = loStep;
+      sliderMaxRef.current = hiStep;
     }, [
       props.lowerLimit,
       props.upperLimit,
-      scale2
+      scale2,
+      fractional,
+      range2
     ]);
     const previewRange = (lower, upper) => {
       useAppStore.getState().setChannelRendering({
@@ -92499,8 +92670,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     const commitRange = (lower, upper) => {
-      const lo = Math.round(lower);
-      const hi2 = Math.round(upper);
+      const lo = snapContrastLimit(lower, fractional);
+      const hi2 = snapContrastLimit(upper, fractional);
       const [lastLo, lastHi] = lastCommittedRangeRef.current;
       if (lo === lastLo && hi2 === lastHi) {
         useAppStore.getState().clearChannelRendering();
@@ -92534,10 +92705,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       props.sourceChannelId
     ]);
     const syncFromSliders = (loStep, hiStep, commit) => {
-      const lo = Math.round(scale2.fromSlider(loStep));
-      const hi2 = Math.round(scale2.fromSlider(hiStep));
-      setMinInput(String(lo));
-      setMaxInput(String(hi2));
+      const lo = snapContrastLimit(scale2.fromSlider(loStep), fractional);
+      const hi2 = snapContrastLimit(scale2.fromSlider(hiStep), fractional);
+      setMinInput(formatContrastLimit(lo, range2));
+      setMaxInput(formatContrastLimit(hi2, range2));
       if (commit) {
         commitRange(lo, hi2);
       } else {
@@ -92563,12 +92734,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       syncFromSliders(sliderMinRef.current, sliderMaxRef.current, true);
     };
     const commitFromInputs = () => {
-      let lo = Number.parseFloat(minInput);
-      let hi2 = Number.parseFloat(maxInput);
+      const preciseLo = snapContrastLimit(scale2.fromSlider(sliderMinRef.current), fractional);
+      const preciseHi = snapContrastLimit(scale2.fromSlider(sliderMaxRef.current), fractional);
+      let lo = minInput === formatContrastLimit(preciseLo, range2) ? preciseLo : Number.parseFloat(minInput);
+      let hi2 = maxInput === formatContrastLimit(preciseHi, range2) ? preciseHi : Number.parseFloat(maxInput);
       if (!Number.isFinite(lo)) lo = scale2.dtypeMin;
       if (!Number.isFinite(hi2)) hi2 = scale2.dtypeMax;
-      lo = Math.round(Math.max(scale2.dtypeMin, Math.min(scale2.dtypeMax, lo)));
-      hi2 = Math.round(Math.max(scale2.dtypeMin, Math.min(scale2.dtypeMax, hi2)));
+      lo = snapContrastLimit(Math.max(scale2.dtypeMin, Math.min(scale2.dtypeMax, lo)), fractional);
+      hi2 = snapContrastLimit(Math.max(scale2.dtypeMin, Math.min(scale2.dtypeMax, hi2)), fractional);
       if (lo > hi2) {
         const t2 = lo;
         lo = hi2;
@@ -92576,107 +92749,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       setSliderMin(scale2.toSlider(lo));
       setSliderMax(scale2.toSlider(hi2));
-      setMinInput(String(lo));
-      setMaxInput(String(hi2));
+      setMinInput(formatContrastLimit(lo, range2));
+      setMaxInput(formatContrastLimit(hi2, range2));
       commitRange(lo, hi2);
     };
     const minFrac = sliderMin / scale2.sliderSteps;
     const maxFrac = sliderMax / scale2.sliderSteps;
-    const sliderRowRef = reactExports.useRef(null);
-    const panDragRef = reactExports.useRef(null);
-    const panMovedRef = reactExports.useRef(false);
-    const { linePath: histLinePath, fillPath: histFillPath } = histogramSparklinePaths(dist2.YValues);
+    const { linePath: histLinePath, fillPath: histFillPath } = histogramSparklinePaths(chart.yValues);
     const histogramClipId = reactExports.useId();
     const histogramViewX = 1.15;
     const histogramViewWidth = 96.7;
     const histogramClipX = histogramViewX + minFrac * histogramViewWidth;
     const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
-    const stepFromClientX = (clientX) => {
-      const row2 = sliderRowRef.current;
-      if (!row2) return 0;
-      const rect = row2.getBoundingClientRect();
-      const x2 = clientX - rect.left;
-      const frac = Math.min(1, Math.max(0, x2 / Math.max(1, rect.width)));
-      return Math.round(frac * scale2.sliderSteps);
-    };
-    const onRangePanPointerDown = (e2) => {
-      if (e2.button !== 0) return;
-      e2.preventDefault();
-      editingLimitRef.current = true;
-      panMovedRef.current = false;
-      panDragRef.current = {
-        active: true,
-        pointerId: e2.pointerId,
-        startX: e2.clientX,
-        startMin: sliderMin,
-        startMax: sliderMax
-      };
-      e2.currentTarget.setPointerCapture(e2.pointerId);
-    };
-    const onRangePanPointerMove = (e2) => {
-      const drag = panDragRef.current;
-      if (!(drag == null ? void 0 : drag.active) || drag.pointerId !== e2.pointerId) return;
-      if (Math.abs(e2.clientX - drag.startX) > 2) {
-        panMovedRef.current = true;
-      }
-      const row2 = sliderRowRef.current;
-      if (!row2) return;
-      const rect = row2.getBoundingClientRect();
-      const deltaSteps = Math.round((e2.clientX - drag.startX) / Math.max(1, rect.width) * scale2.sliderSteps);
-      const span = drag.startMax - drag.startMin;
-      let lo = drag.startMin + deltaSteps;
-      let hi2 = drag.startMax + deltaSteps;
-      if (lo < 0) {
-        lo = 0;
-        hi2 = span;
-      }
-      if (hi2 > scale2.sliderSteps) {
-        hi2 = scale2.sliderSteps;
-        lo = scale2.sliderSteps - span;
-      }
-      sliderMinRef.current = lo;
-      sliderMaxRef.current = hi2;
-      setSliderMin(lo);
-      setSliderMax(hi2);
-      syncFromSliders(lo, hi2, false);
-    };
-    const endRangePan = (e2) => {
-      const drag = panDragRef.current;
-      if (!(drag == null ? void 0 : drag.active) || drag.pointerId !== e2.pointerId) return;
-      if (e2.currentTarget.hasPointerCapture(e2.pointerId)) {
-        e2.currentTarget.releasePointerCapture(e2.pointerId);
-      }
-      if (!panMovedRef.current) {
-        const step = stepFromClientX(e2.clientX);
-        const span = drag.startMax - drag.startMin;
-        let lo = Math.round(step - span / 2);
-        let hi2 = lo + span;
-        if (lo < 0) {
-          lo = 0;
-          hi2 = span;
-        }
-        if (hi2 > scale2.sliderSteps) {
-          hi2 = scale2.sliderSteps;
-          lo = scale2.sliderSteps - span;
-        }
-        sliderMinRef.current = lo;
-        sliderMaxRef.current = hi2;
-        setSliderMin(lo);
-        setSliderMax(hi2);
-        editingLimitRef.current = false;
-        syncFromSliders(lo, hi2, true);
-      } else {
-        onSliderCommit();
-      }
-      panDragRef.current = null;
-      panMovedRef.current = false;
-      editingLimitRef.current = false;
-    };
-    const panLeft = `${minFrac * 100}%`;
-    const panWidth = `${(maxFrac - minFrac) * 100}%`;
+    const trimmed = chart.startBin > 0;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$n.wrap,
-      draggable: false,
       children: [
         jsxRuntimeExports.jsx("input", {
           type: "number",
@@ -92685,6 +92772,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           "aria-label": `${props.channelLabel} contrast minimum value`,
           min: scale2.dtypeMin,
           max: scale2.dtypeMax,
+          step: fractional ? "any" : 1,
           onFocus: () => {
             editingLimitRef.current = true;
           },
@@ -92697,107 +92785,121 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             if (e2.key === "Enter") e2.currentTarget.blur();
           }
         }),
-        jsxRuntimeExports.jsxs("div", {
+        jsxRuntimeExports.jsx("div", {
           className: styles$n.histogramHost,
           style: props.r != null && props.g != null && props.b != null ? {
             "--histogram-color": `rgb(${props.r},${props.g},${props.b})`
           } : void 0,
-          children: [
-            jsxRuntimeExports.jsxs("svg", {
-              className: styles$n.histogramSvg,
-              viewBox: "1.15 0 96.7 11",
-              preserveAspectRatio: "none",
-              role: "img",
-              "aria-label": `${props.channelLabel} intensity histogram`,
-              children: [
-                jsxRuntimeExports.jsx("defs", {
-                  children: jsxRuntimeExports.jsx("clipPath", {
-                    id: histogramClipId,
-                    children: jsxRuntimeExports.jsx("rect", {
-                      x: histogramClipX,
-                      y: 0,
-                      width: histogramClipWidth,
-                      height: 11
-                    })
+          children: jsxRuntimeExports.jsxs("div", {
+            className: trimmed ? `${styles$n.histogramPlot} ${styles$n.histogramPlotTrimmed}` : styles$n.histogramPlot,
+            children: [
+              trimmed ? jsxRuntimeExports.jsx("button", {
+                type: "button",
+                className: `${minervaTheme.focusRing} ${styles$n.axisBreak}`,
+                title: "Full range",
+                "aria-label": `${props.channelLabel} full histogram range`,
+                onClick: () => setExpanded(true),
+                children: jsxRuntimeExports.jsx(SvgAxisBreak, {})
+              }) : null,
+              jsxRuntimeExports.jsxs("svg", {
+                className: styles$n.histogramSvg,
+                viewBox: "1.15 0 96.7 11",
+                preserveAspectRatio: "none",
+                role: "img",
+                "aria-label": `${props.channelLabel} intensity histogram`,
+                children: [
+                  jsxRuntimeExports.jsxs("defs", {
+                    children: [
+                      jsxRuntimeExports.jsx("clipPath", {
+                        id: `${histogramClipId}-frame`,
+                        children: jsxRuntimeExports.jsx("rect", {
+                          x: histogramViewX,
+                          y: -1,
+                          width: histogramViewWidth,
+                          height: 13
+                        })
+                      }),
+                      jsxRuntimeExports.jsx("clipPath", {
+                        id: histogramClipId,
+                        children: jsxRuntimeExports.jsx("rect", {
+                          x: histogramClipX,
+                          y: 0,
+                          width: histogramClipWidth,
+                          height: 11
+                        })
+                      })
+                    ]
+                  }),
+                  jsxRuntimeExports.jsxs("g", {
+                    clipPath: `url(#${histogramClipId}-frame)`,
+                    children: [
+                      jsxRuntimeExports.jsx("path", {
+                        className: `${styles$n.histogramFill} ${styles$n.histogramOutOfRange}`,
+                        d: histFillPath
+                      }),
+                      jsxRuntimeExports.jsx("path", {
+                        className: `${styles$n.histogramLine} ${styles$n.histogramOutOfRange}`,
+                        d: histLinePath
+                      }),
+                      jsxRuntimeExports.jsxs("g", {
+                        clipPath: `url(#${histogramClipId})`,
+                        children: [
+                          jsxRuntimeExports.jsx("path", {
+                            className: styles$n.histogramFill,
+                            d: histFillPath
+                          }),
+                          jsxRuntimeExports.jsx("path", {
+                            className: styles$n.histogramLine,
+                            d: histLinePath
+                          })
+                        ]
+                      })
+                    ]
                   })
-                }),
-                jsxRuntimeExports.jsx("path", {
-                  className: `${styles$n.histogramFill} ${styles$n.histogramOutOfRange}`,
-                  d: histFillPath
-                }),
-                jsxRuntimeExports.jsx("path", {
-                  className: `${styles$n.histogramLine} ${styles$n.histogramOutOfRange}`,
-                  d: histLinePath
-                }),
-                jsxRuntimeExports.jsxs("g", {
-                  clipPath: `url(#${histogramClipId})`,
-                  children: [
-                    jsxRuntimeExports.jsx("path", {
-                      className: styles$n.histogramFill,
-                      d: histFillPath
-                    }),
-                    jsxRuntimeExports.jsx("path", {
-                      className: styles$n.histogramLine,
-                      d: histLinePath
-                    })
-                  ]
+                ]
+              }),
+              jsxRuntimeExports.jsx("div", {
+                className: `${styles$n.histogramLoading}${props.histogramLoading ? ` ${styles$n.histogramLoadingVisible}` : ""}`,
+                title: "Loading histogram",
+                children: jsxRuntimeExports.jsx("div", {
+                  className: minervaTheme.spinnerSm
                 })
-              ]
-            }),
-            jsxRuntimeExports.jsx("div", {
-              className: `${styles$n.histogramLoading}${props.histogramLoading ? ` ${styles$n.histogramLoadingVisible}` : ""}`,
-              title: "Loading histogram",
-              children: jsxRuntimeExports.jsx("div", {
-                className: minervaTheme.spinnerSm
+              }),
+              jsxRuntimeExports.jsxs("div", {
+                className: styles$n.sliderRow,
+                children: [
+                  jsxRuntimeExports.jsx("input", {
+                    type: "range",
+                    className: `${styles$n.rangeInput} ${styles$n.rangeInputMin}`,
+                    min: 0,
+                    max: scale2.sliderSteps,
+                    value: sliderMin,
+                    onChange: onMinSlider,
+                    onMouseUp: onSliderCommit,
+                    onTouchEnd: onSliderCommit,
+                    onKeyUp: onSliderCommit,
+                    onBlur: onSliderCommit,
+                    "aria-label": `${props.channelLabel} contrast minimum`,
+                    "aria-valuetext": `${formatContrastLimit(scale2.fromSlider(sliderMin), range2)} intensity`
+                  }),
+                  jsxRuntimeExports.jsx("input", {
+                    type: "range",
+                    className: `${styles$n.rangeInput} ${styles$n.rangeInputMax}`,
+                    min: 0,
+                    max: scale2.sliderSteps,
+                    value: sliderMax,
+                    onChange: onMaxSlider,
+                    onMouseUp: onSliderCommit,
+                    onTouchEnd: onSliderCommit,
+                    onKeyUp: onSliderCommit,
+                    onBlur: onSliderCommit,
+                    "aria-label": `${props.channelLabel} contrast maximum`,
+                    "aria-valuetext": `${formatContrastLimit(scale2.fromSlider(sliderMax), range2)} intensity`
+                  })
+                ]
               })
-            }),
-            jsxRuntimeExports.jsxs("div", {
-              ref: sliderRowRef,
-              className: styles$n.sliderRow,
-              children: [
-                sliderMax > sliderMin ? jsxRuntimeExports.jsx("div", {
-                  className: styles$n.rangePan,
-                  style: {
-                    left: panLeft,
-                    width: panWidth
-                  },
-                  onPointerDown: onRangePanPointerDown,
-                  onPointerMove: onRangePanPointerMove,
-                  onPointerUp: endRangePan,
-                  onPointerCancel: endRangePan,
-                  "aria-hidden": true
-                }) : null,
-                jsxRuntimeExports.jsx("input", {
-                  type: "range",
-                  className: styles$n.rangeInput,
-                  min: 0,
-                  max: scale2.sliderSteps,
-                  value: sliderMin,
-                  onChange: onMinSlider,
-                  onMouseUp: onSliderCommit,
-                  onTouchEnd: onSliderCommit,
-                  onKeyUp: onSliderCommit,
-                  onBlur: onSliderCommit,
-                  "aria-label": `${props.channelLabel} contrast minimum`,
-                  "aria-valuetext": `${Math.round(scale2.fromSlider(sliderMin))} intensity`
-                }),
-                jsxRuntimeExports.jsx("input", {
-                  type: "range",
-                  className: styles$n.rangeInput,
-                  min: 0,
-                  max: scale2.sliderSteps,
-                  value: sliderMax,
-                  onChange: onMaxSlider,
-                  onMouseUp: onSliderCommit,
-                  onTouchEnd: onSliderCommit,
-                  onKeyUp: onSliderCommit,
-                  onBlur: onSliderCommit,
-                  "aria-label": `${props.channelLabel} contrast maximum`,
-                  "aria-valuetext": `${Math.round(scale2.fromSlider(sliderMax))} intensity`
-                })
-              ]
-            })
-          ]
+            ]
+          })
         }),
         jsxRuntimeExports.jsx("input", {
           type: "number",
@@ -92806,6 +92908,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           "aria-label": `${props.channelLabel} contrast maximum value`,
           min: scale2.dtypeMin,
           max: scale2.dtypeMax,
+          step: fractional ? "any" : 1,
           onFocus: () => {
             editingLimitRef.current = true;
           },
@@ -93097,8 +93200,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsxs("div", {
               className: styles$q.channelRowMid,
-              "data-channel-drag-ignore": "",
-              draggable: false,
               children: [
                 contrast ? jsxRuntimeExports.jsx(ChannelContrastEditor, {
                   ...contrast
@@ -93287,7 +93388,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     inFlight.delete(job.rasterKey);
     notify();
   }
-  function commitFitted(job, window2) {
+  function commitFitted(job, window2, range2) {
     const doc = useDocumentStore.getState();
     const channels2 = flattenImageChannelsInDocumentOrder(doc.images);
     let changed = false;
@@ -93302,6 +93403,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         return sc2;
       }
       changed = true;
+      const dist2 = sc2.sourceDistribution;
+      const distMatches = range2 != null && (dist2 == null ? void 0 : dist2.XScale) === "linear" && dist2.LowerRange === range2.min && dist2.UpperRange === range2.max;
       return {
         ...sc2,
         gmmContrastLimits: {
@@ -93309,7 +93412,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           upper: window2.upper
         },
         lowerLimit: window2.lower,
-        upperLimit: window2.upper
+        upperLimit: window2.upper,
+        ...range2 ? {
+          floatRange: range2
+        } : {},
+        ...range2 && !distMatches ? {
+          sourceDistribution: void 0
+        } : {}
       };
     });
     if (changed) {
@@ -93387,7 +93496,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       z: 0,
       c: sourceIndex
     };
-    const out = new Uint16Array(GMM_MAX_SAMPLES);
+    const raw2 = new Float64Array(GMM_MAX_SAMPLES);
     for (let i2 = planes.length - 1; i2 >= 0; i2--) {
       const plane = planes[i2];
       const { width, height } = planeSize$1(plane);
@@ -93398,6 +93507,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const maxTile = Math.min(ts, width) * Math.min(ts, height);
       if (maxTile > GMM_MAX_DECODE_PIXELS) continue;
       let o2 = 0;
+      let sawU8 = false;
       for (const [x2, y2] of pickTileCoords(nx, ny)) {
         if (o2 >= GMM_MAX_SAMPLES) break;
         let data2;
@@ -93412,24 +93522,36 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           continue;
         }
         if (!(data2 == null ? void 0 : data2.length) || data2.length > GMM_MAX_DECODE_PIXELS) continue;
-        const u8 = data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray;
+        if (data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray) {
+          sawU8 = true;
+        }
         const stride = Math.max(1, Math.ceil(data2.length / (GMM_MAX_SAMPLES - o2)));
         for (let p2 = 0; p2 < data2.length && o2 < GMM_MAX_SAMPLES; p2 += stride) {
-          out[o2++] = sampleToUint16(Number(data2[p2]), u8);
+          raw2[o2++] = Number(data2[p2]);
         }
       }
-      if (o2 > 0) return o2 < GMM_MAX_SAMPLES ? out.subarray(0, o2) : out;
+      if (o2 === 0) continue;
+      const samples = raw2.subarray(0, o2);
+      const range2 = isFloatDtype(plane.dtype) ? finiteSampleRange(samples) : null;
+      const u16 = new Uint16Array(o2);
+      for (let s2 = 0; s2 < o2; s2++) {
+        u16[s2] = range2 ? quantizeFloatToUint16(samples[s2], range2) : sampleToUint16(samples[s2], sawU8);
+      }
+      return {
+        u16,
+        range: range2
+      };
     }
     return null;
   }
   async function runJob(job, gen) {
     await acquire(fetchUsedBox, fetchWaiters, FETCH_CONCURRENCY);
-    let u16 = null;
+    let sampled = null;
     try {
       if (gen !== generation) return {
         kind: "failed"
       };
-      u16 = await fetchCoarsestUint16(job.loader, job.index);
+      sampled = await fetchCoarsestUint16(job.loader, job.index);
     } finally {
       release(fetchUsedBox, fetchWaiters);
       pump();
@@ -93437,7 +93559,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (gen !== generation) return {
       kind: "failed"
     };
-    if (!u16) {
+    if (!sampled) {
       failedKeys.add(job.rasterKey);
       finishJob(job, gen);
       pump();
@@ -93449,7 +93571,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     let window2 = null;
     try {
       if (gen === generation) {
-        window2 = await fitChannelGmmContrastFromUint16(u16);
+        window2 = await fitChannelGmmContrastFromUint16(sampled.u16);
       }
     } finally {
       release(fitUsedBox, fitWaiters);
@@ -93457,6 +93579,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (gen !== generation) return {
       kind: "failed"
     };
+    if (sampled.range) {
+      const range2 = sampled.range;
+      if (window2) {
+        window2 = {
+          lower: dequantizeFromUint16(window2.lower, range2),
+          upper: dequantizeFromUint16(window2.upper, range2)
+        };
+      }
+      if (!window2 || !(window2.upper > window2.lower)) {
+        window2 = {
+          lower: range2.min,
+          upper: range2.max
+        };
+      }
+    }
     if (!window2) {
       failedKeys.add(job.rasterKey);
       finishJob(job, gen);
@@ -93465,7 +93602,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         kind: "failed"
       };
     }
-    commitFitted(job, window2);
+    commitFitted(job, window2, sampled.range);
     finishJob(job, gen);
     pump();
     return {
@@ -93673,41 +93810,42 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     snapshot = emptySnapshot;
     for (const listener of listeners) listener();
   }
+  const HISTOGRAM_BIN_COUNT = 100;
   const MAX_HISTOGRAM_TILE_PIXELS = 4e6;
-  function histogramBinFromPixels(bits, width, data2) {
+  function intensityToHistogramBin(v2, bits) {
+    const n2 = HISTOGRAM_BIN_COUNT;
+    if (bits <= 8) {
+      return Math.min(n2 - 1, Math.floor(v2 * n2 / 2 ** bits));
+    }
+    return Math.min(n2 - 1, Math.floor(n2 * Math.log2(v2) / bits));
+  }
+  function binInRange(v2, min2, max2) {
+    const n2 = HISTOGRAM_BIN_COUNT;
+    const t2 = (v2 - min2) / (max2 - min2);
+    return Math.min(n2 - 1, Math.max(0, Math.floor(t2 * n2)));
+  }
+  function histogramBinFromPixels(bits, width, data2, range2) {
     const len2 = data2.length;
     if (len2 === 0 || len2 > MAX_HISTOGRAM_TILE_PIXELS) return [];
-    const n_bins = 100;
-    const seen2 = /* @__PURE__ */ new Set();
-    const thresholds = [];
-    for (let x2 = 0; x2 < n_bins; x2++) {
-      const t2 = Math.floor(2 ** (bits * x2 / n_bins));
-      if (seen2.has(t2)) continue;
-      seen2.add(t2);
-      thresholds.push(t2);
-    }
-    thresholds.sort((a2, b2) => a2 - b2);
-    const counts = new Array(thresholds.length).fill(0);
+    const spanned = range2 != null && range2.max > range2.min;
+    const counts = new Array(HISTOGRAM_BIN_COUNT).fill(0);
     const step = 4;
     const w2 = Math.max(1, width);
-    const nTh = thresholds.length;
     for (let i2 = 0; i2 < len2; i2++) {
       if (i2 % step !== 0 && Math.floor(i2 / w2) % step !== 0) continue;
       const v2 = data2[i2];
-      if (!(v2 > 0)) continue;
-      let lo = 0;
-      let hi2 = nTh;
-      while (lo < hi2) {
-        const mid = lo + hi2 >> 1;
-        if (v2 <= thresholds[mid]) hi2 = mid;
-        else lo = mid + 1;
+      if (spanned) {
+        if (!Number.isFinite(v2)) continue;
+        counts[binInRange(v2, range2.min, range2.max)]++;
+      } else {
+        if (!(v2 > 0)) continue;
+        counts[intensityToHistogramBin(v2, bits)]++;
       }
-      if (lo < nTh) counts[lo]++;
     }
     return counts;
   }
   function WorkerWrapper$3(options) {
-    return new Worker("" + new URL("histogram.worker-CnnG54PM.js", import.meta.url).href, {
+    return new Worker("" + new URL("histogram.worker-D54kmtrr.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -93738,7 +93876,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         this.workers.push(w2);
       }
     }
-    run(bits, width, buffer2, arrayCtorName) {
+    run(bits, width, buffer2, arrayCtorName, range2) {
       const jobId = this.nextId++;
       const w2 = this.workers[this.rr++ % this.workers.length];
       return new Promise((resolve, reject) => {
@@ -93751,7 +93889,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           bits,
           width,
           buffer: buffer2,
-          arrayCtorName
+          arrayCtorName,
+          range: range2
         }, [
           buffer2
         ]);
@@ -93766,18 +93905,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return singleton$1;
   }
-  async function histogramBinTile(bits, width, data2) {
+  async function histogramBinTile(bits, width, data2, range2) {
     if (data2.length > MAX_HISTOGRAM_TILE_PIXELS) return [];
     const pool = getHistogramBinPool();
     if (pool) {
       try {
         const copy2 = data2.buffer.slice(data2.byteOffset, data2.byteOffset + data2.byteLength);
-        return await pool.run(bits, width, copy2, data2.constructor.name);
+        return await pool.run(bits, width, copy2, data2.constructor.name, range2);
       } catch (err2) {
         console.warn("[minerva] histogram worker failed, using main thread:", err2);
       }
     }
-    return histogramBinFromPixels(bits, width, data2);
+    return histogramBinFromPixels(bits, width, data2, range2);
   }
   const hex_to_rgb = (c2) => {
     const n2 = parseInt(c2, 16);
@@ -93919,9 +94058,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     const parsed = parseInt(dtype.replace(/.?int/, ""), 10);
     if (!Number.isNaN(parsed)) return parsed;
-    if (/float/i.test(dtype)) {
-      return 16;
-    }
+    if (isFloatDtype(dtype)) return 16;
     console.warn(`[minerva] histogram: unsupported dtype "${dtype}" (expected Uint*/Int* or Float*)`);
     return null;
   }
@@ -93970,9 +94107,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const bin = async (inputs) => {
     const { data: data2, width, height } = await captureTile(inputs.index, inputs.planes);
     if (!(data2 == null ? void 0 : data2.length) || width * height > MAX_HISTOGRAM_TILE_PIXELS) {
-      return [];
+      return {
+        y: [],
+        range: null
+      };
     }
-    return histogramBinTile(inputs.bits, width, data2);
+    const dtype = inputs.planes[Math.abs(inputs.index.z)].dtype;
+    const range2 = inputs.range ?? (isFloatDtype(dtype) || data2 instanceof Float32Array || data2 instanceof Float64Array ? finiteSampleRange(data2) : null);
+    const y2 = await histogramBinTile(inputs.bits, width, data2, range2);
+    return {
+      y: y2,
+      range: range2
+    };
   };
   const toTilePlane$1 = (zoom, planes) => {
     return planes[Math.max(0, Math.abs(zoom))];
@@ -94031,7 +94177,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       tileProps
     };
   };
-  const extractDistributionsForSourceIndices = async (loader, sourceIndices) => {
+  const extractDistributionsForSourceIndices = async (loader, sourceIndices, ranges) => {
     const init2 = initialize$1({
       planes: loader.data
     });
@@ -94054,29 +94200,36 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ] : [];
     });
     const entries = await mapIndicesInBatches(indexObjs, HISTOGRAM_EXTRACT_CONCURRENCY, async (index2) => {
+      var _a2, _b2;
       const SourceIndex = index2.c;
       let YValues = [];
+      let range2 = null;
       if (bits != null) {
         try {
-          YValues = await bin({
+          const binned = await bin({
             bits,
             index: index2,
-            planes: loader.data
+            planes: loader.data,
+            range: (ranges == null ? void 0 : ranges.get(SourceIndex)) ?? null
           });
+          YValues = binned.y;
+          range2 = binned.range;
         } catch (err2) {
           const msg = err2 instanceof Error ? err2.message : String(err2);
           console.warn(`[minerva] histogram: channel ${SourceIndex} tile/bin failed (${msg})`);
         }
       }
+      const floatPlane = isFloatDtype(dtype) || isFloatDtype((_b2 = (_a2 = loader.metadata) == null ? void 0 : _a2.Pixels) == null ? void 0 : _b2.Type);
+      const linear = range2 != null || floatPlane || bits != null && bits <= 8;
       return [
         SourceIndex,
         {
           id: crypto.randomUUID(),
           YValues,
-          XScale: bits != null && bits <= 8 ? "linear" : "log",
+          XScale: linear ? "linear" : "log",
           YScale: "linear",
-          LowerRange: 0,
-          UpperRange: bits != null && bits <= 8 ? 2 ** bits - 1 : bits ?? 0
+          LowerRange: (range2 == null ? void 0 : range2.min) ?? 0,
+          UpperRange: range2 ? range2.max : bits != null && bits <= 8 ? 2 ** bits - 1 : bits ?? 0
         }
       ];
     });
@@ -94241,8 +94394,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return ((_a2 = d2 == null ? void 0 : d2.YValues) == null ? void 0 : _a2.length) ?? 0;
   }
   const omeHistogramCache = /* @__PURE__ */ new Map();
-  function cacheKey(imageKey, sourceImageId, sourceIndex) {
-    return `${imageKey}\0${sourceImageId}\0${sourceIndex}`;
+  function cacheKey(imageKey, sourceImageId, sourceIndex, range2) {
+    const span = range2 ? `\0${range2.min}\0${range2.max}` : "";
+    return `${imageKey}\0${sourceImageId}\0${sourceIndex}${span}`;
   }
   function clearOmeHistogramCache() {
     omeHistogramCache.clear();
@@ -94252,7 +94406,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const next2 = channels2.map((sc2) => {
       const dist2 = byChannelId.get(sc2.id);
       if (!dist2) return sc2;
-      if (sourceDistributionYValuesLength(sc2) > 0) return sc2;
+      const prev = sc2.sourceDistribution;
+      if (sourceDistributionYValuesLength(sc2) > 0 && (prev == null ? void 0 : prev.LowerRange) === dist2.LowerRange && (prev == null ? void 0 : prev.UpperRange) === dist2.UpperRange && (prev == null ? void 0 : prev.XScale) === dist2.XScale) {
+        return sc2;
+      }
       changed = true;
       return {
         ...sc2,
@@ -94261,14 +94418,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     return changed ? next2 : channels2;
   }
-  async function ensureOmeHistogramDistributions(loader, imageKey, sourceImageId, sourceIndices) {
+  async function ensureOmeHistogramDistributions(loader, imageKey, sourceImageId, sourceIndices, ranges) {
     const unique = [
       ...new Set(sourceIndices)
     ].filter((i2) => Number.isFinite(i2) && i2 >= 0);
     const result = /* @__PURE__ */ new Map();
     const toCompute = [];
     for (const c2 of unique) {
-      const hit = omeHistogramCache.get(cacheKey(imageKey, sourceImageId, c2));
+      const hit = omeHistogramCache.get(cacheKey(imageKey, sourceImageId, c2, ranges == null ? void 0 : ranges.get(c2)));
       if (hit) {
         result.set(c2, hit);
       } else {
@@ -94278,11 +94435,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (toCompute.length === 0) {
       return result;
     }
-    const fresh = await extractDistributionsForSourceIndices(loader, toCompute);
+    const fresh = await extractDistributionsForSourceIndices(loader, toCompute, ranges);
     for (const c2 of toCompute) {
       const dist2 = fresh.get(c2);
       if (dist2) {
-        omeHistogramCache.set(cacheKey(imageKey, sourceImageId, c2), dist2);
+        omeHistogramCache.set(cacheKey(imageKey, sourceImageId, c2, ranges == null ? void 0 : ranges.get(c2)), dist2);
         result.set(c2, dist2);
       }
     }
@@ -94799,6 +94956,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   const CHIP_COLS = 5;
+  function pointerInEditor(e2, root2) {
+    const t2 = e2.target;
+    if (t2 instanceof Node && root2.contains(t2)) return true;
+    if (t2 instanceof Element && t2.closest("[data-minerva-color-picker]")) {
+      return true;
+    }
+    const r2 = root2.getBoundingClientRect();
+    return e2.clientX >= r2.left && e2.clientX <= r2.right && e2.clientY >= r2.top && e2.clientY <= r2.bottom;
+  }
   function ChipGrid(props) {
     const { chips, openChip, shownIds, blockedIds, onDismissEditor } = props;
     const editorRef = reactExports.useRef(null);
@@ -94808,22 +94974,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const rowEnd = openIndex < 0 ? -1 : Math.min(chips.length - 1, openIndex - openIndex % CHIP_COLS + CHIP_COLS - 1);
     reactExports.useEffect(() => {
       if (openIndex < 0) return;
-      const onDoc = (e2) => {
+      let downInside = false;
+      const onDown = (e2) => {
         const root2 = editorRef.current;
-        if (!root2) return;
-        const t2 = e2.target;
-        if (t2 instanceof Node && root2.contains(t2)) return;
-        if (t2 instanceof Element && t2.closest("[data-minerva-color-picker]")) {
+        downInside = root2 != null && pointerInEditor(e2, root2);
+      };
+      const onDoc = (e2) => {
+        if (downInside) {
+          downInside = false;
           return;
         }
-        const r2 = root2.getBoundingClientRect();
-        if (e2.clientX >= r2.left && e2.clientX <= r2.right && e2.clientY >= r2.top && e2.clientY <= r2.bottom) {
-          return;
-        }
+        const root2 = editorRef.current;
+        if (!root2 || pointerInEditor(e2, root2)) return;
         onDismissEditor();
       };
+      document.addEventListener("mousedown", onDown);
       document.addEventListener("click", onDoc);
-      return () => document.removeEventListener("click", onDoc);
+      return () => {
+        document.removeEventListener("mousedown", onDown);
+        document.removeEventListener("click", onDoc);
+      };
     }, [
       openIndex,
       onDismissEditor
@@ -165440,8 +165610,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         score: null
       };
     }
+    const threshold = plane.integer === false ? 0.9 : EQ_THRESHOLD;
     return {
-      label: score > EQ_THRESHOLD ? "mask" : "image",
+      label: score > threshold ? "mask" : "image",
       score
     };
   }
@@ -166892,9 +167063,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           const result = await detectOmeTiffMask(source2, ac2.signal);
           if (ac2.signal.aborted) return;
           if (!roleChosenByUserRef.current && (result.score != null || result.label === "rgb")) {
-            const role2 = result.label === "mask" ? "segmentation" : "intensity";
-            setDetectedRole(role2);
-            setOverlayRole(role2);
+            const detected = result.label === "mask" ? "segmentation" : "intensity";
+            setDetectedRole(detected);
+            setOverlayRole(detected);
           }
         } catch (error2) {
           if (!ac2.signal.aborted) {
@@ -167324,8 +167495,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 jsxRuntimeExports.jsx(FormatChip, {
                   label: "Fluorescence",
                   selected: overlayRole === "intensity" && !overlayRgbDisplay,
-                  suggested: detectedRole === "intensity" && detectedRgbDisplay !== true,
-                  muted: detectedRole !== "intensity" || detectedRgbDisplay === true,
+                  suggested: overlayRole === "intensity" && !overlayRgbDisplay,
+                  muted: detectedRgbDisplay === true,
                   onClick: () => {
                     roleChosenByUserRef.current = true;
                     rgbDisplayChosenByUserRef.current = true;
@@ -167337,7 +167508,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 detectedRgbDisplay != null ? jsxRuntimeExports.jsx(FormatChip, {
                   label: "Brightfield",
                   selected: overlayRole === "intensity" && overlayRgbDisplay,
-                  suggested: detectedRole === "intensity" && detectedRgbDisplay === true,
+                  suggested: overlayRole === "intensity" && overlayRgbDisplay,
                   muted: detectedRole !== "intensity" || detectedRgbDisplay !== true,
                   onClick: () => {
                     roleChosenByUserRef.current = true;
@@ -167350,8 +167521,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 jsxRuntimeExports.jsx(FormatChip, {
                   label: "Segmentation Mask",
                   selected: overlayRole === "segmentation",
-                  suggested: detectedRole === "segmentation",
-                  muted: detectedRole !== "segmentation",
+                  suggested: overlayRole === "segmentation",
                   onClick: () => {
                     roleChosenByUserRef.current = true;
                     setOverlayRole("segmentation");
@@ -245138,30 +245308,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }, reactExports.createElement("path", {
     d: "M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2 .9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z"
   }));
-  const channelActionButton = "_channelActionButton_r32ls_3";
-  const colorLockButtonLocked = "_colorLockButtonLocked_r32ls_20";
-  const dropHint = "_dropHint_r32ls_29";
-  const groupFolders = "_groupFolders_r32ls_36";
-  const groupFolder = "_groupFolder_r32ls_36";
-  const dropTargetActive = "_dropTargetActive_r32ls_51";
-  const groupFolderHeader = "_groupFolderHeader_r32ls_56";
-  const groupFolderActivate = "_groupFolderActivate_r32ls_68";
-  const groupFolderChevron = "_groupFolderChevron_r32ls_89";
-  const groupFolderName = "_groupFolderName_r32ls_107";
-  const groupFolderTrailing = "_groupFolderTrailing_r32ls_114";
-  const groupFolderBody = "_groupFolderBody_r32ls_121";
-  const groupChildList = "_groupChildList_r32ls_126";
-  const groupChildBlock = "_groupChildBlock_r32ls_132";
-  const channelRowWrap = "_channelRowWrap_r32ls_140";
-  const ungrouping = "_ungrouping_r32ls_149";
-  const groupChildName = "_groupChildName_r32ls_166";
-  const dragHandle = "_dragHandle_r32ls_176";
-  const treeSeparator = "_treeSeparator_r32ls_199";
-  const treeSeparatorLabel = "_treeSeparatorLabel_r32ls_213";
-  const channelFilter = "_channelFilter_r32ls_218";
-  const filterEmpty = "_filterEmpty_r32ls_241";
-  const rootChannelList = "_rootChannelList_r32ls_248";
-  const rootChannelBlock = "_rootChannelBlock_r32ls_256";
+  const channelActionButton = "_channelActionButton_1wvsk_3";
+  const colorLockButtonLocked = "_colorLockButtonLocked_1wvsk_20";
+  const dropHint = "_dropHint_1wvsk_29";
+  const groupFolders = "_groupFolders_1wvsk_36";
+  const groupFolder = "_groupFolder_1wvsk_36";
+  const dropTargetActive = "_dropTargetActive_1wvsk_51";
+  const groupFolderHeader = "_groupFolderHeader_1wvsk_56";
+  const groupFolderActivate = "_groupFolderActivate_1wvsk_68";
+  const groupFolderChevron = "_groupFolderChevron_1wvsk_89";
+  const groupFolderName = "_groupFolderName_1wvsk_107";
+  const groupFolderTrailing = "_groupFolderTrailing_1wvsk_114";
+  const groupFolderBody = "_groupFolderBody_1wvsk_121";
+  const groupChildList = "_groupChildList_1wvsk_126";
+  const groupChildBlock = "_groupChildBlock_1wvsk_132";
+  const channelRowWrap = "_channelRowWrap_1wvsk_140";
+  const ungrouping = "_ungrouping_1wvsk_148";
+  const groupChildName = "_groupChildName_1wvsk_165";
+  const dragHandle = "_dragHandle_1wvsk_175";
+  const treeSeparator = "_treeSeparator_1wvsk_198";
+  const treeSeparatorLabel = "_treeSeparatorLabel_1wvsk_212";
+  const channelFilter = "_channelFilter_1wvsk_217";
+  const filterEmpty = "_filterEmpty_1wvsk_240";
+  const rootChannelList = "_rootChannelList_1wvsk_247";
+  const rootChannelBlock = "_rootChannelBlock_1wvsk_255";
   const styles$c = {
     channelActionButton,
     colorLockButtonLocked,
@@ -245234,11 +245404,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const types2 = Array.from(e2.dataTransfer.types);
     return types2.includes(CHANNEL_DRAG_MIME) || types2.includes("text/plain");
   }
-  function shouldIgnoreChannelRowDrag(target) {
-    if (!(target instanceof Element)) return false;
-    if (target.closest(`.${styles$c.dragHandle}`)) return false;
-    return Boolean(target.closest("input, textarea, select, button, a, label, [contenteditable], [data-channel-drag-ignore]"));
-  }
   function previewUngroupWhileDragging(row2) {
     const onOver = (ev) => {
       const el2 = document.elementFromPoint(ev.clientX, ev.clientY);
@@ -245259,38 +245424,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fromGroupId: props.fromGroupId,
       fromRowId: props.fromRowId
     };
-    const beginDrag = (e2) => startChannelDrag(e2, payload);
-    const ignoreRowDragRef = reactExports.useRef(false);
     return jsxRuntimeExports.jsxs("div", {
       className: styles$c.channelRowWrap,
-      draggable: true,
-      onPointerDown: (e2) => {
-        ignoreRowDragRef.current = shouldIgnoreChannelRowDrag(e2.target);
-      },
-      onDragStart: (e2) => {
-        if (ignoreRowDragRef.current) {
-          e2.preventDefault();
-          return;
-        }
-        beginDrag(e2);
-        if (props.onRemoveFromGroup) {
-          previewUngroupWhileDragging(e2.currentTarget);
-        }
-      },
-      onDragEnd: (e2) => {
-        if (!props.onRemoveFromGroup) return;
-        if (e2.dataTransfer.dropEffect !== "none") return;
-        const el2 = document.elementFromPoint(e2.clientX, e2.clientY);
-        const folder = e2.currentTarget.closest(`.${styles$c.groupFolder}`);
-        if (folder && el2 && folder.contains(el2)) return;
-        props.onRemoveFromGroup();
-      },
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
           className: styles$c.dragHandle,
           draggable: true,
-          onDragStart: beginDrag,
+          onDragStart: (e2) => {
+            startChannelDrag(e2, payload);
+            if (!props.onRemoveFromGroup) return;
+            const row2 = e2.currentTarget.closest(`.${styles$c.channelRowWrap}`);
+            if (row2 instanceof HTMLElement) previewUngroupWhileDragging(row2);
+          },
+          onDragEnd: (e2) => {
+            if (!props.onRemoveFromGroup) return;
+            if (e2.dataTransfer.dropEffect !== "none") return;
+            const el2 = document.elementFromPoint(e2.clientX, e2.clientY);
+            const folder = e2.currentTarget.closest(`.${styles$c.groupFolder}`);
+            if (folder && el2 && folder.contains(el2)) return;
+            props.onRemoveFromGroup();
+          },
           title: `Drag ${props.label}`,
           "aria-label": `Drag ${props.label}`,
           children: "\u22EE\u22EE"
@@ -246003,23 +246157,37 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       removeChannelFromGroup(payload.fromGroupId, payload.fromRowId);
     };
     const visibleHistogramTargets = reactExports.useMemo(() => {
-      const group2 = channelGroups.find((g2) => g2.id === activeChannelGroupId) ?? channelGroups[0];
-      if (!group2) return [];
-      const ids = [];
-      for (const gc2 of group2.channels) {
-        if (!isGroupRowVisible(channelGroupRowVisibilities, gc2.id)) continue;
-        const sc2 = uniqueSourceChannels.find((c2) => c2.id === gc2.channelId);
-        if (!sc2 || !isImageChannel(sc2) || isRgbDisplayChannel(sc2, sourceChannels)) {
-          continue;
+      const seen2 = /* @__PURE__ */ new Set();
+      const consider = (sc2) => {
+        if (!sc2 || seen2.has(sc2.id)) return;
+        if (!isImageChannel(sc2) || isRgbDisplayChannel(sc2, sourceChannels)) return;
+        if (sourceDistributionYValuesLength(sc2) > 0) {
+          const range2 = channelFloatRange(sc2);
+          const dist2 = sc2.sourceDistribution;
+          const axisMatches = (dist2 == null ? void 0 : dist2.XScale) === "linear" && dist2.LowerRange === (range2 == null ? void 0 : range2.min) && dist2.UpperRange === (range2 == null ? void 0 : range2.max);
+          const stale = range2 ? !axisMatches : isFloatDtype(sc2.sourceDataTypeId) && (dist2 == null ? void 0 : dist2.XScale) === "log";
+          if (!stale) return;
         }
-        if (sourceDistributionYValuesLength(sc2) > 0) continue;
-        ids.push(sc2.id);
+        seen2.add(sc2.id);
+      };
+      for (const group2 of channelGroups) {
+        for (const gc2 of group2.channels) {
+          if (!isGroupRowVisible(channelGroupRowVisibilities, gc2.id)) continue;
+          consider(uniqueSourceChannels.find((c2) => c2.id === gc2.channelId));
+        }
       }
-      return ids;
+      for (const sc2 of uniqueSourceChannels) {
+        const inGroup = channelGroups.some((g2) => g2.channels.some((gc2) => gc2.channelId === sc2.id));
+        if (inGroup || !isStackVisible(stackVisibilities, sc2.id)) continue;
+        consider(sc2);
+      }
+      return [
+        ...seen2
+      ];
     }, [
       channelGroups,
-      activeChannelGroupId,
       channelGroupRowVisibilities,
+      stackVisibilities,
       uniqueSourceChannels,
       sourceChannels
     ]);
@@ -248002,6 +248170,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return intensity.length === 0 ? channelsOfKind(image2, "mask") : [];
   }
   function contrastLimitsForExportedChannel(channel, channelGroups) {
+    var _a2, _b2;
     for (const g2 of channelGroups) {
       for (const row2 of g2.channels) {
         if (row2.channelId !== channel.id) continue;
@@ -248011,9 +248180,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         };
       }
     }
-    const max2 = sourceDtypeMax(channel.sourceDataTypeId);
+    const max2 = ((_a2 = channel.floatRange) == null ? void 0 : _a2.max) ?? sourceDtypeMax(channel.sourceDataTypeId);
     return {
-      lowerLimit: channel.lowerLimit ?? 0,
+      lowerLimit: channel.lowerLimit ?? ((_b2 = channel.floatRange) == null ? void 0 : _b2.min) ?? 0,
       upperLimit: channel.upperLimit ?? max2
     };
   }
@@ -250082,7 +250251,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return copy2;
   }
   function WorkerWrapper$2(options) {
-    return new Worker("" + new URL("jpegExport.worker-CSW9_LSR.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-oUHD6uBV.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -254021,11 +254190,9 @@ uniform classStyleUniforms {
     if (idx < 0) return settings;
     if (live.kind === "contrast") {
       if (idx >= settings.contrastLimits.length) return settings;
-      const lo = Math.round(live.lower);
-      const hi2 = Math.round(live.upper);
       const contrastLimits = settings.contrastLimits.map((pair, i2) => i2 === idx ? [
-        lo,
-        hi2
+        live.lower,
+        live.upper
       ] : [
         pair[0],
         pair[1]
@@ -254446,12 +254613,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-24T20:00:59.621Z");
+    const label2 = utcShort("2026-09-30T14:59:44.308Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-24T20:00:59.621Z",
+      title: "2026-09-30T14:59:44.308Z",
       children: [
         "Updated ",
         label2,
@@ -256646,7 +256813,13 @@ uniform classStyleUniforms {
         const uniqueIdx = [
           ...new Set(plist.map((p2) => p2.index))
         ];
-        const map2 = await ensureOmeHistogramDistributions(loader, imageKey, imageId, uniqueIdx);
+        const ranges = /* @__PURE__ */ new Map();
+        for (const p2 of plist) {
+          const ch2 = prevCh.find((c2) => c2.id === p2.channelId);
+          const span = ch2 ? channelFloatRange(ch2) : null;
+          if (span) ranges.set(p2.index, span);
+        }
+        const map2 = await ensureOmeHistogramDistributions(loader, imageKey, imageId, uniqueIdx, ranges);
         for (const p2 of plist) {
           const dist2 = map2.get(p2.index);
           if (dist2) byChannelId.set(p2.channelId, dist2);
