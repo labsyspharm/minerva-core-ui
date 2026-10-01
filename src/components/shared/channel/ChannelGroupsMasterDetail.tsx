@@ -279,13 +279,24 @@ type ChannelRowMoreMenuProps = {
   channelName: string;
   onFitContrast?: () => void;
   fitBusy?: boolean;
+  contoursOn?: boolean;
+  onToggleContours?: () => void;
   onRemoveFromGroup?: () => void;
 };
 
 function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
-  const { channelName, onFitContrast, fitBusy, onRemoveFromGroup } = props;
-  const hasItems = Boolean(onFitContrast || onRemoveFromGroup);
-  const menu = useAnchoredMenu({ align: "end", estimateHeight: 72 });
+  const {
+    channelName,
+    onFitContrast,
+    fitBusy,
+    contoursOn,
+    onToggleContours,
+    onRemoveFromGroup,
+  } = props;
+  const hasItems = Boolean(
+    onFitContrast || onToggleContours || onRemoveFromGroup,
+  );
+  const menu = useAnchoredMenu({ align: "end", estimateHeight: 108 });
 
   if (!hasItems) return null;
 
@@ -325,6 +336,21 @@ function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
                   }}
                 >
                   {fitBusy ? "Fitting contrast…" : "Fit contrast"}
+                </button>
+              ) : null}
+              {onToggleContours ? (
+                <button
+                  type="button"
+                  role="menuitemcheckbox"
+                  aria-checked={contoursOn}
+                  className={minervaTheme.menuItem}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    menu.close();
+                    onToggleContours();
+                  }}
+                >
+                  {contoursOn ? "✓ Contours" : "Contours"}
                 </button>
               ) : null}
               {onRemoveFromGroup ? (
@@ -501,6 +527,8 @@ export const ChannelGroupsMasterDetail = (
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
+  const contourChannelIds = useAppStore((s) => s.contourChannelIds);
+  const toggleContourChannel = useAppStore((s) => s.toggleContourChannel);
   const storedGroupRowVisibilities = useAppStore(
     (s) => s.channelGroupRowVisibilities,
   );
@@ -911,6 +939,10 @@ export const ChannelGroupsMasterDetail = (
         canFitContrast(sc) ? () => void refitAutoContrast(sc.id) : undefined
       }
       fitBusy={sc ? refittingContrastIds.has(sc.id) : false}
+      contoursOn={Boolean(sc && contourChannelIds[sc.id])}
+      onToggleContours={
+        canFitContrast(sc) ? () => toggleContourChannel(sc.id) : undefined
+      }
       onRemoveFromGroup={onRemoveFromGroup}
     />
   );

@@ -26,6 +26,7 @@ import {
   DEFAULT_MASK_VISUALIZATION,
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
+import { contourExtension } from "@/lib/imaging/contourExtension";
 import type { LoaderList } from "@/lib/imaging/loaderEntries";
 import {
   IMAGE_SELECTION_MASK_LAYER_ID,
@@ -434,6 +435,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     imageSelectionMask != null &&
     (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
   const maskExtension = useMemo(() => new MaskExtension(), []);
+  const contourChannelIds = useAppStore((s) => s.contourChannelIds);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -880,14 +882,29 @@ export const ImageViewer = (props: ImageViewerProps) => {
   ]);
 
   const clippedImageLayers = useMemo(() => {
-    if (!selectionMaskActive || !imageSelectionMask) return imageLayers;
-    return imageLayers.map((layer) =>
-      layer.clone({
-        extensions: [maskExtension],
-        maskId: IMAGE_SELECTION_MASK_LAYER_ID,
-      } as Parameters<typeof layer.clone>[0]),
-    );
-  }, [imageLayers, selectionMaskActive, imageSelectionMask, maskExtension]);
+    const masked = selectionMaskActive && imageSelectionMask != null;
+    return imageLayers.map((layer) => {
+      const ids = (layer.props as { sourceChannelIds?: readonly string[] })
+        .sourceChannelIds;
+      const contourEnabled = ids?.map((id) => (contourChannelIds[id] ? 1 : 0));
+      const contoured = Boolean(contourEnabled?.some((on) => on > 0));
+      if (!contoured && !masked) return layer;
+      return layer.clone({
+        extensions: [
+          ...(contoured ? [contourExtension] : []),
+          ...(masked ? [maskExtension] : []),
+        ],
+        ...(contoured ? { contourEnabled } : {}),
+        ...(masked ? { maskId: IMAGE_SELECTION_MASK_LAYER_ID } : {}),
+      } as Parameters<typeof layer.clone>[0]);
+    });
+  }, [
+    imageLayers,
+    contourChannelIds,
+    selectionMaskActive,
+    imageSelectionMask,
+    maskExtension,
+  ]);
 
   const allLayers = useMemo(() => {
     const layers: AnyLayer[] = [
@@ -1159,20 +1176,22 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   const handleAfterRender = useCallback(() => {
     if (loadingWidgetRef.current) {
-      // Display-only overlays (mask opacity/color, annotations) should not
-      // activate the image-data loading spinner.
-      loadingWidgetRef.current.onRedraw({ layers: imageLayers });
+      // Drawn image tiles only. Overlay layers stay out. Contour and
+      // selection-mask clones are the instances Deck updates.
+      loadingWidgetRef.current.onRedraw({ layers: clippedImageLayers });
     }
     // Skip Zustand while the camera is busy — isLoaded flickers as LODs churn.
     if (isCameraBusyRef.current) return;
     const loaded =
-      imageLayers.length > 0 &&
-      imageLayers.every((layer) => (layer as { isLoaded?: boolean }).isLoaded);
+      clippedImageLayers.length > 0 &&
+      clippedImageLayers.every(
+        (layer) => (layer as { isLoaded?: boolean }).isLoaded,
+      );
     if (imageLayersLoadedRef.current !== loaded) {
       imageLayersLoadedRef.current = loaded;
       setViewerImageLayersLoaded(loaded);
     }
-  }, [imageLayers, setViewerImageLayersLoaded]);
+  }, [clippedImageLayers, setViewerImageLayersLoaded]);
 
   useEffect(() => {
     return () => {

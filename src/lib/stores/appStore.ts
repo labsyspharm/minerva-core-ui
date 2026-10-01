@@ -787,6 +787,9 @@ export interface AppStore {
     preview: MaskVisualizationPreview | null,
   ) => void;
   channelVisibilities: Record<string, boolean>;
+  /** Source channel ids drawn as isolines instead of a color fill. */
+  contourChannelIds: Record<string, boolean>;
+  toggleContourChannel: (sourceChannelId: string) => void;
   /**
    * Session-only per-feature-table class visibility. Missing key ≡ all visible.
    */
@@ -932,6 +935,7 @@ const overlayInitialState = {
   channelRendering: null,
   maskVisualizationPreview: null,
   channelVisibilities: {},
+  contourChannelIds: {},
   featureTableVisibilities: {},
   channelGroupRowVisibilities: {},
   groupNames: {},
@@ -2211,6 +2215,18 @@ export const useAppStore = create<AppStore>()(
 
       setEditingViewstateWaypointIndex: (index) => {
         set({ editingViewstateWaypointIndex: index });
+      },
+
+      toggleContourChannel: (sourceChannelId) => {
+        set((state) => {
+          const contourChannelIds = { ...state.contourChannelIds };
+          if (contourChannelIds[sourceChannelId]) {
+            delete contourChannelIds[sourceChannelId];
+          } else {
+            contourChannelIds[sourceChannelId] = true;
+          }
+          return { contourChannelIds };
+        });
       },
 
       setChannelVisibilities: (vis: Record<string, boolean>) => {
