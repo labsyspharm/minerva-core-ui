@@ -6,14 +6,17 @@
   height: var(--minerva-control);
 }
 
-.menu {
-  right: 0;
-  left: auto;
-  min-width: 0;
-  padding: 6px 8px;
+.toolbar {
+  position: absolute;
+  z-index: 4;
   display: flex;
   flex-direction: row;
   align-items: center;
+  padding: 6px 8px;
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
+  pointer-events: auto;
+  transform: translate(-50%, -100%);
 }
 
 .section {

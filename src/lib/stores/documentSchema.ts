@@ -186,6 +186,12 @@ export const ImageSchema = z.object({
   flipHorizontal: z.boolean().default(false),
   /** Omitted input parses as false. */
   flipVertical: z.boolean().default(false),
+  /** µm, applied in world space after rotation. Omitted input parses as 0. */
+  translateX: z.number().default(0),
+  /** µm, applied in world space after rotation. Omitted input parses as 0. */
+  translateY: z.number().default(0),
+  /** Resize around the image center. 1 keeps the file's physical size. */
+  displayScale: z.number().positive().default(1),
   /** µm per pixel, copied from OME PhysicalSize. 1 when the file has none. */
   scaleX: z.number().positive().default(1),
   /** µm per pixel, copied from OME PhysicalSize. 1 when the file has none. */
@@ -363,6 +369,9 @@ export type ImageOrientation = {
   rotationDegrees: number;
   flipHorizontal: boolean;
   flipVertical: boolean;
+  translateX: number;
+  translateY: number;
+  displayScale: number;
   scaleX: number;
   scaleY: number;
 };

@@ -184,8 +184,9 @@ export function effectiveWorldFrame(
 
 /**
  * Deck model matrix.
- * `scale(µm/px) · T(center) · R · S(flip) · T(−center)`.
+ * `T(µm) · T(center) · S(display) · T(−center) · scale(µm/px) · T(center) · R · S(flip) · T(−center)`.
  * µm/px is the document image's `scaleX` / `scaleY` when orientation is passed.
+ * Display scale and translation are the user resize and move, in world µm.
  */
 export function layerModelMatrix(
   loader: Loader,
@@ -195,11 +196,18 @@ export function layerModelMatrix(
   const o = effectiveOrientation(orientation);
   const scaleX = orientation ? o.scaleX : frame.umPerPixelX;
   const scaleY = orientation ? o.scaleY : frame.umPerPixelY;
-  const m = new Matrix4().scale([scaleX, scaleY, 1]);
+  const cx = frame.pixelWidth / 2;
+  const cy = frame.pixelHeight / 2;
+  const ux = cx * scaleX;
+  const uy = cy * scaleY;
+  const m = new Matrix4()
+    .translate([o.translateX, o.translateY, 0])
+    .translate([ux, uy, 0])
+    .scale([o.displayScale, o.displayScale, 1])
+    .translate([-ux, -uy, 0])
+    .scale([scaleX, scaleY, 1]);
   const pivoted = o.rotationDegrees !== 0 || o.flipHorizontal || o.flipVertical;
   if (pivoted) {
-    const cx = frame.pixelWidth / 2;
-    const cy = frame.pixelHeight / 2;
     // Y-down image space: +rotateZ is clockwise on screen (matches CW button).
     m.translate([cx, cy, 0])
       .rotateZ((o.rotationDegrees * Math.PI) / 180)
@@ -207,6 +215,45 @@ export function layerModelMatrix(
       .translate([-cx, -cy, 0]);
   }
   return m;
+}
+
+/** Pixel → world µm. Same order as {@link layerModelMatrix}. */
+export function imagePixelToWorld(
+  pixelX: number,
+  pixelY: number,
+  pixelWidth: number,
+  pixelHeight: number,
+  orientation: ImageOrientation,
+): [number, number] {
+  const cx = pixelWidth / 2;
+  const cy = pixelHeight / 2;
+  let x = pixelX - cx;
+  let y = pixelY - cy;
+  if (orientation.flipHorizontal) x = -x;
+  if (orientation.flipVertical) y = -y;
+  if (
+    orientation.rotationDegrees !== 0 ||
+    orientation.flipHorizontal ||
+    orientation.flipVertical
+  ) {
+    const rad = (orientation.rotationDegrees * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    const rx = x * cos - y * sin;
+    const ry = x * sin + y * cos;
+    x = rx;
+    y = ry;
+  }
+  x += cx;
+  y += cy;
+  const wx = x * orientation.scaleX;
+  const wy = y * orientation.scaleY;
+  const ux = cx * orientation.scaleX;
+  const uy = cy * orientation.scaleY;
+  return [
+    (wx - ux) * orientation.displayScale + ux + orientation.translateX,
+    (wy - uy) * orientation.displayScale + uy + orientation.translateY,
+  ];
 }
 
 function isIdentityScale(scale: PhysicalScale): boolean {

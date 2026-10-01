@@ -15,12 +15,19 @@ function finiteScale(n: number | undefined): number {
   return typeof n === "number" && Number.isFinite(n) && n > 0 ? n : 1;
 }
 
+function finiteOffset(n: number | undefined): number {
+  return typeof n === "number" && Number.isFinite(n) ? n : 0;
+}
+
 /** Normalize placement. `scaleX` / `scaleY` are µm/px copied from the image. */
 export function effectiveOrientation(o: PlacementInput): ImageOrientation {
   return {
     rotationDegrees: wrapDisplayDeg(o?.rotationDegrees ?? 0),
     flipHorizontal: o?.flipHorizontal ?? false,
     flipVertical: o?.flipVertical ?? false,
+    translateX: finiteOffset(o?.translateX),
+    translateY: finiteOffset(o?.translateY),
+    displayScale: finiteScale(o?.displayScale),
     scaleX: finiteScale(o?.scaleX),
     scaleY: finiteScale(o?.scaleY),
   };

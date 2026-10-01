@@ -294,13 +294,22 @@ export function setImageOrientation(
   const idx = images.findIndex((im) => im.id === imageId);
   if (idx < 0) return images;
   const next = [...images];
-  const { rotationDegrees, flipHorizontal, flipVertical } =
-    effectiveOrientation(orientation);
+  const {
+    rotationDegrees,
+    flipHorizontal,
+    flipVertical,
+    translateX,
+    translateY,
+    displayScale,
+  } = effectiveOrientation(orientation);
   next[idx] = {
     ...next[idx],
     rotationDegrees,
     flipHorizontal,
     flipVertical,
+    translateX,
+    translateY,
+    displayScale,
   };
   return next;
 }

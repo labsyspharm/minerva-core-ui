@@ -1,15 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import OrientationIcon from "@/components/shared/icons/orientation.svg?react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import MoveIcon from "@/components/shared/icons/move.svg?react";
 import ReflectHorizontalIcon from "@/components/shared/icons/reflect-horizontal.svg?react";
 import ReflectVerticalIcon from "@/components/shared/icons/reflect-vertical.svg?react";
 import Rotate90CcwIcon from "@/components/shared/icons/rotate-90-ccw.svg?react";
 import Rotate90CwIcon from "@/components/shared/icons/rotate-90-cw.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
-import { useClickOutside } from "@/components/shared/useClickOutside";
 import {
   effectiveOrientation,
-  isIdentityOrientation,
   withOrientation,
   wrapDisplayDeg,
 } from "@/lib/imaging/imageOrientation";
@@ -154,15 +158,12 @@ function RotationKnob(props: {
   );
 }
 
-export function ImageOrientationRow(props: {
+/** Reflect / rotate controls. Placed above the image while orientation is open. */
+export function ImageOrientationToolbar(props: {
   image: Image;
-  onOpenChange?: (open: boolean) => void;
+  style?: CSSProperties;
 }) {
-  const { image, onOpenChange } = props;
-  const [open, setOpen] = useState(false);
-  const onOpenChangeRef = useRef(onOpenChange);
-  onOpenChangeRef.current = onOpenChange;
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const { image } = props;
   const setImages = useDocumentStore((s) => s.setImages);
   const preview = useAppStore((s) =>
     s.imageOrientationPreview?.imageId === image.id
@@ -176,13 +177,6 @@ export function ImageOrientationRow(props: {
   const [textDraft, setTextDraft] = useState(() =>
     formatDeg(live.rotationDegrees),
   );
-  const nonIdentity = !isIdentityOrientation(live);
-
-  useEffect(() => {
-    onOpenChangeRef.current?.(open);
-  }, [open]);
-
-  useClickOutside(open, () => setOpen(false), [wrapRef]);
 
   useEffect(() => {
     if (preview) return;
@@ -220,101 +214,113 @@ export function ImageOrientationRow(props: {
   };
 
   return (
-    <div className={styles.menuWrap} ref={wrapRef}>
+    <div
+      className={styles.toolbar}
+      style={props.style}
+      role="toolbar"
+      aria-label="Image orientation"
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <fieldset className={styles.section}>
+        <legend className={styles.sectionLabel}>Reflect</legend>
+        <div className={styles.row}>
+          <PanelIconButton
+            title="Flip horizontal"
+            aria-label="Flip horizontal"
+            aria-pressed={live.flipHorizontal}
+            active={live.flipHorizontal}
+            onClick={() => commit({ flipHorizontal: !live.flipHorizontal })}
+          >
+            <ReflectHorizontalIcon aria-hidden />
+          </PanelIconButton>
+          <PanelIconButton
+            title="Flip vertical"
+            aria-label="Flip vertical"
+            aria-pressed={live.flipVertical}
+            active={live.flipVertical}
+            onClick={() => commit({ flipVertical: !live.flipVertical })}
+          >
+            <ReflectVerticalIcon aria-hidden />
+          </PanelIconButton>
+        </div>
+      </fieldset>
+
+      <fieldset className={styles.section}>
+        <legend className={styles.sectionLabel}>Rotate</legend>
+        <div className={styles.row}>
+          <PanelIconButton
+            title="Rotate 90° counter-clockwise"
+            aria-label="Rotate 90 degrees counter-clockwise"
+            onClick={() =>
+              commit({ rotationDegrees: live.rotationDegrees - 90 })
+            }
+          >
+            <Rotate90CcwIcon aria-hidden />
+          </PanelIconButton>
+          <RotationKnob
+            degrees={live.rotationDegrees}
+            onLive={(deg) => previewLive({ rotationDegrees: deg })}
+            onCommit={(deg) => commit({ rotationDegrees: deg })}
+            onResetAngle={() => commit({ rotationDegrees: 0 })}
+          />
+          <PanelIconButton
+            title="Rotate 90° clockwise"
+            aria-label="Rotate 90 degrees clockwise"
+            onClick={() =>
+              commit({ rotationDegrees: live.rotationDegrees + 90 })
+            }
+          >
+            <Rotate90CwIcon aria-hidden />
+          </PanelIconButton>
+          <div className={styles.degField}>
+            <input
+              className={`${minervaTheme.input} ${styles.degInput}`}
+              type="text"
+              inputMode="decimal"
+              value={textDraft}
+              aria-label="Rotation degrees"
+              onChange={(e) => setTextDraft(e.target.value)}
+              onBlur={(e) => commitText(e.currentTarget.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  commitText(e.currentTarget.value);
+                  e.currentTarget.blur();
+                } else if (e.key === "Escape") {
+                  setTextDraft(formatDeg(live.rotationDegrees));
+                  e.currentTarget.blur();
+                }
+              }}
+            />
+            <span className={styles.degUnit} aria-hidden>
+              °
+            </span>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+  );
+}
+
+export function ImageOrientationRow(props: {
+  /** Selection frame is showing for this image. */
+  open?: boolean;
+  onToggle?: () => void;
+}) {
+  return (
+    <div className={styles.menuWrap}>
       <PanelIconButton
-        title="Orientation"
-        aria-label="Orientation"
-        aria-expanded={open}
-        aria-haspopup="dialog"
-        active={open || nonIdentity}
+        title="Drag"
+        aria-label="Drag"
+        aria-pressed={props.open}
+        active={props.open}
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((v) => !v);
+          props.onToggle?.();
         }}
       >
-        <OrientationIcon aria-hidden />
+        <MoveIcon aria-hidden />
       </PanelIconButton>
-      {open ? (
-        <div className={`${minervaTheme.menu} ${styles.menu}`}>
-          <fieldset className={styles.section}>
-            <legend className={styles.sectionLabel}>Reflect</legend>
-            <div className={styles.row}>
-              <PanelIconButton
-                title="Flip horizontal"
-                aria-label="Flip horizontal"
-                aria-pressed={live.flipHorizontal}
-                active={live.flipHorizontal}
-                onClick={() => commit({ flipHorizontal: !live.flipHorizontal })}
-              >
-                <ReflectHorizontalIcon aria-hidden />
-              </PanelIconButton>
-              <PanelIconButton
-                title="Flip vertical"
-                aria-label="Flip vertical"
-                aria-pressed={live.flipVertical}
-                active={live.flipVertical}
-                onClick={() => commit({ flipVertical: !live.flipVertical })}
-              >
-                <ReflectVerticalIcon aria-hidden />
-              </PanelIconButton>
-            </div>
-          </fieldset>
-
-          <fieldset className={styles.section}>
-            <legend className={styles.sectionLabel}>Rotate</legend>
-            <div className={styles.row}>
-              <PanelIconButton
-                title="Rotate 90° counter-clockwise"
-                aria-label="Rotate 90 degrees counter-clockwise"
-                onClick={() =>
-                  commit({ rotationDegrees: live.rotationDegrees - 90 })
-                }
-              >
-                <Rotate90CcwIcon aria-hidden />
-              </PanelIconButton>
-              <RotationKnob
-                degrees={live.rotationDegrees}
-                onLive={(deg) => previewLive({ rotationDegrees: deg })}
-                onCommit={(deg) => commit({ rotationDegrees: deg })}
-                onResetAngle={() => commit({ rotationDegrees: 0 })}
-              />
-              <PanelIconButton
-                title="Rotate 90° clockwise"
-                aria-label="Rotate 90 degrees clockwise"
-                onClick={() =>
-                  commit({ rotationDegrees: live.rotationDegrees + 90 })
-                }
-              >
-                <Rotate90CwIcon aria-hidden />
-              </PanelIconButton>
-              <div className={styles.degField}>
-                <input
-                  className={`${minervaTheme.input} ${styles.degInput}`}
-                  type="text"
-                  inputMode="decimal"
-                  value={textDraft}
-                  aria-label="Rotation degrees"
-                  onChange={(e) => setTextDraft(e.target.value)}
-                  onBlur={(e) => commitText(e.currentTarget.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      commitText(e.currentTarget.value);
-                      e.currentTarget.blur();
-                    } else if (e.key === "Escape") {
-                      setTextDraft(formatDeg(live.rotationDegrees));
-                      e.currentTarget.blur();
-                    }
-                  }}
-                />
-                <span className={styles.degUnit} aria-hidden>
-                  °
-                </span>
-              </div>
-            </div>
-          </fieldset>
-        </div>
-      ) : null}
     </div>
   );
 }

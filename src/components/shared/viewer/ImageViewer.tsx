@@ -15,6 +15,7 @@ import "@deck.gl/widgets/stylesheet.css";
 import type { Layer } from "@deck.gl/core";
 import { MaskExtension } from "@deck.gl/extensions";
 import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
+import { ImageArrangeBox } from "@/components/shared/viewer/ImageArrangeBox";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import {
   getFeatureTableLutEpoch,
@@ -378,6 +379,10 @@ export type ImageViewerProps = {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
   ) => void;
+  /** Selection frame for this image. Authoring only, after the drag control. */
+  frameImageId?: string | null;
+  /** Reflect / rotate bar above each image. */
+  showToolbar?: boolean;
   zoomInButton?: HTMLElement | null;
   zoomOutButton?: HTMLElement | null;
   showSquareViewportOverlay?: boolean;
@@ -402,6 +407,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
     isDragging = false,
     hoveredShapeId = null,
     onOverlayInteraction,
+    frameImageId = null,
+    showToolbar = false,
     showSquareViewportOverlay = false,
     squareViewportScale = 0.9,
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
@@ -445,25 +452,30 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const [viewportSize, setViewportSize] = useState(windowSize);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<DeckGLRef | null>(null);
+  const arrangeLayoutRef = useRef<(() => void) | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
-  // Set up ResizeObserver to track viewport size changes
-  useEffect(() => {
-    const element = rootRef.current;
+  // Callback ref: the viewer returns null until loaders exist, so a mount-only
+  // effect never sees the element and the frame stays on the window size.
+  const setRoot = useCallback((element: HTMLDivElement | null) => {
+    rootRef.current = element;
+    resizeObserverRef.current?.disconnect();
+    resizeObserverRef.current = null;
     if (!element) return;
-
+    const publish = (width: number, height: number) => {
+      if (width <= 0 || height <= 0) return;
+      setViewportSize({ width, height });
+      useAppStore.getState().setViewerViewportSize({ width, height });
+    };
+    publish(element.clientWidth, element.clientHeight);
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
-        setViewportSize({ width, height });
-        // Same tick as layout — avoids null viewerViewportSize before React commits.
-        if (width > 0 && height > 0) {
-          useAppStore.getState().setViewerViewportSize({ width, height });
-        }
+        publish(width, height);
       }
     });
-
     resizeObserver.observe(element);
-    return () => resizeObserver.disconnect();
+    resizeObserverRef.current = resizeObserver;
   }, []);
 
   const setViewerWorldFrame = useAppStore((s) => s.setViewerWorldFrame);
@@ -1030,6 +1042,25 @@ export const ImageViewer = (props: ImageViewerProps) => {
     [],
   );
 
+  const clientToWorld = useCallback(
+    (clientX: number, clientY: number): [number, number] | null => {
+      const root = rootRef.current;
+      const flat = toFlatViewState(cameraRef.current);
+      if (!root || !flat?.target) return null;
+      const scale = 2 ** (flat.zoom ?? 0);
+      if (!Number.isFinite(scale) || scale === 0) return null;
+      const rect = root.getBoundingClientRect();
+      const vp = viewportSizeRef.current;
+      const sx = clientX - rect.left;
+      const sy = clientY - rect.top;
+      return [
+        (sx - vp.width / 2) / scale + flat.target[0],
+        (sy - vp.height / 2) / scale + flat.target[1],
+      ];
+    },
+    [],
+  );
+
   const dragHandlers = useMemo(
     () =>
       createDragHandlers(activeTool, onOverlayInteraction, getScreenFromWorld),
@@ -1137,6 +1168,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       } else if (nextViewState) {
         cameraRef.current = nextViewState as OrthographicViewState;
       }
+      arrangeLayoutRef.current?.();
     },
     [isDragging, publishPyramidHud],
   );
@@ -1213,7 +1245,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }
 
   return (
-    <div className={styles.main} ref={rootRef}>
+    <div className={styles.main} ref={setRoot}>
       <Deck
         ref={deckRef}
         getCursor={getCursor}
@@ -1236,6 +1268,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
         layerFilter={layerFilter}
         views={views}
       />
+      {showToolbar || frameImageId ? (
+        <ImageArrangeBox
+          images={images}
+          loaders={loaderList}
+          preview={imageOrientationPreview}
+          project={getScreenFromWorld}
+          unproject={clientToWorld}
+          layoutRef={arrangeLayoutRef}
+          frameImageId={frameImageId}
+          showToolbar={showToolbar}
+        />
+      ) : null}
       <LoadingWidget ref={loadingWidgetRef} placement="center" />
       {pyramidHud.length > 0 ? (
         <output className={styles.pyramidHud}>

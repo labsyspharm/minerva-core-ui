@@ -123,6 +123,9 @@ type UploadProps = {
    * groups and waypoints stay linked; assigns a new image id.
    */
   onReplaceImage?: (imageId: string) => void | Promise<void>;
+  /** Image whose selection frame is showing. */
+  dragImageId?: string | null;
+  onTransformImageId?: (imageId: string | null) => void;
   /** Library strip (horizontal); default is the Images panel stack. */
   row?: boolean;
   disabled?: boolean;
@@ -262,6 +265,8 @@ const Upload = (props: UploadProps) => {
     onReconnectStoryRoot,
     onRemoveImage,
     onReplaceImage,
+    dragImageId = null,
+    onTransformImageId,
     row = false,
     disabled = false,
   } = props;
@@ -299,15 +304,6 @@ const Upload = (props: UploadProps) => {
     setFeatureCsvCols(null);
   }, []);
   const [dragging, setDragging] = useState(false);
-  const [orientMenuImageId, setOrientMenuImageId] = useState<string | null>(
-    null,
-  );
-  const onOrientMenu = (imageId: string, open: boolean) => {
-    setOrientMenuImageId((cur) => {
-      if (open) return imageId;
-      return cur === imageId ? null : cur;
-    });
-  };
   const dragDepthRef = useRef(0);
   const localPickInFlightRef = useRef(false);
   const prevImportRev = useRef(importRevision);
@@ -669,28 +665,10 @@ const Upload = (props: UploadProps) => {
       jpegSourceNeedsLocalRoot(im.source.url);
     const showAccessOverlay = needsReselect || needsPermission || needsStoryDir;
 
-    const orientOpen = orientMenuImageId === im.id;
-    const panelDimmed = orientMenuImageId != null && !orientOpen;
     return (
-      <article
-        key={im.id}
-        className={[styles.imageCard, panelDimmed ? styles.panelDim : ""]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        <div
-          className={[
-            styles.imageCardHeader,
-            orientOpen ? styles.imageCardHeaderOpen : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          <div
-            className={[styles.imageCardText, orientOpen ? styles.panelDim : ""]
-              .filter(Boolean)
-              .join(" ")}
-          >
+      <article key={im.id} className={styles.imageCard}>
+        <div className={styles.imageCardHeader}>
+          <div className={styles.imageCardText}>
             <div className={styles.imageCardTitle} title={title}>
               {title}
             </div>
@@ -698,17 +676,12 @@ const Upload = (props: UploadProps) => {
           </div>
           <div className={styles.imageCardActions}>
             <ImageOrientationRow
-              image={im}
-              onOpenChange={(open) => onOrientMenu(im.id, open)}
+              open={dragImageId === im.id}
+              onToggle={() =>
+                onTransformImageId?.(dragImageId === im.id ? null : im.id)
+              }
             />
-            <span
-              className={[
-                styles.imageCardActionRest,
-                orientOpen ? styles.panelDim : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
+            <span className={styles.imageCardActionRest}>
               {onReplaceImage &&
               im.source?.kind !== "jpeg" &&
               im.source?.kind !== "dicomWeb" ? (
@@ -732,9 +705,7 @@ const Upload = (props: UploadProps) => {
             </span>
           </div>
         </div>
-        <div className={orientOpen ? styles.panelDim : undefined}>
-          <ImageChannelOverviewCard image={im} />
-        </div>
+        <ImageChannelOverviewCard image={im} />
         {showAccessOverlay ? (
           <div className={styles.fileAccessOverlay}>
             <PanelActionButton
@@ -797,7 +768,6 @@ const Upload = (props: UploadProps) => {
         styles.addStrip,
         row ? styles.addStripRow : "",
         row && dragging ? styles.panelDropActive : "",
-        !row && orientMenuImageId ? styles.panelDim : "",
       ]
         .filter(Boolean)
         .join(" ")}
