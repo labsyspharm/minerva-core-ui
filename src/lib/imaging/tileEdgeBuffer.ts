@@ -11,12 +11,12 @@ export type TileRaster = {
   height: number;
 };
 
-/** `renderSubLayers` props from a `HaloTileLayer`: `halo` is `data` padded by 1 texel. */
-export type WithHalo<P> = P & { halo: TileRaster };
+/** `renderSubLayers` props from a `TileEdgeBufferLayer`: `tileEdgeBuffer` is `data` padded by 1 texel. */
+export type WithTileEdgeBuffer<P> = P & { tileEdgeBuffer: TileRaster };
 
-/** Map a 0..1 tile UV into the tile's halo-padded texture. */
-export const TILE_HALO_GLSL = `
-vec2 haloUv(vec2 uv, vec2 paddedSize) {
+/** Map a 0..1 tile UV into the tile's edge-padded texture. */
+export const TILE_EDGE_BUFFER_GLSL = `
+vec2 tileEdgeBufferUv(vec2 uv, vec2 paddedSize) {
   return (uv * (paddedSize - 2.0) + 1.0) / paddedSize;
 }
 `;
@@ -35,7 +35,7 @@ const loadedByTileset = new WeakMap<object, Map<string, Tile2DHeader>>();
 const rasterId = new WeakMap<TileRaster, number>();
 let nextRasterId = 1;
 
-const haloCache = new WeakMap<
+const tileEdgeBufferCache = new WeakMap<
   TileRaster,
   { ids: Int32Array; raster: TileRaster }
 >();
@@ -120,7 +120,7 @@ function paddedTile(
   block: readonly (TileRaster | null)[],
 ): TileRaster {
   neighborIds(block, scratchIds);
-  const hit = haloCache.get(center);
+  const hit = tileEdgeBufferCache.get(center);
   if (hit && sameIds(hit.ids, scratchIds)) return hit.raster;
   const raster = hit?.raster ?? allocate(center);
   paintBorder(raster, center, block);
@@ -128,22 +128,22 @@ function paddedTile(
     hit.ids.set(scratchIds);
     return raster;
   }
-  haloCache.set(center, { ids: new Int32Array(scratchIds), raster });
+  tileEdgeBufferCache.set(center, { ids: new Int32Array(scratchIds), raster });
   return raster;
 }
 
 type SubLayerProps<T> = Parameters<TileLayer<T>["renderSubLayers"]>[0];
 
 /**
- * TileLayer whose `renderSubLayers` also receives `halo` when `padHalo` is
- * not false. Tiles that already drew are redrawn when a neighbor loads.
+ * TileLayer whose `renderSubLayers` also receives `tileEdgeBuffer` when
+ * `padTileEdgeBuffer` is not false. Tiles that already drew are redrawn when a neighbor loads.
  */
-export class HaloTileLayer<T extends TileRaster> extends TileLayer<
+export class TileEdgeBufferLayer<T extends TileRaster> extends TileLayer<
   T,
-  { padHalo?: boolean }
+  { padTileEdgeBuffer?: boolean }
 > {
-  static layerName = "HaloTileLayer";
-  static defaultProps = { padHalo: true };
+  static layerName = "TileEdgeBufferLayer";
+  static defaultProps = { padTileEdgeBuffer: true };
 
   loadedTiles(): Map<string, Tile2DHeader> | null {
     const { tileset } = this.state;
@@ -160,7 +160,7 @@ export class HaloTileLayer<T extends TileRaster> extends TileLayer<
     const loaded = this.loadedTiles();
     if (loaded) {
       loaded.set(keyOf(tile.index), tile);
-      if (this.props.padHalo !== false) {
+      if (this.props.padTileEdgeBuffer !== false) {
         const { x, y, z } = tile.index;
         for (const [dx, dy] of BLOCK) {
           if (dx === 0 && dy === 0) continue;
@@ -180,7 +180,7 @@ export class HaloTileLayer<T extends TileRaster> extends TileLayer<
 
   renderSubLayers(props: SubLayerProps<T>) {
     const center = props.data;
-    if (this.props.padHalo === false || !live(center)) {
+    if (this.props.padTileEdgeBuffer === false || !live(center)) {
       return super.renderSubLayers(props);
     }
     const loaded = this.loadedTiles();
@@ -195,7 +195,7 @@ export class HaloTileLayer<T extends TileRaster> extends TileLayer<
     );
     return super.renderSubLayers({
       ...props,
-      halo: paddedTile(center, block),
-    } as WithHalo<SubLayerProps<T>>);
+      tileEdgeBuffer: paddedTile(center, block),
+    } as WithTileEdgeBuffer<SubLayerProps<T>>);
   }
 }

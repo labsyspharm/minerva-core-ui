@@ -11,10 +11,10 @@ import type {
 } from "@/lib/imaging/loaderTypes";
 import { CELL_OUTLINE_RGB, type MaskGpuStyle } from "@/lib/imaging/maskLayers";
 import {
-  HaloTileLayer,
-  TILE_HALO_GLSL,
-  type WithHalo,
-} from "@/lib/imaging/tileHalo";
+  TILE_EDGE_BUFFER_GLSL,
+  TileEdgeBufferLayer,
+  type WithTileEdgeBuffer,
+} from "@/lib/imaging/tileEdgeBuffer";
 import { type Loader, TILE_CACHE_PROPS } from "@/lib/imaging/viv";
 import { layerModelMatrix } from "@/lib/imaging/worldFrame";
 
@@ -62,7 +62,7 @@ uniform SAMPLER_TYPE channel0;
 
 in vec2 vTexCoord;
 out vec4 fragColor;
-${TILE_HALO_GLSL}
+${TILE_EDGE_BUFFER_GLSL}
 vec3 randomColor(uint label) {
   uint i = (label ^ uint(maskViz.uColorSeed)) % ${CELL_OUTLINE_COUNT}u;
   if (i == 0u) return maskViz.uPalette0;
@@ -88,7 +88,7 @@ bool isOutline(uint label, vec2 coord) {
 
 void main() {
   vec2 uv = maskViz.uOutline != 0
-    ? haloUv(vTexCoord, vec2(textureSize(channel0, 0)))
+    ? tileEdgeBufferUv(vTexCoord, vec2(textureSize(channel0, 0)))
     : vTexCoord;
   uint label = labelAt(uv);
   if (label == 0u) discard;
@@ -432,9 +432,9 @@ export function createMaskTileLayer(args: {
   const visible = args.visible !== false;
 
   const outline = viz.style === "outline";
-  return new HaloTileLayer<MaskTileData>({
+  return new TileEdgeBufferLayer<MaskTileData>({
     id: args.id,
-    padHalo: outline,
+    padTileEdgeBuffer: outline,
     tileSize: finest.tileSize,
     minZoom: Math.round(-(planes.length - 1)),
     maxZoom: 0,
@@ -481,7 +481,9 @@ export function createMaskTileLayer(args: {
       }
     },
     renderSubLayers: (props) => {
-      const { data: tileData, halo } = props as WithHalo<typeof props>;
+      const { data: tileData, tileEdgeBuffer } = props as WithTileEdgeBuffer<
+        typeof props
+      >;
       if (!tileData?.data?.[0] || tileData.width <= 0 || tileData.height <= 0) {
         return null;
       }
@@ -492,7 +494,7 @@ export function createMaskTileLayer(args: {
       const scale = 2 ** Math.round(-props.tile.index.z);
       return new MaskBitmaskLayer({
         id: `${args.id}-bitmask-${props.tile.id}`,
-        channelData: outline ? halo : tileData,
+        channelData: outline ? tileEdgeBuffer : tileData,
         modelMatrix,
         visible,
         bounds: [
