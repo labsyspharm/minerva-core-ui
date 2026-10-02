@@ -20,6 +20,8 @@ export type LoadStoryDocumentResult = {
 
 function seedPlaybackSession(data: DocumentData) {
   const app = useAppStore.getState();
+  // Drop the previous story's waypoint / selection state when reloading.
+  app.resetStoryViewerSession();
   const firstGroup = data.channelGroups[0];
   if (firstGroup) app.setActiveChannelGroup(firstGroup.id);
   if (data.waypoints.length > 0) app.setActiveStory(0);
@@ -31,17 +33,36 @@ function seedPlaybackSession(data: DocumentData) {
   );
 }
 
-/** Fetch, hydrate stores, and build CDN-safe loaders for a published story. */
+/**
+ * A published story: a `document.json` URL, or its contents plus the URL that
+ * relative image / tile / sidecar paths resolve against (defaults to the page URL).
+ */
+export type StoryDocumentInput =
+  | string
+  | { document: unknown; baseUrl?: string };
+
+async function readStoryDocument(
+  input: StoryDocumentInput,
+): Promise<{ data: DocumentData; documentUrl: string }> {
+  if (typeof input !== "string") {
+    return {
+      data: validateDocumentData(input.document),
+      documentUrl: new URL(input.baseUrl ?? "", window.location.href).href,
+    };
+  }
+  const res = await fetch(input);
+  if (!res.ok) {
+    throw new Error(`Failed to load ${input} (${res.status})`);
+  }
+  return { data: validateDocumentData(await res.json()), documentUrl: input };
+}
+
+/** Fetch (or accept), hydrate stores, and build CDN-safe loaders for a published story. */
 export async function loadStoryDocument(
-  documentUrl: string,
+  input: StoryDocumentInput,
   opts?: { onDocument?: () => void },
 ): Promise<LoadStoryDocumentResult> {
-  const res = await fetch(documentUrl);
-  if (!res.ok) {
-    throw new Error(`Failed to load ${documentUrl} (${res.status})`);
-  }
-
-  const data = validateDocumentData(await res.json());
+  const { data, documentUrl } = await readStoryDocument(input);
   useDocumentStore
     .getState()
     .hydrateFromDocument(data, data.metadata.id ?? crypto.randomUUID());

@@ -6,6 +6,7 @@ pages
 build
 dist
 bundle
+/lib
 *.tif
 
 .*.swp

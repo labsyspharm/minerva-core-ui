@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "sourceMap": false,
+    "allowJs": false,
+    "outDir": "./lib/types",
+    "rootDir": "./src"
+  },
+  "include": ["src/embed/index.ts", "src/declaration.d.ts", "src/types"]
+}

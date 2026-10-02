@@ -16,6 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build:bundle": "vite build --config vite.bundle.config.ts",
+    "build:lib": "vite build --config vite.lib.config.ts && node scripts/emit-lib-types.mjs",
     "serve:bundle": "http-server bundle -p 4173 --cors -c-1"
   },
   "type": "module",
@@ -26,12 +27,18 @@
   "license": "MIT",
   "exports": {
     ".": "./build/src/components/Main.js",
+    "./story": {
+      "types": "./lib/types/embed/index.d.ts",
+      "default": "./lib/minerva.js"
+    },
+    "./story.css": "./lib/minerva.css",
     "./bundle": "./bundle/minerva.js",
     "./bundle/minerva.css": "./bundle/minerva.css"
   },
   "files": [
     "build",
-    "bundle"
+    "bundle",
+    "lib"
   ],
   "keywords": [
     "microscopy",
@@ -98,6 +105,10 @@
     "zod": "^3.25.76",
     "zundo": "^2.3.0",
     "zustand": "^5.0.8"
+  },
+  "peerDependencies": {
+    "react": ">=18.2.0",
+    "react-dom": ">=18.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.24.9",

@@ -7,6 +7,7 @@ import {
   DEFAULT_VISIBLE_INTENSITY_CHANNELS,
   isImageChannel,
   isMaskChannel,
+  isRgbDisplayChannel,
   isRgbDisplaySource,
   MAX_VIV_INTENSITY_CHANNELS,
 } from "./channelKind";
@@ -164,6 +165,58 @@ export function visibilitiesForRgbUnit(args: {
     for (const id of ids) channelVisibilities[id] = args.visible;
   }
   return { channelGroupRowVisibilities, channelVisibilities };
+}
+
+/**
+ * Show / hide one channel-legend row: RGB / H&E planes move together (within
+ * the row's group), a group row hides the source's other memberships, an
+ * ungrouped source edits the stack. Returns only the maps that change.
+ */
+export function visibilitiesForLegendRow(args: {
+  sourceChannels: Channel[];
+  channelGroups: readonly ChannelGroup[];
+  stackVisibilities: Record<string, boolean>;
+  groupRowVisibilities: Record<string, boolean>;
+  sourceId: string;
+  /** Group row id when the row belongs to a channel group. */
+  rowId?: string;
+  visible: boolean;
+}): {
+  channelVisibilities?: Record<string, boolean>;
+  channelGroupRowVisibilities?: Record<string, boolean>;
+} {
+  const { sourceChannels, channelGroups, sourceId, rowId, visible } = args;
+  const sc = sourceChannels.find((c) => c.id === sourceId);
+  if (sc && isRgbDisplayChannel(sc, sourceChannels)) {
+    return visibilitiesForRgbUnit({
+      rgbChannels: sourceChannels.filter(
+        (c) => c.imageId === sc.imageId && isImageChannel(c),
+      ),
+      channelGroups,
+      groupRowVisibilities: args.groupRowVisibilities,
+      stackVisibilities: args.stackVisibilities,
+      visible,
+      groupId: rowId
+        ? channelGroups.find((g) => g.channels.some((gc) => gc.id === rowId))
+            ?.id
+        : undefined,
+    });
+  }
+  if (rowId) {
+    return {
+      channelGroupRowVisibilities: withGroupRowVisible(
+        args.groupRowVisibilities,
+        channelGroups,
+        rowId,
+        visible,
+      ),
+    };
+  }
+  const stack =
+    Object.keys(args.stackVisibilities).length > 0
+      ? args.stackVisibilities
+      : applyStackVisibilities(sourceChannels, {}, { kind: "fresh" });
+  return { channelVisibilities: { ...stack, [sourceId]: visible } };
 }
 
 /**

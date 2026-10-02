@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Minerva story embed (dev)</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: #000;
+      }
+    </style>
+  </head>
+  <!-- Dev-only harness for <MinervaStory>: `pnpm dev`, then open /story.html
+       (or /story.html?document=<url of a document.json>). Not part of `pnpm pages`. -->
+  <body>
+    <div id="story" style="height: 100%"></div>
+    <script type="module" src="./src/embed/devHarness.tsx"></script>
+  </body>
+</html>

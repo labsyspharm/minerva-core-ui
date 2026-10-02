@@ -1,33 +1,16 @@
 import { createRoot } from "react-dom/client";
-import "@deck.gl/widgets/stylesheet.css";
-import "@/components/shared/minervaTheme.global.css";
-import { StoryPlayerApp } from "@/components/playback/StoryPlayerApp";
+import { createMinervaController, type MinervaHandle } from "@/api/controller";
+import { type MinervaStoryProps, MinervaStoryView } from "@/embed/MinervaStory";
 
-const DM_SANS_HREF =
-  "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap";
-
-function ensureDmSans() {
-  if (document.querySelector(`link[href="${DM_SANS_HREF}"]`)) return;
-  const google = document.createElement("link");
-  google.rel = "preconnect";
-  google.href = "https://fonts.googleapis.com";
-  const gstatic = document.createElement("link");
-  gstatic.rel = "preconnect";
-  gstatic.href = "https://fonts.gstatic.com";
-  gstatic.crossOrigin = "anonymous";
-  const sheet = document.createElement("link");
-  sheet.rel = "stylesheet";
-  sheet.href = DM_SANS_HREF;
-  document.head.append(google, gstatic, sheet);
-}
-
-export type MinervaStoryPlayOptions = {
+export type MinervaStoryPlayOptions = Omit<MinervaStoryProps, "document"> & {
   /** URL to document.json (relative or absolute). */
   documentUrl?: string;
+  /** Parsed document.json; takes precedence over `documentUrl`. */
+  document?: object;
   root: HTMLElement;
 };
 
-export type MinervaStoryHandle = {
+export type MinervaStoryHandle = MinervaHandle & {
   destroy: () => void;
 };
 
@@ -35,24 +18,29 @@ export type MinervaStoryHandle = {
  * CDN entry (`bundle/minerva.js` → `MinervaStory`).
  *
  * ```js
- * MinervaStory.play({ documentUrl: "document.json", root });
+ * const story = MinervaStory.play({ documentUrl: "document.json", root });
+ * await story.whenReady();
+ * await story.goToWaypoint(2);
  * ```
  */
 export function play(opts: MinervaStoryPlayOptions): MinervaStoryHandle {
-  const { root } = opts;
+  const { root, documentUrl, document, ...props } = opts;
   if (!root) throw new Error("MinervaStory.play: root element is required");
-  ensureDmSans();
 
-  const documentUrl = new URL(
-    opts.documentUrl ?? "document.json",
-    window.location.href,
-  ).href;
+  const source =
+    document ??
+    new URL(documentUrl ?? "document.json", window.location.href).href;
+  const controller = createMinervaController();
   const reactRoot = createRoot(root);
-  reactRoot.render(<StoryPlayerApp documentUrl={documentUrl} />);
+  reactRoot.render(
+    <MinervaStoryView {...props} document={source} controller={controller} />,
+  );
 
   return {
+    ...controller.handle,
     destroy: () => {
       reactRoot.unmount();
+      controller.dispose();
       root.replaceChildren();
     },
   };

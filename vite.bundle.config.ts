@@ -37,12 +37,40 @@ function inlineWorkersForCdn(): Plugin {
 }
 
 /**
+ * Viv's default geotiff pool builds its worker from `new URL(…, import.meta.url)`,
+ * which bypasses the `?worker` hook above and is emitted as `/assets/*.js`.
+ * Rewrite it to an inline worker so the default pool also works from a CDN or
+ * a consumer's bundle. Fails the build if viv changes shape.
+ */
+function inlineVivDecoderWorker(): Plugin {
+  const pattern =
+    /new Worker\(new URL\("\.\/tiff\/lib\/decoder\.worker\.mjs", import\.meta\.url\), \{\s*type: "module"\s*\}\)/;
+  return {
+    name: "minerva-inline-viv-decoder-worker",
+    enforce: "pre",
+    transform(code, id) {
+      if (!id.includes("@vivjs/loaders") || !code.includes("decoder.worker")) {
+        return null;
+      }
+      if (!pattern.test(code)) {
+        this.error("@vivjs/loaders: default decoder worker not found");
+      }
+      return `import __MinervaVivDecoderWorker from "./tiff/lib/decoder.worker.mjs?worker&inline";\n${code.replace(
+        pattern,
+        "new __MinervaVivDecoderWorker()",
+      )}`;
+    },
+  };
+}
+
+/**
  * Single browser build of the app for CDN import (unpkg / jsDelivr).
  * Output: bundle/minerva.js → global `MinervaStory` with `.play(...)`.
  *
  * Omits wasm/top-level-await plugins (incompatible with lib IIFE).
- * psudo (authoring-only GMM/palette) is external — never bundled into the
- * player; SAM2/ONNX stays stubbed.
+ * Authoring-only pieces are stubbed: SAM2/ONNX and psudo (GMM/palette WASM).
+ * Feature-table DuckDB WASM loads from jsDelivr. `vite.lib.config.ts` reuses
+ * all of this.
  */
 export default defineConfig({
   define: {
@@ -56,6 +84,7 @@ export default defineConfig({
   plugins: [
     writeBundleManifest(),
     inlineWorkersForCdn(),
+    inlineVivDecoderWorker(),
     react(),
     svgr({
       svgrOptions: {
@@ -79,6 +108,13 @@ export default defineConfig({
         replacement: path.resolve(
           __dirname,
           "./src/lib/featureTable/cdnStubs/duckdbBundles.ts",
+        ),
+      },
+      {
+        find: /^psudo$/,
+        replacement: path.resolve(
+          __dirname,
+          "./src/lib/imaging/cdnStubs/psudo.ts",
         ),
       },
       {
@@ -107,9 +143,6 @@ export default defineConfig({
       fileName: () => "minerva.js",
     },
     rollupOptions: {
-      // Authoring-only psudo (dynamic import, never hit in the player) stays out
-      // of the player bundle instead of inlining ~3.4MB of WASM.
-      external: ["psudo"],
       output: {
         exports: "named",
         inlineDynamicImports: true,
