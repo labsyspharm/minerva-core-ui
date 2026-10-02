@@ -39,11 +39,9 @@ function applyChannelRendering<S extends MainSettings>(
   if (idx < 0) return settings;
   if (live.kind === "contrast") {
     if (idx >= settings.contrastLimits.length) return settings;
-    const lo = Math.round(live.lower);
-    const hi = Math.round(live.upper);
     const contrastLimits = settings.contrastLimits.map((pair, i) =>
       i === idx
-        ? ([lo, hi] as [number, number])
+        ? ([live.lower, live.upper] as [number, number])
         : ([pair[0], pair[1]] as [number, number]),
     );
     return { ...settings, contrastLimits };

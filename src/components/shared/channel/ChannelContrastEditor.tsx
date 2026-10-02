@@ -1,6 +1,9 @@
 import * as React from "react";
+import AxisBreakIcon from "@/components/shared/icons/axis-break.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { sourceDtypeMax } from "@/lib/imaging/channelKind";
+import { channelFloatRange } from "@/lib/imaging/floatRange";
+import { resolveHistogramChartView } from "@/lib/imaging/histogramChartView";
 import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
 import type { SourceDistributionData } from "@/lib/stores/documentSchema";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
@@ -18,8 +21,8 @@ type ContrastScaleInput = {
   distScale: string;
   distMin: number;
   distMax: number;
-  dtypeMin?: number;
-  dtypeMax?: number;
+  dtypeMin: number;
+  dtypeMax: number;
 };
 
 type ContrastScale = {
@@ -30,13 +33,44 @@ type ContrastScale = {
   dtypeMax: number;
 };
 
-const DEFAULT_DTYPE_MIN = 0;
-const DEFAULT_DTYPE_MAX = 65535;
+function snapContrastLimit(value: number, fractional: boolean): number {
+  if (!fractional) return Math.round(value);
+  return Number(value.toPrecision(6));
+}
+
+/**
+ * Decimal places so the field resolves about a thousandth of the float span.
+ * 0–1 shows thousandths; a span of 1000 shows whole numbers. Drop digits, then
+ * scientific notation, when the text would no longer fit the box.
+ */
+function formatContrastLimit(
+  value: number,
+  range: { min: number; max: number } | null,
+): string {
+  if (!Number.isFinite(value)) return "";
+  if (!range) return String(Math.round(value));
+  const span = range.max - range.min;
+  const exp = Math.floor(Math.log10(span));
+  const wanted = Number.isFinite(exp) ? Math.max(0, 3 - exp) : 3;
+  for (let decimals = Math.min(wanted, 6); decimals >= 0; decimals--) {
+    const text = value.toFixed(decimals);
+    if (text.length <= 6 && (Number(text) !== 0 || value === 0)) return text;
+  }
+  return value.toExponential(2);
+}
+
+const EMPTY_DIST: SourceDistributionData = {
+  id: "",
+  YValues: [],
+  XScale: "log",
+  YScale: "linear",
+  LowerRange: 0,
+  UpperRange: 16,
+};
 
 /** Map slider steps ↔ intensity values (linear or log axis). Ported from range-editor-element.js */
 function buildContrastScale(input: ContrastScaleInput): ContrastScale {
-  const dtypeMin = input.dtypeMin ?? DEFAULT_DTYPE_MIN;
-  const dtypeMax = input.dtypeMax ?? DEFAULT_DTYPE_MAX;
+  const { dtypeMin, dtypeMax } = input;
   const chart_x_steps = SLIDER_DOMAIN_STEPS;
   const chart_x_max = input.distMax;
   const chart_x_origin = input.distMin;
@@ -82,11 +116,11 @@ function buildContrastScale(input: ContrastScaleInput): ContrastScale {
 
 /** Build SVG paths for histogram sparkline (channel-item-element chartTemplate). */
 function histogramSparklinePaths(
-  values: number[] | undefined,
+  values: readonly number[],
   width = 100,
   height = 11,
 ): { linePath: string; fillPath: string } {
-  const line = [0, ...(values || []), 0];
+  const line = [0, ...values, 0];
   const flat = line.slice(1, -1).every((v) => v === line[1]);
   const max = Math.max(1, ...(flat ? [2 * line[1]] : line));
   const len = Math.max(2, line.length);
@@ -114,6 +148,8 @@ export type ChannelContrastEditorProps = {
   histogramLoading?: boolean;
   distribution?: SourceDistributionData | null;
   sourceDataTypeId?: string;
+  /** Finite sample span for a float plane. Absent for integer dtypes. */
+  floatRange?: { min: number; max: number } | null;
 };
 
 export function renderingForSource<K extends ChannelRendering["kind"]>(
@@ -148,6 +184,7 @@ export function contrastEditorPropsForSource(
     upperLimit: liveContrast ? liveContrast.upper : limits[1],
     distribution: sc.sourceDistribution ?? null,
     sourceDataTypeId: sc.sourceDataTypeId,
+    floatRange: channelFloatRange(sc),
   };
 }
 
@@ -177,6 +214,7 @@ export function contrastEditorPropsForGroupRow(
     upperLimit: liveContrast ? liveContrast.upper : gc.upperLimit,
     distribution: sc?.sourceDistribution ?? null,
     sourceDataTypeId: sc?.sourceDataTypeId,
+    floatRange: sc ? channelFloatRange(sc) : null,
   };
 }
 
@@ -184,26 +222,34 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
   const setImages = useDocumentStore((s) => s.setImages);
 
-  const dist = props.distribution ?? {
-    id: "",
-    YValues: [] as number[],
-    XScale: "log",
-    YScale: "linear",
-    LowerRange: 0,
-    UpperRange: 16,
-  };
+  const dist = props.distribution ?? EMPTY_DIST;
 
-  const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
-  const eightBit = dtypeMax === 255;
-  const scale = React.useMemo(
+  const [expanded, setExpanded] = React.useState(false);
+
+  const rangeMin = props.floatRange?.min;
+  const rangeMax = props.floatRange?.max;
+  const range = React.useMemo(
     () =>
-      buildContrastScale({
-        distScale: eightBit ? "linear" : dist.XScale,
-        distMin: eightBit ? 0 : dist.LowerRange,
-        distMax: eightBit ? 255 : dist.UpperRange,
+      rangeMin != null && rangeMax != null
+        ? { min: rangeMin, max: rangeMax }
+        : null,
+    [rangeMin, rangeMax],
+  );
+  const fractional = range != null;
+  const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
+  const chart = React.useMemo(
+    () =>
+      resolveHistogramChartView(dist, {
+        floatRange: range,
         dtypeMax,
+        expanded,
+        lowerLimit: props.lowerLimit,
       }),
-    [eightBit, dist.XScale, dist.LowerRange, dist.UpperRange, dtypeMax],
+    [dist, expanded, range, dtypeMax, props.lowerLimit],
+  );
+  const scale = React.useMemo(
+    () => buildContrastScale(chart.scaleInput),
+    [chart.scaleInput],
   );
 
   const [sliderMin, setSliderMin] = React.useState(() =>
@@ -214,27 +260,44 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   );
   const sliderMinRef = React.useRef(sliderMin);
   const sliderMaxRef = React.useRef(sliderMax);
-  const [minInput, setMinInput] = React.useState(String(props.lowerLimit));
-  const [maxInput, setMaxInput] = React.useState(String(props.upperLimit));
   const editingLimitRef = React.useRef(false);
+  const scaleRef = React.useRef(scale);
+  if (scaleRef.current !== scale) {
+    scaleRef.current = scale;
+    if (!editingLimitRef.current) {
+      const lo = scale.toSlider(props.lowerLimit);
+      const hi = scale.toSlider(props.upperLimit);
+      sliderMinRef.current = lo;
+      sliderMaxRef.current = hi;
+      if (lo !== sliderMin) setSliderMin(lo);
+      if (hi !== sliderMax) setSliderMax(hi);
+    }
+  }
+  const [minInput, setMinInput] = React.useState(() =>
+    formatContrastLimit(props.lowerLimit, range),
+  );
+  const [maxInput, setMaxInput] = React.useState(() =>
+    formatContrastLimit(props.upperLimit, range),
+  );
   const lastCommittedRangeRef = React.useRef([
-    Math.round(props.lowerLimit),
-    Math.round(props.upperLimit),
+    snapContrastLimit(props.lowerLimit, fractional),
+    snapContrastLimit(props.upperLimit, fractional),
   ] as const);
 
   React.useEffect(() => {
     if (editingLimitRef.current) return;
-    setSliderMin(scale.toSlider(props.lowerLimit));
-    setSliderMax(scale.toSlider(props.upperLimit));
-    setMinInput(String(Math.round(props.lowerLimit)));
-    setMaxInput(String(Math.round(props.upperLimit)));
-    lastCommittedRangeRef.current = [
-      Math.round(props.lowerLimit),
-      Math.round(props.upperLimit),
-    ];
-    sliderMinRef.current = scale.toSlider(props.lowerLimit);
-    sliderMaxRef.current = scale.toSlider(props.upperLimit);
-  }, [props.lowerLimit, props.upperLimit, scale]);
+    const lo = snapContrastLimit(props.lowerLimit, fractional);
+    const hi = snapContrastLimit(props.upperLimit, fractional);
+    const loStep = scale.toSlider(props.lowerLimit);
+    const hiStep = scale.toSlider(props.upperLimit);
+    setSliderMin(loStep);
+    setSliderMax(hiStep);
+    setMinInput(formatContrastLimit(lo, range));
+    setMaxInput(formatContrastLimit(hi, range));
+    lastCommittedRangeRef.current = [lo, hi];
+    sliderMinRef.current = loStep;
+    sliderMaxRef.current = hiStep;
+  }, [props.lowerLimit, props.upperLimit, scale, fractional, range]);
 
   const previewRange = (lower: number, upper: number) => {
     useAppStore.getState().setChannelRendering({
@@ -246,8 +309,8 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   };
 
   const commitRange = (lower: number, upper: number) => {
-    const lo = Math.round(lower);
-    const hi = Math.round(upper);
+    const lo = snapContrastLimit(lower, fractional);
+    const hi = snapContrastLimit(upper, fractional);
     const [lastLo, lastHi] = lastCommittedRangeRef.current;
     if (lo === lastLo && hi === lastHi) {
       useAppStore.getState().clearChannelRendering();
@@ -289,10 +352,10 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   }, [props.sourceChannelId]);
 
   const syncFromSliders = (loStep: number, hiStep: number, commit: boolean) => {
-    const lo = Math.round(scale.fromSlider(loStep));
-    const hi = Math.round(scale.fromSlider(hiStep));
-    setMinInput(String(lo));
-    setMaxInput(String(hi));
+    const lo = snapContrastLimit(scale.fromSlider(loStep), fractional);
+    const hi = snapContrastLimit(scale.fromSlider(hiStep), fractional);
+    setMinInput(formatContrastLimit(lo, range));
+    setMaxInput(formatContrastLimit(hi, range));
     if (commit) {
       commitRange(lo, hi);
     } else {
@@ -322,12 +385,32 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   };
 
   const commitFromInputs = () => {
-    let lo = Number.parseFloat(minInput);
-    let hi = Number.parseFloat(maxInput);
+    const preciseLo = snapContrastLimit(
+      scale.fromSlider(sliderMinRef.current),
+      fractional,
+    );
+    const preciseHi = snapContrastLimit(
+      scale.fromSlider(sliderMaxRef.current),
+      fractional,
+    );
+    let lo =
+      minInput === formatContrastLimit(preciseLo, range)
+        ? preciseLo
+        : Number.parseFloat(minInput);
+    let hi =
+      maxInput === formatContrastLimit(preciseHi, range)
+        ? preciseHi
+        : Number.parseFloat(maxInput);
     if (!Number.isFinite(lo)) lo = scale.dtypeMin;
     if (!Number.isFinite(hi)) hi = scale.dtypeMax;
-    lo = Math.round(Math.max(scale.dtypeMin, Math.min(scale.dtypeMax, lo)));
-    hi = Math.round(Math.max(scale.dtypeMin, Math.min(scale.dtypeMax, hi)));
+    lo = snapContrastLimit(
+      Math.max(scale.dtypeMin, Math.min(scale.dtypeMax, lo)),
+      fractional,
+    );
+    hi = snapContrastLimit(
+      Math.max(scale.dtypeMin, Math.min(scale.dtypeMax, hi)),
+      fractional,
+    );
     if (lo > hi) {
       const t = lo;
       lo = hi;
@@ -335,123 +418,25 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     }
     setSliderMin(scale.toSlider(lo));
     setSliderMax(scale.toSlider(hi));
-    setMinInput(String(lo));
-    setMaxInput(String(hi));
+    setMinInput(formatContrastLimit(lo, range));
+    setMaxInput(formatContrastLimit(hi, range));
     commitRange(lo, hi);
   };
 
   const minFrac = sliderMin / scale.sliderSteps;
   const maxFrac = sliderMax / scale.sliderSteps;
-  const sliderRowRef = React.useRef<HTMLDivElement>(null);
-  const panDragRef = React.useRef<{
-    active: boolean;
-    pointerId: number;
-    startX: number;
-    startMin: number;
-    startMax: number;
-  } | null>(null);
-  const panMovedRef = React.useRef(false);
 
   const { linePath: histLinePath, fillPath: histFillPath } =
-    histogramSparklinePaths(dist.YValues);
+    histogramSparklinePaths(chart.yValues);
   const histogramClipId = React.useId();
   const histogramViewX = 1.15;
   const histogramViewWidth = 96.7;
   const histogramClipX = histogramViewX + minFrac * histogramViewWidth;
   const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
-
-  const stepFromClientX = (clientX: number) => {
-    const row = sliderRowRef.current;
-    if (!row) return 0;
-    const rect = row.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const frac = Math.min(1, Math.max(0, x / Math.max(1, rect.width)));
-    return Math.round(frac * scale.sliderSteps);
-  };
-
-  const onRangePanPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    editingLimitRef.current = true;
-    panMovedRef.current = false;
-    panDragRef.current = {
-      active: true,
-      pointerId: e.pointerId,
-      startX: e.clientX,
-      startMin: sliderMin,
-      startMax: sliderMax,
-    };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-
-  const onRangePanPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const drag = panDragRef.current;
-    if (!drag?.active || drag.pointerId !== e.pointerId) return;
-    if (Math.abs(e.clientX - drag.startX) > 2) {
-      panMovedRef.current = true;
-    }
-    const row = sliderRowRef.current;
-    if (!row) return;
-    const rect = row.getBoundingClientRect();
-    const deltaSteps = Math.round(
-      ((e.clientX - drag.startX) / Math.max(1, rect.width)) * scale.sliderSteps,
-    );
-    const span = drag.startMax - drag.startMin;
-    let lo = drag.startMin + deltaSteps;
-    let hi = drag.startMax + deltaSteps;
-    if (lo < 0) {
-      lo = 0;
-      hi = span;
-    }
-    if (hi > scale.sliderSteps) {
-      hi = scale.sliderSteps;
-      lo = scale.sliderSteps - span;
-    }
-    sliderMinRef.current = lo;
-    sliderMaxRef.current = hi;
-    setSliderMin(lo);
-    setSliderMax(hi);
-    syncFromSliders(lo, hi, false);
-  };
-
-  const endRangePan = (e: React.PointerEvent<HTMLDivElement>) => {
-    const drag = panDragRef.current;
-    if (!drag?.active || drag.pointerId !== e.pointerId) return;
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    }
-    if (!panMovedRef.current) {
-      const step = stepFromClientX(e.clientX);
-      const span = drag.startMax - drag.startMin;
-      let lo = Math.round(step - span / 2);
-      let hi = lo + span;
-      if (lo < 0) {
-        lo = 0;
-        hi = span;
-      }
-      if (hi > scale.sliderSteps) {
-        hi = scale.sliderSteps;
-        lo = scale.sliderSteps - span;
-      }
-      sliderMinRef.current = lo;
-      sliderMaxRef.current = hi;
-      setSliderMin(lo);
-      setSliderMax(hi);
-      editingLimitRef.current = false;
-      syncFromSliders(lo, hi, true);
-    } else {
-      onSliderCommit();
-    }
-    panDragRef.current = null;
-    panMovedRef.current = false;
-    editingLimitRef.current = false;
-  };
-
-  const panLeft = `${minFrac * 100}%`;
-  const panWidth = `${(maxFrac - minFrac) * 100}%`;
+  const trimmed = chart.startBin > 0;
 
   return (
-    <div className={styles.wrap} draggable={false}>
+    <div className={styles.wrap}>
       <input
         type="number"
         className={`${minervaTheme.input} ${styles.limitInput}`}
@@ -459,6 +444,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
         aria-label={`${props.channelLabel} contrast minimum value`}
         min={scale.dtypeMin}
         max={scale.dtypeMax}
+        step={fractional ? "any" : 1}
         onFocus={() => {
           editingLimitRef.current = true;
         }}
@@ -481,88 +467,108 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
             : undefined
         }
       >
-        <svg
-          className={styles.histogramSvg}
-          viewBox="1.15 0 96.7 11"
-          preserveAspectRatio="none"
-          role="img"
-          aria-label={`${props.channelLabel} intensity histogram`}
-        >
-          <defs>
-            <clipPath id={histogramClipId}>
-              <rect
-                x={histogramClipX}
-                y={0}
-                width={histogramClipWidth}
-                height={11}
-              />
-            </clipPath>
-          </defs>
-          <path
-            className={`${styles.histogramFill} ${styles.histogramOutOfRange}`}
-            d={histFillPath}
-          />
-          <path
-            className={`${styles.histogramLine} ${styles.histogramOutOfRange}`}
-            d={histLinePath}
-          />
-          <g clipPath={`url(#${histogramClipId})`}>
-            <path className={styles.histogramFill} d={histFillPath} />
-            <path className={styles.histogramLine} d={histLinePath} />
-          </g>
-        </svg>
         <div
-          className={`${styles.histogramLoading}${
-            props.histogramLoading ? ` ${styles.histogramLoadingVisible}` : ""
-          }`}
-          title="Loading histogram"
+          className={
+            trimmed
+              ? `${styles.histogramPlot} ${styles.histogramPlotTrimmed}`
+              : styles.histogramPlot
+          }
         >
-          <div className={minervaTheme.spinnerSm} />
-        </div>
-        <div ref={sliderRowRef} className={styles.sliderRow}>
-          {sliderMax > sliderMin ? (
-            <div
-              className={styles.rangePan}
-              style={{ left: panLeft, width: panWidth }}
-              onPointerDown={onRangePanPointerDown}
-              onPointerMove={onRangePanPointerMove}
-              onPointerUp={endRangePan}
-              onPointerCancel={endRangePan}
-              aria-hidden
-            />
+          {trimmed ? (
+            <button
+              type="button"
+              className={`${minervaTheme.focusRing} ${styles.axisBreak}`}
+              title="Full range"
+              aria-label={`${props.channelLabel} full histogram range`}
+              onClick={() => setExpanded(true)}
+            >
+              <AxisBreakIcon />
+            </button>
           ) : null}
-          <input
-            type="range"
-            className={styles.rangeInput}
-            min={0}
-            max={scale.sliderSteps}
-            value={sliderMin}
-            onChange={onMinSlider}
-            onMouseUp={onSliderCommit}
-            onTouchEnd={onSliderCommit}
-            onKeyUp={onSliderCommit}
-            onBlur={onSliderCommit}
-            aria-label={`${props.channelLabel} contrast minimum`}
-            aria-valuetext={`${Math.round(
-              scale.fromSlider(sliderMin),
-            )} intensity`}
-          />
-          <input
-            type="range"
-            className={styles.rangeInput}
-            min={0}
-            max={scale.sliderSteps}
-            value={sliderMax}
-            onChange={onMaxSlider}
-            onMouseUp={onSliderCommit}
-            onTouchEnd={onSliderCommit}
-            onKeyUp={onSliderCommit}
-            onBlur={onSliderCommit}
-            aria-label={`${props.channelLabel} contrast maximum`}
-            aria-valuetext={`${Math.round(
-              scale.fromSlider(sliderMax),
-            )} intensity`}
-          />
+          <svg
+            className={styles.histogramSvg}
+            viewBox="1.15 0 96.7 11"
+            preserveAspectRatio="none"
+            role="img"
+            aria-label={`${props.channelLabel} intensity histogram`}
+          >
+            <defs>
+              <clipPath id={`${histogramClipId}-frame`}>
+                <rect
+                  x={histogramViewX}
+                  y={-1}
+                  width={histogramViewWidth}
+                  height={13}
+                />
+              </clipPath>
+              <clipPath id={histogramClipId}>
+                <rect
+                  x={histogramClipX}
+                  y={0}
+                  width={histogramClipWidth}
+                  height={11}
+                />
+              </clipPath>
+            </defs>
+            <g clipPath={`url(#${histogramClipId}-frame)`}>
+              <path
+                className={`${styles.histogramFill} ${styles.histogramOutOfRange}`}
+                d={histFillPath}
+              />
+              <path
+                className={`${styles.histogramLine} ${styles.histogramOutOfRange}`}
+                d={histLinePath}
+              />
+              <g clipPath={`url(#${histogramClipId})`}>
+                <path className={styles.histogramFill} d={histFillPath} />
+                <path className={styles.histogramLine} d={histLinePath} />
+              </g>
+            </g>
+          </svg>
+          <div
+            className={`${styles.histogramLoading}${
+              props.histogramLoading ? ` ${styles.histogramLoadingVisible}` : ""
+            }`}
+            title="Loading histogram"
+          >
+            <div className={minervaTheme.spinnerSm} />
+          </div>
+          <div className={styles.sliderRow}>
+            <input
+              type="range"
+              className={`${styles.rangeInput} ${styles.rangeInputMin}`}
+              min={0}
+              max={scale.sliderSteps}
+              value={sliderMin}
+              onChange={onMinSlider}
+              onMouseUp={onSliderCommit}
+              onTouchEnd={onSliderCommit}
+              onKeyUp={onSliderCommit}
+              onBlur={onSliderCommit}
+              aria-label={`${props.channelLabel} contrast minimum`}
+              aria-valuetext={`${formatContrastLimit(
+                scale.fromSlider(sliderMin),
+                range,
+              )} intensity`}
+            />
+            <input
+              type="range"
+              className={`${styles.rangeInput} ${styles.rangeInputMax}`}
+              min={0}
+              max={scale.sliderSteps}
+              value={sliderMax}
+              onChange={onMaxSlider}
+              onMouseUp={onSliderCommit}
+              onTouchEnd={onSliderCommit}
+              onKeyUp={onSliderCommit}
+              onBlur={onSliderCommit}
+              aria-label={`${props.channelLabel} contrast maximum`}
+              aria-valuetext={`${formatContrastLimit(
+                scale.fromSlider(sliderMax),
+                range,
+              )} intensity`}
+            />
+          </div>
         </div>
       </div>
       <input
@@ -572,6 +578,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
         aria-label={`${props.channelLabel} contrast maximum value`}
         min={scale.dtypeMin}
         max={scale.dtypeMax}
+        step={fractional ? "any" : 1}
         onFocus={() => {
           editingLimitRef.current = true;
         }}

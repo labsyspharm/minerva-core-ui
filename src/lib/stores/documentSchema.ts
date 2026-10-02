@@ -121,6 +121,13 @@ export const ImageChannelSchema = z.object({
   sourceDataTypeId: z.string().optional(),
   sourceDistribution: SourceDistributionSchema.optional(),
   gmmContrastLimits: GmmContrastLimitsSchema.optional(),
+  /** Min/max of finite coarsest-plane samples. Float contrast uses this domain. */
+  floatRange: z
+    .object({
+      min: z.number(),
+      max: z.number(),
+    })
+    .optional(),
   /** Pseudocolor / mask display (napari-style layer list; persisted on source). */
   color: ColorSchema.optional(),
   lowerLimit: z.number().optional(),

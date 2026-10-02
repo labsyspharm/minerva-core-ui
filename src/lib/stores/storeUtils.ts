@@ -135,6 +135,7 @@ export function applySourceChannelsToImages(
       sourceDataTypeId,
       sourceDistribution,
       gmmContrastLimits,
+      floatRange,
       color,
       lowerLimit,
       upperLimit,
@@ -149,6 +150,7 @@ export function applySourceChannelsToImages(
       ...(sourceDataTypeId !== undefined ? { sourceDataTypeId } : {}),
       ...(sourceDistribution !== undefined ? { sourceDistribution } : {}),
       ...(gmmContrastLimits !== undefined ? { gmmContrastLimits } : {}),
+      ...(floatRange !== undefined ? { floatRange } : {}),
       ...(color !== undefined ? { color } : {}),
       ...(lowerLimit !== undefined ? { lowerLimit } : {}),
       ...(upperLimit !== undefined ? { upperLimit } : {}),
@@ -341,6 +343,7 @@ export function rebindReplacementImageChannels(
       lowerLimit: prev.lowerLimit ?? ch.lowerLimit,
       upperLimit: prev.upperLimit ?? ch.upperLimit,
       gmmContrastLimits: prev.gmmContrastLimits ?? ch.gmmContrastLimits,
+      floatRange: prev.floatRange ?? ch.floatRange,
       maskVisualization: prev.maskVisualization ?? ch.maskVisualization,
     };
   });

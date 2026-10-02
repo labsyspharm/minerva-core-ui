@@ -52,6 +52,7 @@ import {
   loadOmeLoaderForRole,
   pickLocalOmeTiffHandle,
 } from "@/lib/imaging/filesystem";
+import { channelFloatRange } from "@/lib/imaging/floatRange";
 import {
   clearGmmScheduler,
   ensureGmm,
@@ -1893,11 +1894,18 @@ const Content = (props: Props) => {
         const loader = loaderByImageId.get(imageId);
         if (!loader) continue;
         const uniqueIdx = [...new Set(plist.map((p) => p.index))];
+        const ranges = new Map<number, { min: number; max: number }>();
+        for (const p of plist) {
+          const ch = prevCh.find((c) => c.id === p.channelId);
+          const span = ch ? channelFloatRange(ch) : null;
+          if (span) ranges.set(p.index, span);
+        }
         const map = await ensureOmeHistogramDistributions(
           loader,
           imageKey,
           imageId,
           uniqueIdx,
+          ranges,
         );
         for (const p of plist) {
           const dist = map.get(p.index);
