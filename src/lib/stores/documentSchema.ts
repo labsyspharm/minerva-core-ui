@@ -187,6 +187,22 @@ export const ImageSchema = z.object({
    * false = independent IF channels. Undefined → runtime heuristics.
    */
   rgbDisplay: z.boolean().optional(),
+  /** Degrees clockwise around the pixel center. Omitted input parses as 0. */
+  rotationDegrees: z.number().default(0),
+  /** Omitted input parses as false. */
+  flipHorizontal: z.boolean().default(false),
+  /** Omitted input parses as false. */
+  flipVertical: z.boolean().default(false),
+  /** µm, applied in world space after rotation. Omitted input parses as 0. */
+  translateX: z.number().default(0),
+  /** µm, applied in world space after rotation. Omitted input parses as 0. */
+  translateY: z.number().default(0),
+  /** Resize around the image center. 1 keeps the file's physical size. */
+  displayScale: z.number().positive().default(1),
+  /** µm per pixel, copied from OME PhysicalSize. 1 when the file has none. */
+  scaleX: z.number().positive().default(1),
+  /** µm per pixel, copied from OME PhysicalSize. 1 when the file has none. */
+  scaleY: z.number().positive().default(1),
   channels: z.array(ImageChannelSchema),
   source: ImageSourceSchema.optional(),
 });
@@ -323,12 +339,11 @@ export const DocumentDataSchema = z.preprocess(
       return raw;
     }
     const r = raw as Record<string, unknown>;
-    let next = r;
-    if ("groups" in next && !("channelGroups" in next)) {
-      const { groups, ...rest } = next;
-      next = { ...rest, channelGroups: groups };
+    if ("groups" in r && !("channelGroups" in r)) {
+      const { groups, ...rest } = r;
+      return { ...rest, channelGroups: groups };
     }
-    return next;
+    return r;
   },
   z.object({
     metadata: DocumentMetadataSchema.default({}),
@@ -356,6 +371,17 @@ export type Shape = z.infer<typeof ShapeSchema>;
 
 export type Image = z.infer<typeof ImageSchema>;
 export type ImageSource = z.infer<typeof ImageSourceSchema>;
+/** Resolved placement plus µm/px. Each field is always a number or boolean. */
+export type ImageOrientation = {
+  rotationDegrees: number;
+  flipHorizontal: boolean;
+  flipVertical: boolean;
+  translateX: number;
+  translateY: number;
+  displayScale: number;
+  scaleX: number;
+  scaleY: number;
+};
 export type ImageChannel = z.infer<typeof ImageChannelSchema>;
 export type ImageChannelKind = z.infer<typeof ImageChannelKindSchema>;
 export type MaskVisualization = z.infer<typeof MaskVisualizationSchema>;

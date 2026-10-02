@@ -5,10 +5,14 @@ import type {
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
 import { createOmeDecodePool } from "@/lib/imaging/omeDecodePool";
-import { worldFrameFromPixelCounts } from "@/lib/imaging/worldFrame";
+import {
+  worldFrameFromImage,
+  worldFrameFromPixelCounts,
+} from "@/lib/imaging/worldFrame";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { DocumentData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
+import { applyLoaderPhysicalScales } from "@/lib/stores/storeUtils";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 
 export type LoadStoryDocumentResult = {
@@ -22,11 +26,9 @@ function seedPlaybackSession(data: DocumentData) {
   const firstGroup = data.channelGroups[0];
   if (firstGroup) app.setActiveChannelGroup(firstGroup.id);
   if (data.waypoints.length > 0) app.setActiveStory(0);
+  const im = data.images[0];
   app.setViewerWorldFrame(
-    worldFrameFromPixelCounts(
-      data.images[0]?.sizeX ?? 0,
-      data.images[0]?.sizeY ?? 0,
-    ),
+    im ? worldFrameFromImage(im) : worldFrameFromPixelCounts(0, 0),
   );
 }
 
@@ -57,6 +59,13 @@ export async function loadStoryDocument(
       imageSource: data.metadata.imageSource,
     });
 
-  seedPlaybackSession(data);
+  const doc = useDocumentStore.getState();
+  const images = applyLoaderPhysicalScales(doc.images, [
+    ...omeLoaderEntries,
+    ...jpegLoaderEntries,
+    ...dicomIndexList,
+  ]);
+  if (images !== doc.images) doc.setImages(images);
+  seedPlaybackSession({ ...data, images });
   return { jpegLoaderEntries, omeLoaderEntries, dicomIndexList };
 }

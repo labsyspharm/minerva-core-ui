@@ -15,7 +15,9 @@
  */
 
 import type { ConfigWaypoint } from "../authoring/config";
+import { effectiveOrientation } from "../imaging/imageOrientation";
 import { type Loader, loaderPixelSizeXY } from "../imaging/viv";
+import { worldFrameFromLoader } from "../imaging/worldFrame";
 import {
   importedLineStyle,
   importedPointStyle,
@@ -45,6 +47,7 @@ import type {
   FeatureTable,
   Image,
   ImageChannel,
+  ImageOrientation,
   ImageSource,
   Point,
   StoryShape,
@@ -177,6 +180,11 @@ export function applySourceChannelsToImages(
           sizeC: chans.length,
           omeXmlHash: "",
           basename: "",
+          rotationDegrees: 0,
+          flipHorizontal: false,
+          flipVertical: false,
+          scaleX: 1,
+          scaleY: 1,
           channels: chans,
         },
       ];
@@ -185,18 +193,71 @@ export function applySourceChannelsToImages(
   return nextImages;
 }
 
-/** Set `sizeX`/`sizeY` on the `Image` row matching `imageId` from the Viv loader pyramid/metadata. */
+/**
+ * Unitless 1,1 µm/px copies µm/px from any other image with the same pixel
+ * size and a real physical scale. Matches `inheritUnitlessPhysicalSize`.
+ */
+function inheritDocumentScales(images: Image[]): Image[] {
+  let next = images;
+  for (let i = 0; i < images.length; i++) {
+    const im = next[i];
+    if (im.sizeX <= 1 || im.sizeY <= 1) continue;
+    if (im.scaleX !== 1 || im.scaleY !== 1) continue;
+    const donor = next.find(
+      (peer) =>
+        peer.id !== im.id &&
+        peer.sizeX === im.sizeX &&
+        peer.sizeY === im.sizeY &&
+        (peer.scaleX !== 1 || peer.scaleY !== 1),
+    );
+    if (!donor) continue;
+    if (next === images) next = images.slice();
+    next[i] = { ...im, scaleX: donor.scaleX, scaleY: donor.scaleY };
+  }
+  return next;
+}
+
+/** Set pixel size and µm/px (`scaleX`/`scaleY`) from the loader's OME PhysicalSize. */
 export function applyLoaderPixelSizeToImage(
   images: Image[],
   imageId: string,
   loader: Loader,
 ): Image[] {
   const dims = loaderPixelSizeXY(loader);
-  if (!dims) return [...images];
+  if (!dims) return images;
   const idx = images.findIndex((im) => im.id === imageId);
-  if (idx < 0) return [...images];
-  const next = [...images];
-  next[idx] = { ...next[idx], sizeX: dims.sizeX, sizeY: dims.sizeY };
+  if (idx < 0) return images;
+  const { umPerPixelX: scaleX, umPerPixelY: scaleY } =
+    worldFrameFromLoader(loader);
+  const cur = images[idx];
+  let next = images;
+  if (
+    cur.sizeX !== dims.sizeX ||
+    cur.sizeY !== dims.sizeY ||
+    cur.scaleX !== scaleX ||
+    cur.scaleY !== scaleY
+  ) {
+    next = images.slice();
+    next[idx] = {
+      ...cur,
+      sizeX: dims.sizeX,
+      sizeY: dims.sizeY,
+      scaleX,
+      scaleY,
+    };
+  }
+  return inheritDocumentScales(next);
+}
+
+/** Write OME µm/px onto each image that has a loader. Same array when nothing changes. */
+export function applyLoaderPhysicalScales(
+  images: Image[],
+  loaders: readonly { sourceImageId: string; loader: Loader }[],
+): Image[] {
+  let next = images;
+  for (const entry of loaders) {
+    next = applyLoaderPixelSizeToImage(next, entry.sourceImageId, entry.loader);
+  }
   return next;
 }
 
@@ -223,6 +284,35 @@ export function setImageBasename(
   if (idx < 0) return images;
   const next = [...images];
   next[idx] = { ...next[idx], basename: basename.trim() };
+  return next;
+}
+
+/** Write placement onto one image. Defaults are stored. */
+export function setImageOrientation(
+  images: Image[],
+  imageId: string,
+  orientation: ImageOrientation,
+): Image[] {
+  const idx = images.findIndex((im) => im.id === imageId);
+  if (idx < 0) return images;
+  const next = [...images];
+  const {
+    rotationDegrees,
+    flipHorizontal,
+    flipVertical,
+    translateX,
+    translateY,
+    displayScale,
+  } = effectiveOrientation(orientation);
+  next[idx] = {
+    ...next[idx],
+    rotationDegrees,
+    flipHorizontal,
+    flipVertical,
+    translateX,
+    translateY,
+    displayScale,
+  };
   return next;
 }
 

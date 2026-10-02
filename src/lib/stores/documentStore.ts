@@ -51,6 +51,7 @@ export type {
   Id,
   Image,
   ImageChannel,
+  ImageOrientation,
   Waypoint,
 } from "./documentSchema";
 export {

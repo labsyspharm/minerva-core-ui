@@ -13,6 +13,7 @@ import type {
 import { CELL_OUTLINE_RGB, type MaskGpuStyle } from "@/lib/imaging/maskLayers";
 import { type Loader, TILE_CACHE_PROPS } from "@/lib/imaging/viv";
 import { layerModelMatrix } from "@/lib/imaging/worldFrame";
+import type { ImageOrientation } from "@/lib/stores/documentSchema";
 
 const CELL_OUTLINE_COUNT = CELL_OUTLINE_RGB.length;
 const CELL_OUTLINE_VEC3: [number, number, number][] = CELL_OUTLINE_RGB.map(
@@ -409,6 +410,7 @@ export function createMaskTileLayer(args: {
   loader: Loader;
   channelIndex: number;
   visualization: MaskVisualization;
+  orientation?: ImageOrientation | null;
   classStyle?: MaskGpuStyle;
   visible?: boolean;
 }): Layer | null {
@@ -418,14 +420,14 @@ export function createMaskTileLayer(args: {
   const { width: maskW, height: maskH } = planeSize(finest);
   if (maskW <= 0 || maskH <= 0) return null;
 
-  const modelMatrix = layerModelMatrix(args.loader);
+  const modelMatrix = layerModelMatrix(args.loader, args.orientation);
   const { visualization: viz, channelIndex, classStyle } = args;
   const visible = args.visible !== false;
 
   return new TileLayer<MaskTileData>({
     id: args.id,
     tileSize: finest.tileSize,
-    minZoom: Math.round(-(planes.length - 1)),
+    minZoom: -(planes.length - 1),
     maxZoom: 0,
     zoomOffset: Math.round(Math.log2(modelMatrix.getScale()[0] || 1)),
     extent: [0, 0, maskW, maskH],
@@ -441,6 +443,7 @@ export function createMaskTileLayer(args: {
         viz.color,
         viz.colorSeed ?? 0,
         viz.opacity ?? 1,
+        modelMatrix,
         styleKey(classStyle),
         visible,
       ],

@@ -402,9 +402,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     image.channels.filter(isMaskChannel).map((c) => c.id),
   );
   const defaultMaskKey =
-    maskIds.size === 0
-      ? null
-      : (overviewChips.find((c) => maskIds.has(c.sourceId))?.key ?? null);
+    overviewChips.find((c) => maskIds.has(c.sourceId))?.key ?? null;
   const resolvedOpenKey = openKey === undefined ? defaultMaskKey : openKey;
 
   const openChip =
@@ -413,10 +411,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
       : (overviewChips.find((c) => c.key === resolvedOpenKey) ?? null);
 
   const onOpenEditor = (chip: ImageChannelChip) => {
-    setOpenKey((cur) => {
-      const current = cur === undefined ? defaultMaskKey : cur;
-      return current === chip.key ? null : chip.key;
-    });
+    setOpenKey(resolvedOpenKey === chip.key ? null : chip.key);
   };
   const dismissEditor = useCallback(() => setOpenKey(null), []);
 
