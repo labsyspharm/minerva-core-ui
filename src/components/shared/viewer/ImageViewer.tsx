@@ -436,6 +436,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
   const maskExtension = useMemo(() => new MaskExtension(), []);
   const contourChannelIds = useAppStore((s) => s.contourChannelIds);
+  const contourLevels = useAppStore((s) => s.contourLevels);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -894,13 +895,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
           ...(contoured ? [contourExtension] : []),
           ...(masked ? [maskExtension] : []),
         ],
-        ...(contoured ? { contourEnabled } : {}),
+        ...(contoured ? { contourEnabled, contourLevels } : {}),
         ...(masked ? { maskId: IMAGE_SELECTION_MASK_LAYER_ID } : {}),
       } as Parameters<typeof layer.clone>[0]);
     });
   }, [
     imageLayers,
     contourChannelIds,
+    contourLevels,
     selectionMaskActive,
     imageSelectionMask,
     maskExtension,

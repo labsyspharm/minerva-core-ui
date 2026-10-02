@@ -166,7 +166,11 @@ const CHIP_COLS = 5;
 function pointerInEditor(e: MouseEvent, root: HTMLElement): boolean {
   const t = e.target;
   if (t instanceof Node && root.contains(t)) return true;
-  if (t instanceof Element && t.closest("[data-minerva-color-picker]")) {
+  if (
+    t instanceof Element &&
+    (t.closest("[data-minerva-color-picker]") ||
+      t.closest("[data-channel-row-menu]"))
+  ) {
     return true;
   }
   const r = root.getBoundingClientRect();
@@ -214,7 +218,10 @@ function ChipGrid(props: {
     let downInside = false;
     const onDown = (e: MouseEvent) => {
       const root = editorRef.current;
-      downInside = root != null && pointerInEditor(e, root);
+      // An open row ⋮ menu takes this click to close itself; keep the editor.
+      const menuOpen =
+        document.querySelector("[data-channel-row-menu]") != null;
+      downInside = menuOpen || (root != null && pointerInEditor(e, root));
     };
     const onDoc = (e: MouseEvent) => {
       if (downInside) {

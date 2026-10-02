@@ -456,6 +456,9 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
           onBlur: rename,
         }}
         contrast={contrast}
+        more={
+          showHistogram ? { sourceChannel: sc, allowContrast: true } : undefined
+        }
         {...(!rgbDisplay && isMaskChannel(sc)
           ? {
               isMask: true as const,

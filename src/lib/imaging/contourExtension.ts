@@ -8,24 +8,28 @@ import {
 /** Expanded per channel by Viv (`VIV_CHANNEL_INDEX`). */
 const CHANNEL = "VIV_CHANNEL_INDEX";
 
-const LEVELS = 8;
+/** Default isolines across the contrast window. The shader loops up to the max. */
+export const CONTOUR_LEVELS_DEFAULT = 8;
+export const CONTOUR_LEVELS_MAX = 16;
 
 /**
  * Isolines through bilinear cell crossings, so neighboring pixels share endpoints.
  *
  * ponytail: the cell on a tile boundary has no neighbor texel, so a line can
- * still break on the tile grid. A 1-texel halo in the tile texture would close it.
+ * still break on the tile grid. A 1-texel tile edge buffer would close it.
  */
 const contourModule = {
   name: "contourModule",
   uniformTypes: {
     opacity: "f32",
+    levels: "f32",
     [`contour${CHANNEL}`]: "f32",
     [`contrastLimits${CHANNEL}`]: "vec2<f32>",
     [`color${CHANNEL}`]: "vec3<f32>",
   },
   fs: `uniform contourModuleUniforms {
   float opacity;
+  float levels;
   float contour${CHANNEL};
   vec2 contrastLimits${CHANNEL};
   vec3 color${CHANNEL};
@@ -88,9 +92,12 @@ float contour_channel(highp SAMPLER_TYPE chan, vec2 limits, vec2 uv, float texel
   float v10 = norm_texel(chan, limits, i0 + ivec2(1, 0), size);
   float v01 = norm_texel(chan, limits, i0 + ivec2(0, 1), size);
   float v11 = norm_texel(chan, limits, i0 + ivec2(1, 1), size);
+  float n = contourModule.levels;
   float best = 1e3;
-  for (int k = 1; k <= ${LEVELS}; k++) {
-    best = min(best, level_dist(f, float(k) / float(${LEVELS}), v00, v10, v01, v11));
+  // n lines split the contrast window into n + 1 equal bands.
+  for (int k = 1; k <= ${CONTOUR_LEVELS_MAX}; k++) {
+    if (float(k) > n) break;
+    best = min(best, level_dist(f, float(k) / (n + 1.0), v00, v10, v01, v11));
   }
   return 1.0 - smoothstep(1.25, 2.25, best / texelsPerPx);
 }
@@ -123,6 +130,7 @@ type ContourHost = {
     channelsVisible?: boolean[] | null;
     contrastLimits?: [number, number][] | null;
     contourEnabled?: number[] | null;
+    contourLevels?: number;
     opacity?: number;
     selections?: unknown[] | null;
   };
@@ -153,6 +161,11 @@ class ContourExtension extends VivLayerExtension {
   static extensionName = "ContourExtension";
   static defaultProps = {
     contourEnabled: { type: "array", value: [] as number[], compare: true },
+    contourLevels: {
+      type: "number",
+      value: CONTOUR_LEVELS_DEFAULT,
+      compare: true,
+    },
   };
 
   getVivShaderTemplates() {
@@ -192,8 +205,10 @@ class ContourExtension extends VivLayerExtension {
     }) as unknown as [number, number, number][];
     const limits = this.props.contrastLimits ?? [];
     const enabled = this.props.contourEnabled ?? [];
+    const requested = this.props.contourLevels ?? CONTOUR_LEVELS_DEFAULT;
     const contour: Record<string, unknown> = {
       opacity: this.props.opacity ?? 1,
+      levels: Math.min(CONTOUR_LEVELS_MAX, Math.max(1, Math.round(requested))),
     };
     for (let i = 0; i < numChannels; i++) {
       const pair = limits[i];

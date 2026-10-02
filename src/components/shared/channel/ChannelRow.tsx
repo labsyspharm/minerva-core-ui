@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   ChannelContrastEditor,
   type ChannelContrastEditorProps,
@@ -14,6 +15,11 @@ import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisi
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import { withReseededRandomColors } from "@/lib/imaging/channelKind";
+import { CONTOUR_LEVELS_MAX } from "@/lib/imaging/contourExtension";
+import { refitGmm } from "@/lib/imaging/gmmScheduler";
+import { useAppStore } from "@/lib/stores/appStore";
+import type { Channel } from "@/lib/stores/documentStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
 import styles from "./ChannelRow.module.css";
 
 function ChannelColorSwatchButton(props: {
@@ -255,7 +261,222 @@ type ChannelRowProps = {
   fitting?: boolean;
   visibilityBlocked?: boolean;
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
+  more?: {
+    sourceChannel?: Channel;
+    allowContrast?: boolean;
+    onRemoveFromGroup?: () => void;
+  };
 };
+
+export function useAnchoredMenu(opts: {
+  align: "start" | "end";
+  estimateHeight: number;
+}) {
+  const { align, estimateHeight } = opts;
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+  const close = () => setOpen(false);
+  const toggleFromButton = (btn: HTMLButtonElement) => {
+    if (open) {
+      close();
+      return;
+    }
+    const rect = btn.getBoundingClientRect();
+    const openUp =
+      rect.bottom + estimateHeight + 8 > window.innerHeight &&
+      rect.top > estimateHeight;
+    const top = openUp ? rect.top - 4 - estimateHeight : rect.bottom + 4;
+    setMenuStyle(
+      align === "end"
+        ? { top, right: Math.max(8, window.innerWidth - rect.right) }
+        : {
+            top,
+            left: Math.max(8, Math.min(rect.left, window.innerWidth - 188)),
+          },
+    );
+    setOpen(true);
+  };
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (wrapRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return { open, wrapRef, menuRef, menuStyle, toggleFromButton, close };
+}
+
+function RowMoreMenu(props: {
+  sourceChannel?: Channel;
+  channelName: string;
+  allowContrast?: boolean;
+  fitBusy?: boolean;
+  onRemoveFromGroup?: () => void;
+  /** Offers "Show as contour lines" for this source channel. */
+  contourChannelId?: string;
+}) {
+  const {
+    sourceChannel,
+    channelName,
+    allowContrast,
+    fitBusy,
+    onRemoveFromGroup,
+    contourChannelId,
+  } = props;
+  const contourOn = useAppStore((s) =>
+    contourChannelId ? Boolean(s.contourChannelIds[contourChannelId]) : false,
+  );
+  const menu = useAnchoredMenu({ align: "end", estimateHeight: 140 });
+  if (!allowContrast && !onRemoveFromGroup && !contourChannelId) return null;
+  const refitContrast = () => {
+    if (!sourceChannel) return;
+    menu.close();
+    useAppStore.getState().clearChannelRendering();
+    void refitGmm(sourceChannel.id).then((limits) => {
+      if (!limits) return;
+      const { channelGroups, setChannelGroups } = useDocumentStore.getState();
+      let changed = false;
+      const nextGroups = channelGroups.map((g) => ({
+        ...g,
+        channels: g.channels.map((gc) => {
+          if (gc.channelId !== sourceChannel.id) return gc;
+          changed = true;
+          return { ...gc, lowerLimit: limits.lower, upperLimit: limits.upper };
+        }),
+      }));
+      if (changed) setChannelGroups(nextGroups);
+    });
+  };
+  return (
+    <div ref={menu.wrapRef}>
+      <button
+        type="button"
+        className={styles.moreButton}
+        aria-label={`More actions for ${channelName}`}
+        aria-expanded={menu.open}
+        aria-haspopup="menu"
+        onClick={(e) => {
+          e.stopPropagation();
+          menu.toggleFromButton(e.currentTarget);
+        }}
+      >
+        ⋮
+      </button>
+      {menu.open
+        ? createPortal(
+            <div
+              ref={menu.menuRef}
+              className={minervaTheme.menuFixed}
+              role="menu"
+              data-channel-row-menu
+              style={menu.menuStyle}
+            >
+              {allowContrast ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={minervaTheme.menuItem}
+                  disabled={fitBusy}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    refitContrast();
+                  }}
+                >
+                  {fitBusy ? "Fitting contrast…" : "Fit contrast"}
+                </button>
+              ) : null}
+              {contourChannelId ? (
+                <button
+                  type="button"
+                  role="menuitemcheckbox"
+                  aria-checked={contourOn}
+                  className={`${minervaTheme.menuItem} ${styles.menuCheckItem}`}
+                  title="Draw this channel as isolines across its contrast range instead of a color fill"
+                  onClick={(e) => {
+                    // Stays open so the line count can be set right away.
+                    e.stopPropagation();
+                    useAppStore
+                      .getState()
+                      .toggleContourChannel(contourChannelId);
+                  }}
+                >
+                  Show as contour lines
+                  <span className={styles.menuCheck} aria-hidden>
+                    {contourOn ? "✓" : ""}
+                  </span>
+                </button>
+              ) : null}
+              {contourOn ? <ContourLevelControl /> : null}
+              {onRemoveFromGroup ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={minervaTheme.menuItem}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    menu.close();
+                    onRemoveFromGroup();
+                  }}
+                >
+                  Remove from group
+                </button>
+              ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
+    </div>
+  );
+}
+
+/** ⋮ menu row for the contour line count, shown while contours are on. */
+function ContourLevelControl() {
+  const levels = useAppStore((s) => s.contourLevels);
+  const setContourLevels = useAppStore((s) => s.setContourLevels);
+  const step = (delta: number) =>
+    setContourLevels(Math.min(CONTOUR_LEVELS_MAX, Math.max(1, levels + delta)));
+  return (
+    <div
+      className={styles.contourLevel}
+      title="Lines across the contrast range (shared by all contoured channels)"
+    >
+      <span>Lines</span>
+      <span className={styles.contourStepper}>
+        <button
+          type="button"
+          className={minervaTheme.focusRing}
+          aria-label="Fewer contour lines"
+          disabled={levels <= 1}
+          onClick={() => step(-1)}
+        >
+          −
+        </button>
+        <output aria-live="polite">{levels}</output>
+        <button
+          type="button"
+          className={minervaTheme.focusRing}
+          aria-label="More contour lines"
+          disabled={levels >= CONTOUR_LEVELS_MAX}
+          onClick={() => step(1)}
+        >
+          +
+        </button>
+      </span>
+    </div>
+  );
+}
 
 function EditableChannelRowName(
   props: Extract<ChannelRowNameProps, { mode: "editable" }>,
@@ -333,6 +554,7 @@ export function ChannelRow(props: ChannelRowProps) {
     fitting,
     visibilityBlocked,
     onColorClick,
+    more,
   } = props;
 
   const showMask = isMask && maskVisualization;
@@ -409,7 +631,17 @@ export function ChannelRow(props: ChannelRowProps) {
             onClick={onColorClick}
           />
         ) : null}
-        <div className={styles.channelRowTrailing}>{trailing}</div>
+        <div className={styles.channelRowTrailing}>
+          {trailing}
+          {more || contrast ? (
+            <RowMoreMenu
+              channelName={name.name}
+              fitBusy={fitting}
+              contourChannelId={contrast?.sourceChannelId}
+              {...more}
+            />
+          ) : null}
+        </div>
         {showMask && onMaskVisualizationChange ? (
           <MaskOpacityControl
             value={maskVisualization}
