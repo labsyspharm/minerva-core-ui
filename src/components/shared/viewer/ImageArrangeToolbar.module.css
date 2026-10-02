@@ -1,0 +1,61 @@
+.toolbar {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  row-gap: 4px;
+  width: max-content;
+  max-width: calc(100% - 20px);
+  padding: 4px 6px;
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
+  pointer-events: auto;
+  transform: translateX(-50%);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.group + .group {
+  margin-left: 6px;
+  padding-left: 6px;
+  border-left: 1px solid var(--minerva-edge);
+}
+
+.field {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  margin: 0 4px;
+  color: var(--minerva-quiet);
+  font-size: 13px;
+  font-weight: 600;
+  user-select: none;
+}
+
+.prefix {
+  margin-right: 4px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.input {
+  box-sizing: border-box;
+  width: 4rem;
+  height: 26px;
+  padding: 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  line-height: 24px;
+}

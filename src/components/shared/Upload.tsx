@@ -5,9 +5,9 @@ import {
   pickFeatureCsv,
 } from "@/components/shared/channel/FeatureTable";
 import { ImageChannelOverviewCard } from "@/components/shared/channel/ImageChannelOverview";
-import { ImageOrientationRow } from "@/components/shared/channel/ImageOrientationRow";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import { ImportOverlay } from "@/components/shared/ImportOverlay";
+import MoveIcon from "@/components/shared/icons/move.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
   PanelActionButton,
@@ -42,6 +42,7 @@ import {
   detectOmeTiffMask,
   detectOmeTiffPlanarRgbAmbiguity,
 } from "@/lib/imaging/omeTiff";
+import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentStore";
 import {
   flattenImageChannelsInDocumentOrder,
@@ -123,9 +124,6 @@ type UploadProps = {
    * groups and waypoints stay linked; assigns a new image id.
    */
   onReplaceImage?: (imageId: string) => void | Promise<void>;
-  /** Image whose selection frame is showing. */
-  dragImageId?: string | null;
-  onTransformImageId?: (imageId: string | null) => void;
   /** Library strip (horizontal); default is the Images panel stack. */
   row?: boolean;
   disabled?: boolean;
@@ -265,13 +263,13 @@ const Upload = (props: UploadProps) => {
     onReconnectStoryRoot,
     onRemoveImage,
     onReplaceImage,
-    dragImageId = null,
-    onTransformImageId,
     row = false,
     disabled = false,
   } = props;
 
   const images = useDocumentStore((s) => s.images);
+  const arrangeImageId = useAppStore((s) => s.arrangeImageId);
+  const setArrangeImageId = useAppStore((s) => s.setArrangeImageId);
   const hasImages =
     images.length > 0 || (!!imageLoaded && loadedSource != null);
 
@@ -676,34 +674,37 @@ const Upload = (props: UploadProps) => {
             <div className={styles.imageCardMeta}>{metaParts.join(" · ")}</div>
           </div>
           <div className={styles.imageCardActions}>
-            <ImageOrientationRow
-              open={dragImageId === im.id}
-              onToggle={() =>
-                onTransformImageId?.(dragImageId === im.id ? null : im.id)
+            <PanelIconButton
+              title="Arrange"
+              aria-label={`Arrange ${title}`}
+              aria-pressed={arrangeImageId === im.id}
+              active={arrangeImageId === im.id}
+              onClick={() =>
+                setArrangeImageId(arrangeImageId === im.id ? null : im.id)
               }
-            />
-            <span className={styles.imageCardActionRest}>
-              {onReplaceImage &&
-              im.source?.kind !== "jpeg" &&
-              im.source?.kind !== "dicomWeb" ? (
-                <PanelIconButton
-                  title={`Browse for an image to replace ${title}`}
-                  aria-label={`Browse for an image to replace ${title}`}
-                  onClick={() => void onReplaceImage(im.id)}
-                >
-                  <BrowseIcon title="Browse for image" size={14} />
-                </PanelIconButton>
-              ) : null}
-              {onRemoveImage ? (
-                <PanelIconButton
-                  title={`Delete ${title}`}
-                  aria-label={`Delete ${title}`}
-                  onClick={() => void onRemoveImage(im.id)}
-                >
-                  <TrashIcon title="Delete" size={14} />
-                </PanelIconButton>
-              ) : null}
-            </span>
+            >
+              <MoveIcon aria-hidden />
+            </PanelIconButton>
+            {onReplaceImage &&
+            im.source?.kind !== "jpeg" &&
+            im.source?.kind !== "dicomWeb" ? (
+              <PanelIconButton
+                title={`Browse for an image to replace ${title}`}
+                aria-label={`Browse for an image to replace ${title}`}
+                onClick={() => void onReplaceImage(im.id)}
+              >
+                <BrowseIcon title="Browse for image" size={14} />
+              </PanelIconButton>
+            ) : null}
+            {onRemoveImage ? (
+              <PanelIconButton
+                title={`Delete ${title}`}
+                aria-label={`Delete ${title}`}
+                onClick={() => void onRemoveImage(im.id)}
+              >
+                <TrashIcon title="Delete" size={14} />
+              </PanelIconButton>
+            ) : null}
           </div>
         </div>
         <ImageChannelOverviewCard image={im} />

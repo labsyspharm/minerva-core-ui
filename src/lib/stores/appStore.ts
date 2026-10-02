@@ -598,7 +598,7 @@ type MaskVisualizationPreview = {
   visualization: MaskVisualization;
 };
 
-/** In-flight image orientation while dragging the dial; committed on pointerup. */
+/** In-flight image placement while dragging on the canvas; committed on pointerup. */
 export type ImageOrientationPreview = {
   imageId: string;
   orientation: ImageOrientation;
@@ -792,9 +792,12 @@ export interface AppStore {
   setMaskVisualizationPreview: (
     preview: MaskVisualizationPreview | null,
   ) => void;
-  /** In-flight image rotate/flip; committed on dial pointerup. */
+  /** In-flight move / resize / rotate; committed on pointerup. */
   imageOrientationPreview: ImageOrientationPreview | null;
   setImageOrientationPreview: (preview: ImageOrientationPreview | null) => void;
+  /** Image selected for arranging on the canvas. Authoring only. */
+  arrangeImageId: string | null;
+  setArrangeImageId: (imageId: string | null) => void;
   channelVisibilities: Record<string, boolean>;
   /**
    * Session-only per-feature-table class visibility. Missing key ≡ all visible.
@@ -941,6 +944,7 @@ const overlayInitialState = {
   channelRendering: null,
   maskVisualizationPreview: null,
   imageOrientationPreview: null,
+  arrangeImageId: null,
   channelVisibilities: {},
   featureTableVisibilities: {},
   channelGroupRowVisibilities: {},
@@ -2252,6 +2256,10 @@ export const useAppStore = create<AppStore>()(
 
       setImageOrientationPreview: (preview) => {
         set({ imageOrientationPreview: preview });
+      },
+
+      setArrangeImageId: (imageId) => {
+        set({ arrangeImageId: imageId });
       },
 
       // Import waypoint shapes actions

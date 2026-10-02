@@ -6,9 +6,10 @@ import {
   useRef,
   useState,
 } from "react";
-import { ImageOrientationToolbar } from "@/components/shared/channel/ImageOrientationRow";
 import OrientationIcon from "@/components/shared/icons/orientation.svg?react";
+import { ImageArrangeToolbar } from "@/components/shared/viewer/ImageArrangeToolbar";
 import {
+  clampDisplayScale,
   effectiveOrientation,
   orientationForImage,
   withOrientation,
@@ -25,37 +26,34 @@ import { useDocumentStore } from "@/lib/stores/documentStore";
 import { setImageOrientation } from "@/lib/stores/storeUtils";
 import styles from "./ImageArrangeBox.module.css";
 
-const CORNERS: readonly [number, number][] = [
-  [0, 0],
-  [1, 0],
-  [1, 1],
-  [0, 1],
-];
-const CORNER_NAMES = ["nw", "ne", "se", "sw"] as const;
-
-const MIN_SCALE = 0.02;
-const MAX_SCALE = 100;
-
 type World = [number, number];
 
-type BoxModel = {
-  imageId: string;
-  width: number;
-  height: number;
-  orientation: ImageOrientation;
-  points: World[];
-  top: World;
-  center: World;
-  rotate: World;
-  cursors: string[];
-};
+/** PowerPoint's eight handles, clockwise from top-left, as image fractions. */
+const HANDLES: readonly World[] = [
+  [0, 0],
+  [0.5, 0],
+  [1, 0],
+  [1, 0.5],
+  [1, 1],
+  [0.5, 1],
+  [0, 1],
+  [0, 0.5],
+];
+const RESIZE_CURSORS = ["ew-resize", "nwse-resize", "ns-resize", "nesw-resize"];
+
+/** Screen px from the top edge to the rotate knob. */
+const ROTATE_OFFSET = 28;
+const HANDLE_SIZE = 10;
+const KNOB_RADIUS = 11;
+/** Below this side length (screen px) only the corner handles show. */
+const MIN_SIDE_FOR_EDGE_HANDLES = 48;
+/** Shift-drag rotation step, as in PowerPoint. */
+const SNAP_DEGREES = 15;
 
 type Drag = {
-  imageId: string;
   start: ImageOrientation;
   latest: ImageOrientation;
-  moved: boolean;
-  apply: (world: World) => ImageOrientation;
+  apply: (world: World, e: PointerEvent) => ImageOrientation;
 };
 
 function clockDeg(world: World, center: World): number {
@@ -63,49 +61,52 @@ function clockDeg(world: World, center: World): number {
   return (rad * 180) / Math.PI;
 }
 
-function samePlacement(a: ImageOrientation, b: ImageOrientation): boolean {
+/** Resize cursor for the on-screen anchor → handle direction. */
+function resizeCursor(anchor: World, handle: World): string {
+  const deg =
+    (Math.atan2(handle[1] - anchor[1], handle[0] - anchor[0]) * 180) / Math.PI;
+  return RESIZE_CURSORS[((Math.round(deg / 45) % 4) + 4) % 4];
+}
+
+function isTextField(target: EventTarget | null): boolean {
   return (
-    a.rotationDegrees === b.rotationDegrees &&
-    a.translateX === b.translateX &&
-    a.translateY === b.translateY &&
-    a.displayScale === b.displayScale
+    target instanceof HTMLElement &&
+    target.closest("input, textarea, select, [contenteditable]") !== null
   );
 }
 
-function resizeCursor(anchor: World, handle: World): string {
-  const dx = handle[0] - anchor[0];
-  const dy = handle[1] - anchor[1];
-  return dx * dy >= 0 ? "nwse-resize" : "nesw-resize";
-}
-
+/**
+ * PowerPoint-style selection for one image: drag the body to move, a handle
+ * to resize, the knob to rotate (Shift snaps to 15°). Esc or a click on the
+ * empty canvas ends it.
+ */
 export function ImageArrangeBox(props: {
+  imageId: string;
   images: Image[];
   loaders: LoaderList;
   preview: ImageOrientationPreview | null;
   project: (worldX: number, worldY: number) => [number, number];
   unproject: (clientX: number, clientY: number) => World | null;
   layoutRef: MutableRefObject<(() => void) | null>;
-  /** Image whose move outline and handles are shown. */
-  frameImageId?: string | null;
-  /** Reflect / rotate bar above every image. */
-  showToolbar?: boolean;
+  /** Deck's event target. Wheel over the image is passed on so zoom works. */
+  getCanvas: () => HTMLCanvasElement | null;
 }) {
   const {
+    imageId,
     images,
     loaders,
     preview,
     project,
     unproject,
     layoutRef,
-    frameImageId = null,
-    showToolbar = false,
+    getCanvas,
   } = props;
   const [, setTick] = useState(0);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
   const dragRef = useRef<Drag | null>(null);
   const unprojectRef = useRef(unproject);
   unprojectRef.current = unproject;
   const setPreview = useAppStore((s) => s.setImageOrientationPreview);
+  const setArrangeImageId = useAppStore((s) => s.setArrangeImageId);
 
   useLayoutEffect(() => {
     layoutRef.current = () => setTick((n) => n + 1);
@@ -118,66 +119,80 @@ export function ImageArrangeBox(props: {
     };
   }, [layoutRef]);
 
-  const boxes: BoxModel[] = [];
-  const seen = new Set<string>();
-  for (const item of loaders) {
-    const imageId = item.sourceImageId;
-    if (!imageId || seen.has(imageId)) continue;
-    const frame = worldFrameFromLoader(item.loader);
-    if (frame.pixelWidth <= 1 || frame.pixelHeight <= 1) continue;
-    const orientation = orientationForImage(images, imageId, preview);
-    if (!orientation) continue;
-    seen.add(imageId);
-    const { pixelWidth: w, pixelHeight: h } = frame;
-    const worldAt = (px: number, py: number) =>
-      imagePixelToWorld(px, py, w, h, orientation);
-    const points = CORNERS.map(([u, v]) => project(...worldAt(u * w, v * h)));
-    if (points.some((p) => !Number.isFinite(p[0]) || !Number.isFinite(p[1]))) {
-      continue;
-    }
-    const top: World = [
-      (points[0][0] + points[1][0]) / 2,
-      (points[0][1] + points[1][1]) / 2,
-    ];
-    const center: World = [
-      (points[0][0] + points[2][0]) / 2,
-      (points[0][1] + points[2][1]) / 2,
-    ];
-    const dx = top[0] - center[0];
-    const dy = top[1] - center[1];
-    const len = Math.hypot(dx, dy) || 1;
-    const rotate: World = [top[0] + (dx / len) * 28, top[1] + (dy / len) * 28];
-    const cursors = CORNERS.map((_, i) =>
-      resizeCursor(points[(i + 2) % 4], points[i]),
-    );
-    boxes.push({
-      imageId,
-      width: w,
-      height: h,
-      orientation,
-      points,
-      top,
-      center,
-      rotate,
-      cursors,
-    });
-  }
-  boxes.sort(
-    (a, b) =>
-      Number(a.imageId === draggingId) - Number(b.imageId === draggingId),
-  );
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      const world = unprojectRef.current(e.clientX, e.clientY);
+      if (!world) return;
+      drag.latest = drag.apply(world, e);
+      setPreview({ imageId, orientation: drag.latest });
+    };
+    const onUp = () => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      dragRef.current = null;
+      if (drag.latest !== drag.start) {
+        const doc = useDocumentStore.getState();
+        doc.setImages(setImageOrientation(doc.images, imageId, drag.latest));
+      }
+      setPreview(null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (dragRef.current) {
+        // Cancel the gesture; the image returns to where it started.
+        dragRef.current = null;
+        setPreview(null);
+      } else if (!isTextField(e.target)) {
+        setArrangeImageId(null);
+      }
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [imageId, setPreview, setArrangeImageId]);
 
-  const begin = (
-    e: ReactPointerEvent,
-    imageId: string,
-    start: ImageOrientation,
-    apply: (world: World) => ImageOrientation,
-  ) => {
-    if (!unprojectRef.current(e.clientX, e.clientY)) return;
+  const item = loaders.find((l) => l.sourceImageId === imageId);
+  const o = orientationForImage(images, imageId, preview);
+  if (!item || !o) return null;
+  const { pixelWidth: w, pixelHeight: h } = worldFrameFromLoader(item.loader);
+  if (w <= 1 || h <= 1) return null;
+
+  // A flip maps the frame onto itself, so handles ignore it. The rotate knob
+  // then stays on the visual top edge, as in PowerPoint.
+  const frameO = { ...o, flipHorizontal: false, flipVertical: false };
+  const worldAt = ([u, v]: World, placement: ImageOrientation = frameO) =>
+    imagePixelToWorld(u * w, v * h, w, h, placement);
+  const points = HANDLES.map((uv) => project(...worldAt(uv)));
+  if (points.some((p) => !Number.isFinite(p[0]) || !Number.isFinite(p[1]))) {
+    return null;
+  }
+  const [nw, n, ne, , se, , sw] = points;
+  const center: World = [(nw[0] + se[0]) / 2, (nw[1] + se[1]) / 2];
+  const up = Math.hypot(n[0] - center[0], n[1] - center[1]) || 1;
+  const knob: World = [
+    n[0] + ((n[0] - center[0]) / up) * ROTATE_OFFSET,
+    n[1] + ((n[1] - center[1]) / up) * ROTATE_OFFSET,
+  ];
+  const showEdgeHandles =
+    Math.min(
+      Math.hypot(ne[0] - nw[0], ne[1] - nw[1]),
+      Math.hypot(sw[0] - nw[0], sw[1] - nw[1]),
+    ) >= MIN_SIDE_FOR_EDGE_HANDLES;
+
+  const begin = (e: ReactPointerEvent<Element>, apply: Drag["apply"]) => {
+    if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
-    dragRef.current = { imageId, start, latest: start, moved: false, apply };
-    setDraggingId(imageId);
+    dragRef.current = { start: o, latest: o, apply };
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
@@ -185,210 +200,108 @@ export function ImageArrangeBox(props: {
     }
   };
 
-  useEffect(() => {
-    const onMove = (e: PointerEvent) => {
-      const drag = dragRef.current;
-      if (!drag) return;
-      const world = unprojectRef.current(e.clientX, e.clientY);
-      if (!world) return;
-      drag.moved = true;
-      drag.latest = drag.apply(world);
-      setPreview({ imageId: drag.imageId, orientation: drag.latest });
-    };
-    const onUp = () => {
-      const drag = dragRef.current;
-      if (!drag) return;
-      dragRef.current = null;
-      setDraggingId(null);
-      if (!drag.moved || samePlacement(drag.start, drag.latest)) {
-        if (drag.moved) setPreview(null);
-        return;
+  const startMove = (e: ReactPointerEvent<Element>) => {
+    const origin = unprojectRef.current(e.clientX, e.clientY);
+    if (!origin) return;
+    begin(e, (world, ev) => {
+      let dx = world[0] - origin[0];
+      let dy = world[1] - origin[1];
+      // Shift keeps the move horizontal or vertical.
+      if (ev.shiftKey) {
+        if (Math.abs(dx) > Math.abs(dy)) dy = 0;
+        else dx = 0;
       }
-      useDocumentStore
-        .getState()
-        .setImages(
-          setImageOrientation(
-            useDocumentStore.getState().images,
-            drag.imageId,
-            drag.latest,
-          ),
-        );
-      setPreview(null);
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-    };
-  }, [setPreview]);
+      return effectiveOrientation({
+        ...o,
+        translateX: o.translateX + dx,
+        translateY: o.translateY + dy,
+      });
+    });
+  };
 
-  if (boxes.length === 0) return null;
+  // Uniform scale about the opposite handle, so µm/px stays true.
+  const startResize = (e: ReactPointerEvent<Element>, i: number) => {
+    const [u, v] = HANDLES[i];
+    const anchorUv: World = [1 - u, 1 - v];
+    const anchor = worldAt(anchorUv);
+    const handle = worldAt(HANDLES[i]);
+    const bare = { ...frameO, displayScale: 1, translateX: 0, translateY: 0 };
+    const localAnchor = worldAt(anchorUv, bare);
+    const centerUm = worldAt([0.5, 0.5], bare);
+    const lx = localAnchor[0] - centerUm[0];
+    const ly = localAnchor[1] - centerUm[1];
+    const dx = handle[0] - anchor[0];
+    const dy = handle[1] - anchor[1];
+    const span = Math.hypot(dx, dy);
+    if (span < 1e-6) return;
+    begin(e, (world) => {
+      const along =
+        ((world[0] - anchor[0]) * dx + (world[1] - anchor[1]) * dy) / span;
+      const displayScale = clampDisplayScale(o.displayScale * (along / span));
+      return effectiveOrientation({
+        ...o,
+        displayScale,
+        translateX: anchor[0] - centerUm[0] - displayScale * lx,
+        translateY: anchor[1] - centerUm[1] - displayScale * ly,
+      });
+    });
+  };
+
+  const startRotate = (e: ReactPointerEvent<Element>) => {
+    const pivot = worldAt([0.5, 0.5]);
+    const origin = unprojectRef.current(e.clientX, e.clientY);
+    if (!origin) return;
+    const startAngle = clockDeg(origin, pivot);
+    begin(e, (world, ev) => {
+      let deg = o.rotationDegrees + (clockDeg(world, pivot) - startAngle);
+      if (ev.shiftKey) deg = Math.round(deg / SNAP_DEGREES) * SNAP_DEGREES;
+      return withOrientation(o, { rotationDegrees: deg });
+    });
+  };
 
   return (
     <div className={styles.layer}>
-      {boxes.map((box) => {
-        const { width: w, height: h, orientation: o } = box;
-        const bare = { ...o, displayScale: 1, translateX: 0, translateY: 0 };
-        const image = images.find((im) => im.id === box.imageId);
-        let toolbar = null;
-        if (showToolbar && image) {
-          const half = Math.hypot(
-            box.top[0] - box.center[0],
-            box.top[1] - box.center[1],
-          );
-          toolbar = (
-            <ImageOrientationToolbar
-              image={image}
-              style={{
-                left: box.center[0],
-                // Stays above the unrotated top. A turn can cover the bar.
-                top: Math.max(48, box.center[1] - half - 8),
-              }}
+      <svg className={styles.frame} aria-hidden>
+        <polygon
+          className={styles.body}
+          points={[nw, ne, se, sw].map((p) => p.join(",")).join(" ")}
+          onPointerDown={startMove}
+          onWheel={(e) =>
+            getCanvas()?.dispatchEvent(new WheelEvent("wheel", e.nativeEvent))
+          }
+        />
+        <line
+          className={styles.stem}
+          x1={n[0]}
+          y1={n[1]}
+          x2={knob[0]}
+          y2={knob[1]}
+        />
+        {HANDLES.map(([u, v], i) =>
+          i % 2 === 1 && !showEdgeHandles ? null : (
+            <rect
+              key={`${u},${v}`}
+              className={styles.handle}
+              x={points[i][0] - HANDLE_SIZE / 2}
+              y={points[i][1] - HANDLE_SIZE / 2}
+              width={HANDLE_SIZE}
+              height={HANDLE_SIZE}
+              style={{ cursor: resizeCursor(points[(i + 4) % 8], points[i]) }}
+              onPointerDown={(e) => startResize(e, i)}
             />
-          );
-        }
-        return (
-          <div key={box.imageId}>
-            {frameImageId === box.imageId ? (
-              <>
-                <svg className={styles.frame}>
-                  <title>Move image</title>
-                  <polygon
-                    className={styles.hit}
-                    points={box.points.map((p) => p.join(",")).join(" ")}
-                    onPointerDown={(e) => {
-                      const origin = unprojectRef.current(e.clientX, e.clientY);
-                      if (!origin) return;
-                      begin(e, box.imageId, o, (world) =>
-                        effectiveOrientation({
-                          ...o,
-                          translateX: o.translateX + (world[0] - origin[0]),
-                          translateY: o.translateY + (world[1] - origin[1]),
-                        }),
-                      );
-                    }}
-                  />
-                  <polygon
-                    className={styles.edge}
-                    points={box.points.map((p) => p.join(",")).join(" ")}
-                  />
-                  <line
-                    className={styles.stem}
-                    x1={box.top[0]}
-                    y1={box.top[1]}
-                    x2={box.rotate[0]}
-                    y2={box.rotate[1]}
-                  />
-                </svg>
-                {CORNERS.map((_, i) => {
-                  const point = box.points[i];
-                  const anchorPx = CORNERS[(i + 2) % 4];
-                  return (
-                    <button
-                      key={CORNER_NAMES[i]}
-                      type="button"
-                      className={styles.handle}
-                      style={{
-                        left: point[0],
-                        top: point[1],
-                        cursor: box.cursors[i],
-                      }}
-                      aria-label="Resize image"
-                      onPointerDown={(e) => {
-                        const anchor = imagePixelToWorld(
-                          anchorPx[0] * w,
-                          anchorPx[1] * h,
-                          w,
-                          h,
-                          o,
-                        );
-                        const handle = imagePixelToWorld(
-                          CORNERS[i][0] * w,
-                          CORNERS[i][1] * h,
-                          w,
-                          h,
-                          o,
-                        );
-                        const localAnchor = imagePixelToWorld(
-                          anchorPx[0] * w,
-                          anchorPx[1] * h,
-                          w,
-                          h,
-                          bare,
-                        );
-                        const centerUm = imagePixelToWorld(
-                          w / 2,
-                          h / 2,
-                          w,
-                          h,
-                          bare,
-                        );
-                        const dx = handle[0] - anchor[0];
-                        const dy = handle[1] - anchor[1];
-                        const span = Math.hypot(dx, dy);
-                        if (span < 1e-6) return;
-                        const axis: World = [dx / span, dy / span];
-                        begin(e, box.imageId, o, (world) => {
-                          const along =
-                            (world[0] - anchor[0]) * axis[0] +
-                            (world[1] - anchor[1]) * axis[1];
-                          const displayScale = Math.min(
-                            MAX_SCALE,
-                            Math.max(
-                              MIN_SCALE,
-                              o.displayScale * (along / span),
-                            ),
-                          );
-                          const lx = localAnchor[0] - centerUm[0];
-                          const ly = localAnchor[1] - centerUm[1];
-                          return effectiveOrientation({
-                            ...o,
-                            displayScale,
-                            translateX:
-                              anchor[0] - centerUm[0] - displayScale * lx,
-                            translateY:
-                              anchor[1] - centerUm[1] - displayScale * ly,
-                          });
-                        });
-                      }}
-                    />
-                  );
-                })}
-                <button
-                  type="button"
-                  className={`${styles.handle} ${styles.rotate}`}
-                  style={{
-                    left: box.rotate[0],
-                    top: box.rotate[1],
-                    // Button reset sets radius to 0; an inline value wins.
-                    borderRadius: "50%",
-                  }}
-                  aria-label="Rotate image"
-                  onPointerDown={(e) => {
-                    const center = imagePixelToWorld(w / 2, h / 2, w, h, o);
-                    const origin = unprojectRef.current(e.clientX, e.clientY);
-                    if (!origin) return;
-                    const startAngle = clockDeg(origin, center);
-                    begin(e, box.imageId, o, (world) =>
-                      withOrientation(o, {
-                        rotationDegrees:
-                          o.rotationDegrees +
-                          (clockDeg(world, center) - startAngle),
-                      }),
-                    );
-                  }}
-                >
-                  <OrientationIcon aria-hidden />
-                </button>
-              </>
-            ) : null}
-            {toolbar}
-          </div>
-        );
-      })}
+          ),
+        )}
+        <g
+          className={styles.knob}
+          transform={`translate(${knob[0]} ${knob[1]})`}
+          onPointerDown={startRotate}
+        >
+          <title>Rotate</title>
+          <circle r={KNOB_RADIUS} />
+          <OrientationIcon x={-7} y={-7} width={14} height={14} />
+        </g>
+      </svg>
+      <ImageArrangeToolbar imageId={imageId} orientation={o} />
     </div>
   );
 }

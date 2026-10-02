@@ -15,60 +15,38 @@
   pointer-events: none;
 }
 
-.hit {
-  fill: none;
-  stroke: transparent;
-  stroke-width: 14;
-  pointer-events: stroke;
-  cursor: grab;
-  touch-action: none;
-}
-
-.hit:active {
-  cursor: grabbing;
-}
-
-.edge,
-.stem {
-  fill: none;
+.body {
+  fill: transparent;
   stroke: var(--minerva-blue);
   stroke-width: 1.5;
-  pointer-events: none;
-}
-
-.handle {
-  position: absolute;
-  width: 9px;
-  height: 9px;
-  margin: 0;
-  padding: 0;
-  border: 1.5px solid #fff;
-  border-radius: 1px;
-  background: var(--minerva-blue);
-  pointer-events: auto;
+  pointer-events: all;
+  cursor: move;
   touch-action: none;
-  transform: translate(-50%, -50%);
 }
 
-.rotate {
-  width: 22px;
-  height: 22px;
-  border: 1.5px solid var(--minerva-blue);
-  border-radius: 50%;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.stem {
+  stroke: var(--minerva-blue);
+  stroke-width: 1.5;
+}
+
+.handle,
+.knob circle {
+  fill: #fff;
+  stroke: var(--minerva-blue);
+  stroke-width: 1.5;
+}
+
+.handle,
+.knob {
+  pointer-events: all;
+  touch-action: none;
+}
+
+.knob {
   color: var(--minerva-blue);
   cursor: grab;
 }
 
-.rotate svg {
-  width: 14px;
-  height: 14px;
-  display: block;
-}
-
-.rotate:active {
+.knob:active {
   cursor: grabbing;
 }

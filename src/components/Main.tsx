@@ -552,7 +552,6 @@ const Content = (props: Props) => {
     root: FileSystemDirectoryHandle;
   } | null>(null);
   const [presenting, setPresenting] = useState(false);
-  const [transformImageId, setTransformImageId] = useState<string | null>(null);
 
   const beginExportToFolder = async (
     mode: StoryExportMode,
@@ -2280,8 +2279,6 @@ const Content = (props: Props) => {
           onReconnectStoryRoot: reconnectStoryRoot,
           onRemoveImage,
           onReplaceImage,
-          dragImageId: transformImageId,
-          onTransformImageId: setTransformImageId,
         };
         const routerProps = {
           ...mainProps,
@@ -2302,8 +2299,7 @@ const Content = (props: Props) => {
             isDragging={dragState.isDragging}
             hoveredShapeId={hoverState.hoveredShapeId}
             onOverlayInteraction={handleOverlayInteraction}
-            frameImageId={presenting ? null : transformImageId}
-            showToolbar={!presenting}
+            canArrange={!presenting}
           />
         );
         const imager = (

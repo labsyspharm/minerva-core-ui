@@ -379,10 +379,8 @@ export type ImageViewerProps = {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
   ) => void;
-  /** Selection frame for this image. Authoring only, after the drag control. */
-  frameImageId?: string | null;
-  /** Reflect / rotate bar above each image. */
-  showToolbar?: boolean;
+  /** Show the frame for the store's `arrangeImageId`. */
+  canArrange?: boolean;
   zoomInButton?: HTMLElement | null;
   zoomOutButton?: HTMLElement | null;
   showSquareViewportOverlay?: boolean;
@@ -407,8 +405,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     isDragging = false,
     hoveredShapeId = null,
     onOverlayInteraction,
-    frameImageId = null,
-    showToolbar = false,
+    canArrange = false,
     showSquareViewportOverlay = false,
     squareViewportScale = 0.9,
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
@@ -429,6 +426,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     (s) => s.maskVisualizationPreview,
   );
   const imageOrientationPreview = useAppStore((s) => s.imageOrientationPreview);
+  const arrangeImageId = useAppStore((s) => s.arrangeImageId);
   const selectionMaskVisualizationPreview =
     maskVisualizationPreview?.sourceChannelId === SELECTION_MASK_CHANNEL_KEY
       ? maskVisualizationPreview.visualization
@@ -1042,6 +1040,11 @@ export const ImageViewer = (props: ImageViewerProps) => {
     [],
   );
 
+  const getDeckCanvas = useCallback(
+    () => deckRef.current?.deck?.getCanvas() ?? null,
+    [],
+  );
+
   const clientToWorld = useCallback(
     (clientX: number, clientY: number): [number, number] | null => {
       const root = rootRef.current;
@@ -1065,6 +1068,16 @@ export const ImageViewer = (props: ImageViewerProps) => {
     () =>
       createDragHandlers(activeTool, onOverlayInteraction, getScreenFromWorld),
     [activeTool, onOverlayInteraction, getScreenFromWorld],
+  );
+
+  // A click on empty canvas ends arranging; clicks on the image hit the frame.
+  const handleClick = useCallback(
+    (info: PickInfo) => {
+      const app = useAppStore.getState();
+      if (app.arrangeImageId) app.setArrangeImageId(null);
+      dragHandlers.onClick?.(info);
+    },
+    [dragHandlers],
   );
 
   // Memoize cursor function
@@ -1259,7 +1272,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         initialViewState={deckInitialViewState}
         onViewStateChange={handleViewStateChange}
         onInteractionStateChange={handleInteractionStateChange}
-        onClick={dragHandlers.onClick}
+        onClick={handleClick}
         onDragStart={dragHandlers.onDragStart}
         onDrag={dragHandlers.onDrag}
         onDragEnd={dragHandlers.onDragEnd}
@@ -1268,16 +1281,16 @@ export const ImageViewer = (props: ImageViewerProps) => {
         layerFilter={layerFilter}
         views={views}
       />
-      {showToolbar || frameImageId ? (
+      {canArrange && arrangeImageId ? (
         <ImageArrangeBox
+          imageId={arrangeImageId}
           images={images}
           loaders={loaderList}
           preview={imageOrientationPreview}
           project={getScreenFromWorld}
           unproject={clientToWorld}
           layoutRef={arrangeLayoutRef}
-          frameImageId={frameImageId}
-          showToolbar={showToolbar}
+          getCanvas={getDeckCanvas}
         />
       ) : null}
       <LoadingWidget ref={loadingWidgetRef} placement="center" />
