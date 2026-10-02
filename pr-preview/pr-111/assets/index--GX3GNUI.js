@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-If_En6r2.js","./pako.esm-KbdoS3Oq.js","./lerc-D9LgciVm.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DMG3RET-.js","./pako.esm-KbdoS3Oq.js","./lerc-hp-jZfvH.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -861,12 +861,12 @@ let __tla = (async () => {
             const prefix_raw = path2.substring(start2, segment[1]);
             const suffix_raw = path2.substring(segment[4], end);
             const actuallyCaseSensitive = caseSensitive && !!(prefix_raw || suffix_raw);
-            const prefix = !prefix_raw ? void 0 : actuallyCaseSensitive ? prefix_raw : prefix_raw.toLowerCase();
+            const prefix2 = !prefix_raw ? void 0 : actuallyCaseSensitive ? prefix_raw : prefix_raw.toLowerCase();
             const suffix = !suffix_raw ? void 0 : actuallyCaseSensitive ? suffix_raw : suffix_raw.toLowerCase();
-            const existingNode = !skipOnParamError && ((_h2 = node2.dynamic) == null ? void 0 : _h2.find((s2) => !s2.skipOnParamError && s2.caseSensitive === actuallyCaseSensitive && s2.prefix === prefix && s2.suffix === suffix));
+            const existingNode = !skipOnParamError && ((_h2 = node2.dynamic) == null ? void 0 : _h2.find((s2) => !s2.skipOnParamError && s2.caseSensitive === actuallyCaseSensitive && s2.prefix === prefix2 && s2.suffix === suffix));
             if (existingNode) nextNode = existingNode;
             else {
-              const next2 = createDynamicNode(1, route.fullPath ?? route.from, actuallyCaseSensitive, prefix, suffix);
+              const next2 = createDynamicNode(1, route.fullPath ?? route.from, actuallyCaseSensitive, prefix2, suffix);
               nextNode = next2;
               next2.depth = depth;
               next2.parent = node2;
@@ -879,12 +879,12 @@ let __tla = (async () => {
             const prefix_raw = path2.substring(start2, segment[1]);
             const suffix_raw = path2.substring(segment[4], end);
             const actuallyCaseSensitive = caseSensitive && !!(prefix_raw || suffix_raw);
-            const prefix = !prefix_raw ? void 0 : actuallyCaseSensitive ? prefix_raw : prefix_raw.toLowerCase();
+            const prefix2 = !prefix_raw ? void 0 : actuallyCaseSensitive ? prefix_raw : prefix_raw.toLowerCase();
             const suffix = !suffix_raw ? void 0 : actuallyCaseSensitive ? suffix_raw : suffix_raw.toLowerCase();
-            const existingNode = !skipOnParamError && ((_i2 = node2.optional) == null ? void 0 : _i2.find((s2) => !s2.skipOnParamError && s2.caseSensitive === actuallyCaseSensitive && s2.prefix === prefix && s2.suffix === suffix));
+            const existingNode = !skipOnParamError && ((_i2 = node2.optional) == null ? void 0 : _i2.find((s2) => !s2.skipOnParamError && s2.caseSensitive === actuallyCaseSensitive && s2.prefix === prefix2 && s2.suffix === suffix));
             if (existingNode) nextNode = existingNode;
             else {
-              const next2 = createDynamicNode(3, route.fullPath ?? route.from, actuallyCaseSensitive, prefix, suffix);
+              const next2 = createDynamicNode(3, route.fullPath ?? route.from, actuallyCaseSensitive, prefix2, suffix);
               nextNode = next2;
               next2.parent = node2;
               next2.depth = depth;
@@ -897,9 +897,9 @@ let __tla = (async () => {
             const prefix_raw = path2.substring(start2, segment[1]);
             const suffix_raw = path2.substring(segment[4], end);
             const actuallyCaseSensitive = caseSensitive && !!(prefix_raw || suffix_raw);
-            const prefix = !prefix_raw ? void 0 : actuallyCaseSensitive ? prefix_raw : prefix_raw.toLowerCase();
+            const prefix2 = !prefix_raw ? void 0 : actuallyCaseSensitive ? prefix_raw : prefix_raw.toLowerCase();
             const suffix = !suffix_raw ? void 0 : actuallyCaseSensitive ? suffix_raw : suffix_raw.toLowerCase();
-            const next2 = createDynamicNode(2, route.fullPath ?? route.from, actuallyCaseSensitive, prefix, suffix);
+            const next2 = createDynamicNode(2, route.fullPath ?? route.from, actuallyCaseSensitive, prefix2, suffix);
             nextNode = next2;
             next2.parent = node2;
             next2.depth = depth;
@@ -996,7 +996,7 @@ let __tla = (async () => {
       parsingPriority: 0
     };
   }
-  function createDynamicNode(kind, fullPath, caseSensitive, prefix, suffix) {
+  function createDynamicNode(kind, fullPath, caseSensitive, prefix2, suffix) {
     return {
       kind,
       depth: 0,
@@ -1014,7 +1014,7 @@ let __tla = (async () => {
       skipOnParamError: false,
       parsingPriority: 0,
       caseSensitive,
-      prefix,
+      prefix: prefix2,
       suffix
     };
   }
@@ -1218,19 +1218,19 @@ let __tla = (async () => {
     let bestFuzzy = null;
     let bestMatch = null;
     while (stack2.length) {
-      const frame = stack2.pop();
-      const { node: node2, index: index2, skipped, depth, statics, dynamics, optionals } = frame;
-      let { extract, rawParams, parsedParams } = frame;
+      const frame2 = stack2.pop();
+      const { node: node2, index: index2, skipped, depth, statics, dynamics, optionals } = frame2;
+      let { extract, rawParams, parsedParams } = frame2;
       if (node2.skipOnParamError) {
-        if (!validateMatchParams(path2, parts, frame)) continue;
-        rawParams = frame.rawParams;
-        extract = frame.extract;
-        parsedParams = frame.parsedParams;
+        if (!validateMatchParams(path2, parts, frame2)) continue;
+        rawParams = frame2.rawParams;
+        extract = frame2.extract;
+        parsedParams = frame2.parsedParams;
       }
-      if (fuzzy && node2.route && node2.kind !== SEGMENT_TYPE_INDEX && isFrameMoreSpecific(bestFuzzy, frame)) bestFuzzy = frame;
+      if (fuzzy && node2.route && node2.kind !== SEGMENT_TYPE_INDEX && isFrameMoreSpecific(bestFuzzy, frame2)) bestFuzzy = frame2;
       const isBeyondPath = index2 === partsLength;
       if (isBeyondPath) {
-        if (node2.route && !pathIsIndex && isFrameMoreSpecific(bestMatch, frame)) bestMatch = frame;
+        if (node2.route && !pathIsIndex && isFrameMoreSpecific(bestMatch, frame2)) bestMatch = frame2;
         if (!node2.optional && !node2.wildcard && !node2.index && !node2.pathless) continue;
       }
       const part = isBeyondPath ? void 0 : parts[index2];
@@ -1257,18 +1257,18 @@ let __tla = (async () => {
           if (isFrameMoreSpecific(bestMatch, indexFrame)) bestMatch = indexFrame;
         }
       }
-      if (node2.wildcard && isFrameMoreSpecific(wildcardMatch, frame)) for (const segment of node2.wildcard) {
-        const { prefix, suffix } = segment;
-        if (prefix) {
+      if (node2.wildcard && isFrameMoreSpecific(wildcardMatch, frame2)) for (const segment of node2.wildcard) {
+        const { prefix: prefix2, suffix } = segment;
+        if (prefix2) {
           if (isBeyondPath) continue;
-          if (!(segment.caseSensitive ? part : lowerPart ?? (lowerPart = part.toLowerCase())).startsWith(prefix)) continue;
+          if (!(segment.caseSensitive ? part : lowerPart ?? (lowerPart = part.toLowerCase())).startsWith(prefix2)) continue;
         }
         if (suffix) {
           if (isBeyondPath) continue;
           const end = parts.slice(index2).join("/").slice(-suffix.length);
           if ((segment.caseSensitive ? end : end.toLowerCase()) !== suffix) continue;
         }
-        const frame2 = {
+        const frame22 = {
           node: segment,
           index: partsLength,
           skipped,
@@ -1281,9 +1281,9 @@ let __tla = (async () => {
           parsedParams
         };
         if (segment.skipOnParamError) {
-          if (!validateMatchParams(path2, parts, frame2)) continue;
+          if (!validateMatchParams(path2, parts, frame22)) continue;
         }
-        wildcardMatch = frame2;
+        wildcardMatch = frame22;
         break;
       }
       if (node2.optional) {
@@ -1306,10 +1306,10 @@ let __tla = (async () => {
         }
         if (!isBeyondPath) for (let i2 = node2.optional.length - 1; i2 >= 0; i2--) {
           const segment = node2.optional[i2];
-          const { prefix, suffix } = segment;
-          if (prefix || suffix) {
+          const { prefix: prefix2, suffix } = segment;
+          if (prefix2 || suffix) {
             const casePart = segment.caseSensitive ? part : lowerPart ?? (lowerPart = part.toLowerCase());
-            if (prefix && !casePart.startsWith(prefix)) continue;
+            if (prefix2 && !casePart.startsWith(prefix2)) continue;
             if (suffix && !casePart.endsWith(suffix)) continue;
           }
           stack2.push({
@@ -1328,10 +1328,10 @@ let __tla = (async () => {
       }
       if (!isBeyondPath && node2.dynamic && part) for (let i2 = node2.dynamic.length - 1; i2 >= 0; i2--) {
         const segment = node2.dynamic[i2];
-        const { prefix, suffix } = segment;
-        if (prefix || suffix) {
+        const { prefix: prefix2, suffix } = segment;
+        if (prefix2 || suffix) {
           const casePart = segment.caseSensitive ? part : lowerPart ?? (lowerPart = part.toLowerCase());
-          if (prefix && !casePart.startsWith(prefix)) continue;
+          if (prefix2 && !casePart.startsWith(prefix2)) continue;
           if (suffix && !casePart.endsWith(suffix)) continue;
         }
         stack2.push({
@@ -1409,13 +1409,13 @@ let __tla = (async () => {
     }
     return null;
   }
-  function validateMatchParams(path2, parts, frame) {
+  function validateMatchParams(path2, parts, frame2) {
     try {
-      const [rawParams, state] = extractParams(path2, parts, frame);
-      frame.rawParams = rawParams;
-      frame.extract = state;
-      const parsed = frame.node.parse(rawParams);
-      frame.parsedParams = Object.assign(/* @__PURE__ */ Object.create(null), frame.parsedParams, parsed);
+      const [rawParams, state] = extractParams(path2, parts, frame2);
+      frame2.rawParams = rawParams;
+      frame2.extract = state;
+      const parsed = frame2.node.parse(rawParams);
+      frame2.parsedParams = Object.assign(/* @__PURE__ */ Object.create(null), frame2.parsedParams, parsed);
       return true;
     } catch {
       return null;
@@ -1496,12 +1496,12 @@ let __tla = (async () => {
         continue;
       }
       const end = segment[5];
-      const prefix = part.substring(0, segment[1]);
+      const prefix2 = part.substring(0, segment[1]);
       const suffix = part.substring(segment[4], end);
       const value = part.substring(segment[2], segment[3]);
-      if (kind === 1) joined += prefix || suffix ? `${prefix}{$${value}}${suffix}` : `$${value}`;
-      else if (kind === 2) joined += prefix || suffix ? `${prefix}{$}${suffix}` : "$";
-      else joined += `${prefix}{-$${value}}${suffix}`;
+      if (kind === 1) joined += prefix2 || suffix ? `${prefix2}{$${value}}${suffix}` : `$${value}`;
+      else if (kind === 2) joined += prefix2 || suffix ? `${prefix2}{$}${suffix}` : "$";
+      else joined += `${prefix2}{-$${value}}${suffix}`;
     }
     joined = cleanPath(joined);
     const result = joined || "/";
@@ -1557,25 +1557,25 @@ let __tla = (async () => {
         const splat = params._splat;
         usedParams._splat = splat;
         usedParams["*"] = splat;
-        const prefix = path2.substring(start, segment[1]);
+        const prefix2 = path2.substring(start, segment[1]);
         const suffix = path2.substring(segment[4], end);
         if (!splat) {
           isMissingParams = true;
-          if (prefix || suffix) joined += "/" + prefix + suffix;
+          if (prefix2 || suffix) joined += "/" + prefix2 + suffix;
           continue;
         }
         const value = encodeParam("_splat", params, decoder);
-        joined += "/" + prefix + value + suffix;
+        joined += "/" + prefix2 + value + suffix;
         continue;
       }
       if (kind === 1) {
         const key2 = path2.substring(segment[2], segment[3]);
         if (!isMissingParams && !(key2 in params)) isMissingParams = true;
         usedParams[key2] = params[key2];
-        const prefix = path2.substring(start, segment[1]);
+        const prefix2 = path2.substring(start, segment[1]);
         const suffix = path2.substring(segment[4], end);
         const value = encodeParam(key2, params, decoder) ?? "undefined";
-        joined += "/" + prefix + value + suffix;
+        joined += "/" + prefix2 + value + suffix;
         continue;
       }
       if (kind === 3) {
@@ -1583,10 +1583,10 @@ let __tla = (async () => {
         const valueRaw = params[key2];
         if (valueRaw == null) continue;
         usedParams[key2] = valueRaw;
-        const prefix = path2.substring(start, segment[1]);
+        const prefix2 = path2.substring(start, segment[1]);
         const suffix = path2.substring(segment[4], end);
         const value = encodeParam(key2, params, decoder) ?? "";
-        joined += "/" + prefix + value + suffix;
+        joined += "/" + prefix2 + value + suffix;
         continue;
       }
     }
@@ -13233,15 +13233,15 @@ let __tla = (async () => {
   const wordmark$1 = "_wordmark_68zcf_20";
   const wordmarkDisplay = "_wordmarkDisplay_68zcf_32";
   const title$2 = "_title_68zcf_36";
-  const field$2 = "_field_68zcf_37";
-  const input$1 = "_input_68zcf_62";
+  const field$3 = "_field_68zcf_37";
+  const input$2 = "_input_68zcf_62";
   const surface = "_surface_68zcf_82";
   const selectLeft = "_selectLeft_68zcf_89";
   const control = "_control_68zcf_4";
   const controlRow = "_controlRow_68zcf_4";
   const controlActive = "_controlActive_68zcf_4";
   const controlText = "_controlText_68zcf_4";
-  const menu$2 = "_menu_68zcf_150";
+  const menu$1 = "_menu_68zcf_150";
   const menuFixed = "_menuFixed_68zcf_151";
   const menuItem$1 = "_menuItem_68zcf_165";
   const strip = "_strip_68zcf_195";
@@ -13258,15 +13258,15 @@ let __tla = (async () => {
     wordmark: wordmark$1,
     wordmarkDisplay,
     title: title$2,
-    field: field$2,
-    input: input$1,
+    field: field$3,
+    input: input$2,
     surface,
     selectLeft,
     control,
     controlRow,
     controlActive,
     controlText,
-    menu: menu$2,
+    menu: menu$1,
     menuFixed,
     menuItem: menuItem$1,
     strip,
@@ -17391,6 +17391,10 @@ let __tla = (async () => {
     sourceDataTypeId: stringType().optional(),
     sourceDistribution: SourceDistributionSchema.optional(),
     gmmContrastLimits: GmmContrastLimitsSchema.optional(),
+    floatRange: objectType({
+      min: numberType(),
+      max: numberType()
+    }).optional(),
     color: ColorSchema.optional(),
     lowerLimit: numberType().optional(),
     upperLimit: numberType().optional(),
@@ -17438,6 +17442,9 @@ let __tla = (async () => {
     rotationDegrees: numberType().default(0),
     flipHorizontal: booleanType().default(false),
     flipVertical: booleanType().default(false),
+    translateX: numberType().default(0),
+    translateY: numberType().default(0),
+    displayScale: numberType().positive().default(1),
     scaleX: numberType().positive().default(1),
     scaleY: numberType().positive().default(1),
     channels: arrayType(ImageChannelSchema),
@@ -21721,14 +21728,23 @@ let __tla = (async () => {
     if (d2 <= -180 + 1e-9) return 180;
     return d2;
   }
+  function clampDisplayScale(scale2) {
+    return Math.min(100, Math.max(0.02, scale2));
+  }
   function finiteScale(n2) {
     return typeof n2 === "number" && Number.isFinite(n2) && n2 > 0 ? n2 : 1;
+  }
+  function finiteOffset(n2) {
+    return typeof n2 === "number" && Number.isFinite(n2) ? n2 : 0;
   }
   function effectiveOrientation(o2) {
     return {
       rotationDegrees: wrapDisplayDeg((o2 == null ? void 0 : o2.rotationDegrees) ?? 0),
       flipHorizontal: (o2 == null ? void 0 : o2.flipHorizontal) ?? false,
       flipVertical: (o2 == null ? void 0 : o2.flipVertical) ?? false,
+      translateX: finiteOffset(o2 == null ? void 0 : o2.translateX),
+      translateY: finiteOffset(o2 == null ? void 0 : o2.translateY),
+      displayScale: finiteScale(o2 == null ? void 0 : o2.displayScale),
       scaleX: finiteScale(o2 == null ? void 0 : o2.scaleX),
       scaleY: finiteScale(o2 == null ? void 0 : o2.scaleY)
     };
@@ -21739,9 +21755,20 @@ let __tla = (async () => {
       ...patch2
     });
   }
+  function flipOnScreen(o2, axis) {
+    const c2 = effectiveOrientation(o2);
+    return withOrientation(c2, {
+      rotationDegrees: -c2.rotationDegrees,
+      ...axis === "horizontal" ? {
+        flipHorizontal: !c2.flipHorizontal
+      } : {
+        flipVertical: !c2.flipVertical
+      }
+    });
+  }
   function isIdentityOrientation(o2) {
     const c2 = effectiveOrientation(o2);
-    return c2.rotationDegrees === 0 && !c2.flipHorizontal && !c2.flipVertical;
+    return c2.rotationDegrees === 0 && !c2.flipHorizontal && !c2.flipVertical && c2.translateX === 0 && c2.translateY === 0 && c2.displayScale === 1;
   }
   function orientationForImage(images, sourceImageId, preview) {
     if (!sourceImageId) return void 0;
@@ -22099,8 +22126,8 @@ let __tla = (async () => {
     const u2 = unit.trim();
     if (u2 === "m") return 1;
     if (!u2.endsWith("m")) return null;
-    const prefix = u2.slice(0, -1);
-    return prefix in METRE_PREFIX ? METRE_PREFIX[prefix] : null;
+    const prefix2 = u2.slice(0, -1);
+    return prefix2 in METRE_PREFIX ? METRE_PREFIX[prefix2] : null;
   }
   function umPerPixelFromAxis(size, unit) {
     if (size == null) return null;
@@ -22179,19 +22206,37 @@ let __tla = (async () => {
     return worldFrameFromPixelCounts(docWidth, docHeight);
   }
   function layerModelMatrix(loader, orientation) {
-    const frame = worldFrameFromLoader(loader);
+    const frame2 = worldFrameFromLoader(loader);
     const o2 = effectiveOrientation(orientation);
-    const scaleX2 = orientation ? o2.scaleX : frame.umPerPixelX;
-    const scaleY2 = orientation ? o2.scaleY : frame.umPerPixelY;
-    const m2 = new Matrix4().scale([
+    const scaleX2 = orientation ? o2.scaleX : frame2.umPerPixelX;
+    const scaleY2 = orientation ? o2.scaleY : frame2.umPerPixelY;
+    const cx = frame2.pixelWidth / 2;
+    const cy = frame2.pixelHeight / 2;
+    const ux = cx * scaleX2;
+    const uy = cy * scaleY2;
+    const m2 = new Matrix4().translate([
+      o2.translateX,
+      o2.translateY,
+      0
+    ]).translate([
+      ux,
+      uy,
+      0
+    ]).scale([
+      o2.displayScale,
+      o2.displayScale,
+      1
+    ]).translate([
+      -ux,
+      -uy,
+      0
+    ]).scale([
       scaleX2,
       scaleY2,
       1
     ]);
     const pivoted = o2.rotationDegrees !== 0 || o2.flipHorizontal || o2.flipVertical;
     if (pivoted) {
-      const cx = frame.pixelWidth / 2;
-      const cy = frame.pixelHeight / 2;
       m2.translate([
         cx,
         cy,
@@ -22207,6 +22252,33 @@ let __tla = (async () => {
       ]);
     }
     return m2;
+  }
+  function imagePixelToWorld(pixelX, pixelY, pixelWidth, pixelHeight, orientation) {
+    const cx = pixelWidth / 2;
+    const cy = pixelHeight / 2;
+    let x2 = pixelX - cx;
+    let y2 = pixelY - cy;
+    if (orientation.flipHorizontal) x2 = -x2;
+    if (orientation.flipVertical) y2 = -y2;
+    if (orientation.rotationDegrees !== 0 || orientation.flipHorizontal || orientation.flipVertical) {
+      const rad = orientation.rotationDegrees * Math.PI / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      const rx = x2 * cos - y2 * sin;
+      const ry = x2 * sin + y2 * cos;
+      x2 = rx;
+      y2 = ry;
+    }
+    x2 += cx;
+    y2 += cy;
+    const wx = x2 * orientation.scaleX;
+    const wy = y2 * orientation.scaleY;
+    const ux = cx * orientation.scaleX;
+    const uy = cy * orientation.scaleY;
+    return [
+      (wx - ux) * orientation.displayScale + ux + orientation.translateX,
+      (wy - uy) * orientation.displayScale + uy + orientation.translateY
+    ];
   }
   function isIdentityScale(scale2) {
     return scale2.umPerPixelX === 1 && scale2.umPerPixelY === 1;
@@ -28360,8 +28432,8 @@ let __tla = (async () => {
     await storyDb.blobs.delete(id2);
   }
   async function deleteBlobsForStory(storyId) {
-    const prefix = `story:${storyId}:`;
-    await storyDb.blobs.where("id").startsWith(prefix).delete();
+    const prefix2 = `story:${storyId}:`;
+    await storyDb.blobs.where("id").startsWith(prefix2).delete();
   }
   function promisifyRequest(request2) {
     return new Promise((resolve, reject) => {
@@ -30304,7 +30376,7 @@ let __tla = (async () => {
   }
   function validateOptionsObject(options, id2, defaultOptions2, deprecatedOptions, loaders) {
     const loaderName = id2 || "Top level";
-    const prefix = id2 ? `${id2}.` : "";
+    const prefix2 = id2 ? `${id2}.` : "";
     for (const key2 in options) {
       const isSubOptions = !id2 && isObject$1(options[key2]);
       const isBaseUriOption = key2 === "baseUri" && !id2;
@@ -30312,12 +30384,12 @@ let __tla = (async () => {
       if (!(key2 in defaultOptions2) && !isBaseUriOption && !isWorkerUrlOption) {
         if (key2 in deprecatedOptions) {
           if (probeLog.level > 0) {
-            probeLog.warn(`${loaderName} loader option '${prefix}${key2}' no longer supported, use '${deprecatedOptions[key2]}'`)();
+            probeLog.warn(`${loaderName} loader option '${prefix2}${key2}' no longer supported, use '${deprecatedOptions[key2]}'`)();
           }
         } else if (!isSubOptions) {
           if (probeLog.level > 0) {
             const suggestion = findSimilarOption(key2, loaders);
-            probeLog.warn(`${loaderName} loader option '${prefix}${key2}' not recognized. ${suggestion}`)();
+            probeLog.warn(`${loaderName} loader option '${prefix2}${key2}' not recognized. ${suggestion}`)();
           }
         }
       }
@@ -35196,13 +35268,13 @@ vec4 picking_filterColor(vec4 color) {
   ];
   class TextureFormatDecoder {
     isColor(format) {
-      return COLOR_FORMAT_PREFIXES.some((prefix) => format.startsWith(prefix));
+      return COLOR_FORMAT_PREFIXES.some((prefix2) => format.startsWith(prefix2));
     }
     isDepthStencil(format) {
-      return DEPTH_FORMAT_PREFIXES.some((prefix) => format.startsWith(prefix));
+      return DEPTH_FORMAT_PREFIXES.some((prefix2) => format.startsWith(prefix2));
     }
     isCompressed(format) {
-      return COMPRESSED_TEXTURE_FORMAT_PREFIXES.some((prefix) => format.startsWith(prefix));
+      return COMPRESSED_TEXTURE_FORMAT_PREFIXES.some((prefix2) => format.startsWith(prefix2));
     }
     getInfo(format) {
       return getTextureFormatInfo(format);
@@ -39931,8 +40003,8 @@ float smoothedge(float edge, float x) {
   ];
   function prefixed(obj, property) {
     const camelProp = property[0].toUpperCase() + property.slice(1);
-    for (const prefix of VENDOR_PREFIXES) {
-      const prop = prefix ? prefix + camelProp : property;
+    for (const prefix2 of VENDOR_PREFIXES) {
+      const prop = prefix2 ? prefix2 + camelProp : property;
       if (prop in obj) {
         return prop;
       }
@@ -42936,21 +43008,21 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       };
       const layerFilterCache = {};
       for (let layerIndex = 0; layerIndex < layers.length; layerIndex++) {
-        const layer = layers[layerIndex];
-        const shouldDrawLayer = this._shouldDrawLayer(layer, drawContext, layerFilter, layerFilterCache);
+        const layer2 = layers[layerIndex];
+        const shouldDrawLayer = this._shouldDrawLayer(layer2, drawContext, layerFilter, layerFilterCache);
         const layerParam = {
           shouldDrawLayer
         };
         if (shouldDrawLayer && !evaluateShouldDrawOnly) {
           layerParam.shouldDrawLayer = true;
-          layerParam.layerRenderIndex = indexResolver(layer, shouldDrawLayer);
-          layerParam.shaderModuleProps = this._getShaderModuleProps(layer, effects, pass, shaderModuleProps);
-          const defaultParams = layer.context.device.type === "webgpu" ? WEBGPU_DEFAULT_DRAW_PARAMETERS : null;
+          layerParam.layerRenderIndex = indexResolver(layer2, shouldDrawLayer);
+          layerParam.shaderModuleProps = this._getShaderModuleProps(layer2, effects, pass, shaderModuleProps);
+          const defaultParams = layer2.context.device.type === "webgpu" ? WEBGPU_DEFAULT_DRAW_PARAMETERS : null;
           layerParam.layerParameters = {
             ...defaultParams,
-            ...(_a2 = layer.context.deck) == null ? void 0 : _a2.props.parameters,
+            ...(_a2 = layer2.context.deck) == null ? void 0 : _a2.props.parameters,
             ...(_b2 = views == null ? void 0 : views[viewport2.id]) == null ? void 0 : _b2.props.parameters,
-            ...this.getLayerParameters(layer, layerIndex, viewport2)
+            ...this.getLayerParameters(layer2, layerIndex, viewport2)
           };
         }
         drawLayerParams[layerIndex] = layerParam;
@@ -43011,25 +43083,25 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         viewport: glViewport
       });
       for (let layerIndex = 0; layerIndex < layers.length; layerIndex++) {
-        const layer = layers[layerIndex];
+        const layer2 = layers[layerIndex];
         const drawLayerParameters = drawLayerParams[layerIndex];
         const { shouldDrawLayer } = drawLayerParameters;
-        if (shouldDrawLayer && layer.props.pickable) {
+        if (shouldDrawLayer && layer2.props.pickable) {
           renderStatus.pickableCount++;
         }
-        if (layer.isComposite) {
+        if (layer2.isComposite) {
           renderStatus.compositeCount++;
         }
-        if (layer.isDrawable && drawLayerParameters.shouldDrawLayer) {
+        if (layer2.isDrawable && drawLayerParameters.shouldDrawLayer) {
           const { layerRenderIndex, shaderModuleProps, layerParameters } = drawLayerParameters;
           renderStatus.visibleCount++;
           this._lastRenderIndex = Math.max(this._lastRenderIndex, layerRenderIndex);
           if (shaderModuleProps.project) {
             shaderModuleProps.project.viewport = viewport2;
           }
-          layer.context.renderPass = renderPass;
+          layer2.context.renderPass = renderPass;
           try {
-            layer._drawLayer({
+            layer2._drawLayer({
               renderPass,
               shaderModuleProps,
               uniforms: {
@@ -43038,28 +43110,28 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
               parameters: layerParameters
             });
           } catch (err2) {
-            layer.raiseError(err2, `drawing ${layer} to ${pass}`);
+            layer2.raiseError(err2, `drawing ${layer2} to ${pass}`);
           }
         }
       }
       return renderStatus;
     }
-    shouldDrawLayer(layer) {
+    shouldDrawLayer(layer2) {
       return true;
     }
-    getShaderModuleProps(layer, effects, otherShaderModuleProps) {
+    getShaderModuleProps(layer2, effects, otherShaderModuleProps) {
       return null;
     }
-    getLayerParameters(layer, layerIndex, viewport2) {
-      return layer.props.parameters;
+    getLayerParameters(layer2, layerIndex, viewport2) {
+      return layer2.props.parameters;
     }
-    _shouldDrawLayer(layer, drawContext, layerFilter, layerFilterCache) {
-      const shouldDrawLayer = layer.props.visible && this.shouldDrawLayer(layer);
+    _shouldDrawLayer(layer2, drawContext, layerFilter, layerFilterCache) {
+      const shouldDrawLayer = layer2.props.visible && this.shouldDrawLayer(layer2);
       if (!shouldDrawLayer) {
         return false;
       }
-      drawContext.layer = layer;
-      let parent2 = layer.parent;
+      drawContext.layer = layer2;
+      let parent2 = layer2.parent;
       while (parent2) {
         if (!parent2.props.visible || !parent2.filterSubLayer(drawContext)) {
           return false;
@@ -43076,53 +43148,53 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
           return false;
         }
       }
-      layer.activateViewport(drawContext.viewport);
+      layer2.activateViewport(drawContext.viewport);
       return true;
     }
-    _getShaderModuleProps(layer, effects, pass, overrides) {
+    _getShaderModuleProps(layer2, effects, pass, overrides) {
       var _a2, _b2;
       const devicePixelRatio2 = this.device.canvasContext.cssToDeviceRatio();
-      const layerProps = ((_a2 = layer.internalState) == null ? void 0 : _a2.propsInTransition) || layer.props;
+      const layerProps = ((_a2 = layer2.internalState) == null ? void 0 : _a2.propsInTransition) || layer2.props;
       const shaderModuleProps = {
         layer: layerProps,
         picking: {
           isActive: false
         },
         project: {
-          viewport: layer.context.viewport,
+          viewport: layer2.context.viewport,
           devicePixelRatio: devicePixelRatio2,
           modelMatrix: layerProps.modelMatrix,
           coordinateSystem: layerProps.coordinateSystem,
           coordinateOrigin: layerProps.coordinateOrigin,
-          autoWrapLongitude: layer.wrapLongitude
+          autoWrapLongitude: layer2.wrapLongitude
         }
       };
       if (effects) {
         for (const effect2 of effects) {
-          mergeModuleParameters(shaderModuleProps, (_b2 = effect2.getShaderModuleProps) == null ? void 0 : _b2.call(effect2, layer, shaderModuleProps));
+          mergeModuleParameters(shaderModuleProps, (_b2 = effect2.getShaderModuleProps) == null ? void 0 : _b2.call(effect2, layer2, shaderModuleProps));
         }
       }
-      for (const module of layer.context.defaultShaderModules) {
+      for (const module of layer2.context.defaultShaderModules) {
         if (!(module.name in shaderModuleProps)) {
           shaderModuleProps[module.name] = {};
         }
       }
-      return mergeModuleParameters(shaderModuleProps, this.getShaderModuleProps(layer, effects, shaderModuleProps), overrides);
+      return mergeModuleParameters(shaderModuleProps, this.getShaderModuleProps(layer2, effects, shaderModuleProps), overrides);
     }
   }
   function layerIndexResolver(startIndex = 0, layerIndices = {}) {
     const resolvers = {};
-    const resolveLayerIndex = (layer, isDrawn) => {
-      const indexOverride = layer.props._offset;
-      const layerId = layer.id;
-      const parentId = layer.parent && layer.parent.id;
+    const resolveLayerIndex = (layer2, isDrawn) => {
+      const indexOverride = layer2.props._offset;
+      const layerId = layer2.id;
+      const parentId = layer2.parent && layer2.parent.id;
       let index2;
       if (parentId && !(parentId in layerIndices)) {
-        resolveLayerIndex(layer.parent, false);
+        resolveLayerIndex(layer2.parent, false);
       }
       if (parentId in resolvers) {
         const resolver2 = resolvers[parentId] = resolvers[parentId] || layerIndexResolver(layerIndices[parentId], layerIndices);
-        index2 = resolver2(layer, isDrawn);
+        index2 = resolver2(layer2, isDrawn);
         resolvers[layerId] = resolver2;
       } else if (Number.isFinite(indexOverride)) {
         index2 = indexOverride + (layerIndices[parentId] || 0);
@@ -43228,18 +43300,18 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         pass: "shadow"
       });
     }
-    getLayerParameters(layer, layerIndex, viewport2) {
+    getLayerParameters(layer2, layerIndex, viewport2) {
       return {
-        ...layer.props.parameters,
+        ...layer2.props.parameters,
         blend: false,
         depthWriteEnabled: true,
         depthCompare: "less-equal"
       };
     }
-    shouldDrawLayer(layer) {
-      return layer.props.shadowEnabled !== false;
+    shouldDrawLayer(layer2) {
+      return layer2.props.shadowEnabled !== false;
     }
-    getShaderModuleProps(layer, effects, otherShaderModuleProps) {
+    getShaderModuleProps(layer2, effects, otherShaderModuleProps) {
       return {
         shadow: {
           project: otherShaderModuleProps.project,
@@ -43359,7 +43431,7 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         });
       }
     }
-    getShaderModuleProps(layer, otherShaderModuleProps) {
+    getShaderModuleProps(layer2, otherShaderModuleProps) {
       const shadowProps = this.shadow ? {
         project: otherShaderModuleProps.project,
         shadowMaps: this.shadowPasses.map((shadowPass) => shadowPass.getShadowMap()),
@@ -43369,9 +43441,9 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       } : {};
       const lightingProps = {
         enabled: true,
-        lights: this._getLights(layer)
+        lights: this._getLights(layer2)
       };
-      const materialProps = layer.props.material;
+      const materialProps = layer2.props.material;
       return {
         shadow: shadowProps,
         lighting: lightingProps,
@@ -43413,19 +43485,19 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         this.directionalLights.push(new DirectionalLight(DEFAULT_DIRECTIONAL_LIGHT_PROPS[0]), new DirectionalLight(DEFAULT_DIRECTIONAL_LIGHT_PROPS[1]));
       }
     }
-    _getLights(layer) {
+    _getLights(layer2) {
       const lights = [];
       if (this.ambientLight) {
         lights.push(this.ambientLight);
       }
       for (const pointLight of this.pointLights) {
         lights.push(pointLight.getProjectedLight({
-          layer
+          layer: layer2
         }));
       }
       for (const directionalLight of this.directionalLights) {
         lights.push(directionalLight.getProjectedLight({
-          layer
+          layer: layer2
         }));
       }
       return lights;
@@ -45278,9 +45350,9 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     "+Z": 4,
     "-Z": 5
   };
-  function getFirstMipLevel(layer) {
-    if (!layer) return null;
-    return Array.isArray(layer) ? layer[0] ?? null : layer;
+  function getFirstMipLevel(layer2) {
+    if (!layer2) return null;
+    return Array.isArray(layer2) ? layer2[0] ?? null : layer2;
   }
   function getTextureSizeFromData(props) {
     const { dimension, data: data2 } = props;
@@ -45418,8 +45490,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
   }
   function getTextureArraySubresources(data2) {
     const subresources = [];
-    for (let layer = 0; layer < data2.length; layer++) {
-      subresources.push(...getTexture2DSubresources(layer, data2[layer]));
+    for (let layer2 = 0; layer2 < data2.length; layer2++) {
+      subresources.push(...getTexture2DSubresources(layer2, data2[layer2]));
     }
     return subresources;
   }
@@ -46711,11 +46783,11 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         stats: renderStatus
       };
     }
-    shouldDrawLayer(layer) {
-      const { pickable, operation: operation2 } = layer.props;
+    shouldDrawLayer(layer2) {
+      const { pickable, operation: operation2 } = layer2.props;
       return pickable && operation2.includes("draw") || operation2.includes("terrain") || operation2.includes("mask");
     }
-    getShaderModuleProps(layer, effects, otherShaderModuleProps) {
+    getShaderModuleProps(layer2, effects, otherShaderModuleProps) {
       return {
         picking: {
           isActive: 1,
@@ -46726,23 +46798,23 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         }
       };
     }
-    getLayerParameters(layer, layerIndex, viewport2) {
+    getLayerParameters(layer2, layerIndex, viewport2) {
       var _a2;
       const pickParameters = {
-        ...layer.props.parameters
+        ...layer2.props.parameters
       };
-      const { pickable, operation: operation2 } = layer.props;
+      const { pickable, operation: operation2 } = layer2.props;
       if (!this._colorEncoderState) {
         pickParameters.blend = false;
       } else if (pickable && operation2.includes("draw")) {
         Object.assign(pickParameters, PICKING_BLENDING);
         pickParameters.blend = true;
         if (this.device.type === "webgpu") {
-          pickParameters.blendConstant = encodeColor(this._colorEncoderState, layer, viewport2);
+          pickParameters.blendConstant = encodeColor(this._colorEncoderState, layer2, viewport2);
         } else {
-          pickParameters.blendColor = encodeColor(this._colorEncoderState, layer, viewport2);
+          pickParameters.blendColor = encodeColor(this._colorEncoderState, layer2, viewport2);
         }
-        if (operation2.includes("terrain") && ((_a2 = layer.state) == null ? void 0 : _a2._hasPickingCover)) {
+        if (operation2.includes("terrain") && ((_a2 = layer2.state) == null ? void 0 : _a2._hasPickingCover)) {
           pickParameters.blendAlphaSrcFactor = "one";
         }
       } else if (operation2.includes("terrain")) {
@@ -46758,10 +46830,10 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       return this._colorEncoderState;
     }
   }
-  function encodeColor(encoded, layer, viewport2) {
+  function encodeColor(encoded, layer2, viewport2) {
     const { byLayer, byAlpha } = encoded;
     let a2;
-    let entry = byLayer.get(layer);
+    let entry = byLayer.get(layer2);
     if (entry) {
       entry.viewports.push(viewport2);
       a2 = entry.a;
@@ -46770,12 +46842,12 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       if (a2 <= 255) {
         entry = {
           a: a2,
-          layer,
+          layer: layer2,
           viewports: [
             viewport2
           ]
         };
-        byLayer.set(layer, entry);
+        byLayer.set(layer2, entry);
         byAlpha[a2] = entry;
       } else {
         defaultLogger.warn("Too many pickable layers, only picking the first 255")();
@@ -47067,8 +47139,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     }
     finalize() {
       this.resourceManager.finalize();
-      for (const layer of this.layers) {
-        this._finalizeLayer(layer);
+      for (const layer2 of this.layers) {
+        this._finalizeLayer(layer2);
       }
     }
     needsRedraw(opts = {
@@ -47078,8 +47150,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       if (opts.clearRedrawFlags) {
         this._needsRedraw = false;
       }
-      for (const layer of this.layers) {
-        const layerNeedsRedraw = layer.getNeedsRedraw(opts);
+      for (const layer2 of this.layers) {
+        const layerNeedsRedraw = layer2.getNeedsRedraw(opts);
         redraw = redraw || layerNeedsRedraw;
       }
       return redraw;
@@ -47100,7 +47172,7 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       this._needsUpdate = this._needsUpdate || reason2;
     }
     getLayers({ layerIds } = {}) {
-      return layerIds ? this.layers.filter((layer) => layerIds.find((layerId) => layer.id.indexOf(layerId) === 0)) : this.layers;
+      return layerIds ? this.layers.filter((layer2) => layerIds.find((layerId) => layer2.id.indexOf(layerId) === 0)) : this.layers;
     }
     setProps(props) {
       if ("debug" in props) {
@@ -47120,8 +47192,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       debug(TRACE_SET_LAYERS, this, reason2, newLayers);
       this._lastRenderedLayers = newLayers;
       const flatLayers = flatten(newLayers, Boolean);
-      for (const layer of flatLayers) {
-        layer.context = this.context;
+      for (const layer2 of flatLayers) {
+        layer2.context = this.context;
       }
       this._updateLayers(this.layers, flatLayers);
     }
@@ -47148,8 +47220,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         this._defaultShaderModulesChanged = true;
       }
     }
-    _handleError(stage, error2, layer) {
-      layer.raiseError(error2, `${stage} of ${layer}`);
+    _handleError(stage, error2, layer2) {
+      layer2.raiseError(error2, `${stage} of ${layer2}`);
     }
     _updateLayers(oldLayers, newLayers) {
       const oldLayerMap = {};
@@ -47161,9 +47233,9 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         }
       }
       if (this._defaultShaderModulesChanged) {
-        for (const layer of oldLayers) {
-          layer.setNeedsUpdate();
-          layer.setChangeFlags({
+        for (const layer2 of oldLayers) {
+          layer2.setNeedsUpdate();
+          layer2.setChangeFlags({
             extensionsChanged: true
           });
         }
@@ -47173,9 +47245,9 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       this._updateSublayersRecursively(newLayers, oldLayerMap, generatedLayers);
       this._finalizeOldLayers(oldLayerMap);
       let needsUpdate = false;
-      for (const layer of generatedLayers) {
-        if (layer.hasUniformTransition()) {
-          needsUpdate = `Uniform transition in ${layer}`;
+      for (const layer2 of generatedLayers) {
+        if (layer2.hasUniformTransition()) {
+          needsUpdate = `Uniform transition in ${layer2}`;
           break;
         }
       }
@@ -47213,18 +47285,18 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     }
     _finalizeOldLayers(oldLayerMap) {
       for (const layerId in oldLayerMap) {
-        const layer = oldLayerMap[layerId];
-        if (layer) {
-          this._finalizeLayer(layer);
+        const layer2 = oldLayerMap[layerId];
+        if (layer2) {
+          this._finalizeLayer(layer2);
         }
       }
     }
-    _initializeLayer(layer) {
+    _initializeLayer(layer2) {
       try {
-        layer._initialize();
-        layer.lifecycle = LIFECYCLE.INITIALIZED;
+        layer2._initialize();
+        layer2.lifecycle = LIFECYCLE.INITIALIZED;
       } catch (err2) {
-        this._handleError("initialization", err2, layer);
+        this._handleError("initialization", err2, layer2);
       }
     }
     _transferLayerState(oldLayer, newLayer) {
@@ -47234,21 +47306,21 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         oldLayer.lifecycle = LIFECYCLE.AWAITING_GC;
       }
     }
-    _updateLayer(layer) {
+    _updateLayer(layer2) {
       try {
-        layer._update();
+        layer2._update();
       } catch (err2) {
-        this._handleError("update", err2, layer);
+        this._handleError("update", err2, layer2);
       }
     }
-    _finalizeLayer(layer) {
-      this._needsRedraw = this._needsRedraw || `finalized ${layer}`;
-      layer.lifecycle = LIFECYCLE.AWAITING_FINALIZATION;
+    _finalizeLayer(layer2) {
+      this._needsRedraw = this._needsRedraw || `finalized ${layer2}`;
+      layer2.lifecycle = LIFECYCLE.AWAITING_FINALIZATION;
       try {
-        layer._finalize();
-        layer.lifecycle = LIFECYCLE.FINALIZED;
+        layer2._finalize();
+        layer2.lifecycle = LIFECYCLE.FINALIZED;
       } catch (err2) {
-        this._handleError("finalization", err2, layer);
+        this._handleError("finalization", err2, layer2);
       }
     }
   }
@@ -49592,8 +49664,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     }
   }
   class DrawLayersPass extends LayersPass {
-    shouldDrawLayer(layer) {
-      const { operation: operation2 } = layer.props;
+    shouldDrawLayer(layer2) {
+      const { operation: operation2 } = layer2.props;
       return operation2.includes("draw") || operation2.includes("terrain");
     }
     render(options) {
@@ -49866,7 +49938,7 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       const pickedLayerId = pickedLayer ? pickedLayer.props.id : null;
       if (pickedLayerId !== lastPickedLayerId || pickedObjectIndex !== lastPickedPixelIndex) {
         if (pickedLayerId !== lastPickedLayerId) {
-          const lastPickedLayer = layers.find((layer) => layer.props.id === lastPickedLayerId);
+          const lastPickedLayer = layers.find((layer2) => layer2.props.id === lastPickedLayerId);
           if (lastPickedLayer) {
             affectedLayers.unshift(lastPickedLayer);
           }
@@ -49879,22 +49951,22 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     const baseInfo = getEmptyPickingInfo(opts);
     const infos = /* @__PURE__ */ new Map();
     infos.set(null, baseInfo);
-    affectedLayers.forEach((layer) => {
+    affectedLayers.forEach((layer2) => {
       let info = {
         ...baseInfo
       };
-      if (layer === pickedLayer) {
+      if (layer2 === pickedLayer) {
         info.color = pickedColor;
         info.index = pickedObjectIndex;
         info.picked = true;
       }
       info = getLayerPickingInfo({
-        layer,
+        layer: layer2,
         info,
         mode
       });
       const rootLayer = info.layer;
-      if (layer === pickedLayer && mode === "hover") {
+      if (layer2 === pickedLayer && mode === "hover") {
         lastPickedInfo.info = info;
       }
       infos.set(rootLayer.id, info);
@@ -49904,17 +49976,17 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     });
     return infos;
   }
-  function getLayerPickingInfo({ layer, info, mode }) {
-    while (layer && info) {
+  function getLayerPickingInfo({ layer: layer2, info, mode }) {
+    while (layer2 && info) {
       const sourceLayer = info.layer || null;
       info.sourceLayer = sourceLayer;
-      info.layer = layer;
-      info = layer.getPickingInfo({
+      info.layer = layer2;
+      info = layer2.getPickingInfo({
         info,
         mode,
         sourceLayer
       });
-      layer = layer.parent;
+      layer2 = layer2.parent;
     }
     return info;
   }
@@ -49970,7 +50042,7 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     getLastPickedObject({ x: x2, y: y2, layers, viewports }, lastPickedInfo = this.lastPickedInfo.info) {
       const lastPickedLayerId = lastPickedInfo && lastPickedInfo.layer && lastPickedInfo.layer.id;
       const lastPickedViewportId = lastPickedInfo && lastPickedInfo.viewport && lastPickedInfo.viewport.id;
-      const layer = lastPickedLayerId ? layers.find((l2) => l2.id === lastPickedLayerId) : null;
+      const layer2 = lastPickedLayerId ? layers.find((l2) => l2.id === lastPickedLayerId) : null;
       const viewport2 = lastPickedViewportId && viewports.find((v2) => v2.id === lastPickedViewportId) || viewports[0];
       const coordinate = viewport2 && viewport2.unproject([
         x2 - viewport2.x,
@@ -49981,7 +50053,7 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         y: y2,
         viewport: viewport2,
         coordinate,
-        layer
+        layer: layer2
       };
       return {
         ...lastPickedInfo,
@@ -50033,7 +50105,7 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       if (this._pickable === false) {
         return null;
       }
-      const pickableLayers = layers.filter((layer) => this.pickLayersPass.shouldDrawLayer(layer) && !layer.isComposite);
+      const pickableLayers = layers.filter((layer2) => this.pickLayersPass.shouldDrawLayer(layer2) && !layer2.isComposite);
       return pickableLayers.length ? pickableLayers : null;
     }
     async _pickClosestObjectAsync({ layers, views, viewports, x: x2, y: y2, radius = 0, depth = 1, mode = "query", unproject3D, onViewportActive, effects }) {
@@ -50149,8 +50221,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
           break;
         }
       }
-      for (const layer of affectedLayers) {
-        layer.restorePickingColors();
+      for (const layer2 of affectedLayers) {
+        layer2.restorePickingColors();
       }
       return {
         result,
@@ -50270,8 +50342,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
           break;
         }
       }
-      for (const layer of affectedLayers) {
-        layer.restorePickingColors();
+      for (const layer2 of affectedLayers) {
+        layer2.restorePickingColors();
       }
       return {
         result,
@@ -53858,15 +53930,15 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       const { gl: gl2 } = this.device;
       const { texture } = textureView;
       const level = textureView.props.baseMipLevel;
-      const layer = textureView.props.baseArrayLayer;
+      const layer2 = textureView.props.baseArrayLayer;
       gl2.bindTexture(texture.glTarget, texture.handle);
       switch (texture.glTarget) {
         case 35866:
         case 32879:
-          gl2.framebufferTextureLayer(36160, attachment, texture.handle, level, layer);
+          gl2.framebufferTextureLayer(36160, attachment, texture.handle, level, layer2);
           break;
         case 34067:
-          const face = mapIndexToCubeMapFace(layer);
+          const face = mapIndexToCubeMapFace(layer2);
           gl2.framebufferTexture2D(36160, attachment, face, texture.handle, level);
           break;
         case 3553:
@@ -53886,8 +53958,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       super.resizeAttachments(width, height);
     }
   }
-  function mapIndexToCubeMapFace(layer) {
-    return layer < 34069 ? layer + 34069 : layer;
+  function mapIndexToCubeMapFace(layer2) {
+    return layer2 < 34069 ? layer2 + 34069 : layer2;
   }
   function _getFrameBufferStatus(status) {
     switch (status) {
@@ -54978,8 +55050,8 @@ ${source2}`;
         this.gl.readBuffer(prevReadBuffer);
       }
     }
-    _attachReadSubresource(framebuffer, mipLevel, layer) {
-      const attachmentKey = `${mipLevel}:${layer}`;
+    _attachReadSubresource(framebuffer, mipLevel, layer2) {
+      const attachmentKey = `${mipLevel}:${layer2}`;
       if (this._framebufferAttachmentKey === attachmentKey) {
         return;
       }
@@ -54988,11 +55060,11 @@ ${source2}`;
           this.gl.framebufferTexture2D(36160, 36064, 3553, this.handle, mipLevel);
           break;
         case "cube":
-          this.gl.framebufferTexture2D(36160, 36064, getWebGLCubeFaceTarget(this.glTarget, this.dimension, layer), this.handle, mipLevel);
+          this.gl.framebufferTexture2D(36160, 36064, getWebGLCubeFaceTarget(this.glTarget, this.dimension, layer2), this.handle, mipLevel);
           break;
         case "2d-array":
         case "3d":
-          this.gl.framebufferTextureLayer(36160, 36064, this.handle, mipLevel, layer);
+          this.gl.framebufferTextureLayer(36160, 36064, this.handle, mipLevel, layer2);
           break;
         default:
           throw new Error(`${this} color readback does not support ${this.dimension} textures`);
@@ -57902,7 +57974,7 @@ ${source2}`;
       return result[0] || emptyInfo;
     }
     _shouldUnproject3D(layers = ((_d) => (_d = this.layerManager) == null ? void 0 : _d.getLayers())() || []) {
-      return layers.some((layer) => layer.props.pickable === "3d");
+      return layers.some((layer2) => layer2.props.pickable === "3d");
     }
     _getPointPickOptions(x2, y2, opts = {}, layers = ((_e) => (_e = this.layerManager) == null ? void 0 : _e.getLayers())() || []) {
       return {
@@ -57955,12 +58027,12 @@ ${source2}`;
       if (!eventHandlerProp) {
         return;
       }
-      const { layer } = info;
-      const layerHandler = layer && (layer[eventHandlerProp] || layer.props[eventHandlerProp]);
+      const { layer: layer2 } = info;
+      const layerHandler = layer2 && (layer2[eventHandlerProp] || layer2.props[eventHandlerProp]);
       const rootHandler = this.props[eventHandlerProp];
       let handled = false;
       if (layerHandler) {
-        handled = layerHandler.call(layer, info, event);
+        handled = layerHandler.call(layer2, info, event);
       }
       if (!handled) {
         rootHandler == null ? void 0 : rootHandler(info, event);
@@ -61178,8 +61250,8 @@ void main(void) {
     }
   }
   class LayerState extends ComponentState {
-    constructor({ attributeManager, layer }) {
-      super(layer);
+    constructor({ attributeManager, layer: layer2 }) {
+      super(layer2);
       this.attributeManager = attributeManager;
       this.needsRedraw = true;
       this.needsUpdate = true;
@@ -61190,32 +61262,32 @@ void main(void) {
       return this.component;
     }
     _fetch(propName, url) {
-      const layer = this.layer;
-      const fetch2 = layer == null ? void 0 : layer.props.fetch;
+      const layer2 = this.layer;
+      const fetch2 = layer2 == null ? void 0 : layer2.props.fetch;
       if (fetch2) {
         return fetch2(url, {
           propName,
-          layer
+          layer: layer2
         });
       }
       return super._fetch(propName, url);
     }
     _onResolve(propName, value) {
-      const layer = this.layer;
-      if (layer) {
-        const onDataLoad = layer.props.onDataLoad;
+      const layer2 = this.layer;
+      if (layer2) {
+        const onDataLoad = layer2.props.onDataLoad;
         if (propName === "data" && onDataLoad) {
           onDataLoad(value, {
             propName,
-            layer
+            layer: layer2
           });
         }
       }
     }
     _onError(propName, error2) {
-      const layer = this.layer;
-      if (layer) {
-        layer.raiseError(error2, `loading ${propName} of ${this.layer}`);
+      const layer2 = this.layer;
+      if (layer2) {
+        layer2.raiseError(error2, `loading ${propName} of ${this.layer}`);
       }
     }
   }
@@ -61263,11 +61335,11 @@ void main(void) {
     },
     fetch: {
       type: "function",
-      value: (url, { propName, layer, loaders, loadOptions, signal }) => {
+      value: (url, { propName, layer: layer2, loaders, loadOptions, signal }) => {
         var _a2;
-        const { resourceManager } = layer.context;
-        loadOptions = loadOptions || layer.getLoadOptions();
-        loaders = loaders || layer.props.loaders;
+        const { resourceManager } = layer2.context;
+        loadOptions = loadOptions || layer2.getLoadOptions();
+        loaders = loaders || layer2.props.loaders;
         if (signal) {
           loadOptions = {
             ...loadOptions,
@@ -61294,9 +61366,9 @@ void main(void) {
             resourceId: url,
             onChange: (data2) => {
               var _a3;
-              return (_a3 = layer.internalState) == null ? void 0 : _a3.reloadAsyncProp(propName, data2);
+              return (_a3 = layer2.internalState) == null ? void 0 : _a3.reloadAsyncProp(propName, data2);
             },
-            consumerId: layer.id,
+            consumerId: layer2.id,
             requestId: propName
           });
         }
@@ -61407,11 +61479,11 @@ void main(void) {
       return Object.prototype.hasOwnProperty.call(this, "layerName") ? this.layerName : "";
     }
     get root() {
-      let layer = this;
-      while (layer.parent) {
-        layer = layer.parent;
+      let layer2 = this;
+      while (layer2.parent) {
+        layer2 = layer2.parent;
       }
-      return layer;
+      return layer2;
     }
     toString() {
       const className2 = this.constructor.layerName || this.constructor.name;
@@ -62234,7 +62306,7 @@ void main(void) {
       return false;
     }
     get isLoaded() {
-      return super.isLoaded && this.getSubLayers().every((layer) => layer.isLoaded);
+      return super.isLoaded && this.getSubLayers().every((layer2) => layer2.isLoaded);
     }
     getSubLayers() {
       return this.internalState && this.internalState.subLayers || [];
@@ -62344,8 +62416,8 @@ void main(void) {
       return newProps;
     }
     _updateAutoHighlight(info) {
-      for (const layer of this.getSubLayers()) {
-        layer.updateAutoHighlight(info);
+      for (const layer2 of this.getSubLayers()) {
+        layer2.updateAutoHighlight(info);
       }
     }
     _getAttributeManager() {
@@ -62360,8 +62432,8 @@ void main(void) {
         this.internalState.subLayers = subLayers;
       }
       debug(TRACE_RENDER_LAYERS, this, shouldUpdate, subLayers);
-      for (const layer of subLayers) {
-        layer.parent = this;
+      for (const layer2 of subLayers) {
+        layer2.parent = this;
       }
     }
   }
@@ -65579,15 +65651,15 @@ void mutate_color(inout vec3 rgb, float[NUM_CHANNELS] intensity, vec2 vTexCoord)
       };
     }
     initializeState() {
-      const layer = this.getCurrentLayer();
-      if (layer.isComposite) {
+      const layer2 = this.getCurrentLayer();
+      if (layer2.isComposite) {
         return;
       }
       const onMouseMove = () => {
-        const { viewportId } = layer.props;
+        const { viewportId } = layer2.props;
         const { lensRadius = defaultProps$2$1.lensRadius.value } = this.props;
         if (!viewportId) {
-          layer.setState({
+          layer2.setState({
             unprojectLensBounds: [
               0,
               0,
@@ -65597,9 +65669,9 @@ void mutate_color(inout vec3 rgb, float[NUM_CHANNELS] intensity, vec2 vTexCoord)
           });
           return;
         }
-        const { mousePosition } = layer.context;
-        const layerView = layer.context.deck.viewManager.views.filter((view) => view.id === viewportId)[0];
-        const viewState = layer.context.deck.viewManager.viewState[viewportId];
+        const { mousePosition } = layer2.context;
+        const layerView = layer2.context.deck.viewManager.views.filter((view) => view.id === viewportId)[0];
+        const viewState = layer2.context.deck.viewManager.viewState[viewportId];
         const viewport2 = layerView.makeViewport({
           ...viewState,
           viewState
@@ -65628,11 +65700,11 @@ void mutate_color(inout vec3 rgb, float[NUM_CHANNELS] intensity, vec2 vTexCoord)
             ]
           ];
           const unprojectLensBounds = mousePositionBounds.map((bounds, i2) => viewport2.unproject(bounds)[i2 % 2]);
-          layer.setState({
+          layer2.setState({
             unprojectLensBounds
           });
         } else {
-          layer.setState({
+          layer2.setState({
             unprojectLensBounds: [
               0,
               0,
@@ -66523,26 +66595,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-C7h6yPBR.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Cc3x25DV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DMgBqBVk.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CLdeSAkZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CWuQ3f91.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BqsMFQZS.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-If_En6r2.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-D9IrnCWf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-D9LgciVm.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DMG3RET-.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CE006Trk.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-hp-jZfvH.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Iqq3z0JZ.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-C1OTm-O0.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-yPJkc0q3.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DpbrmKsU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -76032,17 +76104,17 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     let rowHeight = 0;
     for (let i2 = startIndex; i2 < endIndex; i2++) {
       const character = line[i2];
-      const frame = iconMapping[character];
-      if (frame) {
-        rowHeight = Math.max(rowHeight, frame.height);
+      const frame2 = iconMapping[character];
+      if (frame2) {
+        rowHeight = Math.max(rowHeight, frame2.height);
       }
     }
     for (let i2 = startIndex; i2 < endIndex; i2++) {
       const character = line[i2];
-      const frame = iconMapping[character];
-      if (frame) {
-        leftOffsets[i2] = x2 + frame.anchorX;
-        x2 += frame.advance;
+      const frame2 = iconMapping[character];
+      if (frame2) {
+        leftOffsets[i2] = x2 + frame2.anchorX;
+        x2 += frame2.advance;
       } else {
         defaultLogger.warn(`Missing character: ${character} (${character.codePointAt(0)})`)();
         leftOffsets[i2] = x2;
@@ -76348,22 +76420,22 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       setTextStyle(ctx, fontFamily, fontSize, fontWeight);
       if (renderer) {
         for (const char of characterSet) {
-          const frame = mapping[char];
+          const frame2 = mapping[char];
           const { data: data2, left = 0, top: top2 = 0 } = renderer.draw(char);
-          const x2 = frame.x - left;
-          const y2 = frame.y - top2;
+          const x2 = frame2.x - left;
+          const y2 = frame2.y - top2;
           const x0 = Math.max(0, Math.round(x2));
           const y0 = Math.max(0, Math.round(y2));
           const w2 = Math.min(data2.width, canvas.width - x0);
           const h2 = Math.min(data2.height, canvas.height - y0);
           ctx.putImageData(data2, x0, y0, 0, 0, w2, h2);
-          frame.x += x0 - x2;
-          frame.y += y0 - y2;
+          frame2.x += x0 - x2;
+          frame2.y += y0 - y2;
         }
       } else {
         for (const char of characterSet) {
-          const frame = mapping[char];
-          ctx.fillText(char, frame.x, frame.y + frame.anchorY);
+          const frame2 = mapping[char];
+          ctx.fillText(char, frame2.x, frame2.y + frame2.anchorY);
         }
       }
       const fontMetrics = renderer ? renderer.measure() : defaultMeasure();
@@ -77307,8 +77379,8 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     }
     return result;
   }
-  function forwardProps(layer, mapping) {
-    const { transitions, updateTriggers } = layer.props;
+  function forwardProps(layer2, mapping) {
+    const { transitions, updateTriggers } = layer2.props;
     const result = {
       updateTriggers: {},
       transitions: transitions && {
@@ -77317,9 +77389,9 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     };
     for (const sourceKey in mapping) {
       const targetKey = mapping[sourceKey];
-      let value = layer.props[sourceKey];
+      let value = layer2.props[sourceKey];
       if (sourceKey.startsWith("get")) {
-        value = layer.getSubLayerAccessor(value);
+        value = layer2.getSubLayerAccessor(value);
         result.updateTriggers[targetKey] = updateTriggers[sourceKey];
         if (transitions) {
           result.transitions[targetKey] = transitions[sourceKey];
@@ -77688,9 +77760,9 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     _updateAutoHighlight(info) {
       const pointLayerIdPrefix = `${this.id}-points-`;
       const sourceIsPoints = info.featureType === "points";
-      for (const layer of this.getSubLayers()) {
-        if (layer.id.startsWith(pointLayerIdPrefix) === sourceIsPoints) {
-          layer.updateAutoHighlight(info);
+      for (const layer2 of this.getSubLayers()) {
+        if (layer2.id.startsWith(pointLayerIdPrefix) === sourceIsPoints) {
+          layer2.updateAutoHighlight(info);
         }
       }
     }
@@ -79588,7 +79660,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     }
     get isLoaded() {
       var _a2, _b2, _c2;
-      return Boolean((_c2 = (_b2 = (_a2 = this.state) == null ? void 0 : _a2.tileset) == null ? void 0 : _b2.selectedTiles) == null ? void 0 : _c2.every((tile) => tile.isLoaded && (!tile.content || !tile.layers || tile.layers.every((layer) => layer.isLoaded))));
+      return Boolean((_c2 = (_b2 = (_a2 = this.state) == null ? void 0 : _a2.tileset) == null ? void 0 : _b2.selectedTiles) == null ? void 0 : _c2.every((tile) => tile.isLoaded && (!tile.content || !tile.layers || tile.layers.every((layer2) => layer2.isLoaded))));
     }
     shouldUpdateState({ changeFlags }) {
       return changeFlags.somethingChanged;
@@ -79735,18 +79807,18 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
             _offset: 0,
             tile
           });
-          tile.layers = flatten(layers, Boolean).map((layer) => layer.clone({
+          tile.layers = flatten(layers, Boolean).map((layer2) => layer2.clone({
             tile,
             ...subLayerProps
           }));
         } else if (subLayerProps && tile.layers[0] && Object.keys(subLayerProps).some((propName) => tile.layers[0].props[propName] !== subLayerProps[propName])) {
-          tile.layers = tile.layers.map((layer) => layer.clone(subLayerProps));
+          tile.layers = tile.layers.map((layer2) => layer2.clone(subLayerProps));
         }
         return tile.layers;
       });
     }
-    filterSubLayer({ layer, cullRect }) {
-      const { tile } = layer.props;
+    filterSubLayer({ layer: layer2, cullRect }) {
+      const { tile } = layer2.props;
       const { modelMatrix } = this.props;
       return this.state.tileset.isTileVisible(tile, cullRect, modelMatrix ? new Matrix4(modelMatrix) : null);
     }
@@ -79901,16 +79973,16 @@ in vec2 mask_texCoords;
         pass: "mask"
       });
     }
-    getLayerParameters(layer, layerIndex, viewport2) {
+    getLayerParameters(layer2, layerIndex, viewport2) {
       return {
-        ...layer.props.parameters,
+        ...layer2.props.parameters,
         blend: true,
         depthCompare: "always",
         ...MASK_BLENDING
       };
     }
-    shouldDrawLayer(layer) {
-      return layer.props.operation.includes("mask");
+    shouldDrawLayer(layer2) {
+      return layer2.props.operation.includes("mask");
     }
     delete() {
       this.fbo.delete();
@@ -79924,14 +79996,14 @@ in vec2 mask_texCoords;
       -Infinity,
       -Infinity
     ];
-    for (const layer of layers) {
-      const layerBounds = layer.getBounds();
+    for (const layer2 of layers) {
+      const layerBounds = layer2.getBounds();
       if (layerBounds) {
-        const bottomLeftCommon = layer.projectPosition(layerBounds[0], {
+        const bottomLeftCommon = layer2.projectPosition(layerBounds[0], {
           viewport: viewport2,
           autoOffset: false
         });
-        const topRightCommon = layer.projectPosition(layerBounds[1], {
+        const topRightCommon = layer2.projectPosition(layerBounds[1], {
           viewport: viewport2,
           autoOffset: false
         });
@@ -80109,7 +80181,7 @@ in vec2 mask_texCoords;
       if (!oldChannelInfo) {
         return didRender;
       }
-      const maskChanged = channelInfo === oldChannelInfo || channelInfo.layers.length !== oldChannelInfo.layers.length || channelInfo.layers.some((layer, i2) => layer !== oldChannelInfo.layers[i2] || layer.props.transitions) || channelInfo.layerBounds.some((b2, i2) => b2 !== oldChannelInfo.layerBounds[i2]);
+      const maskChanged = channelInfo === oldChannelInfo || channelInfo.layers.length !== oldChannelInfo.layers.length || channelInfo.layers.some((layer2, i2) => layer2 !== oldChannelInfo.layers[i2] || layer2.props.transitions) || channelInfo.layerBounds.some((b2, i2) => b2 !== oldChannelInfo.layerBounds[i2]);
       channelInfo.bounds = oldChannelInfo.bounds;
       channelInfo.maskBounds = oldChannelInfo.maskBounds;
       this.channels[channelInfo.index] = channelInfo;
@@ -80163,8 +80235,8 @@ in vec2 mask_texCoords;
     _sortMaskChannels(maskLayers) {
       const channelMap = {};
       let channelCount = 0;
-      for (const layer of maskLayers) {
-        const { id: id2 } = layer.root;
+      for (const layer2 of maskLayers) {
+        const { id: id2 } = layer2.root;
         let channelInfo = channelMap[id2];
         if (!channelInfo) {
           if (++channelCount > 4) {
@@ -80176,13 +80248,13 @@ in vec2 mask_texCoords;
             index: this.channels.findIndex((c2) => (c2 == null ? void 0 : c2.id) === id2),
             layers: [],
             layerBounds: [],
-            coordinateOrigin: layer.root.props.coordinateOrigin,
-            coordinateSystem: layer.root.props.coordinateSystem
+            coordinateOrigin: layer2.root.props.coordinateOrigin,
+            coordinateSystem: layer2.root.props.coordinateSystem
           };
           channelMap[id2] = channelInfo;
         }
-        channelInfo.layers.push(layer);
-        channelInfo.layerBounds.push(layer.getBounds());
+        channelInfo.layers.push(layer2);
+        channelInfo.layerBounds.push(layer2.getBounds());
       }
       for (let i2 = 0; i2 < 4; i2++) {
         const channelInfo = this.channels[i2];
@@ -82922,8 +82994,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (isComponent(reactElement)) {
         const ElementType = reactElement.type;
         if (inheritsFrom(ElementType, Layer)) {
-          const layer = createLayer(ElementType, reactElement.props);
-          jsxLayers.push(layer);
+          const layer2 = createLayer(ElementType, reactElement.props);
+          jsxLayers.push(layer2);
         } else {
           reactChildren.push(reactElement);
         }
@@ -83921,11 +83993,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     await storyDb.handles.delete(id2);
   }
   async function deleteFileHandlesForStory(storyId) {
-    const prefix = `story:${storyId}:`;
+    const prefix2 = `story:${storyId}:`;
     for (const id2 of sessionHandles.keys()) {
-      if (id2.startsWith(prefix)) sessionHandles.delete(id2);
+      if (id2.startsWith(prefix2)) sessionHandles.delete(id2);
     }
-    await storyDb.handles.where("id").startsWith(prefix).delete();
+    await storyDb.handles.where("id").startsWith(prefix2).delete();
   }
   const importedPolygonStyle = {
     fillColor: [
@@ -84285,7 +84357,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function applySourceChannelsToImages(currentImages, flatChannels) {
     const byImage = /* @__PURE__ */ new Map();
     for (const row2 of flatChannels) {
-      const { id: id2, imageId, index: index2, name: name2, kind, samples, sourceDataTypeId, sourceDistribution, gmmContrastLimits, color: color2, lowerLimit, upperLimit, maskVisualization } = row2;
+      const { id: id2, imageId, index: index2, name: name2, kind, samples, sourceDataTypeId, sourceDistribution, gmmContrastLimits, floatRange, color: color2, lowerLimit, upperLimit, maskVisualization } = row2;
       const slice = {
         id: id2 && id2.length > 0 ? id2 : crypto.randomUUID(),
         index: index2,
@@ -84304,6 +84376,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         } : {},
         ...gmmContrastLimits !== void 0 ? {
           gmmContrastLimits
+        } : {},
+        ...floatRange !== void 0 ? {
+          floatRange
         } : {},
         ...color2 !== void 0 ? {
           color: color2
@@ -84433,12 +84508,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const next2 = [
       ...images
     ];
-    const { rotationDegrees, flipHorizontal, flipVertical } = effectiveOrientation(orientation);
+    const { rotationDegrees, flipHorizontal, flipVertical, translateX, translateY, displayScale } = effectiveOrientation(orientation);
     next2[idx] = {
       ...next2[idx],
       rotationDegrees,
       flipHorizontal,
-      flipVertical
+      flipVertical,
+      translateX,
+      translateY,
+      displayScale
     };
     return next2;
   }
@@ -84465,6 +84543,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         lowerLimit: prev.lowerLimit ?? ch2.lowerLimit,
         upperLimit: prev.upperLimit ?? ch2.upperLimit,
         gmmContrastLimits: prev.gmmContrastLimits ?? ch2.gmmContrastLimits,
+        floatRange: prev.floatRange ?? ch2.floatRange,
         maskVisualization: prev.maskVisualization ?? ch2.maskVisualization
       };
     });
@@ -86600,8 +86679,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function maybePersistShapesAfterMutation(get2) {
     const doc = useDocumentStore.getState();
     const waypoints = documentWaypoints(doc);
-    const frame = referenceWorldFrameForActions(get2);
-    if (waypoints.length === 0 || frame.worldWidth <= 0 || frame.worldHeight <= 0) {
+    const frame2 = referenceWorldFrameForActions(get2);
+    if (waypoints.length === 0 || frame2.worldWidth <= 0 || frame2.worldHeight <= 0) {
       return;
     }
     const state = get2();
@@ -86663,6 +86742,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     channelRendering: null,
     maskVisualizationPreview: null,
     imageOrientationPreview: null,
+    arrangeImageId: null,
     channelVisibilities: {},
     featureTableVisibilities: {},
     channelGroupRowVisibilities: {},
@@ -86699,13 +86779,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         currentInteraction: interaction
       });
     },
-    addOverlayLayer: (layer) => {
+    addOverlayLayer: (layer2) => {
       set2((state) => {
-        const filtered = state.overlayLayers.filter((l2) => l2 && l2.id !== layer.id);
+        const filtered = state.overlayLayers.filter((l2) => l2 && l2.id !== layer2.id);
         return {
           overlayLayers: [
             ...filtered,
-            layer
+            layer2
           ]
         };
       });
@@ -86733,12 +86813,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         drawingState: overlayInitialState.drawingState
       });
     },
-    handleLayerCreate: (layer) => {
-      if (layer === null) {
+    handleLayerCreate: (layer2) => {
+      if (layer2 === null) {
         get2().removeOverlayLayer("drawing-layer");
         return;
       }
-      get2().addOverlayLayer(layer);
+      get2().addOverlayLayer(layer2);
     },
     handleToolChange: (tool) => {
       set2({
@@ -87225,11 +87305,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     },
     setImageSelectionMaskFromShape: (shape) => {
       var _a2;
-      const frame = referenceWorldFrameForActions(get2);
-      if (frame.worldWidth <= 0 || frame.worldHeight <= 0) return false;
+      const frame2 = referenceWorldFrameForActions(get2);
+      if (frame2.worldWidth <= 0 || frame2.worldHeight <= 0) return false;
       const ring = polygonRingFromShape(shape);
       if (!ring) return false;
-      const mask2 = rasterizePolygonToImageMask(ring, frame.worldWidth, frame.worldHeight, {
+      const mask2 = rasterizePolygonToImageMask(ring, frame2.worldWidth, frame2.worldHeight, {
         sourceShapeId: shape.id,
         sourceShapeLabel: (_a2 = shape.metadata) == null ? void 0 : _a2.label
       });
@@ -87276,15 +87356,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         ...preferredShapeIds ?? [],
         ...shapeIds.filter((id2) => !(preferredShapeIds == null ? void 0 : preferredShapeIds.includes(id2)))
       ];
-      const frame = referenceWorldFrameForActions(get2);
+      const frame2 = referenceWorldFrameForActions(get2);
       const apply = get2().setImageSelectionMaskFromShape;
       for (const id2 of tryIds) {
         const live = viewerShapes.find((s2) => s2.id === id2);
         if (live && apply(live)) return true;
         const persisted = docShapes.find((s2) => s2.id === id2);
         if (persisted && apply(storyShapeToViewer(persisted, {
-          imageWidth: frame.worldWidth,
-          imageHeight: frame.worldHeight
+          imageWidth: frame2.worldWidth,
+          imageHeight: frame2.worldHeight
         }))) {
           return true;
         }
@@ -87655,11 +87735,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     },
     setStories: (configWaypoints2) => {
       const doc = useDocumentStore.getState();
-      const frame = referenceWorldFrameForActions(get2);
+      const frame2 = referenceWorldFrameForActions(get2);
       const vp = authoringViewportForDoc(get2);
       const nextAuthoring = /* @__PURE__ */ new Map();
       const waypoints = configWaypoints2.map((w2) => {
-        const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(w2, doc.channelGroups), frame.pixelWidth, frame.pixelHeight, vp.width, vp.height);
+        const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(w2, doc.channelGroups), frame2.pixelWidth, frame2.pixelHeight, vp.width, vp.height);
         nextAuthoring.set(waypoint.id, authoring);
         return waypoint;
       });
@@ -87676,9 +87756,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     },
     addStory: (configWaypoint) => {
       const doc = useDocumentStore.getState();
-      const frame = referenceWorldFrameForActions(get2);
+      const frame2 = referenceWorldFrameForActions(get2);
       const vp = authoringViewportForDoc(get2);
-      const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(configWaypoint, doc.channelGroups), frame.pixelWidth, frame.pixelHeight, vp.width, vp.height);
+      const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(configWaypoint, doc.channelGroups), frame2.pixelWidth, frame2.pixelHeight, vp.width, vp.height);
       doc.setWaypoints([
         ...doc.waypoints,
         waypoint
@@ -87712,8 +87792,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           merged = rest2;
         }
       }
-      const frame = referenceWorldFrameForActions(get2);
-      const { waypoint: nextWp, authoring } = configWaypointToWaypoint(merged, frame.pixelWidth, frame.pixelHeight, vp.width, vp.height);
+      const frame2 = referenceWorldFrameForActions(get2);
+      const { waypoint: nextWp, authoring } = configWaypointToWaypoint(merged, frame2.pixelWidth, frame2.pixelHeight, vp.width, vp.height);
       const waypoints = [
         ...doc.waypoints
       ];
@@ -87807,9 +87887,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         viewerViewportSize: size
       });
     },
-    setViewerWorldFrame: (frame) => {
+    setViewerWorldFrame: (frame2) => {
       set2({
-        viewerWorldFrame: frame
+        viewerWorldFrame: frame2
       });
     },
     setViewerImageLayersLoaded: (loaded) => {
@@ -87865,9 +87945,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         imageOrientationPreview: preview
       });
     },
+    setArrangeImageId: (imageId) => {
+      set2({
+        arrangeImageId: imageId
+      });
+    },
     importWaypointShapes: (story, clearExisting = false, shapeRegistry) => {
       const doc0 = useDocumentStore.getState();
-      const frame = referenceWorldFrameForActions(get2);
+      const frame2 = referenceWorldFrameForActions(get2);
       const fromStore = documentShapes(doc0);
       const shapesForLookup = shapeRegistry === void 0 ? fromStore : (() => {
         const merged = new Map(fromStore.map((s2) => [
@@ -87881,7 +87966,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ...merged.values()
         ];
       })();
-      if (frame.worldWidth === 0 || frame.worldHeight === 0) {
+      if (frame2.worldWidth === 0 || frame2.worldHeight === 0) {
         return;
       }
       const shapeIds = story.shapeIds ?? [];
@@ -87896,8 +87981,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       for (const id2 of shapeIds) {
         const sh2 = shapeById.get(id2);
         if (sh2) newAnnotations.push(storyShapeToViewer(sh2, {
-          imageWidth: frame.worldWidth,
-          imageHeight: frame.worldHeight
+          imageWidth: frame2.worldWidth,
+          imageHeight: frame2.worldHeight
         }));
       }
       set2((state) => mergeShapesAfterWaypointImport(state, newAnnotations, clearExisting));
@@ -87908,8 +87993,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const doc = useDocumentStore.getState();
       const waypoints = documentWaypoints(doc);
       const row2 = waypoints[storyIndex];
-      const frame = referenceWorldFrameForActions(get2);
-      if (!row2 || frame.worldWidth <= 0 || frame.worldHeight <= 0) {
+      const frame2 = referenceWorldFrameForActions(get2);
+      if (!row2 || frame2.worldWidth <= 0 || frame2.worldHeight <= 0) {
         return;
       }
       const hadStored = (((_a2 = row2.shapeIds) == null ? void 0 : _a2.length) ?? 0) > 0;
@@ -88081,14 +88166,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return useStore(useDocumentStore.temporal, (s2) => s2.futureStates.length > 0);
   }
   const clusterFieldset = "_clusterFieldset_18uri_1";
-  const styles$w = {
+  const styles$x = {
     clusterFieldset
   };
   function DocumentUndoControls() {
     const canUndo = useCanDocumentUndo();
     const canRedo = useCanDocumentRedo();
     return jsxRuntimeExports.jsxs("fieldset", {
-      className: styles$w.clusterFieldset,
+      className: styles$x.clusterFieldset,
       "aria-label": "Document undo and redo",
       children: [
         jsxRuntimeExports.jsx(PanelIconButton, {
@@ -88972,13 +89057,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       shapeCount: added
     };
   }
-  const menuWrap$1 = "_menuWrap_14ty9_1";
+  const menuWrap = "_menuWrap_14ty9_1";
   const menuItemGap = "_menuItemGap_14ty9_9";
   const hiddenFileInput = "_hiddenFileInput_14ty9_14";
   const xmlFeedbackOk = "_xmlFeedbackOk_14ty9_25";
   const xmlFeedbackErr = "_xmlFeedbackErr_14ty9_26";
-  const styles$v = {
-    menuWrap: menuWrap$1,
+  const styles$w = {
+    menuWrap,
     menuItemGap,
     hiddenFileInput,
     xmlFeedbackOk,
@@ -89037,7 +89122,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$v.menuWrap,
+      className: styles$w.menuWrap,
       ref: wrapRef,
       children: [
         jsxRuntimeExports.jsx(PanelIconButton, {
@@ -89071,7 +89156,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsx("button", {
               type: "button",
               role: "menuitem",
-              className: `${minervaTheme.menuItem} ${styles$v.menuItemGap}`,
+              className: `${minervaTheme.menuItem} ${styles$w.menuItemGap}`,
               disabled: !waypointsOk,
               onClick: (e2) => {
                 e2.stopPropagation();
@@ -89098,7 +89183,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsx("button", {
               type: "button",
               role: "menuitem",
-              className: `${minervaTheme.menuItem} ${styles$v.menuItemGap}`,
+              className: `${minervaTheme.menuItem} ${styles$w.menuItemGap}`,
               onClick: (e2) => {
                 var _a2;
                 e2.stopPropagation();
@@ -89111,14 +89196,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }) : null,
         jsxRuntimeExports.jsx("input", {
           ref: xmlInputRef,
-          className: styles$v.hiddenFileInput,
+          className: styles$w.hiddenFileInput,
           type: "file",
           accept: ".xml,application/xml,text/xml",
           "aria-label": "OME-XML annotations file",
           onChange: onAnnotationXmlSelected
         }),
         xmlFeedback ? jsxRuntimeExports.jsx("output", {
-          className: xmlFeedback.type === "ok" ? styles$v.xmlFeedbackOk : styles$v.xmlFeedbackErr,
+          className: xmlFeedback.type === "ok" ? styles$w.xmlFeedbackOk : styles$w.xmlFeedbackErr,
           children: xmlFeedback.text
         }) : null
       ]
@@ -89136,7 +89221,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }));
   const volume = "_volume_drqkm_1";
   const spine = "_spine_drqkm_9";
-  const styles$u = {
+  const styles$v = {
     volume,
     spine
   };
@@ -89152,10 +89237,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   ];
   function StorySpines() {
     return jsxRuntimeExports.jsx("span", {
-      className: styles$u.volume,
+      className: styles$v.volume,
       "aria-hidden": true,
       children: SPINE_HEIGHTS.map((frac, i2) => jsxRuntimeExports.jsx("span", {
-        className: styles$u.spine,
+        className: styles$v.spine,
         style: {
           height: `${frac * 100}%`,
           background: `var(--cloth-${SPINE_CLOTH[i2]})`
@@ -89171,7 +89256,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const titleDisplay = "_titleDisplay_1juq2_52";
   const titleInput = "_titleInput_1juq2_53";
   const titlePlaceholder = "_titlePlaceholder_1juq2_67";
-  const styles$t = {
+  const styles$u = {
     banner,
     leading,
     play,
@@ -89200,32 +89285,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       editing
     ]);
     return jsxRuntimeExports.jsxs("section", {
-      className: `${minervaTheme.bar} ${styles$t.banner}`,
+      className: `${minervaTheme.bar} ${styles$u.banner}`,
       "aria-label": "Story title",
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$t.leading,
+          className: styles$u.leading,
           children: [
             onExport ? jsxRuntimeExports.jsx(StoryAuthorOverflowMenu, {
               onReturnToLibrary,
               onExport
             }) : null,
             jsxRuntimeExports.jsx("span", {
-              className: `${minervaTheme.wordmark} ${styles$t.wordmark}`,
+              className: `${minervaTheme.wordmark} ${styles$u.wordmark}`,
               children: "Minerva"
             }),
             jsxRuntimeExports.jsx(DocumentUndoControls, {})
           ]
         }),
         jsxRuntimeExports.jsxs("label", {
-          className: styles$t.titleFieldWrap,
+          className: styles$u.titleFieldWrap,
           htmlFor: editing ? fieldId : void 0,
           children: [
             jsxRuntimeExports.jsx(StorySpines, {}),
             editing ? jsxRuntimeExports.jsx("input", {
               ref: inputRef,
               id: fieldId,
-              className: `${minervaTheme.field} ${styles$t.titleInput}`,
+              className: `${minervaTheme.field} ${styles$u.titleInput}`,
               type: "text",
               value: draftTitle,
               placeholder: "Untitled story",
@@ -89250,21 +89335,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               spellCheck: false
             }) : jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.field} ${styles$t.titleDisplay}`,
+              className: `${minervaTheme.field} ${styles$u.titleDisplay}`,
               "aria-label": "Story title",
               onClick: () => {
                 setDraftTitle(titleText);
                 setEditing(true);
               },
               children: titleText.trim() ? titleText : jsxRuntimeExports.jsx("span", {
-                className: styles$t.titlePlaceholder,
+                className: styles$u.titlePlaceholder,
                 children: "Untitled story"
               })
             })
           ]
         }),
         onEnterPlaybackPreview ? jsxRuntimeExports.jsx(PanelIconButton, {
-          className: styles$t.play,
+          className: styles$u.play,
           onClick: onEnterPlaybackPreview,
           disabled: playbackPreviewDisabled,
           title: playbackPreviewDisabled ? "Add a waypoint to preview" : "Preview playback",
@@ -90052,17 +90137,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const chevronLeft = "_chevronLeft_m5cf6_2";
   const chevronDown = "_chevronDown_m5cf6_3";
   const chevronUp = "_chevronUp_m5cf6_4";
-  const styles$s = {
+  const styles$t = {
     chevronRight,
     chevronLeft,
     chevronDown,
     chevronUp
   };
   const DIRECTION_CLASS = {
-    right: styles$s.chevronRight,
-    left: styles$s.chevronLeft,
-    down: styles$s.chevronDown,
-    up: styles$s.chevronUp
+    right: styles$t.chevronRight,
+    left: styles$t.chevronLeft,
+    down: styles$t.chevronDown,
+    up: styles$t.chevronUp
   };
   function ChevronIcon({ direction: direction2 = "down", className: className2 }) {
     return jsxRuntimeExports.jsx(SvgChevronDown, {
@@ -90306,7 +90391,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const maskVizSwatchWhite = "_maskVizSwatchWhite_1d485_355";
   const maskVizSwatchRandom = "_maskVizSwatchRandom_1d485_356";
   const channelRow = "_channelRow_1d485_12";
-  const styles$r = {
+  const styles$s = {
     channelNameInput,
     channelRowMain,
     channelRowTitle,
@@ -90406,7 +90491,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return jsxRuntimeExports.jsxs("span", {
       className: [
-        styles$r.cursorHintHost,
+        styles$s.cursorHintHost,
         props.className
       ].filter(Boolean).join(" "),
       onPointerEnter: track,
@@ -90415,7 +90500,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         props.children,
         props.enabled && pos ? reactDomExports.createPortal(jsxRuntimeExports.jsx("output", {
-          className: styles$r.cursorHint,
+          className: styles$s.cursorHint,
           style: {
             "--hint-x": `${pos.x}px`,
             "--hint-y": `${pos.y}px`
@@ -90434,8 +90519,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         type: "button",
         className: [
           minervaTheme.focusRing,
-          styles$r.channelVisibilityButton,
-          visible ? "" : styles$r.channelVisibilityButtonHidden
+          styles$s.channelVisibilityButton,
+          visible ? "" : styles$s.channelVisibilityButtonHidden
         ].filter(Boolean).join(" "),
         title: blocked ? void 0 : title7,
         "aria-label": blocked ? VIEWER_INTENSITY_LIMIT_HINT : ariaLabel,
@@ -90467,44 +90552,41 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  const stack = "_stack_69tbw_1";
-  const panelDropActive = "_panelDropActive_69tbw_11";
-  const addStrip = "_addStrip_69tbw_16";
-  const addStripRow = "_addStripRow_69tbw_27";
-  const dropZone = "_dropZone_69tbw_41";
-  const dropZoneTitle = "_dropZoneTitle_69tbw_51";
-  const orDivider = "_orDivider_69tbw_57";
-  const urlRow = "_urlRow_69tbw_68";
-  const urlField = "_urlField_69tbw_77";
-  const urlInput = "_urlInput_69tbw_83";
-  const urlAdd = "_urlAdd_69tbw_91";
-  const dropZoneActive = "_dropZoneActive_69tbw_121";
-  const importError = "_importError_69tbw_175";
-  const fieldLabel = "_fieldLabel_69tbw_188";
-  const typeOverlay = "_typeOverlay_69tbw_202";
-  const typeOverlayBackdrop = "_typeOverlayBackdrop_69tbw_214";
-  const typeOverlayCard = "_typeOverlayCard_69tbw_220";
-  const typeOverlayFields = "_typeOverlayFields_69tbw_234";
-  const typeOverlayFile = "_typeOverlayFile_69tbw_244";
-  const typeRow = "_typeRow_69tbw_253";
-  const typeChipActive = "_typeChipActive_69tbw_261";
-  const typeChipSuggested = "_typeChipSuggested_69tbw_265";
-  const typeChipMuted = "_typeChipMuted_69tbw_270";
-  const typeFooter = "_typeFooter_69tbw_284";
-  const typeImport = "_typeImport_69tbw_293";
-  const typeSection = "_typeSection_69tbw_300";
-  const imageCard = "_imageCard_69tbw_308";
-  const fileAccessOverlay = "_fileAccessOverlay_69tbw_320";
-  const fileAccessAction = "_fileAccessAction_69tbw_336";
-  const imageCardHeader = "_imageCardHeader_69tbw_344";
-  const imageCardHeaderOpen = "_imageCardHeaderOpen_69tbw_352";
-  const panelDim = "_panelDim_69tbw_358";
-  const imageCardText = "_imageCardText_69tbw_362";
-  const imageCardTitle = "_imageCardTitle_69tbw_370";
-  const imageCardMeta = "_imageCardMeta_69tbw_378";
-  const imageCardActions = "_imageCardActions_69tbw_384";
-  const imageCardActionRest = "_imageCardActionRest_69tbw_393";
-  const styles$q = {
+  const stack = "_stack_o8d7w_1";
+  const panelDropActive = "_panelDropActive_o8d7w_11";
+  const addStrip = "_addStrip_o8d7w_16";
+  const addStripRow = "_addStripRow_o8d7w_27";
+  const dropZone = "_dropZone_o8d7w_41";
+  const dropZoneTitle = "_dropZoneTitle_o8d7w_51";
+  const orDivider = "_orDivider_o8d7w_57";
+  const urlRow = "_urlRow_o8d7w_68";
+  const urlField = "_urlField_o8d7w_77";
+  const urlInput = "_urlInput_o8d7w_83";
+  const urlAdd = "_urlAdd_o8d7w_91";
+  const dropZoneActive = "_dropZoneActive_o8d7w_121";
+  const importError = "_importError_o8d7w_175";
+  const fieldLabel = "_fieldLabel_o8d7w_188";
+  const typeOverlay = "_typeOverlay_o8d7w_202";
+  const typeOverlayBackdrop = "_typeOverlayBackdrop_o8d7w_214";
+  const typeOverlayCard = "_typeOverlayCard_o8d7w_220";
+  const typeOverlayFields = "_typeOverlayFields_o8d7w_234";
+  const typeOverlayFile = "_typeOverlayFile_o8d7w_244";
+  const typeRow = "_typeRow_o8d7w_253";
+  const typeChipActive = "_typeChipActive_o8d7w_261";
+  const typeChipSuggested = "_typeChipSuggested_o8d7w_265";
+  const typeChipMuted = "_typeChipMuted_o8d7w_270";
+  const typeFooter = "_typeFooter_o8d7w_284";
+  const typeImport = "_typeImport_o8d7w_293";
+  const typeSection = "_typeSection_o8d7w_300";
+  const imageCard = "_imageCard_o8d7w_308";
+  const fileAccessOverlay = "_fileAccessOverlay_o8d7w_320";
+  const fileAccessAction = "_fileAccessAction_o8d7w_336";
+  const imageCardHeader = "_imageCardHeader_o8d7w_344";
+  const imageCardText = "_imageCardText_o8d7w_352";
+  const imageCardTitle = "_imageCardTitle_o8d7w_360";
+  const imageCardMeta = "_imageCardMeta_o8d7w_368";
+  const imageCardActions = "_imageCardActions_o8d7w_374";
+  const styles$r = {
     stack,
     panelDropActive,
     addStrip,
@@ -90535,48 +90617,45 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     fileAccessOverlay,
     fileAccessAction,
     imageCardHeader,
-    imageCardHeaderOpen,
-    panelDim,
     imageCardText,
     imageCardTitle,
     imageCardMeta,
-    imageCardActions,
-    imageCardActionRest
+    imageCardActions
   };
   function ImportOverlay(props) {
     const busy = props.busy === true;
     return reactDomExports.createPortal(jsxRuntimeExports.jsxs("div", {
-      className: styles$q.typeOverlay,
+      className: styles$r.typeOverlay,
       role: "dialog",
       "aria-modal": "true",
       "aria-busy": busy,
       "aria-labelledby": props.titleId,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$q.typeOverlayBackdrop,
+          className: styles$r.typeOverlayBackdrop,
           "aria-hidden": "true"
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: `${minervaTheme.surface} ${styles$q.typeOverlayCard}`,
+          className: `${minervaTheme.surface} ${styles$r.typeOverlayCard}`,
           children: [
             jsxRuntimeExports.jsx("div", {
               id: props.titleId,
-              className: styles$q.typeOverlayFile,
+              className: styles$r.typeOverlayFile,
               title: props.title,
               children: props.title
             }),
             props.children != null ? jsxRuntimeExports.jsx("fieldset", {
               disabled: props.importDisabled,
-              className: styles$q.typeOverlayFields,
+              className: styles$r.typeOverlayFields,
               children: props.children
             }) : null,
             props.error ? jsxRuntimeExports.jsx("div", {
-              className: styles$q.importError,
+              className: styles$r.importError,
               role: "alert",
               children: props.error
             }) : null,
             jsxRuntimeExports.jsxs("div", {
-              className: styles$q.typeFooter,
+              className: styles$r.typeFooter,
               children: [
                 jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
@@ -90586,7 +90665,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
-                  className: styles$q.typeImport,
+                  className: styles$r.typeImport,
                   disabled: props.importDisabled,
                   onClick: props.onImport,
                   children: busy ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
@@ -91872,30 +91951,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const attachBtn = "_attachBtn_16e0a_9";
   const attachLabel = "_attachLabel_16e0a_34";
   const root$a = "_root_16e0a_42";
-  const toolbar$1 = "_toolbar_16e0a_50";
-  const field$1 = "_field_16e0a_57";
+  const toolbar$2 = "_toolbar_16e0a_50";
+  const field$2 = "_field_16e0a_57";
   const textBtn = "_textBtn_16e0a_79";
   const colPick = "_colPick_16e0a_95";
   const scroller = "_scroller_16e0a_118";
   const accessPrompt = "_accessPrompt_16e0a_126";
   const loading = "_loading_16e0a_136";
-  const row$1 = "_row_16e0a_150";
+  const row = "_row_16e0a_150";
   const swatch$1 = "_swatch_16e0a_162";
   const swatchPending = "_swatchPending_16e0a_177";
   const name$3 = "_name_16e0a_182";
-  const styles$p = {
+  const styles$q = {
     attach,
     attachBtn,
     attachLabel,
     root: root$a,
-    toolbar: toolbar$1,
-    field: field$1,
+    toolbar: toolbar$2,
+    field: field$2,
     textBtn,
     colPick,
     scroller,
     accessPrompt,
     loading,
-    row: row$1,
+    row,
     swatch: swatch$1,
     swatchPending,
     name: name$3
@@ -91957,7 +92036,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function TableLoading() {
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.loading,
+      className: styles$q.loading,
       children: [
         jsxRuntimeExports.jsx("div", {
           className: minervaTheme.spinnerSm,
@@ -92099,7 +92178,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         label2,
         jsxRuntimeExports.jsx("select", {
-          className: styles$p.field,
+          className: styles$q.field,
           value,
           "aria-label": `${label2} column`,
           onChange: (e2) => onChange(e2.target.value),
@@ -92111,7 +92190,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.colPick,
+      className: styles$q.colPick,
       children: [
         select("ID", props.id, props.onId),
         select("Name", props.name, props.onName)
@@ -92135,16 +92214,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function FeatureTableGlyph(props) {
     const { wait: wait2, folder, title: title7, ariaLabel, onClick } = props;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.attach,
+      className: styles$q.attach,
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$p.attachBtn}${wait2 ? ` ${minervaTheme.busyOverlay}` : ""}`,
+          className: `${minervaTheme.focusRing} ${styles$q.attachBtn}${wait2 ? ` ${minervaTheme.busyOverlay}` : ""}`,
           disabled: wait2 || onClick == null,
           title: title7,
           "aria-label": ariaLabel,
           "aria-busy": wait2 || void 0,
-          "data-channel-drag-ignore": "",
           onClick,
           children: folder ? jsxRuntimeExports.jsx(SvgFolder, {
             width: 12,
@@ -92153,7 +92231,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }) : jsxRuntimeExports.jsx(TableIcon, {})
         }),
         jsxRuntimeExports.jsx("span", {
-          className: styles$p.attachLabel,
+          className: styles$q.attachLabel,
           children: "Table"
         })
       ]
@@ -92281,14 +92359,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     if (!hasIngestedFeatureTable(featureTableId) && !showAccess) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.root,
-      "data-channel-drag-ignore": "",
+      className: styles$q.root,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$p.toolbar,
+          className: styles$q.toolbar,
           children: [
             jsxRuntimeExports.jsx("input", {
-              className: styles$p.field,
+              className: styles$q.field,
               type: "text",
               value: list2.filter,
               placeholder: "Filter classes\u2026",
@@ -92301,13 +92378,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
+              className: `${minervaTheme.focusRing} ${styles$q.textBtn}`,
               onClick: () => setAllClassesVisible(featureTableId, true),
               children: "Show all"
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
+              className: `${minervaTheme.focusRing} ${styles$q.textBtn}`,
               onClick: () => setAllClassesVisible(featureTableId, false),
               children: "Hide all"
             }),
@@ -92327,7 +92404,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsxs("div", {
           ref: scrollerRef,
-          className: `${styles$p.scroller} ${panel$1.thinScrollbar}`,
+          className: `${styles$q.scroller} ${panel$1.thinScrollbar}`,
           onScroll: () => {
             const el2 = scrollerRef.current;
             if (!el2) return;
@@ -92335,10 +92412,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           },
           children: [
             showAccess ? jsxRuntimeExports.jsx("div", {
-              className: styles$p.accessPrompt,
+              className: styles$q.accessPrompt,
               children: jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
+                className: `${minervaTheme.focusRing} ${styles$q.textBtn}`,
                 onClick: () => void restoreFile(),
                 children: needsReselect ? "Choose file again" : "Allow file access"
               })
@@ -92350,7 +92427,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 position: "relative"
               },
               children: list2.rows.map((row2, i2) => jsxRuntimeExports.jsxs("div", {
-                className: styles$p.row,
+                className: styles$q.row,
                 style: {
                   top: (list2.loadedOffset + i2) * ROW_H
                 },
@@ -92363,7 +92440,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   }),
                   row2.color ? jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$p.swatch}`,
+                    className: `${minervaTheme.focusRing} ${styles$q.swatch}`,
                     style: {
                       backgroundColor: `#${rgbToHex$1(row2.color)}`
                     },
@@ -92381,13 +92458,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     }
                   }) : jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${styles$p.swatch} ${styles$p.swatchPending} ${minervaTheme.busyOverlay}`,
+                    className: `${styles$q.swatch} ${styles$q.swatchPending} ${minervaTheme.busyOverlay}`,
                     "aria-label": `Assigning color for ${row2.name}`,
                     disabled: true
                   }),
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$p.name}`,
+                    className: `${minervaTheme.focusRing} ${styles$q.name}`,
                     title: row2.visible ? `Hide ${row2.name}` : `Show ${row2.name}`,
                     "aria-pressed": row2.visible,
                     onClick: () => toggleClassVisible(featureTableId, row2.name),
@@ -92440,38 +92517,174 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function useAuthorChannelNav() {
     return reactExports.useContext(AuthorChannelNavContext);
   }
-  const wrap$2 = "_wrap_g1gme_1";
-  const histogramHost = "_histogramHost_g1gme_13";
-  const histogramLoading = "_histogramLoading_g1gme_20";
-  const histogramLoadingVisible = "_histogramLoadingVisible_g1gme_32";
-  const histogramSvg = "_histogramSvg_g1gme_36";
-  const histogramFill = "_histogramFill_g1gme_44";
-  const histogramLine = "_histogramLine_g1gme_49";
-  const histogramOutOfRange = "_histogramOutOfRange_g1gme_56";
-  const sliderRow = "_sliderRow_g1gme_60";
-  const rangePan = "_rangePan_g1gme_72";
-  const rangeInput = "_rangeInput_g1gme_86";
-  const limitInput = "_limitInput_g1gme_132";
-  const styles$o = {
+  const SvgAxisBreak = (props) => reactExports.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg",
+    viewBox: "0 0 180 50",
+    fill: "none",
+    width: "1em",
+    height: "1em",
+    ...props
+  }, reactExports.createElement("path", {
+    d: "M0 25H54M78 25H180M48 45L60 5M72 45L84 5",
+    stroke: "currentColor",
+    strokeWidth: 6,
+    strokeLinejoin: "miter"
+  }));
+  function isFloatDtype(dtype) {
+    return dtype != null && /float/i.test(dtype);
+  }
+  const UNIT_INTERVAL_SLACK = 1e-3;
+  function snapUnitInterval(range2) {
+    if (range2.min >= -1e-3 && range2.max <= 1 + UNIT_INTERVAL_SLACK) {
+      return {
+        min: 0,
+        max: 1
+      };
+    }
+    return range2;
+  }
+  function finiteSampleRange(samples) {
+    let min2 = Infinity;
+    let max2 = -Infinity;
+    for (let i2 = 0; i2 < samples.length; i2++) {
+      const v2 = samples[i2];
+      if (!Number.isFinite(v2)) continue;
+      if (v2 < min2) min2 = v2;
+      if (v2 > max2) max2 = v2;
+    }
+    if (!(max2 > min2)) return null;
+    return snapUnitInterval({
+      min: min2,
+      max: max2
+    });
+  }
+  function quantizeFloatToUint16(v2, range2) {
+    if (!Number.isFinite(v2)) return 0;
+    const t2 = (v2 - range2.min) / (range2.max - range2.min);
+    const x2 = t2 <= 0 ? 0 : t2 >= 1 ? 1 : t2;
+    return Math.round(x2 * 65535);
+  }
+  function dequantizeFromUint16(q2, range2) {
+    return range2.min + q2 / 65535 * (range2.max - range2.min);
+  }
+  function channelFloatRange(channel) {
+    const stored = channel.floatRange;
+    if ((stored == null ? void 0 : stored.min) != null && stored.max != null && Number.isFinite(stored.min) && Number.isFinite(stored.max) && stored.max > stored.min) {
+      return snapUnitInterval({
+        min: stored.min,
+        max: stored.max
+      });
+    }
+    if (!isFloatDtype(channel.sourceDataTypeId)) return null;
+    const dist2 = channel.sourceDistribution;
+    if ((dist2 == null ? void 0 : dist2.XScale) === "linear" && dist2.LowerRange != null && dist2.UpperRange != null && dist2.UpperRange > dist2.LowerRange) {
+      return snapUnitInterval({
+        min: dist2.LowerRange,
+        max: dist2.UpperRange
+      });
+    }
+    return null;
+  }
+  const HISTOGRAM_TRIM_FRACTION = 5e-3;
+  function firstTrimBin(yValues) {
+    let total = 0;
+    for (const y2 of yValues) total += y2;
+    if (total === 0) return 0;
+    const threshold = HISTOGRAM_TRIM_FRACTION * total;
+    let sum2 = 0;
+    for (let i2 = 0; i2 < yValues.length; i2++) {
+      sum2 += yValues[i2];
+      if (sum2 >= threshold) return i2;
+    }
+    return 0;
+  }
+  function resolveHistogramChartView(dist2, opts) {
+    const y2 = dist2.YValues ?? [];
+    const full2 = opts.floatRange ?? (opts.dtypeMax === 255 ? {
+      min: 0,
+      max: 255
+    } : null);
+    const fullScale = full2 || dist2.XScale === "linear" ? "linear" : "log";
+    const fullMin = (full2 == null ? void 0 : full2.min) ?? dist2.LowerRange ?? 0;
+    const fullMax = (full2 == null ? void 0 : full2.max) ?? dist2.UpperRange ?? 0;
+    const span = fullMax - fullMin;
+    const trimAt = firstTrimBin(y2);
+    const valueBin = y2.length === 0 || span === 0 ? 0 : Math.min(y2.length, Math.max(0, Math.floor((opts.lowerLimit - fullMin) / span * y2.length)));
+    const start = opts.expanded ? 0 : Math.min(trimAt, valueBin);
+    const distMin = y2.length === 0 ? fullMin : fullMin + span * (start / y2.length);
+    return {
+      yValues: start > 0 ? y2.slice(start) : y2,
+      startBin: start,
+      scaleInput: {
+        distScale: fullScale,
+        distMin,
+        distMax: fullMax,
+        dtypeMin: (full2 == null ? void 0 : full2.min) ?? 0,
+        dtypeMax: (full2 == null ? void 0 : full2.max) ?? opts.dtypeMax
+      }
+    };
+  }
+  const wrap$2 = "_wrap_sur29_1";
+  const histogramHost = "_histogramHost_sur29_13";
+  const histogramPlot = "_histogramPlot_sur29_22";
+  const histogramPlotTrimmed = "_histogramPlotTrimmed_sur29_30";
+  const histogramLoading = "_histogramLoading_sur29_35";
+  const histogramLoadingVisible = "_histogramLoadingVisible_sur29_47";
+  const histogramSvg = "_histogramSvg_sur29_51";
+  const axisBreak = "_axisBreak_sur29_59";
+  const histogramFill = "_histogramFill_sur29_84";
+  const histogramLine = "_histogramLine_sur29_89";
+  const histogramOutOfRange = "_histogramOutOfRange_sur29_96";
+  const sliderRow = "_sliderRow_sur29_100";
+  const rangeInput = "_rangeInput_sur29_112";
+  const rangeInputMin = "_rangeInputMin_sur29_137";
+  const rangeInputMax = "_rangeInputMax_sur29_144";
+  const limitInput = "_limitInput_sur29_182";
+  const styles$p = {
     wrap: wrap$2,
     histogramHost,
+    histogramPlot,
+    histogramPlotTrimmed,
     histogramLoading,
     histogramLoadingVisible,
     histogramSvg,
+    axisBreak,
     histogramFill,
     histogramLine,
     histogramOutOfRange,
     sliderRow,
-    rangePan,
     rangeInput,
+    rangeInputMin,
+    rangeInputMax,
     limitInput
   };
   const SLIDER_DOMAIN_STEPS = 8192;
-  const DEFAULT_DTYPE_MIN = 0;
-  const DEFAULT_DTYPE_MAX = 65535;
+  function snapContrastLimit(value, fractional) {
+    if (!fractional) return Math.round(value);
+    return Number(value.toPrecision(6));
+  }
+  function formatContrastLimit(value, range2) {
+    if (!Number.isFinite(value)) return "";
+    if (!range2) return String(Math.round(value));
+    const span = range2.max - range2.min;
+    const exp = Math.floor(Math.log10(span));
+    const wanted = Number.isFinite(exp) ? Math.max(0, 3 - exp) : 3;
+    for (let decimals = Math.min(wanted, 6); decimals >= 0; decimals--) {
+      const text2 = value.toFixed(decimals);
+      if (text2.length <= 6 && (Number(text2) !== 0 || value === 0)) return text2;
+    }
+    return value.toExponential(2);
+  }
+  const EMPTY_DIST = {
+    id: "",
+    YValues: [],
+    XScale: "log",
+    YScale: "linear",
+    LowerRange: 0,
+    UpperRange: 16
+  };
   function buildContrastScale(input2) {
-    const dtypeMin = input2.dtypeMin ?? DEFAULT_DTYPE_MIN;
-    const dtypeMax = input2.dtypeMax ?? DEFAULT_DTYPE_MAX;
+    const { dtypeMin, dtypeMax } = input2;
     const chart_x_steps = SLIDER_DOMAIN_STEPS;
     const chart_x_max = input2.distMax;
     const chart_x_origin = input2.distMin;
@@ -92512,7 +92725,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function histogramSparklinePaths(values, width = 100, height = 11) {
     const line = [
       0,
-      ...values || [],
+      ...values,
       0
     ];
     const flat = line.slice(1, -1).every((v2) => v2 === line[1]);
@@ -92554,7 +92767,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       lowerLimit: liveContrast ? liveContrast.lower : limits[0],
       upperLimit: liveContrast ? liveContrast.upper : limits[1],
       distribution: sc2.sourceDistribution ?? null,
-      sourceDataTypeId: sc2.sourceDataTypeId
+      sourceDataTypeId: sc2.sourceDataTypeId,
+      floatRange: channelFloatRange(sc2)
     };
   }
   function contrastEditorPropsForGroupRow(channelRendering, groupId, gc2, sc2) {
@@ -92573,59 +92787,87 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       lowerLimit: liveContrast ? liveContrast.lower : gc2.lowerLimit,
       upperLimit: liveContrast ? liveContrast.upper : gc2.upperLimit,
       distribution: (sc2 == null ? void 0 : sc2.sourceDistribution) ?? null,
-      sourceDataTypeId: sc2 == null ? void 0 : sc2.sourceDataTypeId
+      sourceDataTypeId: sc2 == null ? void 0 : sc2.sourceDataTypeId,
+      floatRange: sc2 ? channelFloatRange(sc2) : null
     };
   }
   function ChannelContrastEditor(props) {
+    var _a2, _b2;
     const setChannelGroups = useDocumentStore((s2) => s2.setChannelGroups);
     const setImages = useDocumentStore((s2) => s2.setImages);
-    const dist2 = props.distribution ?? {
-      YValues: [],
-      XScale: "log",
-      LowerRange: 0,
-      UpperRange: 16
-    };
+    const dist2 = props.distribution ?? EMPTY_DIST;
+    const [expanded, setExpanded] = reactExports.useState(false);
+    const rangeMin = (_a2 = props.floatRange) == null ? void 0 : _a2.min;
+    const rangeMax = (_b2 = props.floatRange) == null ? void 0 : _b2.max;
+    const range2 = reactExports.useMemo(() => rangeMin != null && rangeMax != null ? {
+      min: rangeMin,
+      max: rangeMax
+    } : null, [
+      rangeMin,
+      rangeMax
+    ]);
+    const fractional = range2 != null;
     const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
-    const eightBit = dtypeMax === 255;
-    const scale2 = reactExports.useMemo(() => buildContrastScale({
-      distScale: eightBit ? "linear" : dist2.XScale,
-      distMin: eightBit ? 0 : dist2.LowerRange,
-      distMax: eightBit ? 255 : dist2.UpperRange,
-      dtypeMax
+    const chart = reactExports.useMemo(() => resolveHistogramChartView(dist2, {
+      floatRange: range2,
+      dtypeMax,
+      expanded,
+      lowerLimit: props.lowerLimit
     }), [
-      eightBit,
-      dist2.XScale,
-      dist2.LowerRange,
-      dist2.UpperRange,
-      dtypeMax
+      dist2,
+      expanded,
+      range2,
+      dtypeMax,
+      props.lowerLimit
+    ]);
+    const scale2 = reactExports.useMemo(() => buildContrastScale(chart.scaleInput), [
+      chart.scaleInput
     ]);
     const [sliderMin, setSliderMin] = reactExports.useState(() => scale2.toSlider(props.lowerLimit));
     const [sliderMax, setSliderMax] = reactExports.useState(() => scale2.toSlider(props.upperLimit));
     const sliderMinRef = reactExports.useRef(sliderMin);
     const sliderMaxRef = reactExports.useRef(sliderMax);
-    const [minInput, setMinInput] = reactExports.useState(String(props.lowerLimit));
-    const [maxInput, setMaxInput] = reactExports.useState(String(props.upperLimit));
     const editingLimitRef = reactExports.useRef(false);
+    const scaleRef = reactExports.useRef(scale2);
+    if (scaleRef.current !== scale2) {
+      scaleRef.current = scale2;
+      if (!editingLimitRef.current) {
+        const lo = scale2.toSlider(props.lowerLimit);
+        const hi2 = scale2.toSlider(props.upperLimit);
+        sliderMinRef.current = lo;
+        sliderMaxRef.current = hi2;
+        if (lo !== sliderMin) setSliderMin(lo);
+        if (hi2 !== sliderMax) setSliderMax(hi2);
+      }
+    }
+    const [minInput, setMinInput] = reactExports.useState(() => formatContrastLimit(props.lowerLimit, range2));
+    const [maxInput, setMaxInput] = reactExports.useState(() => formatContrastLimit(props.upperLimit, range2));
     const lastCommittedRangeRef = reactExports.useRef([
-      Math.round(props.lowerLimit),
-      Math.round(props.upperLimit)
+      snapContrastLimit(props.lowerLimit, fractional),
+      snapContrastLimit(props.upperLimit, fractional)
     ]);
     reactExports.useEffect(() => {
       if (editingLimitRef.current) return;
-      setSliderMin(scale2.toSlider(props.lowerLimit));
-      setSliderMax(scale2.toSlider(props.upperLimit));
-      setMinInput(String(Math.round(props.lowerLimit)));
-      setMaxInput(String(Math.round(props.upperLimit)));
+      const lo = snapContrastLimit(props.lowerLimit, fractional);
+      const hi2 = snapContrastLimit(props.upperLimit, fractional);
+      const loStep = scale2.toSlider(props.lowerLimit);
+      const hiStep = scale2.toSlider(props.upperLimit);
+      setSliderMin(loStep);
+      setSliderMax(hiStep);
+      setMinInput(formatContrastLimit(lo, range2));
+      setMaxInput(formatContrastLimit(hi2, range2));
       lastCommittedRangeRef.current = [
-        Math.round(props.lowerLimit),
-        Math.round(props.upperLimit)
+        lo,
+        hi2
       ];
-      sliderMinRef.current = scale2.toSlider(props.lowerLimit);
-      sliderMaxRef.current = scale2.toSlider(props.upperLimit);
+      sliderMinRef.current = loStep;
+      sliderMaxRef.current = hiStep;
     }, [
       props.lowerLimit,
       props.upperLimit,
-      scale2
+      scale2,
+      fractional,
+      range2
     ]);
     const previewRange = (lower, upper) => {
       useAppStore.getState().setChannelRendering({
@@ -92636,8 +92878,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     const commitRange = (lower, upper) => {
-      const lo = Math.round(lower);
-      const hi2 = Math.round(upper);
+      const lo = snapContrastLimit(lower, fractional);
+      const hi2 = snapContrastLimit(upper, fractional);
       const [lastLo, lastHi] = lastCommittedRangeRef.current;
       if (lo === lastLo && hi2 === lastHi) {
         useAppStore.getState().clearChannelRendering();
@@ -92671,10 +92913,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       props.sourceChannelId
     ]);
     const syncFromSliders = (loStep, hiStep, commit) => {
-      const lo = Math.round(scale2.fromSlider(loStep));
-      const hi2 = Math.round(scale2.fromSlider(hiStep));
-      setMinInput(String(lo));
-      setMaxInput(String(hi2));
+      const lo = snapContrastLimit(scale2.fromSlider(loStep), fractional);
+      const hi2 = snapContrastLimit(scale2.fromSlider(hiStep), fractional);
+      setMinInput(formatContrastLimit(lo, range2));
+      setMaxInput(formatContrastLimit(hi2, range2));
       if (commit) {
         commitRange(lo, hi2);
       } else {
@@ -92700,12 +92942,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       syncFromSliders(sliderMinRef.current, sliderMaxRef.current, true);
     };
     const commitFromInputs = () => {
-      let lo = Number.parseFloat(minInput);
-      let hi2 = Number.parseFloat(maxInput);
+      const preciseLo = snapContrastLimit(scale2.fromSlider(sliderMinRef.current), fractional);
+      const preciseHi = snapContrastLimit(scale2.fromSlider(sliderMaxRef.current), fractional);
+      let lo = minInput === formatContrastLimit(preciseLo, range2) ? preciseLo : Number.parseFloat(minInput);
+      let hi2 = maxInput === formatContrastLimit(preciseHi, range2) ? preciseHi : Number.parseFloat(maxInput);
       if (!Number.isFinite(lo)) lo = scale2.dtypeMin;
       if (!Number.isFinite(hi2)) hi2 = scale2.dtypeMax;
-      lo = Math.round(Math.max(scale2.dtypeMin, Math.min(scale2.dtypeMax, lo)));
-      hi2 = Math.round(Math.max(scale2.dtypeMin, Math.min(scale2.dtypeMax, hi2)));
+      lo = snapContrastLimit(Math.max(scale2.dtypeMin, Math.min(scale2.dtypeMax, lo)), fractional);
+      hi2 = snapContrastLimit(Math.max(scale2.dtypeMin, Math.min(scale2.dtypeMax, hi2)), fractional);
       if (lo > hi2) {
         const t2 = lo;
         lo = hi2;
@@ -92713,115 +92957,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       setSliderMin(scale2.toSlider(lo));
       setSliderMax(scale2.toSlider(hi2));
-      setMinInput(String(lo));
-      setMaxInput(String(hi2));
+      setMinInput(formatContrastLimit(lo, range2));
+      setMaxInput(formatContrastLimit(hi2, range2));
       commitRange(lo, hi2);
     };
     const minFrac = sliderMin / scale2.sliderSteps;
     const maxFrac = sliderMax / scale2.sliderSteps;
-    const sliderRowRef = reactExports.useRef(null);
-    const panDragRef = reactExports.useRef(null);
-    const panMovedRef = reactExports.useRef(false);
-    const { linePath: histLinePath, fillPath: histFillPath } = histogramSparklinePaths(dist2.YValues);
+    const { linePath: histLinePath, fillPath: histFillPath } = histogramSparklinePaths(chart.yValues);
     const histogramClipId = reactExports.useId();
     const histogramViewX = 1.15;
     const histogramViewWidth = 96.7;
     const histogramClipX = histogramViewX + minFrac * histogramViewWidth;
     const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
-    const stepFromClientX = (clientX) => {
-      const row2 = sliderRowRef.current;
-      if (!row2) return 0;
-      const rect = row2.getBoundingClientRect();
-      const x2 = clientX - rect.left;
-      const frac = Math.min(1, Math.max(0, x2 / Math.max(1, rect.width)));
-      return Math.round(frac * scale2.sliderSteps);
-    };
-    const onRangePanPointerDown = (e2) => {
-      if (e2.button !== 0) return;
-      e2.preventDefault();
-      editingLimitRef.current = true;
-      panMovedRef.current = false;
-      panDragRef.current = {
-        active: true,
-        pointerId: e2.pointerId,
-        startX: e2.clientX,
-        startMin: sliderMin,
-        startMax: sliderMax
-      };
-      e2.currentTarget.setPointerCapture(e2.pointerId);
-    };
-    const onRangePanPointerMove = (e2) => {
-      const drag = panDragRef.current;
-      if (!(drag == null ? void 0 : drag.active) || drag.pointerId !== e2.pointerId) return;
-      if (Math.abs(e2.clientX - drag.startX) > 2) {
-        panMovedRef.current = true;
-      }
-      const row2 = sliderRowRef.current;
-      if (!row2) return;
-      const rect = row2.getBoundingClientRect();
-      const deltaSteps = Math.round((e2.clientX - drag.startX) / Math.max(1, rect.width) * scale2.sliderSteps);
-      const span = drag.startMax - drag.startMin;
-      let lo = drag.startMin + deltaSteps;
-      let hi2 = drag.startMax + deltaSteps;
-      if (lo < 0) {
-        lo = 0;
-        hi2 = span;
-      }
-      if (hi2 > scale2.sliderSteps) {
-        hi2 = scale2.sliderSteps;
-        lo = scale2.sliderSteps - span;
-      }
-      sliderMinRef.current = lo;
-      sliderMaxRef.current = hi2;
-      setSliderMin(lo);
-      setSliderMax(hi2);
-      syncFromSliders(lo, hi2, false);
-    };
-    const endRangePan = (e2) => {
-      const drag = panDragRef.current;
-      if (!(drag == null ? void 0 : drag.active) || drag.pointerId !== e2.pointerId) return;
-      if (e2.currentTarget.hasPointerCapture(e2.pointerId)) {
-        e2.currentTarget.releasePointerCapture(e2.pointerId);
-      }
-      if (!panMovedRef.current) {
-        const step = stepFromClientX(e2.clientX);
-        const span = drag.startMax - drag.startMin;
-        let lo = Math.round(step - span / 2);
-        let hi2 = lo + span;
-        if (lo < 0) {
-          lo = 0;
-          hi2 = span;
-        }
-        if (hi2 > scale2.sliderSteps) {
-          hi2 = scale2.sliderSteps;
-          lo = scale2.sliderSteps - span;
-        }
-        sliderMinRef.current = lo;
-        sliderMaxRef.current = hi2;
-        setSliderMin(lo);
-        setSliderMax(hi2);
-        editingLimitRef.current = false;
-        syncFromSliders(lo, hi2, true);
-      } else {
-        onSliderCommit();
-      }
-      panDragRef.current = null;
-      panMovedRef.current = false;
-      editingLimitRef.current = false;
-    };
-    const panLeft = `${minFrac * 100}%`;
-    const panWidth = `${(maxFrac - minFrac) * 100}%`;
+    const trimmed = chart.startBin > 0;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$o.wrap,
-      draggable: false,
+      className: styles$p.wrap,
       children: [
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$o.limitInput}`,
+          className: `${minervaTheme.input} ${styles$p.limitInput}`,
           value: minInput,
           "aria-label": `${props.channelLabel} contrast minimum value`,
           min: scale2.dtypeMin,
           max: scale2.dtypeMax,
+          step: fractional ? "any" : 1,
           onFocus: () => {
             editingLimitRef.current = true;
           },
@@ -92834,115 +92993,130 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             if (e2.key === "Enter") e2.currentTarget.blur();
           }
         }),
-        jsxRuntimeExports.jsxs("div", {
-          className: styles$o.histogramHost,
+        jsxRuntimeExports.jsx("div", {
+          className: styles$p.histogramHost,
           style: props.r != null && props.g != null && props.b != null ? {
             "--histogram-color": `rgb(${props.r},${props.g},${props.b})`
           } : void 0,
-          children: [
-            jsxRuntimeExports.jsxs("svg", {
-              className: styles$o.histogramSvg,
-              viewBox: "1.15 0 96.7 11",
-              preserveAspectRatio: "none",
-              role: "img",
-              "aria-label": `${props.channelLabel} intensity histogram`,
-              children: [
-                jsxRuntimeExports.jsx("defs", {
-                  children: jsxRuntimeExports.jsx("clipPath", {
-                    id: histogramClipId,
-                    children: jsxRuntimeExports.jsx("rect", {
-                      x: histogramClipX,
-                      y: 0,
-                      width: histogramClipWidth,
-                      height: 11
-                    })
+          children: jsxRuntimeExports.jsxs("div", {
+            className: trimmed ? `${styles$p.histogramPlot} ${styles$p.histogramPlotTrimmed}` : styles$p.histogramPlot,
+            children: [
+              trimmed ? jsxRuntimeExports.jsx("button", {
+                type: "button",
+                className: `${minervaTheme.focusRing} ${styles$p.axisBreak}`,
+                title: "Full range",
+                "aria-label": `${props.channelLabel} full histogram range`,
+                onClick: () => setExpanded(true),
+                children: jsxRuntimeExports.jsx(SvgAxisBreak, {})
+              }) : null,
+              jsxRuntimeExports.jsxs("svg", {
+                className: styles$p.histogramSvg,
+                viewBox: "1.15 0 96.7 11",
+                preserveAspectRatio: "none",
+                role: "img",
+                "aria-label": `${props.channelLabel} intensity histogram`,
+                children: [
+                  jsxRuntimeExports.jsxs("defs", {
+                    children: [
+                      jsxRuntimeExports.jsx("clipPath", {
+                        id: `${histogramClipId}-frame`,
+                        children: jsxRuntimeExports.jsx("rect", {
+                          x: histogramViewX,
+                          y: -1,
+                          width: histogramViewWidth,
+                          height: 13
+                        })
+                      }),
+                      jsxRuntimeExports.jsx("clipPath", {
+                        id: histogramClipId,
+                        children: jsxRuntimeExports.jsx("rect", {
+                          x: histogramClipX,
+                          y: 0,
+                          width: histogramClipWidth,
+                          height: 11
+                        })
+                      })
+                    ]
+                  }),
+                  jsxRuntimeExports.jsxs("g", {
+                    clipPath: `url(#${histogramClipId}-frame)`,
+                    children: [
+                      jsxRuntimeExports.jsx("path", {
+                        className: `${styles$p.histogramFill} ${styles$p.histogramOutOfRange}`,
+                        d: histFillPath
+                      }),
+                      jsxRuntimeExports.jsx("path", {
+                        className: `${styles$p.histogramLine} ${styles$p.histogramOutOfRange}`,
+                        d: histLinePath
+                      }),
+                      jsxRuntimeExports.jsxs("g", {
+                        clipPath: `url(#${histogramClipId})`,
+                        children: [
+                          jsxRuntimeExports.jsx("path", {
+                            className: styles$p.histogramFill,
+                            d: histFillPath
+                          }),
+                          jsxRuntimeExports.jsx("path", {
+                            className: styles$p.histogramLine,
+                            d: histLinePath
+                          })
+                        ]
+                      })
+                    ]
                   })
-                }),
-                jsxRuntimeExports.jsx("path", {
-                  className: `${styles$o.histogramFill} ${styles$o.histogramOutOfRange}`,
-                  d: histFillPath
-                }),
-                jsxRuntimeExports.jsx("path", {
-                  className: `${styles$o.histogramLine} ${styles$o.histogramOutOfRange}`,
-                  d: histLinePath
-                }),
-                jsxRuntimeExports.jsxs("g", {
-                  clipPath: `url(#${histogramClipId})`,
-                  children: [
-                    jsxRuntimeExports.jsx("path", {
-                      className: styles$o.histogramFill,
-                      d: histFillPath
-                    }),
-                    jsxRuntimeExports.jsx("path", {
-                      className: styles$o.histogramLine,
-                      d: histLinePath
-                    })
-                  ]
+                ]
+              }),
+              jsxRuntimeExports.jsx("div", {
+                className: `${styles$p.histogramLoading}${props.histogramLoading ? ` ${styles$p.histogramLoadingVisible}` : ""}`,
+                title: "Loading histogram",
+                children: jsxRuntimeExports.jsx("div", {
+                  className: minervaTheme.spinnerSm
                 })
-              ]
-            }),
-            jsxRuntimeExports.jsx("div", {
-              className: `${styles$o.histogramLoading}${props.histogramLoading ? ` ${styles$o.histogramLoadingVisible}` : ""}`,
-              title: "Loading histogram",
-              children: jsxRuntimeExports.jsx("div", {
-                className: minervaTheme.spinnerSm
+              }),
+              jsxRuntimeExports.jsxs("div", {
+                className: styles$p.sliderRow,
+                children: [
+                  jsxRuntimeExports.jsx("input", {
+                    type: "range",
+                    className: `${styles$p.rangeInput} ${styles$p.rangeInputMin}`,
+                    min: 0,
+                    max: scale2.sliderSteps,
+                    value: sliderMin,
+                    onChange: onMinSlider,
+                    onMouseUp: onSliderCommit,
+                    onTouchEnd: onSliderCommit,
+                    onKeyUp: onSliderCommit,
+                    onBlur: onSliderCommit,
+                    "aria-label": `${props.channelLabel} contrast minimum`,
+                    "aria-valuetext": `${formatContrastLimit(scale2.fromSlider(sliderMin), range2)} intensity`
+                  }),
+                  jsxRuntimeExports.jsx("input", {
+                    type: "range",
+                    className: `${styles$p.rangeInput} ${styles$p.rangeInputMax}`,
+                    min: 0,
+                    max: scale2.sliderSteps,
+                    value: sliderMax,
+                    onChange: onMaxSlider,
+                    onMouseUp: onSliderCommit,
+                    onTouchEnd: onSliderCommit,
+                    onKeyUp: onSliderCommit,
+                    onBlur: onSliderCommit,
+                    "aria-label": `${props.channelLabel} contrast maximum`,
+                    "aria-valuetext": `${formatContrastLimit(scale2.fromSlider(sliderMax), range2)} intensity`
+                  })
+                ]
               })
-            }),
-            jsxRuntimeExports.jsxs("div", {
-              ref: sliderRowRef,
-              className: styles$o.sliderRow,
-              children: [
-                sliderMax > sliderMin ? jsxRuntimeExports.jsx("div", {
-                  className: styles$o.rangePan,
-                  style: {
-                    left: panLeft,
-                    width: panWidth
-                  },
-                  onPointerDown: onRangePanPointerDown,
-                  onPointerMove: onRangePanPointerMove,
-                  onPointerUp: endRangePan,
-                  onPointerCancel: endRangePan,
-                  "aria-hidden": true
-                }) : null,
-                jsxRuntimeExports.jsx("input", {
-                  type: "range",
-                  className: styles$o.rangeInput,
-                  min: 0,
-                  max: scale2.sliderSteps,
-                  value: sliderMin,
-                  onChange: onMinSlider,
-                  onMouseUp: onSliderCommit,
-                  onTouchEnd: onSliderCommit,
-                  onKeyUp: onSliderCommit,
-                  onBlur: onSliderCommit,
-                  "aria-label": `${props.channelLabel} contrast minimum`,
-                  "aria-valuetext": `${Math.round(scale2.fromSlider(sliderMin))} intensity`
-                }),
-                jsxRuntimeExports.jsx("input", {
-                  type: "range",
-                  className: styles$o.rangeInput,
-                  min: 0,
-                  max: scale2.sliderSteps,
-                  value: sliderMax,
-                  onChange: onMaxSlider,
-                  onMouseUp: onSliderCommit,
-                  onTouchEnd: onSliderCommit,
-                  onKeyUp: onSliderCommit,
-                  onBlur: onSliderCommit,
-                  "aria-label": `${props.channelLabel} contrast maximum`,
-                  "aria-valuetext": `${Math.round(scale2.fromSlider(sliderMax))} intensity`
-                })
-              ]
-            })
-          ]
+            ]
+          })
         }),
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$o.limitInput}`,
+          className: `${minervaTheme.input} ${styles$p.limitInput}`,
           value: maxInput,
           "aria-label": `${props.channelLabel} contrast maximum value`,
           min: scale2.dtypeMin,
           max: scale2.dtypeMax,
+          step: fractional ? "any" : 1,
           onFocus: () => {
             editingLimitRef.current = true;
           },
@@ -92965,8 +93139,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       type: "button",
       className: [
         minervaTheme.focusRing,
-        styles$r.channelColorSwatch,
-        fill ? null : styles$r.channelColorSwatchUnfilled,
+        styles$s.channelColorSwatch,
+        fill ? null : styles$s.channelColorSwatchUnfilled,
         busy ? minervaTheme.busyOverlay : null
       ].filter(Boolean).join(" "),
       style: fill ? {
@@ -92983,7 +93157,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function MaskVizButton(props) {
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: `${minervaTheme.focusRing} ${styles$r.maskVizOption}${props.active ? ` ${styles$r.maskVizOptionActive}` : ""}`,
+      className: `${minervaTheme.focusRing} ${styles$s.maskVizOption}${props.active ? ` ${styles$s.maskVizOptionActive}` : ""}`,
       "aria-pressed": props.active,
       title: props.title ?? props.label,
       "aria-label": props.label,
@@ -93023,18 +93197,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onPreview == null ? void 0 : onPreview(null);
     };
     return jsxRuntimeExports.jsxs("label", {
-      className: styles$r.maskOpacityControl,
+      className: styles$s.maskOpacityControl,
       title: `Opacity ${pct}%`,
       style: {
         ["--mask-opacity-pct"]: `${pct}%`
       },
       children: [
         jsxRuntimeExports.jsxs("span", {
-          className: styles$r.maskOpacityInputRow,
+          className: styles$s.maskOpacityInputRow,
           children: [
             jsxRuntimeExports.jsx("input", {
               type: "range",
-              className: styles$r.maskOpacitySlider,
+              className: styles$s.maskOpacitySlider,
               min: 0,
               max: 100,
               step: 1,
@@ -93054,7 +93228,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onBlur: commit
             }),
             jsxRuntimeExports.jsxs("span", {
-              className: styles$r.maskOpacityValue,
+              className: styles$s.maskOpacityValue,
               children: [
                 pct,
                 "%"
@@ -93063,7 +93237,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         jsxRuntimeExports.jsx("span", {
-          className: styles$r.maskOpacityLabel,
+          className: styles$s.maskOpacityLabel,
           children: "Opacity"
         })
       ]
@@ -93082,19 +93256,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       colorTitle = "Random colors (click to re-seed)";
     }
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$r.maskModeControls,
+      className: styles$s.maskModeControls,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$r.maskModeGroup,
+          className: styles$s.maskModeGroup,
           children: [
             jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$r.maskVizToggle,
+              className: styles$s.maskVizToggle,
               "aria-label": `${ariaLabel} fill`,
               children: [
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.style === "outline",
                   label: "Outline",
-                  iconClass: styles$r.maskVizIconOutline,
+                  iconClass: styles$s.maskVizIconOutline,
                   onClick: () => onChange({
                     ...value,
                     style: "outline"
@@ -93103,7 +93277,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.style === "full",
                   label: "Full",
-                  iconClass: styles$r.maskVizIconFull,
+                  iconClass: styles$s.maskVizIconFull,
                   onClick: () => onChange({
                     ...value,
                     style: "full"
@@ -93112,22 +93286,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$r.maskModeGroupLabel,
+              className: styles$s.maskModeGroupLabel,
               children: "Fill"
             })
           ]
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$r.maskModeGroup,
+          className: styles$s.maskModeGroup,
           children: [
             jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$r.maskVizToggle,
+              className: styles$s.maskVizToggle,
               "aria-label": `${ariaLabel} color`,
               children: [
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.color === "white",
                   label: "White",
-                  iconClass: styles$r.maskVizSwatchWhite,
+                  iconClass: styles$s.maskVizSwatchWhite,
                   onClick: () => onChange({
                     ...value,
                     color: "white"
@@ -93137,7 +93311,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   active: colored,
                   label: colorLabel,
                   title: colorTitle,
-                  iconClass: styles$r.maskVizSwatchRandom,
+                  iconClass: styles$s.maskVizSwatchRandom,
                   onClick: () => onChange(classColors ? {
                     ...value,
                     color: "random"
@@ -93146,7 +93320,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$r.maskModeGroupLabel,
+              className: styles$s.maskModeGroupLabel,
               children: "Color"
             })
           ]
@@ -93177,7 +93351,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       props.onBlur(trimmed);
     };
     return jsxRuntimeExports.jsx("input", {
-      className: `${minervaTheme.field} ${styles$r.channelNameInput}`,
+      className: `${minervaTheme.field} ${styles$s.channelNameInput}`,
       type: "text",
       value: draft,
       title: props.name,
@@ -93204,15 +93378,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showColor = !isMask && onColorClick;
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$r.channelRow,
-        locked ? styles$r.detailChannelRowLocked : null,
+        styles$s.channelRow,
+        locked ? styles$s.detailChannelRowLocked : null,
         fitting ? minervaTheme.busyOverlay : null
       ].filter(Boolean).join(" "),
       "aria-busy": fitting || void 0,
       title: fitting ? "Fitting contrast\u2026" : void 0,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: `${styles$r.channelRowMain}${showMask ? ` ${styles$r.channelRowMainMask}` : ""}`,
+          className: `${styles$s.channelRowMain}${showMask ? ` ${styles$s.channelRowMainMask}` : ""}`,
           children: [
             jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible,
@@ -93222,10 +93396,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: onToggleVisibility
             }),
             jsxRuntimeExports.jsxs("div", {
-              className: styles$r.channelRowTitle,
+              className: styles$s.channelRowTitle,
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$r.channelNameSlot,
+                  className: styles$s.channelNameSlot,
                   children: name2.mode === "label" ? jsxRuntimeExports.jsx("span", {
                     className: name2.className,
                     title: name2.title ?? name2.name,
@@ -93235,16 +93409,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   })
                 }),
                 imageSubtitle ? jsxRuntimeExports.jsx("span", {
-                  className: styles$r.channelImageSubtitle,
+                  className: styles$s.channelImageSubtitle,
                   title: `From ${imageSubtitle}`,
                   children: imageSubtitle
                 }) : null
               ]
             }),
             jsxRuntimeExports.jsxs("div", {
-              className: styles$r.channelRowMid,
-              "data-channel-drag-ignore": "",
-              draggable: false,
+              className: styles$s.channelRowMid,
               children: [
                 contrast ? jsxRuntimeExports.jsx(ChannelContrastEditor, {
                   ...contrast
@@ -93258,7 +93430,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             showMask && fixedColorHex ? jsxRuntimeExports.jsx("span", {
-              className: styles$r.channelColorSwatchStatic,
+              className: styles$s.channelColorSwatchStatic,
               style: {
                 backgroundColor: `#${fixedColorHex}`
               },
@@ -93273,7 +93445,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: onColorClick
             }) : null,
             jsxRuntimeExports.jsx("div", {
-              className: styles$r.channelRowTrailing,
+              className: styles$s.channelRowTrailing,
               children: trailing
             }),
             showMask && onMaskVisualizationChange ? jsxRuntimeExports.jsx(MaskOpacityControl, {
@@ -93286,7 +93458,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         showMask && maskFooter ? jsxRuntimeExports.jsx("div", {
-          className: styles$r.maskControlsPanel,
+          className: styles$s.maskControlsPanel,
           children: maskFooter
         }) : null
       ]
@@ -93433,7 +93605,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     inFlight.delete(job.rasterKey);
     notify();
   }
-  function commitFitted(job, window2) {
+  function commitFitted(job, window2, range2) {
     const doc = useDocumentStore.getState();
     const channels2 = flattenImageChannelsInDocumentOrder(doc.images);
     let changed = false;
@@ -93448,6 +93620,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         return sc2;
       }
       changed = true;
+      const dist2 = sc2.sourceDistribution;
+      const distMatches = range2 != null && (dist2 == null ? void 0 : dist2.XScale) === "linear" && dist2.LowerRange === range2.min && dist2.UpperRange === range2.max;
       return {
         ...sc2,
         gmmContrastLimits: {
@@ -93455,7 +93629,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           upper: window2.upper
         },
         lowerLimit: window2.lower,
-        upperLimit: window2.upper
+        upperLimit: window2.upper,
+        ...range2 ? {
+          floatRange: range2
+        } : {},
+        ...range2 && !distMatches ? {
+          sourceDistribution: void 0
+        } : {}
       };
     });
     if (changed) {
@@ -93533,7 +93713,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       z: 0,
       c: sourceIndex
     };
-    const out = new Uint16Array(GMM_MAX_SAMPLES);
+    const raw2 = new Float64Array(GMM_MAX_SAMPLES);
     for (let i2 = planes.length - 1; i2 >= 0; i2--) {
       const plane = planes[i2];
       const { width, height } = planeSize$1(plane);
@@ -93544,6 +93724,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const maxTile = Math.min(ts, width) * Math.min(ts, height);
       if (maxTile > GMM_MAX_DECODE_PIXELS) continue;
       let o2 = 0;
+      let sawU8 = false;
       for (const [x2, y2] of pickTileCoords(nx, ny)) {
         if (o2 >= GMM_MAX_SAMPLES) break;
         let data2;
@@ -93558,24 +93739,36 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           continue;
         }
         if (!(data2 == null ? void 0 : data2.length) || data2.length > GMM_MAX_DECODE_PIXELS) continue;
-        const u8 = data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray;
+        if (data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray) {
+          sawU8 = true;
+        }
         const stride = Math.max(1, Math.ceil(data2.length / (GMM_MAX_SAMPLES - o2)));
         for (let p2 = 0; p2 < data2.length && o2 < GMM_MAX_SAMPLES; p2 += stride) {
-          out[o2++] = sampleToUint16(Number(data2[p2]), u8);
+          raw2[o2++] = Number(data2[p2]);
         }
       }
-      if (o2 > 0) return o2 < GMM_MAX_SAMPLES ? out.subarray(0, o2) : out;
+      if (o2 === 0) continue;
+      const samples = raw2.subarray(0, o2);
+      const range2 = isFloatDtype(plane.dtype) ? finiteSampleRange(samples) : null;
+      const u16 = new Uint16Array(o2);
+      for (let s2 = 0; s2 < o2; s2++) {
+        u16[s2] = range2 ? quantizeFloatToUint16(samples[s2], range2) : sampleToUint16(samples[s2], sawU8);
+      }
+      return {
+        u16,
+        range: range2
+      };
     }
     return null;
   }
   async function runJob(job, gen) {
     await acquire(fetchUsedBox, fetchWaiters, FETCH_CONCURRENCY);
-    let u16 = null;
+    let sampled = null;
     try {
       if (gen !== generation) return {
         kind: "failed"
       };
-      u16 = await fetchCoarsestUint16(job.loader, job.index);
+      sampled = await fetchCoarsestUint16(job.loader, job.index);
     } finally {
       release(fetchUsedBox, fetchWaiters);
       pump();
@@ -93583,7 +93776,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (gen !== generation) return {
       kind: "failed"
     };
-    if (!u16) {
+    if (!sampled) {
       failedKeys.add(job.rasterKey);
       finishJob(job, gen);
       pump();
@@ -93595,7 +93788,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     let window2 = null;
     try {
       if (gen === generation) {
-        window2 = await fitChannelGmmContrastFromUint16(u16);
+        window2 = await fitChannelGmmContrastFromUint16(sampled.u16);
       }
     } finally {
       release(fitUsedBox, fitWaiters);
@@ -93603,6 +93796,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (gen !== generation) return {
       kind: "failed"
     };
+    if (sampled.range) {
+      const range2 = sampled.range;
+      if (window2) {
+        window2 = {
+          lower: dequantizeFromUint16(window2.lower, range2),
+          upper: dequantizeFromUint16(window2.upper, range2)
+        };
+      }
+      if (!window2 || !(window2.upper > window2.lower)) {
+        window2 = {
+          lower: range2.min,
+          upper: range2.max
+        };
+      }
+    }
     if (!window2) {
       failedKeys.add(job.rasterKey);
       finishJob(job, gen);
@@ -93611,7 +93819,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         kind: "failed"
       };
     }
-    commitFitted(job, window2);
+    commitFitted(job, window2, sampled.range);
     finishJob(job, gen);
     pump();
     return {
@@ -93819,41 +94027,42 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     snapshot = emptySnapshot;
     for (const listener of listeners) listener();
   }
+  const HISTOGRAM_BIN_COUNT = 100;
   const MAX_HISTOGRAM_TILE_PIXELS = 4e6;
-  function histogramBinFromPixels(bits, width, data2) {
+  function intensityToHistogramBin(v2, bits) {
+    const n2 = HISTOGRAM_BIN_COUNT;
+    if (bits <= 8) {
+      return Math.min(n2 - 1, Math.floor(v2 * n2 / 2 ** bits));
+    }
+    return Math.min(n2 - 1, Math.floor(n2 * Math.log2(v2) / bits));
+  }
+  function binInRange(v2, min2, max2) {
+    const n2 = HISTOGRAM_BIN_COUNT;
+    const t2 = (v2 - min2) / (max2 - min2);
+    return Math.min(n2 - 1, Math.max(0, Math.floor(t2 * n2)));
+  }
+  function histogramBinFromPixels(bits, width, data2, range2) {
     const len2 = data2.length;
     if (len2 === 0 || len2 > MAX_HISTOGRAM_TILE_PIXELS) return [];
-    const n_bins = 100;
-    const seen2 = /* @__PURE__ */ new Set();
-    const thresholds = [];
-    for (let x2 = 0; x2 < n_bins; x2++) {
-      const t2 = Math.floor(2 ** (bits * x2 / n_bins));
-      if (seen2.has(t2)) continue;
-      seen2.add(t2);
-      thresholds.push(t2);
-    }
-    thresholds.sort((a2, b2) => a2 - b2);
-    const counts = new Array(thresholds.length).fill(0);
+    const spanned = range2 != null && range2.max > range2.min;
+    const counts = new Array(HISTOGRAM_BIN_COUNT).fill(0);
     const step = 4;
     const w2 = Math.max(1, width);
-    const nTh = thresholds.length;
     for (let i2 = 0; i2 < len2; i2++) {
       if (i2 % step !== 0 && Math.floor(i2 / w2) % step !== 0) continue;
       const v2 = data2[i2];
-      if (!(v2 > 0)) continue;
-      let lo = 0;
-      let hi2 = nTh;
-      while (lo < hi2) {
-        const mid = lo + hi2 >> 1;
-        if (v2 <= thresholds[mid]) hi2 = mid;
-        else lo = mid + 1;
+      if (spanned) {
+        if (!Number.isFinite(v2)) continue;
+        counts[binInRange(v2, range2.min, range2.max)]++;
+      } else {
+        if (!(v2 > 0)) continue;
+        counts[intensityToHistogramBin(v2, bits)]++;
       }
-      if (lo < nTh) counts[lo]++;
     }
     return counts;
   }
   function WorkerWrapper$3(options) {
-    return new Worker("" + new URL("histogram.worker-CnnG54PM.js", import.meta.url).href, {
+    return new Worker("" + new URL("histogram.worker-D54kmtrr.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -93884,7 +94093,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         this.workers.push(w2);
       }
     }
-    run(bits, width, buffer2, arrayCtorName) {
+    run(bits, width, buffer2, arrayCtorName, range2) {
       const jobId = this.nextId++;
       const w2 = this.workers[this.rr++ % this.workers.length];
       return new Promise((resolve, reject) => {
@@ -93897,7 +94106,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           bits,
           width,
           buffer: buffer2,
-          arrayCtorName
+          arrayCtorName,
+          range: range2
         }, [
           buffer2
         ]);
@@ -93912,18 +94122,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return singleton$1;
   }
-  async function histogramBinTile(bits, width, data2) {
+  async function histogramBinTile(bits, width, data2, range2) {
     if (data2.length > MAX_HISTOGRAM_TILE_PIXELS) return [];
     const pool = getHistogramBinPool();
     if (pool) {
       try {
         const copy2 = data2.buffer.slice(data2.byteOffset, data2.byteOffset + data2.byteLength);
-        return await pool.run(bits, width, copy2, data2.constructor.name);
+        return await pool.run(bits, width, copy2, data2.constructor.name, range2);
       } catch (err2) {
         console.warn("[minerva] histogram worker failed, using main thread:", err2);
       }
     }
-    return histogramBinFromPixels(bits, width, data2);
+    return histogramBinFromPixels(bits, width, data2, range2);
   }
   const hex_to_rgb = (c2) => {
     const n2 = parseInt(c2, 16);
@@ -94065,9 +94275,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     const parsed = parseInt(dtype.replace(/.?int/, ""), 10);
     if (!Number.isNaN(parsed)) return parsed;
-    if (/float/i.test(dtype)) {
-      return 16;
-    }
+    if (isFloatDtype(dtype)) return 16;
     console.warn(`[minerva] histogram: unsupported dtype "${dtype}" (expected Uint*/Int* or Float*)`);
     return null;
   }
@@ -94116,9 +94324,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const bin = async (inputs) => {
     const { data: data2, width, height } = await captureTile(inputs.index, inputs.planes);
     if (!(data2 == null ? void 0 : data2.length) || width * height > MAX_HISTOGRAM_TILE_PIXELS) {
-      return [];
+      return {
+        y: [],
+        range: null
+      };
     }
-    return histogramBinTile(inputs.bits, width, data2);
+    const dtype = inputs.planes[Math.abs(inputs.index.z)].dtype;
+    const range2 = inputs.range ?? (isFloatDtype(dtype) || data2 instanceof Float32Array || data2 instanceof Float64Array ? finiteSampleRange(data2) : null);
+    const y2 = await histogramBinTile(inputs.bits, width, data2, range2);
+    return {
+      y: y2,
+      range: range2
+    };
   };
   const toTilePlane$1 = (zoom, planes) => {
     return planes[Math.max(0, Math.abs(zoom))];
@@ -94177,7 +94394,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       tileProps
     };
   };
-  const extractDistributionsForSourceIndices = async (loader, sourceIndices) => {
+  const extractDistributionsForSourceIndices = async (loader, sourceIndices, ranges) => {
     const init2 = initialize$1({
       planes: loader.data
     });
@@ -94200,29 +94417,36 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ] : [];
     });
     const entries = await mapIndicesInBatches(indexObjs, HISTOGRAM_EXTRACT_CONCURRENCY, async (index2) => {
+      var _a2, _b2;
       const SourceIndex = index2.c;
       let YValues = [];
+      let range2 = null;
       if (bits != null) {
         try {
-          YValues = await bin({
+          const binned = await bin({
             bits,
             index: index2,
-            planes: loader.data
+            planes: loader.data,
+            range: (ranges == null ? void 0 : ranges.get(SourceIndex)) ?? null
           });
+          YValues = binned.y;
+          range2 = binned.range;
         } catch (err2) {
           const msg = err2 instanceof Error ? err2.message : String(err2);
           console.warn(`[minerva] histogram: channel ${SourceIndex} tile/bin failed (${msg})`);
         }
       }
+      const floatPlane = isFloatDtype(dtype) || isFloatDtype((_b2 = (_a2 = loader.metadata) == null ? void 0 : _a2.Pixels) == null ? void 0 : _b2.Type);
+      const linear = range2 != null || floatPlane || bits != null && bits <= 8;
       return [
         SourceIndex,
         {
           id: crypto.randomUUID(),
           YValues,
-          XScale: bits != null && bits <= 8 ? "linear" : "log",
+          XScale: linear ? "linear" : "log",
           YScale: "linear",
-          LowerRange: 0,
-          UpperRange: bits != null && bits <= 8 ? 2 ** bits - 1 : bits ?? 0
+          LowerRange: (range2 == null ? void 0 : range2.min) ?? 0,
+          UpperRange: range2 ? range2.max : bits != null && bits <= 8 ? 2 ** bits - 1 : bits ?? 0
         }
       ];
     });
@@ -94387,8 +94611,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return ((_a2 = d2 == null ? void 0 : d2.YValues) == null ? void 0 : _a2.length) ?? 0;
   }
   const omeHistogramCache = /* @__PURE__ */ new Map();
-  function cacheKey(imageKey, sourceImageId, sourceIndex) {
-    return `${imageKey}\0${sourceImageId}\0${sourceIndex}`;
+  function cacheKey(imageKey, sourceImageId, sourceIndex, range2) {
+    const span = range2 ? `\0${range2.min}\0${range2.max}` : "";
+    return `${imageKey}\0${sourceImageId}\0${sourceIndex}${span}`;
   }
   function clearOmeHistogramCache() {
     omeHistogramCache.clear();
@@ -94398,7 +94623,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const next2 = channels2.map((sc2) => {
       const dist2 = byChannelId.get(sc2.id);
       if (!dist2) return sc2;
-      if (sourceDistributionYValuesLength(sc2) > 0) return sc2;
+      const prev = sc2.sourceDistribution;
+      if (sourceDistributionYValuesLength(sc2) > 0 && (prev == null ? void 0 : prev.LowerRange) === dist2.LowerRange && (prev == null ? void 0 : prev.UpperRange) === dist2.UpperRange && (prev == null ? void 0 : prev.XScale) === dist2.XScale) {
+        return sc2;
+      }
       changed = true;
       return {
         ...sc2,
@@ -94407,14 +94635,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     return changed ? next2 : channels2;
   }
-  async function ensureOmeHistogramDistributions(loader, imageKey, sourceImageId, sourceIndices) {
+  async function ensureOmeHistogramDistributions(loader, imageKey, sourceImageId, sourceIndices, ranges) {
     const unique = [
       ...new Set(sourceIndices)
     ].filter((i2) => Number.isFinite(i2) && i2 >= 0);
     const result = /* @__PURE__ */ new Map();
     const toCompute = [];
     for (const c2 of unique) {
-      const hit = omeHistogramCache.get(cacheKey(imageKey, sourceImageId, c2));
+      const hit = omeHistogramCache.get(cacheKey(imageKey, sourceImageId, c2, ranges == null ? void 0 : ranges.get(c2)));
       if (hit) {
         result.set(c2, hit);
       } else {
@@ -94424,11 +94652,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (toCompute.length === 0) {
       return result;
     }
-    const fresh = await extractDistributionsForSourceIndices(loader, toCompute);
+    const fresh = await extractDistributionsForSourceIndices(loader, toCompute, ranges);
     for (const c2 of toCompute) {
       const dist2 = fresh.get(c2);
       if (dist2) {
-        omeHistogramCache.set(cacheKey(imageKey, sourceImageId, c2), dist2);
+        omeHistogramCache.set(cacheKey(imageKey, sourceImageId, c2, ranges == null ? void 0 : ranges.get(c2)), dist2);
         result.set(c2, dist2);
       }
     }
@@ -94859,7 +95087,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const chipHint = "_chipHint_j7rhr_121";
   const chipDim = "_chipDim_j7rhr_160";
   const editor = "_editor_j7rhr_164";
-  const styles$n = {
+  const styles$o = {
     root: root$9,
     groupCard,
     groupHeader,
@@ -94897,12 +95125,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showEditor = !chip2.key.endsWith(":rgb");
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$n.chipCell,
-        chip2.visible && chip2.hex && shown ? styles$n.chipOn : null,
-        chip2.hex && (!chip2.visible || !shown) ? styles$n.chipOutlined : null,
-        chip2.hex ? null : styles$n.chipUnassigned,
+        styles$o.chipCell,
+        chip2.visible && chip2.hex && shown ? styles$o.chipOn : null,
+        chip2.hex && (!chip2.visible || !shown) ? styles$o.chipOutlined : null,
+        chip2.hex ? null : styles$o.chipUnassigned,
         pending2 ? minervaTheme.busyOverlay : null,
-        dim ? styles$n.chipDim : null
+        dim ? styles$o.chipDim : null
       ].filter(Boolean).join(" "),
       style: chip2.hex ? {
         "--ch": `#${chip2.hex}`
@@ -94912,10 +95140,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         jsxRuntimeExports.jsx(CursorHint, {
           enabled: showBlocked,
           label: VIEWER_INTENSITY_LIMIT_HINT,
-          className: styles$n.chipHint,
+          className: styles$o.chipHint,
           children: jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$n.chip}`,
+            className: `${minervaTheme.focusRing} ${styles$o.chip}`,
             title: pending2 ? pendingLabel2 : void 0,
             "aria-label": pending2 ? pendingLabel2 : showBlocked ? VIEWER_INTENSITY_LIMIT_HINT : chipAriaLabel(chip2),
             "aria-pressed": chip2.visible,
@@ -94929,7 +95157,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         showEditor ? jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$n.chipMenu}`,
+          className: `${minervaTheme.focusRing} ${styles$o.chipMenu}`,
           title: `Edit ${chip2.name}`,
           "aria-label": `Edit ${chip2.name}`,
           "aria-expanded": open,
@@ -94945,6 +95173,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   const CHIP_COLS = 5;
+  function pointerInEditor(e2, root2) {
+    const t2 = e2.target;
+    if (t2 instanceof Node && root2.contains(t2)) return true;
+    if (t2 instanceof Element && t2.closest("[data-minerva-color-picker]")) {
+      return true;
+    }
+    const r2 = root2.getBoundingClientRect();
+    return e2.clientX >= r2.left && e2.clientX <= r2.right && e2.clientY >= r2.top && e2.clientY <= r2.bottom;
+  }
   function ChipGrid(props) {
     const { chips, openChip, shownIds, blockedIds, onDismissEditor } = props;
     const editorRef = reactExports.useRef(null);
@@ -94954,28 +95191,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const rowEnd = openIndex < 0 ? -1 : Math.min(chips.length - 1, openIndex - openIndex % CHIP_COLS + CHIP_COLS - 1);
     reactExports.useEffect(() => {
       if (openIndex < 0) return;
-      const onDoc = (e2) => {
+      let downInside = false;
+      const onDown = (e2) => {
         const root2 = editorRef.current;
-        if (!root2) return;
-        const t2 = e2.target;
-        if (t2 instanceof Node && root2.contains(t2)) return;
-        if (t2 instanceof Element && t2.closest("[data-minerva-color-picker]")) {
+        downInside = root2 != null && pointerInEditor(e2, root2);
+      };
+      const onDoc = (e2) => {
+        if (downInside) {
+          downInside = false;
           return;
         }
-        const r2 = root2.getBoundingClientRect();
-        if (e2.clientX >= r2.left && e2.clientX <= r2.right && e2.clientY >= r2.top && e2.clientY <= r2.bottom) {
-          return;
-        }
+        const root2 = editorRef.current;
+        if (!root2 || pointerInEditor(e2, root2)) return;
         onDismissEditor();
       };
+      document.addEventListener("mousedown", onDown);
       document.addEventListener("click", onDoc);
-      return () => document.removeEventListener("click", onDoc);
+      return () => {
+        document.removeEventListener("mousedown", onDown);
+        document.removeEventListener("click", onDoc);
+      };
     }, [
       openIndex,
       onDismissEditor
     ]);
     return jsxRuntimeExports.jsx("div", {
-      className: styles$n.chipWrap,
+      className: styles$o.chipWrap,
       children: chips.map((chip2, i2) => jsxRuntimeExports.jsxs(reactExports.Fragment, {
         children: [
           jsxRuntimeExports.jsx(ChipButton, {
@@ -94991,7 +95232,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           i2 === rowEnd && openChip ? jsxRuntimeExports.jsx("div", {
             ref: editorRef,
-            className: styles$n.editor,
+            className: styles$o.editor,
             children: jsxRuntimeExports.jsx(ChannelEditor, {
               chip: openChip
             })
@@ -95004,10 +95245,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const visLabel = props.allVisible ? `Hide every channel in ${props.name}` : `Show every channel in ${props.name}`;
     const filtering = props.onNameFilterChange != null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$n.groupCard,
+      className: styles$o.groupCard,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$n.groupHeader,
+          className: styles$o.groupHeader,
           children: [
             props.onToggleVisibility ? jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible: Boolean(props.allVisible),
@@ -95017,11 +95258,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: props.onToggleVisibility
             }) : null,
             jsxRuntimeExports.jsx("div", {
-              className: styles$n.groupLabel,
+              className: styles$o.groupLabel,
               children: props.name
             }),
             props.onNameFilterChange ? jsxRuntimeExports.jsx("input", {
-              className: styles$n.channelFilter,
+              className: styles$o.channelFilter,
               type: "text",
               value: props.nameFilter ?? "",
               placeholder: "Search...",
@@ -95038,7 +95279,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         filtering && props.chips.length === 0 ? jsxRuntimeExports.jsx("div", {
-          className: styles$n.filterEmpty,
+          className: styles$o.filterEmpty,
           children: "No matching channels"
         }) : jsxRuntimeExports.jsx(ChipGrid, {
           chips: props.chips,
@@ -95225,7 +95466,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     if (image2.channels.length === 0) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$n.root,
+      className: styles$o.root,
       children: [
         model.groups.map((group2) => {
           const rgbUnit = rgbDisplay && group2.chips[0] ? [
@@ -95287,7 +95528,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  const SvgOrientation = (props) => reactExports.createElement("svg", {
+  const SvgMove = (props) => reactExports.createElement("svg", {
     xmlns: "http://www.w3.org/2000/svg",
     width: "1em",
     height: "1em",
@@ -95299,454 +95540,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     strokeLinejoin: "round",
     ...props
   }, reactExports.createElement("path", {
-    d: "M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"
+    d: "M12 2v20"
   }), reactExports.createElement("path", {
-    d: "M21 3v5h-5"
+    d: "m15 19-3 3-3-3"
+  }), reactExports.createElement("path", {
+    d: "m19 9 3 3-3 3"
+  }), reactExports.createElement("path", {
+    d: "M2 12h20"
+  }), reactExports.createElement("path", {
+    d: "m5 9-3 3 3 3"
+  }), reactExports.createElement("path", {
+    d: "m9 5 3-3 3 3"
   }));
-  const SvgReflectHorizontal = (props) => reactExports.createElement("svg", {
-    width: "1em",
-    height: "1em",
-    viewBox: "0 0 16 16",
-    fill: "none",
-    xmlns: "http://www.w3.org/2000/svg",
-    ...props
-  }, reactExports.createElement("path", {
-    stroke: "currentColor",
-    strokeWidth: 1.25,
-    strokeLinecap: "round",
-    strokeDasharray: "0 2.5",
-    d: "M8 1.25v13.5"
-  }), reactExports.createElement("path", {
-    stroke: "currentColor",
-    strokeWidth: 1.25,
-    strokeLinejoin: "round",
-    d: "M1.5 3.5v9L7 8Z"
-  }), reactExports.createElement("path", {
-    fill: "currentColor",
-    d: "M14.5 3.5v9L9 8Z"
-  }));
-  const SvgReflectVertical = (props) => reactExports.createElement("svg", {
-    width: "1em",
-    height: "1em",
-    viewBox: "0 0 16 16",
-    fill: "none",
-    xmlns: "http://www.w3.org/2000/svg",
-    ...props
-  }, reactExports.createElement("path", {
-    stroke: "currentColor",
-    strokeWidth: 1.25,
-    strokeLinecap: "round",
-    strokeDasharray: "0 2.5",
-    d: "M1.25 8h13.5"
-  }), reactExports.createElement("path", {
-    fill: "currentColor",
-    d: "M3.5 1.5h9L8 7Z"
-  }), reactExports.createElement("path", {
-    stroke: "currentColor",
-    strokeWidth: 1.25,
-    strokeLinejoin: "round",
-    d: "M3.5 14.5h9L8 9Z"
-  }));
-  const SvgRotate90Ccw = (props) => reactExports.createElement("svg", {
-    xmlns: "http://www.w3.org/2000/svg",
-    width: "1em",
-    height: "1em",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 2,
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    ...props
-  }, reactExports.createElement("path", {
-    d: "M20 9V7a2 2 0 0 0-2-2h-6"
-  }), reactExports.createElement("path", {
-    d: "m15 2-3 3 3 3"
-  }), reactExports.createElement("path", {
-    d: "M20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"
-  }));
-  const SvgRotate90Cw = (props) => reactExports.createElement("svg", {
-    xmlns: "http://www.w3.org/2000/svg",
-    width: "1em",
-    height: "1em",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 2,
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    ...props
-  }, reactExports.createElement("path", {
-    d: "M12 5H6a2 2 0 0 0-2 2v3"
-  }), reactExports.createElement("path", {
-    d: "m9 8 3-3-3-3"
-  }), reactExports.createElement("path", {
-    d: "M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
-  }));
-  const menuWrap = "_menuWrap_1gd86_1";
-  const menu$1 = "_menu_1gd86_1";
-  const section = "_section_1gd86_19";
-  const sectionLabel$1 = "_sectionLabel_1gd86_36";
-  const row = "_row_1gd86_48";
-  const knobButton = "_knobButton_1gd86_54";
-  const knob = "_knob_1gd86_54";
-  const knobRing = "_knobRing_1gd86_80";
-  const knobTick = "_knobTick_1gd86_85";
-  const knobArm = "_knobArm_1gd86_91";
-  const knobHandle = "_knobHandle_1gd86_97";
-  const degField = "_degField_1gd86_101";
-  const degInput = "_degInput_1gd86_109";
-  const degUnit = "_degUnit_1gd86_122";
-  const styles$m = {
-    menuWrap,
-    menu: menu$1,
-    section,
-    sectionLabel: sectionLabel$1,
-    row,
-    knobButton,
-    knob,
-    knobRing,
-    knobTick,
-    knobArm,
-    knobHandle,
-    degField,
-    degInput,
-    degUnit
-  };
-  function formatDeg(deg) {
-    const w2 = wrapDisplayDeg(deg);
-    const rounded = Math.round(w2 * 10) / 10;
-    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
-  }
-  function angleFromPointer(clientX, clientY, rect) {
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const rad = Math.atan2(clientX - cx, -(clientY - cy));
-    return wrapDisplayDeg(rad * 180 / Math.PI);
-  }
-  function RotationKnob(props) {
-    const svgRef = reactExports.useRef(null);
-    const dragging = reactExports.useRef(false);
-    const shiftStep = reactExports.useRef(false);
-    const applyPointer = reactExports.useCallback((e2, commit) => {
-      const el2 = svgRef.current;
-      if (!el2) return;
-      let deg = angleFromPointer(e2.clientX, e2.clientY, el2.getBoundingClientRect());
-      if (shiftStep.current || e2.shiftKey) {
-        deg = Math.round(deg * 10) / 10;
-      }
-      if (commit) props.onCommit(deg);
-      else props.onLive(deg);
-    }, [
-      props
-    ]);
-    reactExports.useEffect(() => {
-      const onMove = (e2) => {
-        if (!dragging.current) return;
-        applyPointer(e2, false);
-      };
-      const onUp = (e2) => {
-        if (!dragging.current) return;
-        dragging.current = false;
-        applyPointer(e2, true);
-      };
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
-      window.addEventListener("pointercancel", onUp);
-      return () => {
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
-        window.removeEventListener("pointercancel", onUp);
-      };
-    }, [
-      applyPointer
-    ]);
-    const display = wrapDisplayDeg(props.degrees);
-    const handleRad = display * Math.PI / 180;
-    const hx = 20 + 14 * Math.sin(handleRad);
-    const hy = 20 - 14 * Math.cos(handleRad);
-    return jsxRuntimeExports.jsx("div", {
-      className: styles$m.knobButton,
-      role: "slider",
-      tabIndex: 0,
-      "aria-label": "Rotation angle",
-      "aria-valuemin": -180,
-      "aria-valuemax": 180,
-      "aria-valuenow": Math.round(display * 10) / 10,
-      "aria-valuetext": `${formatDeg(display)} degrees`,
-      onPointerDown: (e2) => {
-        var _a2, _b2;
-        e2.preventDefault();
-        e2.stopPropagation();
-        dragging.current = true;
-        shiftStep.current = e2.shiftKey;
-        (_b2 = (_a2 = e2.currentTarget).setPointerCapture) == null ? void 0 : _b2.call(_a2, e2.pointerId);
-        applyPointer(e2, false);
-      },
-      onDoubleClick: (e2) => {
-        e2.preventDefault();
-        e2.stopPropagation();
-        props.onResetAngle();
-      },
-      onKeyDown: (e2) => {
-        const step = e2.shiftKey ? 0.1 : 1;
-        if (e2.key === "ArrowLeft" || e2.key === "ArrowDown") {
-          e2.preventDefault();
-          props.onCommit(wrapDisplayDeg(display - step));
-        } else if (e2.key === "ArrowRight" || e2.key === "ArrowUp") {
-          e2.preventDefault();
-          props.onCommit(wrapDisplayDeg(display + step));
-        } else if (e2.key === "Home") {
-          e2.preventDefault();
-          props.onResetAngle();
-        }
-      },
-      children: jsxRuntimeExports.jsxs("svg", {
-        ref: svgRef,
-        className: styles$m.knob,
-        viewBox: "0 0 40 40",
-        width: "26",
-        height: "26",
-        "aria-hidden": true,
-        children: [
-          jsxRuntimeExports.jsx("title", {
-            children: "Rotation dial"
-          }),
-          jsxRuntimeExports.jsx("circle", {
-            cx: "20",
-            cy: "20",
-            r: "15.5",
-            className: styles$m.knobRing,
-            fill: "none"
-          }),
-          jsxRuntimeExports.jsx("line", {
-            x1: "20",
-            y1: "4.5",
-            x2: "20",
-            y2: "8",
-            className: styles$m.knobTick
-          }),
-          jsxRuntimeExports.jsx("line", {
-            x1: "20",
-            y1: "20",
-            x2: hx,
-            y2: hy,
-            className: styles$m.knobArm
-          }),
-          jsxRuntimeExports.jsx("circle", {
-            cx: hx,
-            cy: hy,
-            r: "3.5",
-            className: styles$m.knobHandle
-          })
-        ]
-      })
-    });
-  }
-  function ImageOrientationRow(props) {
-    const { image: image2, onOpenChange } = props;
-    const [open, setOpen] = reactExports.useState(false);
-    const onOpenChangeRef = reactExports.useRef(onOpenChange);
-    onOpenChangeRef.current = onOpenChange;
-    const wrapRef = reactExports.useRef(null);
-    const setImages = useDocumentStore((s2) => s2.setImages);
-    const preview = useAppStore((s2) => {
-      var _a2;
-      return ((_a2 = s2.imageOrientationPreview) == null ? void 0 : _a2.imageId) === image2.id ? s2.imageOrientationPreview.orientation : null;
-    });
-    const setPreview = useAppStore((s2) => s2.setImageOrientationPreview);
-    const committed = effectiveOrientation(image2);
-    const live = preview ?? committed;
-    const [textDraft, setTextDraft] = reactExports.useState(() => formatDeg(live.rotationDegrees));
-    const nonIdentity = !isIdentityOrientation(live);
-    reactExports.useEffect(() => {
-      var _a2;
-      (_a2 = onOpenChangeRef.current) == null ? void 0 : _a2.call(onOpenChangeRef, open);
-    }, [
-      open
-    ]);
-    useClickOutside(open, () => setOpen(false), [
-      wrapRef
-    ]);
-    reactExports.useEffect(() => {
-      if (preview) return;
-      setTextDraft(formatDeg(committed.rotationDegrees));
-    }, [
-      committed.rotationDegrees,
-      preview
-    ]);
-    const commit = reactExports.useCallback((patch2) => {
-      const next2 = withOrientation(live, patch2);
-      setPreview(null);
-      setImages(setImageOrientation(useDocumentStore.getState().images, image2.id, next2));
-      setTextDraft(formatDeg(next2.rotationDegrees));
-    }, [
-      image2.id,
-      live,
-      setImages,
-      setPreview
-    ]);
-    const previewLive = reactExports.useCallback((patch2) => {
-      const next2 = withOrientation(live, patch2);
-      setPreview({
-        imageId: image2.id,
-        orientation: next2
-      });
-      setTextDraft(formatDeg(next2.rotationDegrees));
-    }, [
-      image2.id,
-      live,
-      setPreview
-    ]);
-    const commitText = (raw2) => {
-      const parsed = Number.parseFloat(raw2.replace(/°/g, "").trim());
-      if (!Number.isFinite(parsed)) {
-        setTextDraft(formatDeg(live.rotationDegrees));
-        return;
-      }
-      commit({
-        rotationDegrees: parsed
-      });
-    };
-    return jsxRuntimeExports.jsxs("div", {
-      className: styles$m.menuWrap,
-      ref: wrapRef,
-      children: [
-        jsxRuntimeExports.jsx(PanelIconButton, {
-          title: "Orientation",
-          "aria-label": "Orientation",
-          "aria-expanded": open,
-          "aria-haspopup": "dialog",
-          active: open || nonIdentity,
-          onClick: (e2) => {
-            e2.stopPropagation();
-            setOpen((v2) => !v2);
-          },
-          children: jsxRuntimeExports.jsx(SvgOrientation, {
-            "aria-hidden": true
-          })
-        }),
-        open ? jsxRuntimeExports.jsxs("div", {
-          className: `${minervaTheme.menu} ${styles$m.menu}`,
-          children: [
-            jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$m.section,
-              children: [
-                jsxRuntimeExports.jsx("legend", {
-                  className: styles$m.sectionLabel,
-                  children: "Reflect"
-                }),
-                jsxRuntimeExports.jsxs("div", {
-                  className: styles$m.row,
-                  children: [
-                    jsxRuntimeExports.jsx(PanelIconButton, {
-                      title: "Flip horizontal",
-                      "aria-label": "Flip horizontal",
-                      "aria-pressed": live.flipHorizontal,
-                      active: live.flipHorizontal,
-                      onClick: () => commit({
-                        flipHorizontal: !live.flipHorizontal
-                      }),
-                      children: jsxRuntimeExports.jsx(SvgReflectHorizontal, {
-                        "aria-hidden": true
-                      })
-                    }),
-                    jsxRuntimeExports.jsx(PanelIconButton, {
-                      title: "Flip vertical",
-                      "aria-label": "Flip vertical",
-                      "aria-pressed": live.flipVertical,
-                      active: live.flipVertical,
-                      onClick: () => commit({
-                        flipVertical: !live.flipVertical
-                      }),
-                      children: jsxRuntimeExports.jsx(SvgReflectVertical, {
-                        "aria-hidden": true
-                      })
-                    })
-                  ]
-                })
-              ]
-            }),
-            jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$m.section,
-              children: [
-                jsxRuntimeExports.jsx("legend", {
-                  className: styles$m.sectionLabel,
-                  children: "Rotate"
-                }),
-                jsxRuntimeExports.jsxs("div", {
-                  className: styles$m.row,
-                  children: [
-                    jsxRuntimeExports.jsx(PanelIconButton, {
-                      title: "Rotate 90\xB0 counter-clockwise",
-                      "aria-label": "Rotate 90 degrees counter-clockwise",
-                      onClick: () => commit({
-                        rotationDegrees: live.rotationDegrees - 90
-                      }),
-                      children: jsxRuntimeExports.jsx(SvgRotate90Ccw, {
-                        "aria-hidden": true
-                      })
-                    }),
-                    jsxRuntimeExports.jsx(RotationKnob, {
-                      degrees: live.rotationDegrees,
-                      onLive: (deg) => previewLive({
-                        rotationDegrees: deg
-                      }),
-                      onCommit: (deg) => commit({
-                        rotationDegrees: deg
-                      }),
-                      onResetAngle: () => commit({
-                        rotationDegrees: 0
-                      })
-                    }),
-                    jsxRuntimeExports.jsx(PanelIconButton, {
-                      title: "Rotate 90\xB0 clockwise",
-                      "aria-label": "Rotate 90 degrees clockwise",
-                      onClick: () => commit({
-                        rotationDegrees: live.rotationDegrees + 90
-                      }),
-                      children: jsxRuntimeExports.jsx(SvgRotate90Cw, {
-                        "aria-hidden": true
-                      })
-                    }),
-                    jsxRuntimeExports.jsxs("div", {
-                      className: styles$m.degField,
-                      children: [
-                        jsxRuntimeExports.jsx("input", {
-                          className: `${minervaTheme.input} ${styles$m.degInput}`,
-                          type: "text",
-                          inputMode: "decimal",
-                          value: textDraft,
-                          "aria-label": "Rotation degrees",
-                          onChange: (e2) => setTextDraft(e2.target.value),
-                          onBlur: (e2) => commitText(e2.currentTarget.value),
-                          onKeyDown: (e2) => {
-                            if (e2.key === "Enter") {
-                              e2.preventDefault();
-                              commitText(e2.currentTarget.value);
-                              e2.currentTarget.blur();
-                            } else if (e2.key === "Escape") {
-                              setTextDraft(formatDeg(live.rotationDegrees));
-                              e2.currentTarget.blur();
-                            }
-                          }
-                        }),
-                        jsxRuntimeExports.jsx("span", {
-                          className: styles$m.degUnit,
-                          "aria-hidden": true,
-                          children: "\xB0"
-                        })
-                      ]
-                    })
-                  ]
-                })
-              ]
-            })
-          ]
-        }) : null
-      ]
-    });
-  }
   var commonjsGlobal = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
   function getDefaultExportFromCjs(x2) {
     return x2 && x2.__esModule && Object.prototype.hasOwnProperty.call(x2, "default") ? x2["default"] : x2;
@@ -158141,14 +157946,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       {
         key: "applyFormatting",
         value: function applyFormatting(value) {
-          var formatNumber = function formatNumber2(numberStr) {
+          var formatNumber2 = function formatNumber3(numberStr) {
             var returnVal = numberStr.trim().replace(/[^0-9.\\\-+e]/gi, "");
             return returnVal === "" ? null : Number(returnVal);
           };
           if (Array.isArray(value)) {
-            return value.map(formatNumber);
+            return value.map(formatNumber2);
           }
-          return formatNumber(value);
+          return formatNumber2(value);
         }
       },
       {
@@ -158304,14 +158109,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       {
         key: "applyFormatting",
         value: function applyFormatting(value) {
-          var formatNumber = function formatNumber2(numberStr) {
+          var formatNumber2 = function formatNumber3(numberStr) {
             var returnVal = numberStr.trim().replace(/[^0-9.\\\-+e]/gi, "");
             return returnVal === "" ? null : Number(returnVal);
           };
           if (Array.isArray(value)) {
-            return value.map(formatNumber);
+            return value.map(formatNumber2);
           }
-          return formatNumber(value);
+          return formatNumber2(value);
         }
       },
       {
@@ -160035,11 +159840,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
           var frameSize = referenceDataset.PixelData.byteLength;
           ds.PixelData = new ArrayBuffer(ds.NumberOfFrames * frameSize);
-          var frame = 0;
+          var frame2 = 0;
           distanceDatasetPairs.forEach(function(pair) {
             var dataset = pair[1];
             var pixels = new Uint16Array(dataset.PixelData);
-            var frameView = new Uint16Array(ds.PixelData, frame * frameSize, frameSize / 2);
+            var frameView = new Uint16Array(ds.PixelData, frame2 * frameSize, frameSize / 2);
             try {
               frameView.set(pixels);
             } catch (e2) {
@@ -160048,7 +159853,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 log$2.error(message2);
               }
             }
-            frame++;
+            frame2++;
           });
           if (ds.NumberOfFrames < 2) {
             log$2.error("Cannot populate shared groups uniquely without multiple frames");
@@ -166043,8 +165848,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         score: null
       };
     }
+    const threshold = plane.integer === false ? 0.9 : EQ_THRESHOLD;
     return {
-      label: score > EQ_THRESHOLD ? "mask" : "image",
+      label: score > threshold ? "mask" : "image",
       score
     };
   }
@@ -167219,9 +167025,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       type: "button",
       "aria-pressed": selected,
       className: [
-        selected ? styles$q.typeChipActive : null,
-        suggested ? styles$q.typeChipSuggested : null,
-        muted ? styles$q.typeChipMuted : null
+        selected ? styles$r.typeChipActive : null,
+        suggested ? styles$r.typeChipSuggested : null,
+        muted ? styles$r.typeChipMuted : null
       ].filter(Boolean).join(" "),
       onClick,
       children: label2
@@ -167281,6 +167087,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const Upload = (props) => {
     const { onAllow, importRevision = 0, imageLoaded = false, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, onImportDicomWeb, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], onReselectFile, needsStoryRootReconnect = false, onReconnectStoryRoot, onRemoveImage, onReplaceImage, row: row2 = false, disabled: disabled2 = false } = props;
     const images = useDocumentStore((s2) => s2.images);
+    const arrangeImageId = useAppStore((s2) => s2.arrangeImageId);
+    const setArrangeImageId = useAppStore((s2) => s2.setArrangeImageId);
     const hasImages = images.length > 0 || !!imageLoaded && loadedSource != null;
     const [urlDraft, setUrlDraft] = reactExports.useState("");
     const [pending2, setPending] = reactExports.useState(null);
@@ -167301,13 +167109,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setFeatureCsvCols(null);
     }, []);
     const [dragging, setDragging] = reactExports.useState(false);
-    const [orientMenuImageId, setOrientMenuImageId] = reactExports.useState(null);
-    const onOrientMenu = (imageId, open) => {
-      setOrientMenuImageId((cur) => {
-        if (open) return imageId;
-        return cur === imageId ? null : cur;
-      });
-    };
     const dragDepthRef = reactExports.useRef(0);
     const localPickInFlightRef = reactExports.useRef(false);
     const prevImportRev = reactExports.useRef(importRevision);
@@ -167407,9 +167208,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           const result = await detectOmeTiffMask(source2, ac2.signal);
           if (ac2.signal.aborted) return;
           if (!roleChosenByUserRef.current && (result.score != null || result.label === "rgb")) {
-            const role2 = result.label === "mask" ? "segmentation" : "intensity";
-            setDetectedRole(role2);
-            setOverlayRole(role2);
+            const detected = result.label === "mask" ? "segmentation" : "intensity";
+            setDetectedRole(detected);
+            setOverlayRole(detected);
           }
         } catch (error2) {
           if (!ac2.signal.aborted) {
@@ -167621,85 +167422,69 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const needsPermission = needsFileAccess && !!onRequestFileAccess && ((_b2 = im.source) == null ? void 0 : _b2.kind) === "local" && !needsReselect;
       const needsStoryDir = needsStoryRootReconnect && !!onReconnectStoryRoot && ((_c2 = im.source) == null ? void 0 : _c2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
       const showAccessOverlay = needsReselect || needsPermission || needsStoryDir;
-      const orientOpen = orientMenuImageId === im.id;
-      const panelDimmed = orientMenuImageId != null && !orientOpen;
       return jsxRuntimeExports.jsxs("article", {
-        className: [
-          styles$q.imageCard,
-          panelDimmed ? styles$q.panelDim : ""
-        ].filter(Boolean).join(" "),
+        className: styles$r.imageCard,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: [
-              styles$q.imageCardHeader,
-              orientOpen ? styles$q.imageCardHeaderOpen : ""
-            ].filter(Boolean).join(" "),
+            className: styles$r.imageCardHeader,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: [
-                  styles$q.imageCardText,
-                  orientOpen ? styles$q.panelDim : ""
-                ].filter(Boolean).join(" "),
+                className: styles$r.imageCardText,
                 children: [
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$q.imageCardTitle,
+                    className: styles$r.imageCardTitle,
                     title: title7,
                     children: title7
                   }),
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$q.imageCardMeta,
+                    className: styles$r.imageCardMeta,
                     children: metaParts.join(" \xB7 ")
                   })
                 ]
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$q.imageCardActions,
+                className: styles$r.imageCardActions,
                 children: [
-                  jsxRuntimeExports.jsx(ImageOrientationRow, {
-                    image: im,
-                    onOpenChange: (open) => onOrientMenu(im.id, open)
+                  jsxRuntimeExports.jsx(PanelIconButton, {
+                    title: "Arrange",
+                    "aria-label": `Arrange ${title7}`,
+                    "aria-pressed": arrangeImageId === im.id,
+                    active: arrangeImageId === im.id,
+                    onClick: () => setArrangeImageId(arrangeImageId === im.id ? null : im.id),
+                    children: jsxRuntimeExports.jsx(SvgMove, {
+                      "aria-hidden": true
+                    })
                   }),
-                  jsxRuntimeExports.jsxs("span", {
-                    className: [
-                      styles$q.imageCardActionRest,
-                      orientOpen ? styles$q.panelDim : ""
-                    ].filter(Boolean).join(" "),
-                    children: [
-                      onReplaceImage && ((_d = im.source) == null ? void 0 : _d.kind) !== "jpeg" && ((_e = im.source) == null ? void 0 : _e.kind) !== "dicomWeb" ? jsxRuntimeExports.jsx(PanelIconButton, {
-                        title: `Browse for an image to replace ${title7}`,
-                        "aria-label": `Browse for an image to replace ${title7}`,
-                        onClick: () => void onReplaceImage(im.id),
-                        children: jsxRuntimeExports.jsx(BrowseIcon, {
-                          title: "Browse for image",
-                          size: 14
-                        })
-                      }) : null,
-                      onRemoveImage ? jsxRuntimeExports.jsx(PanelIconButton, {
-                        title: `Delete ${title7}`,
-                        "aria-label": `Delete ${title7}`,
-                        onClick: () => void onRemoveImage(im.id),
-                        children: jsxRuntimeExports.jsx(TrashIcon, {
-                          title: "Delete",
-                          size: 14
-                        })
-                      }) : null
-                    ]
-                  })
+                  onReplaceImage && ((_d = im.source) == null ? void 0 : _d.kind) !== "jpeg" && ((_e = im.source) == null ? void 0 : _e.kind) !== "dicomWeb" ? jsxRuntimeExports.jsx(PanelIconButton, {
+                    title: `Browse for an image to replace ${title7}`,
+                    "aria-label": `Browse for an image to replace ${title7}`,
+                    onClick: () => void onReplaceImage(im.id),
+                    children: jsxRuntimeExports.jsx(BrowseIcon, {
+                      title: "Browse for image",
+                      size: 14
+                    })
+                  }) : null,
+                  onRemoveImage ? jsxRuntimeExports.jsx(PanelIconButton, {
+                    title: `Delete ${title7}`,
+                    "aria-label": `Delete ${title7}`,
+                    onClick: () => void onRemoveImage(im.id),
+                    children: jsxRuntimeExports.jsx(TrashIcon, {
+                      title: "Delete",
+                      size: 14
+                    })
+                  }) : null
                 ]
               })
             ]
           }),
-          jsxRuntimeExports.jsx("div", {
-            className: orientOpen ? styles$q.panelDim : void 0,
-            children: jsxRuntimeExports.jsx(ImageChannelOverviewCard, {
-              image: im
-            })
+          jsxRuntimeExports.jsx(ImageChannelOverviewCard, {
+            image: im
           }),
           showAccessOverlay ? jsxRuntimeExports.jsx("div", {
-            className: styles$q.fileAccessOverlay,
+            className: styles$r.fileAccessOverlay,
             children: jsxRuntimeExports.jsx(PanelActionButton, {
               type: "button",
-              className: styles$q.fileAccessAction,
+              className: styles$r.fileAccessAction,
               onClick: () => {
                 if (needsStoryDir) void (onReconnectStoryRoot == null ? void 0 : onReconnectStoryRoot());
                 else if (needsReselect) void (onReselectFile == null ? void 0 : onReselectFile(im.id));
@@ -167713,18 +167498,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const imageCards = images.length > 0 ? images.map((im, i2) => renderImageCard(im, i2)) : imageLoaded && loadedSource ? [
       jsxRuntimeExports.jsx("article", {
-        className: styles$q.imageCard,
+        className: styles$r.imageCard,
         children: jsxRuntimeExports.jsx("div", {
-          className: styles$q.imageCardHeader,
+          className: styles$r.imageCardHeader,
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$q.imageCardText,
+            className: styles$r.imageCardText,
             children: [
               jsxRuntimeExports.jsx("div", {
-                className: styles$q.imageCardTitle,
+                className: styles$r.imageCardTitle,
                 children: loadedSource.label
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$q.imageCardMeta,
+                className: styles$r.imageCardMeta,
                 children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
               })
             ]
@@ -167743,47 +167528,46 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const urlError = stripError && stripErrorAt === "url" ? stripError : null;
     const addStrip2 = jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$q.addStrip,
-        row2 ? styles$q.addStripRow : "",
-        row2 && dragging ? styles$q.panelDropActive : "",
-        !row2 && orientMenuImageId ? styles$q.panelDim : ""
+        styles$r.addStrip,
+        row2 ? styles$r.addStripRow : "",
+        row2 && dragging ? styles$r.panelDropActive : ""
       ].filter(Boolean).join(" "),
       ...row2 ? dropHandlers : {},
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
           className: [
-            styles$q.dropZone,
-            dragging ? styles$q.dropZoneActive : ""
+            styles$r.dropZone,
+            dragging ? styles$r.dropZoneActive : ""
           ].join(" "),
           disabled: disabled2,
           "aria-invalid": dropError ? true : void 0,
           onClick: () => void browseLocal(),
           children: jsxRuntimeExports.jsx("span", {
             className: [
-              styles$q.dropZoneTitle,
-              dropError ? styles$q.importError : ""
+              styles$r.dropZoneTitle,
+              dropError ? styles$r.importError : ""
             ].filter(Boolean).join(" "),
             role: dropError ? "alert" : void 0,
             children: dropError ?? "Drop or Browse Image File"
           })
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$q.orDivider,
+          className: styles$r.orDivider,
           children: jsxRuntimeExports.jsx("span", {
             children: "or"
           })
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$q.urlRow,
+          className: styles$r.urlRow,
           children: [
             jsxRuntimeExports.jsxs("div", {
-              className: styles$q.urlField,
+              className: styles$r.urlField,
               children: [
                 jsxRuntimeExports.jsx("input", {
                   id: "upload-add-url",
                   type: "url",
-                  className: `${minervaTheme.input} ${styles$q.urlInput}`,
+                  className: `${minervaTheme.input} ${styles$r.urlInput}`,
                   placeholder: "Image URL (OME-TIFF or DICOMweb)",
                   "aria-label": "Image URL",
                   "aria-invalid": urlError ? true : void 0,
@@ -167802,7 +167586,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 urlDraft.trim() ? jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
-                  className: styles$q.urlAdd,
+                  className: styles$r.urlAdd,
                   disabled: disabled2 || !urlReady,
                   onClick: acceptUrlDraft,
                   children: "Add"
@@ -167810,7 +167594,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             urlError ? jsxRuntimeExports.jsx("div", {
-              className: styles$q.importError,
+              className: styles$r.importError,
               role: "alert",
               children: urlError
             }) : null
@@ -167828,7 +167612,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         row2 ? addStrip2 : jsxRuntimeExports.jsx("div", {
           className: [
             panel$1.authorPanel,
-            dragging ? styles$q.panelDropActive : ""
+            dragging ? styles$r.panelDropActive : ""
           ].join(" "),
           ...dropHandlers,
           children: jsxRuntimeExports.jsx("div", {
@@ -167837,7 +167621,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               panel$1.thinScrollbar
             ].join(" "),
             children: jsxRuntimeExports.jsxs("div", {
-              className: styles$q.stack,
+              className: styles$r.stack,
               children: [
                 imageCards,
                 addStrip2
@@ -167857,17 +167641,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           onImport: () => void runImport(),
           children: [
             jsxRuntimeExports.jsxs("div", {
-              className: styles$q.typeRow,
+              className: styles$r.typeRow,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$q.fieldLabel,
+                  className: styles$r.fieldLabel,
                   children: "Image Type"
                 }),
                 jsxRuntimeExports.jsx(FormatChip, {
                   label: "Fluorescence",
                   selected: overlayRole === "intensity" && !overlayRgbDisplay,
-                  suggested: detectedRole === "intensity" && detectedRgbDisplay !== true,
-                  muted: detectedRole !== "intensity" || detectedRgbDisplay === true,
+                  suggested: overlayRole === "intensity" && !overlayRgbDisplay,
+                  muted: detectedRgbDisplay === true,
                   onClick: () => {
                     roleChosenByUserRef.current = true;
                     rgbDisplayChosenByUserRef.current = true;
@@ -167878,7 +167662,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 detectedRgbDisplay != null ? jsxRuntimeExports.jsx(FormatChip, {
                   label: "Brightfield",
                   selected: overlayRole === "intensity" && overlayRgbDisplay,
-                  suggested: detectedRole === "intensity" && detectedRgbDisplay === true,
+                  suggested: overlayRole === "intensity" && overlayRgbDisplay,
                   muted: detectedRole !== "intensity" || detectedRgbDisplay !== true,
                   onClick: () => {
                     roleChosenByUserRef.current = true;
@@ -167890,8 +167674,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 jsxRuntimeExports.jsx(FormatChip, {
                   label: "Segmentation Mask",
                   selected: overlayRole === "segmentation",
-                  suggested: detectedRole === "segmentation",
-                  muted: detectedRole !== "segmentation",
+                  suggested: overlayRole === "segmentation",
                   onClick: () => {
                     roleChosenByUserRef.current = true;
                     setOverlayRole("segmentation");
@@ -167902,12 +167685,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             dicomAllowed ? jsxRuntimeExports.jsx("div", {
-              className: styles$q.typeSection,
+              className: styles$r.typeSection,
               children: jsxRuntimeExports.jsxs("div", {
-                className: styles$q.typeRow,
+                className: styles$r.typeRow,
                 children: [
                   jsxRuntimeExports.jsx("span", {
-                    className: styles$q.fieldLabel,
+                    className: styles$r.fieldLabel,
                     children: "Format"
                   }),
                   FORMAT_OPTIONS.map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
@@ -167924,10 +167707,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               })
             }) : null,
             overlayRole === "segmentation" ? jsxRuntimeExports.jsxs("div", {
-              className: styles$q.typeRow,
+              className: styles$r.typeRow,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$q.fieldLabel,
+                  className: styles$r.fieldLabel,
                   children: "Feature table"
                 }),
                 jsxRuntimeExports.jsx(PanelActionButton, {
@@ -170430,7 +170213,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const rowTitle$1 = "_rowTitle_la95u_239";
   const rowDate = "_rowDate_la95u_249";
   const scrap = "_scrap_la95u_258";
-  const styles$l = {
+  const styles$n = {
     root: root$8,
     masthead,
     addWrap,
@@ -170503,7 +170286,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function ShelfBoard() {
     return jsxRuntimeExports.jsx("div", {
-      className: styles$l.shelfBoard,
+      className: styles$n.shelfBoard,
       "aria-hidden": true
     });
   }
@@ -170567,10 +170350,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     return jsxRuntimeExports.jsx("div", {
       ref: shelfRef,
-      className: styles$l.ghostShelf,
+      className: styles$n.ghostShelf,
       "aria-hidden": true,
       children: books.map((b2) => jsxRuntimeExports.jsx("div", {
-        className: styles$l.ghostBook,
+        className: styles$n.ghostBook,
         style: {
           width: b2.width,
           height: b2.height,
@@ -170747,46 +170530,46 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       summaries
     ]);
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$l.root,
+      className: styles$n.root,
       children: [
         error2 ? jsxRuntimeExports.jsx("p", {
-          className: styles$l.error,
+          className: styles$n.error,
           children: error2
         }) : null,
         jsxRuntimeExports.jsxs("header", {
-          className: styles$l.masthead,
+          className: styles$n.masthead,
           children: [
             jsxRuntimeExports.jsx("h1", {
               className: `${minervaTheme.wordmark} ${minervaTheme.wordmarkDisplay}`,
               children: "Minerva"
             }),
             jsxRuntimeExports.jsx("p", {
-              className: styles$l.tagline,
+              className: styles$n.tagline,
               children: "a microscopy viewer for non-experts"
             })
           ]
         }),
         jsxRuntimeExports.jsx("section", {
-          className: styles$l.bookcase,
+          className: styles$n.bookcase,
           "aria-label": "Library",
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$l.bookcaseInner,
+            className: styles$n.bookcaseInner,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$l.shelfBay,
+                className: styles$n.shelfBay,
                 children: [
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$l.bayContent,
+                    className: styles$n.bayContent,
                     children: jsxRuntimeExports.jsxs("div", {
-                      className: styles$l.intakeRow,
+                      className: styles$n.intakeRow,
                       children: [
                         jsxRuntimeExports.jsxs("div", {
-                          className: styles$l.addWrap,
+                          className: styles$n.addWrap,
                           ref: addRef,
                           children: [
                             jsxRuntimeExports.jsx("button", {
                               type: "button",
-                              className: `${minervaTheme.focusRing} ${styles$l.addTrigger}`,
+                              className: `${minervaTheme.focusRing} ${styles$n.addTrigger}`,
                               disabled: shelfBusy,
                               "aria-label": "Add story",
                               title: "New or import story",
@@ -170796,7 +170579,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                               children: jsxRuntimeExports.jsx(PlusIcon, {})
                             }),
                             addOpen ? jsxRuntimeExports.jsxs("div", {
-                              className: `${minervaTheme.menu} ${styles$l.addMenu}`,
+                              className: `${minervaTheme.menu} ${styles$n.addMenu}`,
                               role: "menu",
                               children: [
                                 jsxRuntimeExports.jsx("button", {
@@ -170841,48 +170624,48 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               bays.map((bay, index2) => {
                 const key2 = bay.kind === "story" ? bay.story.id : `bay-${index2}`;
                 return jsxRuntimeExports.jsxs("div", {
-                  className: styles$l.shelfBay,
+                  className: styles$n.shelfBay,
                   children: [
                     jsxRuntimeExports.jsxs("div", {
-                      className: bay.kind === "empty" ? `${styles$l.bayContent} ${styles$l.bayContentEmpty}` : styles$l.bayContent,
+                      className: bay.kind === "empty" ? `${styles$n.bayContent} ${styles$n.bayContentEmpty}` : styles$n.bayContent,
                       "aria-hidden": bay.kind === "empty" ? true : void 0,
                       children: [
                         bay.kind === "empty" ? jsxRuntimeExports.jsx(GhostBooks, {
                           bayIndex: index2
                         }) : null,
                         bay.kind === "loading" ? jsxRuntimeExports.jsx("p", {
-                          className: styles$l.whisper,
+                          className: styles$n.whisper,
                           children: "Opening the stacks\u2026"
                         }) : null,
                         bay.kind === "story" ? jsxRuntimeExports.jsxs("div", {
-                          className: styles$l.storyRow,
+                          className: styles$n.storyRow,
                           children: [
                             jsxRuntimeExports.jsxs("button", {
                               type: "button",
-                              className: `${minervaTheme.focusRing} ${styles$l.rowOpen}`,
+                              className: `${minervaTheme.focusRing} ${styles$n.rowOpen}`,
                               disabled: busyId === bay.story.id,
                               onClick: () => void openStory(bay.story.id),
                               children: [
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$l.rowThumb,
+                                  className: styles$n.rowThumb,
                                   "aria-hidden": true,
                                   children: bay.story.thumbnail ? jsxRuntimeExports.jsx("img", {
                                     src: bay.story.thumbnail,
                                     alt: "",
-                                    className: styles$l.rowThumbImg
+                                    className: styles$n.rowThumbImg
                                   }) : jsxRuntimeExports.jsx("span", {
-                                    className: styles$l.rowThumbBlank
+                                    className: styles$n.rowThumbBlank
                                   })
                                 }),
                                 jsxRuntimeExports.jsxs("span", {
-                                  className: styles$l.rowText,
+                                  className: styles$n.rowText,
                                   children: [
                                     jsxRuntimeExports.jsx("span", {
-                                      className: styles$l.rowTitle,
+                                      className: styles$n.rowTitle,
                                       children: bay.story.title
                                     }),
                                     jsxRuntimeExports.jsx("span", {
-                                      className: styles$l.rowDate,
+                                      className: styles$n.rowDate,
                                       children: formatShortDate(bay.story.modifiedAt)
                                     })
                                   ]
@@ -170891,7 +170674,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             }),
                             jsxRuntimeExports.jsx("button", {
                               type: "button",
-                              className: `${minervaTheme.focusRing} ${styles$l.scrap}`,
+                              className: `${minervaTheme.focusRing} ${styles$n.scrap}`,
                               disabled: busyId === bay.story.id,
                               "aria-label": `Remove ${bay.story.title}`,
                               onClick: (e2) => {
@@ -170958,7 +170741,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const headerTitle = "_headerTitle_o47qu_12";
   const headerCount = "_headerCount_o47qu_24";
   const headerActions = "_headerActions_o47qu_30";
-  const styles$k = {
+  const styles$m = {
     compactHeader,
     headerTitle,
     headerCount,
@@ -170989,7 +170772,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showTitle = title7 != null && title7 !== "";
     const slot = reactExports.useContext(SidebarStripSlotContext);
     const actionsNode = actions2 == null ? null : jsxRuntimeExports.jsx("div", {
-      className: styles$k.headerActions,
+      className: styles$m.headerActions,
       children: actions2
     });
     if (!showTitle) {
@@ -170998,18 +170781,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$k.compactHeader,
+        styles$m.compactHeader,
         className2
       ].filter(Boolean).join(" "),
       children: [
         showTitle ? jsxRuntimeExports.jsxs("div", {
-          className: styles$k.headerTitle,
+          className: styles$m.headerTitle,
           children: [
             jsxRuntimeExports.jsx("span", {
               children: title7
             }),
             count2 != null ? jsxRuntimeExports.jsx("span", {
-              className: styles$k.headerCount,
+              className: styles$m.headerCount,
               children: count2
             }) : null
           ]
@@ -171045,7 +170828,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const brushEditIcon = "_brushEditIcon_1qxur_61";
   const itemListRoot = "_itemListRoot_1qxur_66";
   const metaIcon = "_metaIcon_1qxur_70";
-  const styles$j = {
+  const styles$l = {
     layersPanel,
     layersUnifiedTop,
     layersToolbarSlot,
@@ -171077,7 +170860,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const itemRowMainStatic = "_itemRowMainStatic_1ftcd_161";
   const itemListMarkdownEditor = "_itemListMarkdownEditor_1ftcd_167";
   const itemListCompact = "_itemListCompact_1ftcd_197";
-  const styles$i = {
+  const styles$k = {
     itemList,
     headerMarkdown,
     list: list$3,
@@ -171144,7 +170927,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       return jsxRuntimeExports.jsx("button", {
         type: "button",
-        className: styles$i.button,
+        className: styles$k.button,
         onClick: (e2) => {
           e2.stopPropagation();
           onToggleVisibility(item2.id);
@@ -171174,23 +170957,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const isDragging = draggedItemId === item2.id;
       const isDropTarget = dropTargetId === item2.id;
       const itemClasses = [
-        styles$i.item,
+        styles$k.item,
         item2.isActive ? minervaTheme.selectLeft : "",
-        item2.pulse ? styles$i.itemPulse : "",
-        item2.isHidden ? styles$i.itemHidden : "",
-        isDragging ? styles$i.itemDragging : "",
-        isDropTarget ? styles$i.itemDropTarget : "",
-        isChild2 ? styles$i.itemChild : ""
+        item2.pulse ? styles$k.itemPulse : "",
+        item2.isHidden ? styles$k.itemHidden : "",
+        isDragging ? styles$k.itemDragging : "",
+        isDropTarget ? styles$k.itemDropTarget : "",
+        isChild2 ? styles$k.itemChild : ""
       ].filter(Boolean).join(" ");
       const contentBlock = jsxRuntimeExports.jsxs("span", {
-        className: styles$i.content,
+        className: styles$k.content,
         children: [
           jsxRuntimeExports.jsx("span", {
-            className: `${styles$i.title} ${item2.isActive ? styles$i.titleActive : ""}`,
+            className: `${styles$k.title} ${item2.isActive ? styles$k.titleActive : ""}`,
             children: item2.title
           }),
           item2.subtitle ? jsxRuntimeExports.jsx("span", {
-            className: styles$i.subtitle,
+            className: styles$k.subtitle,
             children: item2.subtitle
           }) : null
         ]
@@ -171205,25 +170988,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         onDrop: (e2) => handleDrop(item2.id, e2),
         children: [
           visibilityToggleLeading ? jsxRuntimeExports.jsx("span", {
-            className: styles$i.itemLeadingVisibility,
+            className: styles$k.itemLeadingVisibility,
             children: renderVisibilityToggle(item2)
           }) : null,
           item2.icon ? onItemClick ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$i.itemIconHit}`,
+            className: `${minervaTheme.focusRing} ${styles$k.itemIconHit}`,
             onClick: (e2) => onItemClick(item2, e2),
             onDoubleClick: () => onItemDoubleClick == null ? void 0 : onItemDoubleClick(item2),
             children: jsxRuntimeExports.jsx("span", {
-              className: styles$i.icon,
+              className: styles$k.icon,
               children: item2.icon
             })
           }) : jsxRuntimeExports.jsx("div", {
-            className: styles$i.icon,
+            className: styles$k.icon,
             children: item2.icon
           }) : null,
           showExpandToggle && item2.children && jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$i.button,
+            className: styles$k.button,
             onClick: (e2) => {
               e2.stopPropagation();
               onToggleExpand == null ? void 0 : onToggleExpand(item2.id);
@@ -171234,22 +171017,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           onItemClick ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$i.itemRowMain}`,
+            className: `${minervaTheme.focusRing} ${styles$k.itemRowMain}`,
             onClick: (e2) => onItemClick(item2, e2),
             onDoubleClick: () => onItemDoubleClick == null ? void 0 : onItemDoubleClick(item2),
             children: contentBlock
           }) : jsxRuntimeExports.jsx("div", {
-            className: styles$i.itemRowMainStatic,
+            className: styles$k.itemRowMainStatic,
             children: contentBlock
           }),
           jsxRuntimeExports.jsxs("div", {
-            className: styles$i.actions,
+            className: styles$k.actions,
             children: [
               !visibilityToggleLeading ? renderVisibilityToggle(item2) : null,
               itemActions == null ? void 0 : itemActions(item2),
               showDeleteButton && onDelete && jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$i.button,
+                className: styles$k.button,
                 onClick: (e2) => {
                   e2.stopPropagation();
                   onDelete(item2.id);
@@ -171269,12 +171052,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       title: title7,
       count: `(${items.length})`,
       actions: headerActions2,
-      className: variant === "markdownEditor" ? styles$i.headerMarkdown : void 0
+      className: variant === "markdownEditor" ? styles$k.headerMarkdown : void 0
     });
     const rootClass = [
-      styles$i.itemList,
-      variant === "markdownEditor" ? styles$i.itemListMarkdownEditor : "",
-      compactRows ? styles$i.itemListCompact : "",
+      styles$k.itemList,
+      variant === "markdownEditor" ? styles$k.itemListMarkdownEditor : "",
+      compactRows ? styles$k.itemListCompact : "",
       className2
     ].filter(Boolean).join(" ");
     return jsxRuntimeExports.jsxs("div", {
@@ -171286,14 +171069,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: emptyMessage2
         }) : jsxRuntimeExports.jsx("ul", {
           className: [
-            styles$i.list,
+            styles$k.list,
             panel$1.thinScrollbar
           ].join(" "),
           children: items.map((item2) => jsxRuntimeExports.jsxs(reactExports.Fragment, {
             children: [
               renderItem(item2),
               item2.isExpanded && item2.children && item2.children.map((child) => customChildRenderer ? jsxRuntimeExports.jsx("li", {
-                className: styles$i.itemChild,
+                className: styles$k.itemChild,
                 children: customChildRenderer(child, item2)
               }, `${item2.id}-child-${child.id}`) : jsxRuntimeExports.jsx(reactExports.Fragment, {
                 children: renderItem(child, true)
@@ -171425,17 +171208,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }));
   const panel = "_panel_ex885_1";
   const title = "_title_ex885_12";
-  const field = "_field_ex885_19";
+  const field$1 = "_field_ex885_19";
   const label = "_label_ex885_23";
   const numberInput = "_numberInput_ex885_30";
   const textarea = "_textarea_ex885_35";
   const textInput = "_textInput_ex885_42";
   const actions = "_actions_ex885_48";
   const hint = "_hint_ex885_55";
-  const styles$h = {
+  const styles$j = {
     panel,
     title,
-    field,
+    field: field$1,
     label,
     numberInput,
     textarea,
@@ -171446,18 +171229,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const TextEditPanel = ({ title: title7, textValue, fontSize = 14, onTextChange, onFontSizeChange, onSubmit, onCancel, submitButtonText, allowEmpty = false, showFontSize = true, singleLine = false, placeholder = "Enter your text here..." }) => {
     const canSubmit = allowEmpty || !!(textValue == null ? void 0 : textValue.trim());
     return jsxRuntimeExports.jsxs("div", {
-      className: `${minervaTheme.surface} ${styles$h.panel}`,
+      className: `${minervaTheme.surface} ${styles$j.panel}`,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$h.title,
+          className: styles$j.title,
           children: title7
         }),
         showFontSize ? jsxRuntimeExports.jsxs("div", {
-          className: styles$h.field,
+          className: styles$j.field,
           children: [
             jsxRuntimeExports.jsx("label", {
               htmlFor: "fontSizeInput",
-              className: styles$h.label,
+              className: styles$j.label,
               children: "Font Size:"
             }),
             jsxRuntimeExports.jsx("input", {
@@ -171468,7 +171251,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onChange: (e2) => onFontSizeChange == null ? void 0 : onFontSizeChange(parseInt(e2.target.value, 10) || 14),
               min: "8",
               max: "72",
-              className: `${minervaTheme.input} ${styles$h.numberInput}`
+              className: `${minervaTheme.input} ${styles$j.numberInput}`
             })
           ]
         }) : null,
@@ -171477,7 +171260,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           value: textValue,
           onChange: (e2) => onTextChange(e2.target.value),
           placeholder,
-          className: `${minervaTheme.input} ${styles$h.textInput}`,
+          className: `${minervaTheme.input} ${styles$j.textInput}`,
           onKeyDown: (e2) => {
             if (e2.key === "Enter") {
               onSubmit();
@@ -171489,7 +171272,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           value: textValue,
           onChange: (e2) => onTextChange(e2.target.value),
           placeholder,
-          className: `${minervaTheme.input} ${styles$h.textarea}`,
+          className: `${minervaTheme.input} ${styles$j.textarea}`,
           onKeyDown: (e2) => {
             if (e2.key === "Enter" && e2.ctrlKey) {
               onSubmit();
@@ -171499,7 +171282,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$h.actions,
+          className: styles$j.actions,
           children: [
             jsxRuntimeExports.jsx(PanelActionButton, {
               type: "button",
@@ -171516,7 +171299,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$h.hint,
+          className: styles$j.hint,
           children: singleLine ? "Press Enter to submit, Escape to cancel" : "Press Ctrl+Enter to submit, Escape to cancel"
         })
       ]
@@ -171795,7 +171578,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         isActive: selectedGroupId === group2.id,
         pulse: flashGroupId === group2.id,
         icon: jsxRuntimeExports.jsx(SvgFolder, {
-          className: styles$j.metaIcon
+          className: styles$l.metaIcon
         }),
         children,
         metadata: {
@@ -172021,7 +171804,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const isBrushActive = isPolygon && brushEditTargetId === annotation.id && brushEditMode === "add";
         const isEraserActive = isPolygon && brushEditTargetId === annotation.id && brushEditMode === "subtract";
         return jsxRuntimeExports.jsxs("div", {
-          className: styles$j.brushEditActions,
+          className: styles$l.brushEditActions,
           children: [
             isPolygon && jsxRuntimeExports.jsx(PanelIconButton, {
               variant: "row",
@@ -172039,7 +171822,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               },
               title: "Brush add to polygon",
               children: jsxRuntimeExports.jsx(SvgAddBrush, {
-                className: styles$j.brushEditIcon
+                className: styles$l.brushEditIcon
               })
             }),
             isPolygon && jsxRuntimeExports.jsx(PanelIconButton, {
@@ -172058,7 +171841,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               },
               title: "Brush subtract from polygon",
               children: jsxRuntimeExports.jsx(SvgEraser, {
-                className: styles$j.brushEditIcon
+                className: styles$l.brushEditIcon
               })
             })
           ]
@@ -172103,24 +171886,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     const hasUnifiedToolbar = !!toolbarSlot2;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$j.layersPanel,
+      className: styles$l.layersPanel,
       children: [
         hasUnifiedToolbar ? jsxRuntimeExports.jsxs("div", {
-          className: styles$j.layersUnifiedTop,
+          className: styles$l.layersUnifiedTop,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$j.layersToolbarSlot,
+              className: styles$l.layersToolbarSlot,
               children: toolbarSlot2
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$j.layersMetaCluster,
+              className: styles$l.layersMetaCluster,
               children: layerMetaButtons
             })
           ]
         }) : null,
         jsxRuntimeExports.jsx("div", {
           ref: itemListRootRef,
-          className: styles$j.itemListRoot,
+          className: styles$l.itemListRoot,
           children: jsxRuntimeExports.jsx(ItemList, {
             className: className2,
             variant: itemListVariant,
@@ -172144,7 +171927,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             showDeleteButton: false,
             showExpandToggle: true,
             headerActions: hasUnifiedToolbar ? void 0 : jsxRuntimeExports.jsx("div", {
-              className: styles$j.layersMetaCluster,
+              className: styles$l.layersMetaCluster,
               children: layerMetaButtons
             }),
             itemActions
@@ -172181,7 +171964,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const menu = "_menu_1gwwf_36";
   const menuItem = "_menuItem_1gwwf_48";
   const menuItemLabel = "_menuItemLabel_1gwwf_54";
-  const styles$g = {
+  const styles$i = {
     container,
     toggle,
     chevron,
@@ -172219,18 +172002,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setIsOpen(false);
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$g.container,
+      className: styles$i.container,
       children: [
         jsxRuntimeExports.jsxs("button", {
           ref: toggleRef,
           type: "button",
-          className: `${styles$g.toggle} ${buttonClassName} ${isActive ? activeClassName : ""}`,
+          className: `${styles$i.toggle} ${buttonClassName} ${isActive ? activeClassName : ""}`,
           title: parentTitle,
           onClick: () => setIsOpen((prev) => !prev),
           children: [
             activeItem ? activeItem.icon : parentIcon,
             jsxRuntimeExports.jsx("span", {
-              className: styles$g.chevron,
+              className: styles$i.chevron,
               "aria-hidden": true,
               children: jsxRuntimeExports.jsxs("svg", {
                 width: "8",
@@ -172257,20 +172040,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         isOpen && reactDomExports.createPortal(jsxRuntimeExports.jsx("div", {
           ref: menuRef,
-          className: `${minervaTheme.menuFixed} ${styles$g.menu}`,
+          className: `${minervaTheme.menuFixed} ${styles$i.menu}`,
           style: {
             top: menuPos.top,
             left: menuPos.left
           },
           children: items.map((item2) => jsxRuntimeExports.jsxs("button", {
             type: "button",
-            className: `${minervaTheme.menuItem} ${styles$g.menuItem} ${activeTool === item2.id ? minervaTheme.selectLeft : ""}`,
+            className: `${minervaTheme.menuItem} ${styles$i.menuItem} ${activeTool === item2.id ? minervaTheme.selectLeft : ""}`,
             title: item2.title,
             onClick: () => handleSelect(item2.id),
             children: [
               item2.icon,
               jsxRuntimeExports.jsx("span", {
-                className: styles$g.menuItemLabel,
+                className: styles$i.menuItemLabel,
                 children: item2.title
               })
             ]
@@ -172382,40 +172165,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }), reactExports.createElement("polygon", {
     strokeWidth: 0.75,
     points: "11.58 1.28 12.27 3.43 14.53 3.43 12.71 4.75 13.4 6.9 11.58 5.57 9.75 6.9 10.45 4.75 8.62 3.43 10.88 3.43 11.58 1.28"
-  }));
-  const SvgMove = (props) => reactExports.createElement("svg", {
-    width: "1em",
-    height: "1em",
-    viewBox: "0 0 16 16",
-    fill: "none",
-    stroke: "currentColor",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    ...props
-  }, reactExports.createElement("line", {
-    strokeWidth: 1.5,
-    x1: 1.3,
-    y1: 8,
-    x2: 14.7,
-    y2: 8
-  }), reactExports.createElement("polygon", {
-    strokeWidth: 0.5,
-    points: "3.6 10.9 4.1 10.4 1.6 8 4.1 5.6 3.6 5.1 .5 8 3.6 10.9"
-  }), reactExports.createElement("polygon", {
-    strokeWidth: 0.5,
-    points: "12.4 10.9 11.9 10.4 14.4 8 11.9 5.6 12.4 5.1 15.5 8 12.4 10.9"
-  }), reactExports.createElement("line", {
-    strokeWidth: 1.5,
-    x1: 8,
-    y1: 1.3,
-    x2: 8,
-    y2: 14.7
-  }), reactExports.createElement("polygon", {
-    strokeWidth: 0.5,
-    points: "5.1 3.6 5.6 4.1 8 1.6 10.4 4.1 10.9 3.6 8 .5 5.1 3.6"
-  }), reactExports.createElement("polygon", {
-    strokeWidth: 0.5,
-    points: "5.1 12.4 5.6 11.9 8 14.4 10.4 11.9 10.9 12.4 8 15.5 5.1 12.4"
   }));
   const SvgPasteAnnotations = (props) => reactExports.createElement("svg", {
     width: "1em",
@@ -172856,7 +172605,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
     });
     const viewerWorldFrame = useAppStore((s2) => s2.viewerWorldFrame);
-    const frame = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
+    const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
     reactExports.useEffect(() => {
       if (!sharedSam2Worker) {
         sharedSam2Worker = new Worker(new URL("" + new URL("sam2.worker-Clc5RZYk.js", import.meta.url).href, import.meta.url), {
@@ -173076,12 +172825,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setSam2Processing(true);
       try {
         const imageShape = {
-          x: frame.worldWidth,
-          y: frame.worldHeight
+          x: frame2.worldWidth,
+          y: frame2.worldHeight
         };
         const viewRect = computeImageViewRect(sam2ViewState, sam2ViewportSize, imageShape);
         const samTransform = computeSamTransform(viewRect);
-        const { float32Array, shape } = await sam2ImageFetcher(pixelViewRectFromWorld(viewRect, frame));
+        const { float32Array, shape } = await sam2ImageFetcher(pixelViewRectFromWorld(viewRect, frame2));
         if (isDebug()) {
           const canvas = saveEncodedImageForDebug(float32Array, shape, clickX, clickY);
           setSam2DebugImages({
@@ -173140,7 +172889,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     }, [
       sam2ImageFetcher,
-      frame,
+      frame2,
       ensureReady,
       decodeMask,
       waitForEncode,
@@ -173635,8 +173384,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       consolidatedLayerIds.forEach((layerId) => {
         useAppStore.getState().removeOverlayLayer(layerId);
       });
-      shapeLayers.forEach((layer) => {
-        useAppStore.getState().addOverlayLayer(layer);
+      shapeLayers.forEach((layer2) => {
+        useAppStore.getState().addOverlayLayer(layer2);
       });
     }, [
       shapeLayers
@@ -173654,7 +173403,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const debugLabel = "_debugLabel_1fd03_64";
   const debugImage = "_debugImage_1fd03_70";
   const debugWaiting = "_debugWaiting_1fd03_76";
-  const styles$f = {
+  const styles$h = {
     errorToast,
     hintBar,
     hintAdd,
@@ -174936,16 +174685,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         sam2Error && activeTool === "magic_wand" && !sam2Session && jsxRuntimeExports.jsx("div", {
-          className: styles$f.errorToast,
+          className: styles$h.errorToast,
           children: sam2Error
         }),
         sam2Session && activeTool === "magic_wand" && jsxRuntimeExports.jsxs("div", {
-          className: styles$f.hintBar,
+          className: styles$h.hintBar,
           children: [
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$f.hintAdd,
+                  className: styles$h.hintAdd,
                   children: "Click"
                 }),
                 " to add"
@@ -174954,7 +174703,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$f.hintRemove,
+                  className: styles$h.hintRemove,
                   children: "Shift+Click"
                 }),
                 " to remove"
@@ -174963,7 +174712,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$f.hintConfirm,
+                  className: styles$h.hintConfirm,
                   children: "Enter"
                 }),
                 " to confirm"
@@ -174972,14 +174721,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$f.hintCancel,
+                  className: styles$h.hintCancel,
                   children: "Esc"
                 }),
                 " to cancel"
               ]
             }),
             jsxRuntimeExports.jsxs("span", {
-              className: styles$f.hintCount,
+              className: styles$h.hintCount,
               children: [
                 "(",
                 sam2Session.points.length,
@@ -174991,18 +174740,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         sam2DebugImages && jsxRuntimeExports.jsxs("div", {
-          className: styles$f.debugOverlay,
+          className: styles$h.debugOverlay,
           children: [
             sam2DebugImages.encoded ? jsxRuntimeExports.jsxs("div", {
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$f.debugLabel,
+                  className: styles$h.debugLabel,
                   children: "Encoded (1024\xD71024)"
                 }),
                 jsxRuntimeExports.jsx("img", {
                   src: sam2DebugImages.encoded,
                   alt: "SAM2 encoded",
-                  className: styles$f.debugImage,
+                  className: styles$h.debugImage,
                   title: "Right-click \u2192 Save image as"
                 })
               ]
@@ -175010,18 +174759,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             sam2DebugImages.mask ? jsxRuntimeExports.jsxs("div", {
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$f.debugLabel,
+                  className: styles$h.debugLabel,
                   children: "Mask (256\xD7256)"
                 }),
                 jsxRuntimeExports.jsx("img", {
                   src: sam2DebugImages.mask,
                   alt: "SAM2 mask",
-                  className: styles$f.debugImage,
+                  className: styles$h.debugImage,
                   title: "Right-click \u2192 Save image as"
                 })
               ]
             }) : jsxRuntimeExports.jsx("div", {
-              className: styles$f.debugWaiting,
+              className: styles$h.debugWaiting,
               children: "Mask: waiting for decode\u2026"
             })
           ]
@@ -175106,7 +174855,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const annotationsPanelContent = "_annotationsPanelContent_fxe56_15";
   const layersContainer = "_layersContainer_fxe56_22";
   const annotationsPanelEmbedded = "_annotationsPanelEmbedded_fxe56_30";
-  const styles$e = {
+  const styles$g = {
     annotationsPanel,
     annotationsPanelContent,
     layersContainer,
@@ -175347,13 +175096,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
     return jsxRuntimeExports.jsxs("div", {
-      className: embeddedInScrollParent ? `${styles$e.annotationsPanel} ${styles$e.annotationsPanelEmbedded}` : styles$e.annotationsPanel,
+      className: embeddedInScrollParent ? `${styles$g.annotationsPanel} ${styles$g.annotationsPanelEmbedded}` : styles$g.annotationsPanel,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$e.annotationsPanelContent,
+          className: styles$g.annotationsPanelContent,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$e.layersContainer,
+              className: styles$g.layersContainer,
               children: jsxRuntimeExports.jsx(LayersPanel, {
                 itemListVariant: embeddedInScrollParent ? "markdownEditor" : "default",
                 toolbarSlot: drawingToolbar,
@@ -176655,7 +176404,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         diff: "!"
       };
       Object.keys(PREFIXES).forEach(function(name2) {
-        var prefix = PREFIXES[name2];
+        var prefix2 = PREFIXES[name2];
         var alias2 = [];
         if (!/^\w+$/.test(name2)) {
           alias2.push(/\w+/.exec(name2)[0]);
@@ -176664,7 +176413,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           alias2.push("bold");
         }
         Prism3.languages.diff[name2] = {
-          pattern: RegExp("^(?:[" + prefix + "].*(?:\r\n?|\n|(?![\\s\\S])))+", "m"),
+          pattern: RegExp("^(?:[" + prefix2 + "].*(?:\r\n?|\n|(?![\\s\\S])))+", "m"),
           alias: alias2,
           inside: {
             line: {
@@ -195185,13 +194934,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   t4Templating$1.aliases = [];
   function t4Templating$1(Prism2) {
     (function(Prism3) {
-      function createBlock(prefix, inside, contentAlias) {
+      function createBlock(prefix2, inside, contentAlias) {
         return {
-          pattern: RegExp("<#" + prefix + "[\\s\\S]*?#>"),
+          pattern: RegExp("<#" + prefix2 + "[\\s\\S]*?#>"),
           alias: "block",
           inside: {
             delimiter: {
-              pattern: RegExp("^<#" + prefix + "|#>$"),
+              pattern: RegExp("^<#" + prefix2 + "|#>$"),
               alias: "important"
             },
             content: {
@@ -206451,7 +206200,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     "-//w3c//dtd html 4.01 transitional//"
   ];
   function hasPrefix(publicId, prefixes) {
-    return prefixes.some((prefix) => publicId.startsWith(prefix));
+    return prefixes.some((prefix2) => publicId.startsWith(prefix2));
   }
   function isConforming(token) {
     return token.name === VALID_DOCTYPE_NAME && token.publicId === null && (token.systemId === null || token.systemId === VALID_SYSTEM_ID);
@@ -210272,8 +210021,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   var capitalize = function(match, character) {
     return character.toUpperCase();
   };
-  var trimHyphen = function(match, prefix) {
-    return "".concat(prefix, "-");
+  var trimHyphen = function(match, prefix2) {
+    return "".concat(prefix2, "-");
   };
   var camelCase = function(property, options) {
     if (options === void 0) {
@@ -211026,14 +210775,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     function start(code2) {
       if (markdownSpace(code2)) {
         effects.enter(type);
-        return prefix(code2);
+        return prefix2(code2);
       }
       return ok2(code2);
     }
-    function prefix(code2) {
+    function prefix2(code2) {
       if (markdownSpace(code2) && size++ < limit) {
         effects.consume(code2);
-        return prefix;
+        return prefix2;
       }
       effects.exit(type);
       return ok2(code2);
@@ -217039,10 +216788,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     get stem() {
       return typeof this.path === "string" ? minpath.basename(this.path, this.extname) : void 0;
     }
-    set stem(stem) {
-      assertNonEmpty(stem, "stem");
-      assertPart(stem, "stem");
-      this.path = minpath.join(this.dirname || "", stem + (this.extname || ""));
+    set stem(stem2) {
+      assertNonEmpty(stem2, "stem");
+      assertPart(stem2, "stem");
+      this.path = minpath.join(this.dirname || "", stem2 + (this.extname || ""));
     }
     fail(causeOrReason, optionsOrParentOrPlace, origin) {
       const message2 = this.message(causeOrReason, optionsOrParentOrPlace, origin);
@@ -217795,14 +217544,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function findUrl(_2, protocol, domain2, path2, match) {
-    let prefix = "";
+    let prefix2 = "";
     if (!previous(match)) {
       return false;
     }
     if (/^w/i.test(protocol)) {
       domain2 = protocol + domain2;
       protocol = "";
-      prefix = "http://";
+      prefix2 = "http://";
     }
     if (!isCorrectDomain(domain2)) {
       return false;
@@ -217812,7 +217561,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const result = {
       type: "link",
       title: null,
-      url: prefix + protocol + parts[0],
+      url: prefix2 + protocol + parts[0],
       children: [
         {
           type: "text",
@@ -218917,7 +218666,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const value = (checkRule(state) + (state.options.ruleSpaces ? " " : "")).repeat(checkRuleRepetition(state));
     return state.options.ruleSpaces ? value.slice(0, -1) : value;
   }
-  const handle$1 = {
+  const handle$2 = {
     blockquote,
     break: hardBreak,
     code: code$2,
@@ -219095,7 +218844,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return result;
     }
     function inlineCodeWithTable(node2, parent2, state) {
-      let value = handle$1.inlineCode(node2, parent2, state);
+      let value = handle$2.inlineCode(node2, parent2, state);
       if (state.stack.includes("tableCell")) {
         value = value.replace(/\|/g, "\\$&");
       }
@@ -219169,7 +218918,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (checkable) {
       tracker.move(checkbox);
     }
-    let value = handle$1.listItem(node2, parent2, state, {
+    let value = handle$2.listItem(node2, parent2, state, {
       ...info,
       ...tracker.current()
     });
@@ -220891,12 +220640,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const slugs = new BananaSlug();
   function rehypeSlug(options) {
     const settings = options || emptyOptions$3;
-    const prefix = settings.prefix || "";
+    const prefix2 = settings.prefix || "";
     return function(tree) {
       slugs.reset();
       visit$1(tree, "element", function(node2) {
         if (headingRank(node2) && !node2.properties.id) {
-          node2.properties.id = prefix + slugs.slug(toString$2(node2));
+          node2.properties.id = prefix2 + slugs.slug(toString$2(node2));
         }
       });
     };
@@ -222218,7 +221967,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
   }
   const closing = omission({
-    body: body$1,
+    body: body$2,
     caption: headOrColgroupOrCaption,
     colgroup: headOrColgroupOrCaption,
     dd,
@@ -222246,7 +221995,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const next2 = siblingAfter(parent2, index2);
     return !next2 || next2.type !== "comment";
   }
-  function body$1(_2, index2, parent2) {
+  function body$2(_2, index2, parent2) {
     const next2 = siblingAfter(parent2, index2);
     return !next2 || next2.type !== "comment";
   }
@@ -222298,7 +222047,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return !next2 || next2.type === "element" && (next2.tagName === "td" || next2.tagName === "th");
   }
   const opening = omission({
-    body,
+    body: body$1,
     colgroup,
     head,
     html,
@@ -222319,7 +222068,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const child = node2.children[0];
     return !child || child.type === "element";
   }
-  function body(node2) {
+  function body$1(node2) {
     const head2 = siblingAfter(node2, -1, true);
     return !head2 || head2.type !== "comment" && !(head2.type === "text" && whitespace$1(head2.value.charAt(0))) && !(head2.type === "element" && (head2.tagName === "meta" || head2.tagName === "link" || head2.tagName === "script" || head2.tagName === "style" || head2.tagName === "template"));
   }
@@ -222486,7 +222235,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function root$1(node2, _1, _2, state) {
     return state.all(node2);
   }
-  const handle = zwitch("type", {
+  const handle$1 = zwitch("type", {
     invalid,
     unknown,
     handlers: {
@@ -222547,7 +222296,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     } : tree, void 0, void 0);
   }
   function one(node2, index2, parent2) {
-    return handle(node2, index2, parent2, this);
+    return handle$1(node2, index2, parent2, this);
   }
   function all(parent2) {
     const results = [];
@@ -223614,7 +223363,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         diff: "!"
       };
       Object.keys(PREFIXES).forEach(function(name2) {
-        var prefix = PREFIXES[name2];
+        var prefix2 = PREFIXES[name2];
         var alias2 = [];
         if (!/^\w+$/.test(name2)) {
           alias2.push(/\w+/.exec(name2)[0]);
@@ -223623,7 +223372,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           alias2.push("bold");
         }
         Prism3.languages.diff[name2] = {
-          pattern: RegExp("^(?:[" + prefix + "].*(?:\r\n?|\n|(?![\\s\\S])))+", "m"),
+          pattern: RegExp("^(?:[" + prefix2 + "].*(?:\r\n?|\n|(?![\\s\\S])))+", "m"),
           alias: alias2,
           inside: {
             line: {
@@ -240434,13 +240183,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   t4Templating.aliases = [];
   function t4Templating(Prism2) {
     (function(Prism3) {
-      function createBlock(prefix, inside, contentAlias) {
+      function createBlock(prefix2, inside, contentAlias) {
         return {
-          pattern: RegExp("<#" + prefix + "[\\s\\S]*?#>"),
+          pattern: RegExp("<#" + prefix2 + "[\\s\\S]*?#>"),
           alias: "block",
           inside: {
             delimiter: {
-              pattern: RegExp("^<#" + prefix + "|#>$"),
+              pattern: RegExp("^<#" + prefix2 + "|#>$"),
               alias: "important"
             },
             content: {
@@ -242736,16 +242485,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
   }
   function selectWord(_ref) {
-    var { text: text2, selection, prefix, suffix = prefix } = _ref;
+    var { text: text2, selection, prefix: prefix2, suffix = prefix2 } = _ref;
     var result = selection;
     if (text2 && text2.length && selection.start === selection.end) {
       result = getSurroundingWord(text2, selection.start);
     }
-    if (result.start >= prefix.length && result.end <= text2.length - suffix.length) {
-      var selectedTextContext = text2.slice(result.start - prefix.length, result.end + suffix.length);
-      if (selectedTextContext.startsWith(prefix) && selectedTextContext.endsWith(suffix)) {
+    if (result.start >= prefix2.length && result.end <= text2.length - suffix.length) {
+      var selectedTextContext = text2.slice(result.start - prefix2.length, result.end + suffix.length);
+      if (selectedTextContext.startsWith(prefix2) && selectedTextContext.endsWith(suffix)) {
         return {
-          start: result.start - prefix.length,
+          start: result.start - prefix2.length,
           end: result.end + suffix.length
         };
       }
@@ -242830,18 +242579,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   }
   function executeCommand(_ref3) {
-    var { api, selectedText, selection, prefix, suffix = prefix } = _ref3;
-    if (selectedText.length >= prefix.length + suffix.length && selectedText.startsWith(prefix) && selectedText.endsWith(suffix)) {
-      api.replaceSelection(selectedText.slice(prefix.length, suffix.length ? -suffix.length : void 0));
+    var { api, selectedText, selection, prefix: prefix2, suffix = prefix2 } = _ref3;
+    if (selectedText.length >= prefix2.length + suffix.length && selectedText.startsWith(prefix2) && selectedText.endsWith(suffix)) {
+      api.replaceSelection(selectedText.slice(prefix2.length, suffix.length ? -suffix.length : void 0));
       api.setSelectionRange({
-        start: selection.start - prefix.length,
-        end: selection.end - prefix.length
+        start: selection.start - prefix2.length,
+        end: selection.end - prefix2.length
       });
     } else {
-      api.replaceSelection("" + prefix + selectedText + suffix);
+      api.replaceSelection("" + prefix2 + selectedText + suffix);
       api.setSelectionRange({
-        start: selection.start + prefix.length,
-        end: selection.end + prefix.length
+        start: selection.start + prefix2.length,
+        end: selection.end + prefix2.length
       });
     }
   }
@@ -242934,14 +242683,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         suffix: "\n```"
       });
       var state1 = api.setSelectionRange(newSelectionRange);
-      var prefix = "\n```\n";
+      var prefix2 = "\n```\n";
       var suffix = "\n```\n";
-      if (state1.selectedText.length >= prefix.length + suffix.length - 2 && state1.selectedText.startsWith(prefix) && state1.selectedText.endsWith(suffix)) {
-        prefix = "```\n";
+      if (state1.selectedText.length >= prefix2.length + suffix.length - 2 && state1.selectedText.startsWith(prefix2) && state1.selectedText.endsWith(suffix)) {
+        prefix2 = "```\n";
         suffix = "\n```";
       } else {
         if (state1.selection.start >= 1 && state.text.slice(state1.selection.start - 1, state1.selection.start) === "\n" || state1.selection.start === 0) {
-          prefix = "```\n";
+          prefix2 = "```\n";
         }
         if (state1.selection.end <= state.text.length - 1 && state.text.slice(state1.selection.end, state1.selection.end + 1) === "\n" || state1.selection.end === state.text.length) {
           suffix = "\n```";
@@ -242950,7 +242699,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       var newSelectionRange2 = selectWord({
         text: state.text,
         selection: state.selection,
-        prefix,
+        prefix: prefix2,
         suffix
       });
       var state2 = api.setSelectionRange(newSelectionRange2);
@@ -242958,7 +242707,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         api,
         selectedText: state2.selectedText,
         selection: state.selection,
-        prefix,
+        prefix: prefix2,
         suffix
       });
     }
@@ -243086,7 +242835,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     }
   };
-  var group = (arr, options) => {
+  var group$1 = (arr, options) => {
     var data2 = _extends({
       children: arr,
       icon: jsxRuntimeExports.jsx("svg", {
@@ -243638,7 +243387,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   };
   var title1 = heading1;
   function headingExecute(_ref) {
-    var { state, api, prefix, suffix = prefix } = _ref;
+    var { state, api, prefix: prefix2, suffix = prefix2 } = _ref;
     var newSelectionRange = selectLine({
       text: state.text,
       selection: state.selection
@@ -243648,7 +243397,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       api,
       selectedText: state1.selectedText,
       selection: state.selection,
-      prefix,
+      prefix: prefix2,
       suffix
     });
   }
@@ -243873,7 +243622,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     italic,
     strikethrough,
     hr,
-    group([
+    group$1([
       title1,
       title2,
       title3,
@@ -244763,7 +244512,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const channelGroupDropdownMenu = "_channelGroupDropdownMenu_zbb9b_462";
   const channelGroupDropdownItem = "_channelGroupDropdownItem_zbb9b_481";
   const channelGroupDropdownOption = "_channelGroupDropdownOption_zbb9b_486";
-  const styles$d = {
+  const styles$f = {
     rows,
     compactRow,
     compactRowEditable,
@@ -244840,9 +244589,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
     });
     const viewerWorldFrame = useAppStore((s2) => s2.viewerWorldFrame);
-    const frame = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
-    const imageWidth = frame.pixelWidth;
-    const imageHeight = frame.pixelHeight;
+    const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
+    const imageWidth = frame2.pixelWidth;
+    const imageHeight = frame2.pixelHeight;
     const { activeStoryIndex, setActiveStory, setActiveChannelGroup, addStory, updateStory, reorderStories, importWaypointShapes, persistImportedShapesToStory, setTargetWaypointCamera, captureSquareViewportThumbnail, removeStory, setShowSquareViewportOverlay, setAuthoringWaypointEditorOpen, setAuthoringWaypointShapesIndex, handleToolChange, setImageSelectionMaskFromWaypoint, layersPanelSelectedShapeIds } = useAppStore();
     const previousDetailStoryIdRef = reactExports.useRef(null);
     const detailBodyRef = reactExports.useRef(null);
@@ -245007,12 +244756,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       const loaded = useAppStore.getState().viewerImageLayersLoaded;
       const thumbnail = loaded ? captureSquareViewportThumbnail() : null;
-      const vsPixels = viewStateToPixels(viewStateCanon, frame);
+      const vsPixels = viewStateToPixels(viewStateCanon, frame2);
       const boundsPixels = {
-        x0: bounds.x0 / frame.umPerPixelX,
-        x1: bounds.x1 / frame.umPerPixelX,
-        y0: bounds.y0 / frame.umPerPixelY,
-        y1: bounds.y1 / frame.umPerPixelY
+        x0: bounds.x0 / frame2.umPerPixelX,
+        x1: bounds.x1 / frame2.umPerPixelX,
+        y0: bounds.y0 / frame2.umPerPixelY,
+        y1: bounds.y1 / frame2.umPerPixelY
       };
       updateStory(index2, {
         Bounds: boundsPixels,
@@ -245188,7 +244937,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: "No waypoints yet"
         }) : jsxRuntimeExports.jsx("ul", {
           className: [
-            styles$d.rows,
+            styles$f.rows,
             panel$1.authorPanelBody,
             panel$1.thinScrollbar
           ].join(" "),
@@ -245201,11 +244950,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             const isDropTarget = dropTargetStoryId === storyId;
             return jsxRuntimeExports.jsxs("li", {
               className: [
-                styles$d.compactRow,
-                canEdit ? styles$d.compactRowEditable : "",
+                styles$f.compactRow,
+                canEdit ? styles$f.compactRowEditable : "",
                 isActive ? minervaTheme.selectLeft : "",
-                isDragging ? styles$d.compactRowDragging : "",
-                isDropTarget ? styles$d.compactRowDropTarget : ""
+                isDragging ? styles$f.compactRowDragging : "",
+                isDropTarget ? styles$f.compactRowDropTarget : ""
               ].filter(Boolean).join(" "),
               onDragOver: (e2) => handleDragOverRow(storyId, e2),
               onDragLeave: handleDragLeaveRow,
@@ -245216,7 +244965,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               children: [
                 canEdit ? jsxRuntimeExports.jsx("button", {
                   type: "button",
-                  className: styles$d.dragHandle,
+                  className: styles$f.dragHandle,
                   draggable: true,
                   title: `Drag ${story.title}`,
                   "aria-label": `Drag ${story.title}`,
@@ -245226,59 +244975,59 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }) : null,
                 canEdit ? jsxRuntimeExports.jsx(PanelIconButton, {
                   variant: "row",
-                  className: styles$d.rowOpenDetailButton,
+                  className: styles$f.rowOpenDetailButton,
                   title: "Open waypoint details",
                   onClick: () => openDetailForStoryId(storyId),
                   children: jsxRuntimeExports.jsx(ChevronIcon, {
                     direction: "right"
                   })
                 }) : jsxRuntimeExports.jsx("div", {
-                  className: styles$d.rowChevronSpacer,
+                  className: styles$f.rowChevronSpacer,
                   "aria-hidden": true
                 }),
                 jsxRuntimeExports.jsxs("button", {
                   type: "button",
-                  className: `${minervaTheme.focusRing} ${styles$d.rowMainHit}`,
+                  className: `${minervaTheme.focusRing} ${styles$f.rowMainHit}`,
                   "aria-label": `Select waypoint: ${story.title}`,
                   onClick: () => activateStoryIndex(index2, true),
                   onDoubleClick: () => openDetailForStoryId(storyId),
                   children: [
                     story.thumbnail ? jsxRuntimeExports.jsx("img", {
-                      className: `${minervaTheme.surface} ${styles$d.rowThumbnail}`,
+                      className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
                       src: story.thumbnail,
                       width: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
                       height: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
                       alt: "",
                       "aria-hidden": true
                     }) : jsxRuntimeExports.jsx("div", {
-                      className: `${minervaTheme.surface} ${styles$d.rowThumbnail}`,
+                      className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
                       "aria-hidden": true
                     }),
                     jsxRuntimeExports.jsxs("div", {
-                      className: styles$d.rowTextStack,
+                      className: styles$f.rowTextStack,
                       children: [
                         jsxRuntimeExports.jsxs("div", {
-                          className: styles$d.rowTitleRow,
+                          className: styles$f.rowTitleRow,
                           children: [
                             jsxRuntimeExports.jsx("span", {
-                              className: styles$d.rowTitle,
+                              className: styles$f.rowTitle,
                               title: story.title,
                               children: story.title
                             }),
                             jsxRuntimeExports.jsxs("span", {
-                              className: `${minervaTheme.surface} ${styles$d.annotationBadge}`,
+                              className: `${minervaTheme.surface} ${styles$f.annotationBadge}`,
                               title: annotationTitle,
                               children: [
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$d.visuallyHidden,
+                                  className: styles$f.visuallyHidden,
                                   children: annotationTitle
                                 }),
                                 jsxRuntimeExports.jsx(SvgShapes, {
-                                  className: styles$d.annotationIcon,
+                                  className: styles$f.annotationIcon,
                                   "aria-hidden": true
                                 }),
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$d.annotationCount,
+                                  className: styles$f.annotationCount,
                                   "aria-hidden": true,
                                   children: annotationCount2
                                 })
@@ -245287,7 +245036,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           ]
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$d.rowContent,
+                          className: styles$f.rowContent,
                           title: story.content ?? "",
                           children: story.content ?? ""
                         })
@@ -245296,7 +245045,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 jsxRuntimeExports.jsxs("div", {
-                  className: styles$d.rowViewportActions,
+                  className: styles$f.rowViewportActions,
                   children: [
                     canEdit ? jsxRuntimeExports.jsx(PanelIconButton, {
                       variant: "row",
@@ -245319,7 +245068,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           "aria-hidden": true
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$d.visuallyHidden,
+                          className: styles$f.visuallyHidden,
                           children: "Jump to waypoint view"
                         })
                       ]
@@ -245335,7 +245084,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           "aria-hidden": true
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$d.visuallyHidden,
+                          className: styles$f.visuallyHidden,
                           children: "Save waypoint view"
                         })
                       ]
@@ -245386,14 +245135,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         scheduleThumbnailCaptureForStory(detailStoryIndex, true, true, 1100);
       };
       return jsxRuntimeExports.jsxs("div", {
-        className: styles$d.detailView,
+        className: styles$f.detailView,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$d.detailHeader,
+            className: styles$f.detailHeader,
             children: [
               jsxRuntimeExports.jsxs("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$d.backButton}`,
+                className: `${minervaTheme.focusRing} ${styles$f.backButton}`,
                 onClick: () => setDetailStoryId(null),
                 title: "Back to waypoint list",
                 children: [
@@ -245406,7 +245155,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$d.detailTitle,
+                className: styles$f.detailTitle,
                 title: detailStory.title,
                 children: detailStory.title
               })
@@ -245414,24 +245163,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           jsxRuntimeExports.jsx("div", {
             className: [
-              styles$d.detailBody,
+              styles$f.detailBody,
               panel$1.thinScrollbar
             ].join(" "),
             ref: detailBodyRef,
             children: jsxRuntimeExports.jsxs("div", {
-              className: styles$d.detailBodyInner,
+              className: styles$f.detailBodyInner,
               children: [
                 jsxRuntimeExports.jsxs("div", {
-                  className: `${minervaTheme.surface} ${styles$d.detailTitleFieldWrap}`,
+                  className: `${minervaTheme.surface} ${styles$f.detailTitleFieldWrap}`,
                   children: [
                     jsxRuntimeExports.jsx("label", {
-                      className: styles$d.detailTitleLabel,
+                      className: styles$f.detailTitleLabel,
                       htmlFor: detailTitleFieldId,
                       children: "Title"
                     }),
                     jsxRuntimeExports.jsx("input", {
                       id: detailTitleFieldId,
-                      className: `${minervaTheme.input} ${styles$d.detailTitleInput}`,
+                      className: `${minervaTheme.input} ${styles$f.detailTitleInput}`,
                       type: "text",
                       value: detailStory.title ?? "",
                       onChange: (e2) => updateStory(detailStoryIndex, {
@@ -245447,47 +245196,47 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 channelGroups.length > 0 ? jsxRuntimeExports.jsxs("div", {
-                  className: `${minervaTheme.surface} ${styles$d.detailTitleFieldWrap}`,
+                  className: `${minervaTheme.surface} ${styles$f.detailTitleFieldWrap}`,
                   children: [
                     jsxRuntimeExports.jsx("label", {
-                      className: styles$d.detailTitleLabel,
+                      className: styles$f.detailTitleLabel,
                       htmlFor: detailGroupFieldId,
                       children: "Channel group"
                     }),
                     jsxRuntimeExports.jsxs("div", {
-                      className: styles$d.channelGroupDropdown,
+                      className: styles$f.channelGroupDropdown,
                       ref: channelGroupDropdownRef,
                       children: [
                         jsxRuntimeExports.jsxs("button", {
                           type: "button",
                           id: detailGroupFieldId,
-                          className: `${minervaTheme.input} ${minervaTheme.focusRing} ${styles$d.channelGroupDropdownTrigger}`,
+                          className: `${minervaTheme.input} ${minervaTheme.focusRing} ${styles$f.channelGroupDropdownTrigger}`,
                           "aria-haspopup": "listbox",
                           "aria-expanded": channelGroupMenuOpen,
                           disabled: !canEdit,
                           onClick: () => setChannelGroupMenuOpen((open) => !open),
                           children: [
                             jsxRuntimeExports.jsxs("span", {
-                              className: styles$d.channelGroupDropdownTriggerMain,
+                              className: styles$f.channelGroupDropdownTriggerMain,
                               children: [
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$d.channelGroupDropdownTitle,
+                                  className: styles$f.channelGroupDropdownTitle,
                                   children: selectedGroup.name
                                 }),
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$d.channelGroupDropdownChannels,
+                                  className: styles$f.channelGroupDropdownChannels,
                                   children: selectedChannelsSubtitle || "\u2014"
                                 })
                               ]
                             }),
                             jsxRuntimeExports.jsx(ChevronIcon, {
                               direction: channelGroupMenuOpen ? "up" : "down",
-                              className: styles$d.channelGroupDropdownChevron
+                              className: styles$f.channelGroupDropdownChevron
                             })
                           ]
                         }),
                         channelGroupMenuOpen ? jsxRuntimeExports.jsx("div", {
-                          className: `${minervaTheme.menu} ${styles$d.channelGroupDropdownMenu}`,
+                          className: `${minervaTheme.menu} ${styles$f.channelGroupDropdownMenu}`,
                           role: "listbox",
                           "aria-label": "Channel groups",
                           children: channelGroups.map((group2) => {
@@ -245495,24 +245244,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             const subtitle2 = names.join(", ");
                             const isSelected = group2.id === selectedGroupUuid;
                             return jsxRuntimeExports.jsx("div", {
-                              className: styles$d.channelGroupDropdownItem,
+                              className: styles$f.channelGroupDropdownItem,
                               children: jsxRuntimeExports.jsxs("button", {
                                 type: "button",
                                 role: "option",
                                 "aria-selected": isSelected,
                                 className: [
                                   minervaTheme.menuItem,
-                                  styles$d.channelGroupDropdownOption,
+                                  styles$f.channelGroupDropdownOption,
                                   isSelected ? minervaTheme.selectLeft : ""
                                 ].filter(Boolean).join(" "),
                                 onClick: () => selectChannelGroupByUuid(group2.id),
                                 children: [
                                   jsxRuntimeExports.jsx("span", {
-                                    className: styles$d.channelGroupDropdownTitle,
+                                    className: styles$f.channelGroupDropdownTitle,
                                     children: group2.name
                                   }),
                                   jsxRuntimeExports.jsx("span", {
-                                    className: styles$d.channelGroupDropdownChannels,
+                                    className: styles$f.channelGroupDropdownChannels,
                                     children: subtitle2 || "\u2014"
                                   })
                                 ]
@@ -245526,29 +245275,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }) : null,
                 jsxRuntimeExports.jsxs("div", {
                   className: [
-                    styles$d.detailCollapsible,
+                    styles$f.detailCollapsible,
                     minervaTheme.surface,
-                    styles$d.detailMarkdownSection,
-                    !detailMarkdownExpanded ? styles$d.detailCollapsibleCollapsed : ""
+                    styles$f.detailMarkdownSection,
+                    !detailMarkdownExpanded ? styles$f.detailCollapsibleCollapsed : ""
                   ].filter(Boolean).join(" "),
                   children: [
                     jsxRuntimeExports.jsxs("button", {
                       type: "button",
-                      className: `${minervaTheme.focusRing} ${styles$d.detailCollapsibleHeader}`,
+                      className: `${minervaTheme.focusRing} ${styles$f.detailCollapsibleHeader}`,
                       "aria-expanded": detailMarkdownExpanded,
                       onClick: () => setDetailMarkdownExpanded((prev) => !prev),
                       children: [
                         jsxRuntimeExports.jsx(ChevronIcon, {
-                          className: styles$d.detailCollapsibleChevron
+                          className: styles$f.detailCollapsibleChevron
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$d.detailCollapsibleTitle,
+                          className: styles$f.detailCollapsibleTitle,
                           children: "Markdown"
                         })
                       ]
                     }),
                     detailMarkdownExpanded ? jsxRuntimeExports.jsx("div", {
-                      className: styles$d.detailCollapsibleBody,
+                      className: styles$f.detailCollapsibleBody,
                       children: jsxRuntimeExports.jsx(WaypointContentEditor, {
                         variant: "detail",
                         story: detailStory,
@@ -245559,29 +245308,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 jsxRuntimeExports.jsxs("div", {
                   className: [
-                    styles$d.detailCollapsible,
+                    styles$f.detailCollapsible,
                     minervaTheme.surface,
-                    styles$d.detailAnnotationsSection,
-                    !detailAnnotationsExpanded ? styles$d.detailCollapsibleCollapsed : ""
+                    styles$f.detailAnnotationsSection,
+                    !detailAnnotationsExpanded ? styles$f.detailCollapsibleCollapsed : ""
                   ].filter(Boolean).join(" "),
                   children: [
                     jsxRuntimeExports.jsxs("button", {
                       type: "button",
-                      className: `${minervaTheme.focusRing} ${styles$d.detailCollapsibleHeader}`,
+                      className: `${minervaTheme.focusRing} ${styles$f.detailCollapsibleHeader}`,
                       "aria-expanded": detailAnnotationsExpanded,
                       title: detailAnnotationText,
                       onClick: () => setDetailAnnotationsExpanded((prev) => !prev),
                       children: [
                         jsxRuntimeExports.jsx(ChevronIcon, {
-                          className: styles$d.detailCollapsibleChevron
+                          className: styles$f.detailCollapsibleChevron
                         }),
                         jsxRuntimeExports.jsxs("span", {
-                          className: styles$d.detailCollapsibleTitle,
+                          className: styles$f.detailCollapsibleTitle,
                           children: [
                             "Annotations",
                             " ",
                             jsxRuntimeExports.jsxs("span", {
-                              className: styles$d.detailCollapsibleCount,
+                              className: styles$f.detailCollapsibleCount,
                               children: [
                                 "(",
                                 detailAnnotationCount,
@@ -245593,13 +245342,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       ]
                     }),
                     detailAnnotationsExpanded ? jsxRuntimeExports.jsxs("div", {
-                      className: styles$d.detailCollapsibleBody,
+                      className: styles$f.detailCollapsibleBody,
                       children: [
                         detailAnnotationCount > 0 ? jsxRuntimeExports.jsx("div", {
-                          className: styles$d.detailSelectionActions,
+                          className: styles$f.detailSelectionActions,
                           children: jsxRuntimeExports.jsx("button", {
                             type: "button",
-                            className: `${minervaTheme.focusRing} ${styles$d.detailSelectionButton}`,
+                            className: `${minervaTheme.focusRing} ${styles$f.detailSelectionButton}`,
                             title: "Use a waypoint annotation as the spatial selection mask (prefers the selected shape in the layers list)",
                             onClick: () => {
                               const shapeIds = detailStory.shapeIds ?? [];
@@ -245648,31 +245397,31 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }, reactExports.createElement("path", {
     d: "M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2 .9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z"
   }));
-  const channelActionButton = "_channelActionButton_r32ls_3";
-  const colorLockButtonLocked = "_colorLockButtonLocked_r32ls_20";
-  const dropHint = "_dropHint_r32ls_29";
-  const groupFolders = "_groupFolders_r32ls_36";
-  const groupFolder = "_groupFolder_r32ls_36";
-  const dropTargetActive = "_dropTargetActive_r32ls_51";
-  const groupFolderHeader = "_groupFolderHeader_r32ls_56";
-  const groupFolderActivate = "_groupFolderActivate_r32ls_68";
-  const groupFolderChevron = "_groupFolderChevron_r32ls_89";
-  const groupFolderName = "_groupFolderName_r32ls_107";
-  const groupFolderTrailing = "_groupFolderTrailing_r32ls_114";
-  const groupFolderBody = "_groupFolderBody_r32ls_121";
-  const groupChildList = "_groupChildList_r32ls_126";
-  const groupChildBlock = "_groupChildBlock_r32ls_132";
-  const channelRowWrap = "_channelRowWrap_r32ls_140";
-  const ungrouping = "_ungrouping_r32ls_149";
-  const groupChildName = "_groupChildName_r32ls_166";
-  const dragHandle = "_dragHandle_r32ls_176";
-  const treeSeparator = "_treeSeparator_r32ls_199";
-  const treeSeparatorLabel = "_treeSeparatorLabel_r32ls_213";
-  const channelFilter = "_channelFilter_r32ls_218";
-  const filterEmpty = "_filterEmpty_r32ls_241";
-  const rootChannelList = "_rootChannelList_r32ls_248";
-  const rootChannelBlock = "_rootChannelBlock_r32ls_256";
-  const styles$c = {
+  const channelActionButton = "_channelActionButton_1wvsk_3";
+  const colorLockButtonLocked = "_colorLockButtonLocked_1wvsk_20";
+  const dropHint = "_dropHint_1wvsk_29";
+  const groupFolders = "_groupFolders_1wvsk_36";
+  const groupFolder = "_groupFolder_1wvsk_36";
+  const dropTargetActive = "_dropTargetActive_1wvsk_51";
+  const groupFolderHeader = "_groupFolderHeader_1wvsk_56";
+  const groupFolderActivate = "_groupFolderActivate_1wvsk_68";
+  const groupFolderChevron = "_groupFolderChevron_1wvsk_89";
+  const groupFolderName = "_groupFolderName_1wvsk_107";
+  const groupFolderTrailing = "_groupFolderTrailing_1wvsk_114";
+  const groupFolderBody = "_groupFolderBody_1wvsk_121";
+  const groupChildList = "_groupChildList_1wvsk_126";
+  const groupChildBlock = "_groupChildBlock_1wvsk_132";
+  const channelRowWrap = "_channelRowWrap_1wvsk_140";
+  const ungrouping = "_ungrouping_1wvsk_148";
+  const groupChildName = "_groupChildName_1wvsk_165";
+  const dragHandle = "_dragHandle_1wvsk_175";
+  const treeSeparator = "_treeSeparator_1wvsk_198";
+  const treeSeparatorLabel = "_treeSeparatorLabel_1wvsk_212";
+  const channelFilter = "_channelFilter_1wvsk_217";
+  const filterEmpty = "_filterEmpty_1wvsk_240";
+  const rootChannelList = "_rootChannelList_1wvsk_247";
+  const rootChannelBlock = "_rootChannelBlock_1wvsk_255";
+  const styles$e = {
     channelActionButton,
     colorLockButtonLocked,
     dropHint,
@@ -245744,19 +245493,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const types2 = Array.from(e2.dataTransfer.types);
     return types2.includes(CHANNEL_DRAG_MIME) || types2.includes("text/plain");
   }
-  function shouldIgnoreChannelRowDrag(target) {
-    if (!(target instanceof Element)) return false;
-    if (target.closest(`.${styles$c.dragHandle}`)) return false;
-    return Boolean(target.closest("input, textarea, select, button, a, label, [contenteditable], [data-channel-drag-ignore]"));
-  }
   function previewUngroupWhileDragging(row2) {
     const onOver = (ev) => {
       const el2 = document.elementFromPoint(ev.clientX, ev.clientY);
-      const overGroup = el2 instanceof Element && el2.closest(`.${styles$c.groupFolder}`);
-      row2.classList.toggle(styles$c.ungrouping, !overGroup);
+      const overGroup = el2 instanceof Element && el2.closest(`.${styles$e.groupFolder}`);
+      row2.classList.toggle(styles$e.ungrouping, !overGroup);
     };
     const onEnd = () => {
-      row2.classList.remove(styles$c.ungrouping);
+      row2.classList.remove(styles$e.ungrouping);
       document.removeEventListener("dragover", onOver, true);
       document.removeEventListener("dragend", onEnd);
     };
@@ -245769,38 +245513,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fromGroupId: props.fromGroupId,
       fromRowId: props.fromRowId
     };
-    const beginDrag = (e2) => startChannelDrag(e2, payload);
-    const ignoreRowDragRef = reactExports.useRef(false);
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$c.channelRowWrap,
-      draggable: true,
-      onPointerDown: (e2) => {
-        ignoreRowDragRef.current = shouldIgnoreChannelRowDrag(e2.target);
-      },
-      onDragStart: (e2) => {
-        if (ignoreRowDragRef.current) {
-          e2.preventDefault();
-          return;
-        }
-        beginDrag(e2);
-        if (props.onRemoveFromGroup) {
-          previewUngroupWhileDragging(e2.currentTarget);
-        }
-      },
-      onDragEnd: (e2) => {
-        if (!props.onRemoveFromGroup) return;
-        if (e2.dataTransfer.dropEffect !== "none") return;
-        const el2 = document.elementFromPoint(e2.clientX, e2.clientY);
-        const folder = e2.currentTarget.closest(`.${styles$c.groupFolder}`);
-        if (folder && el2 && folder.contains(el2)) return;
-        props.onRemoveFromGroup();
-      },
+      className: styles$e.channelRowWrap,
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$c.dragHandle,
+          className: styles$e.dragHandle,
           draggable: true,
-          onDragStart: beginDrag,
+          onDragStart: (e2) => {
+            startChannelDrag(e2, payload);
+            if (!props.onRemoveFromGroup) return;
+            const row2 = e2.currentTarget.closest(`.${styles$e.channelRowWrap}`);
+            if (row2 instanceof HTMLElement) previewUngroupWhileDragging(row2);
+          },
+          onDragEnd: (e2) => {
+            if (!props.onRemoveFromGroup) return;
+            if (e2.dataTransfer.dropEffect !== "none") return;
+            const el2 = document.elementFromPoint(e2.clientX, e2.clientY);
+            const folder = e2.currentTarget.closest(`.${styles$e.groupFolder}`);
+            if (folder && el2 && folder.contains(el2)) return;
+            props.onRemoveFromGroup();
+          },
           title: `Drag ${props.label}`,
           "aria-label": `Drag ${props.label}`,
           children: "\u22EE\u22EE"
@@ -245875,7 +245608,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$c.channelActionButton,
+          className: styles$e.channelActionButton,
           "aria-label": `More actions for ${channelName2}`,
           "aria-expanded": menu2.open,
           "aria-haspopup": "menu",
@@ -246513,23 +246246,37 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       removeChannelFromGroup(payload.fromGroupId, payload.fromRowId);
     };
     const visibleHistogramTargets = reactExports.useMemo(() => {
-      const group2 = channelGroups.find((g2) => g2.id === activeChannelGroupId) ?? channelGroups[0];
-      if (!group2) return [];
-      const ids = [];
-      for (const gc2 of group2.channels) {
-        if (!isGroupRowVisible(channelGroupRowVisibilities, gc2.id)) continue;
-        const sc2 = uniqueSourceChannels.find((c2) => c2.id === gc2.channelId);
-        if (!sc2 || !isImageChannel(sc2) || isRgbDisplayChannel(sc2, sourceChannels)) {
-          continue;
+      const seen2 = /* @__PURE__ */ new Set();
+      const consider = (sc2) => {
+        if (!sc2 || seen2.has(sc2.id)) return;
+        if (!isImageChannel(sc2) || isRgbDisplayChannel(sc2, sourceChannels)) return;
+        if (sourceDistributionYValuesLength(sc2) > 0) {
+          const range2 = channelFloatRange(sc2);
+          const dist2 = sc2.sourceDistribution;
+          const axisMatches = (dist2 == null ? void 0 : dist2.XScale) === "linear" && dist2.LowerRange === (range2 == null ? void 0 : range2.min) && dist2.UpperRange === (range2 == null ? void 0 : range2.max);
+          const stale = range2 ? !axisMatches : isFloatDtype(sc2.sourceDataTypeId) && (dist2 == null ? void 0 : dist2.XScale) === "log";
+          if (!stale) return;
         }
-        if (sourceDistributionYValuesLength(sc2) > 0) continue;
-        ids.push(sc2.id);
+        seen2.add(sc2.id);
+      };
+      for (const group2 of channelGroups) {
+        for (const gc2 of group2.channels) {
+          if (!isGroupRowVisible(channelGroupRowVisibilities, gc2.id)) continue;
+          consider(uniqueSourceChannels.find((c2) => c2.id === gc2.channelId));
+        }
       }
-      return ids;
+      for (const sc2 of uniqueSourceChannels) {
+        const inGroup = channelGroups.some((g2) => g2.channels.some((gc2) => gc2.channelId === sc2.id));
+        if (inGroup || !isStackVisible(stackVisibilities, sc2.id)) continue;
+        consider(sc2);
+      }
+      return [
+        ...seen2
+      ];
     }, [
       channelGroups,
-      activeChannelGroupId,
       channelGroupRowVisibilities,
+      stackVisibilities,
       uniqueSourceChannels,
       sourceChannels
     ]);
@@ -246607,25 +246354,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       };
       return jsxRuntimeExports.jsxs("div", {
         className: [
-          styles$c.groupFolder,
+          styles$e.groupFolder,
           isActive ? minervaTheme.selectLeft : "",
-          isDropTarget ? styles$c.dropTargetActive : ""
+          isDropTarget ? styles$e.dropTargetActive : ""
         ].join(" "),
         ...folderDropProps,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$c.groupFolderHeader,
+            className: styles$e.groupFolderHeader,
             children: [
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$c.groupFolderActivate}`,
+                className: `${minervaTheme.focusRing} ${styles$e.groupFolderActivate}`,
                 "aria-label": `Select group ${group2.name}`,
                 "aria-pressed": isActive,
                 onClick: () => activateGroup(group2.id)
               }),
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$c.groupFolderChevron,
+                className: styles$e.groupFolderChevron,
                 "aria-expanded": expanded,
                 title: expanded ? "Collapse group" : "Expand group",
                 onClick: () => toggleGroupExpanded(group2.id),
@@ -246641,7 +246388,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 onClick: () => toggleGroupMasterVisibility(group2, groupShowAllNext)
               }),
               jsxRuntimeExports.jsx("input", {
-                className: `${minervaTheme.input} ${styles$c.groupFolderName}`,
+                className: `${minervaTheme.input} ${styles$e.groupFolderName}`,
                 type: "text",
                 defaultValue: group2.name,
                 maxLength: 200,
@@ -246663,7 +246410,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$c.groupFolderTrailing,
+                className: styles$e.groupFolderTrailing,
                 children: [
                   jsxRuntimeExports.jsx(GroupFolderGearMenu, {
                     groupName: group2.name,
@@ -246691,10 +246438,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           }),
           expanded && !rgbGroup ? jsxRuntimeExports.jsxs("div", {
-            className: styles$c.groupFolderBody,
+            className: styles$e.groupFolderBody,
             children: [
               jsxRuntimeExports.jsx("ul", {
-                className: styles$c.groupChildList,
+                className: styles$e.groupChildList,
                 children: group2.channels.map((gc2) => {
                   const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
                   const name2 = (sc2 == null ? void 0 : sc2.name) ?? "Unknown";
@@ -246715,7 +246462,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   const colorLocked = lockedIds.has(gc2.id);
                   const showColorLock = !(sc2 && isMaskChannel(sc2)) && !rgbDisplay;
                   return jsxRuntimeExports.jsx("li", {
-                    className: styles$c.groupChildBlock,
+                    className: styles$e.groupChildBlock,
                     children: jsxRuntimeExports.jsx(DraggableChannelRow, {
                       label: name2,
                       sourceId: gc2.channelId,
@@ -246747,7 +246494,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           mode: "label",
                           name: name2,
                           title: name2,
-                          className: styles$c.groupChildName
+                          className: styles$e.groupChildName
                         },
                         imageSubtitle,
                         contrast,
@@ -246778,8 +246525,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             showColorLock ? jsxRuntimeExports.jsx("button", {
                               type: "button",
                               className: [
-                                styles$c.channelActionButton,
-                                colorLocked ? styles$c.colorLockButtonLocked : ""
+                                styles$e.channelActionButton,
+                                colorLocked ? styles$e.colorLockButtonLocked : ""
                               ].join(" "),
                               title: colorLocked ? "Unlock color" : "Lock color",
                               "aria-label": colorLocked ? `Unlock color for ${name2}` : `Lock color for ${name2}`,
@@ -246804,7 +246551,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 })
               }),
               group2.channels.length === 0 ? jsxRuntimeExports.jsx("div", {
-                className: styles$c.dropHint,
+                className: styles$e.dropHint,
                 children: "Drag channels"
               }) : null
             ]
@@ -246903,7 +246650,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         histogramLoading: loadingHistogramSourceIds.includes(sc2.id)
       } : void 0;
       return jsxRuntimeExports.jsx("li", {
-        className: styles$c.rootChannelBlock,
+        className: styles$e.rootChannelBlock,
         children: jsxRuntimeExports.jsx(DraggableChannelRow, {
           label: sc2.name,
           sourceId: sc2.id,
@@ -246962,20 +246709,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           onDrop: handleDropRemoveFromGroup,
           children: [
             channelGroups.length > 0 ? jsxRuntimeExports.jsx("div", {
-              className: styles$c.groupFolders,
+              className: styles$e.groupFolders,
               children: channelGroups.map((group2, i2) => renderGroupFolder(group2, i2))
             }) : null,
             showAllChannelsList ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
               children: [
                 jsxRuntimeExports.jsxs("div", {
-                  className: styles$c.treeSeparator,
+                  className: styles$e.treeSeparator,
                   children: [
                     jsxRuntimeExports.jsx("span", {
-                      className: styles$c.treeSeparatorLabel,
+                      className: styles$e.treeSeparatorLabel,
                       children: "All channels"
                     }),
                     jsxRuntimeExports.jsx("input", {
-                      className: styles$c.channelFilter,
+                      className: styles$e.channelFilter,
                       type: "text",
                       value: channelNameFilter,
                       placeholder: "Search...",
@@ -246989,10 +246736,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 filteredAllChannels.length === 0 ? jsxRuntimeExports.jsx("div", {
-                  className: styles$c.filterEmpty,
+                  className: styles$e.filterEmpty,
                   children: "No matching channels"
                 }) : jsxRuntimeExports.jsx("ul", {
-                  className: styles$c.rootChannelList,
+                  className: styles$e.rootChannelList,
                   children: filteredAllChannels.map(renderAllChannelsRow)
                 })
               ]
@@ -247012,7 +246759,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               },
               name: {
                 mode: "label",
-                className: styles$c.groupChildName,
+                className: styles$e.groupChildName,
                 name: `${SELECTION_MASK_CHANNEL_KEY}${imageSelectionMask.sourceShapeLabel ? ` (${imageSelectionMask.sourceShapeLabel})` : ""}`
               },
               isMask: true,
@@ -247026,7 +246773,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               fixedColorHex: "ffcc00",
               trailing: jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$c.channelActionButton,
+                className: styles$e.channelActionButton,
                 title: "Clear selection",
                 "aria-label": "Clear selection",
                 onClick: () => clearImageSelectionMask(),
@@ -247085,7 +246832,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const viewport = "_viewport_1ewkv_78";
   const viewportCollapsed = "_viewportCollapsed_1ewkv_90";
   const viewerRegion = "_viewerRegion_1ewkv_94";
-  const styles$b = {
+  const styles$d = {
     sidebarHost,
     sidebarHostCollapsed,
     panelOuter,
@@ -247129,14 +246876,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: jsxRuntimeExports.jsx(SidebarStripSlotProvider, {
         children: jsxRuntimeExports.jsx("div", {
           className: [
-            styles$b.sidebarHost,
-            expanded ? null : styles$b.sidebarHostCollapsed
+            styles$d.sidebarHost,
+            expanded ? null : styles$d.sidebarHostCollapsed
           ].filter(Boolean).join(" "),
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$b.panelOuter,
+            className: styles$d.panelOuter,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: `${styles$b.tabRow} ${minervaTheme.strip}`,
+                className: `${styles$d.tabRow} ${minervaTheme.strip}`,
                 children: [
                   jsxRuntimeExports.jsx(TabBar, {
                     tabs: TAB_ITEMS,
@@ -247145,12 +246892,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     "aria-label": "Author panels"
                   }),
                   jsxRuntimeExports.jsx(SidebarStripSlot, {
-                    className: styles$b.stripActions
+                    className: styles$d.stripActions
                   })
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$b.panelContent,
+                className: styles$d.panelContent,
                 role: "tabpanel",
                 children: activePanel
               })
@@ -247164,8 +246911,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const { collapsed, children, className: className2 } = props;
     return jsxRuntimeExports.jsx("div", {
       className: [
-        styles$b.viewport,
-        collapsed ? styles$b.viewportCollapsed : null,
+        styles$d.viewport,
+        collapsed ? styles$d.viewportCollapsed : null,
         className2
       ].filter(Boolean).join(" "),
       children
@@ -247174,7 +246921,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function AuthorViewerRegion(props) {
     return jsxRuntimeExports.jsx("div", {
       className: [
-        styles$b.viewerRegion,
+        styles$d.viewerRegion,
         props.className
       ].filter(Boolean).join(" "),
       children: props.children
@@ -247194,8 +246941,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsx(PanelIconButton, {
           className: [
-            styles$b.expandControl,
-            expanded ? styles$b.expandControlExpanded : null
+            styles$d.expandControl,
+            expanded ? styles$d.expandControlExpanded : null
           ].filter(Boolean).join(" "),
           title: expanded ? "Collapse panel" : "Expand panel",
           "aria-label": expanded ? "Collapse panel" : "Expand panel",
@@ -248447,8 +248194,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const cleaned = raw2.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
     return cleaned.replace(/-minerva$/i, "") || "image";
   }
-  function omeTiffExportDiskName(stem) {
-    return `${stem}-minerva.ome.tif`;
+  function omeTiffExportDiskName(stem2) {
+    return `${stem2}-minerva.ome.tif`;
   }
   function omeTiffExportFileName(image2, used) {
     const base2 = omeTiffExportBaseName(image2);
@@ -248512,6 +248259,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return intensity.length === 0 ? channelsOfKind(image2, "mask") : [];
   }
   function contrastLimitsForExportedChannel(channel, channelGroups) {
+    var _a2, _b2;
     for (const g2 of channelGroups) {
       for (const row2 of g2.channels) {
         if (row2.channelId !== channel.id) continue;
@@ -248521,9 +248269,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         };
       }
     }
-    const max2 = sourceDtypeMax(channel.sourceDataTypeId);
+    const max2 = ((_a2 = channel.floatRange) == null ? void 0 : _a2.max) ?? sourceDtypeMax(channel.sourceDataTypeId);
     return {
-      lowerLimit: channel.lowerLimit ?? 0,
+      lowerLimit: channel.lowerLimit ?? ((_b2 = channel.floatRange) == null ? void 0 : _b2.min) ?? 0,
       upperLimit: channel.upperLimit ?? max2
     };
   }
@@ -250592,7 +250340,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return copy2;
   }
   function WorkerWrapper$2(options) {
-    return new Worker("" + new URL("jpegExport.worker-PoKVEyfi.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-C5jqsOrs.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -250967,7 +250715,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const etaLine = "_etaLine_1x24y_60";
   const exportMessage = "_exportMessage_1x24y_67";
   const confirmActions = "_confirmActions_1x24y_85";
-  const styles$a = {
+  const styles$c = {
     imageExporter,
     exportStatus,
     dismissButton,
@@ -251526,12 +251274,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     const clampedRatio = Math.min(1, Math.max(0, ratio));
     return jsxRuntimeExports.jsx("div", {
-      className: styles$a.imageExporter,
+      className: styles$c.imageExporter,
       children: exportError ? jsxRuntimeExports.jsxs("div", {
-        className: styles$a.exportStatus,
+        className: styles$c.exportStatus,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$a.exportMessage,
+            className: styles$c.exportMessage,
             children: [
               "Export failed: ",
               exportError
@@ -251539,44 +251287,44 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$a.dismissButton,
+            className: styles$c.dismissButton,
             onClick: stopExport,
             children: "Dismiss"
           })
         ]
       }) : mode === "remote-url" ? jsxRuntimeExports.jsxs("div", {
-        className: styles$a.exportStatus,
+        className: styles$c.exportStatus,
         children: [
           jsxRuntimeExports.jsx("div", {
-            className: styles$a.exportMessage,
+            className: styles$c.exportMessage,
             children: done ? "Exported document.json + index.html (remote URLs)" : "Writing document.json + index.html\u2026"
           }),
           done ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$a.dismissButton,
+            className: styles$c.dismissButton,
             onClick: stopExport,
             children: "Dismiss"
           }) : null
         ]
       }) : !exportArmed ? jsxRuntimeExports.jsxs("div", {
-        className: styles$a.exportStatus,
+        className: styles$c.exportStatus,
         children: [
           jsxRuntimeExports.jsx("div", {
-            className: styles$a.exportMessage,
+            className: styles$c.exportMessage,
             children: "Export JPEG OME-TIFF (cube-root IF)"
           }),
           jsxRuntimeExports.jsxs("div", {
-            className: styles$a.confirmActions,
+            className: styles$c.confirmActions,
             children: [
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$a.dismissButton,
+                className: styles$c.dismissButton,
                 onClick: armExport,
                 children: "Start export"
               }),
               canUpdateDocumentOnly ? jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$a.dismissButton,
+                className: styles$c.dismissButton,
                 onClick: () => {
                   var _a2;
                   void ((_a2 = props.onDocumentOnlyUpdate) == null ? void 0 : _a2.call(props).catch((e2) => {
@@ -251588,7 +251336,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               }) : null,
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$a.dismissButton,
+                className: styles$c.dismissButton,
                 onClick: stopExport,
                 children: "Cancel"
               })
@@ -251596,12 +251344,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           })
         ]
       }) : jsxRuntimeExports.jsxs("div", {
-        className: styles$a.exportStatus,
+        className: styles$c.exportStatus,
         children: [
           jsxRuntimeExports.jsxs("div", {
             className: [
-              styles$a.progressBar,
-              done ? styles$a.progressBarDone : null
+              styles$c.progressBar,
+              done ? styles$c.progressBarDone : null
             ].filter(Boolean).join(" "),
             style: {
               "--progress-ratio": clampedRatio
@@ -251620,12 +251368,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           }),
           etaLabel ? jsxRuntimeExports.jsx("div", {
-            className: styles$a.etaLine,
+            className: styles$c.etaLine,
             children: etaLabel
           }) : null,
           done ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$a.dismissButton,
+            className: styles$c.dismissButton,
             onClick: stopExport,
             children: "Dismiss"
           }) : null
@@ -251824,7 +251572,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const navPane = "_navPane_ltxq8_113";
   const navPaneHasStoryName = "_navPaneHasStoryName_ltxq8_126";
   const storyTitle = "_storyTitle_ltxq8_130";
-  const toolbar = "_toolbar_ltxq8_137";
+  const toolbar$1 = "_toolbar_ltxq8_137";
   const contentWrap = "_contentWrap_ltxq8_149";
   const navInactive = "_navInactive_ltxq8_186";
   const heading = "_heading_ltxq8_198";
@@ -251836,7 +251584,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const nextLink = "_nextLink_ltxq8_308";
   const tocWrapper = "_tocWrapper_ltxq8_352";
   const channelName = "_channelName_ltxq8_361";
-  const styles$9 = {
+  const styles$b = {
     presentation,
     previewRibbon,
     previewRibbonChevron,
@@ -251848,7 +251596,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     navPane,
     navPaneHasStoryName,
     storyTitle,
-    toolbar,
+    toolbar: toolbar$1,
     contentWrap,
     navInactive,
     heading,
@@ -251897,9 +251645,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
     });
     const viewerWorldFrame = useAppStore((s2) => s2.viewerWorldFrame);
-    const frame = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
-    const imageWidth = frame.pixelWidth;
-    const imageHeight = frame.pixelHeight;
+    const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
+    const imageWidth = frame2.pixelWidth;
+    const imageHeight = frame2.pixelHeight;
     const { activeStoryIndex, setActiveStory, activeChannelGroupId, setActiveChannelGroup, importWaypointShapes, setTargetWaypointCamera } = useAppStore();
     const previousActiveStoryIndexRef = reactExports.useRef(null);
     const groupAppliedForStoryRef = reactExports.useRef(null);
@@ -251996,7 +251744,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const iconPx = 16;
     const toc_button = jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: styles$9.tocButton,
+      className: styles$b.tocButton,
       title: "View table of contents",
       onMouseDown: (e2) => {
         e2.preventDefault();
@@ -252044,8 +251792,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return jsxRuntimeExports.jsx("button", {
         type: "button",
         className: [
-          styles$9.navLeft,
-          props2.active ? null : styles$9.navInactive
+          styles$b.navLeft,
+          props2.active ? null : styles$b.navInactive
         ].filter(Boolean).join(" "),
         title: "View previous waypoint",
         onMouseDown: handleMouseDown,
@@ -252056,7 +251804,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     const count2 = jsxRuntimeExports.jsxs("div", {
-      className: styles$9.count,
+      className: styles$b.count,
       children: [
         jsxRuntimeExports.jsx("div", {
           title: "Current waypoint",
@@ -252079,8 +251827,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return jsxRuntimeExports.jsx("button", {
         type: "button",
         className: [
-          styles$9.navRight,
-          props2.active ? null : styles$9.navInactive
+          styles$b.navRight,
+          props2.active ? null : styles$b.navInactive
         ].filter(Boolean).join(" "),
         title: "View next waypoint",
         onMouseDown: handleMouseDown,
@@ -252091,7 +251839,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     const story_next = jsxRuntimeExports.jsx("p", {
-      className: styles$9.nextLink,
+      className: styles$b.nextLink,
       title: "View next waypoint",
       onMouseDown: (e2) => {
         e2.preventDefault();
@@ -252102,10 +251850,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const TableOfContents = (props2) => {
       const { waypoints: tocWaypoints } = props2;
       return jsxRuntimeExports.jsxs("div", {
-        className: styles$9.tocWrapper,
+        className: styles$b.tocWrapper,
         children: [
           jsxRuntimeExports.jsx("h2", {
-            className: styles$9.heading,
+            className: styles$b.heading,
             children: "Table of Contents"
           }),
           jsxRuntimeExports.jsx("ol", {
@@ -252175,10 +251923,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const navStoryName = !showRibbon && documentTitle.trim() ? documentTitle.trim() : "";
     const flushTitle = !props.exitPlaybackPreview;
     return jsxRuntimeExports.jsxs("div", {
-      className: `${styles$9.presentation} minerva-seal`,
+      className: `${styles$b.presentation} minerva-seal`,
       children: [
         showRibbon ? jsxRuntimeExports.jsxs("div", {
-          className: `${minervaTheme.bar} ${styles$9.previewRibbon}`,
+          className: `${minervaTheme.bar} ${styles$b.previewRibbon}`,
           children: [
             props.exitPlaybackPreview ? jsxRuntimeExports.jsxs(PanelActionButton, {
               type: "button",
@@ -252187,7 +251935,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               "aria-label": "Back to editing",
               children: [
                 jsxRuntimeExports.jsx(SvgChevronDown, {
-                  className: styles$9.previewRibbonChevron,
+                  className: styles$b.previewRibbonChevron,
                   "aria-hidden": true
                 }),
                 jsxRuntimeExports.jsx("span", {
@@ -252199,8 +251947,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               title: ribbonDocTitle,
               className: [
                 minervaTheme.title,
-                styles$9.previewRibbonDocumentTitle,
-                flushTitle ? styles$9.previewRibbonDocumentTitleFlush : null
+                styles$b.previewRibbonDocumentTitle,
+                flushTitle ? styles$b.previewRibbonDocumentTitleFlush : null
               ].filter(Boolean).join(" "),
               children: [
                 jsxRuntimeExports.jsx(StorySpines, {}),
@@ -252208,26 +251956,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             props.exitPlaybackPreview ? jsxRuntimeExports.jsx("span", {
-              className: styles$9.previewRibbonPreviewBadge,
+              className: styles$b.previewRibbonPreviewBadge,
               children: "Story preview"
             }) : null
           ]
         }) : null,
         jsxRuntimeExports.jsxs("div", {
-          className: styles$9.splitGrid,
+          className: styles$b.splitGrid,
           children: [
             jsxRuntimeExports.jsxs("div", {
               className: [
-                styles$9.navPane,
-                navStoryName ? styles$9.navPaneHasStoryName : null
+                styles$b.navPane,
+                navStoryName ? styles$b.navPaneHasStoryName : null
               ].filter(Boolean).join(" "),
               children: [
                 navStoryName ? jsxRuntimeExports.jsx("div", {
-                  className: styles$9.storyTitle,
+                  className: styles$b.storyTitle,
                   children: navStoryName
                 }) : null,
                 jsxRuntimeExports.jsxs("div", {
-                  className: styles$9.toolbar,
+                  className: styles$b.toolbar,
                   children: [
                     toc_button,
                     jsxRuntimeExports.jsx(StoryLeft, {
@@ -252241,10 +251989,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 jsxRuntimeExports.jsxs("div", {
                   ref: contentPaneRef,
-                  className: styles$9.contentWrap,
+                  className: styles$b.contentWrap,
                   children: [
                     jsxRuntimeExports.jsx("h2", {
-                      className: styles$9.heading,
+                      className: styles$b.heading,
                       children: story_title
                     }),
                     jsxRuntimeExports.jsx(Markdown, {
@@ -252253,7 +252001,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           const text2 = String(children);
                           const color2 = channelColors.get(text2);
                           return color2 ? jsxRuntimeExports.jsx("span", {
-                            className: styles$9.channelName,
+                            className: styles$b.channelName,
                             style: {
                               "--channel-color": color2
                             },
@@ -252269,7 +252017,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       waypoints
                     }),
                     jsxRuntimeExports.jsx("div", {
-                      className: styles$9.inlineNext,
+                      className: styles$b.inlineNext,
                       children: last_story ? jsxRuntimeExports.jsx("p", {
                         children: "End"
                       }) : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
@@ -252287,7 +252035,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$9.presentationViewerRegion,
+              className: styles$b.presentationViewerRegion,
               children: props.children
             })
           ]
@@ -252303,7 +252051,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const groupAltRow = "_groupAltRow_8953e_63";
   const ellipsis = "_ellipsis_8953e_81";
   const triggerLabel = "_triggerLabel_8953e_87";
-  const styles$8 = {
+  const styles$a = {
     wrapRows,
     activeHeader,
     activeGroupTrigger,
@@ -252329,7 +252077,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: `${minervaTheme.focusRing} ${styles$8.groupAltRow}`,
+      className: `${minervaTheme.focusRing} ${styles$a.groupAltRow}`,
       onClick: toGroup,
       children: name2
     });
@@ -252353,12 +252101,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const activeGroupName = (activeGroup == null ? void 0 : activeGroup.name) || "No group";
     if (channelGroups.length <= 1) {
       return jsxRuntimeExports.jsx("div", {
-        className: styles$8.wrapRows,
+        className: styles$a.wrapRows,
         children: jsxRuntimeExports.jsx("div", {
-          className: styles$8.activeHeader,
+          className: styles$a.activeHeader,
           title: activeGroupName,
           children: jsxRuntimeExports.jsx("span", {
-            className: styles$8.ellipsis,
+            className: styles$a.ellipsis,
             children: activeGroupName
           })
         })
@@ -252366,29 +252114,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     const otherGroups = expanded ? docChannelGroups.filter((g2) => g2.id !== (activeGroup == null ? void 0 : activeGroup.id)) : [];
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$8.wrapRows,
+      className: styles$a.wrapRows,
       children: [
         jsxRuntimeExports.jsxs("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$8.activeGroupTrigger}`,
+          className: `${minervaTheme.focusRing} ${styles$a.activeGroupTrigger}`,
           "aria-expanded": expanded,
           onClick: () => setExpanded(!expanded),
           children: [
             jsxRuntimeExports.jsx("span", {
-              className: styles$8.chevronWrap,
+              className: styles$a.chevronWrap,
               "aria-hidden": true,
               children: jsxRuntimeExports.jsx(ChevronIcon, {
                 direction: expanded ? "up" : "down"
               })
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$8.triggerLabel,
+              className: styles$a.triggerLabel,
               children: activeGroupName
             })
           ]
         }),
         otherGroups.length > 0 ? jsxRuntimeExports.jsx("div", {
-          className: styles$8.alternateList,
+          className: styles$a.alternateList,
           children: otherGroups.map((group2) => jsxRuntimeExports.jsx(GroupRow, {
             group: group2
           }, group2.id))
@@ -252408,7 +252156,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }));
   const clickable = "_clickable_hg67w_9";
   const wrapColumn = "_wrapColumn_hg67w_13";
-  const styles$7 = {
+  const styles$9 = {
     "static": "_static_hg67w_1",
     clickable,
     wrapColumn
@@ -252416,7 +252164,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const IconButton = (props) => {
     const { onClick, children, "aria-label": ariaLabel } = props;
     return jsxRuntimeExports.jsx(PanelIconButton, {
-      className: onClick ? styles$7.clickable : styles$7.static,
+      className: onClick ? styles$9.clickable : styles$9.static,
       onClick,
       "aria-label": ariaLabel,
       children
@@ -252430,7 +252178,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const PopUpdate = (props) => {
     const { onPop, children } = props;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$7.wrapColumn,
+      className: styles$9.wrapColumn,
       children: [
         jsxRuntimeExports.jsx(IconButton, {
           onClick: onPop,
@@ -252442,10 +252190,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   };
   const fieldWrap = "_fieldWrap_1y8s3_1";
-  const input = "_input_1y8s3_8";
-  const styles$6 = {
+  const input$1 = "_input_1y8s3_8";
+  const styles$8 = {
     fieldWrap,
-    input
+    input: input$1
   };
   const parseEvent = (e2) => e2.target.value;
   const handleText = ({ setInput }) => {
@@ -252467,14 +252215,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const El = React$2.Fragment;
     const content2 = editable ? jsxRuntimeExports.jsx("input", {
-      className: styles$6.input,
+      className: styles$8.input,
       ...inputProps,
       title: text2
     }) : jsxRuntimeExports.jsx(El, {
       children: text2
     });
     return jsxRuntimeExports.jsx("div", {
-      className: styles$6.fieldWrap,
+      className: styles$8.fieldWrap,
       children: content2
     });
   };
@@ -252507,7 +252255,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const swatchFilled = "_swatchFilled_60gku_130";
   const legendDivider = "_legendDivider_60gku_134";
   const nameSlot = "_nameSlot_60gku_139";
-  const styles$5 = {
+  const styles$7 = {
     channelsSection,
     channelsSectionHeader,
     sectionLabel,
@@ -252611,7 +252359,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const swatchLabel = colorPending ? `Optimizing color of ${channelName2}` : `Change color of ${channelName2}`;
     const coreUI = jsxRuntimeExports.jsxs("div", {
-      className: styles$5.rowClickArea,
+      className: styles$7.rowClickArea,
       style: {
         opacity: rowVisible ? 1 : 0.55
       },
@@ -252619,7 +252367,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         jsxRuntimeExports.jsx("button", {
           type: "button",
           className: [
-            styles$5.swatchButton,
+            styles$7.swatchButton,
             colorPending ? minervaTheme.busyOverlay : null
           ].filter(Boolean).join(" "),
           onClick: onColorClick,
@@ -252628,8 +252376,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           "aria-busy": colorPending || void 0,
           children: jsxRuntimeExports.jsx("div", {
             className: [
-              styles$5.swatch,
-              channel.color && rowVisible ? styles$5.swatchFilled : null
+              styles$7.swatch,
+              channel.color && rowVisible ? styles$7.swatchFilled : null
             ].filter(Boolean).join(" "),
             style: {
               "--swatch-color": channel.color ? `#${channel.color}` : "#fff"
@@ -252638,12 +252386,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$5.nameButton,
+          className: styles$7.nameButton,
           onClick: () => props.toggleChannel(channel),
           title: rowVisible ? `Hide ${channelName2}` : `Show ${channelName2}`,
           "aria-label": rowVisible ? `Hide ${channelName2}` : `Show ${channelName2}`,
           children: jsxRuntimeExports.jsx("span", {
-            className: styles$5.nameSlot,
+            className: styles$7.nameSlot,
             children: jsxRuntimeExports.jsx(EditableText, {
               ...statusProps,
               children: channelName2
@@ -252676,7 +252424,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     });
     return jsxRuntimeExports.jsx("div", {
-      className: styles$5.legendRowWrap,
+      className: styles$7.legendRowWrap,
       children: extraUI
     });
   };
@@ -252736,16 +252484,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     if (sections.length === 0) {
       return jsxRuntimeExports.jsx("div", {
-        className: styles$5.channelsSection,
+        className: styles$7.channelsSection,
         children: jsxRuntimeExports.jsxs("div", {
-          className: styles$5.channelsSectionHeader,
+          className: styles$7.channelsSectionHeader,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$5.sectionLabel,
+              className: styles$7.sectionLabel,
               children: "Channels"
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$5.toolbarSlot,
+              className: styles$7.toolbarSlot,
               children: addChannelUI
             })
           ]
@@ -252754,38 +252502,38 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     let rowIdx = 0;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$5.channelsSection,
+      className: styles$7.channelsSection,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$5.channelsSectionHeader,
+          className: styles$7.channelsSectionHeader,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$5.sectionLabel,
+              className: styles$7.sectionLabel,
               children: "Channels"
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$5.toolbarSlot,
+              className: styles$7.toolbarSlot,
               children: addChannelUI
             })
           ]
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$5.legendBody,
-          children: sections.map((section2) => jsxRuntimeExports.jsxs("div", {
-            className: styles$5.imageSection,
+          className: styles$7.legendBody,
+          children: sections.map((section) => jsxRuntimeExports.jsxs("div", {
+            className: styles$7.imageSection,
             children: [
               jsxRuntimeExports.jsx("div", {
-                className: styles$5.imageSectionLabel,
-                title: section2.label,
-                children: section2.label
+                className: styles$7.imageSectionLabel,
+                title: section.label,
+                children: section.label
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$5.channelList,
-                children: section2.entries.map((entry, entryIdx) => {
+                className: styles$7.channelList,
+                children: section.entries.map((entry, entryIdx) => {
                   if (entry.type === "divider") {
                     return jsxRuntimeExports.jsx("div", {
-                      className: styles$5.legendDivider
-                    }, `div-${section2.imageId}-${entryIdx}`);
+                      className: styles$7.legendDivider
+                    }, `div-${section.imageId}-${entryIdx}`);
                   }
                   const c2 = entry.channel;
                   const k2 = rowIdx;
@@ -252815,7 +252563,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 })
               })
             ]
-          }, section2.imageId))
+          }, section.imageId))
         }),
         jsxRuntimeExports.jsx(ColorPickerPopover, {
           position: colorPickerPos,
@@ -252850,7 +252598,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const wrapContent = "_wrapContent_dawfc_25";
   const wrapCore = "_wrapCore_dawfc_33";
   const overlaySectionLabel = "_overlaySectionLabel_dawfc_52";
-  const styles$4 = {
+  const styles$6 = {
     textWrap,
     core,
     hide,
@@ -253019,13 +252767,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     const hideClass = [
-      hide2 ? styles$4.hide : "",
-      styles$4.core
+      hide2 ? styles$6.hide : "",
+      styles$6.core
     ].join(" ");
     const allGroups = docChannelGroups.length > 0 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$4.overlaySectionLabel,
+          className: styles$6.overlaySectionLabel,
           children: "Channel groups"
         }),
         jsxRuntimeExports.jsx(ChannelGroups, {
@@ -253039,9 +252787,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const channelMenu = jsxRuntimeExports.jsx("div", {
       className: hideClass,
       children: jsxRuntimeExports.jsx("div", {
-        className: styles$4.wrapContent,
+        className: styles$6.wrapContent,
         children: jsxRuntimeExports.jsxs("div", {
-          className: styles$4.wrapCore,
+          className: styles$6.wrapCore,
           children: [
             allGroups,
             jsxRuntimeExports.jsx(ChannelLegend, {
@@ -253056,17 +252804,602 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })
     });
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$4.textWrap,
+      className: styles$6.textWrap,
       children: [
         props.children,
         hidden ? "" : channelMenu
       ]
     });
   };
+  const SvgOrientation = (props) => reactExports.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg",
+    width: "1em",
+    height: "1em",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    ...props
+  }, reactExports.createElement("path", {
+    d: "M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"
+  }), reactExports.createElement("path", {
+    d: "M21 3v5h-5"
+  }));
+  const SvgReflectHorizontal = (props) => reactExports.createElement("svg", {
+    width: "1em",
+    height: "1em",
+    viewBox: "0 0 16 16",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg",
+    ...props
+  }, reactExports.createElement("path", {
+    stroke: "currentColor",
+    strokeWidth: 1.25,
+    strokeLinecap: "round",
+    strokeDasharray: "0 2.5",
+    d: "M8 1.25v13.5"
+  }), reactExports.createElement("path", {
+    stroke: "currentColor",
+    strokeWidth: 1.25,
+    strokeLinejoin: "round",
+    d: "M1.5 3.5v9L7 8Z"
+  }), reactExports.createElement("path", {
+    fill: "currentColor",
+    d: "M14.5 3.5v9L9 8Z"
+  }));
+  const SvgReflectVertical = (props) => reactExports.createElement("svg", {
+    width: "1em",
+    height: "1em",
+    viewBox: "0 0 16 16",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg",
+    ...props
+  }, reactExports.createElement("path", {
+    stroke: "currentColor",
+    strokeWidth: 1.25,
+    strokeLinecap: "round",
+    strokeDasharray: "0 2.5",
+    d: "M1.25 8h13.5"
+  }), reactExports.createElement("path", {
+    fill: "currentColor",
+    d: "M3.5 1.5h9L8 7Z"
+  }), reactExports.createElement("path", {
+    stroke: "currentColor",
+    strokeWidth: 1.25,
+    strokeLinejoin: "round",
+    d: "M3.5 14.5h9L8 9Z"
+  }));
+  const SvgRotate90Ccw = (props) => reactExports.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg",
+    width: "1em",
+    height: "1em",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    ...props
+  }, reactExports.createElement("path", {
+    d: "M20 9V7a2 2 0 0 0-2-2h-6"
+  }), reactExports.createElement("path", {
+    d: "m15 2-3 3 3 3"
+  }), reactExports.createElement("path", {
+    d: "M20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"
+  }));
+  const SvgRotate90Cw = (props) => reactExports.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg",
+    width: "1em",
+    height: "1em",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    ...props
+  }, reactExports.createElement("path", {
+    d: "M12 5H6a2 2 0 0 0-2 2v3"
+  }), reactExports.createElement("path", {
+    d: "m9 8 3-3-3-3"
+  }), reactExports.createElement("path", {
+    d: "M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
+  }));
+  const toolbar = "_toolbar_1hbkn_1";
+  const group = "_group_1hbkn_20";
+  const field = "_field_1hbkn_33";
+  const prefix = "_prefix_1hbkn_44";
+  const input = "_input_1hbkn_51";
+  const styles$5 = {
+    toolbar,
+    group,
+    field,
+    prefix,
+    input
+  };
+  const UNPLACED = {
+    rotationDegrees: 0,
+    flipHorizontal: false,
+    flipVertical: false,
+    translateX: 0,
+    translateY: 0,
+    displayScale: 1
+  };
+  function formatNumber(n2) {
+    const rounded = Math.round(n2 * 10) / 10;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  }
+  function NumberField(props) {
+    const { label: label2, prefix: prefix2, unit, value, onCommit } = props;
+    const [draft, setDraft] = reactExports.useState(null);
+    const cancel = reactExports.useRef(false);
+    const finish = (raw2) => {
+      setDraft(null);
+      const skip = cancel.current || raw2 === value;
+      cancel.current = false;
+      const n2 = Number.parseFloat(raw2);
+      if (!skip && Number.isFinite(n2)) onCommit(n2);
+    };
+    return jsxRuntimeExports.jsxs("label", {
+      className: styles$5.field,
+      title: label2,
+      children: [
+        prefix2 ? jsxRuntimeExports.jsx("span", {
+          className: styles$5.prefix,
+          children: prefix2
+        }) : null,
+        jsxRuntimeExports.jsx("input", {
+          className: `${minervaTheme.input} ${styles$5.input}`,
+          type: "text",
+          inputMode: "decimal",
+          value: draft ?? value,
+          "aria-label": label2,
+          onFocus: (e2) => {
+            setDraft(e2.currentTarget.value);
+            e2.currentTarget.select();
+          },
+          onChange: (e2) => setDraft(e2.target.value),
+          onBlur: (e2) => finish(e2.currentTarget.value),
+          onKeyDown: (e2) => {
+            if (e2.key === "Enter") {
+              e2.currentTarget.blur();
+            } else if (e2.key === "Escape") {
+              cancel.current = true;
+              e2.currentTarget.blur();
+            }
+          }
+        }),
+        jsxRuntimeExports.jsx("span", {
+          "aria-hidden": true,
+          children: unit
+        })
+      ]
+    });
+  }
+  function ImageArrangeToolbar(props) {
+    const { imageId, orientation: o2 } = props;
+    const commit = (patch2) => {
+      const doc = useDocumentStore.getState();
+      doc.setImages(setImageOrientation(doc.images, imageId, withOrientation(o2, patch2)));
+    };
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$5.toolbar,
+      role: "toolbar",
+      "aria-label": "Arrange image",
+      children: [
+        jsxRuntimeExports.jsxs("div", {
+          className: styles$5.group,
+          children: [
+            jsxRuntimeExports.jsx(PanelIconButton, {
+              title: "Rotate left 90\xB0",
+              onClick: () => commit({
+                rotationDegrees: o2.rotationDegrees - 90
+              }),
+              children: jsxRuntimeExports.jsx(SvgRotate90Ccw, {
+                "aria-hidden": true
+              })
+            }),
+            jsxRuntimeExports.jsx(PanelIconButton, {
+              title: "Rotate right 90\xB0",
+              onClick: () => commit({
+                rotationDegrees: o2.rotationDegrees + 90
+              }),
+              children: jsxRuntimeExports.jsx(SvgRotate90Cw, {
+                "aria-hidden": true
+              })
+            }),
+            jsxRuntimeExports.jsx(NumberField, {
+              label: "Rotation",
+              unit: "\xB0",
+              value: formatNumber(o2.rotationDegrees),
+              onCommit: (deg) => commit({
+                rotationDegrees: deg
+              })
+            })
+          ]
+        }),
+        jsxRuntimeExports.jsxs("div", {
+          className: styles$5.group,
+          children: [
+            jsxRuntimeExports.jsx(PanelIconButton, {
+              title: "Flip horizontal",
+              onClick: () => commit(flipOnScreen(o2, "horizontal")),
+              children: jsxRuntimeExports.jsx(SvgReflectHorizontal, {
+                "aria-hidden": true
+              })
+            }),
+            jsxRuntimeExports.jsx(PanelIconButton, {
+              title: "Flip vertical",
+              onClick: () => commit(flipOnScreen(o2, "vertical")),
+              children: jsxRuntimeExports.jsx(SvgReflectVertical, {
+                "aria-hidden": true
+              })
+            })
+          ]
+        }),
+        jsxRuntimeExports.jsxs("div", {
+          className: styles$5.group,
+          children: [
+            jsxRuntimeExports.jsx(NumberField, {
+              label: "Scale",
+              prefix: "Scale",
+              unit: "%",
+              value: formatNumber(o2.displayScale * 100),
+              onCommit: (pct) => {
+                if (pct > 0) commit({
+                  displayScale: clampDisplayScale(pct / 100)
+                });
+              }
+            }),
+            jsxRuntimeExports.jsx(NumberField, {
+              label: "Horizontal shift",
+              prefix: "X",
+              unit: WORLD_MICRON,
+              value: formatNumber(o2.translateX),
+              onCommit: (x2) => commit({
+                translateX: x2
+              })
+            }),
+            jsxRuntimeExports.jsx(NumberField, {
+              label: "Vertical shift",
+              prefix: "Y",
+              unit: WORLD_MICRON,
+              value: formatNumber(o2.translateY),
+              onCommit: (y2) => commit({
+                translateY: y2
+              })
+            })
+          ]
+        }),
+        jsxRuntimeExports.jsx("div", {
+          className: styles$5.group,
+          children: jsxRuntimeExports.jsx(PanelActionButton, {
+            disabled: isIdentityOrientation(o2),
+            onClick: () => commit(UNPLACED),
+            children: "Reset"
+          })
+        })
+      ]
+    });
+  }
+  const layer = "_layer_y32ny_1";
+  const frame = "_frame_y32ny_9";
+  const body = "_body_y32ny_18";
+  const stem = "_stem_y32ny_27";
+  const handle = "_handle_y32ny_32";
+  const knob = "_knob_y32ny_33";
+  const styles$4 = {
+    layer,
+    frame,
+    body,
+    stem,
+    handle,
+    knob
+  };
+  const HANDLES = [
+    [
+      0,
+      0
+    ],
+    [
+      0.5,
+      0
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      0.5
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      0.5,
+      1
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      0.5
+    ]
+  ];
+  const RESIZE_CURSORS = [
+    "ew-resize",
+    "nwse-resize",
+    "ns-resize",
+    "nesw-resize"
+  ];
+  const ROTATE_OFFSET = 28;
+  const HANDLE_SIZE = 10;
+  const KNOB_RADIUS = 11;
+  const MIN_SIDE_FOR_EDGE_HANDLES = 48;
+  const SNAP_DEGREES = 15;
+  function clockDeg(world, center) {
+    const rad = Math.atan2(world[0] - center[0], -(world[1] - center[1]));
+    return rad * 180 / Math.PI;
+  }
+  function resizeCursor(anchor, handle2) {
+    const deg = Math.atan2(handle2[1] - anchor[1], handle2[0] - anchor[0]) * 180 / Math.PI;
+    return RESIZE_CURSORS[(Math.round(deg / 45) % 4 + 4) % 4];
+  }
+  function isTextField(target) {
+    return target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable]") !== null;
+  }
+  function ImageArrangeBox(props) {
+    const { imageId, images, loaders, preview, project: project2, unproject, layoutRef, getCanvas } = props;
+    const [, setTick] = reactExports.useState(0);
+    const dragRef = reactExports.useRef(null);
+    const unprojectRef = reactExports.useRef(unproject);
+    unprojectRef.current = unproject;
+    const setPreview = useAppStore((s2) => s2.setImageOrientationPreview);
+    const setArrangeImageId = useAppStore((s2) => s2.setArrangeImageId);
+    reactExports.useLayoutEffect(() => {
+      layoutRef.current = () => setTick((n22) => n22 + 1);
+      return () => {
+        layoutRef.current = null;
+        if (dragRef.current) {
+          dragRef.current = null;
+          useAppStore.getState().setImageOrientationPreview(null);
+        }
+      };
+    }, [
+      layoutRef
+    ]);
+    reactExports.useEffect(() => {
+      const onMove = (e2) => {
+        const drag = dragRef.current;
+        if (!drag) return;
+        const world = unprojectRef.current(e2.clientX, e2.clientY);
+        if (!world) return;
+        drag.latest = drag.apply(world, e2);
+        setPreview({
+          imageId,
+          orientation: drag.latest
+        });
+      };
+      const onUp = () => {
+        const drag = dragRef.current;
+        if (!drag) return;
+        dragRef.current = null;
+        if (drag.latest !== drag.start) {
+          const doc = useDocumentStore.getState();
+          doc.setImages(setImageOrientation(doc.images, imageId, drag.latest));
+        }
+        setPreview(null);
+      };
+      const onKey = (e2) => {
+        if (e2.key !== "Escape") return;
+        if (dragRef.current) {
+          dragRef.current = null;
+          setPreview(null);
+        } else if (!isTextField(e2.target)) {
+          setArrangeImageId(null);
+        }
+      };
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onUp);
+      window.addEventListener("keydown", onKey);
+      return () => {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", onUp);
+        window.removeEventListener("keydown", onKey);
+      };
+    }, [
+      imageId,
+      setPreview,
+      setArrangeImageId
+    ]);
+    const item2 = loaders.find((l2) => l2.sourceImageId === imageId);
+    const o2 = orientationForImage(images, imageId, preview);
+    if (!item2 || !o2) return null;
+    const { pixelWidth: w2, pixelHeight: h2 } = worldFrameFromLoader(item2.loader);
+    if (w2 <= 1 || h2 <= 1) return null;
+    const frameO = {
+      ...o2,
+      flipHorizontal: false,
+      flipVertical: false
+    };
+    const worldAt = ([u2, v2], placement = frameO) => imagePixelToWorld(u2 * w2, v2 * h2, w2, h2, placement);
+    const points = HANDLES.map((uv) => project2(...worldAt(uv)));
+    if (points.some((p2) => !Number.isFinite(p2[0]) || !Number.isFinite(p2[1]))) {
+      return null;
+    }
+    const [nw, n2, ne2, , se2, , sw] = points;
+    const center = [
+      (nw[0] + se2[0]) / 2,
+      (nw[1] + se2[1]) / 2
+    ];
+    const up = Math.hypot(n2[0] - center[0], n2[1] - center[1]) || 1;
+    const knob2 = [
+      n2[0] + (n2[0] - center[0]) / up * ROTATE_OFFSET,
+      n2[1] + (n2[1] - center[1]) / up * ROTATE_OFFSET
+    ];
+    const showEdgeHandles = Math.min(Math.hypot(ne2[0] - nw[0], ne2[1] - nw[1]), Math.hypot(sw[0] - nw[0], sw[1] - nw[1])) >= MIN_SIDE_FOR_EDGE_HANDLES;
+    const begin = (e2, apply) => {
+      if (e2.button !== 0) return;
+      e2.preventDefault();
+      e2.stopPropagation();
+      dragRef.current = {
+        start: o2,
+        latest: o2,
+        apply
+      };
+      try {
+        e2.currentTarget.setPointerCapture(e2.pointerId);
+      } catch {
+      }
+    };
+    const startMove = (e2) => {
+      const origin = unprojectRef.current(e2.clientX, e2.clientY);
+      if (!origin) return;
+      begin(e2, (world, ev) => {
+        let dx = world[0] - origin[0];
+        let dy = world[1] - origin[1];
+        if (ev.shiftKey) {
+          if (Math.abs(dx) > Math.abs(dy)) dy = 0;
+          else dx = 0;
+        }
+        return effectiveOrientation({
+          ...o2,
+          translateX: o2.translateX + dx,
+          translateY: o2.translateY + dy
+        });
+      });
+    };
+    const startResize = (e2, i2) => {
+      const [u2, v2] = HANDLES[i2];
+      const anchorUv = [
+        1 - u2,
+        1 - v2
+      ];
+      const anchor = worldAt(anchorUv);
+      const handle2 = worldAt(HANDLES[i2]);
+      const bare = {
+        ...frameO,
+        displayScale: 1,
+        translateX: 0,
+        translateY: 0
+      };
+      const localAnchor = worldAt(anchorUv, bare);
+      const centerUm = worldAt([
+        0.5,
+        0.5
+      ], bare);
+      const lx = localAnchor[0] - centerUm[0];
+      const ly = localAnchor[1] - centerUm[1];
+      const dx = handle2[0] - anchor[0];
+      const dy = handle2[1] - anchor[1];
+      const span = Math.hypot(dx, dy);
+      if (span < 1e-6) return;
+      begin(e2, (world) => {
+        const along = ((world[0] - anchor[0]) * dx + (world[1] - anchor[1]) * dy) / span;
+        const displayScale = clampDisplayScale(o2.displayScale * (along / span));
+        return effectiveOrientation({
+          ...o2,
+          displayScale,
+          translateX: anchor[0] - centerUm[0] - displayScale * lx,
+          translateY: anchor[1] - centerUm[1] - displayScale * ly
+        });
+      });
+    };
+    const startRotate = (e2) => {
+      const pivot = worldAt([
+        0.5,
+        0.5
+      ]);
+      const origin = unprojectRef.current(e2.clientX, e2.clientY);
+      if (!origin) return;
+      const startAngle = clockDeg(origin, pivot);
+      begin(e2, (world, ev) => {
+        let deg = o2.rotationDegrees + (clockDeg(world, pivot) - startAngle);
+        if (ev.shiftKey) deg = Math.round(deg / SNAP_DEGREES) * SNAP_DEGREES;
+        return withOrientation(o2, {
+          rotationDegrees: deg
+        });
+      });
+    };
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$4.layer,
+      children: [
+        jsxRuntimeExports.jsxs("svg", {
+          className: styles$4.frame,
+          "aria-hidden": true,
+          children: [
+            jsxRuntimeExports.jsx("polygon", {
+              className: styles$4.body,
+              points: [
+                nw,
+                ne2,
+                se2,
+                sw
+              ].map((p2) => p2.join(",")).join(" "),
+              onPointerDown: startMove,
+              onWheel: (e2) => {
+                var _a2;
+                return (_a2 = getCanvas()) == null ? void 0 : _a2.dispatchEvent(new WheelEvent("wheel", e2.nativeEvent));
+              }
+            }),
+            jsxRuntimeExports.jsx("line", {
+              className: styles$4.stem,
+              x1: n2[0],
+              y1: n2[1],
+              x2: knob2[0],
+              y2: knob2[1]
+            }),
+            HANDLES.map(([u2, v2], i2) => i2 % 2 === 1 && !showEdgeHandles ? null : jsxRuntimeExports.jsx("rect", {
+              className: styles$4.handle,
+              x: points[i2][0] - HANDLE_SIZE / 2,
+              y: points[i2][1] - HANDLE_SIZE / 2,
+              width: HANDLE_SIZE,
+              height: HANDLE_SIZE,
+              style: {
+                cursor: resizeCursor(points[(i2 + 4) % 8], points[i2])
+              },
+              onPointerDown: (e2) => startResize(e2, i2)
+            }, `${u2},${v2}`)),
+            jsxRuntimeExports.jsxs("g", {
+              className: styles$4.knob,
+              transform: `translate(${knob2[0]} ${knob2[1]})`,
+              onPointerDown: startRotate,
+              children: [
+                jsxRuntimeExports.jsx("title", {
+                  children: "Rotate"
+                }),
+                jsxRuntimeExports.jsx("circle", {
+                  r: KNOB_RADIUS
+                }),
+                jsxRuntimeExports.jsx(SvgOrientation, {
+                  x: -7,
+                  y: -7,
+                  width: 14,
+                  height: 14
+                })
+              ]
+            })
+          ]
+        }),
+        jsxRuntimeExports.jsx(ImageArrangeToolbar, {
+          imageId,
+          orientation: o2
+        })
+      ]
+    });
+  }
   const LoadingWidget = reactExports.forwardRef(({ placement = "top-left", label: label2 = "Loading layer data" }, ref) => {
     const [loading2, setLoading] = reactExports.useState(false);
     const onRedraw = reactExports.useCallback(({ layers }) => {
-      const isLoading = layers.some((layer) => !layer.isLoaded);
+      const isLoading = layers.some((layer2) => !layer2.isLoaded);
       setLoading((prev) => prev === isLoading ? prev : isLoading);
     }, []);
     reactExports.useImperativeHandle(ref, () => ({
@@ -253711,10 +254044,10 @@ uniform classStyleUniforms {
       onHover: (info) => {
         var _a2;
         const coordinate = toCoord(info) ?? null;
-        const layer = info.layer;
+        const layer2 = info.layer;
         const object = info.object;
         if (activeTool === "move" && store().authoringWaypointEditorOpen) {
-          if (((_a2 = layer == null ? void 0 : layer.id) == null ? void 0 : _a2.startsWith("shape-")) && (object == null ? void 0 : object.id)) {
+          if (((_a2 = layer2 == null ? void 0 : layer2.id) == null ? void 0 : _a2.startsWith("shape-")) && (object == null ? void 0 : object.id)) {
             let shapeId = object.id;
             if (shapeId.endsWith("-arrow")) {
               shapeId = shapeId.replace("-arrow", "");
@@ -253763,7 +254096,7 @@ uniform classStyleUniforms {
   };
   const ImageViewer = (props) => {
     const windowSize = useWindowSize();
-    const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2 } = props;
+    const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, canArrange = false, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2 } = props;
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const channelVisibilities = useAppStore((s2) => s2.channelVisibilities);
     const channelGroupRowVisibilities = useAppStore((s2) => s2.channelGroupRowVisibilities);
@@ -253772,6 +254105,7 @@ uniform classStyleUniforms {
     const imageSelectionMask = useAppStore((s2) => s2.imageSelectionMask);
     const maskVisualizationPreview = useAppStore((s2) => s2.maskVisualizationPreview);
     const imageOrientationPreview = useAppStore((s2) => s2.imageOrientationPreview);
+    const arrangeImageId = useAppStore((s2) => s2.arrangeImageId);
     const selectionMaskVisualizationPreview = (maskVisualizationPreview == null ? void 0 : maskVisualizationPreview.sourceChannelId) === SELECTION_MASK_CHANNEL_KEY ? maskVisualizationPreview.visualization : null;
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
@@ -253784,26 +254118,34 @@ uniform classStyleUniforms {
     const [viewportSize, setViewportSize] = reactExports.useState(windowSize);
     const rootRef = reactExports.useRef(null);
     const deckRef = reactExports.useRef(null);
-    reactExports.useEffect(() => {
-      const element2 = rootRef.current;
+    const arrangeLayoutRef = reactExports.useRef(null);
+    const resizeObserverRef = reactExports.useRef(null);
+    const setRoot = reactExports.useCallback((element2) => {
+      var _a2;
+      rootRef.current = element2;
+      (_a2 = resizeObserverRef.current) == null ? void 0 : _a2.disconnect();
+      resizeObserverRef.current = null;
       if (!element2) return;
+      const publish = (width, height) => {
+        if (width <= 0 || height <= 0) return;
+        setViewportSize({
+          width,
+          height
+        });
+        useAppStore.getState().setViewerViewportSize({
+          width,
+          height
+        });
+      };
+      publish(element2.clientWidth, element2.clientHeight);
       const resizeObserver = new ResizeObserver((entries) => {
         for (const entry of entries) {
           const { width, height } = entry.contentRect;
-          setViewportSize({
-            width,
-            height
-          });
-          if (width > 0 && height > 0) {
-            useAppStore.getState().setViewerViewportSize({
-              width,
-              height
-            });
-          }
+          publish(width, height);
         }
       });
       resizeObserver.observe(element2);
-      return () => resizeObserver.disconnect();
+      resizeObserverRef.current = resizeObserver;
     }, []);
     const setViewerWorldFrame = useAppStore((s2) => s2.setViewerWorldFrame);
     const firstLoader = reactExports.useMemo(() => loaderList.length > 0 ? loaderList[0] : null, [
@@ -253821,7 +254163,7 @@ uniform classStyleUniforms {
       loaderList,
       images
     ]);
-    const frame = reactExports.useMemo(() => {
+    const frame2 = reactExports.useMemo(() => {
       const image2 = images.find((im) => im.id === (firstLoader == null ? void 0 : firstLoader.sourceImageId));
       if (image2 && image2.sizeX > 0 && image2.sizeY > 0) {
         return worldFrameFromImage(image2);
@@ -253832,10 +254174,10 @@ uniform classStyleUniforms {
       images
     ]);
     reactExports.useEffect(() => {
-      setViewerWorldFrame(frame);
+      setViewerWorldFrame(frame2);
       return () => setViewerWorldFrame(null);
     }, [
-      frame,
+      frame2,
       setViewerWorldFrame
     ]);
     const maskDisplayLayers = reactExports.useMemo(() => {
@@ -253854,7 +254196,7 @@ uniform classStyleUniforms {
         const visualization = (maskVisualizationPreview == null ? void 0 : maskVisualizationPreview.sourceChannelId) === sc2.id ? maskVisualizationPreview.visualization : effectiveMaskVisualizationForSource(sc2, channelGroups, activeChannelGroupId);
         const orientation = orientationForImage(images, sc2.imageId, imageOrientationPreview);
         const featureTable = featureTables.find((c2) => c2.sourceChannelId === sc2.id);
-        const layer = createMaskTileLayer({
+        const layer2 = createMaskTileLayer({
           id: `mask-channel-${sc2.id}`,
           loader: entry.loader,
           channelIndex: sc2.index,
@@ -253863,7 +254205,7 @@ uniform classStyleUniforms {
           visible: rendered,
           classStyle: featureTable ? gpuStyleForFeatureTable(featureTable, featureTableVisibilities[featureTable.id], visualization.colorSeed ?? 0) : void 0
         });
-        if (layer) layers.push(layer);
+        if (layer2) layers.push(layer2);
       }
       return layers;
     }, [
@@ -253883,9 +254225,9 @@ uniform classStyleUniforms {
       const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
       return withOrthoZoom({
         zoom: -n_levels,
-        target: frame ? [
-          frame.worldWidth / 2,
-          frame.worldHeight / 2,
+        target: frame2 ? [
+          frame2.worldWidth / 2,
+          frame2.worldHeight / 2,
           0
         ] : [
           0,
@@ -253895,7 +254237,7 @@ uniform classStyleUniforms {
       });
     }, [
       firstLoader,
-      frame
+      frame2
     ]);
     const [viewState, setViewState] = reactExports.useState(fitViewState);
     const [orthoSeed, setOrthoSeed] = reactExports.useState(fitViewState);
@@ -253957,8 +254299,8 @@ uniform classStyleUniforms {
     ]);
     const targetWaypointCamera = useAppStore((state) => state.targetWaypointCamera);
     const clearTargetWaypointCamera = useAppStore((state) => state.clearTargetWaypointCamera);
-    const refImageWidth = (frame == null ? void 0 : frame.pixelWidth) ?? 0;
-    const refImageHeight = (frame == null ? void 0 : frame.pixelHeight) ?? 0;
+    const refImageWidth = (frame2 == null ? void 0 : frame2.pixelWidth) ?? 0;
+    const refImageHeight = (frame2 == null ? void 0 : frame2.pixelHeight) ?? 0;
     reactExports.useEffect(() => {
       if (firstLoader !== null && !hasInitialized.current) {
         commitIdleCamera(fitViewState, true);
@@ -254053,11 +254395,11 @@ uniform classStyleUniforms {
       if (viewportSize.width <= 0 || viewportSize.height <= 0) return;
       if (refImageWidth <= 0 || refImageHeight <= 0) return;
       const vsPixels = getWaypointViewState(targetWaypointCamera, refImageWidth, refImageHeight, viewportSize.width, viewportSize.height);
-      if (!vsPixels || !frame) {
+      if (!vsPixels || !frame2) {
         clearTargetWaypointCamera();
         return;
       }
-      const vs2 = viewStateToWorld(vsPixels, frame);
+      const vs2 = viewStateToWorld(vsPixels, frame2);
       const gen = ++waypointTransitionGenRef.current;
       const viewportW = viewportSize.width;
       const viewportH = viewportSize.height;
@@ -254102,12 +254444,12 @@ uniform classStyleUniforms {
       viewportSize.height,
       refImageWidth,
       refImageHeight,
-      frame,
+      frame2,
       clearTargetWaypointCamera,
       commitIdleCamera
     ]);
     const scaleBarLayer = reactExports.useMemo(() => {
-      if (!frame || viewportSize.width <= 0 || viewportSize.height <= 0) {
+      if (!frame2 || viewportSize.width <= 0 || viewportSize.height <= 0) {
         return null;
       }
       return new ScaleBarLayer({
@@ -254125,13 +254467,13 @@ uniform classStyleUniforms {
       });
     }, [
       viewState,
-      frame,
+      frame2,
       viewportSize.width,
       viewportSize.height
     ]);
     const worldPickSurfaceLayer = reactExports.useMemo(() => {
-      const w2 = (frame == null ? void 0 : frame.worldWidth) ?? 0;
-      const h2 = (frame == null ? void 0 : frame.worldHeight) ?? 0;
+      const w2 = (frame2 == null ? void 0 : frame2.worldWidth) ?? 0;
+      const h2 = (frame2 == null ? void 0 : frame2.worldHeight) ?? 0;
       const cx = w2 > 0 ? w2 / 2 : 0;
       const cy = h2 > 0 ? h2 / 2 : 0;
       const R2 = Math.min(Math.max(Math.max(w2, h2, 4096) * 8, 512e3), 5e7);
@@ -254173,7 +254515,7 @@ uniform classStyleUniforms {
         getLineWidth: 0
       });
     }, [
-      frame
+      frame2
     ]);
     const selectionMaskDeckLayers = reactExports.useMemo(() => {
       if (!imageSelectionMask) return [];
@@ -254214,7 +254556,7 @@ uniform classStyleUniforms {
     ]);
     const clippedImageLayers = reactExports.useMemo(() => {
       if (!selectionMaskActive || !imageSelectionMask) return imageLayers;
-      return imageLayers.map((layer) => layer.clone({
+      return imageLayers.map((layer2) => layer2.clone({
         extensions: [
           maskExtension
         ],
@@ -254319,10 +254661,37 @@ uniform classStyleUniforms {
         (worldY - target[1]) * scale2 + vp.height / 2
       ];
     }, []);
+    const getDeckCanvas = reactExports.useCallback(() => {
+      var _a2, _b2;
+      return ((_b2 = (_a2 = deckRef.current) == null ? void 0 : _a2.deck) == null ? void 0 : _b2.getCanvas()) ?? null;
+    }, []);
+    const clientToWorld = reactExports.useCallback((clientX, clientY) => {
+      const root2 = rootRef.current;
+      const flat = toFlatViewState(cameraRef.current);
+      if (!root2 || !(flat == null ? void 0 : flat.target)) return null;
+      const scale2 = 2 ** (flat.zoom ?? 0);
+      if (!Number.isFinite(scale2) || scale2 === 0) return null;
+      const rect = root2.getBoundingClientRect();
+      const vp = viewportSizeRef.current;
+      const sx = clientX - rect.left;
+      const sy = clientY - rect.top;
+      return [
+        (sx - vp.width / 2) / scale2 + flat.target[0],
+        (sy - vp.height / 2) / scale2 + flat.target[1]
+      ];
+    }, []);
     const dragHandlers = reactExports.useMemo(() => createDragHandlers(activeTool, onOverlayInteraction, getScreenFromWorld), [
       activeTool,
       onOverlayInteraction,
       getScreenFromWorld
+    ]);
+    const handleClick = reactExports.useCallback((info) => {
+      var _a2;
+      const app = useAppStore.getState();
+      if (app.arrangeImageId) app.setArrangeImageId(null);
+      (_a2 = dragHandlers.onClick) == null ? void 0 : _a2.call(dragHandlers, info);
+    }, [
+      dragHandlers
     ]);
     const getCursor2 = reactExports.useCallback(({ isDragging: isDragging2, isHovering: _isHovering }) => {
       if (sam2Processing) return "wait";
@@ -254382,6 +254751,7 @@ uniform classStyleUniforms {
       controllerConfig
     ]);
     const handleViewStateChange = reactExports.useCallback(({ viewState: nextViewState, viewId, interactionState }) => {
+      var _a2;
       if (viewId === SCALEBAR_VIEW_ID) return;
       if (isDragging) return;
       if (!(interactionState == null ? void 0 : interactionState.inTransition) && ((interactionState == null ? void 0 : interactionState.isZooming) || (interactionState == null ? void 0 : interactionState.isPanning) || (interactionState == null ? void 0 : interactionState.isDragging))) {
@@ -254395,6 +254765,7 @@ uniform classStyleUniforms {
       } else if (nextViewState) {
         cameraRef.current = nextViewState;
       }
+      (_a2 = arrangeLayoutRef.current) == null ? void 0 : _a2.call(arrangeLayoutRef);
     }, [
       isDragging,
       publishPyramidHud
@@ -254423,7 +254794,7 @@ uniform classStyleUniforms {
         });
       }
       if (isCameraBusyRef.current) return;
-      const loaded = imageLayers.length > 0 && imageLayers.every((layer) => layer.isLoaded);
+      const loaded = imageLayers.length > 0 && imageLayers.every((layer2) => layer2.isLoaded);
       if (imageLayersLoadedRef.current !== loaded) {
         imageLayersLoadedRef.current = loaded;
         setViewerImageLayersLoaded(loaded);
@@ -254437,8 +254808,8 @@ uniform classStyleUniforms {
         useAppStore.getState().setViewerImageLayersLoaded(false);
       };
     }, []);
-    const layerFilter = reactExports.useCallback(({ layer, viewport: viewport2 }) => {
-      if (layer.id.startsWith("scale-bar")) {
+    const layerFilter = reactExports.useCallback(({ layer: layer2, viewport: viewport2 }) => {
+      if (layer2.id.startsWith("scale-bar")) {
         return viewport2.id === SCALEBAR_VIEW_ID;
       }
       return viewport2.id === ORTHO_VIEW_ID;
@@ -254448,7 +254819,7 @@ uniform classStyleUniforms {
     }
     return jsxRuntimeExports.jsxs("div", {
       className: styles$3.main,
-      ref: rootRef,
+      ref: setRoot,
       children: [
         jsxRuntimeExports.jsx(DeckGL, {
           ref: deckRef,
@@ -254463,7 +254834,7 @@ uniform classStyleUniforms {
           initialViewState: deckInitialViewState,
           onViewStateChange: handleViewStateChange,
           onInteractionStateChange: handleInteractionStateChange,
-          onClick: dragHandlers.onClick,
+          onClick: handleClick,
           onDragStart: dragHandlers.onDragStart,
           onDrag: dragHandlers.onDrag,
           onDragEnd: dragHandlers.onDragEnd,
@@ -254472,6 +254843,16 @@ uniform classStyleUniforms {
           layerFilter,
           views
         }),
+        canArrange && arrangeImageId ? jsxRuntimeExports.jsx(ImageArrangeBox, {
+          imageId: arrangeImageId,
+          images,
+          loaders: loaderList,
+          preview: imageOrientationPreview,
+          project: getScreenFromWorld,
+          unproject: clientToWorld,
+          layoutRef: arrangeLayoutRef,
+          getCanvas: getDeckCanvas
+        }) : null,
         jsxRuntimeExports.jsx(LoadingWidget, {
           ref: loadingWidgetRef,
           placement: "center"
@@ -254544,11 +254925,9 @@ uniform classStyleUniforms {
     if (idx < 0) return settings;
     if (live.kind === "contrast") {
       if (idx >= settings.contrastLimits.length) return settings;
-      const lo = Math.round(live.lower);
-      const hi2 = Math.round(live.upper);
       const contrastLimits = settings.contrastLimits.map((pair, i2) => i2 === idx ? [
-        lo,
-        hi2
+        live.lower,
+        live.upper
       ] : [
         pair[0],
         pair[1]
@@ -254661,15 +255040,15 @@ uniform classStyleUniforms {
     let omeVisiblePainted = 0;
     return [
       ...dicomIndexList.flatMap((entry, i2) => {
-        const layer = createDicomTileLayer({
+        const layer2 = createDicomTileLayer({
           entry,
           settings: dicomSettingsList[i2],
           remountKey: args.remountKey,
           orientation: orientationForImage(images, entry.sourceImageId, orientationPreview)
         });
-        if (!layer) return [];
+        if (!layer2) return [];
         return [
-          layer
+          layer2
         ];
       }),
       ...omeLoaderEntries.flatMap(({ loader, transfer, sourceImageId }, i2) => {
@@ -254978,12 +255357,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-29T15:55:45.197Z");
+    const label2 = utcShort("2026-10-02T19:09:13.156Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-29T15:55:45.197Z",
+      title: "2026-10-02T19:09:13.156Z",
       children: [
         "Updated ",
         label2,
@@ -256388,9 +256767,9 @@ uniform classStyleUniforms {
       return ((_a2 = state.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
     });
     const viewerWorldFrame = useAppStore((s2) => s2.viewerWorldFrame);
-    const frame = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
-    const imageWidth = frame.pixelWidth;
-    const imageHeight = frame.pixelHeight;
+    const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
+    const imageWidth = frame2.pixelWidth;
+    const imageHeight = frame2.pixelHeight;
     reactExports.useEffect(() => {
       const enabledFromConfig = localStorage.getItem("square_viewport_overlay") === "1";
       if (enabledFromConfig) {
@@ -257184,7 +257563,13 @@ uniform classStyleUniforms {
         const uniqueIdx = [
           ...new Set(plist.map((p2) => p2.index))
         ];
-        const map2 = await ensureOmeHistogramDistributions(loader, imageKey, imageId, uniqueIdx);
+        const ranges = /* @__PURE__ */ new Map();
+        for (const p2 of plist) {
+          const ch2 = prevCh.find((c2) => c2.id === p2.channelId);
+          const span = ch2 ? channelFloatRange(ch2) : null;
+          if (span) ranges.set(p2.index, span);
+        }
+        const map2 = await ensureOmeHistogramDistributions(loader, imageKey, imageId, uniqueIdx, ranges);
         for (const p2 of plist) {
           const dist2 = map2.get(p2.index);
           if (dist2) byChannelId.set(p2.channelId, dist2);
@@ -257504,7 +257889,8 @@ uniform classStyleUniforms {
           activeTool,
           isDragging: dragState.isDragging,
           hoveredShapeId: hoverState.hoveredShapeId,
-          onOverlayInteraction: handleOverlayInteraction
+          onOverlayInteraction: handleOverlayInteraction,
+          canArrange: !presenting
         }, viewerRemountKey);
         const imager = jsxRuntimeExports.jsx("div", {
           className: styles.full,

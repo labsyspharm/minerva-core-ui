@@ -4201,6 +4201,11 @@ const ImageChannelSchema = objectType({
   sourceDataTypeId: stringType().optional(),
   sourceDistribution: SourceDistributionSchema.optional(),
   gmmContrastLimits: GmmContrastLimitsSchema.optional(),
+  /** Min/max of finite coarsest-plane samples. Float contrast uses this domain. */
+  floatRange: objectType({
+    min: numberType(),
+    max: numberType()
+  }).optional(),
   /** Pseudocolor / mask display (napari-style layer list; persisted on source). */
   color: ColorSchema.optional(),
   lowerLimit: numberType().optional(),
@@ -4254,6 +4259,12 @@ const ImageSchema = objectType({
   flipHorizontal: booleanType().default(false),
   /** Omitted input parses as false. */
   flipVertical: booleanType().default(false),
+  /** µm, applied in world space after rotation. Omitted input parses as 0. */
+  translateX: numberType().default(0),
+  /** µm, applied in world space after rotation. Omitted input parses as 0. */
+  translateY: numberType().default(0),
+  /** Resize around the image center. 1 keeps the file's physical size. */
+  displayScale: numberType().positive().default(1),
   /** µm per pixel, copied from OME PhysicalSize. 1 when the file has none. */
   scaleX: numberType().positive().default(1),
   /** µm per pixel, copied from OME PhysicalSize. 1 when the file has none. */
