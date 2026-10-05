@@ -1,5 +1,5 @@
 /**
- * Library entry: `minerva-core-ui/story` → `lib/minerva-story.js` (+ `minerva-core-ui/story.css`).
+ * Library entry: `minerva-core-ui/story` → `lib/minerva.js` (+ `minerva-core-ui/story.css`).
  *
  * React: `<MinervaStory ref={handleRef} document=… />`.
  * Programmatic: the {@link MinervaHandle} from `ref` / `onReady`.

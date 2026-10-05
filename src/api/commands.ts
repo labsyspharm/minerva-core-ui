@@ -66,7 +66,7 @@ export type MinervaCommand<
   input: S;
   /** Fails with `not_ready` until a document is loaded. */
   requiresDocument?: boolean;
-  run: (input: z.infer<S>, ctx: MinervaCommandContext) => unknown;
+  run: (input: z.infer<S>, ctx: MinervaCommandContext) => void | Promise<void>;
 };
 
 function defineCommand<S extends z.ZodType, const N extends string>(
@@ -151,6 +151,15 @@ function activateWaypoint(index: number): void {
   app.setActiveStory(index);
 }
 
+/** Step to the adjacent waypoint, clamped to the first / last. */
+function stepWaypoint(delta: 1 | -1): void {
+  const n = useDocumentStore.getState().waypoints.length;
+  if (n === 0) fail("not_found", "The document has no waypoints.");
+  const current = useAppStore.getState().activeStoryIndex;
+  const next = current === null ? 0 : current + delta;
+  activateWaypoint(Math.min(n - 1, Math.max(0, next)));
+}
+
 /** Request a camera move; ImageViewer resolves it against its live size. */
 function requestCamera(
   camera: Pick<ConfigWaypoint, "ViewState" | "Bounds">,
@@ -172,21 +181,12 @@ const waypointRef = z
   .union([z.number().int().min(0), z.string().min(1)])
   .describe("Zero-based waypoint index, waypoint id, or waypoint title.");
 
-const boundsSchema = z
-  .object({
-    x0: z.number(),
-    y0: z.number(),
-    x1: z.number(),
-    y1: z.number(),
-  })
-  .describe("Region in image pixels; x0,y0 is the top-left corner.");
-
 const getState = defineCommand({
   name: "getState",
   description:
     "Return the current viewer state: document, waypoints, active waypoint, channel groups with channel visibility, and the camera view in image pixels.",
   input: z.object({}),
-  run: (_input, ctx) => ctx.getState(),
+  run: () => {}, // every result carries the state
 });
 
 const loadDocument = defineCommand({
@@ -234,12 +234,7 @@ const nextWaypoint = defineCommand({
   description: "Navigate to the next waypoint (stays on the last one).",
   input: z.object({}),
   requiresDocument: true,
-  run: () => {
-    const n = useDocumentStore.getState().waypoints.length;
-    if (n === 0) fail("not_found", "The document has no waypoints.");
-    const i = useAppStore.getState().activeStoryIndex ?? -1;
-    activateWaypoint(Math.min(n - 1, i + 1));
-  },
+  run: () => stepWaypoint(1),
 });
 
 const previousWaypoint = defineCommand({
@@ -247,12 +242,7 @@ const previousWaypoint = defineCommand({
   description: "Navigate to the previous waypoint (stays on the first one).",
   input: z.object({}),
   requiresDocument: true,
-  run: () => {
-    const n = useDocumentStore.getState().waypoints.length;
-    if (n === 0) fail("not_found", "The document has no waypoints.");
-    const i = useAppStore.getState().activeStoryIndex ?? 0;
-    activateWaypoint(Math.max(0, i - 1));
-  },
+  run: () => stepWaypoint(-1),
 });
 
 const setChannelGroup = defineCommand({
@@ -361,7 +351,15 @@ const setView = defineCommand({
         .describe(
           "log2 screen pixels per image pixel: 0 is 1:1, -1 is half size.",
         ),
-      bounds: boundsSchema.optional(),
+      bounds: z
+        .object({
+          x0: z.number(),
+          y0: z.number(),
+          x1: z.number(),
+          y1: z.number(),
+        })
+        .optional()
+        .describe("Region in image pixels; x0,y0 is the top-left corner."),
     })
     .refine(
       (v) =>
@@ -443,7 +441,7 @@ export function describeMinervaCommands(): MinervaCommandDescriptor[] {
 }
 
 export type MinervaCommandResult =
-  | { ok: true; state: MinervaState; data?: unknown }
+  | { ok: true; state: MinervaState }
   | {
       ok: false;
       code: MinervaErrorCode;
@@ -477,11 +475,8 @@ export async function runMinervaCommand(
     return failure("not_ready", "No document is loaded yet.");
   }
   try {
-    const data = await command.run(parsed.data, ctx);
-    const state = ctx.getState();
-    return data === undefined || data === state
-      ? { ok: true, state }
-      : { ok: true, state, data };
+    await command.run(parsed.data, ctx);
+    return { ok: true, state: ctx.getState() };
   } catch (e) {
     if (e instanceof MinervaCommandError) return failure(e.code, e.message);
     return failure("failed", e instanceof Error ? e.message : String(e));

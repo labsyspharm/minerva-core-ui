@@ -57,12 +57,18 @@ await ref.current.setChannelVisibility("CD45", false);
 await ref.current.setView({ bounds: { x0: 9000, y0: 9000, x1: 13000, y1: 12000 } });
 ```
 
-- The component fills its parent, so give the parent a height.
+- The component fills its parent, so give the parent a height (or pass a
+  `className` / `style`).
+- A new `document` loads a new story, so keep object documents referentially
+  stable.
 - `waypoint`, `channelGroup` and `view` are applied when the story is ready
   and whenever they change. Readers can still navigate in between; follow along
   with `onStateChange`.
-- React (≥18.2) is a peer dependency. Everything else is bundled.
+- React 18.2+ or 19 is a peer dependency. Everything else is bundled.
+- Browser-only (WebGL): in Next.js, load it with
+  `dynamic(() => import(…), { ssr: false })`.
 - Viewer state lives in module-level stores, so use one Minerva view per page.
+- It adds the DM Sans stylesheet from Google Fonts, like the CDN player.
 - Like the CDN player, it omits authoring-only pieces (SAM2, palette
   optimization, DuckDB feature tables). Feature tables are not part of
   exported stories yet.

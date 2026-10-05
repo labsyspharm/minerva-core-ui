@@ -1,0 +1,7 @@
+/* Zero specificity so a host `className` can size or position the embed. */
+:where(.root) {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}

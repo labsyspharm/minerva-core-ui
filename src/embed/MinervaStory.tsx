@@ -3,8 +3,10 @@ import "@/components/shared/minervaTheme.global.css";
 import type { CSSProperties } from "react";
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -21,9 +23,13 @@ import {
   type StoryPlayerStatus,
 } from "@/components/playback/StoryPlayerApp";
 import type { StoryDocumentInput } from "@/lib/story/loadStoryDocument";
+import styles from "./MinervaStory.module.css";
 
 export type MinervaStoryProps = {
-  /** URL of a `document.json`, or its parsed contents. */
+  /**
+   * URL of a `document.json`, or its parsed contents. A new value loads a new
+   * story, so keep object references stable (`useMemo` / module scope).
+   */
   document: string | object;
   /** Resolves relative image paths when `document` is an object (default: page URL). */
   baseUrl?: string;
@@ -43,9 +49,11 @@ export type MinervaStoryProps = {
   showDocumentTitle?: boolean;
   /** Every state change: status, waypoint, channel group, visibility, camera. */
   onStateChange?: (state: MinervaState) => void;
+  /** Each time a document finishes loading. */
   onReady?: (handle: MinervaHandle) => void;
   onError?: (error: string) => void;
 
+  /** The embed fills its parent by default; these override that. */
   className?: string;
   style?: CSSProperties;
 };
@@ -104,18 +112,23 @@ export function MinervaStoryView(
 ) {
   const { document, baseUrl, waypoint, channelGroup, view, controller } = props;
   const { handle } = controller;
-  const callbacks = useRef(props);
-  callbacks.current = props;
 
-  // Props and the `loadDocument` command both feed this source.
+  // Latest callbacks for event handlers, without re-running effects.
+  const callbacks = useRef(props);
+  useLayoutEffect(() => {
+    callbacks.current = props;
+  });
+
+  // The story to show: set from props, or by the `loadDocument` command.
   const [source, setSource] = useState(() => toInput(document, baseUrl));
-  const lastDocumentProps = useRef({ document, baseUrl });
-  useEffect(() => {
-    const last = lastDocumentProps.current;
-    if (last.document === document && last.baseUrl === baseUrl) return;
-    lastDocumentProps.current = { document, baseUrl };
+  const [documentProps, setDocumentProps] = useState({ document, baseUrl });
+  if (
+    documentProps.document !== document ||
+    documentProps.baseUrl !== baseUrl
+  ) {
+    setDocumentProps({ document, baseUrl });
     setSource(toInput(document, baseUrl));
-  }, [document, baseUrl]);
+  }
 
   useEffect(() => {
     controller.host.loadDocument = async (next) => {
@@ -156,40 +169,17 @@ export function MinervaStoryView(
     if (s.status === "ready") callbacks.current.onReady?.(handle);
   };
 
-  // Declarative props → commands, applied in order. Changing the waypoint
-  // makes `Presentation` re-apply that waypoint's group and camera on the
-  // next commit, so wait two frames before layering `channelGroup` / `view`.
+  // Declarative props → commands. Each prop is applied when the story becomes
+  // ready (so a new document gets them too) and whenever it changes. Commands
+  // run in order; after a waypoint change `Presentation` re-applies that
+  // waypoint's group and camera on the next commit, so wait two frames before
+  // layering `channelGroup` / `view` on top.
   const ready =
     useSyncExternalStore(handle.subscribe, handle.getState).status === "ready";
-  const viewKey = JSON.stringify(view ?? null);
-  const applied = useRef<Record<string, unknown> | null>(null);
   const queue = useRef(Promise.resolve());
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `view` is tracked by value via viewKey
-  useEffect(() => {
-    if (!ready) {
-      applied.current = null; // re-apply everything to the next document
-      return;
-    }
-    const prev = applied.current;
-    const next = {
-      waypoint,
-      channelGroup,
-      view: view === undefined ? undefined : viewKey,
-    };
-    applied.current = next;
-    const changed = (key: keyof typeof next) =>
-      next[key] !== undefined && (prev === null || prev[key] !== next[key]);
-
-    const steps: [MinervaCommandName, unknown][] = [];
-    if (changed("waypoint")) steps.push(["goToWaypoint", { waypoint }]);
-    if (changed("channelGroup")) {
-      steps.push(["setChannelGroup", { group: channelGroup }]);
-    }
-    if (changed("view")) steps.push(["setView", view]);
-    if (steps.length === 0) return;
-
-    queue.current = queue.current.then(async () => {
-      for (const [name, input] of steps) {
+  const enqueue = useCallback(
+    (name: MinervaCommandName, input: unknown) => {
+      queue.current = queue.current.then(async () => {
         const result = await handle.execute(name, input);
         if (result.ok === false) {
           console.warn(`[minerva] ${name}: ${result.error}`);
@@ -198,20 +188,32 @@ export function MinervaStoryView(
           await nextFrame();
           await nextFrame();
         }
-      }
-    });
-  }, [ready, waypoint, channelGroup, viewKey, handle]);
+      });
+    },
+    [handle],
+  );
+  useEffect(() => {
+    if (ready && waypoint !== undefined) {
+      enqueue("goToWaypoint", { waypoint });
+    }
+  }, [ready, waypoint, enqueue]);
+  useEffect(() => {
+    if (ready && channelGroup !== undefined) {
+      enqueue("setChannelGroup", { group: channelGroup });
+    }
+  }, [ready, channelGroup, enqueue]);
+  const viewKey = JSON.stringify(view ?? null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `view` is compared by value via viewKey
+  useEffect(() => {
+    if (ready && view !== undefined) enqueue("setView", view);
+  }, [ready, viewKey, enqueue]);
 
   return (
     <div
-      className={["minerva-seal", props.className].filter(Boolean).join(" ")}
-      style={{
-        position: "relative",
-        overflow: "hidden",
-        width: "100%",
-        height: "100%",
-        ...props.style,
-      }}
+      className={[styles.root, "minerva-seal", props.className]
+        .filter(Boolean)
+        .join(" ")}
+      style={props.style}
     >
       <StoryPlayerApp
         source={source}

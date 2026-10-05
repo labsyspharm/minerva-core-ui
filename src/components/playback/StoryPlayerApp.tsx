@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Presentation } from "@/components/playback/Presentation";
 import { StoryPlaybackView } from "@/components/playback/StoryPlaybackView";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
@@ -33,8 +33,9 @@ export type StoryPlayerAppProps = {
 };
 
 /**
- * CDN story player. Same Presentation → StoryPlaybackView tree as authoring
- * Story preview (preview adds only the Back ribbon).
+ * Published-story player (CDN bundle and `<MinervaStory>`). Same Presentation
+ * → StoryPlaybackView tree as authoring Story preview (preview adds only the
+ * Back ribbon).
  */
 export function StoryPlayerApp({
   source,
@@ -58,7 +59,9 @@ export function StoryPlayerApp({
   );
   const [dicomIndexList, setDicomIndexList] = useState<DicomIndex[]>([]);
   const onStatusChangeRef = useRef(onStatusChange);
-  onStatusChangeRef.current = onStatusChange;
+  useLayoutEffect(() => {
+    onStatusChangeRef.current = onStatusChange;
+  });
 
   useEffect(() => {
     let cancelled = false;
