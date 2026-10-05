@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-ECnlCbAT.js","./pako.esm-KbdoS3Oq.js","./lerc-MOOKRuGH.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Tww7_wkI.js","./pako.esm-KbdoS3Oq.js","./lerc-OCyLd_qA.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -66460,26 +66460,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DdfxVd1C.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DoMt82Zd.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CGJVmS2G.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DbKWCnhY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-D82Ts2vb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BPU0mHdf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-ECnlCbAT.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DNPPeXyo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-MOOKRuGH.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-Tww7_wkI.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CgIZOYuh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-OCyLd_qA.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-4s8gWL2K.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BDADmkgn.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-bB20qtN5.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BvhWYVTm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -83967,11 +83967,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return null;
   };
   const getViewerViewportSnapshotFromStore = () => {
-    const live = viewerLiveSnapshotReader == null ? void 0 : viewerLiveSnapshotReader();
-    if (live) {
-      const z2 = orthographicZoomToNumber(live.viewState.zoom);
-      if (z2 !== null && Array.isArray(live.viewState.target) && live.viewState.target.length >= 3 && live.viewportSize.width > 0 && live.viewportSize.height > 0) {
-        return live;
+    const live2 = viewerLiveSnapshotReader == null ? void 0 : viewerLiveSnapshotReader();
+    if (live2) {
+      const z2 = orthographicZoomToNumber(live2.viewState.zoom);
+      if (z2 !== null && Array.isArray(live2.viewState.target) && live2.viewState.target.length >= 3 && live2.viewportSize.width > 0 && live2.viewportSize.height > 0) {
+        return live2;
       }
     }
     const { viewerViewState, viewerViewportSize } = useAppStore.getState();
@@ -87173,8 +87173,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const frame = referenceWorldFrameForActions(get2);
       const apply = get2().setImageSelectionMaskFromShape;
       for (const id2 of tryIds) {
-        const live = viewerShapes.find((s2) => s2.id === id2);
-        if (live && apply(live)) return true;
+        const live2 = viewerShapes.find((s2) => s2.id === id2);
+        if (live2 && apply(live2)) return true;
         const persisted = docShapes.find((s2) => s2.id === id2);
         if (persisted && apply(storyShapeToViewer(persisted, {
           imageWidth: frame.worldWidth,
@@ -92538,9 +92538,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fillPath
     };
   }
-  function renderingForSource(live, sourceChannelId, kind) {
-    if ((live == null ? void 0 : live.kind) === kind && live.sourceChannelId === sourceChannelId) {
-      return live;
+  function renderingForSource(live2, sourceChannelId, kind) {
+    if ((live2 == null ? void 0 : live2.kind) === kind && live2.sourceChannelId === sourceChannelId) {
+      return live2;
     }
     return null;
   }
@@ -94448,10 +94448,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function commitChannelColorTarget(target) {
     var _a2;
     if (!target) return;
-    const live = useAppStore.getState().channelRendering;
+    const live2 = useAppStore.getState().channelRendering;
     const doc = useDocumentStore.getState();
     if (target.scope === "source") {
-      const colorLive = renderingForSource(live, target.sourceId, "color");
+      const colorLive = renderingForSource(live2, target.sourceId, "color");
       if (colorLive) {
         doc.setImages(patchSourceChannelOnImages(doc.images, target.sourceId, {
           color: {
@@ -94463,7 +94463,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     } else {
       const groupRow = (_a2 = doc.channelGroups.find((g2) => g2.id === target.groupId)) == null ? void 0 : _a2.channels.find((gc2) => gc2.id === target.rowId);
-      const colorLive = groupRow ? renderingForSource(live, groupRow.channelId, "color") : null;
+      const colorLive = groupRow ? renderingForSource(live2, groupRow.channelId, "color") : null;
       if (colorLive) {
         doc.setChannelGroups(doc.channelGroups.map((g2) => g2.id !== target.groupId ? g2 : {
           ...g2,
@@ -94482,8 +94482,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function hexForColorTarget(target, channelRendering, sourceChannels, channelGroups) {
     if (target.scope === "source") {
-      const live2 = renderingForSource(channelRendering, target.sourceId, "color");
-      if (live2) return rgbToHex$1(live2);
+      const live22 = renderingForSource(channelRendering, target.sourceId, "color");
+      if (live22) return rgbToHex$1(live22);
       const sc22 = findSourceChannel(sourceChannels, target.sourceId);
       if (!sc22) return null;
       return rgbToHex$1(effectiveSourceColor(sc22, sourceChannels));
@@ -94492,8 +94492,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const gc2 = g2 == null ? void 0 : g2.channels.find((c2) => c2.id === target.rowId);
     if (!gc2) return null;
     const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
-    const live = renderingForSource(channelRendering, gc2.channelId, "color");
-    if (live) return rgbToHex$1(live);
+    const live2 = renderingForSource(channelRendering, gc2.channelId, "color");
+    if (live2) return rgbToHex$1(live2);
     return rgbToHex$1(sc2 ? effectiveDisplayColor(sc2, sourceChannels, gc2) : gc2.color);
   }
   function previewLiveColor(target, hex) {
@@ -252777,6 +252777,171 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   });
   LoadingWidget.displayName = "LoadingWidget";
+  const TILE_EDGE_BUFFER_GLSL = `
+vec2 tileEdgeBufferUv(vec2 uv, vec2 paddedSize) {
+  return (uv * (paddedSize - 2.0) + 1.0) / paddedSize;
+}
+`;
+  const BLOCK = [
+    -1,
+    0,
+    1
+  ].flatMap((dy) => [
+    -1,
+    0,
+    1
+  ].map((dx) => [
+    dx,
+    dy
+  ]));
+  const keyOf = ({ x: x2, y: y2, z: z2 }) => `${x2}-${y2}-${z2}`;
+  const loadedByTileset = /* @__PURE__ */ new WeakMap();
+  const rasterId = /* @__PURE__ */ new WeakMap();
+  let nextRasterId = 1;
+  const tileEdgeBufferCache = /* @__PURE__ */ new WeakMap();
+  const scratchIds = new Int32Array(8);
+  const live = (r2) => r2 != null && r2.width > 0 && r2.height > 0 && r2.data.length > 0;
+  function idOf(raster) {
+    const existing = rasterId.get(raster);
+    if (existing !== void 0) return existing;
+    const id2 = nextRasterId++;
+    rasterId.set(raster, id2);
+    return id2;
+  }
+  function neighborIds(block, into) {
+    let k2 = 0;
+    for (let i2 = 0; i2 < 9; i2++) {
+      if (i2 === 4) continue;
+      const n2 = block[i2];
+      into[k2++] = live(n2) ? idOf(n2) : 0;
+    }
+  }
+  function sameIds(a2, b2) {
+    for (let i2 = 0; i2 < 8; i2++) if (a2[i2] !== b2[i2]) return false;
+    return true;
+  }
+  function allocate(center) {
+    const { width: w2, height: h2 } = center;
+    const pw = w2 + 2;
+    const data2 = center.data.map((plane) => {
+      const Out = plane.constructor;
+      const out = new Out(pw * (h2 + 2));
+      for (let y2 = 0; y2 < h2; y2++) {
+        out.set(plane.subarray(y2 * w2, y2 * w2 + w2), (y2 + 1) * pw + 1);
+      }
+      return out;
+    });
+    return {
+      data: data2,
+      width: pw,
+      height: h2 + 2
+    };
+  }
+  function paintBorder(raster, center, block) {
+    const { width: w2, height: h2 } = center;
+    const pw = w2 + 2;
+    for (let c2 = 0; c2 < center.data.length; c2++) {
+      const out = raster.data[c2];
+      const at = (src, x2, y2) => {
+        const xx = x2 < 0 ? 0 : x2 >= src.width ? src.width - 1 : x2;
+        const yy = y2 < 0 ? 0 : y2 >= src.height ? src.height - 1 : y2;
+        return src.data[c2][yy * src.width + xx];
+      };
+      const put = (x2, y2) => {
+        const dx = x2 < 0 ? -1 : x2 >= w2 ? 1 : 0;
+        const dy = y2 < 0 ? -1 : y2 >= h2 ? 1 : 0;
+        const src = block[(dy + 1) * 3 + (dx + 1)];
+        const n2 = live(src) ? src : null;
+        const sx = n2 && dx !== 0 ? dx < 0 ? n2.width - 1 : 0 : x2;
+        const sy = n2 && dy !== 0 ? dy < 0 ? n2.height - 1 : 0 : y2;
+        out[(y2 + 1) * pw + x2 + 1] = at(n2 ?? center, sx, sy);
+      };
+      for (let x2 = -1; x2 <= w2; x2++) {
+        put(x2, -1);
+        put(x2, h2);
+      }
+      for (let y2 = 0; y2 < h2; y2++) {
+        put(-1, y2);
+        put(w2, y2);
+      }
+    }
+  }
+  function paddedTile(center, block) {
+    neighborIds(block, scratchIds);
+    const hit = tileEdgeBufferCache.get(center);
+    if (hit && sameIds(hit.ids, scratchIds)) return hit.raster;
+    const raster = (hit == null ? void 0 : hit.raster) ?? allocate(center);
+    paintBorder(raster, center, block);
+    if (hit) {
+      hit.ids.set(scratchIds);
+      return raster;
+    }
+    tileEdgeBufferCache.set(center, {
+      ids: new Int32Array(scratchIds),
+      raster
+    });
+    return raster;
+  }
+  class TileEdgeBufferLayer extends TileLayer {
+    loadedTiles() {
+      const { tileset } = this.state;
+      if (!tileset) return null;
+      let loaded = loadedByTileset.get(tileset);
+      if (!loaded) {
+        loaded = /* @__PURE__ */ new Map();
+        loadedByTileset.set(tileset, loaded);
+      }
+      return loaded;
+    }
+    _onTileLoad(tile) {
+      const loaded = this.loadedTiles();
+      if (loaded) {
+        loaded.set(keyOf(tile.index), tile);
+        if (this.props.padTileEdgeBuffer !== false) {
+          const { x: x2, y: y2, z: z2 } = tile.index;
+          for (const [dx, dy] of BLOCK) {
+            if (dx === 0 && dy === 0) continue;
+            const neighbor = loaded.get(keyOf({
+              x: x2 + dx,
+              y: y2 + dy,
+              z: z2
+            }));
+            if (neighbor == null ? void 0 : neighbor.layers) neighbor.layers = null;
+          }
+        }
+      }
+      super._onTileLoad(tile);
+    }
+    _onTileUnload(tile) {
+      var _a2;
+      (_a2 = this.loadedTiles()) == null ? void 0 : _a2.delete(keyOf(tile.index));
+      super._onTileUnload(tile);
+    }
+    renderSubLayers(props) {
+      const center = props.data;
+      if (this.props.padTileEdgeBuffer === false || !live(center)) {
+        return super.renderSubLayers(props);
+      }
+      const loaded = this.loadedTiles();
+      const { x: x2, y: y2, z: z2 } = props.tile.index;
+      const block = BLOCK.map(([dx, dy]) => {
+        var _a2;
+        return dx === 0 && dy === 0 ? null : ((_a2 = loaded == null ? void 0 : loaded.get(keyOf({
+          x: x2 + dx,
+          y: y2 + dy,
+          z: z2
+        }))) == null ? void 0 : _a2.content) ?? null;
+      });
+      return super.renderSubLayers({
+        ...props,
+        tileEdgeBuffer: paddedTile(center, block)
+      });
+    }
+  }
+  __publicField(TileEdgeBufferLayer, "layerName", "TileEdgeBufferLayer");
+  __publicField(TileEdgeBufferLayer, "defaultProps", {
+    padTileEdgeBuffer: true
+  });
   const CELL_OUTLINE_COUNT = CELL_OUTLINE_RGB.length;
   const CELL_OUTLINE_VEC3 = CELL_OUTLINE_RGB.map(([r2, g2, b2]) => [
     r2 / 255,
@@ -252814,7 +252979,7 @@ uniform SAMPLER_TYPE channel0;
 
 in vec2 vTexCoord;
 out vec4 fragColor;
-
+${TILE_EDGE_BUFFER_GLSL}
 vec3 randomColor(uint label) {
   uint i = (label ^ uint(maskViz.uColorSeed)) % ${CELL_OUTLINE_COUNT}u;
   if (i == 0u) return maskViz.uPalette0;
@@ -252839,9 +253004,14 @@ bool isOutline(uint label, vec2 coord) {
 }
 
 void main() {
-  uint label = labelAt(vTexCoord);
+  vec2 uv = maskViz.uOutline != 0
+    ? tileEdgeBufferUv(vTexCoord, vec2(textureSize(channel0, 0)))
+    : vTexCoord;
+  uint label = labelAt(uv);
   if (label == 0u) discard;
-  if (maskViz.uOutline != 0 && !isOutline(label, vTexCoord)) discard;
+  if (maskViz.uOutline != 0) {
+    if (!isOutline(label, uv)) discard;
+  }
 
   vec3 rgb;
   int w = int(classStyle.uLutSize.x);
@@ -253112,8 +253282,10 @@ uniform classStyleUniforms {
     const modelMatrix = layerModelMatrix(args.loader);
     const { visualization: viz, channelIndex, classStyle } = args;
     const visible = args.visible !== false;
-    return new TileLayer({
+    const outline = viz.style === "outline";
+    return new TileEdgeBufferLayer({
       id: args.id,
+      padTileEdgeBuffer: outline,
       tileSize: finest.tileSize,
       minZoom: Math.round(-(planes.length - 1)),
       maxZoom: 0,
@@ -253176,7 +253348,7 @@ uniform classStyleUniforms {
       },
       renderSubLayers: (props) => {
         var _a2;
-        const tileData = props.data;
+        const { data: tileData, tileEdgeBuffer } = props;
         if (!((_a2 = tileData == null ? void 0 : tileData.data) == null ? void 0 : _a2[0]) || tileData.width <= 0 || tileData.height <= 0) {
           return null;
         }
@@ -253190,7 +253362,7 @@ uniform classStyleUniforms {
         const scale2 = 2 ** Math.round(-props.tile.index.z);
         return new MaskBitmaskLayer({
           id: `${args.id}-bitmask-${props.tile.id}`,
-          channelData: tileData,
+          channelData: outline ? tileEdgeBuffer : tileData,
           modelMatrix,
           visible,
           bounds: [
@@ -254182,17 +254354,17 @@ uniform classStyleUniforms {
       groups
     });
   }
-  function applyChannelRendering(settings, live) {
-    if (!live) return settings;
+  function applyChannelRendering(settings, live2) {
+    if (!live2) return settings;
     const ids = settings.sourceChannelIds;
     if (!(ids == null ? void 0 : ids.length)) return settings;
-    const idx = ids.indexOf(live.sourceChannelId);
+    const idx = ids.indexOf(live2.sourceChannelId);
     if (idx < 0) return settings;
-    if (live.kind === "contrast") {
+    if (live2.kind === "contrast") {
       if (idx >= settings.contrastLimits.length) return settings;
       const contrastLimits = settings.contrastLimits.map((pair, i2) => i2 === idx ? [
-        live.lower,
-        live.upper
+        live2.lower,
+        live2.upper
       ] : [
         pair[0],
         pair[1]
@@ -254203,9 +254375,9 @@ uniform classStyleUniforms {
       };
     }
     if (idx >= settings.colors.length) return settings;
-    const r2 = Math.round(Math.max(0, Math.min(255, live.r)));
-    const g2 = Math.round(Math.max(0, Math.min(255, live.g)));
-    const b2 = Math.round(Math.max(0, Math.min(255, live.b)));
+    const r2 = Math.round(Math.max(0, Math.min(255, live2.r)));
+    const g2 = Math.round(Math.max(0, Math.min(255, live2.g)));
+    const b2 = Math.round(Math.max(0, Math.min(255, live2.b)));
     const colors = settings.colors.map((triple, i2) => i2 === idx ? [
       r2,
       g2,
@@ -254613,12 +254785,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-09-30T14:59:44.308Z");
+    const label2 = utcShort("2026-10-05T13:55:09.559Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-09-30T14:59:44.308Z",
+      title: "2026-10-05T13:55:09.559Z",
       children: [
         "Updated ",
         label2,
