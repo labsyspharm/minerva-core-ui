@@ -16,7 +16,7 @@ import {
 } from "@/lib/imaging/imageOrientation";
 import type { LoaderList } from "@/lib/imaging/loaderEntries";
 import {
-  imagePixelToWorld,
+  layerModelMatrix,
   worldFrameFromLoader,
 } from "@/lib/imaging/worldFrame";
 import type { ImageOrientationPreview } from "@/lib/stores/appStore";
@@ -169,8 +169,11 @@ export function ImageArrangeBox(props: {
   // A flip maps the frame onto itself, so handles ignore it. The rotate knob
   // then stays on the visual top edge, as in PowerPoint.
   const frameO = { ...o, flipHorizontal: false, flipVertical: false };
-  const worldAt = ([u, v]: World, placement: ImageOrientation = frameO) =>
-    imagePixelToWorld(u * w, v * h, w, h, placement);
+  const frameMatrix = layerModelMatrix(item.loader, frameO);
+  const worldAt = ([u, v]: World, m = frameMatrix): World => {
+    const p = m.transformAsPoint([u * w, v * h, 0]);
+    return [p[0], p[1]];
+  };
   const points = HANDLES.map((uv) => project(...worldAt(uv)));
   if (points.some((p) => !Number.isFinite(p[0]) || !Number.isFinite(p[1]))) {
     return null;
@@ -225,7 +228,12 @@ export function ImageArrangeBox(props: {
     const anchorUv: World = [1 - u, 1 - v];
     const anchor = worldAt(anchorUv);
     const handle = worldAt(HANDLES[i]);
-    const bare = { ...frameO, displayScale: 1, translateX: 0, translateY: 0 };
+    const bare = layerModelMatrix(item.loader, {
+      ...frameO,
+      displayScale: 1,
+      translateX: 0,
+      translateY: 0,
+    });
     const localAnchor = worldAt(anchorUv, bare);
     const centerUm = worldAt([0.5, 0.5], bare);
     const lx = localAnchor[0] - centerUm[0];

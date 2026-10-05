@@ -24,7 +24,7 @@ function finiteOffset(n: number | undefined): number {
   return typeof n === "number" && Number.isFinite(n) ? n : 0;
 }
 
-/** Normalize placement. `scaleX` / `scaleY` are µm/px copied from the image. */
+/** Normalize placement. */
 export function effectiveOrientation(o: PlacementInput): ImageOrientation {
   return {
     rotationDegrees: wrapDisplayDeg(o?.rotationDegrees ?? 0),
@@ -33,12 +33,10 @@ export function effectiveOrientation(o: PlacementInput): ImageOrientation {
     translateX: finiteOffset(o?.translateX),
     translateY: finiteOffset(o?.translateY),
     displayScale: finiteScale(o?.displayScale),
-    scaleX: finiteScale(o?.scaleX),
-    scaleY: finiteScale(o?.scaleY),
   };
 }
 
-/** Replace placement fields. µm/px stays the file's. */
+/** Replace placement fields. */
 export function withOrientation(
   o: PlacementInput,
   patch: Partial<ImageOrientation>,

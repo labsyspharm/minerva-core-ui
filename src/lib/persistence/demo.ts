@@ -189,8 +189,6 @@ export function buildDemoCrcDocumentData(): DocumentData {
     rotationDegrees: 0,
     flipHorizontal: false,
     flipVertical: false,
-    scaleX: 1,
-    scaleY: 1,
     channels,
     source: { kind: "url", url: DEMO_CRC_OME_TIFF_URL },
   };

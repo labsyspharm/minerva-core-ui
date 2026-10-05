@@ -117,7 +117,6 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import {
-  applyLoaderPhysicalScales,
   applyLoaderPixelSizeToImage,
   applySourceChannelsToImages,
   firstImageNameForStoryTitle,
@@ -295,13 +294,6 @@ async function hydrateLoadersFromImages(
         }
       : {}),
   });
-  const doc = useDocumentStore.getState();
-  const scaled = applyLoaderPhysicalScales(doc.images, [
-    ...result.omeLoaderEntries,
-    ...result.jpegLoaderEntries,
-    ...result.dicomIndexList,
-  ]);
-  if (scaled !== doc.images) doc.setImages(scaled);
   return { ...result, missingStoryRoot };
 }
 

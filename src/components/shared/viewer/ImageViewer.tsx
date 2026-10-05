@@ -41,7 +41,6 @@ import type { Loader } from "@/lib/imaging/viv";
 import {
   viewStateToWorld,
   WORLD_MICRON,
-  worldFrameFromImage,
   worldFrameFromLoader,
 } from "@/lib/imaging/worldFrame";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
@@ -83,11 +82,7 @@ function planeWidth(plane: Loader["data"][number]): number {
 }
 
 /** Avivator Footer: `"1/5 [t, c, z, y, x]"` — 1 is finest. */
-function formatPyramidStatus(
-  zoom: number,
-  loader: Loader,
-  umPerPixelX: number,
-): string | null {
+function formatPyramidStatus(zoom: number, loader: Loader): string | null {
   const planes = loader.data;
   if (planes.length === 0) return null;
   const baseWidth = planeWidth(planes[0]);
@@ -96,7 +91,9 @@ function formatPyramidStatus(
     return -Math.round(Math.log2(baseWidth / width));
   });
   const coarsest = levelZooms[levelZooms.length - 1] ?? 0;
-  const zoomOffset = Math.round(Math.log2(umPerPixelX || 1));
+  const zoomOffset = Math.round(
+    Math.log2(worldFrameFromLoader(loader).umPerPixelX || 1),
+  );
   const tileZ = Math.min(0, Math.max(coarsest, Math.ceil(zoom + zoomOffset)));
   let snapped = coarsest;
   for (const lz of levelZooms) {
@@ -125,10 +122,7 @@ function formatPyramidHudLines(
     const key = item.sourceImageId ?? `${item.modality}:${rows.length}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    const image = images.find((im) => im.id === item.sourceImageId);
-    const umPerPixelX =
-      image?.scaleX ?? worldFrameFromLoader(item.loader).umPerPixelX;
-    const status = formatPyramidStatus(zoom, item.loader, umPerPixelX);
+    const status = formatPyramidStatus(zoom, item.loader);
     if (!status) continue;
     rows.push({
       key,
@@ -495,13 +489,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
     [loaderList, images],
   );
 
-  const frame = useMemo(() => {
-    const image = images.find((im) => im.id === firstLoader?.sourceImageId);
-    if (image && image.sizeX > 0 && image.sizeY > 0) {
-      return worldFrameFromImage(image);
-    }
-    return firstLoader ? worldFrameFromLoader(firstLoader.loader) : null;
-  }, [firstLoader, images]);
+  const frame = useMemo(
+    () => (firstLoader ? worldFrameFromLoader(firstLoader.loader) : null),
+    [firstLoader],
+  );
 
   useEffect(() => {
     setViewerWorldFrame(frame);
