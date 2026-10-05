@@ -1,6 +1,5 @@
 import type { Layer } from "@deck.gl/core";
 import { COORDINATE_SYSTEM, picking, project32 } from "@deck.gl/core";
-import { TileLayer } from "@deck.gl/geo-layers";
 import { XRLayer } from "@hms-dbmi/viv";
 import {
   DEFAULT_MASK_VISUALIZATION,
@@ -11,6 +10,11 @@ import type {
   SupportedTypedArray,
 } from "@/lib/imaging/loaderTypes";
 import { CELL_OUTLINE_RGB, type MaskGpuStyle } from "@/lib/imaging/maskLayers";
+import {
+  TILE_EDGE_BUFFER_GLSL,
+  TileEdgeBufferLayer,
+  type WithTileEdgeBuffer,
+} from "@/lib/imaging/tileEdgeBuffer";
 import { type Loader, TILE_CACHE_PROPS } from "@/lib/imaging/viv";
 import { layerModelMatrix } from "@/lib/imaging/worldFrame";
 import type { ImageOrientation } from "@/lib/stores/documentSchema";
@@ -21,7 +25,7 @@ const CELL_OUTLINE_VEC3: [number, number, number][] = CELL_OUTLINE_RGB.map(
 );
 
 type MaskTileData = {
-  data: Uint32Array[];
+  data: Uint32Array<ArrayBuffer>[];
   width: number;
   height: number;
 };
@@ -59,7 +63,7 @@ uniform SAMPLER_TYPE channel0;
 
 in vec2 vTexCoord;
 out vec4 fragColor;
-
+${TILE_EDGE_BUFFER_GLSL}
 vec3 randomColor(uint label) {
   uint i = (label ^ uint(maskViz.uColorSeed)) % ${CELL_OUTLINE_COUNT}u;
   if (i == 0u) return maskViz.uPalette0;
@@ -84,9 +88,14 @@ bool isOutline(uint label, vec2 coord) {
 }
 
 void main() {
-  uint label = labelAt(vTexCoord);
+  vec2 uv = maskViz.uOutline != 0
+    ? tileEdgeBufferUv(vTexCoord, vec2(textureSize(channel0, 0)))
+    : vTexCoord;
+  uint label = labelAt(uv);
   if (label == 0u) discard;
-  if (maskViz.uOutline != 0 && !isOutline(label, vTexCoord)) discard;
+  if (maskViz.uOutline != 0) {
+    if (!isOutline(label, uv)) discard;
+  }
 
   vec3 rgb;
   int w = int(classStyle.uLutSize.x);
@@ -386,7 +395,7 @@ class MaskBitmaskLayer extends XRLayerBase {
   }
 }
 
-function asLabelUint32(data: SupportedTypedArray): Uint32Array {
+function asLabelUint32(data: SupportedTypedArray): Uint32Array<ArrayBuffer> {
   if (data instanceof Uint32Array) return data;
   const out = new Uint32Array(data.length);
   for (let i = 0; i < data.length; i++) {
@@ -424,8 +433,10 @@ export function createMaskTileLayer(args: {
   const { visualization: viz, channelIndex, classStyle } = args;
   const visible = args.visible !== false;
 
-  return new TileLayer<MaskTileData>({
+  const outline = viz.style === "outline";
+  return new TileEdgeBufferLayer<MaskTileData>({
     id: args.id,
+    padTileEdgeBuffer: outline,
     tileSize: finest.tileSize,
     minZoom: -(planes.length - 1),
     maxZoom: 0,
@@ -473,7 +484,9 @@ export function createMaskTileLayer(args: {
       }
     },
     renderSubLayers: (props) => {
-      const tileData = props.data;
+      const { data: tileData, tileEdgeBuffer } = props as WithTileEdgeBuffer<
+        typeof props
+      >;
       if (!tileData?.data?.[0] || tileData.width <= 0 || tileData.height <= 0) {
         return null;
       }
@@ -484,7 +497,7 @@ export function createMaskTileLayer(args: {
       const scale = 2 ** Math.round(-props.tile.index.z);
       return new MaskBitmaskLayer({
         id: `${args.id}-bitmask-${props.tile.id}`,
-        channelData: tileData,
+        channelData: outline ? tileEdgeBuffer : tileData,
         modelMatrix,
         visible,
         bounds: [
