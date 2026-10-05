@@ -1,4 +1,4 @@
-import { B as BaseDecoder } from "./index--GX3GNUI.js";
+import { B as BaseDecoder } from "./index-BxcOGL94.js";
 const MIN_BITS = 9;
 const CLEAR_CODE = 256;
 const EOI_CODE = 257;
