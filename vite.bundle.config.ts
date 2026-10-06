@@ -51,6 +51,14 @@ export default defineConfig({
           "./src/lib/sam2/cdnStubs/useSam2.ts",
         ),
       },
+      // Feature-table DuckDB wasm comes from jsDelivr instead of ~100MB inlined.
+      {
+        find: "@/lib/featureTable/duckdbBundles",
+        replacement: path.resolve(
+          __dirname,
+          "./src/lib/featureTable/cdnStubs/duckdbBundles.ts",
+        ),
+      },
       {
         find: "@",
         replacement: path.resolve(__dirname, "./src"),
