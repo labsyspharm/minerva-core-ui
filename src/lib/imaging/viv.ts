@@ -1,3 +1,4 @@
+import { _Tileset2D as Tileset2D } from "@deck.gl/geo-layers";
 import type {
   ChannelGroup,
   Channel as SourceChannel,
@@ -38,10 +39,24 @@ function stampDeckTileByteLength(tile: {
   c.byteLength = rasterTileByteLength(c.data);
 }
 
+/** Deck's tile list overhangs a rotated image; viv draws blank tiles there. */
+class ImageTileset2D extends Tileset2D {
+  getTileIndices(opts: Parameters<Tileset2D["getTileIndices"]>[0]) {
+    const indices = super.getTileIndices(opts);
+    const { extent, tileSize } = this.opts;
+    if (!extent) return indices;
+    return indices.filter(({ x, y, z }) => {
+      const size = tileSize / 2 ** z;
+      return x >= 0 && y >= 0 && x * size < extent[2] && y * size < extent[3];
+    });
+  }
+}
+
 /** Omit maxCacheSize so Deck's count cap is Infinity when a byte budget is set. */
 export const TILE_CACHE_PROPS = {
   maxCacheByteSize: VIV_TILE_MAX_CACHE_BYTE_SIZE,
   onTileLoad: stampDeckTileByteLength,
+  TilesetClass: ImageTileset2D,
 };
 
 type Selection = Record<"z" | "t" | "c", number>;

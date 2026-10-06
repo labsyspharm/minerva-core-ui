@@ -186,6 +186,9 @@ export function buildDemoCrcDocumentData(): DocumentData {
     omeXmlHash: "",
     basename: "CRC01-096-097.ome.tif",
     contentRole: "intensity",
+    rotationDegrees: 0,
+    flipHorizontal: false,
+    flipVertical: false,
     channels,
     source: { kind: "url", url: DEMO_CRC_OME_TIFF_URL },
   };

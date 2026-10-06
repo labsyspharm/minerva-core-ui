@@ -7,12 +7,21 @@ import type {
   MainSettings,
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
-import type { ChannelRendering } from "@/lib/stores/appStore";
-import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
+import type {
+  ChannelRendering,
+  ImageOrientationPreview,
+} from "@/lib/stores/appStore";
+import type {
+  Channel,
+  ChannelGroup,
+  Image,
+  ImageOrientation,
+} from "@/lib/stores/documentStore";
 import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
+import { orientationForImage } from "./imageOrientation";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
 import { type Loader, TILE_CACHE_PROPS, toSettings } from "./viv";
@@ -87,6 +96,7 @@ function createDicomTileLayer(args: {
   entry: DicomIndex;
   settings: unknown;
   remountKey?: string | number;
+  orientation?: ImageOrientation | null;
 }): Layer | null {
   const rgbImage = args.entry.modality === "Brightfield";
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
@@ -97,7 +107,7 @@ function createDicomTileLayer(args: {
     settings: args.settings,
     rgbImage,
     imageID: `${imageKey}${remount}`,
-    modelMatrix: layerModelMatrix(args.entry.loader),
+    modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
   });
 }
 
@@ -128,6 +138,7 @@ function createMultiscaleLayer(args: {
    */
   transfer?: JpegExportTransfer;
   overlay?: boolean;
+  orientation?: ImageOrientation | null;
 }): Layer {
   const base = args.settings as MainSettings;
   const settings: MainSettings =
@@ -149,7 +160,7 @@ function createMultiscaleLayer(args: {
     excludeBackground: true,
     ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
     loader: args.loader.data,
-    modelMatrix: layerModelMatrix(args.loader),
+    modelMatrix: layerModelMatrix(args.loader, args.orientation),
   } as never);
 }
 
@@ -157,6 +168,7 @@ function createEncodedImageLayer(args: {
   entry: JpegLoaderEntry;
   settings: unknown;
   remountKey?: string | number;
+  orientation?: ImageOrientation | null;
 }): Layer {
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
   return createJpegLayers({
@@ -164,7 +176,7 @@ function createEncodedImageLayer(args: {
     settings: args.settings,
     transfer: args.entry.transfer ?? "contrast",
     layerId: `jpeg-${args.entry.sourceImageId}${remount}`,
-    modelMatrix: layerModelMatrix(args.entry.loader),
+    modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
   });
 }
 
@@ -176,6 +188,8 @@ function buildImageLayers(args: {
   omeSettingsList?: unknown[];
   jpegSettingsList?: unknown[];
   remountKey?: string | number;
+  images?: Image[];
+  orientationPreview?: ImageOrientationPreview | null;
 }): Layer[] {
   const dicomIndexList = args.dicomIndexList ?? [];
   const omeLoaderEntries = args.omeLoaderEntries ?? [];
@@ -183,6 +197,7 @@ function buildImageLayers(args: {
   const dicomSettingsList = args.dicomSettingsList ?? [];
   const omeSettingsList = args.omeSettingsList ?? [];
   const jpegSettingsList = args.jpegSettingsList ?? [];
+  const { images, orientationPreview } = args;
 
   let omeVisiblePainted = 0;
   return [
@@ -191,6 +206,11 @@ function buildImageLayers(args: {
         entry,
         settings: dicomSettingsList[i],
         remountKey: args.remountKey,
+        orientation: orientationForImage(
+          images,
+          entry.sourceImageId,
+          orientationPreview,
+        ),
       });
       if (!layer) return [];
       return [layer];
@@ -208,6 +228,11 @@ function buildImageLayers(args: {
           layerId: `mainLayer-${sourceImageId}`,
           remountKey: args.remountKey,
           overlay,
+          orientation: orientationForImage(
+            images,
+            sourceImageId,
+            orientationPreview,
+          ),
           ...(transfer ? { transfer } : {}),
         }),
       ];
@@ -220,6 +245,11 @@ function buildImageLayers(args: {
           entry,
           settings,
           remountKey: args.remountKey,
+          orientation: orientationForImage(
+            images,
+            entry.sourceImageId,
+            orientationPreview,
+          ),
         }),
       ];
     }),
@@ -238,6 +268,10 @@ export function useViewerLayers(args: {
   channelGroupRowVisibilities: Record<string, boolean>;
   /** Authoring: live contrast/color drag preview (CDN omits). */
   channelRendering?: ChannelRendering | null;
+  /** Document images (for per-image orientation → modelMatrix). */
+  images?: Image[];
+  /** Authoring: live orientation drag preview (CDN omits). */
+  orientationPreview?: ImageOrientationPreview | null;
   /** Authoring: bump after export to recreate GL layers (CDN omits). */
   remountKey?: string | number;
 }) {
@@ -251,6 +285,8 @@ export function useViewerLayers(args: {
     channelVisibilities,
     channelGroupRowVisibilities,
     channelRendering = null,
+    images,
+    orientationPreview = null,
     remountKey,
   } = args;
 
@@ -366,6 +402,8 @@ export function useViewerLayers(args: {
         omeSettingsList: omeSettingsWithLive,
         jpegSettingsList: jpegSettingsWithLive,
         remountKey,
+        images,
+        orientationPreview,
       }),
     [
       dicomIndexList,
@@ -375,6 +413,8 @@ export function useViewerLayers(args: {
       omeSettingsWithLive,
       jpegSettingsWithLive,
       remountKey,
+      images,
+      orientationPreview,
     ],
   );
 

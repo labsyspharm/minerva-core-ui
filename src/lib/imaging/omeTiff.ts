@@ -13,7 +13,6 @@ type GeoTiffImage = {
     BitsPerSample?: number[] | ArrayLike<number>;
     SampleFormat?: number[];
     SamplesPerPixel?: number;
-    PhotometricInterpretation?: number;
     SubIFDs?: number[] | ArrayLike<number>;
   };
   getHeight: () => number;
@@ -74,11 +73,6 @@ async function getCoarsestTiffImage(
     typeof tiff.parseFileDirectoryAt !== "function" ||
     (baseInternals.source ?? tiff.source) == null
   ) {
-    console.info("[minerva] rgb detect: coarsest = IFD0 (no SubIFDs)", {
-      w: base.getWidth(),
-      h: base.getHeight(),
-      subIfds: offsets.length,
-    });
     return base;
   }
   let best = base;
@@ -99,12 +93,6 @@ async function getCoarsestTiffImage(
       best = image;
     }
   }
-  console.info("[minerva] rgb detect: coarsest from SubIFDs", {
-    w: best.getWidth(),
-    h: best.getHeight(),
-    ifd0: { w: base.getWidth(), h: base.getHeight() },
-    subIfds: offsets.length,
-  });
   return best;
 }
 
@@ -210,17 +198,7 @@ function threeChannelOmeFromXml(omeXml: string | null | undefined): boolean {
   });
   const packed = samples.length === 1 && samples[0] === 3;
   const planar = samples.length === 3 && samples.every((s) => s === 1);
-  const showChips = packed || planar;
-  console.info("[minerva] rgb detect: xml gate", {
-    sizeC: pixels.getAttribute("SizeC"),
-    interleaved: pixels.getAttribute("Interleaved"),
-    channels: samples.length,
-    samplesPerPixel: samples,
-    packed,
-    planar,
-    showChips,
-  });
-  return showChips;
+  return packed || planar;
 }
 
 /**
@@ -258,31 +236,14 @@ function isBrightfieldRgb(
   const stride = Math.max(1, Math.ceil(nPixels / 10_000));
   let nDark = 0;
   let nLight = 0;
-  let nSampled = 0;
   for (let i = 0; i + channels - 1 < data.length; i += channels * stride) {
     const r = data[i];
     const g = channels >= 3 ? data[i + 1] : r;
     const b = channels >= 3 ? data[i + 2] : r;
-    nSampled += 1;
     if (r < dark && g < dark && b < dark) nDark += 1;
     else if (r > light && g > light && b > light) nLight += 1;
   }
-  const brightfield = nLight > nDark && nDark + nLight > 0;
-  console.info("[minerva] rgb detect: high/low pixels", {
-    nDark,
-    nLight,
-    nMid: nSampled - nDark - nLight,
-    nSampled,
-    nPixels,
-    stride,
-    channels,
-    dark,
-    light,
-    sampleMax,
-    dtype: data.constructor?.name,
-    brightfield,
-  });
-  return brightfield;
+  return nLight > nDark && nDark + nLight > 0;
 }
 
 /**
@@ -293,12 +254,9 @@ export async function detectOmeTiffBrightfield(
   source: Blob | string,
   signal?: AbortSignal,
 ): Promise<boolean> {
-  const t0 = performance.now();
   const tiff = await openOmeTiff(source, signal);
-  const tOpen = performance.now();
   const image = await getCoarsestTiffImage(tiff);
   if (signal?.aborted) return false;
-  const tLevel = performance.now();
   const w = image.getWidth();
   const h = image.getHeight();
   const tileW = Math.max(1, image.getTileWidth?.() || 256);
@@ -314,44 +272,16 @@ export async function detectOmeTiffBrightfield(
   const spp = image.fileDirectory?.SamplesPerPixel ?? 1;
   const bitsRaw = image.fileDirectory?.BitsPerSample?.[0];
   const bits = typeof bitsRaw === "number" ? bitsRaw : 8;
-  const photo = image.fileDirectory?.PhotometricInterpretation;
-  const winPixels = (window[2] - window[0]) * (window[3] - window[1]);
-  console.info("[minerva] rgb detect: coarsest tile", {
-    spp,
-    bits,
-    photo,
-    w,
-    h,
-    fullPixels: w * h,
-    tileW,
-    tileH,
-    window,
-    winPixels,
-    openMs: Math.round(tOpen - t0),
-    levelMs: Math.round(tLevel - tOpen),
-  });
   // readRasters hands back raw samples: JPEG H&E is YCbCr (Cb/Cr sit near 128,
   // so nothing ever reads as light), WhiteIsZero is inverted, Palette is
   // indices. readRGB applies the photometric transform and always returns
   // interleaved RGB. It throws when the tag is missing or unsupported.
   try {
-    const tRead = performance.now();
     const rgb = await image.readRGB({ interleave: true, window, signal });
-    console.info("[minerva] rgb detect: readRGB", {
-      nPixels: Math.floor(rgb.length / 3),
-      samples: rgb.length,
-      dtype: rgb.constructor?.name,
-      readMs: Math.round(performance.now() - tRead),
-    });
-    const brightfield = isBrightfieldRgb(rgb, {
+    return isBrightfieldRgb(rgb, {
       sampleMax: sampleMaxForBuffer(rgb, bits),
       channels: 3,
     });
-    console.info("[minerva] rgb detect: done", {
-      brightfield,
-      totalMs: Math.round(performance.now() - t0),
-    });
-    return brightfield;
   } catch (error) {
     if (signal?.aborted) return false;
     console.warn(
@@ -360,29 +290,16 @@ export async function detectOmeTiffBrightfield(
     );
   }
   const samples = spp >= 3 ? [0, 1, 2] : [0];
-  const tRead = performance.now();
   const raw = await image.readRasters({
     samples,
     interleave: true,
     window,
     signal,
   });
-  console.info("[minerva] rgb detect: readRasters", {
-    channels: samples.length,
-    nPixels: Math.floor(raw.length / samples.length),
-    samples: raw.length,
-    dtype: raw.constructor?.name,
-    readMs: Math.round(performance.now() - tRead),
-  });
-  const brightfield = isBrightfieldRgb(raw, {
+  return isBrightfieldRgb(raw, {
     sampleMax: sampleMaxForBuffer(raw, bits),
     channels: samples.length,
   });
-  console.info("[minerva] rgb detect: done", {
-    brightfield,
-    totalMs: Math.round(performance.now() - t0),
-  });
-  return brightfield;
 }
 
 /** Packed RGB (1×SPP=3) or three planar channels. */
@@ -390,13 +307,7 @@ export async function detectOmeTiffPlanarRgbAmbiguity(
   source: File | string,
   signal?: AbortSignal,
 ): Promise<boolean> {
-  const t0 = performance.now();
   const xml = await getOmeTiffImageDescriptionOmeXml(source, {}, signal);
   if (signal?.aborted) return false;
-  const threeChannel = threeChannelOmeFromXml(xml);
-  console.info("[minerva] rgb detect: xml gate done", {
-    threeChannel,
-    xmlMs: Math.round(performance.now() - t0),
-  });
-  return threeChannel;
+  return threeChannelOmeFromXml(xml);
 }

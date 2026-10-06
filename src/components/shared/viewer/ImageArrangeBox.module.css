@@ -1,0 +1,52 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.body {
+  fill: transparent;
+  stroke: var(--minerva-blue);
+  stroke-width: 1.5;
+  pointer-events: all;
+  cursor: move;
+  touch-action: none;
+}
+
+.stem {
+  stroke: var(--minerva-blue);
+  stroke-width: 1.5;
+}
+
+.handle,
+.knob circle {
+  fill: #fff;
+  stroke: var(--minerva-blue);
+  stroke-width: 1.5;
+}
+
+.handle,
+.knob {
+  pointer-events: all;
+  touch-action: none;
+}
+
+.knob {
+  color: var(--minerva-blue);
+  cursor: grab;
+}
+
+.knob:active {
+  cursor: grabbing;
+}

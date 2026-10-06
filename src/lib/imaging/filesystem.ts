@@ -282,6 +282,7 @@ async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
   const dtype = dtypeFromTiffDirectory(fd);
   const ome = parseFirstOmeImagePixels(fd.ImageDescription);
   const sizeC = Math.max(1, ome?.SizeC ?? fd.SamplesPerPixel ?? 1);
+  const unitlessResolution = isUnitlessPlaceholderResolution(fd);
   const channels = Array.from({ length: sizeC }, (_, i) => ({
     ID: `Channel:0:${i}`,
     Name: sizeC === 1 ? "Mask" : `Mask ${i + 1}`,
@@ -296,10 +297,8 @@ async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
     SizeZ: 1,
     SizeY: height,
     SizeX: width,
-    PhysicalSizeX:
-      ome?.PhysicalSizeX ?? (isUnitlessPlaceholderResolution(fd) ? 0 : 1),
-    PhysicalSizeY:
-      ome?.PhysicalSizeY ?? (isUnitlessPlaceholderResolution(fd) ? 0 : 1),
+    PhysicalSizeX: ome?.PhysicalSizeX ?? (unitlessResolution ? 0 : 1),
+    PhysicalSizeY: ome?.PhysicalSizeY ?? (unitlessResolution ? 0 : 1),
     PhysicalSizeXUnit: ome?.PhysicalSizeXUnit ?? "µm",
     PhysicalSizeYUnit: ome?.PhysicalSizeYUnit ?? "µm",
     PhysicalSizeZUnit: ome?.PhysicalSizeZUnit ?? "µm",

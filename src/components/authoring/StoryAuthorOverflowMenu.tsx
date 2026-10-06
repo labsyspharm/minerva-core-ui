@@ -2,6 +2,7 @@ import * as React from "react";
 import MenuIcon from "@/components/shared/icons/menu.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
+import { useClickOutside } from "@/components/shared/useClickOutside";
 import { applyOmeRoisFromAnnotationXmlString } from "@/lib/shapes/applyOmeRoisToDocument";
 import type { DocumentData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
@@ -41,17 +42,8 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
   const xmlInputRef = React.useRef<HTMLInputElement>(null);
   const waypointsOk = useDocumentStore((s) => s.waypoints.length > 0);
 
-  React.useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      const w = wrapRef.current;
-      if (w && !w.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [open]);
-
   const close = () => setOpen(false);
+  useClickOutside(open, close, [wrapRef]);
 
   const onAnnotationXmlSelected: React.ChangeEventHandler<HTMLInputElement> = (
     e,

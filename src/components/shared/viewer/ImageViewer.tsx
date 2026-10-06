@@ -15,6 +15,7 @@ import "@deck.gl/widgets/stylesheet.css";
 import type { Layer } from "@deck.gl/core";
 import { MaskExtension } from "@deck.gl/extensions";
 import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
+import { ImageArrangeBox } from "@/components/shared/viewer/ImageArrangeBox";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import {
   getFeatureTableLutEpoch,
@@ -26,6 +27,7 @@ import {
   DEFAULT_MASK_VISUALIZATION,
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
+import { orientationForImage } from "@/lib/imaging/imageOrientation";
 import type { LoaderList } from "@/lib/imaging/loaderEntries";
 import {
   IMAGE_SELECTION_MASK_LAYER_ID,
@@ -86,17 +88,16 @@ function formatPyramidStatus(zoom: number, loader: Loader): string | null {
   const baseWidth = planeWidth(planes[0]);
   const levelZooms = planes.map((level) => {
     const width = planeWidth(level);
-    return 0 - Math.round(Math.log2(baseWidth / width));
+    return -Math.round(Math.log2(baseWidth / width));
   });
   const coarsest = levelZooms[levelZooms.length - 1] ?? 0;
   const zoomOffset = Math.round(
     Math.log2(worldFrameFromLoader(loader).umPerPixelX || 1),
   );
   const tileZ = Math.min(0, Math.max(coarsest, Math.ceil(zoom + zoomOffset)));
-  const target = Math.round(tileZ);
-  let snapped = levelZooms[levelZooms.length - 1] ?? 0;
+  let snapped = coarsest;
   for (const lz of levelZooms) {
-    if (lz <= target) {
+    if (lz <= tileZ) {
       snapped = lz;
       break;
     }
@@ -372,6 +373,8 @@ export type ImageViewerProps = {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
   ) => void;
+  /** Show the frame for the store's `arrangeImageId`. */
+  canArrange?: boolean;
   zoomInButton?: HTMLElement | null;
   zoomOutButton?: HTMLElement | null;
   showSquareViewportOverlay?: boolean;
@@ -396,6 +399,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     isDragging = false,
     hoveredShapeId = null,
     onOverlayInteraction,
+    canArrange = false,
     showSquareViewportOverlay = false,
     squareViewportScale = 0.9,
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
@@ -415,6 +419,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const maskVisualizationPreview = useAppStore(
     (s) => s.maskVisualizationPreview,
   );
+  const imageOrientationPreview = useAppStore((s) => s.imageOrientationPreview);
+  const arrangeImageId = useAppStore((s) => s.arrangeImageId);
   const selectionMaskVisualizationPreview =
     maskVisualizationPreview?.sourceChannelId === SELECTION_MASK_CHANNEL_KEY
       ? maskVisualizationPreview.visualization
@@ -438,25 +444,30 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const [viewportSize, setViewportSize] = useState(windowSize);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<DeckGLRef | null>(null);
+  const arrangeLayoutRef = useRef<(() => void) | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
-  // Set up ResizeObserver to track viewport size changes
-  useEffect(() => {
-    const element = rootRef.current;
+  // Callback ref: the viewer returns null until loaders exist, so a mount-only
+  // effect never sees the element and the frame stays on the window size.
+  const setRoot = useCallback((element: HTMLDivElement | null) => {
+    rootRef.current = element;
+    resizeObserverRef.current?.disconnect();
+    resizeObserverRef.current = null;
     if (!element) return;
-
+    const publish = (width: number, height: number) => {
+      if (width <= 0 || height <= 0) return;
+      setViewportSize({ width, height });
+      useAppStore.getState().setViewerViewportSize({ width, height });
+    };
+    publish(element.clientWidth, element.clientHeight);
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
-        setViewportSize({ width, height });
-        // Same tick as layout — avoids null viewerViewportSize before React commits.
-        if (width > 0 && height > 0) {
-          useAppStore.getState().setViewerViewportSize({ width, height });
-        }
+        publish(width, height);
       }
     });
-
     resizeObserver.observe(element);
-    return () => resizeObserver.disconnect();
+    resizeObserverRef.current = resizeObserver;
   }, []);
 
   const setViewerWorldFrame = useAppStore((s) => s.setViewerWorldFrame);
@@ -513,6 +524,11 @@ export const ImageViewer = (props: ImageViewerProps) => {
               channelGroups,
               activeChannelGroupId,
             );
+      const orientation = orientationForImage(
+        images,
+        sc.imageId,
+        imageOrientationPreview,
+      );
       const featureTable = featureTables.find(
         (c) => c.sourceChannelId === sc.id,
       );
@@ -521,6 +537,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         loader: entry.loader,
         channelIndex: sc.index,
         visualization,
+        orientation,
         visible: rendered,
         classStyle: featureTable
           ? gpuStyleForFeatureTable(
@@ -541,6 +558,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     activeChannelGroupId,
     channelGroups,
     maskVisualizationPreview,
+    imageOrientationPreview,
     featureTables,
     featureTableVisibilities,
     featureTableLutEpoch,
@@ -1013,10 +1031,44 @@ export const ImageViewer = (props: ImageViewerProps) => {
     [],
   );
 
+  const getDeckCanvas = useCallback(
+    () => deckRef.current?.deck?.getCanvas() ?? null,
+    [],
+  );
+
+  const clientToWorld = useCallback(
+    (clientX: number, clientY: number): [number, number] | null => {
+      const root = rootRef.current;
+      const flat = toFlatViewState(cameraRef.current);
+      if (!root || !flat?.target) return null;
+      const scale = 2 ** (flat.zoom ?? 0);
+      if (!Number.isFinite(scale) || scale === 0) return null;
+      const rect = root.getBoundingClientRect();
+      const vp = viewportSizeRef.current;
+      const sx = clientX - rect.left;
+      const sy = clientY - rect.top;
+      return [
+        (sx - vp.width / 2) / scale + flat.target[0],
+        (sy - vp.height / 2) / scale + flat.target[1],
+      ];
+    },
+    [],
+  );
+
   const dragHandlers = useMemo(
     () =>
       createDragHandlers(activeTool, onOverlayInteraction, getScreenFromWorld),
     [activeTool, onOverlayInteraction, getScreenFromWorld],
+  );
+
+  // A click on empty canvas ends arranging; clicks on the image hit the frame.
+  const handleClick = useCallback(
+    (info: PickInfo) => {
+      const app = useAppStore.getState();
+      if (app.arrangeImageId) app.setArrangeImageId(null);
+      dragHandlers.onClick?.(info);
+    },
+    [dragHandlers],
   );
 
   // Memoize cursor function
@@ -1120,6 +1172,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       } else if (nextViewState) {
         cameraRef.current = nextViewState as OrthographicViewState;
       }
+      arrangeLayoutRef.current?.();
     },
     [isDragging, publishPyramidHud],
   );
@@ -1196,7 +1249,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }
 
   return (
-    <div className={styles.main} ref={rootRef}>
+    <div className={styles.main} ref={setRoot}>
       <Deck
         ref={deckRef}
         getCursor={getCursor}
@@ -1210,7 +1263,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         initialViewState={deckInitialViewState}
         onViewStateChange={handleViewStateChange}
         onInteractionStateChange={handleInteractionStateChange}
-        onClick={dragHandlers.onClick}
+        onClick={handleClick}
         onDragStart={dragHandlers.onDragStart}
         onDrag={dragHandlers.onDrag}
         onDragEnd={dragHandlers.onDragEnd}
@@ -1219,6 +1272,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
         layerFilter={layerFilter}
         views={views}
       />
+      {canArrange && arrangeImageId ? (
+        <ImageArrangeBox
+          imageId={arrangeImageId}
+          images={images}
+          loaders={loaderList}
+          preview={imageOrientationPreview}
+          project={getScreenFromWorld}
+          unproject={clientToWorld}
+          layoutRef={arrangeLayoutRef}
+          getCanvas={getDeckCanvas}
+        />
+      ) : null}
       <LoadingWidget ref={loadingWidgetRef} placement="center" />
       {pyramidHud.length > 0 ? (
         <output className={styles.pyramidHud}>

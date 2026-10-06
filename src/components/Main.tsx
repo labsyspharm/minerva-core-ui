@@ -447,6 +447,7 @@ const Content = (props: Props) => {
     channelVisibilities,
     channelGroupRowVisibilities,
     channelRendering,
+    imageOrientationPreview,
     setGroupNames,
   } = useAppStore();
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
@@ -1218,7 +1219,6 @@ const Content = (props: Props) => {
       relevantGroups: relevant_groups,
       rgbDisplay,
     });
-    const SourceChannels = slice.sourceChannels;
     let nextImages = slice.nextImages;
     let ChannelGroups: ChannelGroup[];
     if (role === "segmentation") {
@@ -1226,7 +1226,7 @@ const Content = (props: Props) => {
     } else if (slice.extractedGroups.length > 0) {
       ChannelGroups = await applySharedImportPaletteToChannelGroups(
         slice.extractedGroups,
-        SourceChannels,
+        slice.sourceChannels,
       );
     } else {
       nextImages = await applyPaletteToFlatImportImages(nextImages);
@@ -1983,6 +1983,8 @@ const Content = (props: Props) => {
     channelVisibilities,
     channelGroupRowVisibilities,
     channelRendering,
+    images,
+    orientationPreview: imageOrientationPreview,
     remountKey: viewerRemountKey,
   });
 
@@ -2116,40 +2118,26 @@ const Content = (props: Props) => {
           const w = img?.sizeX ?? 0;
           const h = img?.sizeY ?? 0;
           const ch = img?.sizeC ?? 0;
+          let label: string;
           if (dicomIndexList.length > 0) {
-            loadedSource = {
-              label:
-                fileName ||
-                dicomIndexList
-                  .map((d) =>
-                    d.modality ? `${d.series} (${d.modality})` : `${d.series}`,
-                  )
-                  .join(", ") ||
-                "DICOMweb",
-              width: w,
-              height: h,
-              channelCount: ch,
-            };
+            label =
+              fileName ||
+              dicomIndexList
+                .map((d) =>
+                  d.modality ? `${d.series} (${d.modality})` : `${d.series}`,
+                )
+                .join(", ") ||
+              "DICOMweb";
           } else if (omeLoaderEntries.length > 0) {
             const isUrlSource = handles.length === 0;
-            const label = isUrlSource
+            label = isUrlSource
               ? lastOmeTiffUrl || fileName || "Remote OME-TIFF"
               : fileName || handleNamesLabel || "OME-TIFF";
-            loadedSource = {
-              label,
-              width: w,
-              height: h,
-              channelCount: ch,
-            };
           } else {
-            loadedSource = {
-              label:
-                lastOmeTiffUrl || fileName || handleNamesLabel || "Loading…",
-              width: w,
-              height: h,
-              channelCount: ch,
-            };
+            label =
+              lastOmeTiffUrl || fileName || handleNamesLabel || "Loading…";
           }
+          loadedSource = { label, width: w, height: h, channelCount: ch };
         }
         const importOme = async (
           req: OmeImportRequest,
@@ -2303,6 +2291,7 @@ const Content = (props: Props) => {
             isDragging={dragState.isDragging}
             hoveredShapeId={hoverState.hoveredShapeId}
             onOverlayInteraction={handleOverlayInteraction}
+            canArrange={!presenting}
           />
         );
         const imager = (
