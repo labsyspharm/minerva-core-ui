@@ -43,6 +43,7 @@ import {
   WORLD_MICRON,
   worldFrameFromLoader,
 } from "@/lib/imaging/worldFrame";
+import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -183,6 +184,18 @@ type WorldToScreen = (
   worldY: number,
 ) => [number, number] | undefined;
 
+/** Drag on these tools draws or places a shape, so the view must not pan. */
+const TOOLS_THAT_DRAW_ON_DRAG = new Set([
+  "rectangle",
+  "ellipse",
+  "arrow",
+  "line",
+  "lasso",
+  "polyline",
+  "brush",
+  "point",
+]);
+
 /** Translate Deck.gl pick events into overlay / brush interactions. */
 const createDragHandlers = (
   activeTool: string,
@@ -250,7 +263,17 @@ const createDragHandlers = (
       if (coord) emit("click", coord);
     },
 
-    onDragStart: (info: PickInfo) => {
+    onDragStart: (
+      info: PickInfo,
+      event?: { stopImmediatePropagation?: () => void },
+    ) => {
+      // Runs before the view controller, so the same drag does not start a pan.
+      if (
+        TOOLS_THAT_DRAW_ON_DRAG.has(activeTool) ||
+        (activeTool === "move" && !!store().hoverState.hoveredShapeId)
+      ) {
+        event?.stopImmediatePropagation?.();
+      }
       const coord = toCoord(info);
       if (coord && activeTool === "brush" && getScreenFromWorld) {
         const screen = getScreenFromWorld(coord[0], coord[1]);
@@ -641,6 +664,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   );
   const setSam2ViewState = useAppStore((s) => s.setSam2ViewState);
   const setSam2ViewportSize = useAppStore((s) => s.setSam2ViewportSize);
+  const setSam2ImageFetcher = useAppStore((s) => s.setSam2ImageFetcher);
 
   const deckInitialViewState = useMemo(
     () => deckViewStates(orthoSeed, viewportSize.width, viewportSize.height),
@@ -712,6 +736,40 @@ export const ImageViewer = (props: ImageViewerProps) => {
     setSam2ViewportSize(viewportSize);
     setViewerViewportSize(viewportSize);
   }, [viewportSize, setSam2ViewportSize, setViewerViewportSize]);
+
+  // Magic wand reads the visible region through this fetcher. Pixel size, not
+  // world microns: the click path converts the view rect before calling it.
+  useEffect(() => {
+    const loader = firstLoader?.loader;
+    const settings = mainSettingsList[0];
+    const width = frame?.pixelWidth ?? 0;
+    const height = frame?.pixelHeight ?? 0;
+    if (!loader || !settings || width <= 0 || height <= 0) {
+      setSam2ImageFetcher(null);
+      return;
+    }
+    setSam2ImageFetcher(
+      createSam2ImageFetcher(
+        loader,
+        {
+          selections: settings.selections.map((s) => ({ z: 0, t: 0, c: s.c })),
+          colors: settings.colors.map(
+            (c) => [c[0], c[1], c[2]] as [number, number, number],
+          ),
+          contrastLimits: settings.contrastLimits.map(
+            (lim) => [lim[0], lim[1]] as [number, number],
+          ),
+          channelsVisible: [
+            ...(settings.channelsVisible ??
+              settings.selections.map(() => true)),
+          ],
+        },
+        width,
+        height,
+      ),
+    );
+    return () => setSam2ImageFetcher(null);
+  }, [firstLoader, mainSettingsList, frame, setSam2ImageFetcher]);
 
   useEffect(() => {
     registerViewerLiveSnapshotReader(() => {
@@ -1103,11 +1161,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
     [activeTool, hoveredShapeId, sam2Processing],
   );
 
-  // Memoize controller configuration
-  // Disable pan only while the move tool would drag an annotation under the cursor.
+  // Drawing tools own the drag. The move tool pans unless it is dragging a shape.
   const controllerConfig = useMemo(
     () => ({
-      dragPan: !(activeTool === "move" && !!hoveredShapeId) && !isDragging,
+      dragPan:
+        !TOOLS_THAT_DRAW_ON_DRAG.has(activeTool) &&
+        !(activeTool === "move" && !!hoveredShapeId) &&
+        !isDragging,
       dragRotate: false,
       scrollZoom: true,
       doubleClickZoom: true,
