@@ -18,7 +18,7 @@ import {
   seedDefaultSourceChannelStyles,
 } from "@/lib/imaging/sourceChannelStyle";
 import { useAppStore } from "@/lib/stores/appStore";
-import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
+import type { Channel, ChannelGroup, Image } from "@/lib/stores/documentStore";
 import {
   findSourceChannel,
   flattenImageChannelsInDocumentOrder,
@@ -415,6 +415,30 @@ export async function applySharedImportPaletteToSourceChannels(
       seedPaletteForPicked(picked.length),
     );
   }
+}
+
+/**
+ * Import palette for an export or preview when no group row exists.
+ * Existing colors and contrast limits are left alone.
+ */
+export async function paintUngroupedExportColors(
+  images: Image[],
+  channelGroups: ChannelGroup[],
+): Promise<Image[]> {
+  if (channelGroups.some((g) => g.channels.length > 0)) return images;
+  const flat = flattenImageChannelsInDocumentOrder(images);
+  if (flat.every((ch) => ch.color)) return images;
+  const painted = await applySharedImportPaletteToSourceChannels(flat);
+  const colorById = new Map(
+    painted.flatMap((ch) => (ch.color ? [[ch.id, ch.color] as const] : [])),
+  );
+  return images.map((image) => ({
+    ...image,
+    channels: image.channels.map((ch) => {
+      const color = colorById.get(ch.id);
+      return color && !ch.color ? { ...ch, color } : ch;
+    }),
+  }));
 }
 
 function needsInitPalette(

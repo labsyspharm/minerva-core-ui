@@ -532,6 +532,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       const rendered = isMaskSourceRendered({
         sc,
         channelGroups,
+        activeGroup: channelGroups.find((g) => g.id === activeChannelGroupId),
         stackVisibilities: channelVisibilities ?? {},
         groupRowVisibilities: channelGroupRowVisibilities,
       });

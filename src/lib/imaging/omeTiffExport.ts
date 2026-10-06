@@ -276,15 +276,13 @@ export function groupIntensityChannelsForOmeExport(
   return grouped.length > 0 ? grouped : all;
 }
 
-/** Mask channels: group rows, or all masks when that would otherwise drop the image. */
+/** Mask channels: group rows when any exist, otherwise all masks. */
 export function groupMaskChannelsForOmeExport(
   image: Image,
   channelGroups: ChannelGroup[],
 ): ImageChannel[] {
   const grouped = groupChannelsForOmeExport(image, channelGroups, "mask");
-  if (grouped.length > 0) return grouped;
-  const intensity = groupIntensityChannelsForOmeExport(image, channelGroups);
-  return intensity.length === 0 ? channelsOfKind(image, "mask") : [];
+  return grouped.length > 0 ? grouped : channelsOfKind(image, "mask");
 }
 
 /** Group-row contrast, else source limits, else the stored float span, else 0…dtypeMax. */
@@ -335,6 +333,34 @@ export function jpegPyramidExportChannels(
   channelGroups: ChannelGroup[],
   storyTransfer: JpegExportTransfer,
 ): JpegPyramidExportChannel[] {
+  if (!channelGroups.some((g) => g.channels.length > 0)) {
+    const out: JpegPyramidExportChannel[] = [];
+    for (const image of images) {
+      const transfer = exportTransferForImage(image, storyTransfer);
+      const channels = [
+        ...groupIntensityChannelsForOmeExport(image, channelGroups),
+        ...groupMaskChannelsForOmeExport(image, channelGroups),
+      ];
+      for (const ch of channels) {
+        const lim = contrastLimitsForExportedChannel(ch, channelGroups);
+        const limits = folderLimitsForTransfer(
+          transfer,
+          lim.lowerLimit,
+          lim.upperLimit,
+        );
+        out.push({
+          channelId: ch.id,
+          sourceImageId: image.id,
+          index: ch.index,
+          lowerLimit: limits.lowerLimit,
+          upperLimit: limits.upperLimit,
+          transfer,
+        });
+      }
+    }
+    return out;
+  }
+
   const out: JpegPyramidExportChannel[] = [];
   const seenGroupChannelIds = new Set<string>();
 

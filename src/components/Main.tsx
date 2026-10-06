@@ -582,16 +582,6 @@ const Content = (props: Props) => {
       );
       return;
     }
-    if (mode === "jpeg-pyramid") {
-      const groups = doc.channelGroups;
-      const hasChannels = groups.some((g) => g.channels.length > 0);
-      if (groups.length === 0 || !hasChannels) {
-        window.alert(
-          "Add a channel group with at least one channel before exporting a JPEG pyramid.",
-        );
-        return;
-      }
-    }
     if (mode === "jpeg-ome-tiff") {
       if (omeLoaderEntries.length === 0 && dicomIndexList.length === 0) {
         window.alert(

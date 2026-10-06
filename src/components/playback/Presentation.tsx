@@ -365,6 +365,9 @@ export const Presentation = (props: PresentationProps) => {
   const navStoryName =
     !showRibbon && documentTitle.trim() ? documentTitle.trim() : "";
   const flushTitle = !props.exitPlaybackPreview;
+  /** One waypoint and no markdown: the nav has nothing to show. */
+  const hideNavPane =
+    waypoints.length === 1 && !(waypoints[0]?.content ?? "").trim();
 
   return (
     <div className={`${styles.presentation} minerva-seal`}>
@@ -404,58 +407,67 @@ export const Presentation = (props: PresentationProps) => {
           ) : null}
         </div>
       ) : null}
-      <div className={styles.splitGrid}>
-        <div
-          className={[
-            styles.navPane,
-            navStoryName ? styles.navPaneHasStoryName : null,
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          {navStoryName ? (
-            <div className={styles.storyTitle}>{navStoryName}</div>
-          ) : null}
-          <div className={styles.toolbar}>
-            {toc_button}
-            <StoryLeft active={!first_story} />
-            {count}
-            <StoryRight active={!last_story} />
-          </div>
-          <div ref={contentPaneRef} className={styles.contentWrap}>
-            <h2 className={styles.heading}>{story_title}</h2>
-            <ReactMarkdown
-              components={{
-                strong: ({ children }) => {
-                  const text = String(children);
-                  const color = channelColors.get(text);
-                  return color ? (
-                    <span
-                      className={styles.channelName}
-                      style={{ "--channel-color": color } as CSSProperties}
-                    >
-                      {text}
-                    </span>
-                  ) : (
-                    <strong>{children}</strong>
-                  );
-                },
-              }}
-            >
-              {processedContent}
-            </ReactMarkdown>
-            {first_story && <TableOfContents waypoints={waypoints} />}
-            <div className={styles.inlineNext}>
-              {last_story ? (
-                <p>End</p>
-              ) : (
-                <>
-                  {story_next} <StoryRight active={!last_story} />
-                </>
-              )}
+      <div
+        className={[
+          styles.splitGrid,
+          hideNavPane ? styles.splitGridViewerOnly : null,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {hideNavPane ? null : (
+          <div
+            className={[
+              styles.navPane,
+              navStoryName ? styles.navPaneHasStoryName : null,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {navStoryName ? (
+              <div className={styles.storyTitle}>{navStoryName}</div>
+            ) : null}
+            <div className={styles.toolbar}>
+              {toc_button}
+              <StoryLeft active={!first_story} />
+              {count}
+              <StoryRight active={!last_story} />
+            </div>
+            <div ref={contentPaneRef} className={styles.contentWrap}>
+              <h2 className={styles.heading}>{story_title}</h2>
+              <ReactMarkdown
+                components={{
+                  strong: ({ children }) => {
+                    const text = String(children);
+                    const color = channelColors.get(text);
+                    return color ? (
+                      <span
+                        className={styles.channelName}
+                        style={{ "--channel-color": color } as CSSProperties}
+                      >
+                        {text}
+                      </span>
+                    ) : (
+                      <strong>{children}</strong>
+                    );
+                  },
+                }}
+              >
+                {processedContent}
+              </ReactMarkdown>
+              {first_story && <TableOfContents waypoints={waypoints} />}
+              <div className={styles.inlineNext}>
+                {last_story ? (
+                  <p>End</p>
+                ) : (
+                  <>
+                    {story_next} <StoryRight active={!last_story} />
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
         <div className={styles.presentationViewerRegion}>{props.children}</div>
       </div>
     </div>
