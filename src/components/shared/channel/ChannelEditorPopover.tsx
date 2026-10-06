@@ -418,27 +418,28 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     setColorPos(colorPickerAnchorPosition(el.getBoundingClientRect()));
   };
 
-  const contrast = showHistogram
-    ? gc && chip.groupId
-      ? {
-          ...contrastEditorPropsForGroupRow(
-            channelRendering,
-            chip.groupId,
-            gc,
-            sc,
-          ),
-          histogramLoading,
-        }
-      : {
-          ...contrastEditorPropsForSource(
-            channelRendering,
-            sc,
-            color,
-            effectiveSourceLimits(sc),
-          ),
-          histogramLoading,
-        }
-    : undefined;
+  const contrast =
+    showHistogram && nav?.contrastEditable
+      ? gc && chip.groupId
+        ? {
+            ...contrastEditorPropsForGroupRow(
+              channelRendering,
+              chip.groupId,
+              gc,
+              sc,
+            ),
+            histogramLoading,
+          }
+        : {
+            ...contrastEditorPropsForSource(
+              channelRendering,
+              sc,
+              color,
+              effectiveSourceLimits(sc),
+            ),
+            histogramLoading,
+          }
+      : undefined;
 
   return (
     <>
@@ -457,7 +458,12 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
         }}
         contrast={contrast}
         more={
-          showHistogram ? { sourceChannel: sc, allowContrast: true } : undefined
+          showHistogram
+            ? {
+                sourceChannel: sc,
+                allowContrast: Boolean(nav?.contrastEditable),
+              }
+            : undefined
         }
         {...(!rgbDisplay && isMaskChannel(sc)
           ? {
