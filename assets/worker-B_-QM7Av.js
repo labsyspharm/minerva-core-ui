@@ -11300,6 +11300,14 @@ var duckdbWasmEh = ""+new URL('duckdb-eh-9ubY-jlA.wasm', import.meta.url).href+"
 
 var duckdbWasmMvp = ""+new URL('duckdb-mvp-BP0pRkMH.wasm', import.meta.url).href+"";
 
+const duckdbBundles = {
+  mvp: { mainModule: duckdbWasmMvp, mainWorker: mvpWorker },
+  eh: { mainModule: duckdbWasmEh, mainWorker: ehWorker }
+};
+function createDuckdbWorker(mainWorker) {
+  return new Worker(mainWorker);
+}
+
 const ID_ALIASES = /* @__PURE__ */ new Set(["classid", "classids", "id", "cellid", "cellids"]);
 const NAME_ALIASES = /* @__PURE__ */ new Set([
   "classname",
@@ -11381,13 +11389,10 @@ let conn = null;
 let duckWorker = null;
 async function ensureConn() {
   if (conn) return conn;
-  const bundle = await Xe({
-    mvp: { mainModule: duckdbWasmMvp, mainWorker: mvpWorker },
-    eh: { mainModule: duckdbWasmEh, mainWorker: ehWorker }
-  });
+  const bundle = await Xe(duckdbBundles);
   const mainWorker = bundle.mainWorker;
   if (!mainWorker) throw new Error("DuckDB worker missing");
-  duckWorker = new Worker(mainWorker);
+  duckWorker = createDuckdbWorker(mainWorker);
   db = new f(new N(), duckWorker);
   await db.instantiate(bundle.mainModule, bundle.pthreadWorker ?? void 0);
   conn = await db.connect();

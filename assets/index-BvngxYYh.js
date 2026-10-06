@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BaO5agMT.js","./pako.esm-KbdoS3Oq.js","./lerc-B6alcqxH.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-PXmOEpq3.js","./pako.esm-KbdoS3Oq.js","./lerc-Ci-iOaUl.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -76303,26 +76303,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DXEFPzxg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-blJ2z7HV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DG2Vzj7a.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DixM9fSh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DNsoArPK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-dDxm8_X8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BaO5agMT.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-Cuz8bc6h.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-B6alcqxH.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-PXmOEpq3.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DqZ976hZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Ci-iOaUl.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BjnvbSM_.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-D6hgMk59.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-gEVPQzVJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-v61gcMp7.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -80260,7 +80260,7 @@ vec4 colormap(float intensity, float opacity) {
       type: "module"
     });
   }
-  let WorkerWrapper$4 = class WorkerWrapper {
+  let WorkerWrapper$5 = class WorkerWrapper {
     constructor(worker2) {
       __publicField$2(this, "worker");
       __publicField$2(this, "jobIdCounter", 0);
@@ -80304,7 +80304,7 @@ vec4 colormap(float intensity, float opacity) {
         this.workerWrappers = (async () => {
           const wrappers = [];
           for (let i2 = 0; i2 < size; i2++) {
-            wrappers.push(new WorkerWrapper$4(createWorker()));
+            wrappers.push(new WorkerWrapper$5(createWorker()));
           }
           return wrappers;
         })();
@@ -91221,6 +91221,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!changed) return;
     docNow.setImages(applySourceChannelsToImages(docNow.images, next2));
   }
+  function WorkerWrapper$4(options) {
+    return new Worker("" + new URL("worker-B_-QM7Av.js", import.meta.url).href, {
+      type: "module",
+      name: options == null ? void 0 : options.name
+    });
+  }
   let worker = null;
   let nextId = 1;
   let ingestEpoch = 0;
@@ -91261,9 +91267,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function ensureWorker() {
     if (worker) return worker;
-    worker = new Worker(new URL("" + new URL("worker-R4LEwTGc.js", import.meta.url).href, import.meta.url), {
-      type: "module"
-    });
+    worker = new WorkerWrapper$4();
     worker.onmessage = (e2) => {
       const waiter = pending.get(e2.data.id);
       if (!waiter) return;
@@ -166616,7 +166620,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     return next2;
   }
-  const version = "1.0.0-alpha.9";
+  const version = "1.0.0-alpha.10";
   function minervaCdnUrls(version2) {
     const base2 = `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version2}/bundle`;
     return {
@@ -255466,12 +255470,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-10-06T13:51:35.736Z");
+    const label2 = utcShort("2026-10-06T14:38:29.290Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-10-06T13:51:35.736Z",
+      title: "2026-10-06T14:38:29.290Z",
       children: [
         "Updated ",
         label2,
