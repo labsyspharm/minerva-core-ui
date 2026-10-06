@@ -4253,6 +4253,18 @@ const ImageSchema = objectType({
    * false = independent IF channels. Undefined → runtime heuristics.
    */
   rgbDisplay: booleanType().optional(),
+  /** Degrees clockwise around the pixel center. Omitted input parses as 0. */
+  rotationDegrees: numberType().default(0),
+  /** Omitted input parses as false. */
+  flipHorizontal: booleanType().default(false),
+  /** Omitted input parses as false. */
+  flipVertical: booleanType().default(false),
+  /** µm, applied in world space after rotation. Omitted input parses as 0. */
+  translateX: numberType().default(0),
+  /** µm, applied in world space after rotation. Omitted input parses as 0. */
+  translateY: numberType().default(0),
+  /** Resize around the image center. 1 keeps the file's physical size. */
+  displayScale: numberType().positive().default(1),
   channels: arrayType(ImageChannelSchema),
   source: ImageSourceSchema.optional()
 });
@@ -4366,12 +4378,11 @@ preprocessType(
       return raw;
     }
     const r = raw;
-    let next = r;
-    if ("groups" in next && !("channelGroups" in next)) {
-      const { groups, ...rest } = next;
-      next = { ...rest, channelGroups: groups };
+    if ("groups" in r && !("channelGroups" in r)) {
+      const { groups, ...rest } = r;
+      return { ...rest, channelGroups: groups };
     }
-    return next;
+    return r;
   },
   objectType({
     metadata: DocumentMetadataSchema.default({}),

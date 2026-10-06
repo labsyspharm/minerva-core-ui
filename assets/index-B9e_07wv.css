@@ -7027,6 +7027,119 @@ body[data-color-mode*='light'] {
   margin-top: -1px;
   cursor: row-resize;
 }
+._toolbar_1hbkn_1 {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  row-gap: 4px;
+  width: max-content;
+  max-width: calc(100% - 20px);
+  padding: 4px 6px;
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
+  pointer-events: auto;
+  transform: translateX(-50%);
+}
+
+._group_1hbkn_20 {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+._group_1hbkn_20 + ._group_1hbkn_20 {
+  margin-left: 6px;
+  padding-left: 6px;
+  border-left: 1px solid var(--minerva-edge);
+}
+
+._field_1hbkn_33 {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  margin: 0 4px;
+  color: var(--minerva-quiet);
+  font-size: 13px;
+  font-weight: 600;
+  user-select: none;
+}
+
+._prefix_1hbkn_44 {
+  margin-right: 4px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+._input_1hbkn_51 {
+  box-sizing: border-box;
+  width: 4rem;
+  height: 26px;
+  padding: 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  line-height: 24px;
+}
+._layer_y32ny_1 {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+._frame_y32ny_9 {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+._body_y32ny_18 {
+  fill: transparent;
+  stroke: var(--minerva-blue);
+  stroke-width: 1.5;
+  pointer-events: all;
+  cursor: move;
+  touch-action: none;
+}
+
+._stem_y32ny_27 {
+  stroke: var(--minerva-blue);
+  stroke-width: 1.5;
+}
+
+._handle_y32ny_32,
+._knob_y32ny_33 circle {
+  fill: #fff;
+  stroke: var(--minerva-blue);
+  stroke-width: 1.5;
+}
+
+._handle_y32ny_32,
+._knob_y32ny_33 {
+  pointer-events: all;
+  touch-action: none;
+}
+
+._knob_y32ny_33 {
+  color: var(--minerva-blue);
+  cursor: grab;
+}
+
+._knob_y32ny_33:active {
+  cursor: grabbing;
+}
 ._main_1boo4_1 {
   position: relative;
   height: 100%;
