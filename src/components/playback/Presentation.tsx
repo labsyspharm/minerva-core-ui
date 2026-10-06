@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent, ReactElement } from "react";
+import type { CSSProperties, MouseEvent, ReactElement, ReactNode } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
@@ -16,16 +16,99 @@ import {
 import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
 import styles from "./Presentation.module.css";
 
-/** Shared by authoring preview and the CDN story player bundle. */
+/** CDN story player layout. Authoring preview composes the pieces below. */
 export type PresentationProps = {
   children: ReactElement;
-  /** When set, shows the authoring “Back / Story preview” ribbon. */
-  exitPlaybackPreview?: () => void;
-  /**
-   * When true (CDN player), show the document title in the top ribbon without
-   * authoring “Back” / “Story preview” controls.
-   */
+  /** Show the document title in the top ribbon. */
   showDocumentTitle?: boolean;
+};
+
+/** One waypoint and no markdown: the nav has nothing to show. */
+function usePresentationNavHidden() {
+  return useDocumentStore(
+    (s) => s.waypoints.length === 1 && !(s.waypoints[0]?.content ?? "").trim(),
+  );
+}
+
+/** Same element whether active or not, so children (the Deck) stay mounted. */
+export function PresentationFrame(props: {
+  active: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={
+        props.active
+          ? `${styles.frame} ${styles.presentation} minerva-seal`
+          : styles.frame
+      }
+    >
+      {props.children}
+    </div>
+  );
+}
+
+/** Top ribbon; `exitPlaybackPreview` adds the authoring “Back / Story preview” controls. */
+export function PresentationRibbon(props: {
+  exitPlaybackPreview?: () => void;
+}) {
+  const documentTitle = useDocumentStore((s) => s.metadata.title ?? "");
+  const ribbonDocTitle = documentTitle.trim() || "Untitled story";
+  const flushTitle = !props.exitPlaybackPreview;
+  return (
+    <div className={`${minervaTheme.bar} ${styles.previewRibbon}`}>
+      {props.exitPlaybackPreview ? (
+        <PanelActionButton
+          type="button"
+          onClick={props.exitPlaybackPreview}
+          title="Back to editing"
+          aria-label="Back to editing"
+        >
+          <ChevronDownIcon
+            className={styles.previewRibbonChevron}
+            aria-hidden
+          />
+          <span>Back</span>
+        </PanelActionButton>
+      ) : null}
+      <span
+        title={ribbonDocTitle}
+        className={[
+          minervaTheme.title,
+          styles.previewRibbonDocumentTitle,
+          flushTitle ? styles.previewRibbonDocumentTitleFlush : null,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <StorySpines />
+        {ribbonDocTitle}
+      </span>
+      {props.exitPlaybackPreview ? (
+        <span className={styles.previewRibbonPreviewBadge}>Story preview</span>
+      ) : null}
+    </div>
+  );
+}
+
+export const Presentation = (props: PresentationProps) => {
+  const hideNavPane = usePresentationNavHidden();
+  return (
+    <PresentationFrame active>
+      {props.showDocumentTitle ? <PresentationRibbon /> : null}
+      <div
+        className={[
+          styles.splitGrid,
+          hideNavPane ? styles.splitGridViewerOnly : null,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <PresentationNav showStoryName={!props.showDocumentTitle} />
+        <div className={styles.presentationViewerRegion}>{props.children}</div>
+      </div>
+    </PresentationFrame>
+  );
 };
 
 /** Square viewBox so the glyph’s visual center matches the SVG box center. */
@@ -54,7 +137,11 @@ const NavChevron = (props: { dir: "left" | "right"; px: number }) => {
   );
 };
 
-export const Presentation = (props: PresentationProps) => {
+/**
+ * Waypoint nav pane plus playback effects (camera fly, group, shapes). Stays
+ * mounted while presenting even when the pane itself is hidden.
+ */
+export function PresentationNav(props: { showStoryName: boolean }) {
   const documentTitle = useDocumentStore((s) => s.metadata.title ?? "");
   const waypoints = useDocumentStore((s) => s.waypoints);
   const shapes = useDocumentStore((s) => s.shapes);
@@ -308,9 +395,6 @@ export const Presentation = (props: PresentationProps) => {
   const story = waypoints[activeStoryIndex];
   const story_title = story?.title ?? `Waypoint ${activeStoryIndex + 1}`;
   const story_content = story?.content;
-  const ribbonDocTitle = documentTitle.trim()
-    ? documentTitle.trim()
-    : "Untitled story";
 
   // Scroll waypoint content back to top when changing to a different waypoint.
   const contentPaneRef = useRef<HTMLDivElement>(null);
@@ -358,118 +442,63 @@ export const Presentation = (props: PresentationProps) => {
     return { processedContent: content, channelColors: colors };
   }, [story_content, activeChannelGroupId, channelGroups, sourceChannels]);
 
-  const showRibbon = Boolean(
-    props.exitPlaybackPreview || props.showDocumentTitle,
-  );
   /** Left-nav title only when there is no top ribbon (ribbon already shows it). */
   const navStoryName =
-    !showRibbon && documentTitle.trim() ? documentTitle.trim() : "";
-  const flushTitle = !props.exitPlaybackPreview;
-  /** One waypoint and no markdown: the nav has nothing to show. */
-  const hideNavPane =
-    waypoints.length === 1 && !(waypoints[0]?.content ?? "").trim();
+    props.showStoryName && documentTitle.trim() ? documentTitle.trim() : "";
+  const hideNavPane = usePresentationNavHidden();
+  if (hideNavPane) return null;
 
   return (
-    <div className={`${styles.presentation} minerva-seal`}>
-      {showRibbon ? (
-        <div className={`${minervaTheme.bar} ${styles.previewRibbon}`}>
-          {props.exitPlaybackPreview ? (
-            <PanelActionButton
-              type="button"
-              onClick={props.exitPlaybackPreview}
-              title="Back to editing"
-              aria-label="Back to editing"
-            >
-              <ChevronDownIcon
-                className={styles.previewRibbonChevron}
-                aria-hidden
-              />
-              <span>Back</span>
-            </PanelActionButton>
-          ) : null}
-          <span
-            title={ribbonDocTitle}
-            className={[
-              minervaTheme.title,
-              styles.previewRibbonDocumentTitle,
-              flushTitle ? styles.previewRibbonDocumentTitleFlush : null,
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            <StorySpines />
-            {ribbonDocTitle}
-          </span>
-          {props.exitPlaybackPreview ? (
-            <span className={styles.previewRibbonPreviewBadge}>
-              Story preview
-            </span>
-          ) : null}
-        </div>
+    <div
+      className={[
+        styles.navPane,
+        navStoryName ? styles.navPaneHasStoryName : null,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {navStoryName ? (
+        <div className={styles.storyTitle}>{navStoryName}</div>
       ) : null}
-      <div
-        className={[
-          styles.splitGrid,
-          hideNavPane ? styles.splitGridViewerOnly : null,
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        {hideNavPane ? null : (
-          <div
-            className={[
-              styles.navPane,
-              navStoryName ? styles.navPaneHasStoryName : null,
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            {navStoryName ? (
-              <div className={styles.storyTitle}>{navStoryName}</div>
-            ) : null}
-            <div className={styles.toolbar}>
-              {toc_button}
-              <StoryLeft active={!first_story} />
-              {count}
-              <StoryRight active={!last_story} />
-            </div>
-            <div ref={contentPaneRef} className={styles.contentWrap}>
-              <h2 className={styles.heading}>{story_title}</h2>
-              <ReactMarkdown
-                components={{
-                  strong: ({ children }) => {
-                    const text = String(children);
-                    const color = channelColors.get(text);
-                    return color ? (
-                      <span
-                        className={styles.channelName}
-                        style={{ "--channel-color": color } as CSSProperties}
-                      >
-                        {text}
-                      </span>
-                    ) : (
-                      <strong>{children}</strong>
-                    );
-                  },
-                }}
-              >
-                {processedContent}
-              </ReactMarkdown>
-              {first_story && <TableOfContents waypoints={waypoints} />}
-              <div className={styles.inlineNext}>
-                {last_story ? (
-                  <p>End</p>
-                ) : (
-                  <>
-                    {story_next} <StoryRight active={!last_story} />
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-        <div className={styles.presentationViewerRegion}>{props.children}</div>
+      <div className={styles.toolbar}>
+        {toc_button}
+        <StoryLeft active={!first_story} />
+        {count}
+        <StoryRight active={!last_story} />
+      </div>
+      <div ref={contentPaneRef} className={styles.contentWrap}>
+        <h2 className={styles.heading}>{story_title}</h2>
+        <ReactMarkdown
+          components={{
+            strong: ({ children }) => {
+              const text = String(children);
+              const color = channelColors.get(text);
+              return color ? (
+                <span
+                  className={styles.channelName}
+                  style={{ "--channel-color": color } as CSSProperties}
+                >
+                  {text}
+                </span>
+              ) : (
+                <strong>{children}</strong>
+              );
+            },
+          }}
+        >
+          {processedContent}
+        </ReactMarkdown>
+        {first_story && <TableOfContents waypoints={waypoints} />}
+        <div className={styles.inlineNext}>
+          {last_story ? (
+            <p>End</p>
+          ) : (
+            <>
+              {story_next} <StoryRight active={!last_story} />
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
-};
+}

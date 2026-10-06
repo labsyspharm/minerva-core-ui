@@ -1,18 +1,19 @@
 import type { ReactNode } from "react";
 import { AuthorView } from "@/components/authoring/AuthorSidebar";
 import { ImageExporter } from "@/components/playback/ImageExporter";
-import { Presentation } from "@/components/playback/Presentation";
 import {
-  type StoryPlaybackLoaders,
-  StoryPlaybackView,
-} from "@/components/playback/StoryPlaybackView";
+  PresentationFrame,
+  PresentationNav,
+  PresentationRibbon,
+} from "@/components/playback/Presentation";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
+import type { Image } from "@/lib/stores/documentStore";
 import type { StoryExportMode } from "@/lib/storyExport/storyBundle";
 import styles from "./PlaybackModeView.module.css";
 
-export type PlaybackModeViewProps = StoryPlaybackLoaders & {
+export type PlaybackModeViewProps = {
   viewer: ReactNode;
   imagesPanel: ReactNode;
   hiddenChannel: boolean;
@@ -22,6 +23,8 @@ export type PlaybackModeViewProps = StoryPlaybackLoaders & {
   ioState: null | string;
   stopExport: () => void;
   presenting: boolean;
+  /** Images the viewer paints (export colors for ungrouped channels while presenting). */
+  viewerImages: Image[];
   directory_handle: FileSystemDirectoryHandle;
   exitPlaybackPreview?: () => void;
   dicomIndexList: DicomIndex[];
@@ -38,31 +41,12 @@ export type PlaybackModeViewProps = StoryPlaybackLoaders & {
   } | null;
 };
 
+/**
+ * Authoring and Story preview share one tree so the viewer's Deck is never
+ * unmounted: a remount would re-init already-finalized deck.gl layers.
+ */
 export const PlaybackModeView = (props: PlaybackModeViewProps) => {
-  const channelPanelProps = {
-    hiddenChannel: props.hiddenChannel,
-    noLoader: props.noLoader,
-  };
-
-  if (props.presenting) {
-    return (
-      <div
-        key="presenting"
-        className={styles.modeViewport}
-        data-mode="presenting"
-      >
-        <Presentation exitPlaybackPreview={props.exitPlaybackPreview}>
-          <StoryPlaybackView
-            jpegLoaderEntries={props.jpegLoaderEntries}
-            setJpegLoaderEntries={props.setJpegLoaderEntries}
-            omeLoaderEntries={props.omeLoaderEntries}
-            dicomIndexList={props.dicomIndexList}
-          />
-        </Presentation>
-      </div>
-    );
-  }
-
+  const { presenting } = props;
   const exporting = props.ioState === "EXPORTING";
   const folderPrompt = props.exportFolderPrompt;
   const overlayOpen = exporting || !!folderPrompt;
@@ -77,10 +61,15 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
 
   return (
     <div
-      key="author"
       className={styles.modeViewport}
       data-mode={
-        exporting ? "exporting" : folderPrompt ? "export-dest" : "author"
+        presenting
+          ? "presenting"
+          : exporting
+            ? "exporting"
+            : folderPrompt
+              ? "export-dest"
+              : "author"
       }
     >
       <div
@@ -91,15 +80,31 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
           .filter(Boolean)
           .join(" ")}
       >
-        <AuthorView
-          imagesPanel={props.imagesPanel}
-          noLoader={props.noLoader}
-          ensureChannelHistograms={props.ensureChannelHistograms}
-          contrastEditable={props.contrastEditable}
-          viewer={
-            <ChannelPanel {...channelPanelProps}>{props.viewer}</ChannelPanel>
-          }
-        />
+        <PresentationFrame active={presenting}>
+          {presenting ? (
+            <PresentationRibbon
+              exitPlaybackPreview={props.exitPlaybackPreview}
+            />
+          ) : null}
+          <AuthorView
+            imagesPanel={props.imagesPanel}
+            noLoader={props.noLoader}
+            ensureChannelHistograms={props.ensureChannelHistograms}
+            contrastEditable={props.contrastEditable}
+            previewNav={
+              presenting ? <PresentationNav showStoryName={false} /> : undefined
+            }
+            viewer={
+              <ChannelPanel
+                hiddenChannel={!presenting && props.hiddenChannel}
+                noLoader={props.noLoader}
+                images={props.viewerImages}
+              >
+                {props.viewer}
+              </ChannelPanel>
+            }
+          />
+        </PresentationFrame>
       </div>
       {folderPrompt ? (
         <div className={styles.exportOverlay}>

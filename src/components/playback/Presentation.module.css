@@ -10,11 +10,15 @@
   box-sizing: border-box;
 }
 
-.presentation {
+/** `PresentationFrame` layout; `.presentation` adds tokens when active. */
+.frame {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
+}
+
+.presentation {
   overflow: hidden;
   color: var(--minerva-ink);
   font-family: var(--minerva-font);

@@ -91,6 +91,25 @@
   grid-template-columns: var(--author-collapsed-rail, 2.5rem) 1fr;
 }
 
+/** Story preview: nav column collapses to 0 when the nav pane renders nothing. */
+.viewportPreview {
+  grid-template-columns: auto 1fr;
+}
+
+.previewNav {
+  grid-column: 1;
+  grid-row: 1;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.previewNav:not(:empty) {
+  width: 350px;
+}
+
 .viewerRegion {
   grid-column: 2;
   grid-row: 1;

@@ -67,7 +67,7 @@ function useStoryPlaybackLayers(
   });
 }
 
-/** Shared ChannelPanel + ImageViewer under Presentation (CDN + Story preview). */
+/** CDN player's ChannelPanel + ImageViewer under Presentation. */
 export function StoryPlaybackView(props: StoryPlaybackLoaders) {
   const { omeLoaderEntries } = props;
   const storeImages = useDocumentStore((s) => s.images);

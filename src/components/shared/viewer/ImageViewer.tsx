@@ -1229,11 +1229,15 @@ export const ImageViewer = (props: ImageViewerProps) => {
       const flat = toFlatViewState(ortho) ?? toFlatViewState(nextViewState);
       if (flat) {
         cameraRef.current = withOrthoZoom(flat);
-        publishPyramidHud(flat.zoom);
       } else if (nextViewState) {
         cameraRef.current = nextViewState as OrthographicViewState;
       }
-      arrangeLayoutRef.current?.();
+      // DeckGL can call this while rendering (a resize re-applies a waypoint
+      // transition in deck.setProps); React state updates must wait.
+      queueMicrotask(() => {
+        if (flat) publishPyramidHud(flat.zoom);
+        arrangeLayoutRef.current?.();
+      });
     },
     [isDragging, publishPyramidHud],
   );
