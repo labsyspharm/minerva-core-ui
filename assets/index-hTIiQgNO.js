@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-PXmOEpq3.js","./pako.esm-KbdoS3Oq.js","./lerc-Ci-iOaUl.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DdX1EIbH.js","./pako.esm-KbdoS3Oq.js","./lerc-wXnP1Kh2.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -76303,26 +76303,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DG2Vzj7a.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DixM9fSh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Behy5SJH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BfnKOGCI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-dDxm8_X8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-Bm9ilyJ8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-PXmOEpq3.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DqZ976hZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Ci-iOaUl.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DdX1EIbH.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-VgirMbQR.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-wXnP1Kh2.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-D6hgMk59.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-D6hSqueM.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-v61gcMp7.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-V8sKtvda.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -172218,6 +172218,39 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       samToImage
     };
   }
+  function canvasToFloat32Array(canvas) {
+    const { width, height } = canvas;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not get 2d context");
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const { data: data2 } = imageData;
+    const total = width * height * 3;
+    const float32Array = new Float32Array(total);
+    const rescale = 1 / 255;
+    const meanR = 0.485;
+    const meanG = 0.456;
+    const meanB = 0.406;
+    const stdR = 0.229;
+    const stdG = 0.224;
+    const stdB = 0.225;
+    for (let i2 = 0; i2 < width * height; i2++) {
+      const r2 = data2[i2 * 4] * rescale;
+      const g2 = data2[i2 * 4 + 1] * rescale;
+      const b2 = data2[i2 * 4 + 2] * rescale;
+      float32Array[i2] = (r2 - meanR) / stdR;
+      float32Array[width * height + i2] = (g2 - meanG) / stdG;
+      float32Array[width * height * 2 + i2] = (b2 - meanB) / stdB;
+    }
+    return {
+      float32Array,
+      shape: [
+        1,
+        3,
+        height,
+        width
+      ]
+    };
+  }
   function float32ArrayToCanvas(float32Array, width, height) {
     const canvas = document.createElement("canvas");
     canvas.width = width;
@@ -250191,13 +250224,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   const MOZJPEG_COLORSPACE_GRAYSCALE = 1;
   const JPEG_EXPORT_QUALITY = 0.95;
-  function clampValue(x2, min2, max2) {
+  function clampValue$1(x2, min2, max2) {
     if (max2 === min2) return 0;
     return Math.min(255, Math.max(0, 255 * (x2 - min2) / (max2 - min2)));
   }
   function clampPixelsToRgba(out, pixels, min2, max2) {
     for (let i2 = 0; i2 < pixels.length; i2++) {
-      const clamped = clampValue(pixels[i2], min2, max2);
+      const clamped = clampValue$1(pixels[i2], min2, max2);
       const o2 = i2 * 4;
       out[o2] = clamped;
       out[o2 + 1] = clamped;
@@ -254003,6 +254036,131 @@ uniform classStyleUniforms {
       }
     });
   }
+  function clampValue(x2, min2, max2) {
+    if (max2 <= min2) return min2;
+    return Math.min(255, Math.max(0, Math.round(255 * (x2 - min2) / (max2 - min2))));
+  }
+  function pickPyramidLevel(levels, viewRect, samSize) {
+    const viewW = viewRect.maxX - viewRect.minX;
+    const viewH = viewRect.maxY - viewRect.minY;
+    const longerSide = Math.max(viewW, viewH);
+    if (longerSide <= 0) return 0;
+    const idealLevel = Math.max(0, Math.floor(Math.log2(longerSide / samSize)));
+    return Math.min(idealLevel, levels.length - 1);
+  }
+  function createSam2ImageFetcher(loader, settings, imageWidth, imageHeight) {
+    var _a2;
+    if (!((_a2 = loader == null ? void 0 : loader.data) == null ? void 0 : _a2.length) || !settings) return null;
+    const SAM_SIZE = 1024;
+    return async (viewRect) => {
+      Math.max(1, viewRect.maxX - viewRect.minX);
+      Math.max(1, viewRect.maxY - viewRect.minY);
+      const level = pickPyramidLevel(loader.data, viewRect, SAM_SIZE);
+      const plane = loader.data[level];
+      const { tileSize } = plane;
+      const labels = Array.from(plane.labels ?? []);
+      const shape = plane.shape ?? [];
+      const xIdx = labels.indexOf("x") >= 0 ? labels.indexOf("x") : shape.length - 1;
+      const yIdx = labels.indexOf("y") >= 0 ? labels.indexOf("y") : shape.length - 2;
+      const levelW = shape[xIdx] ?? imageWidth;
+      const levelH = shape[yIdx] ?? imageHeight;
+      const scaleX2 = levelW / imageWidth;
+      const scaleY2 = levelH / imageHeight;
+      const lvlMinX = Math.max(0, Math.floor(viewRect.minX * scaleX2));
+      const lvlMinY = Math.max(0, Math.floor(viewRect.minY * scaleY2));
+      const lvlMaxX = Math.min(levelW, Math.ceil(viewRect.maxX * scaleX2));
+      const lvlMaxY = Math.min(levelH, Math.ceil(viewRect.maxY * scaleY2));
+      const cropW = Math.max(1, lvlMaxX - lvlMinX);
+      const cropH = Math.max(1, lvlMaxY - lvlMinY);
+      const tileXMin = Math.floor(lvlMinX / tileSize);
+      const tileYMin = Math.floor(lvlMinY / tileSize);
+      const tileXMax = Math.floor((lvlMaxX - 1) / tileSize);
+      const tileYMax = Math.floor((lvlMaxY - 1) / tileSize);
+      const canvas = document.createElement("canvas");
+      canvas.width = cropW;
+      canvas.height = cropH;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not get 2d context");
+      const imageData = ctx.createImageData(cropW, cropH);
+      const outData = imageData.data;
+      outData.fill(0);
+      const signal = AbortSignal.timeout(3e4);
+      let hasData = false;
+      for (let ch2 = 0; ch2 < settings.selections.length; ch2++) {
+        if (!settings.channelsVisible[ch2]) continue;
+        const sel = settings.selections[ch2];
+        const [low, high] = settings.contrastLimits[ch2] ?? [
+          0,
+          65535
+        ];
+        const [r2, g2, b2] = settings.colors[ch2] ?? [
+          255,
+          255,
+          255
+        ];
+        for (let ty = tileYMin; ty <= tileYMax; ty++) {
+          for (let tx = tileXMin; tx <= tileXMax; tx++) {
+            const tile = await plane.getTile({
+              selection: {
+                z: sel.z,
+                t: sel.t,
+                c: sel.c
+              },
+              x: tx,
+              y: ty,
+              signal
+            });
+            const { data: data2, width: tw, height: th2 } = tile;
+            const tilePixelX = tx * tileSize;
+            const tilePixelY = ty * tileSize;
+            const isUint16 = data2 instanceof Uint16Array;
+            for (let py = 0; py < th2; py++) {
+              for (let px = 0; px < tw; px++) {
+                const imgX = tilePixelX + px;
+                const imgY = tilePixelY + py;
+                const cropX = imgX - lvlMinX;
+                const cropY = imgY - lvlMinY;
+                if (cropX < 0 || cropX >= cropW || cropY < 0 || cropY >= cropH) continue;
+                hasData = true;
+                const tileIdx = py * tw + px;
+                const raw2 = isUint16 ? data2[tileIdx] : data2[tileIdx];
+                const v2 = clampValue(raw2, low, high);
+                const outIdx = (cropY * cropW + cropX) * 4;
+                outData[outIdx] = Math.min(255, outData[outIdx] + v2 * r2 / 255);
+                outData[outIdx + 1] = Math.min(255, outData[outIdx + 1] + v2 * g2 / 255);
+                outData[outIdx + 2] = Math.min(255, outData[outIdx + 2] + v2 * b2 / 255);
+                outData[outIdx + 3] = 255;
+              }
+            }
+          }
+        }
+      }
+      if (!hasData) {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, cropW, cropH);
+      } else {
+        ctx.putImageData(imageData, 0, 0);
+      }
+      const longerSide = Math.max(cropW, cropH);
+      const drawScale = SAM_SIZE / longerSide;
+      const drawW = Math.round(cropW * drawScale);
+      const drawH = Math.round(cropH * drawScale);
+      const offsetX = Math.round((SAM_SIZE - drawW) / 2);
+      const offsetY = Math.round((SAM_SIZE - drawH) / 2);
+      const samCanvas = document.createElement("canvas");
+      samCanvas.width = SAM_SIZE;
+      samCanvas.height = SAM_SIZE;
+      const samCtx = samCanvas.getContext("2d");
+      if (!samCtx) throw new Error("Could not get 2d context");
+      samCtx.clearRect(0, 0, SAM_SIZE, SAM_SIZE);
+      samCtx.drawImage(canvas, 0, 0, cropW, cropH, offsetX, offsetY, drawW, drawH);
+      const { float32Array, shape: s2 } = canvasToFloat32Array(samCanvas);
+      return {
+        float32Array,
+        shape: s2
+      };
+    };
+  }
   const main = "_main_1boo4_1";
   const pyramidHud = "_pyramidHud_1boo4_6";
   const squareViewportOverlay = "_squareViewportOverlay_1boo4_27";
@@ -254085,6 +254243,16 @@ uniform classStyleUniforms {
       ]
     }
   });
+  const TOOLS_THAT_DRAW_ON_DRAG = /* @__PURE__ */ new Set([
+    "rectangle",
+    "ellipse",
+    "arrow",
+    "line",
+    "lasso",
+    "polyline",
+    "brush",
+    "point"
+  ]);
   const createDragHandlers = (activeTool, onInteraction, getScreenFromWorld) => {
     if (!onInteraction) {
       return {
@@ -254140,7 +254308,11 @@ uniform classStyleUniforms {
         }
         if (coord) emit("click", coord);
       },
-      onDragStart: (info) => {
+      onDragStart: (info, event) => {
+        var _a2;
+        if (TOOLS_THAT_DRAW_ON_DRAG.has(activeTool) || activeTool === "move" && !!store().hoverState.hoveredShapeId) {
+          (_a2 = event == null ? void 0 : event.stopImmediatePropagation) == null ? void 0 : _a2.call(event);
+        }
         const coord = toCoord(info);
         if (coord && activeTool === "brush" && getScreenFromWorld) {
           const screen = getScreenFromWorld(coord[0], coord[1]);
@@ -254405,6 +254577,7 @@ uniform classStyleUniforms {
     const setViewerImageLayersLoaded = useAppStore((s2) => s2.setViewerImageLayersLoaded);
     const setSam2ViewState = useAppStore((s2) => s2.setSam2ViewState);
     const setSam2ViewportSize = useAppStore((s2) => s2.setSam2ViewportSize);
+    const setSam2ImageFetcher = useAppStore((s2) => s2.setSam2ImageFetcher);
     const deckInitialViewState = reactExports.useMemo(() => deckViewStates(orthoSeed, viewportSize.width, viewportSize.height), [
       orthoSeed,
       viewportSize.width,
@@ -254481,6 +254654,41 @@ uniform classStyleUniforms {
       viewportSize,
       setSam2ViewportSize,
       setViewerViewportSize
+    ]);
+    reactExports.useEffect(() => {
+      const loader = firstLoader == null ? void 0 : firstLoader.loader;
+      const settings = mainSettingsList[0];
+      const width = (frame2 == null ? void 0 : frame2.pixelWidth) ?? 0;
+      const height = (frame2 == null ? void 0 : frame2.pixelHeight) ?? 0;
+      if (!loader || !settings || width <= 0 || height <= 0) {
+        setSam2ImageFetcher(null);
+        return;
+      }
+      setSam2ImageFetcher(createSam2ImageFetcher(loader, {
+        selections: settings.selections.map((s2) => ({
+          z: 0,
+          t: 0,
+          c: s2.c
+        })),
+        colors: settings.colors.map((c2) => [
+          c2[0],
+          c2[1],
+          c2[2]
+        ]),
+        contrastLimits: settings.contrastLimits.map((lim) => [
+          lim[0],
+          lim[1]
+        ]),
+        channelsVisible: [
+          ...settings.channelsVisible ?? settings.selections.map(() => true)
+        ]
+      }, width, height));
+      return () => setSam2ImageFetcher(null);
+    }, [
+      firstLoader,
+      mainSettingsList,
+      frame2,
+      setSam2ImageFetcher
     ]);
     reactExports.useEffect(() => {
       registerViewerLiveSnapshotReader(() => {
@@ -254838,7 +255046,7 @@ uniform classStyleUniforms {
       sam2Processing
     ]);
     const controllerConfig = reactExports.useMemo(() => ({
-      dragPan: !(activeTool === "move" && !!hoveredShapeId) && !isDragging,
+      dragPan: !TOOLS_THAT_DRAW_ON_DRAG.has(activeTool) && !(activeTool === "move" && !!hoveredShapeId) && !isDragging,
       dragRotate: false,
       scrollZoom: true,
       doubleClickZoom: true,
@@ -255470,12 +255678,12 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-10-06T14:38:29.290Z");
+    const label2 = utcShort("2026-10-06T17:22:46.413Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$1.stamp,
       "aria-hidden": true,
-      title: "2026-10-06T14:38:29.290Z",
+      title: "2026-10-06T17:22:46.413Z",
       children: [
         "Updated ",
         label2,
