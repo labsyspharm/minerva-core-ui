@@ -101,6 +101,15 @@
   max-height: 100%;
 }
 
+/** Single empty waypoint: no nav column, viewer fills the row. */
+.splitGridViewerOnly {
+  grid-template-columns: 1fr;
+}
+
+.splitGridViewerOnly > .presentationViewerRegion {
+  max-height: 100%;
+}
+
 /** Positioned containing block so author .root.grid (absolute + inset 0) fills viewer area only */
 .presentationViewerRegion {
   position: relative;

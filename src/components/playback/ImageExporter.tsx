@@ -17,6 +17,7 @@ import {
 import { jpegPyramidFolderName } from "@/lib/imaging/jpegPyramid";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import { jpegPyramidExportChannels } from "@/lib/imaging/omeTiffExport";
+import { paintUngroupedExportColors } from "@/lib/imaging/psudoPalette";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   type StoryExportMode,
@@ -358,9 +359,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     }
     if (pyramidChannels.length === 0) {
       setCRange([]);
-      setExportError(
-        "Add a channel group with at least one channel before exporting.",
-      );
+      setExportError("No channels to export.");
       return;
     }
     setExportError(null);
@@ -402,9 +401,16 @@ export const ImageExporter = (props: ImageExporterProps) => {
     setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
     void (async () => {
       try {
+        const doc = useDocumentStore.getState().toDocumentData();
         await writeStoryBundleSidecars(
           directory_handle,
-          useDocumentStore.getState().toDocumentData(),
+          {
+            ...doc,
+            images: await paintUngroupedExportColors(
+              doc.images,
+              doc.channelGroups,
+            ),
+          },
           { mode: "remote-url" },
         );
         if (cancelled) return;
@@ -448,8 +454,9 @@ export const ImageExporter = (props: ImageExporterProps) => {
               loader: d.loader as OmeLoaderEntry["loader"],
               sourceImageId: d.sourceImageId as string,
             }));
-    const imagesSnapshot = useDocumentStore.getState().images;
-    const channelGroupsSnapshot = useDocumentStore.getState().channelGroups;
+    const docAtStart = useDocumentStore.getState();
+    const channelGroupsSnapshot = docAtStart.channelGroups;
+    const imagesAtStart = docAtStart.images;
 
     setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
 
@@ -459,6 +466,10 @@ export const ImageExporter = (props: ImageExporterProps) => {
 
     void (async () => {
       try {
+        const imagesSnapshot = await paintUngroupedExportColors(
+          imagesAtStart,
+          channelGroupsSnapshot,
+        );
         const remappedImages = await exportJpegOmeTiffStory({
           directory: directory_handle,
           omeLoaderEntries: loaderEntries,
@@ -524,11 +535,11 @@ export const ImageExporter = (props: ImageExporterProps) => {
     if (mode !== "jpeg-pyramid" || !exportArmed || exportError) return;
     if (!state) return;
     if (cRange !== null && cRange.length === 0) {
-      setExportError("No exportable channels in the current channel groups.");
+      setExportError("No channels to export.");
       return;
     }
     if (state.indices.length === 0) {
-      setExportError("No exportable channels in the current channel groups.");
+      setExportError("No channels to export.");
       return;
     }
 
@@ -609,6 +620,10 @@ export const ImageExporter = (props: ImageExporterProps) => {
           directory_handle,
           {
             ...doc,
+            images: await paintUngroupedExportColors(
+              doc.images,
+              doc.channelGroups,
+            ),
             metadata: { ...doc.metadata, imageSource: nextSource },
           },
           { mode: "jpeg-pyramid" },

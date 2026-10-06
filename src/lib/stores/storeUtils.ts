@@ -15,6 +15,7 @@
  */
 
 import type { ConfigWaypoint } from "../authoring/config";
+import { effectiveOrientation } from "../imaging/imageOrientation";
 import { type Loader, loaderPixelSizeXY } from "../imaging/viv";
 import {
   importedLineStyle,
@@ -45,6 +46,7 @@ import type {
   FeatureTable,
   Image,
   ImageChannel,
+  ImageOrientation,
   ImageSource,
   Point,
   StoryShape,
@@ -177,6 +179,9 @@ export function applySourceChannelsToImages(
           sizeC: chans.length,
           omeXmlHash: "",
           basename: "",
+          rotationDegrees: 0,
+          flipHorizontal: false,
+          flipVertical: false,
           channels: chans,
         },
       ];
@@ -223,6 +228,19 @@ export function setImageBasename(
   if (idx < 0) return images;
   const next = [...images];
   next[idx] = { ...next[idx], basename: basename.trim() };
+  return next;
+}
+
+/** Write placement onto one image. Defaults are stored. */
+export function setImageOrientation(
+  images: Image[],
+  imageId: string,
+  orientation: ImageOrientation,
+): Image[] {
+  const idx = images.findIndex((im) => im.id === imageId);
+  if (idx < 0) return images;
+  const next = [...images];
+  next[idx] = { ...next[idx], ...effectiveOrientation(orientation) };
   return next;
 }
 

@@ -1,10 +1,13 @@
-import { fileOpen } from "browser-fs-access";
 import type { DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FeatureCsvColumnPick } from "@/components/shared/channel/FeatureTable";
+import {
+  FeatureCsvColumnPick,
+  pickFeatureCsv,
+} from "@/components/shared/channel/FeatureTable";
 import { ImageChannelOverviewCard } from "@/components/shared/channel/ImageChannelOverview";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import { ImportOverlay } from "@/components/shared/ImportOverlay";
+import MoveIcon from "@/components/shared/icons/move.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
   PanelActionButton,
@@ -39,6 +42,7 @@ import {
   detectOmeTiffMask,
   detectOmeTiffPlanarRgbAmbiguity,
 } from "@/lib/imaging/omeTiff";
+import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentStore";
 import {
   flattenImageChannelsInDocumentOrder,
@@ -49,8 +53,8 @@ import styles from "./Upload.module.css";
 
 export type { OmeImportResult };
 
-function ReplaceIcon({ title, size = 14 }: { title?: string; size?: number }) {
-  const label = title ?? "Replace";
+function BrowseIcon({ title, size = 14 }: { title?: string; size?: number }) {
+  const label = title ?? "Browse for image";
   return (
     <svg
       aria-hidden={title ? undefined : true}
@@ -60,7 +64,7 @@ function ReplaceIcon({ title, size = 14 }: { title?: string; size?: number }) {
       fill="currentColor"
     >
       <title>{label}</title>
-      <path d="M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l1.46 1.46C18.69 15.33 19 14.2 19 13c0-3.87-3.13-7-7-7zm0 10c-2.76 0-5-2.24-5-5 0-.65.13-1.26.36-1.83L5.9 7.71C5.31 8.67 5 9.8 5 11c0 3.87 3.13 7 7 7v3l4-4-4-4v3z" />
+      <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
     </svg>
   );
 }
@@ -74,8 +78,8 @@ export type LoadedSourceSummary = {
   channelCount: number;
 };
 
-/** Intensity stack vs label / segmentation file. */
 export type OmeImportRequest = {
+  /** Intensity stack vs label / segmentation file. */
   role: OmeImageImportRole;
   append: boolean;
   rgbDisplay?: boolean;
@@ -264,6 +268,8 @@ const Upload = (props: UploadProps) => {
   } = props;
 
   const images = useDocumentStore((s) => s.images);
+  const arrangeImageId = useAppStore((s) => s.arrangeImageId);
+  const setArrangeImageId = useAppStore((s) => s.setArrangeImageId);
   const hasImages =
     images.length > 0 || (!!imageLoaded && loadedSource != null);
 
@@ -303,7 +309,6 @@ const Upload = (props: UploadProps) => {
   const formatChosenByUserRef = useRef(false);
   const roleChosenByUserRef = useRef(false);
   const rgbDisplayChosenByUserRef = useRef(false);
-  const overlayRgbDisplayRef = useRef(false);
 
   const dicomAllowed =
     pending?.kind === "url" && overlayRole !== "segmentation";
@@ -346,7 +351,6 @@ const Upload = (props: UploadProps) => {
       formatChosenByUserRef.current = false;
       roleChosenByUserRef.current = false;
       rgbDisplayChosenByUserRef.current = false;
-      overlayRgbDisplayRef.current = false;
       const role = resolveImportRole("intensity", pendingLabel(next));
       let format = inferFormat(next);
       if (role === "segmentation") format = "ome-tiff";
@@ -402,7 +406,6 @@ const Upload = (props: UploadProps) => {
               if (ac.signal.aborted) return;
               setDetectedRgbDisplay(isBrightfield);
               if (!rgbDisplayChosenByUserRef.current) {
-                overlayRgbDisplayRef.current = isBrightfield;
                 setOverlayRgbDisplay(isBrightfield);
               }
             } catch (error) {
@@ -576,7 +579,7 @@ const Upload = (props: UploadProps) => {
       }
       const rgbDisplay =
         detectedRgbDisplay != null && role === "intensity"
-          ? overlayRgbDisplayRef.current
+          ? overlayRgbDisplay
           : undefined;
       const attachCsv = role === "segmentation" ? featureCsvFile : null;
       const beforeMaskIds = attachCsv
@@ -670,30 +673,39 @@ const Upload = (props: UploadProps) => {
             </div>
             <div className={styles.imageCardMeta}>{metaParts.join(" · ")}</div>
           </div>
-          {onReplaceImage || onRemoveImage ? (
-            <div className={styles.imageCardActions}>
-              {onReplaceImage &&
-              im.source?.kind !== "jpeg" &&
-              im.source?.kind !== "dicomWeb" ? (
-                <PanelIconButton
-                  title={`Replace ${title} with another OME-TIFF`}
-                  aria-label={`Replace ${title}`}
-                  onClick={() => void onReplaceImage(im.id)}
-                >
-                  <ReplaceIcon title="Replace image" size={14} />
-                </PanelIconButton>
-              ) : null}
-              {onRemoveImage ? (
-                <PanelIconButton
-                  title={`Delete ${title}`}
-                  aria-label={`Delete ${title}`}
-                  onClick={() => void onRemoveImage(im.id)}
-                >
-                  <TrashIcon title="Delete" size={14} />
-                </PanelIconButton>
-              ) : null}
-            </div>
-          ) : null}
+          <div className={styles.imageCardActions}>
+            <PanelIconButton
+              title="Arrange"
+              aria-label={`Arrange ${title}`}
+              aria-pressed={arrangeImageId === im.id}
+              active={arrangeImageId === im.id}
+              onClick={() =>
+                setArrangeImageId(arrangeImageId === im.id ? null : im.id)
+              }
+            >
+              <MoveIcon aria-hidden />
+            </PanelIconButton>
+            {onReplaceImage &&
+            im.source?.kind !== "jpeg" &&
+            im.source?.kind !== "dicomWeb" ? (
+              <PanelIconButton
+                title={`Browse for an image to replace ${title}`}
+                aria-label={`Browse for an image to replace ${title}`}
+                onClick={() => void onReplaceImage(im.id)}
+              >
+                <BrowseIcon title="Browse for image" size={14} />
+              </PanelIconButton>
+            ) : null}
+            {onRemoveImage ? (
+              <PanelIconButton
+                title={`Delete ${title}`}
+                aria-label={`Delete ${title}`}
+                onClick={() => void onRemoveImage(im.id)}
+              >
+                <TrashIcon title="Delete" size={14} />
+              </PanelIconButton>
+            ) : null}
+          </div>
         </div>
         <ImageChannelOverviewCard image={im} />
         {showAccessOverlay ? (
@@ -758,7 +770,9 @@ const Upload = (props: UploadProps) => {
         styles.addStrip,
         row ? styles.addStripRow : "",
         row && dragging ? styles.panelDropActive : "",
-      ].join(" ")}
+      ]
+        .filter(Boolean)
+        .join(" ")}
       {...(row ? dropHandlers : {})}
     >
       <button
@@ -875,7 +889,6 @@ const Upload = (props: UploadProps) => {
               onClick={() => {
                 roleChosenByUserRef.current = true;
                 rgbDisplayChosenByUserRef.current = true;
-                overlayRgbDisplayRef.current = false;
                 setOverlayRole("intensity");
                 setOverlayRgbDisplay(false);
               }}
@@ -891,7 +904,6 @@ const Upload = (props: UploadProps) => {
                 onClick={() => {
                   roleChosenByUserRef.current = true;
                   rgbDisplayChosenByUserRef.current = true;
-                  overlayRgbDisplayRef.current = true;
                   setOverlayRole("intensity");
                   setOverlayRgbDisplay(true);
                 }}
@@ -936,18 +948,8 @@ const Upload = (props: UploadProps) => {
                 type="button"
                 onClick={() => {
                   void (async () => {
-                    let file: File;
-                    try {
-                      file = await fileOpen({
-                        description: "Feature table CSV",
-                        mimeTypes: ["text/csv"],
-                        extensions: [".csv"],
-                        multiple: false,
-                      });
-                    } catch (e) {
-                      if (e instanceof Error && e.name === "AbortError") return;
-                      throw e;
-                    }
+                    const file = await pickFeatureCsv();
+                    if (!file) return;
                     setFeatureCsvFile(file);
                     void peekFeatureCsv(file).then(setFeatureCsvCols);
                   })();

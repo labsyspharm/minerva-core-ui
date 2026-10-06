@@ -1,3 +1,5 @@
+import FeatureTableWorker from "./worker?worker";
+
 type ClassIndexMap = {
   data: Uint8Array;
   width: number;
@@ -90,9 +92,8 @@ export function hasIngestedFeatureTable(featureTableId: string): boolean {
 
 function ensureWorker(): Worker {
   if (worker) return worker;
-  worker = new Worker(new URL("./worker.ts", import.meta.url), {
-    type: "module",
-  });
+  // `?worker` (not `new URL`) so the CDN bundle can inline it.
+  worker = new FeatureTableWorker();
   worker.onmessage = (e: MessageEvent<Outbound>) => {
     const waiter = pending.get(e.data.id);
     if (!waiter) return;

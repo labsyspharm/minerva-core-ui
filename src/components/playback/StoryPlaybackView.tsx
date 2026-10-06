@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
@@ -8,10 +8,12 @@ import type {
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
 import { useSyncJpegChannelFolders } from "@/lib/imaging/loadJpegFromDocument";
+import { paintUngroupedExportColors } from "@/lib/imaging/psudoPalette";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
   flattenImageChannelsInDocumentOrder,
+  type Image,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 
@@ -24,14 +26,16 @@ export type StoryPlaybackLoaders = {
 };
 
 /** JPEG folder sync + Viv layers for StoryPlaybackView. */
-function useStoryPlaybackLayers({
-  jpegLoaderEntries,
-  setJpegLoaderEntries,
-  omeLoaderEntries,
-  dicomIndexList,
-}: StoryPlaybackLoaders) {
+function useStoryPlaybackLayers(
+  {
+    jpegLoaderEntries,
+    setJpegLoaderEntries,
+    omeLoaderEntries,
+    dicomIndexList,
+  }: StoryPlaybackLoaders,
+  images: Image[],
+) {
   const channelGroups = useDocumentStore((s) => s.channelGroups);
-  const images = useDocumentStore((s) => s.images);
   const sourceChannels = useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
@@ -59,14 +63,31 @@ function useStoryPlaybackLayers({
     activeChannelGroupId,
     channelVisibilities,
     channelGroupRowVisibilities,
+    images,
   });
 }
 
 /** Shared ChannelPanel + ImageViewer under Presentation (CDN + Story preview). */
 export function StoryPlaybackView(props: StoryPlaybackLoaders) {
   const { omeLoaderEntries } = props;
-  const { loaderList, mainSettingsList, imageLayers } =
-    useStoryPlaybackLayers(props);
+  const storeImages = useDocumentStore((s) => s.images);
+  const channelGroups = useDocumentStore((s) => s.channelGroups);
+  const [displayImages, setDisplayImages] = useState(storeImages);
+  useEffect(() => {
+    let cancelled = false;
+    void paintUngroupedExportColors(storeImages, channelGroups).then(
+      (painted) => {
+        if (!cancelled) setDisplayImages(painted);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [storeImages, channelGroups]);
+  const { loaderList, mainSettingsList, imageLayers } = useStoryPlaybackLayers(
+    props,
+    displayImages,
+  );
   const {
     overlayLayers,
     activeTool,
@@ -76,7 +97,7 @@ export function StoryPlaybackView(props: StoryPlaybackLoaders) {
   } = useAppStore();
 
   return (
-    <ChannelPanel noLoader={false} hiddenChannel={false}>
+    <ChannelPanel noLoader={false} hiddenChannel={false} images={displayImages}>
       <ImageViewer
         omeLoaderEntries={omeLoaderEntries}
         imageLayers={imageLayers}

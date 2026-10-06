@@ -6,8 +6,8 @@ import type {
   OmeImportResult,
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
+import { useClickOutside } from "@/components/shared/useClickOutside";
 import { toFile } from "@/lib/imaging/filesystem";
-import type { OmeImageImportRole } from "@/lib/imaging/omeImport";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
@@ -21,12 +21,7 @@ const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
 
 /** One-shot handoff: library stash → story page consumes after navigate. */
 type PendingLibraryImport =
-  | {
-      kind: "ome";
-      role: OmeImageImportRole;
-      source: OmeImportRequest["source"];
-      rgbDisplay?: boolean;
-    }
+  | ({ kind: "ome" } & Omit<OmeImportRequest, "append">)
   | { kind: "dicomWeb"; url: string };
 
 let pendingLibraryImport: PendingLibraryImport | null = null;
@@ -251,15 +246,7 @@ export function MinervaLibraryPage() {
     document.title = `${APP_TAB_TITLE_PREFIX} | Minerva Library`;
   }, []);
 
-  React.useEffect(() => {
-    if (!addOpen) return;
-    const onDoc = (e: MouseEvent) => {
-      const el = addRef.current;
-      if (el && !el.contains(e.target as Node)) setAddOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [addOpen]);
+  useClickOutside(addOpen, () => setAddOpen(false), [addRef]);
 
   const goToStory = React.useCallback(
     (id: string) => {
@@ -426,12 +413,7 @@ export function MinervaLibraryPage() {
                   onAllow={toFile}
                   disabled={shelfBusy}
                   onImportOme={(req) =>
-                    startStoryWithPendingImport({
-                      kind: "ome",
-                      role: req.role,
-                      source: req.source,
-                      rgbDisplay: req.rgbDisplay,
-                    })
+                    startStoryWithPendingImport({ ...req, kind: "ome" })
                   }
                   onImportDicomWeb={(req) =>
                     startStoryWithPendingImport({

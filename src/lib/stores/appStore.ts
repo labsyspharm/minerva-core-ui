@@ -35,7 +35,7 @@ import {
 } from "../shapes/shapeModel";
 import { mergeShapesAfterWaypointImport } from "../shapes/shapeWaypointImport";
 import type { ViewportSize, ViewRect } from "../viewer/samViewport";
-import type { Waypoint } from "./documentSchema";
+import type { ImageOrientation, Waypoint } from "./documentSchema";
 import {
   documentShapes,
   documentWaypoints,
@@ -599,6 +599,12 @@ type MaskVisualizationPreview = {
   visualization: MaskVisualization;
 };
 
+/** In-flight image placement while dragging on the canvas; committed on pointerup. */
+export type ImageOrientationPreview = {
+  imageId: string;
+  orientation: ImageOrientation;
+};
+
 export interface AppStore {
   // State
   overlayLayers: OverlayLayer[];
@@ -787,6 +793,12 @@ export interface AppStore {
   setMaskVisualizationPreview: (
     preview: MaskVisualizationPreview | null,
   ) => void;
+  /** In-flight move / resize / rotate; committed on pointerup. */
+  imageOrientationPreview: ImageOrientationPreview | null;
+  setImageOrientationPreview: (preview: ImageOrientationPreview | null) => void;
+  /** Image selected for arranging on the canvas. Authoring only. */
+  arrangeImageId: string | null;
+  setArrangeImageId: (imageId: string | null) => void;
   channelVisibilities: Record<string, boolean>;
   /** Source channel ids drawn as isolines instead of a color fill. */
   contourChannelIds: Record<string, boolean>;
@@ -938,6 +950,8 @@ const overlayInitialState = {
   activeChannelGroupId: null, // No channel group initially
   channelRendering: null,
   maskVisualizationPreview: null,
+  imageOrientationPreview: null,
+  arrangeImageId: null,
   channelVisibilities: {},
   contourChannelIds: {},
   contourLevels: CONTOUR_LEVELS_DEFAULT,
@@ -2263,6 +2277,14 @@ export const useAppStore = create<AppStore>()(
 
       setMaskVisualizationPreview: (preview) => {
         set({ maskVisualizationPreview: preview });
+      },
+
+      setImageOrientationPreview: (preview) => {
+        set({ imageOrientationPreview: preview });
+      },
+
+      setArrangeImageId: (imageId) => {
+        set({ arrangeImageId: imageId });
       },
 
       // Import waypoint shapes actions

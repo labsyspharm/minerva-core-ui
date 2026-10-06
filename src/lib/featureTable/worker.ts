@@ -3,10 +3,10 @@
  */
 
 import * as duckdb from "@duckdb/duckdb-wasm";
-import ehWorker from "@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url";
-import mvpWorker from "@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url";
-import duckdbWasmEh from "@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url";
-import duckdbWasmMvp from "@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url";
+import {
+  createDuckdbWorker,
+  duckdbBundles,
+} from "@/lib/featureTable/duckdbBundles";
 import { parseCsvLine, peekCsvHeaders } from "./columns";
 import { indexTexSize, MAX_CLASS_NAMES } from "./lutLayout";
 
@@ -90,13 +90,10 @@ let duckWorker: Worker | null = null;
 
 async function ensureConn(): Promise<duckdb.AsyncDuckDBConnection> {
   if (conn) return conn;
-  const bundle = await duckdb.selectBundle({
-    mvp: { mainModule: duckdbWasmMvp, mainWorker: mvpWorker },
-    eh: { mainModule: duckdbWasmEh, mainWorker: ehWorker },
-  });
+  const bundle = await duckdb.selectBundle(duckdbBundles);
   const mainWorker = bundle.mainWorker;
   if (!mainWorker) throw new Error("DuckDB worker missing");
-  duckWorker = new Worker(mainWorker);
+  duckWorker = createDuckdbWorker(mainWorker);
   db = new duckdb.AsyncDuckDB(new duckdb.VoidLogger(), duckWorker);
   await db.instantiate(bundle.mainModule, bundle.pthreadWorker ?? undefined);
   conn = await db.connect();
