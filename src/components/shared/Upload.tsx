@@ -1,21 +1,16 @@
-import { fileOpen } from "browser-fs-access";
 import type { DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FeatureCsvColumnPick } from "@/components/shared/channel/FeatureTable";
+import { FeatureCsvAttachDialog } from "@/components/shared/channel/FeatureTable";
 import { ImageChannelOverviewCard } from "@/components/shared/channel/ImageChannelOverview";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import { ImportOverlay } from "@/components/shared/ImportOverlay";
+import MoveIcon from "@/components/shared/icons/move.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
   PanelActionButton,
   PanelIconButton,
 } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
-import {
-  completeFeatureTableIngest,
-  ingestFeatureCsvFile,
-  peekFeatureCsv,
-} from "@/lib/featureTable";
 import {
   isMaskChannel,
   resolveImageContentRole,
@@ -30,6 +25,11 @@ import {
   fileHandleFromDataTransferItem,
   findFile,
 } from "@/lib/imaging/filesystem";
+import {
+  type ImportFileKind,
+  importFileKind,
+  importFilePickerOptions,
+} from "@/lib/imaging/importFileKind";
 import type {
   OmeImageImportRole,
   OmeImportResult,
@@ -39,6 +39,8 @@ import {
   detectOmeTiffMask,
   detectOmeTiffPlanarRgbAmbiguity,
 } from "@/lib/imaging/omeTiff";
+import { applyOmeRoisFromAnnotationXmlString } from "@/lib/shapes/applyOmeRoisToDocument";
+import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentStore";
 import {
   flattenImageChannelsInDocumentOrder,
@@ -49,8 +51,8 @@ import styles from "./Upload.module.css";
 
 export type { OmeImportResult };
 
-function ReplaceIcon({ title, size = 14 }: { title?: string; size?: number }) {
-  const label = title ?? "Replace";
+function BrowseIcon({ title, size = 14 }: { title?: string; size?: number }) {
+  const label = title ?? "Browse for image";
   return (
     <svg
       aria-hidden={title ? undefined : true}
@@ -60,7 +62,7 @@ function ReplaceIcon({ title, size = 14 }: { title?: string; size?: number }) {
       fill="currentColor"
     >
       <title>{label}</title>
-      <path d="M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l1.46 1.46C18.69 15.33 19 14.2 19 13c0-3.87-3.13-7-7-7zm0 10c-2.76 0-5-2.24-5-5 0-.65.13-1.26.36-1.83L5.9 7.71C5.31 8.67 5 9.8 5 11c0 3.87 3.13 7 7 7v3l4-4-4-4v3z" />
+      <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
     </svg>
   );
 }
@@ -74,8 +76,8 @@ export type LoadedSourceSummary = {
   channelCount: number;
 };
 
-/** Intensity stack vs label / segmentation file. */
 export type OmeImportRequest = {
+  /** Intensity stack vs label / segmentation file. */
   role: OmeImageImportRole;
   append: boolean;
   rgbDisplay?: boolean;
@@ -85,7 +87,13 @@ export type OmeImportRequest = {
 };
 
 type UploadProps = {
-  onAllow: () => Promise<Handle.File[]>;
+  onAllow: (kinds?: readonly ImportFileKind[]) => Promise<Handle.File[]>;
+  /**
+   * Drop / Browse route by extension. Images open the import dialog. With this
+   * (Library), `.json` stories are accepted; without it (a story), `.xml` OME
+   * ROIs attach to the current waypoint and `.csv` feature tables to a mask.
+   */
+  onImportStory?: (file: File) => void | Promise<void>;
   /** Bumps after a successful image import; clears pending add state. */
   importRevision?: number;
   /** True when the viewer has image data (same idea as `!noLoader` in main). */
@@ -244,6 +252,7 @@ function pendingLabel(pending: PendingSource): string {
 const Upload = (props: UploadProps) => {
   const {
     onAllow,
+    onImportStory,
     importRevision = 0,
     imageLoaded = false,
     loadedSource,
@@ -264,6 +273,8 @@ const Upload = (props: UploadProps) => {
   } = props;
 
   const images = useDocumentStore((s) => s.images);
+  const arrangeImageId = useAppStore((s) => s.arrangeImageId);
+  const setArrangeImageId = useAppStore((s) => s.setArrangeImageId);
   const hasImages =
     images.length > 0 || (!!imageLoaded && loadedSource != null);
 
@@ -285,16 +296,12 @@ const Upload = (props: UploadProps) => {
   const [importError, setImportError] = useState<string | null>(null);
   const [stripErrorAt, setStripErrorAt] = useState<"drop" | "url">("drop");
   const [importBusy, setImportBusy] = useState(false);
-  const [featureCsvFile, setFeatureCsvFile] = useState<File | null>(null);
-  const [featureCsvCols, setFeatureCsvCols] = useState<{
-    headers: string[];
-    id: string;
-    name: string;
+  const [csvDrop, setCsvDrop] = useState<{
+    file: File;
+    masks: { id?: string; name?: string }[];
   } | null>(null);
-  const clearFeatureCsv = useCallback(() => {
-    setFeatureCsvFile(null);
-    setFeatureCsvCols(null);
-  }, []);
+  /** Brief success line in the drop zone (annotations / feature table). */
+  const [notice, setNotice] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const dragDepthRef = useRef(0);
   const localPickInFlightRef = useRef(false);
@@ -303,7 +310,6 @@ const Upload = (props: UploadProps) => {
   const formatChosenByUserRef = useRef(false);
   const roleChosenByUserRef = useRef(false);
   const rgbDisplayChosenByUserRef = useRef(false);
-  const overlayRgbDisplayRef = useRef(false);
 
   const dicomAllowed =
     pending?.kind === "url" && overlayRole !== "segmentation";
@@ -322,23 +328,13 @@ const Upload = (props: UploadProps) => {
 
   useEffect(() => {
     if (prevImportRev.current === importRevision) return;
-    // OME save bumps revision before a paired CSV ingest finishes. Stay on
-    // the overlay until runImport clears importBusy.
-    if (importBusy) return;
     prevImportRev.current = importRevision;
     if (importError) return;
     abortFormatDetect();
     setPending(null);
     setImportError(null);
     setUrlDraft("");
-    clearFeatureCsv();
-  }, [
-    abortFormatDetect,
-    importBusy,
-    importError,
-    importRevision,
-    clearFeatureCsv,
-  ]);
+  }, [abortFormatDetect, importError, importRevision]);
 
   const openPending = useCallback(
     (next: PendingSource) => {
@@ -346,7 +342,6 @@ const Upload = (props: UploadProps) => {
       formatChosenByUserRef.current = false;
       roleChosenByUserRef.current = false;
       rgbDisplayChosenByUserRef.current = false;
-      overlayRgbDisplayRef.current = false;
       const role = resolveImportRole("intensity", pendingLabel(next));
       let format = inferFormat(next);
       if (role === "segmentation") format = "ome-tiff";
@@ -359,7 +354,6 @@ const Upload = (props: UploadProps) => {
       setDetectedRgbDisplay(null);
       setDetecting(false);
       setImportError(null);
-      clearFeatureCsv();
 
       const ac = new AbortController();
       formatDetectAbortRef.current = ac;
@@ -402,7 +396,6 @@ const Upload = (props: UploadProps) => {
               if (ac.signal.aborted) return;
               setDetectedRgbDisplay(isBrightfield);
               if (!rgbDisplayChosenByUserRef.current) {
-                overlayRgbDisplayRef.current = isBrightfield;
                 setOverlayRgbDisplay(isBrightfield);
               }
             } catch (error) {
@@ -438,28 +431,47 @@ const Upload = (props: UploadProps) => {
         }
       })();
     },
-    [abortFormatDetect, clearFeatureCsv],
+    [abortFormatDetect],
   );
 
   const clearPending = useCallback(() => {
     abortFormatDetect();
     setPending(null);
     setImportError(null);
-    clearFeatureCsv();
-  }, [abortFormatDetect, clearFeatureCsv]);
+  }, [abortFormatDetect]);
 
-  const acceptLocalHandles = useCallback(
-    async (handles: Handle.File[]) => {
-      if (handles.length === 0) return;
-      const handle = handles[0];
-      if (!(await ensureFileHandlePermission(handle))) {
-        setStripErrorAt("drop");
-        setImportError("Allow file access to load this image.");
-        return;
-      }
+  useEffect(() => {
+    if (!notice) return;
+    const t = window.setTimeout(() => setNotice(null), 4000);
+    return () => window.clearTimeout(t);
+  }, [notice]);
+
+  const acceptedKinds: ImportFileKind[] = onImportStory
+    ? ["image", "story"]
+    : ["image", "annotations", "featureTable"];
+
+  const failDrop = (message: string) => {
+    setStripErrorAt("drop");
+    setImportError(message);
+  };
+
+  const acceptLocalHandle = async (handle: Handle.File) => {
+    const kind = importFileKind(handle.name);
+    if (!acceptedKinds.includes(kind)) {
+      failDrop(
+        onImportStory
+          ? "Open a story to add this file."
+          : "Import story files from the Library.",
+      );
+      return;
+    }
+    if (!(await ensureFileHandlePermission(handle))) {
+      failDrop("Allow file access to read this file.");
+      return;
+    }
+    if (kind === "image") {
       if (!(await findFile({ handle }))) {
-        setStripErrorAt("drop");
-        setImportError("Could not read the selected file.");
+        failDrop("Could not read the selected file.");
         return;
       }
       openPending({
@@ -467,22 +479,55 @@ const Upload = (props: UploadProps) => {
         handles: [handle],
         label: handle.name || "image.ome.tif",
       });
-    },
-    [openPending],
-  );
+      return;
+    }
+    try {
+      // Keep the handle so an attached feature table can persist it.
+      const file = Object.assign(await handle.getFile(), { handle });
+      if (kind === "story") {
+        await onImportStory?.(file);
+      } else if (kind === "annotations") {
+        const r = applyOmeRoisFromAnnotationXmlString(await file.text());
+        if (r.success === false) failDrop(r.error);
+        else {
+          const n = r.shapeIds.length;
+          setNotice(`Imported ${n} annotation${n === 1 ? "" : "s"}.`);
+        }
+      } else {
+        const doc = useDocumentStore.getState();
+        const hasTable = new Set(
+          doc.featureTables.map((t) => t.sourceChannelId),
+        );
+        const masks = flattenImageChannelsInDocumentOrder(doc.images).filter(
+          isMaskChannel,
+        );
+        const free = masks.filter((m) => !hasTable.has(m.id));
+        if (free.length > 0) setCsvDrop({ file, masks: free });
+        else
+          failDrop(
+            masks.length > 0
+              ? "Every mask already has a feature table."
+              : "Add a segmentation mask before attaching a feature table.",
+          );
+      }
+    } catch (e: unknown) {
+      failDrop(
+        e instanceof Error ? e.message : "Could not read the selected file.",
+      );
+    }
+  };
 
-  const browseLocal = useCallback(async () => {
+  const browseLocal = async () => {
     if (disabled || localPickInFlightRef.current) return;
     localPickInFlightRef.current = true;
     setImportError(null);
     try {
-      const picked = await onAllow();
-      if (picked.length === 0) return;
-      await acceptLocalHandles(picked);
+      const [handle] = await onAllow(acceptedKinds);
+      if (handle) await acceptLocalHandle(handle);
     } finally {
       localPickInFlightRef.current = false;
     }
-  }, [acceptLocalHandles, disabled, onAllow]);
+  };
 
   const acceptUrlDraft = useCallback(() => {
     if (disabled) return;
@@ -525,17 +570,15 @@ const Upload = (props: UploadProps) => {
     if (disabled) return;
     const items = [...e.dataTransfer.items].filter((i) => i.kind === "file");
     if (items.length === 0) {
-      setStripErrorAt("drop");
-      setImportError("Drop an image file to add it.");
+      failDrop("Drop a file to add it.");
       return;
     }
     const handle = await fileHandleFromDataTransferItem(items[0]);
     if (!handle) {
-      setStripErrorAt("drop");
-      setImportError("Could not read the dropped file.");
+      failDrop("Could not read the dropped file.");
       return;
     }
-    await acceptLocalHandles([handle]);
+    await acceptLocalHandle(handle);
   };
 
   const runImport = async () => {
@@ -576,27 +619,8 @@ const Upload = (props: UploadProps) => {
       }
       const rgbDisplay =
         detectedRgbDisplay != null && role === "intensity"
-          ? overlayRgbDisplayRef.current
+          ? overlayRgbDisplay
           : undefined;
-      const attachCsv = role === "segmentation" ? featureCsvFile : null;
-      const beforeMaskIds = attachCsv
-        ? new Set(
-            flattenImageChannelsInDocumentOrder(
-              useDocumentStore.getState().images,
-            )
-              .filter(isMaskChannel)
-              .map((c) => c.id),
-          )
-        : null;
-      // Start CSV extract immediately so Chrome doesn't revoke the File during OME import.
-      const csvJob = attachCsv
-        ? ingestFeatureCsvFile(
-            attachCsv,
-            featureCsvCols
-              ? { id: featureCsvCols.id, name: featureCsvCols.name }
-              : undefined,
-          )
-        : null;
       const result = await onImportOme({
         role,
         append: hasImages,
@@ -610,22 +634,7 @@ const Upload = (props: UploadProps) => {
               }
             : { kind: "url", url: pending.url },
       });
-      if (result && result.ok === false) {
-        setImportError(result.error);
-        return;
-      }
-      const sourceChannelId = beforeMaskIds
-        ? flattenImageChannelsInDocumentOrder(
-            useDocumentStore.getState().images,
-          ).find((c) => isMaskChannel(c) && !beforeMaskIds.has(c.id))?.id
-        : undefined;
-      if (result?.ok && csvJob && sourceChannelId) {
-        const attached = await completeFeatureTableIngest(
-          sourceChannelId,
-          csvJob,
-        );
-        if (attached.ok === false) setImportError(attached.error);
-      }
+      if (result && result.ok === false) setImportError(result.error);
     } finally {
       setImportBusy(false);
     }
@@ -670,30 +679,39 @@ const Upload = (props: UploadProps) => {
             </div>
             <div className={styles.imageCardMeta}>{metaParts.join(" · ")}</div>
           </div>
-          {onReplaceImage || onRemoveImage ? (
-            <div className={styles.imageCardActions}>
-              {onReplaceImage &&
-              im.source?.kind !== "jpeg" &&
-              im.source?.kind !== "dicomWeb" ? (
-                <PanelIconButton
-                  title={`Replace ${title} with another OME-TIFF`}
-                  aria-label={`Replace ${title}`}
-                  onClick={() => void onReplaceImage(im.id)}
-                >
-                  <ReplaceIcon title="Replace image" size={14} />
-                </PanelIconButton>
-              ) : null}
-              {onRemoveImage ? (
-                <PanelIconButton
-                  title={`Delete ${title}`}
-                  aria-label={`Delete ${title}`}
-                  onClick={() => void onRemoveImage(im.id)}
-                >
-                  <TrashIcon title="Delete" size={14} />
-                </PanelIconButton>
-              ) : null}
-            </div>
-          ) : null}
+          <div className={styles.imageCardActions}>
+            <PanelIconButton
+              title="Arrange"
+              aria-label={`Arrange ${title}`}
+              aria-pressed={arrangeImageId === im.id}
+              active={arrangeImageId === im.id}
+              onClick={() =>
+                setArrangeImageId(arrangeImageId === im.id ? null : im.id)
+              }
+            >
+              <MoveIcon aria-hidden />
+            </PanelIconButton>
+            {onReplaceImage &&
+            im.source?.kind !== "jpeg" &&
+            im.source?.kind !== "dicomWeb" ? (
+              <PanelIconButton
+                title={`Browse for an image to replace ${title}`}
+                aria-label={`Browse for an image to replace ${title}`}
+                onClick={() => void onReplaceImage(im.id)}
+              >
+                <BrowseIcon title="Browse for image" size={14} />
+              </PanelIconButton>
+            ) : null}
+            {onRemoveImage ? (
+              <PanelIconButton
+                title={`Delete ${title}`}
+                aria-label={`Delete ${title}`}
+                onClick={() => void onRemoveImage(im.id)}
+              >
+                <TrashIcon title="Delete" size={14} />
+              </PanelIconButton>
+            ) : null}
+          </div>
         </div>
         <ImageChannelOverviewCard image={im} />
         {showAccessOverlay ? (
@@ -758,7 +776,9 @@ const Upload = (props: UploadProps) => {
         styles.addStrip,
         row ? styles.addStripRow : "",
         row && dragging ? styles.panelDropActive : "",
-      ].join(" ")}
+      ]
+        .filter(Boolean)
+        .join(" ")}
       {...(row ? dropHandlers : {})}
     >
       <button
@@ -775,10 +795,15 @@ const Upload = (props: UploadProps) => {
           className={[styles.dropZoneTitle, dropError ? styles.importError : ""]
             .filter(Boolean)
             .join(" ")}
-          role={dropError ? "alert" : undefined}
+          role={dropError ? "alert" : notice ? "status" : undefined}
         >
-          {dropError ?? "Drop or Browse Image File"}
+          {dropError ?? notice ?? "Drop or Browse File"}
         </span>
+        {!row && !dropError && !notice ? (
+          <span className={styles.dropZoneHint}>
+            {importFilePickerOptions(acceptedKinds).description}
+          </span>
+        ) : null}
       </button>
       <div className={styles.orDivider}>
         <span>or</span>
@@ -825,12 +850,6 @@ const Upload = (props: UploadProps) => {
     </div>
   );
 
-  let overlayBusyLabel = "Importing…";
-  if (detecting) overlayBusyLabel = "Detecting…";
-  else if (featureCsvFile && overlayRole === "segmentation") {
-    overlayBusyLabel = "Loading feature table…";
-  }
-
   return (
     <>
       {row ? (
@@ -859,7 +878,7 @@ const Upload = (props: UploadProps) => {
           titleId="image-import-dialog-title"
           error={importError}
           busy={importBusy || detecting}
-          busyLabel={overlayBusyLabel}
+          busyLabel={detecting ? "Detecting…" : "Importing…"}
           cancelDisabled={importBusy || disabled}
           importDisabled={importBusy || detecting || disabled}
           onCancel={clearPending}
@@ -875,7 +894,6 @@ const Upload = (props: UploadProps) => {
               onClick={() => {
                 roleChosenByUserRef.current = true;
                 rgbDisplayChosenByUserRef.current = true;
-                overlayRgbDisplayRef.current = false;
                 setOverlayRole("intensity");
                 setOverlayRgbDisplay(false);
               }}
@@ -891,7 +909,6 @@ const Upload = (props: UploadProps) => {
                 onClick={() => {
                   roleChosenByUserRef.current = true;
                   rgbDisplayChosenByUserRef.current = true;
-                  overlayRgbDisplayRef.current = true;
                   setOverlayRole("intensity");
                   setOverlayRgbDisplay(true);
                 }}
@@ -929,44 +946,15 @@ const Upload = (props: UploadProps) => {
               </div>
             </div>
           ) : null}
-          {overlayRole === "segmentation" ? (
-            <div className={styles.typeRow}>
-              <span className={styles.fieldLabel}>Feature table</span>
-              <PanelActionButton
-                type="button"
-                onClick={() => {
-                  void (async () => {
-                    let file: File;
-                    try {
-                      file = await fileOpen({
-                        description: "Feature table CSV",
-                        mimeTypes: ["text/csv"],
-                        extensions: [".csv"],
-                        multiple: false,
-                      });
-                    } catch (e) {
-                      if (e instanceof Error && e.name === "AbortError") return;
-                      throw e;
-                    }
-                    setFeatureCsvFile(file);
-                    void peekFeatureCsv(file).then(setFeatureCsvCols);
-                  })();
-                }}
-              >
-                {featureCsvFile ? featureCsvFile.name : "Optional CSV…"}
-              </PanelActionButton>
-            </div>
-          ) : null}
-          {overlayRole === "segmentation" && featureCsvCols ? (
-            <FeatureCsvColumnPick
-              headers={featureCsvCols.headers}
-              id={featureCsvCols.id}
-              name={featureCsvCols.name}
-              onId={(id) => setFeatureCsvCols({ ...featureCsvCols, id })}
-              onName={(name) => setFeatureCsvCols({ ...featureCsvCols, name })}
-            />
-          ) : null}
         </ImportOverlay>
+      ) : null}
+      {csvDrop ? (
+        <FeatureCsvAttachDialog
+          file={csvDrop.file}
+          masks={csvDrop.masks}
+          onClose={() => setCsvDrop(null)}
+          onAttached={() => setNotice("Attached feature table.")}
+        />
       ) : null}
     </>
   );

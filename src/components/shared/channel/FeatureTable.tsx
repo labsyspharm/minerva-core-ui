@@ -1,4 +1,3 @@
-import { fileOpen } from "browser-fs-access";
 import {
   useCallback,
   useEffect,
@@ -38,6 +37,7 @@ import {
   subscribeFeatureTablePending,
   toggleClassVisible,
 } from "@/lib/featureTable";
+import { pickFile } from "@/lib/imaging/filesystem";
 import { rgbToHex } from "@/lib/imaging/sourceChannelStyle";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Color } from "@/lib/stores/documentSchema";
@@ -54,20 +54,6 @@ type FeatureTableRow = {
 };
 
 const EDGE = 10;
-
-async function pickFeatureCsv(): Promise<File | undefined> {
-  try {
-    return await fileOpen({
-      description: "Feature table CSV",
-      mimeTypes: ["text/csv"],
-      extensions: [".csv"],
-      multiple: false,
-    });
-  } catch (e) {
-    if (e instanceof Error && e.name === "AbortError") return undefined;
-    throw e;
-  }
-}
 
 function TableIcon() {
   return (
@@ -354,84 +340,120 @@ function FeatureTableAttach(props: { sourceChannelId: string }) {
     getFeatureTablePendingSourceIds,
     getFeatureTablePendingSourceIds,
   );
-  const [busy, setBusy] = useState(false);
-  const wait = busy || pendingIds.includes(props.sourceChannelId);
-  const [pendingCsv, setPendingCsv] = useState<{
-    file: File;
-    headers: string[];
-    id: string;
-    name: string;
-  } | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const closePending = () => {
-    setPendingCsv(null);
-    setError(null);
-  };
-
-  const attachFile = async (
-    file: File,
-    columns?: { id: string; name: string },
-  ) => {
-    setPendingCsv(null);
-    setError(null);
-    setBusy(true);
-    try {
-      const result = await completeFeatureTableIngest(
-        props.sourceChannelId,
-        ingestFeatureCsvFile(file, columns),
-      );
-      if (result.ok === false) setError(result.error);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const pickAndAttach = async () => {
-    const file = await pickFeatureCsv();
-    if (!file) return;
-    const peek = await peekFeatureCsv(file);
-    setError(null);
-    setPendingCsv({
-      file,
-      headers: peek?.headers ?? [],
-      id: peek?.id ?? "",
-      name: peek?.name ?? "",
-    });
-  };
-
-  const columns =
-    pendingCsv && pendingCsv.headers.length >= 2
-      ? { id: pendingCsv.id, name: pendingCsv.name }
-      : undefined;
+  const [file, setFile] = useState<File | null>(null);
+  const wait = pendingIds.includes(props.sourceChannelId);
 
   return (
     <>
       <FeatureTableGlyph
         wait={wait}
-        title={error ?? "Attach feature table"}
+        title="Attach feature table"
         ariaLabel={wait ? "Loading feature table" : "Attach feature table"}
-        onClick={() => void pickAndAttach()}
+        onClick={() =>
+          void pickFile(["featureTable"]).then((f) => f && setFile(f))
+        }
       />
-      {pendingCsv ? (
-        <ImportOverlay
-          title={pendingCsv.file.name}
-          titleId="feature-table-import-dialog-title"
-          onCancel={closePending}
-          onImport={() => void attachFile(pendingCsv.file, columns)}
-        >
-          {pendingCsv.headers.length >= 2 ? (
-            <FeatureCsvColumnPick
-              headers={pendingCsv.headers}
-              id={pendingCsv.id}
-              name={pendingCsv.name}
-              onId={(id) => setPendingCsv({ ...pendingCsv, id })}
-              onName={(name) => setPendingCsv({ ...pendingCsv, name })}
-            />
-          ) : null}
-        </ImportOverlay>
+      {file ? (
+        <FeatureCsvAttachDialog
+          file={file}
+          masks={[{ id: props.sourceChannelId }]}
+          onClose={() => setFile(null)}
+        />
       ) : null}
     </>
+  );
+}
+
+/** Attach a feature-table CSV to a mask: pick the mask (if several) and columns. */
+export function FeatureCsvAttachDialog(props: {
+  file: File;
+  masks: { id?: string; name?: string }[];
+  onClose: () => void;
+  onAttached?: () => void;
+}) {
+  const { file, masks, onClose, onAttached } = props;
+  const [maskId, setMaskId] = useState(masks[0]?.id ?? "");
+  const [cols, setCols] = useState<{
+    headers: string[];
+    id: string;
+    name: string;
+  } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void peekFeatureCsv(file).then(setCols);
+  }, [file]);
+
+  const pickCols = cols != null && cols.headers.length >= 2;
+
+  const attach = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await completeFeatureTableIngest(
+        maskId,
+        ingestFeatureCsvFile(
+          file,
+          pickCols ? { id: cols.id, name: cols.name } : undefined,
+        ),
+      );
+      if (result.ok === false) {
+        setError(result.error);
+        return;
+      }
+      onAttached?.();
+      onClose();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <ImportOverlay
+      title={file.name}
+      titleId="feature-table-import-dialog-title"
+      error={error}
+      busy={busy}
+      busyLabel="Loading feature table…"
+      cancelDisabled={busy}
+      importDisabled={busy}
+      onCancel={onClose}
+      onImport={() => void attach()}
+    >
+      {masks.length > 1 || pickCols ? (
+        <>
+          {masks.length > 1 ? (
+            <div className={styles.colPick}>
+              <label>
+                Mask
+                <select
+                  className={styles.field}
+                  value={maskId}
+                  aria-label="Mask"
+                  onChange={(e) => setMaskId(e.target.value)}
+                >
+                  {masks.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name || "Mask"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          ) : null}
+          {pickCols ? (
+            <FeatureCsvColumnPick
+              headers={cols.headers}
+              id={cols.id}
+              name={cols.name}
+              onId={(id) => setCols({ ...cols, id })}
+              onName={(name) => setCols({ ...cols, name })}
+            />
+          ) : null}
+        </>
+      ) : null}
+    </ImportOverlay>
   );
 }
 
@@ -471,7 +493,7 @@ function FeatureTableListBody(props: { featureTableId: string }) {
   const restoreFile = async () => {
     if (needsReselect) {
       if (!sourceChannelId) return;
-      const file = await pickFeatureCsv();
+      const file = await pickFile(["featureTable"]);
       if (!file) return;
       await completeFeatureTableIngest(
         sourceChannelId,

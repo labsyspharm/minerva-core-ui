@@ -79,16 +79,6 @@ interface RoiLabelShape extends BaseRoiShape {
   Text: string;
 }
 
-type Group = {
-  id: string;
-  name: string;
-  shapeIds: string[];
-  isExpanded: boolean;
-  metadata?: {
-    createdAt?: Date;
-  };
-};
-
 export type RoiShape =
   | RoiRectangleShape
   | RoiEllipseShape
@@ -483,127 +473,55 @@ function makeImportCentroidTextShape(
   };
 }
 
+const roiShapeToViewerShape = (shape: RoiShape, roi: Roi): Shape | null => {
+  switch (shape.type) {
+    case "rectangle":
+      return rectangleShapeToViewerShape(shape, roi);
+    case "ellipse":
+      return ellipseShapeToViewerShape(shape, roi);
+    case "line":
+      return lineShapeToViewerShape(shape, roi);
+    case "point":
+      return pointShapeToViewerShape(shape, roi);
+    case "polygon":
+      return polygonShapeToViewerShape(shape, roi);
+    case "polyline":
+      return polylineShapeToViewerShape(shape, roi);
+    case "label":
+      return labelShapeToViewerShape(shape, roi);
+    default:
+      console.warn("Unknown ROI shape", shape);
+      return null;
+  }
+};
+
 /** Convert structured ROI data (e.g. from OME-XML or Viv metadata) to viewer shapes. */
 export const parseRoisFromRoiList = (
   rois: Roi[] | null | undefined,
-): { shapes: Shape[]; groups: Group[] } => {
+): Shape[] => {
   const shapes: Shape[] = [];
-  const groups: Group[] = [];
-
-  if (!rois || rois.length === 0) {
-    return { shapes, groups };
-  }
-
-  console.log(`Found ${rois.length} ROIs in ROI list`);
-
-  // Process each ROI
-  rois.forEach((roi) => {
-    console.log(
-      `Processing ROI ${roi.ID} (${roi.Name || "unnamed"}) with ${roi.shapes.length} shapes`,
-    );
-
-    // Create a group for this ROI
-    const groupId = `roi-group-${roi.ID}`;
-    const roiShapeIds: string[] = [];
-
-    // Process each shape in the ROI
-    roi.shapes.forEach((shape) => {
+  for (const roi of rois ?? []) {
+    let added = 0;
+    for (const shape of roi.shapes) {
       try {
-        let viewerShape: Shape | null = null;
-
-        switch (shape.type) {
-          case "rectangle":
-            viewerShape = rectangleShapeToViewerShape(shape, roi);
-            console.log(`Created rectangle shape: ${viewerShape.id}`);
-            break;
-
-          case "ellipse":
-            viewerShape = ellipseShapeToViewerShape(shape, roi);
-            console.log(`Created ellipse shape: ${viewerShape.id}`);
-            break;
-
-          case "line":
-            viewerShape = lineShapeToViewerShape(shape, roi);
-            console.log(`Created line shape: ${viewerShape.id}`);
-            break;
-
-          case "point":
-            viewerShape = pointShapeToViewerShape(shape, roi);
-            console.log(`Created point shape: ${viewerShape.id}`);
-            break;
-
-          case "polygon":
-            viewerShape = polygonShapeToViewerShape(shape, roi);
-            console.log(`Created polygon shape: ${viewerShape.id}`);
-            break;
-
-          case "polyline":
-            viewerShape = polylineShapeToViewerShape(shape, roi);
-            console.log(`Created polyline shape: ${viewerShape.id}`);
-            break;
-
-          case "label":
-            viewerShape = labelShapeToViewerShape(shape, roi);
-            console.log(`Created text shape: ${viewerShape.id}`);
-            break;
-
-          default:
-            console.warn(`Unknown shape: ${shape}`);
-        }
-
-        if (viewerShape) {
-          shapes.push(viewerShape);
-          roiShapeIds.push(viewerShape.id);
-        }
+        const viewerShape = roiShapeToViewerShape(shape, roi);
+        if (!viewerShape) continue;
+        shapes.push(viewerShape);
+        added += 1;
       } catch (error) {
         console.error(
           `Error processing shape ${shape.ID} in ROI ${roi.ID}:`,
           error,
         );
       }
-    });
-
+    }
     const labelOnlyRoi =
       roi.shapes.length > 0 && roi.shapes.every((s) => s.type === "label");
-    if (roiShapeIds.length > 0 && !labelOnlyRoi) {
+    if (added > 0 && !labelOnlyRoi) {
       const centroidPos = importRoiCentroidPosition(roi);
-      if (centroidPos) {
-        const centroidShape = makeImportCentroidTextShape(roi, centroidPos);
-        shapes.push(centroidShape);
-        roiShapeIds.push(centroidShape.id);
-      }
+      if (centroidPos)
+        shapes.push(makeImportCentroidTextShape(roi, centroidPos));
     }
-
-    // Create a group for this ROI if it has any shapes
-    if (roiShapeIds.length > 0) {
-      const group = {
-        id: groupId,
-        name: roi.Name || `ROI ${roi.ID}`,
-        shapeIds: roiShapeIds,
-        isExpanded: true,
-      };
-      groups.push(group);
-      console.log(
-        `Created group for ROI ${roi.ID} with ${roiShapeIds.length} shapes`,
-      );
-    }
-  });
-
-  console.log(`Total shapes created from ROIs: ${shapes.length}`);
-  console.log(`Total groups created from ROIs: ${groups.length}`);
-  return { shapes, groups };
-};
-
-/**
- * Parse ROIs from loader metadata and convert to viewer shapes and groups.
- * Accepts a structural loader shape so this module does not import viv (cycle).
- */
-export const parseRoisFromLoader = (
-  loader: { metadata?: { ROIs?: Roi[] | null } } | null | undefined,
-): { shapes: Shape[]; groups: Group[] } => {
-  if (!loader || !loader.metadata || !loader.metadata.ROIs) {
-    console.log("No ROIs found in loader metadata");
-    return { shapes: [], groups: [] };
   }
-  return parseRoisFromRoiList(loader.metadata.ROIs);
+  return shapes;
 };

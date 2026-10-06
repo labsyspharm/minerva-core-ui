@@ -1,5 +1,7 @@
 import { Matrix4 } from "@math.gl/core";
+import { effectiveOrientation } from "@/lib/imaging/imageOrientation";
 import { type Loader, loaderPixelSizeXY } from "@/lib/imaging/viv";
+import type { ImageOrientation } from "@/lib/stores/documentSchema";
 import type { ViewRect } from "@/lib/viewer/samViewport";
 
 export type WorldFrame = {
@@ -9,6 +11,8 @@ export type WorldFrame = {
   umPerPixelY: number;
   worldWidth: number;
   worldHeight: number;
+  /** Document image this frame belongs to, when known. */
+  sourceImageId?: string;
 };
 
 export const WORLD_MICRON = "µm";
@@ -117,6 +121,31 @@ export function worldFrameFromLoader(loader: Loader): WorldFrame {
 }
 
 /**
+ * Frame for an OME `<Pixels>` element's pixel space (e.g. an ROI file): its own
+ * physical size if it has one, else the viewer image with the same pixel size.
+ */
+export function omePixelsWorldFrame(
+  pixels: Element,
+  imageFrames: readonly WorldFrame[],
+): WorldFrame | undefined {
+  const n = (name: string) => Number(pixels.getAttribute(name)) || null;
+  const scale = parsePhysicalScale({
+    PhysicalSizeX: n("PhysicalSizeX"),
+    PhysicalSizeY: n("PhysicalSizeY"),
+    PhysicalSizeXUnit: pixels.getAttribute("PhysicalSizeXUnit"),
+    PhysicalSizeYUnit: pixels.getAttribute("PhysicalSizeYUnit"),
+  });
+  const declared = frameFromPixels(n("SizeX") ?? 0, n("SizeY") ?? 0, scale);
+  const match = imageFrames.find(
+    (f) =>
+      f.pixelWidth === declared.pixelWidth &&
+      f.pixelHeight === declared.pixelHeight,
+  );
+  if (isIdentityScale(scale)) return match;
+  return { ...declared, sourceImageId: match?.sourceImageId };
+}
+
+/**
  * Unitless 1,1 / identity µm/px copies µm/px from *any* other open image
  * with the same pixel size and a real physical scale.
  */
@@ -163,9 +192,41 @@ export function effectiveWorldFrame(
   return worldFrameFromPixelCounts(docWidth, docHeight);
 }
 
-export function layerModelMatrix(loader: Loader): Matrix4 {
-  const { umPerPixelX, umPerPixelY } = worldFrameFromLoader(loader);
-  return new Matrix4().scale([umPerPixelX, umPerPixelY, 1]);
+/**
+ * Deck model matrix.
+ * `T(µm) · T(center) · S(display) · T(−center) · scale(µm/px) · T(center) · R · S(flip) · T(−center)`.
+ * µm/px is the loader's OME PhysicalSize. Display scale and translation are
+ * the user resize and move, in world µm.
+ */
+export function layerModelMatrix(
+  loader: Loader,
+  orientation?: Partial<ImageOrientation> | null,
+): Matrix4 {
+  return frameModelMatrix(worldFrameFromLoader(loader), orientation);
+}
+
+/** {@link layerModelMatrix} from a frame: maps an image's pixels to world µm. */
+export function frameModelMatrix(
+  frame: WorldFrame,
+  orientation?: Partial<ImageOrientation> | null,
+): Matrix4 {
+  const { pixelWidth, pixelHeight, umPerPixelX, umPerPixelY } = frame;
+  const o = effectiveOrientation(orientation);
+  const cx = pixelWidth / 2;
+  const cy = pixelHeight / 2;
+  const ux = cx * umPerPixelX;
+  const uy = cy * umPerPixelY;
+  // Y-down image space: +rotateZ is clockwise on screen (matches CW button).
+  return new Matrix4()
+    .translate([o.translateX, o.translateY, 0])
+    .translate([ux, uy, 0])
+    .scale([o.displayScale, o.displayScale, 1])
+    .translate([-ux, -uy, 0])
+    .scale([umPerPixelX, umPerPixelY, 1])
+    .translate([cx, cy, 0])
+    .rotateZ((o.rotationDegrees * Math.PI) / 180)
+    .scale([o.flipHorizontal ? -1 : 1, o.flipVertical ? -1 : 1, 1])
+    .translate([-cx, -cy, 0]);
 }
 
 function isIdentityScale(scale: PhysicalScale): boolean {

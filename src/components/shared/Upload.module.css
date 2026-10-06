@@ -134,6 +134,11 @@
   color: var(--minerva-ink);
 }
 
+.dropZoneHint {
+  font-size: var(--minerva-size-note);
+  color: var(--minerva-quiet);
+}
+
 .orDivider {
   display: flex;
   align-items: center;

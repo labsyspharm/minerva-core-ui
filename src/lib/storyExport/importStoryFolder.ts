@@ -1,11 +1,10 @@
-import { fileOpen } from "browser-fs-access";
 import {
   folderLimitsForTransfer,
   isJpegOmeTiffImageSource,
   type JpegExportTransfer,
   jpegTransferFromImageSource,
 } from "@/lib/imaging/cubeRootEncoding";
-import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
+import { hasDirectoryPickerAccess, pickFile } from "@/lib/imaging/filesystem";
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import {
   folderByChannelIndexFromGroup,
@@ -196,14 +195,6 @@ function isRelativeOmeTiffUrl(url: string): boolean {
   return /\.ome\.tiff?$/i.test(u) || /\.tiff?$/i.test(u);
 }
 
-async function readDocumentJson(
-  root: FileSystemDirectoryHandle,
-): Promise<DocumentData> {
-  const fh = await root.getFileHandle("document.json");
-  const file = await fh.getFile();
-  return validateDocumentData(JSON.parse(await file.text()) as unknown);
-}
-
 async function persistImportedStory(
   data: DocumentData,
   titleFallback: string,
@@ -270,14 +261,14 @@ async function persistImportedStory(
   return rec.id;
 }
 
-/** Pick a story JSON. If it needs local image files, a folder picker follows. */
-export async function importStoryJsonFromPicker(): Promise<string> {
-  const file = await fileOpen({
-    description: "Minerva story JSON",
-    mimeTypes: ["application/json"],
-    extensions: [".json"],
-    multiple: false,
-  });
+/** Pick a story JSON and import it; undefined when the picker is cancelled. */
+export async function importStoryJsonFromPicker(): Promise<string | undefined> {
+  const file = await pickFile(["story"]);
+  return file && importStoryJsonFile(file);
+}
+
+/** Import a story JSON and return the new story id; a folder picker follows if it needs local images. */
+export async function importStoryJsonFile(file: File): Promise<string> {
   const data = validateDocumentData(JSON.parse(await file.text()) as unknown);
 
   let root: FileSystemDirectoryHandle | undefined;
@@ -304,26 +295,6 @@ export async function importStoryJsonFromPicker(): Promise<string> {
   const base = file.name.replace(/\.json$/i, "").trim();
   const fallback = /^(document|story)$/i.test(base) ? "Imported Story" : base;
   return persistImportedStory(data, fallback, root);
-}
-
-/**
- * Pick a story export folder, import `document.json` into Dexie, and open it.
- * Returns the new story id.
- */
-export async function importStoryFolderFromPicker(): Promise<string> {
-  if (!hasDirectoryPickerAccess()) {
-    throw new Error(
-      "Importing a story folder needs the File System Access API (Chrome or Edge).",
-    );
-  }
-  const root = await window.showDirectoryPicker({
-    id: "minerva-story-import",
-    mode: "read",
-  });
-  const data = await readDocumentJson(root);
-  await assertPyramidFoldersExist(root, data);
-  const title = data.metadata.title?.trim() || root.name || "Imported Story";
-  return persistImportedStory(data, title, root);
 }
 
 export async function reconnectStoryRootFromPicker(

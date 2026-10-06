@@ -1,6 +1,7 @@
 import { loadOmeTiff } from "@hms-dbmi/viv";
-import { fileOpen } from "browser-fs-access";
+import { type FileWithHandle, fileOpen } from "browser-fs-access";
 import { fromBlob, GeoTIFFImage } from "geotiff";
+import { type ImportFileKind, importFilePickerOptions } from "./importFileKind";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
 import type { DecodePool } from "./omeDecodePool";
 import { omeChannelElements, omePixelsElement, parseOmeXml } from "./omeXml";
@@ -43,7 +44,7 @@ type FindFileIn = {
   handle: Handle.File;
 };
 type FindFile = (i: FindFileIn) => Promise<boolean>;
-type ToFiles = () => Promise<Handle.File[]>;
+type ToFiles = (kinds?: readonly ImportFileKind[]) => Promise<Handle.File[]>;
 
 /** Viv's published OME metadata types are looser than our app `Loader` shape. */
 function asAppLoader(image: Awaited<ReturnType<typeof loadOmeTiff>>): Loader {
@@ -282,6 +283,7 @@ async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
   const dtype = dtypeFromTiffDirectory(fd);
   const ome = parseFirstOmeImagePixels(fd.ImageDescription);
   const sizeC = Math.max(1, ome?.SizeC ?? fd.SamplesPerPixel ?? 1);
+  const unitlessResolution = isUnitlessPlaceholderResolution(fd);
   const channels = Array.from({ length: sizeC }, (_, i) => ({
     ID: `Channel:0:${i}`,
     Name: sizeC === 1 ? "Mask" : `Mask ${i + 1}`,
@@ -296,10 +298,8 @@ async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
     SizeZ: 1,
     SizeY: height,
     SizeX: width,
-    PhysicalSizeX:
-      ome?.PhysicalSizeX ?? (isUnitlessPlaceholderResolution(fd) ? 0 : 1),
-    PhysicalSizeY:
-      ome?.PhysicalSizeY ?? (isUnitlessPlaceholderResolution(fd) ? 0 : 1),
+    PhysicalSizeX: ome?.PhysicalSizeX ?? (unitlessResolution ? 0 : 1),
+    PhysicalSizeY: ome?.PhysicalSizeY ?? (unitlessResolution ? 0 : 1),
     PhysicalSizeXUnit: ome?.PhysicalSizeXUnit ?? "µm",
     PhysicalSizeYUnit: ome?.PhysicalSizeYUnit ?? "µm",
     PhysicalSizeZUnit: ome?.PhysicalSizeZUnit ?? "µm",
@@ -443,22 +443,26 @@ const findFile: FindFile = async (opts) => {
   }
 };
 
-const toFile: ToFiles = async () => {
+/** Single-file picker for `kinds`; undefined when cancelled. */
+async function pickFile(
+  kinds: readonly ImportFileKind[],
+): Promise<FileWithHandle | undefined> {
   try {
-    const file = await fileOpen({
-      description: "OME-TIFF images",
-      mimeTypes: ["image/tiff"],
-      extensions: [".tif", ".tiff", ".ome.tif", ".ome.tiff"],
+    return await fileOpen({
+      ...importFilePickerOptions(kinds),
       multiple: false,
     });
-    if (file.handle) return [file.handle];
-    return [ephemeralFileHandleFromFile(file)];
   } catch (e: unknown) {
-    if (isAbortError(e)) {
-      return [];
-    }
+    if (isAbortError(e)) return undefined;
     throw e;
   }
+}
+
+/** {@link pickFile} as a handle; defaults to OME-TIFF images. */
+const toFile: ToFiles = async (kinds = ["image"]) => {
+  const file = await pickFile(kinds);
+  if (!file) return [];
+  return [file.handle ?? ephemeralFileHandleFromFile(file)];
 };
 
 function vivLoadOpts(pool?: DecodePool | null, packedRgb?: "planar") {
@@ -524,6 +528,8 @@ export {
   hasFileHandlePermission,
   ensureFileHandlePermission,
   findFile,
+  isAbortError,
+  pickFile,
   toFile,
   ephemeralFileHandleFromFile,
   fileHandleFromDataTransferItem,

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { useClickOutside } from "@/components/shared/useClickOutside";
 import styles from "./ToolSubmenu.module.css";
 
 export interface ToolSubmenuItem {
@@ -39,21 +40,7 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
   const isActive = items.some((item) => item.id === activeTool);
   const activeItem = items.find((item) => item.id === activeTool);
 
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (
-        toggleRef.current &&
-        !toggleRef.current.contains(target) &&
-        menuRef.current &&
-        !menuRef.current.contains(target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useClickOutside(isOpen, () => setIsOpen(false), [toggleRef, menuRef]);
 
   React.useEffect(() => {
     if (isOpen && toggleRef.current) {

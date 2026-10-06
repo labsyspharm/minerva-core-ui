@@ -10,6 +10,7 @@ import ArrowIcon from "@/components/shared/icons/arrow-tool.svg?react";
 import BrushIcon from "@/components/shared/icons/brush.svg?react";
 import CopyAnnotationsIcon from "@/components/shared/icons/copy-annotations.svg?react";
 import EllipseIcon from "@/components/shared/icons/ellipse.svg?react";
+import ImportAnnotationsIcon from "@/components/shared/icons/import-annotations.svg?react";
 import LineIcon from "@/components/shared/icons/line.svg?react";
 import LinesIcon from "@/components/shared/icons/lines.svg?react";
 import MagicWandIcon from "@/components/shared/icons/magic-wand.svg?react";
@@ -23,6 +24,8 @@ import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
+import { pickFile } from "@/lib/imaging/filesystem";
+import { applyOmeRoisFromAnnotationXmlString } from "@/lib/shapes/applyOmeRoisToDocument";
 import {
   cloneShapesForPaste,
   readShapesFromSystemClipboard,
@@ -74,17 +77,28 @@ async function pasteWaypointShapesFromClipboard(): Promise<void> {
   }
   if (!raw?.length) return;
   const cloned = cloneShapesForPaste(raw);
-  const {
-    addShapesBatch,
-    flashLayersPanelSelection,
-    requestLayersPanelSelection,
-  } = useAppStore.getState();
+  useAppStore.getState().addShapesBatch(cloned);
+  selectAndFlashLayers(cloned.map((a) => a.id));
+}
 
-  addShapesBatch(cloned);
+function selectAndFlashLayers(shapeIds: string[]): void {
+  const { flashLayersPanelSelection, requestLayersPanelSelection } =
+    useAppStore.getState();
+  requestLayersPanelSelection({ shapeIds, groupId: null });
+  flashLayersPanelSelection({ shapeIds, groupId: null });
+}
 
-  const ids = cloned.map((a) => a.id);
-  requestLayersPanelSelection({ shapeIds: ids, groupId: null });
-  flashLayersPanelSelection({ shapeIds: ids, groupId: null });
+/** Pick an OME-XML file and attach its ROIs to the waypoint being edited. */
+async function importWaypointShapesFromOmeXml(): Promise<void> {
+  try {
+    const file = await pickFile(["annotations"]);
+    if (!file) return;
+    const r = applyOmeRoisFromAnnotationXmlString(await file.text());
+    if (r.success === false) window.alert(r.error);
+    else selectAndFlashLayers(r.shapeIds);
+  } catch (e) {
+    window.alert(e instanceof Error ? e.message : "Could not read the file.");
+  }
 }
 
 /** Writes rgba into the fields the renderer reads (`style.*`). */
@@ -231,6 +245,13 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onClick={() => void pasteWaypointShapesFromClipboard()}
       >
         <PasteAnnotationsIcon />
+      </PanelIconButton>
+      <PanelIconButton
+        title="Import annotations from an OME-XML file"
+        aria-label="Import annotations (OME-XML)"
+        onClick={() => void importWaypointShapesFromOmeXml()}
+      >
+        <ImportAnnotationsIcon />
       </PanelIconButton>
     </>
   );

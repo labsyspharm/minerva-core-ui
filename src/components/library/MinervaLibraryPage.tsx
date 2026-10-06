@@ -6,14 +6,17 @@ import type {
   OmeImportResult,
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
-import { toFile } from "@/lib/imaging/filesystem";
-import type { OmeImageImportRole } from "@/lib/imaging/omeImport";
+import { useClickOutside } from "@/components/shared/useClickOutside";
+import { isAbortError, toFile } from "@/lib/imaging/filesystem";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
-import { importStoryJsonFromPicker } from "@/lib/storyExport/importStoryFolder";
+import {
+  importStoryJsonFile,
+  importStoryJsonFromPicker,
+} from "@/lib/storyExport/importStoryFolder";
 import { rootRouteApi } from "@/router/appRouter";
 import styles from "./MinervaLibraryPage.module.css";
 
@@ -21,12 +24,7 @@ const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
 
 /** One-shot handoff: library stash → story page consumes after navigate. */
 type PendingLibraryImport =
-  | {
-      kind: "ome";
-      role: OmeImageImportRole;
-      source: OmeImportRequest["source"];
-      rgbDisplay?: boolean;
-    }
+  | ({ kind: "ome" } & Omit<OmeImportRequest, "append">)
   | { kind: "dicomWeb"; url: string };
 
 let pendingLibraryImport: PendingLibraryImport | null = null;
@@ -251,15 +249,7 @@ export function MinervaLibraryPage() {
     document.title = `${APP_TAB_TITLE_PREFIX} | Minerva Library`;
   }, []);
 
-  React.useEffect(() => {
-    if (!addOpen) return;
-    const onDoc = (e: MouseEvent) => {
-      const el = addRef.current;
-      if (el && !el.contains(e.target as Node)) setAddOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [addOpen]);
+  useClickOutside(addOpen, () => setAddOpen(false), [addRef]);
 
   const goToStory = React.useCallback(
     (id: string) => {
@@ -326,22 +316,26 @@ export function MinervaLibraryPage() {
     [goToStory, openNewStory],
   );
 
-  const handleImport = React.useCallback(async () => {
-    setAddOpen(false);
-    setShelfBusy(true);
-    setError(null);
-    try {
-      useAppStore.getState().resetStoryViewerSession();
-      goToStory(await importStoryJsonFromPicker());
-    } catch (e: unknown) {
-      // AbortError = user cancelled the picker; finally still clears busy.
-      if (!(e instanceof DOMException && e.name === "AbortError")) {
-        setError(e instanceof Error ? e.message : "Could not import story");
+  /** Picked or dropped story JSON → new story; picker cancel is not an error. */
+  const runStoryImport = React.useCallback(
+    async (load: () => Promise<string | undefined>) => {
+      setAddOpen(false);
+      setShelfBusy(true);
+      setError(null);
+      try {
+        useAppStore.getState().resetStoryViewerSession();
+        const id = await load();
+        if (id) goToStory(id);
+      } catch (e: unknown) {
+        if (!isAbortError(e)) {
+          setError(e instanceof Error ? e.message : "Could not import story");
+        }
+      } finally {
+        setShelfBusy(false);
       }
-    } finally {
-      setShelfBusy(false);
-    }
-  }, [goToStory]);
+    },
+    [goToStory],
+  );
 
   const handleDelete = React.useCallback(
     (id: string, title: string) => {
@@ -414,7 +408,9 @@ export function MinervaLibraryPage() {
                         role="menuitem"
                         className={minervaTheme.menuItem}
                         disabled={shelfBusy}
-                        onClick={() => void handleImport()}
+                        onClick={() =>
+                          void runStoryImport(importStoryJsonFromPicker)
+                        }
                       >
                         Import story
                       </button>
@@ -425,13 +421,11 @@ export function MinervaLibraryPage() {
                   row
                   onAllow={toFile}
                   disabled={shelfBusy}
+                  onImportStory={(file) =>
+                    runStoryImport(() => importStoryJsonFile(file))
+                  }
                   onImportOme={(req) =>
-                    startStoryWithPendingImport({
-                      kind: "ome",
-                      role: req.role,
-                      source: req.source,
-                      rgbDisplay: req.rgbDisplay,
-                    })
+                    startStoryWithPendingImport({ ...req, kind: "ome" })
                   }
                   onImportDicomWeb={(req) =>
                     startStoryWithPendingImport({

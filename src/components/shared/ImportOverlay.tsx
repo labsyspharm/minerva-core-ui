@@ -36,7 +36,7 @@ export function ImportOverlay(props: {
         </div>
         {props.children != null ? (
           <fieldset
-            disabled={props.importDisabled || busy}
+            disabled={props.importDisabled}
             className={styles.typeOverlayFields}
           >
             {props.children}

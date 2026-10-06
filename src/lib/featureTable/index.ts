@@ -208,10 +208,6 @@ function scheduleClassPalette(
     });
 }
 
-function cancelClassPalette(featureTableId: string) {
-  paletteJobs.delete(featureTableId);
-}
-
 async function sha256Hex(bytes: Uint8Array): Promise<string> {
   const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);
@@ -373,7 +369,7 @@ async function commitIngestedFeatureTable(
 ): Promise<AttachFeatureTableResult> {
   const existing = featureTableForChannel(sourceChannelId);
   if (existing && existing.id !== ingested.featureTableId) {
-    cancelClassPalette(existing.id);
+    paletteJobs.delete(existing.id);
     await dropFeatureTable(existing.id).catch(() => undefined);
     await dropStoredSource(existing.source.handleKey);
   }
@@ -422,7 +418,7 @@ export async function detachFeatureTable(
 ): Promise<void> {
   const featureTable = featureTableForChannel(sourceChannelId);
   if (!featureTable) return;
-  cancelClassPalette(featureTable.id);
+  paletteJobs.delete(featureTable.id);
   await dropFeatureTable(featureTable.id).catch(() => undefined);
   await dropStoredSource(featureTable.source.handleKey);
   const doc = useDocumentStore.getState();

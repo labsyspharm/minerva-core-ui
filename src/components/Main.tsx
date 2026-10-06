@@ -17,10 +17,7 @@ import type {
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
 import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
-import type {
-  ConfigSourceDistribution,
-  ConfigWaypoint,
-} from "@/lib/authoring/config";
+import type { ConfigSourceDistribution } from "@/lib/authoring/config";
 import { extractChannels } from "@/lib/authoring/config";
 import {
   detachRemovedFeatureTables,
@@ -120,7 +117,6 @@ import {
   applyLoaderPixelSizeToImage,
   applySourceChannelsToImages,
   firstImageNameForStoryTitle,
-  hydrateConfigWaypoint,
   type LegacyExhibitWaypoint,
   removeImageFromDocument,
   setImageBasename,
@@ -143,6 +139,7 @@ import {
   type StoryExportMode,
   writeStoryBundleSidecars,
 } from "@/lib/storyExport/storyBundle";
+import { ensureDefaultWaypoint } from "@/lib/waypoints/ensureDefaultWaypoint";
 import {
   applyWaypointSeedAction,
   planWaypointConfigSeedTick,
@@ -164,29 +161,10 @@ function maybeDefaultStoryTitleFromFirstImage(): void {
   doc.setMetadata({ title: name });
 }
 
-/** When the story has no waypoints yet, add a default row for image import to attach to. */
-function ensureDefaultWaypointForImageImport(): void {
-  const doc = useDocumentStore.getState();
-  if (doc.waypoints.length > 0) return;
-
-  const groupId = doc.channelGroups[0]?.id;
-  const raw: ConfigWaypoint = {
-    id: crypto.randomUUID(),
-    State: { Expanded: true },
-    Name: "Waypoint 1",
-    Content: "",
-    shapeIds: [],
-    ...(groupId !== undefined ? { groupId } : {}),
-  };
-  const app = useAppStore.getState();
-  app.addStory(hydrateConfigWaypoint(raw, doc.channelGroups));
-  app.setActiveStory(0);
-}
-
 /** Shared post-import document side effects after images land in the store. */
 function afterImageImportDocumentEffects(): void {
   maybeDefaultStoryTitleFromFirstImage();
-  ensureDefaultWaypointForImageImport();
+  ensureDefaultWaypoint();
 }
 
 function reconcileLoaderEntries<T extends { sourceImageId: string }>(
@@ -447,6 +425,7 @@ const Content = (props: Props) => {
     channelVisibilities,
     channelGroupRowVisibilities,
     channelRendering,
+    imageOrientationPreview,
     setGroupNames,
   } = useAppStore();
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
@@ -1037,10 +1016,10 @@ const Content = (props: Props) => {
         const entry = entries[i];
         const handle = handles[i];
         if (!entry || !handle) continue;
-        const { loader } = entry;
+        const { loader, sourceImageId } = entry;
         const file = await handle.getFile();
         const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
-        applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+        applyOmeRoisFromLoaderToFirstWaypoint(loader, sourceImageId, omeXml);
       }
     }
     setFileName(
@@ -1218,7 +1197,6 @@ const Content = (props: Props) => {
       relevantGroups: relevant_groups,
       rgbDisplay,
     });
-    const SourceChannels = slice.sourceChannels;
     let nextImages = slice.nextImages;
     let ChannelGroups: ChannelGroup[];
     if (role === "segmentation") {
@@ -1226,7 +1204,7 @@ const Content = (props: Props) => {
     } else if (slice.extractedGroups.length > 0) {
       ChannelGroups = await applySharedImportPaletteToChannelGroups(
         slice.extractedGroups,
-        SourceChannels,
+        slice.sourceChannels,
       );
     } else {
       nextImages = await applyPaletteToFlatImportImages(nextImages);
@@ -1246,7 +1224,7 @@ const Content = (props: Props) => {
     afterImageImportDocumentEffects();
     if (role !== "segmentation") {
       const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
-      applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+      applyOmeRoisFromLoaderToFirstWaypoint(loader, sourceImageId, omeXml);
     }
     setLastOmeTiffUrl(url);
     setFileName(basename);
@@ -1983,6 +1961,8 @@ const Content = (props: Props) => {
     channelVisibilities,
     channelGroupRowVisibilities,
     channelRendering,
+    images,
+    orientationPreview: imageOrientationPreview,
     remountKey: viewerRemountKey,
   });
 
@@ -2116,40 +2096,26 @@ const Content = (props: Props) => {
           const w = img?.sizeX ?? 0;
           const h = img?.sizeY ?? 0;
           const ch = img?.sizeC ?? 0;
+          let label: string;
           if (dicomIndexList.length > 0) {
-            loadedSource = {
-              label:
-                fileName ||
-                dicomIndexList
-                  .map((d) =>
-                    d.modality ? `${d.series} (${d.modality})` : `${d.series}`,
-                  )
-                  .join(", ") ||
-                "DICOMweb",
-              width: w,
-              height: h,
-              channelCount: ch,
-            };
+            label =
+              fileName ||
+              dicomIndexList
+                .map((d) =>
+                  d.modality ? `${d.series} (${d.modality})` : `${d.series}`,
+                )
+                .join(", ") ||
+              "DICOMweb";
           } else if (omeLoaderEntries.length > 0) {
             const isUrlSource = handles.length === 0;
-            const label = isUrlSource
+            label = isUrlSource
               ? lastOmeTiffUrl || fileName || "Remote OME-TIFF"
               : fileName || handleNamesLabel || "OME-TIFF";
-            loadedSource = {
-              label,
-              width: w,
-              height: h,
-              channelCount: ch,
-            };
           } else {
-            loadedSource = {
-              label:
-                lastOmeTiffUrl || fileName || handleNamesLabel || "Loading…",
-              width: w,
-              height: h,
-              channelCount: ch,
-            };
+            label =
+              lastOmeTiffUrl || fileName || handleNamesLabel || "Loading…";
           }
+          loadedSource = { label, width: w, height: h, channelCount: ch };
         }
         const importOme = async (
           req: OmeImportRequest,
@@ -2303,6 +2269,7 @@ const Content = (props: Props) => {
             isDragging={dragState.isDragging}
             hoveredShapeId={hoverState.hoveredShapeId}
             onOverlayInteraction={handleOverlayInteraction}
+            canArrange={!presenting}
           />
         );
         const imager = (
