@@ -167,5 +167,7 @@
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  /* Keeps the row's ⋮ button off the outline. */
+  padding-right: 6px;
   border: 1px solid #fff;
 }

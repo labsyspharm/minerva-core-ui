@@ -5,6 +5,7 @@ import type { ConfigWaypoint } from "../authoring/config";
 import { applyStackVisibilities } from "../imaging/channelCompositor";
 import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
+import { CONTOUR_LEVELS_DEFAULT } from "../imaging/contourExtension";
 import {
   type ClassVisibility,
   type ImageSelectionMask,
@@ -799,6 +800,12 @@ export interface AppStore {
   arrangeImageId: string | null;
   setArrangeImageId: (imageId: string | null) => void;
   channelVisibilities: Record<string, boolean>;
+  /** Source channel ids drawn as isolines instead of a color fill. */
+  contourChannelIds: Record<string, boolean>;
+  toggleContourChannel: (sourceChannelId: string) => void;
+  /** Isolines across each contoured channel's contrast window. */
+  contourLevels: number;
+  setContourLevels: (levels: number) => void;
   /**
    * Session-only per-feature-table class visibility. Missing key ≡ all visible.
    */
@@ -946,6 +953,8 @@ const overlayInitialState = {
   imageOrientationPreview: null,
   arrangeImageId: null,
   channelVisibilities: {},
+  contourChannelIds: {},
+  contourLevels: CONTOUR_LEVELS_DEFAULT,
   featureTableVisibilities: {},
   channelGroupRowVisibilities: {},
   groupNames: {},
@@ -2225,6 +2234,22 @@ export const useAppStore = create<AppStore>()(
 
       setEditingViewstateWaypointIndex: (index) => {
         set({ editingViewstateWaypointIndex: index });
+      },
+
+      toggleContourChannel: (sourceChannelId) => {
+        set((state) => {
+          const contourChannelIds = { ...state.contourChannelIds };
+          if (contourChannelIds[sourceChannelId]) {
+            delete contourChannelIds[sourceChannelId];
+          } else {
+            contourChannelIds[sourceChannelId] = true;
+          }
+          return { contourChannelIds };
+        });
+      },
+
+      setContourLevels: (contourLevels) => {
+        set({ contourLevels });
       },
 
       setChannelVisibilities: (vis: Record<string, boolean>) => {

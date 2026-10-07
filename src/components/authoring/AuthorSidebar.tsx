@@ -42,8 +42,9 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
   const channelNav = useMemo<AuthorChannelNav>(
     () => ({
       ensureChannelHistograms: props.ensureChannelHistograms,
+      contrastEditable: props.contrastEditable,
     }),
-    [props.ensureChannelHistograms],
+    [props.ensureChannelHistograms, props.contrastEditable],
   );
 
   const activePanel =
