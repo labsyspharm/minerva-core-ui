@@ -4,10 +4,29 @@ import {
 } from "@/lib/imaging/cubeRootEncoding";
 import type { DocumentData, Image } from "@/lib/stores/documentSchema";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
+import { routerBasepath } from "@/router/appRouter";
 import { version as MINERVA_VERSION } from "../../../package.json";
 
+/**
+ * PR previews build with `VITE_STORY_BUNDLE_URL` and ship `bundle/` beside the
+ * app (see `pr-preview.yml`), so stories exported there load the player built
+ * from the same commit instead of the published npm release.
+ */
+function storyBundleBaseUrl(version: string): string {
+  const selfHosted = import.meta.env.VITE_STORY_BUNDLE_URL;
+  if (!selfHosted) {
+    return `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version}/bundle`;
+  }
+  // Relative values resolve against the deploy folder (e.g. `/pr-preview/pr-12/`).
+  const deployDir = new URL(
+    `${routerBasepath().replace(/\/$/, "")}/`,
+    window.location.origin,
+  );
+  return new URL(selfHosted, deployDir).href.replace(/\/$/, "");
+}
+
 function minervaCdnUrls(version: string): { js: string; css: string } {
-  const base = `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version}/bundle`;
+  const base = storyBundleBaseUrl(version);
   return {
     js: `${base}/minerva.js`,
     css: `${base}/minerva.css`,

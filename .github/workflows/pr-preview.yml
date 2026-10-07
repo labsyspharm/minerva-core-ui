@@ -33,12 +33,17 @@ jobs:
           run_install: true
 
       # Same Vite build as Github Pages (`build.yml`): relative base so assets load under
-      # `…/pr-preview/pr/<number>/`.
+      # `…/pr-preview/pr/<number>/`. `pages` also builds the story player (`bundle/`) from
+      # this commit; ship it inside the preview and point exported stories at it
+      # (`VITE_STORY_BUNDLE_URL`, relative to the preview folder) instead of the npm release.
       - name: Install and build
         if: github.event.action != 'closed'
         env:
           BASE_PATH: "./"
-        run: pnpm run pages
+          VITE_STORY_BUNDLE_URL: "bundle/"
+        run: |
+          pnpm run pages
+          cp -R bundle dist/bundle
 
       - name: Deploy preview
         uses: rossjrw/pr-preview-action@v1
