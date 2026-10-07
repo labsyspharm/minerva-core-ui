@@ -126,7 +126,7 @@ function deploymentBasenameFromNormalizedPath(normalizedPath: string): string {
   return `/${segments[0]}`;
 }
 
-function routerBasepath(): string {
+export function routerBasepath(): string {
   const b =
     typeof import.meta.env.BASE_URL === "string"
       ? import.meta.env.BASE_URL
