@@ -15,12 +15,3 @@ export function indexTexSize(
   width = Math.max(4, (width + 3) & ~3);
   return { width, height: Math.max(1, Math.ceil(n / width)) };
 }
-
-/** False when the worker has no rows or the index would not fit a texture. */
-export function shouldFetchClassIndex(
-  ingested: boolean,
-  count: number,
-): boolean {
-  if (!ingested) return false;
-  return indexTexSize(count) != null;
-}

@@ -565,7 +565,7 @@ function exportViewportToBounds(v: Viewport): WaypointBounds {
 
 // Every waypoint field must be copied here and in `waypointToConfigWaypoint`;
 // `updateStory` round-trips through both and drops anything else.
-export function configWaypointToExportWaypoint(
+function configWaypointToExportWaypoint(
   wp: ConfigWaypoint,
   imageWidth: number,
   imageHeight: number,

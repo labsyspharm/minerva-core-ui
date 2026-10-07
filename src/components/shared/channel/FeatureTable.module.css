@@ -113,10 +113,6 @@
   cursor: pointer;
 }
 
-.name:disabled {
-  cursor: default;
-}
-
 .textBtn:hover:not(:disabled) {
   background: var(--minerva-wash);
 }

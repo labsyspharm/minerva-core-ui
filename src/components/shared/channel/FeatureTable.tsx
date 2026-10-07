@@ -47,7 +47,11 @@ import {
   rgbToHex,
 } from "@/lib/imaging/sourceChannelStyle";
 import { useAppStore } from "@/lib/stores/appStore";
-import type { Color, Waypoint } from "@/lib/stores/documentSchema";
+import type {
+  Color,
+  FeatureTable,
+  Waypoint,
+} from "@/lib/stores/documentSchema";
 import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
@@ -446,13 +450,6 @@ function FeatureTableAttach(props: { sourceChannelId: string }) {
   );
 }
 
-function useActiveWaypoint(): Waypoint | undefined {
-  const activeStoryIndex = useAppStore((s) => s.activeStoryIndex);
-  return useDocumentStore((s) =>
-    activeStoryIndex == null ? undefined : s.waypoints[activeStoryIndex],
-  );
-}
-
 /**
  * One table's classes as `waypoint` shows them. Edits write that waypoint's
  * class view; with no waypoint the list is read-only.
@@ -649,7 +646,10 @@ function ClassViewReset(props: { featureTableId: string; waypoint: Waypoint }) {
 /** Channel panel: the class list under a mask row edits the waypoint on screen. */
 function FeatureTableListBody(props: { featureTableId: string }) {
   const { featureTableId } = props;
-  const waypoint = useActiveWaypoint();
+  const activeStoryIndex = useAppStore((s) => s.activeStoryIndex);
+  const waypoint = useDocumentStore((s) =>
+    activeStoryIndex == null ? undefined : s.waypoints[activeStoryIndex],
+  );
   const handleKey = useDocumentStore((s) => {
     const featureTable = s.featureTables.find((c) => c.id === featureTableId);
     return featureTable ? featureTableHandleKey(featureTable) : undefined;
@@ -744,15 +744,10 @@ function FeatureTableListBody(props: { featureTableId: string }) {
 export function WaypointClassViews(props: {
   waypoint: Waypoint;
   /** Tables whose mask is in the waypoint's channel group. */
-  featureTableIds: readonly string[];
+  featureTables: readonly FeatureTable[];
   readOnly?: boolean;
 }) {
-  const { waypoint, featureTableIds, readOnly } = props;
-  const allTables = useDocumentStore((s) => s.featureTables);
-  const featureTables = useMemo(
-    () => allTables.filter((c) => featureTableIds.includes(c.id)),
-    [allTables, featureTableIds],
-  );
+  const { waypoint, featureTables, readOnly } = props;
   const images = useDocumentStore((s) => s.images);
   const ingestEpoch = useSyncExternalStore(
     subscribeFeatureTableIngest,

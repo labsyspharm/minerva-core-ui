@@ -133,14 +133,13 @@ const FEATURE_TABLE_DIR = "feature-tables";
  * `document.json`. A table the worker has not loaded has no bytes to write:
  * it is left out and its mask's name is returned in `skipped`.
  */
-export function planFeatureTableSidecars(
+function planFeatureTableSidecars(
   data: Pick<DocumentData, "featureTables" | "images">,
-  isLoaded: (featureTableId: string) => boolean,
 ): { featureTables: FeatureTable[]; skipped: string[] } {
   const featureTables: FeatureTable[] = [];
   const skipped: string[] = [];
   for (const featureTable of data.featureTables) {
-    if (!isLoaded(featureTable.id)) {
+    if (!hasIngestedFeatureTable(featureTable.id)) {
       const channel = data.images
         .flatMap((im) => im.channels)
         .find((ch) => ch.id === featureTable.sourceChannelId);
@@ -201,10 +200,7 @@ export async function writeStoryBundleSidecars(
       "Remote URL export requires all images to use OME-TIFF URLs (no local files).",
     );
   }
-  const { featureTables, skipped } = planFeatureTableSidecars(
-    data,
-    hasIngestedFeatureTable,
-  );
+  const { featureTables, skipped } = planFeatureTableSidecars(data);
   await writeFeatureTableFiles(directory, featureTables);
   const exported = toExportedStoryDocument({ ...data, featureTables }, mode);
   await writeTextFile(

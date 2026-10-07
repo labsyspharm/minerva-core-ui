@@ -25,10 +25,9 @@ import {
   peekClassIndex,
   resetFeatureTables,
 } from "./client";
-import { MAX_CLASS_NAMES, shouldFetchClassIndex } from "./lutLayout";
+import { indexTexSize, MAX_CLASS_NAMES } from "./lutLayout";
 
 export {
-  exportFeatureTableParquet,
   getFeatureTableIngestEpoch,
   hasIngestedFeatureTable,
   pageFeatureTable,
@@ -311,11 +310,10 @@ function ensureIndex(featureTable: FeatureTable) {
     lutPending.has(featureTableId)
   )
     return;
+  // No rows yet, or the index would not fit a texture.
   if (
-    !shouldFetchClassIndex(
-      hasIngestedFeatureTable(featureTableId),
-      featureTable.maxClassId + 1,
-    )
+    !hasIngestedFeatureTable(featureTableId) ||
+    indexTexSize(featureTable.maxClassId + 1) == null
   )
     return;
   lutPending.add(featureTableId);

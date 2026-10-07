@@ -218,7 +218,7 @@ async function planRead(
   const file = `${table}.csv`;
   return {
     file,
-    cols: format.columns,
+    cols: PERSISTED_COLUMNS,
     reader: `read_csv(${sqlString(file)}, header=true, all_varchar=true, ${CSV_QUOTING})`,
     persist: true,
   };

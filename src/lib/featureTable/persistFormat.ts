@@ -1,9 +1,7 @@
 /** Columns of every stored table, Parquet or legacy CSV. */
 export const PERSISTED_COLUMNS = { id: "class_id", name: "class_name" };
 
-export type StoredTableFormat =
-  | { kind: "parquet" }
-  | { kind: "csv"; columns: { id: string; name: string }; header: true };
+type StoredTableFormat = { kind: "parquet" } | { kind: "csv" };
 
 /**
  * Stored bytes start with `PAR1` when they are Parquet. Older stories stored
@@ -18,5 +16,5 @@ export function storedTableFormat(bytes: Uint8Array): StoredTableFormat {
     bytes[2] === 0x52 &&
     bytes[3] === 0x31;
   if (parquet) return { kind: "parquet" };
-  return { kind: "csv", columns: PERSISTED_COLUMNS, header: true };
+  return { kind: "csv" };
 }
