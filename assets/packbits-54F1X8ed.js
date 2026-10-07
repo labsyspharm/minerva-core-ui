@@ -1,4 +1,4 @@
-import { B as BaseDecoder } from './decoder.worker-DIAknyvn.js';
+import { B as BaseDecoder } from './decoder.worker-CKbAr6AY.js';
 
 class PackbitsDecoder extends BaseDecoder {
   decodeBlock(buffer) {
