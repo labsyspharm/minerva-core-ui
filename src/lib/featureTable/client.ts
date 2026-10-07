@@ -32,6 +32,7 @@ type Outbound =
       indexWidth?: number;
       indexHeight?: number;
     }
+  | { id: number; type: "parquet"; bytes: Uint8Array<ArrayBuffer> }
   | { id: number; type: "ok" }
   | { id: number; type: "error"; message: string };
 
@@ -202,6 +203,15 @@ export async function fetchClassIndex(
     msg.indexHeight,
   );
   return classIndexCache.get(featureTableId) ?? undefined;
+}
+
+export async function exportFeatureTableParquet(
+  featureTableId: string,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const msg = await request({ type: "exportParquet", featureTableId });
+  if (msg.type === "error") throw new Error(msg.message);
+  if (msg.type !== "parquet") throw new Error("unexpected export reply");
+  return msg.bytes;
 }
 
 export async function dropFeatureTable(featureTableId: string): Promise<void> {

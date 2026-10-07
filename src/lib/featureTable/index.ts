@@ -28,6 +28,7 @@ import {
 import { MAX_CLASS_NAMES, shouldFetchClassIndex } from "./lutLayout";
 
 export {
+  exportFeatureTableParquet,
   getFeatureTableIngestEpoch,
   hasIngestedFeatureTable,
   pageFeatureTable,
@@ -259,6 +260,32 @@ export function classColorsFor(
   const colors = new Map(featureTable.nameColors.map((c) => [c.name, c.color]));
   for (const c of view?.colors ?? []) colors.set(c.name, c.color);
   return colors;
+}
+
+/**
+ * Classes the view shows, in palette order, with the swatch the mask draws.
+ * Undefined until the class index is loaded. Names past the palette's slots
+ * draw unlabeled, so they are left out.
+ */
+export function shownClassRows(
+  featureTable: FeatureTable,
+  view: ClassView | undefined,
+  seed: number,
+): { name: string; color: Color }[] | undefined {
+  const idx = peekClassIndex(featureTable.id);
+  if (!idx) return undefined;
+  const colors = classColorsFor(featureTable, view);
+  const rows: { name: string; color: Color }[] = [];
+  const n = Math.min(idx.names.length, MAX_CLASS_NAMES);
+  for (let i = 0; i < n; i++) {
+    const name = idx.names[i];
+    if (!classNameVisible(view?.visibility, name)) continue;
+    rows.push({
+      name,
+      color: colors.get(name) ?? defaultClassColor(i + 1, seed),
+    });
+  }
+  return rows;
 }
 
 function paletteRev(
@@ -538,9 +565,27 @@ export function resetClassView(featureTableId: string): void {
     .setWaypointClassView(target.waypointId, target.channelId, null);
 }
 
+async function fetchTableBytes(
+  url: string,
+  documentUrl: string | undefined,
+): Promise<Uint8Array> {
+  const base = new URL(
+    documentUrl ?? window.location.href,
+    window.location.href,
+  );
+  const res = await fetch(new URL(url, base));
+  if (!res.ok) throw new Error(`Failed to load ${url} (${res.status})`);
+  return new Uint8Array(await res.arrayBuffer());
+}
+
+/**
+ * Ingest every table into the worker. A `local` source reads its Dexie blob;
+ * a `url` source is fetched relative to `documentUrl` (the page by default).
+ */
 export async function hydrateFeatureTables(
   featureTables: readonly FeatureTable[],
   reset: boolean,
+  opts?: { documentUrl?: string },
 ): Promise<void> {
   if (reset) {
     lutPending.clear();
@@ -549,6 +594,17 @@ export async function hydrateFeatureTables(
   const missingHandleKeys: string[] = [];
   for (const featureTable of featureTables) {
     if (!reset && hasIngestedFeatureTable(featureTable.id)) continue;
+    const { source } = featureTable;
+    if (source.kind === "url") {
+      try {
+        const bytes = await fetchTableBytes(source.url, opts?.documentUrl);
+        await ingestFeatureTable(featureTable.id, bytes);
+        noteLut();
+      } catch (e) {
+        console.error("[featureTable] hydrate failed", featureTable.id, e);
+      }
+      continue;
+    }
     const key = featureTableHandleKey(featureTable);
     if (!key) continue;
     const bytes = await getBlob(key);

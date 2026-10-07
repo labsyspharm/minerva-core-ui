@@ -31,6 +31,7 @@ type Inbound =
       limit: number;
     }
   | { id: number; type: "classIndex"; featureTableId: string }
+  | { id: number; type: "exportParquet"; featureTableId: string }
   | { id: number; type: "drop"; featureTableId: string }
   | { id: number; type: "reset" };
 
@@ -59,6 +60,7 @@ type Outbound =
       indexWidth?: number;
       indexHeight?: number;
     }
+  | { id: number; type: "parquet"; bytes: Uint8Array }
   | { id: number; type: "ok" }
   | { id: number; type: "error"; message: string };
 
@@ -382,6 +384,18 @@ async function readClassIndex(featureTableId: string): Promise<{
   return { names, index };
 }
 
+/** Parquet of an ingested table, whatever format its blob was stored in. */
+async function exportTableParquet(featureTableId: string): Promise<Uint8Array> {
+  const c = await ensureConn();
+  const duck = db;
+  if (!duck) throw new Error("DuckDB failed to start");
+  const table = tableName(featureTableId);
+  if (!(await tableExists(c, table))) {
+    throw new Error("Feature table is not loaded");
+  }
+  return exportParquet(duck, c, table);
+}
+
 async function drop(featureTableId: string): Promise<void> {
   if (!conn) return;
   await conn.query(`DROP TABLE IF EXISTS ${tableName(featureTableId)}`);
@@ -441,6 +455,14 @@ async function handle(msg: Inbound): Promise<void> {
           indexHeight: index?.height,
         } satisfies Outbound,
         index ? { transfer: [index.data.buffer] } : undefined,
+      );
+      return;
+    }
+    if (msg.type === "exportParquet") {
+      const bytes = await exportTableParquet(msg.featureTableId);
+      self.postMessage(
+        { id: msg.id, type: "parquet", bytes } satisfies Outbound,
+        { transfer: [bytes.buffer] },
       );
       return;
     }

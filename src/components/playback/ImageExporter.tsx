@@ -314,6 +314,8 @@ export const ImageExporter = (props: ImageExporterProps) => {
   const [nowMs, setNowMs] = useState(() => performance.now());
   const [cRange, setCRange] = useState<Index[] | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  /** Masks whose feature table was not loaded, so the export left it out. */
+  const [skippedTables, setSkippedTables] = useState<string[]>([]);
   /** IF multiplex always cube-root; RGB still forced to contrast in export helpers. */
   const jpegTransfer: JpegExportTransfer = "cube-root";
   /**
@@ -402,7 +404,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     void (async () => {
       try {
         const doc = useDocumentStore.getState().toDocumentData();
-        await writeStoryBundleSidecars(
+        const written = await writeStoryBundleSidecars(
           directory_handle,
           {
             ...doc,
@@ -414,6 +416,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
           { mode: "remote-url" },
         );
         if (cancelled) return;
+        setSkippedTables(written.skippedFeatureTables);
         setProgress({
           completed: 1,
           total: 1,
@@ -499,9 +502,10 @@ export const ImageExporter = (props: ImageExporterProps) => {
             imageSource: nextSource,
           },
         };
-        await writeStoryBundleSidecars(directory_handle, doc, {
+        const written = await writeStoryBundleSidecars(directory_handle, doc, {
           mode: "jpeg-ome-tiff",
         });
+        setSkippedTables(written.skippedFeatureTables);
         const store = useDocumentStore.getState();
         store.setImages(remappedImages);
         store.setMetadata({
@@ -616,7 +620,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
       try {
         const nextSource = imageSourceFromJpegTransfer(jpegTransfer);
         const doc = useDocumentStore.getState().toDocumentData();
-        await writeStoryBundleSidecars(
+        const written = await writeStoryBundleSidecars(
           directory_handle,
           {
             ...doc,
@@ -628,6 +632,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
           },
           { mode: "jpeg-pyramid" },
         );
+        setSkippedTables(written.skippedFeatureTables);
         useDocumentStore.getState().setMetadata({ imageSource: nextSource });
       } catch (e) {
         console.error("[minerva] failed to write story bundle sidecars", e);
@@ -687,6 +692,12 @@ export const ImageExporter = (props: ImageExporterProps) => {
   }
 
   const clampedRatio = Math.min(1, Math.max(0, ratio));
+  const skippedNote =
+    done && skippedTables.length > 0 ? (
+      <div className={styles.exportMessage}>
+        Feature tables not loaded, left out: {skippedTables.join(", ")}
+      </div>
+    ) : null;
 
   return (
     <div className={styles.imageExporter}>
@@ -710,6 +721,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
               ? "Exported document.json + index.html (remote URLs)"
               : "Writing document.json + index.html…"}
           </div>
+          {skippedNote}
           {done ? (
             <button
               type="button"
@@ -780,6 +792,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
             <div> {percentLabel} </div>
           </div>
           {etaLabel ? <div className={styles.etaLine}>{etaLabel}</div> : null}
+          {skippedNote}
           {done ? (
             <button
               type="button"

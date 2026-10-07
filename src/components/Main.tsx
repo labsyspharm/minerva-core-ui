@@ -1929,12 +1929,17 @@ const Content = (props: Props) => {
           if (!handle) {
             throw new Error("No export folder selected");
           }
-          await writeStoryBundleSidecars(
+          const written = await writeStoryBundleSidecars(
             handle,
             useDocumentStore.getState().toDocumentData(),
             { mode: "jpeg-ome-tiff" },
           );
           stopExport();
+          if (written.skippedFeatureTables.length > 0) {
+            window.alert(
+              `document.json updated. Feature tables not loaded, left out: ${written.skippedFeatureTables.join(", ")}`,
+            );
+          }
         }
       : undefined,
     presenting,

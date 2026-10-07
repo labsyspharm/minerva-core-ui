@@ -1,3 +1,4 @@
+import { hydrateFeatureTables } from "@/lib/featureTable";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import { hydrateDocumentLoaders } from "@/lib/imaging/hydrateDocumentLoaders";
 import type {
@@ -58,5 +59,10 @@ export async function loadStoryDocument(
     });
 
   seedPlaybackSession(data);
+  // Not awaited: the image draws first, and masks with a table join once
+  // their Parquet sidecar is ingested.
+  void hydrateFeatureTables(data.featureTables, true, { documentUrl }).catch(
+    (e) => console.error("[featureTable] player hydrate failed", e),
+  );
   return { jpegLoaderEntries, omeLoaderEntries, dicomIndexList };
 }

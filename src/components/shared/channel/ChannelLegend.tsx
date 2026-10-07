@@ -375,3 +375,79 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
     </div>
   );
 };
+
+export type ClassLegendSection = {
+  channelId: string;
+  label: string;
+  /** `color` is hex without `#`. */
+  rows: { name: string; color: string }[];
+  /** False for a white mask, which draws every class the same. */
+  showSwatches: boolean;
+};
+
+const CLASS_LEGEND_ROWS = 12;
+
+function ClassLegendList({ section }: { section: ClassLegendSection }) {
+  const [expanded, setExpanded] = React.useState(false);
+  const more = section.rows.length - CLASS_LEGEND_ROWS;
+  const rows =
+    expanded || more <= 0
+      ? section.rows
+      : section.rows.slice(0, CLASS_LEGEND_ROWS);
+  return (
+    <div className={styles.imageSection}>
+      <div className={styles.imageSectionLabel} title={section.label}>
+        {section.label}
+      </div>
+      <div className={styles.channelList}>
+        {rows.map((row) => (
+          <div className={styles.legendRowWrap} key={row.name}>
+            <div className={styles.rowClickArea}>
+              {section.showSwatches ? (
+                <div
+                  className={`${styles.swatch} ${styles.swatchFilled}`}
+                  style={{ "--swatch-color": `#${row.color}` } as CSSProperties}
+                />
+              ) : null}
+              <span className={styles.nameSlot}>
+                {row.name.trim() ? row.name : "Unnamed"}
+              </span>
+            </div>
+          </div>
+        ))}
+        {more > 0 && !expanded ? (
+          <div className={styles.legendRowWrap}>
+            <button
+              type="button"
+              className={`${minervaTheme.focusRing} ${styles.nameButton}`}
+              onClick={() => setExpanded(true)}
+            >
+              <span className={styles.nameSlot}>+{more} more</span>
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+/** Classes the active waypoint shows, one list per mask with a table. */
+export const ClassLegend = ({
+  sections,
+}: {
+  sections: ClassLegendSection[];
+}) => {
+  if (sections.length === 0) return null;
+  return (
+    <div className={styles.channelsSection}>
+      <div className={styles.channelsSectionHeader}>
+        <div className={styles.sectionLabel}>Classes</div>
+      </div>
+      <div className={styles.legendBody}>
+        {sections.map((section) => (
+          <ClassLegendList key={section.channelId} section={section} />
+        ))}
+      </div>
+    </div>
+  );
+};
