@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-D71z0AtH.js","./pako.esm-KbdoS3Oq.js","./lerc-BPSuPxsE.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-B7-_jdpX.js","./pako.esm-KbdoS3Oq.js","./lerc-BWwvdLl_.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -76309,26 +76309,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-mSoqbgvF.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Be4Zyxq_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BmvENMNb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DtWZepnS.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-C1F7V4z3.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-xeUFL1SJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-D71z0AtH.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BlAVHsEW.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BPSuPxsE.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-B7-_jdpX.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DO2OZBCi.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BWwvdLl_.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Bh8qkqiP.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-6vbxEQMz.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CP_59GXc.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-kc5bFeIk.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -157364,7 +157364,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, lengths) {
+        value: function writeBytes2(stream, value, lengths) {
           var writeOptions = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : {
             allowInvalidVRLength: false
           };
@@ -157484,7 +157484,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           var written = _get(_getPrototypeOf(AsciiStringRepresentation2.prototype), "write", this).call(this, stream, "AsciiString", value);
           return _get(_getPrototypeOf(AsciiStringRepresentation2.prototype), "writeBytes", this).call(this, stream, value, written, writeOptions);
         }
@@ -157509,7 +157509,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           var written = _get(_getPrototypeOf(EncodedStringRepresentation2.prototype), "write", this).call(this, stream, "UTF8String", value);
           return _get(_getPrototypeOf(EncodedStringRepresentation2.prototype), "writeBytes", this).call(this, stream, value, written, writeOptions);
         }
@@ -157531,7 +157531,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     _createClass(BinaryRepresentation2, [
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, syntax, isEncapsulated) {
+        value: function writeBytes2(stream, value, syntax, isEncapsulated) {
           var writeOptions = arguments.length > 4 && arguments[4] !== void 0 ? arguments[4] : {};
           var i2;
           var binaryStream;
@@ -157801,7 +157801,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(AttributeTag2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(AttributeTag2.prototype), "write", this).call(this, stream, "TwoUint16s", value), writeOptions);
         }
       }
@@ -157906,7 +157906,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           var _this8 = this;
           var val = Array.isArray(value) ? value.map(function(ds) {
             return _this8.convertToString(ds);
@@ -157975,7 +157975,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(FloatingPointSingle2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(FloatingPointSingle2.prototype), "write", this).call(this, stream, "Float", value), writeOptions);
         }
       }
@@ -158011,7 +158011,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(FloatingPointDouble2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(FloatingPointDouble2.prototype), "write", this).call(this, stream, "Double", value), writeOptions);
         }
       }
@@ -158053,7 +158053,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           var _this13 = this;
           var val = Array.isArray(value) ? value.map(function(is2) {
             return _this13.convertToString(is2);
@@ -158209,7 +158209,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(PersonName2.prototype), "writeBytes", this).call(this, stream, dicomJson.pnObjectToString(value), writeOptions);
         }
       }
@@ -158278,7 +158278,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(SignedLong2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(SignedLong2.prototype), "write", this).call(this, stream, "Int32", value), writeOptions);
         }
       }
@@ -158375,7 +158375,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, syntax, writeOptions) {
+        value: function writeBytes2(stream, value, syntax, writeOptions) {
           var written = 0;
           if (value) {
             for (var i2 = 0; i2 < value.length; i2++) {
@@ -158426,7 +158426,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(SignedShort2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(SignedShort2.prototype), "write", this).call(this, stream, "Int16", value), writeOptions);
         }
       }
@@ -158580,7 +158580,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(UnsignedShort2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(UnsignedShort2.prototype), "write", this).call(this, stream, "Uint16", value), writeOptions);
         }
       }
@@ -158610,7 +158610,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(UnsignedLong2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(UnsignedLong2.prototype), "write", this).call(this, stream, "Uint32", value), writeOptions);
         }
       }
@@ -166786,13 +166786,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   const version = "1.0.0-alpha.10";
-  function storyBundleBaseUrl(version2) {
-    {
-      return `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version2}/bundle`;
-    }
+  const LOCAL_PLAYER_DIR = "bundle";
+  function hostedPlayerBaseUrl() {
+    return null;
   }
-  function minervaCdnUrls(version2) {
-    const base2 = storyBundleBaseUrl(version2);
+  function playerAssetUrls(version2) {
+    const base2 = `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version2}/bundle`;
     return {
       js: `${base2}/minerva.js`,
       css: `${base2}/minerva.css`
@@ -166845,7 +166844,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return current ?? "jpeg-pyramid";
   }
   function storyIndexHtml(title7, version$12 = version) {
-    const { js, css: css2 } = minervaCdnUrls(version$12);
+    const { js, css: css2 } = playerAssetUrls(version$12);
     const safeTitle = ((title7 == null ? void 0 : title7.trim()) || "Minerva Story").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     return `<!DOCTYPE html>
 <html lang="en">
@@ -166880,6 +166879,49 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     await write.write(text2);
     await write.close();
   }
+  async function writeBytes(directory, relativePath, bytes) {
+    const parts = relativePath.split("/");
+    const fileName = parts.pop();
+    if (!fileName) throw new Error(`Invalid story player path: ${relativePath}`);
+    let dir2 = directory;
+    for (const part of parts) {
+      dir2 = await dir2.getDirectoryHandle(part, {
+        create: true
+      });
+    }
+    const fh2 = await dir2.getFileHandle(fileName, {
+      create: true
+    });
+    const write = await fh2.createWritable();
+    await write.write(bytes);
+    await write.close();
+  }
+  async function copyHostedPlayer(directory) {
+    const base2 = hostedPlayerBaseUrl();
+    if (!base2) return;
+    const manifestRes = await fetch(`${base2}/manifest.json`);
+    if (!manifestRes.ok) {
+      throw new Error(`Story player manifest missing at ${base2}/manifest.json (${manifestRes.status})`);
+    }
+    const listed = await manifestRes.json();
+    if (!Array.isArray(listed)) {
+      throw new Error("Story player manifest is invalid");
+    }
+    const files = listed.filter((name2) => typeof name2 === "string");
+    if (files.length === 0) {
+      throw new Error("Story player manifest is empty");
+    }
+    const playerDir = await directory.getDirectoryHandle(LOCAL_PLAYER_DIR, {
+      create: true
+    });
+    for (const relativePath of files) {
+      const fileRes = await fetch(`${base2}/${relativePath}`);
+      if (!fileRes.ok) {
+        throw new Error(`Failed to copy story player file ${relativePath} (${fileRes.status})`);
+      }
+      await writeBytes(playerDir, relativePath, await fileRes.arrayBuffer());
+    }
+  }
   async function writeStoryBundleSidecars(directory, data2, opts) {
     const mode = (opts == null ? void 0 : opts.mode) ?? "jpeg-pyramid";
     if (mode === "remote-url" && !canExportWithRemoteUrls(data2.images)) {
@@ -166887,6 +166929,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     const exported = toExportedStoryDocument(data2, mode);
     await writeTextFile(directory, "document.json", JSON.stringify(exported, null, 2));
+    await copyHostedPlayer(directory);
     await writeTextFile(directory, "index.html", storyIndexHtml(exported.metadata.title, exported.metadata.minervaVersion ?? version));
   }
   const STORY_ROOT_HANDLE_SUFFIX = ":storyRoot";
@@ -253238,12 +253281,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-10-07T17:22:16.719Z");
+    const label2 = utcShort("2026-10-07T18:45:29.733Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$4.stamp,
       "aria-hidden": true,
-      title: "2026-10-07T17:22:16.719Z",
+      title: "2026-10-07T18:45:29.733Z",
       children: [
         "Updated ",
         label2,
