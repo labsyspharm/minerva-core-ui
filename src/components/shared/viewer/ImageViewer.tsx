@@ -512,10 +512,21 @@ export const ImageViewer = (props: ImageViewerProps) => {
     [loaderList, images],
   );
 
-  const frame = useMemo(
-    () => (firstLoader ? worldFrameFromLoader(firstLoader.loader) : null),
-    [firstLoader],
-  );
+  const frame = useMemo(() => {
+    if (!firstLoader) return null;
+    const base = worldFrameFromLoader(firstLoader.loader);
+    const um = images.find(
+      (im) => im.id === firstLoader.sourceImageId,
+    )?.umPerPixel;
+    if (typeof um !== "number" || !Number.isFinite(um) || um <= 0) return base;
+    return {
+      ...base,
+      umPerPixelX: um,
+      umPerPixelY: um,
+      worldWidth: base.pixelWidth * um,
+      worldHeight: base.pixelHeight * um,
+    };
+  }, [firstLoader, images]);
 
   useEffect(() => {
     setViewerWorldFrame(frame);

@@ -33,6 +33,10 @@ import {
   fileHandleFromDataTransferItem,
   findFile,
 } from "@/lib/imaging/filesystem";
+import {
+  markerNamesByChannelIndex,
+  peekMarkerCsv,
+} from "@/lib/imaging/markerCsv";
 import type {
   OmeImageImportRole,
   OmeImportResult,
@@ -40,7 +44,7 @@ import type {
 import {
   detectOmeTiffBrightfield,
   detectOmeTiffMask,
-  detectOmeTiffPlanarRgbAmbiguity,
+  detectOmeTiffRgbLayout,
 } from "@/lib/imaging/omeTiff";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentStore";
@@ -86,6 +90,8 @@ export type OmeImportRequest = {
   source:
     | { kind: "local"; path: string; handles: Handle.File[] }
     | { kind: "url"; url: string };
+  /** Fluorescence import: 0-based channel index → marker name. */
+  channelNames?: ReadonlyMap<number, string>;
 };
 
 type UploadProps = {
@@ -301,6 +307,29 @@ const Upload = (props: UploadProps) => {
     setFeatureCsvFile(null);
     setFeatureCsvCols(null);
   }, []);
+  useEffect(() => {
+    if (!featureCsvFile) return;
+    let cancel = false;
+    setFeatureCsvCols(null);
+    const peek =
+      overlayRole === "segmentation" ? peekFeatureCsv : peekMarkerCsv;
+    void peek(featureCsvFile).then((cols) => {
+      if (cancel) return;
+      if (!cols) {
+        setFeatureCsvCols(null);
+        return;
+      }
+      const id = "id" in cols && typeof cols.id === "string" ? cols.id : "";
+      setFeatureCsvCols({
+        headers: cols.headers,
+        id,
+        name: cols.name,
+      });
+    });
+    return () => {
+      cancel = true;
+    };
+  }, [featureCsvFile, overlayRole]);
   const [dragging, setDragging] = useState(false);
   const dragDepthRef = useRef(0);
   const localPickInFlightRef = useRef(false);
@@ -386,16 +415,22 @@ const Upload = (props: UploadProps) => {
           setDetecting(true);
 
           // 3-channel OME: skip mask detect; suggest Brightfield vs Fluorescence.
-          const rgbAmbiguous = await detectOmeTiffPlanarRgbAmbiguity(
-            source,
-            ac.signal,
-          );
+          // Packed RGB (one channel, SamplesPerPixel=3) is interleaved H&E.
+          // Only three separate planes are ambiguous.
+          const rgbLayout = await detectOmeTiffRgbLayout(source, ac.signal);
           if (ac.signal.aborted) return;
 
-          if (rgbAmbiguous) {
+          if (rgbLayout) {
             setDetectedRole("intensity");
             if (!roleChosenByUserRef.current) {
               setOverlayRole("intensity");
+            }
+            if (rgbLayout === "packed") {
+              setDetectedRgbDisplay(true);
+              if (!rgbDisplayChosenByUserRef.current) {
+                setOverlayRgbDisplay(true);
+              }
+              return;
             }
             setDetectedRgbDisplay(false);
             try {
@@ -582,6 +617,20 @@ const Upload = (props: UploadProps) => {
           ? overlayRgbDisplay
           : undefined;
       const attachCsv = role === "segmentation" ? featureCsvFile : null;
+      const attachMarkers =
+        role === "intensity" && !overlayRgbDisplay ? featureCsvFile : null;
+      let channelNames: Map<number, string> | undefined;
+      if (attachMarkers) {
+        const parsed = markerNamesByChannelIndex(
+          await attachMarkers.text(),
+          featureCsvCols?.name ? { name: featureCsvCols.name } : null,
+        );
+        if (parsed.ok === false) {
+          setImportError(parsed.error);
+          return;
+        }
+        channelNames = parsed.names;
+      }
       const beforeMaskIds = attachCsv
         ? new Set(
             flattenImageChannelsInDocumentOrder(
@@ -604,6 +653,7 @@ const Upload = (props: UploadProps) => {
         role,
         append: hasImages,
         rgbDisplay,
+        channelNames,
         source:
           pending.kind === "local"
             ? {
@@ -941,17 +991,23 @@ const Upload = (props: UploadProps) => {
               </div>
             </div>
           ) : null}
-          {overlayRole === "segmentation" ? (
+          {overlayRole === "segmentation" ||
+          (overlayRole === "intensity" && !overlayRgbDisplay) ? (
             <div className={styles.typeRow}>
-              <span className={styles.fieldLabel}>Feature table</span>
+              <span className={styles.fieldLabel}>
+                {overlayRole === "segmentation" ? "Feature table" : "Markers"}
+              </span>
               <PanelActionButton
                 type="button"
                 onClick={() => {
                   void (async () => {
-                    const file = await pickFeatureCsv();
+                    const file = await pickFeatureCsv(
+                      overlayRole === "segmentation"
+                        ? "Feature table CSV"
+                        : "Markers CSV",
+                    );
                     if (!file) return;
                     setFeatureCsvFile(file);
-                    void peekFeatureCsv(file).then(setFeatureCsvCols);
                   })();
                 }}
               >
@@ -959,12 +1015,24 @@ const Upload = (props: UploadProps) => {
               </PanelActionButton>
             </div>
           ) : null}
-          {overlayRole === "segmentation" && featureCsvCols ? (
+          {featureCsvCols &&
+          overlayRole === "segmentation" &&
+          featureCsvCols.id ? (
             <FeatureCsvColumnPick
               headers={featureCsvCols.headers}
               id={featureCsvCols.id}
               name={featureCsvCols.name}
               onId={(id) => setFeatureCsvCols({ ...featureCsvCols, id })}
+              onName={(name) => setFeatureCsvCols({ ...featureCsvCols, name })}
+            />
+          ) : null}
+          {featureCsvCols &&
+          overlayRole === "intensity" &&
+          !overlayRgbDisplay &&
+          featureCsvCols.name ? (
+            <FeatureCsvColumnPick
+              headers={featureCsvCols.headers}
+              name={featureCsvCols.name}
               onName={(name) => setFeatureCsvCols({ ...featureCsvCols, name })}
             />
           ) : null}

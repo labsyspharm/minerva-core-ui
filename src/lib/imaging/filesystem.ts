@@ -1,10 +1,14 @@
-import { loadOmeTiff } from "@hms-dbmi/viv";
+import { loadOmeTiff, TiffPixelSource } from "@hms-dbmi/viv";
 import { fileOpen } from "browser-fs-access";
-import { fromBlob, GeoTIFFImage } from "geotiff";
+import { fromBlob, fromUrl, GeoTIFFImage } from "geotiff";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
 import type { DecodePool } from "./omeDecodePool";
 import { omeChannelElements, omePixelsElement, parseOmeXml } from "./omeXml";
 import type { Loader } from "./viv";
+import { registerLzwDecoder } from "./workers/decoders";
+
+// Viv's import registers an LZW decoder that drops SamplesPerPixel. Override it.
+registerLzwDecoder();
 
 type GeoTiff = Awaited<ReturnType<typeof fromBlob>>;
 type GeoTiffImage = Awaited<ReturnType<GeoTiff["getImage"]>>;
@@ -467,6 +471,90 @@ function vivLoadOpts(pool?: DecodePool | null, packedRgb?: "planar") {
   };
 }
 
+/** OME SizeX/SizeY sometimes describe a different grid than IFD0. The plane is the pixels we can read. */
+function syncOmeSizeToPlane(loader: Loader): void {
+  const plane = loader.data?.[0];
+  const pixels = loader.metadata?.Pixels;
+  if (!plane || !pixels) return;
+  const xi = plane.labels.indexOf("x");
+  const yi = plane.labels.indexOf("y");
+  if (xi < 0 || yi < 0) return;
+  const width = plane.shape[xi];
+  const height = plane.shape[yi];
+  if (width > 1) pixels.SizeX = width;
+  if (height > 1) pixels.SizeY = height;
+}
+
+/** Next page is one pyramid step down (half-res, ±1px for odd sizes). */
+function isHalfResolution(
+  prevW: number,
+  prevH: number,
+  width: number,
+  height: number,
+): boolean {
+  if (width >= prevW || height >= prevH) return false;
+  return Math.abs(width - prevW / 2) <= 1 && Math.abs(height - prevH / 2) <= 1;
+}
+
+/**
+ * Viv only walks SubIFD pyramids. Bio-Formats also writes classic
+ * half-resolution pages as later IFDs; without them a whole slide is one level.
+ */
+async function appendClassicIfdPyramid(
+  loader: Loader,
+  source: Blob | string,
+  pool?: DecodePool,
+): Promise<void> {
+  const planes = loader.data;
+  if (!planes || planes.length !== 1) return;
+  const base = planes[0];
+  const xi = base.labels.indexOf("x");
+  const yi = base.labels.indexOf("y");
+  if (xi < 0 || yi < 0) return;
+  const tiff =
+    typeof source === "string" ? await fromUrl(source) : await fromBlob(source);
+  const count = await tiff.getImageCount();
+  let prevW = base.shape[xi];
+  let prevH = base.shape[yi];
+  const meta = (base as { meta?: undefined }).meta;
+  for (let i = 1; i < count; i++) {
+    const image = await tiff.getImage(i);
+    const width = image.getWidth();
+    const height = image.getHeight();
+    if (!isHalfResolution(prevW, prevH, width, height)) break;
+    const shape = base.shape.slice();
+    shape[xi] = width;
+    shape[yi] = height;
+    planes.push(
+      new TiffPixelSource(
+        async () => image,
+        base.dtype as never,
+        vivTileSize(image),
+        shape,
+        base.labels as never,
+        meta,
+        pool,
+      ) as unknown as LoaderPlane,
+    );
+    prevW = width;
+    prevH = height;
+  }
+}
+
+async function finishOmeIntensityLoader(
+  loader: Loader,
+  source: Blob | string,
+  pool?: DecodePool,
+): Promise<Loader> {
+  syncOmeSizeToPlane(loader);
+  try {
+    await appendClassicIfdPyramid(loader, source, pool);
+  } catch (error) {
+    console.warn("[minerva] TIFF pyramid levels were not attached", error);
+  }
+  return loader;
+}
+
 type OmeLoaderRole = "intensity" | "segmentation";
 
 /**
@@ -499,8 +587,10 @@ export async function loadOmeLoaderForRole(
     if (role === "segmentation") {
       return maskLoaderFromBlob(file);
     }
-    return asAppLoader(
-      await loadOmeTiff(file, vivLoadOpts(source.pool, packedRgb)),
+    return finishOmeIntensityLoader(
+      asAppLoader(await loadOmeTiff(file, vivLoadOpts(source.pool, packedRgb))),
+      file,
+      source.pool,
     );
   }
   if (role === "segmentation") {
@@ -510,8 +600,12 @@ export async function loadOmeLoaderForRole(
     }
     return maskLoaderFromBlob(await response.blob());
   }
-  return asAppLoader(
-    await loadOmeTiff(source.url, vivLoadOpts(source.pool, packedRgb)),
+  return finishOmeIntensityLoader(
+    asAppLoader(
+      await loadOmeTiff(source.url, vivLoadOpts(source.pool, packedRgb)),
+    ),
+    source.url,
+    source.pool,
   );
 }
 

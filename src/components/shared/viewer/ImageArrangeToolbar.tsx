@@ -9,7 +9,6 @@ import {
   PanelIconButton,
 } from "@/components/shared/panel/PanelButtons";
 import {
-  clampDisplayScale,
   flipOnScreen,
   isIdentityOrientation,
   withOrientation,
@@ -34,6 +33,11 @@ function formatNumber(n: number): string {
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 }
 
+/** Enough digits to tell 0.325 from 0.274, without float32 noise. */
+function formatPixelScale(n: number): string {
+  return String(Math.round(n * 1e6) / 1e6);
+}
+
 /** A number in a text field. Enter or blur commits; Esc cancels. */
 function NumberField(props: {
   label: string;
@@ -41,9 +45,10 @@ function NumberField(props: {
   unit: string;
   /** Shown while the field is not being edited. */
   value: string;
+  wide?: boolean;
   onCommit: (n: number) => void;
 }) {
-  const { label, prefix, unit, value, onCommit } = props;
+  const { label, prefix, unit, value, wide, onCommit } = props;
   // Text while editing; otherwise the field follows the image, live.
   const [draft, setDraft] = useState<string | null>(null);
   const cancel = useRef(false);
@@ -60,7 +65,7 @@ function NumberField(props: {
     <label className={styles.field} title={label}>
       {prefix ? <span className={styles.prefix}>{prefix}</span> : null}
       <input
-        className={`${minervaTheme.input} ${styles.input}`}
+        className={`${minervaTheme.input} ${styles.input} ${wide ? styles.inputWide : ""}`}
         type="text"
         inputMode="decimal"
         value={draft ?? value}
@@ -90,8 +95,10 @@ export function ImageArrangeToolbar(props: {
   imageId: string;
   /** Live placement, including an in-flight canvas drag. */
   orientation: ImageOrientation;
+  /** File PhysicalSize, shown until the image stores an override. */
+  fileUmPerPixel: number;
 }) {
-  const { imageId, orientation: o } = props;
+  const { imageId, orientation: o, fileUmPerPixel } = props;
 
   const commit = (patch: Partial<ImageOrientation>) => {
     const doc = useDocumentStore.getState();
@@ -138,12 +145,13 @@ export function ImageArrangeToolbar(props: {
       </div>
       <div className={styles.group}>
         <NumberField
-          label="Scale"
+          label="Microns per pixel"
           prefix="Scale"
-          unit="%"
-          value={formatNumber(o.displayScale * 100)}
-          onCommit={(pct) => {
-            if (pct > 0) commit({ displayScale: clampDisplayScale(pct / 100) });
+          unit={`${WORLD_MICRON}/px`}
+          wide
+          value={formatPixelScale(o.umPerPixel ?? fileUmPerPixel)}
+          onCommit={(um) => {
+            if (um > 0) commit({ umPerPixel: um });
           }}
         />
         <NumberField
@@ -164,7 +172,7 @@ export function ImageArrangeToolbar(props: {
       <div className={styles.group}>
         <PanelActionButton
           disabled={isIdentityOrientation(o)}
-          onClick={() => commit(UNPLACED)}
+          onClick={() => commit({ ...UNPLACED, umPerPixel: undefined })}
         >
           Reset
         </PanelActionButton>

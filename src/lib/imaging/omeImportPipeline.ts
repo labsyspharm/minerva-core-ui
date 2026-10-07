@@ -16,6 +16,7 @@ import {
   rebindReplacementImageChannels,
   replaceImageRowInDocument,
 } from "@/lib/stores/storeUtils";
+import { renameChannelsFromMarkers } from "./markerCsv";
 import {
   mergeExtractedChannelsIntoImages,
   type OmeImageImportRole,
@@ -72,6 +73,8 @@ export function buildOmeImportSlice(args: {
   relevantGroups?: ConfigGroup[];
   /** Persist when import dialog asked RGB vs separate channels. */
   rgbDisplay?: boolean;
+  /** 0-based channel index → marker name from an optional markers.csv. */
+  channelNames?: ReadonlyMap<number, string>;
 }): BuiltOmeImportSlice {
   const {
     loader,
@@ -81,6 +84,7 @@ export function buildOmeImportSlice(args: {
     existingImages,
     relevantGroups = [],
     rgbDisplay,
+    channelNames,
   } = args;
   const defaultKind = role === "segmentation" ? "mask" : "channel";
   const extracted = extractChannels(
@@ -106,6 +110,13 @@ export function buildOmeImportSlice(args: {
   }
   if (role === "segmentation") {
     sourceChannels = seedMaskSourceChannelStyles(sourceChannels);
+  }
+  if (role === "intensity" && channelNames && channelNames.size > 0) {
+    const renamed = renameChannelsFromMarkers(sourceChannels, channelNames);
+    if (renamed.applied === 0) {
+      throw new Error("Markers CSV did not match any channel.");
+    }
+    sourceChannels = renamed.channels;
   }
   const taggedForRgb =
     rgbDisplay == null

@@ -163,7 +163,8 @@ export function ImageArrangeBox(props: {
   const item = loaders.find((l) => l.sourceImageId === imageId);
   const o = orientationForImage(images, imageId, preview);
   if (!item || !o) return null;
-  const { pixelWidth: w, pixelHeight: h } = worldFrameFromLoader(item.loader);
+  const fileFrame = worldFrameFromLoader(item.loader);
+  const { pixelWidth: w, pixelHeight: h } = fileFrame;
   if (w <= 1 || h <= 1) return null;
 
   // A flip maps the frame onto itself, so handles ignore it. The rotate knob
@@ -309,7 +310,11 @@ export function ImageArrangeBox(props: {
           <OrientationIcon x={-7} y={-7} width={14} height={14} />
         </g>
       </svg>
-      <ImageArrangeToolbar imageId={imageId} orientation={o} />
+      <ImageArrangeToolbar
+        imageId={imageId}
+        orientation={o}
+        fileUmPerPixel={fileFrame.umPerPixelX}
+      />
     </div>
   );
 }
