@@ -738,16 +738,21 @@ function FeatureTableListBody(props: { featureTableId: string }) {
 }
 
 /**
- * Waypoint detail view: every mask that has a feature table, as this
- * waypoint shows it. Attaching, deleting, and re-choosing tables stay in the
- * channel panel.
+ * Waypoint detail view: the listed tables as this waypoint shows them.
+ * Attaching, deleting, and re-choosing tables stay in the channel panel.
  */
 export function WaypointClassViews(props: {
   waypoint: Waypoint;
+  /** Tables whose mask is in the waypoint's channel group. */
+  featureTableIds: readonly string[];
   readOnly?: boolean;
 }) {
-  const { waypoint, readOnly } = props;
-  const featureTables = useDocumentStore((s) => s.featureTables);
+  const { waypoint, featureTableIds, readOnly } = props;
+  const allTables = useDocumentStore((s) => s.featureTables);
+  const featureTables = useMemo(
+    () => allTables.filter((c) => featureTableIds.includes(c.id)),
+    [allTables, featureTableIds],
+  );
   const images = useDocumentStore((s) => s.images);
   const ingestEpoch = useSyncExternalStore(
     subscribeFeatureTableIngest,
@@ -765,16 +770,7 @@ export function WaypointClassViews(props: {
     [images],
   );
   void ingestEpoch;
-  if (featureTables.length === 0) {
-    return (
-      <div className={styles.waypointClasses}>
-        <span className={styles.readOnlyNote}>
-          Attach a feature table to a mask in the channel panel to choose
-          classes here.
-        </span>
-      </div>
-    );
-  }
+  if (featureTables.length === 0) return null;
   return (
     <div className={styles.waypointClasses}>
       {featureTables.map((featureTable) => {

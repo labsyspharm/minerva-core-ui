@@ -66,7 +66,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   const shapes = useDocumentStore((s) => s.shapes);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
-  const featureTableCount = useDocumentStore((s) => s.featureTables.length);
+  const featureTables = useDocumentStore((s) => s.featureTables);
   const sourceChannels = React.useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
@@ -763,6 +763,14 @@ const WaypointsList = (props: WaypointsListProps) => {
       );
       selectedChannelsSubtitle = selectedChannelNames.join(", ");
     }
+    // Classes only for masks in this waypoint's group that have a table.
+    const classTableIds = featureTables
+      .filter((table) =>
+        selectedGroup?.channels.some(
+          (gc) => gc.channelId === table.sourceChannelId,
+        ),
+      )
+      .map((table) => table.id);
 
     const selectChannelGroupByUuid = (nextGroupUuid: string) => {
       const nextGroup = channelGroups.find(
@@ -940,7 +948,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                 </div>
               ) : null}
             </div>
-            {featureTableCount > 0 ? (
+            {classTableIds.length > 0 ? (
               <div
                 className={[
                   styles.detailCollapsible,
@@ -963,7 +971,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <span className={styles.detailCollapsibleTitle}>
                     Classes{" "}
                     <span className={styles.detailCollapsibleCount}>
-                      ({featureTableCount})
+                      ({classTableIds.length})
                     </span>
                   </span>
                 </button>
@@ -971,6 +979,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <div className={styles.detailCollapsibleBody}>
                     <WaypointClassViews
                       waypoint={detailStory}
+                      featureTableIds={classTableIds}
                       readOnly={!canEdit}
                     />
                   </div>
