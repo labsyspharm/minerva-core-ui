@@ -5,6 +5,7 @@ import {
   type PlanPyramidJob,
   planPyramid,
 } from "tiffwriter";
+import { getFileHandle } from "@/lib/persistence/fileHandles";
 import type {
   ChannelGroup,
   Image,
@@ -21,6 +22,14 @@ import {
 } from "./exportZlibOmeTiff";
 import { encodeTileJpeg, jpegExportConcurrency } from "./jpegExportPool";
 import type { OmeLoaderEntry } from "./loaderEntries";
+import {
+  type BrightfieldTally,
+  brightfieldSampleMax,
+  brightfieldSampleOffsets,
+  brightfieldTallyMatches,
+  omeTiffBaseIsJpeg,
+  tallyBrightfieldSamples,
+} from "./omeTiff";
 import {
   allocateOmeTiffExportFileNames,
   buildOmeTiffXml,
@@ -51,6 +60,221 @@ type ExportJpegOmeTiffOpts = {
   signal: AbortSignal;
   onProgress?: (deltaCompleted: number) => void;
 };
+
+function interleavePlanar(planes: ArrayLike<number>[]): Float64Array {
+  const n = planes.reduce(
+    (min, plane) => Math.min(min, plane.length),
+    planes[0]?.length ?? 0,
+  );
+  const out = new Float64Array(n * planes.length);
+  for (let i = 0; i < n; i++) {
+    for (let c = 0; c < planes.length; c++) {
+      out[i * planes.length + c] = planes[c][i];
+    }
+  }
+  return out;
+}
+
+/**
+ * Cube-root lifts dark pixels. That is right for fluorescence and washes out
+ * brightfield (white glass, dark stain). Sample the coarsest level the same
+ * way import does; a brightfield hit forces contrast.
+ */
+async function planesLookBrightfield(
+  planes: LoaderPlane[],
+  channels: ImageChannel[],
+  signal: AbortSignal,
+): Promise<boolean> {
+  if (channels.length !== 1 && channels.length < 3) return false;
+  const level = planes[planes.length - 1];
+  if (!level?.getTile) return false;
+  const { width, height, tileSize } = planeLevels(planes).at(-1) ?? {
+    width: 0,
+    height: 0,
+    tileSize: 256,
+  };
+  if (width <= 0 || height <= 0) return false;
+  const tile = Math.max(1, tileSize);
+  const xs = brightfieldSampleOffsets(width, tile);
+  const ys = brightfieldSampleOffsets(height, tile);
+  const use = channels.slice(0, 3);
+  const tally: BrightfieldTally = { nDark: 0, nLight: 0 };
+  for (const y0 of ys) {
+    for (const x0 of xs) {
+      if (signal.aborted) return false;
+      const x = Math.floor(x0 / tile);
+      const y = Math.floor(y0 / tile);
+      let tiles: { data: ArrayLike<number> }[];
+      try {
+        tiles = await Promise.all(
+          use.map((ch) =>
+            level.getTile({
+              selection: { t: 0, z: 0, c: ch.index },
+              x,
+              y,
+              signal,
+            }),
+          ),
+        );
+      } catch {
+        continue;
+      }
+      if (signal.aborted) return false;
+      const sampleMax = brightfieldSampleMax(tiles[0].data, level.dtype);
+      if (use.length >= 3) {
+        tallyBrightfieldSamples(
+          interleavePlanar(tiles.map((t) => t.data)),
+          { sampleMax, channels: 3 },
+          tally,
+        );
+      } else {
+        tallyBrightfieldSamples(
+          tiles[0].data,
+          { sampleMax, channels: 1 },
+          tally,
+        );
+      }
+    }
+  }
+  return brightfieldTallyMatches(tally);
+}
+
+async function transferForBrightfield(
+  image: Image,
+  storyTransfer: JpegExportTransfer,
+  planes: LoaderPlane[],
+  channels: ImageChannel[],
+  signal: AbortSignal,
+): Promise<{ transfer: JpegExportTransfer; image: Image }> {
+  const transfer = exportTransferForImage(image, storyTransfer);
+  if (transfer !== "cube-root") return { transfer, image };
+  if (!(await planesLookBrightfield(planes, channels, signal))) {
+    return { transfer, image };
+  }
+  return {
+    transfer: "contrast",
+    image: image.rgbDisplay === true ? image : { ...image, rgbDisplay: true },
+  };
+}
+
+function absoluteSourceUrl(url: string): string {
+  const trimmed = url.trim();
+  if (
+    /^https?:\/\//i.test(trimmed) ||
+    trimmed.startsWith("blob:") ||
+    trimmed.startsWith("file:")
+  ) {
+    return trimmed;
+  }
+  return new URL(trimmed, window.location.href).href;
+}
+
+/** Header probe first. The body is opened only after the file is known to be JPEG. */
+async function openCopySource(
+  image: Image,
+  signal: AbortSignal,
+): Promise<{
+  probe: Blob | string;
+  openBody: () => Promise<{ stream: ReadableStream<Uint8Array>; size: number }>;
+} | null> {
+  const source = image.source;
+  if (!source) return null;
+  if (source.kind === "local") {
+    const stored = await getFileHandle(source.handleKey);
+    if (!stored || stored.kind !== "file") return null;
+    const file = await (stored as FileSystemFileHandle).getFile();
+    return {
+      probe: file,
+      openBody: async () => ({ stream: file.stream(), size: file.size }),
+    };
+  }
+  if (source.kind === "url") {
+    const url = absoluteSourceUrl(source.url);
+    return {
+      probe: url,
+      openBody: async () => {
+        const response = await fetch(url, { signal });
+        if (!response.ok || !response.body) {
+          throw new Error(`Failed to fetch ${url} (${response.status})`);
+        }
+        const length = Number(response.headers.get("content-length"));
+        return {
+          stream: response.body,
+          size: Number.isFinite(length) && length > 0 ? length : 0,
+        };
+      },
+    };
+  }
+  return null;
+}
+
+async function writeStream(
+  directory: FileSystemDirectoryHandle,
+  fileName: string,
+  stream: ReadableStream<Uint8Array>,
+  size: number,
+  signal: AbortSignal,
+  onProgress: (written: number, total: number) => void,
+): Promise<void> {
+  const fh = await directory.getFileHandle(fileName, { create: true });
+  const writable = await fh.createWritable();
+  let written = 0;
+  const reader = stream.getReader();
+  try {
+    while (true) {
+      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+      const { done, value } = await reader.read();
+      if (done) break;
+      const bytes =
+        value.buffer instanceof ArrayBuffer
+          ? new Uint8Array(value.buffer, value.byteOffset, value.byteLength)
+          : new Uint8Array(value);
+      await writable.write(bytes);
+      written += value.byteLength;
+      if (size > 0) onProgress(written, size);
+    }
+    await writable.close();
+    onProgress(Math.max(written, size), Math.max(size, 1));
+  } catch (error) {
+    try {
+      await reader.cancel();
+    } catch {
+      /* ignore */
+    }
+    try {
+      await writable.abort?.();
+    } catch {
+      /* ignore */
+    }
+    throw error;
+  }
+}
+
+/**
+ * Brightfield slides are usually already JPEG tiles. Copy the file when the
+ * full-resolution IFD says so; otherwise the caller re-encodes.
+ */
+async function copyJpegBrightfieldSource(
+  image: Image,
+  directory: FileSystemDirectoryHandle,
+  fileName: string,
+  signal: AbortSignal,
+  onProgress: (written: number, total: number) => void,
+): Promise<Image | null> {
+  const opened = await openCopySource(image, signal);
+  if (!opened) return null;
+  if (!(await omeTiffBaseIsJpeg(opened.probe, signal))) return null;
+  const body = await opened.openBody();
+  await writeStream(
+    directory,
+    fileName,
+    body.stream,
+    body.size,
+    signal,
+    onProgress,
+  );
+  return { ...image, source: { kind: "url", url: fileName } };
+}
 
 /** Write one multi-channel JPEG pyramidal OME-TIFF (contrast or cube-root uint8). */
 async function exportJpegOmeTiffImage(
@@ -310,21 +534,67 @@ export async function exportJpegOmeTiffStory(
 
   const remappedById = new Map<string, Image>();
   const insertedAfter = new Map<string, Image[]>();
+  const copiedSourceIds = new Set<string>();
 
   for (let i = 0; i < intensityItems.length; i++) {
     if (signal.aborted) throw new DOMException("Aborted", "AbortError");
     const item = intensityItems[i];
+    const decided = await transferForBrightfield(
+      item.image,
+      transfer,
+      item.planes,
+      item.intensity,
+      signal,
+    );
+    if (decided.transfer === "contrast") {
+      const imageTiles = tileCountForLevels(
+        planeLevels(item.planes),
+        item.intensity.length,
+      );
+      let credited = 0;
+      const credit = (written: number, total: number) => {
+        const next =
+          total > 0
+            ? Math.min(imageTiles, Math.floor((written / total) * imageTiles))
+            : 0;
+        if (next > credited) {
+          bump(next - credited);
+          credited = next;
+        }
+      };
+      try {
+        const copied = await copyJpegBrightfieldSource(
+          decided.image,
+          directory,
+          intensityFileNames[i],
+          signal,
+          credit,
+        );
+        if (copied) {
+          if (credited < imageTiles) bump(imageTiles - credited);
+          copiedSourceIds.add(item.image.id);
+          remappedById.set(item.image.id, copied);
+          continue;
+        }
+      } catch (error) {
+        if (signal.aborted) throw error;
+        console.warn(
+          "[minerva] jpeg brightfield copy failed, re-encoding",
+          error,
+        );
+      }
+    }
     let jpegImage = await exportJpegOmeTiffImage({
       directory,
       layoutPlanes: item.planes,
-      image: item.image,
+      image: decided.image,
       channelSources: item.intensity.map((channel) => ({
         channel,
         planes: item.planes,
       })),
       channelGroups,
       fileName: intensityFileNames[i],
-      transfer: exportTransferForImage(item.image, transfer),
+      transfer: decided.transfer,
       signal,
       onProgress: bump,
     });
@@ -337,6 +607,10 @@ export async function exportJpegOmeTiffStory(
   for (let i = 0; i < maskItems.length; i++) {
     if (signal.aborted) throw new DOMException("Aborted", "AbortError");
     const item = maskItems[i];
+    if (copiedSourceIds.has(item.image.id)) {
+      bump(maskExportTileCount(item.entry, item.masks.length));
+      continue;
+    }
     const splitFromIntensity = remappedById.has(item.image.id);
     const maskSource = splitFromIntensity
       ? { ...item.image, id: crypto.randomUUID() }

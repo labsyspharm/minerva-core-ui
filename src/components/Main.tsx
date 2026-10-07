@@ -87,6 +87,7 @@ import { getOmeTiffImageDescriptionOmeXml } from "@/lib/imaging/omeTiff";
 import {
   applySharedImportPaletteToChannelGroups,
   ensureInitPalette,
+  paintUngroupedExportColors,
   reconcileUngroupedStackPalette,
   resetInitPalette,
   warmupPsudoPalette,
@@ -1966,17 +1967,38 @@ const Content = (props: Props) => {
       : null,
   };
 
+  // Story preview shows export colors for ungrouped channels on the same Deck.
+  const [previewImages, setPreviewImages] = useState<Image[] | null>(null);
+  useEffect(() => {
+    if (!presenting) {
+      setPreviewImages(null);
+      return;
+    }
+    let cancelled = false;
+    void paintUngroupedExportColors(images, channelGroups).then((painted) => {
+      if (!cancelled) setPreviewImages(painted);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [presenting, images, channelGroups]);
+  const viewerImages = (presenting && previewImages) || images;
+  const viewerSourceChannels = useMemo(
+    () => flattenImageChannelsInDocumentOrder(viewerImages),
+    [viewerImages],
+  );
+
   const { loaderList, mainSettingsList, imageLayers } = useViewerLayers({
     dicomIndexList,
     omeLoaderEntries,
     jpegLoaderEntries,
-    sourceChannels,
+    sourceChannels: viewerSourceChannels,
     channelGroups,
     activeChannelGroupId,
     channelVisibilities,
     channelGroupRowVisibilities,
     channelRendering,
-    images,
+    images: viewerImages,
     orientationPreview: imageOrientationPreview,
     remountKey: viewerRemountKey,
   });
@@ -2270,9 +2292,8 @@ const Content = (props: Props) => {
           noLoader,
           dicomIndexList,
           omeLoaderEntries,
-          jpegLoaderEntries,
-          setJpegLoaderEntries,
           exitPlaybackPreview,
+          viewerImages,
         };
         const imagesPanel = <Upload {...uploadProps} />;
         const viewer = noLoader ? null : (

@@ -1355,7 +1355,7 @@ export const ChannelGroupsMasterDetail = (
                     groupRowVisibilities: nextRowVis,
                   });
                 const hex = sc
-                  ? assignedDisplayHex(sc, sourceChannels, gc)
+                  ? assignedDisplayHex(sc, sourceChannels, gc, channelRendering)
                   : rgbToHex(gc.color);
                 const palettePending = palettePendingIds.includes(gc.channelId);
                 const rgbDisplay = sc
@@ -1637,7 +1637,12 @@ export const ChannelGroupsMasterDetail = (
 
     const palettePending = palettePendingIds.includes(sc.id);
     const rgbDisplay = isRgbDisplayChannel(sc, sourceChannels);
-    const hex = assignedDisplayHex(sc, sourceChannels, home?.row ?? null);
+    const hex = assignedDisplayHex(
+      sc,
+      sourceChannels,
+      home?.row ?? null,
+      channelRendering,
+    );
     const colorSwatch =
       rgbDisplay || isMaskChannel(sc)
         ? undefined

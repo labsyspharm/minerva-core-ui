@@ -9,10 +9,7 @@ import type {
 import { loadStoryDocument } from "@/lib/story/loadStoryDocument";
 import styles from "./StoryPlayerApp.module.css";
 
-/**
- * CDN story player. Same Presentation → StoryPlaybackView tree as authoring
- * Story preview (preview adds only the Back ribbon).
- */
+/** CDN story player. Authoring preview reuses the Presentation ribbon and nav. */
 export function StoryPlayerApp({ documentUrl }: { documentUrl: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

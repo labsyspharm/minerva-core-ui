@@ -3,6 +3,7 @@ import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import type { JpegLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Image } from "@/lib/stores/documentSchema";
 import {
+  exportTransferForImage,
   folderLimitsForTransfer,
   type JpegExportTransfer,
 } from "./cubeRootEncoding";
@@ -306,6 +307,7 @@ export async function jpegLoaderEntriesFromImages(opts: {
       const path = new URL(opts.documentUrl, window.location.href).pathname;
       if (!/\/document\.json$/i.test(path)) continue;
     }
+    const imageTransfer = exportTransferForImage(im, transfer);
     const storyRootUrl = resolveJpegStoryRoot(opts.documentUrl, im.source.url);
     const groupChannelFolders: Record<string, Record<number, string>> = {};
     for (const group of opts.channelGroups) {
@@ -315,7 +317,7 @@ export async function jpegLoaderEntriesFromImages(opts: {
       groupChannelFolders[group.id] = await resolveChannelFolders({
         groupChannels: rows,
         image: im,
-        transfer,
+        transfer: imageTransfer,
       });
     }
     const availablePyramidFolders = new Set<string>();
@@ -333,7 +335,7 @@ export async function jpegLoaderEntriesFromImages(opts: {
     const desired = await resolveChannelFolders({
       groupChannels,
       image: im,
-      transfer,
+      transfer: imageTransfer,
     });
     const channelFolders =
       pickAvailableChannelFolders({
@@ -353,14 +355,14 @@ export async function jpegLoaderEntriesFromImages(opts: {
       })),
       channelFolders,
       fetchTile: opts.fetchTile,
-      transfer,
+      transfer: imageTransfer,
     });
     entries.push({
       loader,
       sourceImageId: im.id,
       channelFolders,
       imagePath: storyRootUrl,
-      transfer,
+      transfer: imageTransfer,
       availablePyramidFolders,
       groupChannelFolders,
     });

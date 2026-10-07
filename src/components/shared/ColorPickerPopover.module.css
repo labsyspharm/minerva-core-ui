@@ -1,0 +1,86 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.panel {
+  position: fixed;
+  z-index: 9999;
+  padding: 6px 8px;
+  background: var(--minerva-paper);
+  border: 1px solid var(--minerva-edge);
+  border-radius: 0;
+}
+
+.colorGrid {
+  display: grid;
+}
+
+.colorGridExpanded {
+  gap: 8px;
+}
+
+.hueRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  column-gap: 8px;
+  align-items: center;
+}
+
+.iconButton {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  color: var(--minerva-quiet);
+  line-height: 0;
+}
+
+.iconButton:focus-visible,
+.whiteSwatch:focus-visible {
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: var(--minerva-focus-offset);
+}
+
+.closeIcon {
+  width: 12px;
+  height: 12px;
+  display: block;
+  fill: currentColor;
+}
+
+.whiteSwatch {
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  padding: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--minerva-quiet);
+  border-radius: 0;
+  background: #fff;
+  cursor: pointer;
+}
+
+.whiteSwatch[aria-pressed="true"] {
+  box-shadow: 0 0 0 1px var(--minerva-ink);
+}
+
+.saturation {
+  transition:
+    height 0.33s ease-out,
+    opacity 0.33s ease-out;
+}
+
+.saturationHidden {
+  opacity: 0;
+  pointer-events: none;
+}

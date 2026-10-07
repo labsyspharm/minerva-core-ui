@@ -53,9 +53,7 @@
   z-index: 1;
   justify-self: center;
   align-self: start;
-  margin-top: calc(
-    (var(--minerva-strip-height) - var(--minerva-control)) / 2
-  );
+  margin-top: calc((var(--minerva-strip-height) - var(--minerva-control)) / 2);
   margin-right: 0;
 }
 
@@ -89,6 +87,29 @@
 
 .viewportCollapsed {
   grid-template-columns: var(--author-collapsed-rail, 2.5rem) 1fr;
+}
+
+/** Story preview: nav column collapses to 0 when the nav pane renders nothing. */
+.viewportPreview {
+  grid-template-columns: auto 1fr;
+}
+
+.previewNav {
+  grid-column: 1;
+  grid-row: 1;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.previewNav:not(:empty) {
+  width: 350px;
+}
+
+.previewNavParked {
+  display: none;
 }
 
 .viewerRegion {

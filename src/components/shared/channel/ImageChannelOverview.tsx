@@ -335,6 +335,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     (s) => s.setChannelGroupRowVisibilities,
   );
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
+  const channelRendering = useAppStore((s) => s.channelRendering);
   const nav = useAuthorChannelNav();
   const [openKey, setOpenKey] = useState<string | null | undefined>(undefined);
   const [channelNameFilter, setChannelNameFilter] = useState("");
@@ -370,6 +371,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
         stackVisibilities: filledStackVis,
         groupRowVisibilities: filledGroupVis,
         activeChannelGroupId,
+        channelRendering,
       }),
     [
       image,
@@ -378,6 +380,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
       filledStackVis,
       filledGroupVis,
       activeChannelGroupId,
+      channelRendering,
     ],
   );
 
