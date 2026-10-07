@@ -310,6 +310,10 @@
   flex-shrink: 0;
 }
 
+.detailClassesSection {
+  flex-shrink: 0;
+}
+
 .detailSelectionActions {
   padding: 0 0 8px;
 }

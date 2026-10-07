@@ -489,65 +489,69 @@ export function detachRemovedFeatureTables(
   useDocumentStore.getState().setFeatureTables([...remaining]);
 }
 
-/** Class edits target the waypoint on screen, `activeStoryIndex`. */
-function activeClassViewTarget(
+/**
+ * Class edits name their waypoint: the channel panel passes the one on
+ * screen, the waypoint detail view passes its own.
+ */
+function classViewTarget(
+  waypointId: string,
   featureTableId: string,
-):
-  | { waypointId: string; channelId: string; view: ClassView | undefined }
-  | undefined {
+): { channelId: string; view: ClassView | undefined } | undefined {
   const doc = useDocumentStore.getState();
   const featureTable = doc.featureTables.find((c) => c.id === featureTableId);
-  const index = useAppStore.getState().activeStoryIndex;
-  const waypoint = index == null ? undefined : doc.waypoints[index];
+  const waypoint = doc.waypoints.find((w) => w.id === waypointId);
   if (!featureTable || !waypoint) return undefined;
   const channelId = featureTable.sourceChannelId;
-  return {
-    waypointId: waypoint.id,
-    channelId,
-    view: classViewFor(waypoint, channelId),
-  };
+  return { channelId, view: classViewFor(waypoint, channelId) };
 }
 
-function updateActiveClassView(
+function updateClassView(
+  waypointId: string,
   featureTableId: string,
   update: (view: ClassView | undefined) => Omit<ClassView, "channelId">,
 ): void {
-  const target = activeClassViewTarget(featureTableId);
+  const target = classViewTarget(waypointId, featureTableId);
   if (!target) return;
   const next = update(target.view);
   const isDefault = next.visibility.mode === "all" && next.colors.length === 0;
   useAppStore
     .getState()
     .setWaypointClassView(
-      target.waypointId,
+      waypointId,
       target.channelId,
       isDefault ? null : next,
     );
 }
 
-export function toggleClassVisible(featureTableId: string, name: string): void {
-  updateActiveClassView(featureTableId, (view) => ({
+export function toggleClassVisible(
+  waypointId: string,
+  featureTableId: string,
+  name: string,
+): void {
+  updateClassView(waypointId, featureTableId, (view) => ({
     visibility: toggleClassName(view?.visibility, name),
     colors: view?.colors ?? [],
   }));
 }
 
 export function setAllClassesVisible(
+  waypointId: string,
   featureTableId: string,
   visible: boolean,
 ): void {
-  updateActiveClassView(featureTableId, (view) => ({
+  updateClassView(waypointId, featureTableId, (view) => ({
     visibility: visible ? visibilityAllOn() : visibilityAllOff(),
     colors: view?.colors ?? [],
   }));
 }
 
 export function setClassColor(
+  waypointId: string,
   featureTableId: string,
   name: string,
   color: Color,
 ): void {
-  updateActiveClassView(featureTableId, (view) => ({
+  updateClassView(waypointId, featureTableId, (view) => ({
     visibility: view?.visibility ?? visibilityAllOn(),
     colors: [
       ...(view?.colors ?? []).filter((c) => c.name !== name),
@@ -556,13 +560,16 @@ export function setClassColor(
   }));
 }
 
-/** Back to every class in the table palette on the active waypoint. */
-export function resetClassView(featureTableId: string): void {
-  const target = activeClassViewTarget(featureTableId);
+/** Back to every class in the table palette on that waypoint. */
+export function resetClassView(
+  waypointId: string,
+  featureTableId: string,
+): void {
+  const target = classViewTarget(waypointId, featureTableId);
   if (!target) return;
   useAppStore
     .getState()
-    .setWaypointClassView(target.waypointId, target.channelId, null);
+    .setWaypointClassView(waypointId, target.channelId, null);
 }
 
 async function fetchTableBytes(

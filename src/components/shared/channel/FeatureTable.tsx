@@ -1,5 +1,6 @@
 import { fileOpen } from "browser-fs-access";
 import {
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
@@ -46,8 +47,11 @@ import {
   rgbToHex,
 } from "@/lib/imaging/sourceChannelStyle";
 import { useAppStore } from "@/lib/stores/appStore";
-import type { Color } from "@/lib/stores/documentSchema";
-import { useDocumentStore } from "@/lib/stores/documentStore";
+import type { Color, Waypoint } from "@/lib/stores/documentSchema";
+import {
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
 import styles from "./FeatureTable.module.css";
 
 const ROW_H = 22;
@@ -108,7 +112,10 @@ function TableLoading() {
   );
 }
 
-function useFeatureTableList(featureTableId: string) {
+function useFeatureTableList(
+  featureTableId: string,
+  waypoint: Waypoint | undefined,
+) {
   const [filter, setFilter] = useState("");
   const [raw, setRaw] = useState<{ name: string }[]>([]);
   const [total, setTotal] = useState(0);
@@ -116,10 +123,6 @@ function useFeatureTableList(featureTableId: string) {
   const [loading, setLoading] = useState(false);
   const featureTable = useDocumentStore((s) =>
     s.featureTables.find((c) => c.id === featureTableId),
-  );
-  const activeStoryIndex = useAppStore((s) => s.activeStoryIndex);
-  const waypoint = useDocumentStore((s) =>
-    activeStoryIndex == null ? undefined : s.waypoints[activeStoryIndex],
   );
   const view = featureTable
     ? classViewFor(waypoint, featureTable.sourceChannelId)
@@ -221,8 +224,6 @@ function useFeatureTableList(featureTableId: string) {
     loadedOffset: usingCache ? 0 : loadedOffset,
     loading,
     fadeColors,
-    waypoint,
-    hasView: view != null,
     setFilter,
     onScroll: (scrollTop: number, clientHeight: number) => {
       const first = Math.floor(scrollTop / ROW_H);
@@ -445,24 +446,27 @@ function FeatureTableAttach(props: { sourceChannelId: string }) {
   );
 }
 
-function FeatureTableListBody(props: { featureTableId: string }) {
-  const { featureTableId } = props;
-  const list = useFeatureTableList(featureTableId);
-  const handleKey = useDocumentStore((s) => {
-    const featureTable = s.featureTables.find((c) => c.id === featureTableId);
-    return featureTable ? featureTableHandleKey(featureTable) : undefined;
-  });
-  const sourceChannelId = useDocumentStore(
-    (s) =>
-      s.featureTables.find((c) => c.id === featureTableId)?.sourceChannelId,
+function useActiveWaypoint(): Waypoint | undefined {
+  const activeStoryIndex = useAppStore((s) => s.activeStoryIndex);
+  return useDocumentStore((s) =>
+    activeStoryIndex == null ? undefined : s.waypoints[activeStoryIndex],
   );
-  const access = useSyncExternalStore(
-    subscribeFeatureTableAccess,
-    getFeatureTableAccess,
-    getFeatureTableAccess,
-  );
-  const needsReselect =
-    handleKey != null && access.missingHandleKeys.includes(handleKey);
+}
+
+/**
+ * One table's classes as `waypoint` shows them. Edits write that waypoint's
+ * class view; with no waypoint the list is read-only.
+ */
+function ClassViewList(props: {
+  featureTableId: string;
+  waypoint: Waypoint | undefined;
+  /** Extra controls at the end of the filter row. */
+  tools?: ReactNode;
+  /** Covers the rows, e.g. a prompt to choose the file again. */
+  overlay?: ReactNode;
+}) {
+  const { featureTableId, waypoint, tools, overlay } = props;
+  const list = useFeatureTableList(featureTableId, waypoint);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [picker, setPicker] = useState<{
     name: string;
@@ -472,55 +476,20 @@ function FeatureTableListBody(props: { featureTableId: string }) {
     left: number;
   } | null>(null);
 
-  const waypointCount = useDocumentStore((s) => s.waypoints.length);
   const showBusy = list.loading && list.rows.length === 0;
   const fadeColors = list.fadeColors;
-  const readOnly = list.waypoint == null;
+  const waypointId = waypoint?.id;
+  const readOnly = waypointId == null;
   const toggle = (name: string) => {
-    if (!readOnly) toggleClassVisible(featureTableId, name);
-  };
-
-  const restoreFile = async () => {
-    if (!sourceChannelId) return;
-    const file = await pickFeatureCsv();
-    if (!file) return;
-    await completeFeatureTableIngest(
-      sourceChannelId,
-      ingestFeatureCsvFile(file),
-    );
+    if (waypointId) toggleClassVisible(waypointId, featureTableId, name);
   };
 
   useEffect(() => {
     if (fadeColors || readOnly) setPicker(null);
   }, [fadeColors, readOnly]);
 
-  if (!hasIngestedFeatureTable(featureTableId) && !needsReselect) return null;
-
   return (
-    <div className={styles.root}>
-      <div className={styles.toolbar}>
-        {list.waypoint ? (
-          <>
-            <span className={styles.viewTitle} title={list.waypoint.title}>
-              {list.waypoint.title.trim() || "Untitled waypoint"}
-            </span>
-            <button
-              type="button"
-              className={`${minervaTheme.focusRing} ${styles.textBtn}`}
-              disabled={!list.hasView}
-              onClick={() => resetClassView(featureTableId)}
-            >
-              Reset
-            </button>
-          </>
-        ) : (
-          <span className={styles.readOnlyNote}>
-            {waypointCount === 0
-              ? "Add a waypoint to customize classes"
-              : "Select a waypoint to customize classes"}
-          </span>
-        )}
-      </div>
+    <>
       <div className={styles.toolbar}>
         <input
           className={styles.field}
@@ -537,7 +506,10 @@ function FeatureTableListBody(props: { featureTableId: string }) {
           type="button"
           className={`${minervaTheme.focusRing} ${styles.textBtn}`}
           disabled={readOnly}
-          onClick={() => setAllClassesVisible(featureTableId, true)}
+          onClick={() => {
+            if (waypointId)
+              setAllClassesVisible(waypointId, featureTableId, true);
+          }}
         >
           Show all
         </button>
@@ -545,20 +517,14 @@ function FeatureTableListBody(props: { featureTableId: string }) {
           type="button"
           className={`${minervaTheme.focusRing} ${styles.textBtn}`}
           disabled={readOnly}
-          onClick={() => setAllClassesVisible(featureTableId, false)}
+          onClick={() => {
+            if (waypointId)
+              setAllClassesVisible(waypointId, featureTableId, false);
+          }}
         >
           Hide all
         </button>
-        <PanelIconButton
-          variant="row"
-          title="Delete table"
-          aria-label="Delete table"
-          onClick={() => {
-            if (sourceChannelId) void detachFeatureTable(sourceChannelId);
-          }}
-        >
-          <TrashIcon title="Delete table" size={14} />
-        </PanelIconButton>
+        {tools}
       </div>
       <div
         ref={scrollerRef}
@@ -569,22 +535,11 @@ function FeatureTableListBody(props: { featureTableId: string }) {
           list.onScroll(el.scrollTop, el.clientHeight);
         }}
       >
-        {needsReselect ? (
-          <div className={styles.accessPrompt}>
-            <button
-              type="button"
-              className={`${minervaTheme.focusRing} ${styles.textBtn}`}
-              onClick={() => void restoreFile()}
-            >
-              Choose file again
-            </button>
-          </div>
-        ) : null}
-        {showBusy && !needsReselect ? <TableLoading /> : null}
+        {overlay ? <div className={styles.accessPrompt}>{overlay}</div> : null}
+        {showBusy && !overlay ? <TableLoading /> : null}
         <div
           style={{
-            height:
-              Math.max(list.total, showBusy || needsReselect ? 2 : 1) * ROW_H,
+            height: Math.max(list.total, showBusy || overlay ? 2 : 1) * ROW_H,
             position: "relative",
           }}
         >
@@ -649,7 +604,8 @@ function FeatureTableListBody(props: { featureTableId: string }) {
             const pending = picker.pending;
             const name = picker.name;
             setPicker(null);
-            if (pending) setClassColor(featureTableId, name, pending);
+            if (pending && waypointId)
+              setClassColor(waypointId, featureTableId, name, pending);
           }}
           color={`#${picker.hex}`}
           showAlpha={false}
@@ -665,6 +621,191 @@ function FeatureTableListBody(props: { featureTableId: string }) {
           }}
         />
       ) : null}
+    </>
+  );
+}
+
+function ClassViewReset(props: { featureTableId: string; waypoint: Waypoint }) {
+  const { featureTableId, waypoint } = props;
+  const hasView = useDocumentStore((s) => {
+    const featureTable = s.featureTables.find((c) => c.id === featureTableId);
+    return (
+      featureTable != null &&
+      classViewFor(waypoint, featureTable.sourceChannelId) != null
+    );
+  });
+  return (
+    <button
+      type="button"
+      className={`${minervaTheme.focusRing} ${styles.textBtn}`}
+      disabled={!hasView}
+      onClick={() => resetClassView(waypoint.id, featureTableId)}
+    >
+      Reset
+    </button>
+  );
+}
+
+/** Channel panel: the class list under a mask row edits the waypoint on screen. */
+function FeatureTableListBody(props: { featureTableId: string }) {
+  const { featureTableId } = props;
+  const waypoint = useActiveWaypoint();
+  const handleKey = useDocumentStore((s) => {
+    const featureTable = s.featureTables.find((c) => c.id === featureTableId);
+    return featureTable ? featureTableHandleKey(featureTable) : undefined;
+  });
+  const sourceChannelId = useDocumentStore(
+    (s) =>
+      s.featureTables.find((c) => c.id === featureTableId)?.sourceChannelId,
+  );
+  const access = useSyncExternalStore(
+    subscribeFeatureTableAccess,
+    getFeatureTableAccess,
+    getFeatureTableAccess,
+  );
+  const ingestEpoch = useSyncExternalStore(
+    subscribeFeatureTableIngest,
+    getFeatureTableIngestEpoch,
+    getFeatureTableIngestEpoch,
+  );
+  const waypointCount = useDocumentStore((s) => s.waypoints.length);
+  const needsReselect =
+    handleKey != null && access.missingHandleKeys.includes(handleKey);
+
+  const restoreFile = async () => {
+    if (!sourceChannelId) return;
+    const file = await pickFeatureCsv();
+    if (!file) return;
+    await completeFeatureTableIngest(
+      sourceChannelId,
+      ingestFeatureCsvFile(file),
+    );
+  };
+
+  void ingestEpoch;
+  if (!hasIngestedFeatureTable(featureTableId) && !needsReselect) return null;
+
+  return (
+    <div className={styles.root}>
+      <div className={styles.toolbar}>
+        {waypoint ? (
+          <>
+            <span className={styles.viewTitle} title={waypoint.title}>
+              {waypoint.title.trim() || "Untitled waypoint"}
+            </span>
+            <ClassViewReset
+              featureTableId={featureTableId}
+              waypoint={waypoint}
+            />
+          </>
+        ) : (
+          <span className={styles.readOnlyNote}>
+            {waypointCount === 0
+              ? "Add a waypoint to customize classes"
+              : "Select a waypoint to customize classes"}
+          </span>
+        )}
+      </div>
+      <ClassViewList
+        featureTableId={featureTableId}
+        waypoint={waypoint}
+        tools={
+          <PanelIconButton
+            variant="row"
+            title="Delete table"
+            aria-label="Delete table"
+            onClick={() => {
+              if (sourceChannelId) void detachFeatureTable(sourceChannelId);
+            }}
+          >
+            <TrashIcon title="Delete table" size={14} />
+          </PanelIconButton>
+        }
+        overlay={
+          needsReselect ? (
+            <button
+              type="button"
+              className={`${minervaTheme.focusRing} ${styles.textBtn}`}
+              onClick={() => void restoreFile()}
+            >
+              Choose file again
+            </button>
+          ) : null
+        }
+      />
+    </div>
+  );
+}
+
+/**
+ * Waypoint detail view: every mask that has a feature table, as this
+ * waypoint shows it. Attaching, deleting, and re-choosing tables stay in the
+ * channel panel.
+ */
+export function WaypointClassViews(props: {
+  waypoint: Waypoint;
+  readOnly?: boolean;
+}) {
+  const { waypoint, readOnly } = props;
+  const featureTables = useDocumentStore((s) => s.featureTables);
+  const images = useDocumentStore((s) => s.images);
+  const ingestEpoch = useSyncExternalStore(
+    subscribeFeatureTableIngest,
+    getFeatureTableIngestEpoch,
+    getFeatureTableIngestEpoch,
+  );
+  const maskNames = useMemo(
+    () =>
+      new Map(
+        flattenImageChannelsInDocumentOrder(images).map((sc) => [
+          sc.id,
+          sc.name,
+        ]),
+      ),
+    [images],
+  );
+  void ingestEpoch;
+  if (featureTables.length === 0) {
+    return (
+      <div className={styles.waypointClasses}>
+        <span className={styles.readOnlyNote}>
+          Attach a feature table to a mask in the channel panel to choose
+          classes here.
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div className={styles.waypointClasses}>
+      {featureTables.map((featureTable) => {
+        const label = maskNames.get(featureTable.sourceChannelId) ?? "Mask";
+        const loaded = hasIngestedFeatureTable(featureTable.id);
+        return (
+          <div key={featureTable.id} className={styles.root}>
+            <div className={styles.toolbar}>
+              <span className={styles.viewTitle} title={label}>
+                {label}
+              </span>
+              {loaded && !readOnly ? (
+                <ClassViewReset
+                  featureTableId={featureTable.id}
+                  waypoint={waypoint}
+                />
+              ) : null}
+            </div>
+            {loaded ? (
+              <ClassViewList
+                featureTableId={featureTable.id}
+                waypoint={readOnly ? undefined : waypoint}
+              />
+            ) : (
+              <span className={styles.readOnlyNote}>
+                Table not loaded. Choose the file again in the channel panel.
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

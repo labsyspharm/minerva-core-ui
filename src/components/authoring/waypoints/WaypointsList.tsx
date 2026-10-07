@@ -1,4 +1,5 @@
 import * as React from "react";
+import { WaypointClassViews } from "@/components/shared/channel/FeatureTable";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
@@ -65,6 +66,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   const shapes = useDocumentStore((s) => s.shapes);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
+  const featureTableCount = useDocumentStore((s) => s.featureTables.length);
   const sourceChannels = React.useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
@@ -115,6 +117,8 @@ const WaypointsList = (props: WaypointsListProps) => {
     React.useState(true);
   const [detailAnnotationsExpanded, setDetailAnnotationsExpanded] =
     React.useState(true);
+  const [detailClassesExpanded, setDetailClassesExpanded] =
+    React.useState(true);
 
   React.useEffect(() => {
     setAuthoringWaypointEditorOpen(detailStoryId != null);
@@ -133,6 +137,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     if (detailStoryId) {
       setDetailMarkdownExpanded(true);
       setDetailAnnotationsExpanded(true);
+      setDetailClassesExpanded(true);
     }
     setChannelGroupMenuOpen(false);
   }, [detailStoryId]);
@@ -935,6 +940,43 @@ const WaypointsList = (props: WaypointsListProps) => {
                 </div>
               ) : null}
             </div>
+            {featureTableCount > 0 ? (
+              <div
+                className={[
+                  styles.detailCollapsible,
+                  minervaTheme.surface,
+                  styles.detailClassesSection,
+                  !detailClassesExpanded
+                    ? styles.detailCollapsibleCollapsed
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                <button
+                  type="button"
+                  className={`${minervaTheme.focusRing} ${styles.detailCollapsibleHeader}`}
+                  aria-expanded={detailClassesExpanded}
+                  onClick={() => setDetailClassesExpanded((prev) => !prev)}
+                >
+                  <ChevronIcon className={styles.detailCollapsibleChevron} />
+                  <span className={styles.detailCollapsibleTitle}>
+                    Classes{" "}
+                    <span className={styles.detailCollapsibleCount}>
+                      ({featureTableCount})
+                    </span>
+                  </span>
+                </button>
+                {detailClassesExpanded ? (
+                  <div className={styles.detailCollapsibleBody}>
+                    <WaypointClassViews
+                      waypoint={detailStory}
+                      readOnly={!canEdit}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             <div
               className={[
                 styles.detailCollapsible,
