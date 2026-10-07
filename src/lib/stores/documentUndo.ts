@@ -102,6 +102,7 @@ export function syncAppStoreFromDocument(): void {
   useAppStore.setState({
     maskVisualizationPreview: null,
     imageOrientationPreview: null,
+    imageOpacityPreview: null,
   });
   syncAppStoreChannelMirrorsFromDocument();
   syncAppStoreWaypointsFromDocument();

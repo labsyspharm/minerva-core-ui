@@ -379,3 +379,7 @@
   align-items: center;
   gap: 2px;
 }
+
+.imageOpacity {
+  padding: 0 12px 8px;
+}

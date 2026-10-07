@@ -1,5 +1,6 @@
 import type { DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { OpacitySlider } from "@/components/shared/channel/ChannelRow";
 import {
   FeatureCsvColumnPick,
   pickFeatureCsv,
@@ -33,6 +34,7 @@ import {
   fileHandleFromDataTransferItem,
   findFile,
 } from "@/lib/imaging/filesystem";
+import { clampImageOpacity } from "@/lib/imaging/imageOpacity";
 import {
   markerNamesByChannelIndex,
   peekMarkerCsv,
@@ -52,6 +54,7 @@ import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
+import { setImageOpacity } from "@/lib/stores/storeUtils";
 import { jpegSourceNeedsLocalRoot } from "@/lib/storyExport/importStoryFolder";
 import styles from "./Upload.module.css";
 
@@ -757,6 +760,23 @@ const Upload = (props: UploadProps) => {
             ) : null}
           </div>
         </div>
+        <OpacitySlider
+          className={styles.imageOpacity}
+          value={clampImageOpacity(im.opacity)}
+          ariaLabel={title}
+          onPreview={(opacity) => {
+            const app = useAppStore.getState();
+            if (opacity !== null) {
+              app.setImageOpacityPreview({ imageId: im.id, opacity });
+            } else if (app.imageOpacityPreview?.imageId === im.id) {
+              app.setImageOpacityPreview(null);
+            }
+          }}
+          onCommit={(opacity) => {
+            const doc = useDocumentStore.getState();
+            doc.setImages(setImageOpacity(doc.images, im.id, opacity));
+          }}
+        />
         <ImageChannelOverviewCard image={im} />
         {showAccessOverlay ? (
           <div className={styles.fileAccessOverlay}>

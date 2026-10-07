@@ -27,6 +27,7 @@ import {
   DEFAULT_MASK_VISUALIZATION,
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
+import { opacityForImage } from "@/lib/imaging/imageOpacity";
 import { orientationForImage } from "@/lib/imaging/imageOrientation";
 import type { LoaderList } from "@/lib/imaging/loaderEntries";
 import {
@@ -443,6 +444,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     (s) => s.maskVisualizationPreview,
   );
   const imageOrientationPreview = useAppStore((s) => s.imageOrientationPreview);
+  const imageOpacityPreview = useAppStore((s) => s.imageOpacityPreview);
   const arrangeImageId = useAppStore((s) => s.arrangeImageId);
   const selectionMaskVisualizationPreview =
     maskVisualizationPreview?.sourceChannelId === SELECTION_MASK_CHANNEL_KEY
@@ -538,10 +540,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
     if (omeLoaderEntries.length === 0) return [];
 
     const layers: Layer[] = [];
-    for (const sc of flattenImageChannelsInDocumentOrder(images)) {
+    const channels = flattenImageChannelsInDocumentOrder(images);
+    for (const sc of channels) {
       if (!isMaskChannel(sc)) continue;
       const rendered = isMaskSourceRendered({
         sc,
+        channels,
         channelGroups,
         activeGroup: channelGroups.find((g) => g.id === activeChannelGroupId),
         stackVisibilities: channelVisibilities ?? {},
@@ -559,6 +563,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
               channelGroups,
               activeChannelGroupId,
             );
+      const imageOpacity = opacityForImage(
+        images,
+        sc.imageId,
+        imageOpacityPreview,
+      );
+      const paintedVisualization =
+        imageOpacity < 1
+          ? {
+              ...visualization,
+              opacity: visualization.opacity * imageOpacity,
+            }
+          : visualization;
       const orientation = orientationForImage(
         images,
         sc.imageId,
@@ -571,7 +587,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         id: `mask-channel-${sc.id}`,
         loader: entry.loader,
         channelIndex: sc.index,
-        visualization,
+        visualization: paintedVisualization,
         orientation,
         visible: rendered,
         classStyle: featureTable
@@ -593,6 +609,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     activeChannelGroupId,
     channelGroups,
     maskVisualizationPreview,
+    imageOpacityPreview,
     imageOrientationPreview,
     featureTables,
     featureTableVisibilities,

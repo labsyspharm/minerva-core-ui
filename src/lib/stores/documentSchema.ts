@@ -199,6 +199,8 @@ export const ImageSchema = z.object({
   translateY: z.number().default(0),
   /** Resize around the image center. 1 keeps the file's physical size. */
   displayScale: z.number().positive().default(1),
+  /** Whole-image alpha (`0…1`). Omitted input parses as 1. */
+  opacity: z.number().min(0).max(1).default(1),
   /** µm per pixel on both axes. Omitted uses the file's PhysicalSize. */
   umPerPixel: z.number().positive().optional(),
   channels: z.array(ImageChannelSchema),

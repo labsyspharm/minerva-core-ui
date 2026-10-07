@@ -5,6 +5,7 @@ import type { ConfigWaypoint } from "../authoring/config";
 import { applyStackVisibilities } from "../imaging/channelCompositor";
 import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
+import type { ImageOpacityPreview } from "../imaging/imageOpacity";
 import {
   type ClassVisibility,
   type ImageSelectionMask,
@@ -795,6 +796,9 @@ export interface AppStore {
   /** In-flight move / resize / rotate; committed on pointerup. */
   imageOrientationPreview: ImageOrientationPreview | null;
   setImageOrientationPreview: (preview: ImageOrientationPreview | null) => void;
+  /** In-flight image opacity while the Images-tab slider is down. */
+  imageOpacityPreview: ImageOpacityPreview | null;
+  setImageOpacityPreview: (preview: ImageOpacityPreview | null) => void;
   /** Image selected for arranging on the canvas. Authoring only. */
   arrangeImageId: string | null;
   setArrangeImageId: (imageId: string | null) => void;
@@ -944,6 +948,7 @@ const overlayInitialState = {
   channelRendering: null,
   maskVisualizationPreview: null,
   imageOrientationPreview: null,
+  imageOpacityPreview: null,
   arrangeImageId: null,
   channelVisibilities: {},
   featureTableVisibilities: {},
@@ -2256,6 +2261,10 @@ export const useAppStore = create<AppStore>()(
 
       setImageOrientationPreview: (preview) => {
         set({ imageOrientationPreview: preview });
+      },
+
+      setImageOpacityPreview: (preview) => {
+        set({ imageOpacityPreview: preview });
       },
 
       setArrangeImageId: (imageId) => {
