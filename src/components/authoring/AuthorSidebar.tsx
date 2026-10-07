@@ -51,10 +51,7 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
     activeTab === "images" ? (
       props.imagesPanel
     ) : activeTab === "channels" ? (
-      <ChannelGroupsMasterDetail
-        noLoader={props.noLoader}
-        contrastEditable={props.contrastEditable}
-      />
+      <ChannelGroupsMasterDetail noLoader={props.noLoader} />
     ) : (
       <WaypointsList />
     );

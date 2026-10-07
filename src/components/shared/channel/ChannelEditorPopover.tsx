@@ -458,11 +458,8 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
         }}
         contrast={contrast}
         more={
-          showHistogram
-            ? {
-                sourceChannel: sc,
-                allowContrast: Boolean(nav?.contrastEditable),
-              }
+          showHistogram && nav?.contrastEditable
+            ? { sourceChannel: sc, allowContrast: true }
             : undefined
         }
         {...(!rgbDisplay && isMaskChannel(sc)

@@ -1,5 +1,4 @@
 import {
-  expandShaderModule,
   getDefaultPalette,
   padColorsForUBO,
   VivLayerExtension,
@@ -120,10 +119,6 @@ void accum_channel(
 `,
 };
 
-type ShaderHost = {
-  getNumChannels?: () => number;
-};
-
 type ContourHost = {
   props: {
     colors?: [number, number, number][] | null;
@@ -168,24 +163,17 @@ class ContourExtension extends VivLayerExtension {
     },
   };
 
-  getVivShaderTemplates() {
-    return { modules: [contourModule] };
-  }
-
   // Sampler uniforms live on the layer shader, so the per-channel calls are
   // injected into main rather than into the module preamble.
-  getShaders(this: ShaderHost) {
+  getVivShaderTemplates(this: { getNumChannels?: () => number }) {
     const n = this.getNumChannels?.() ?? 0;
     if (n < 1) return { modules: [] };
     return {
       modules: [
-        expandShaderModule(
-          {
-            ...contourModule,
-            inject: { "fs:#main-start": mainStart(n) },
-          } as never,
-          n,
-        ),
+        {
+          ...contourModule,
+          inject: { "fs:#main-start": mainStart(n) },
+        },
       ],
     };
   }

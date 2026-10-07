@@ -166,11 +166,7 @@ const CHIP_COLS = 5;
 function pointerInEditor(e: MouseEvent, root: HTMLElement): boolean {
   const t = e.target;
   if (t instanceof Node && root.contains(t)) return true;
-  if (
-    t instanceof Element &&
-    (t.closest("[data-minerva-color-picker]") ||
-      t.closest("[data-channel-row-menu]"))
-  ) {
+  if (t instanceof Element && t.closest("[data-minerva-color-picker]")) {
     return true;
   }
   const r = root.getBoundingClientRect();

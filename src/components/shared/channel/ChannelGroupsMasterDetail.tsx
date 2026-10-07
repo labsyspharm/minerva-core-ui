@@ -361,7 +361,6 @@ function groupOptimizePendingSourceIds(
 
 export type ChannelGroupsMasterDetailProps = {
   noLoader: boolean;
-  contrastEditable?: boolean;
 };
 
 export const ChannelGroupsMasterDetail = (
@@ -719,11 +718,12 @@ export const ChannelGroupsMasterDetail = (
     setChannelGroupRowVisibilities(next);
   };
 
-  const { ensureChannelHistograms } = useAuthorChannelNav() ?? {};
+  const { ensureChannelHistograms, contrastEditable } =
+    useAuthorChannelNav() ?? {};
 
   const canFitContrast = (sc: Channel | undefined): sc is Channel =>
     Boolean(
-      props.contrastEditable &&
+      contrastEditable &&
         sc &&
         !isMaskChannel(sc) &&
         !isRgbDisplayChannel(sc, sourceChannels),
@@ -1176,7 +1176,7 @@ export const ChannelGroupsMasterDetail = (
                   ? isRgbDisplayChannel(sc, sourceChannels)
                   : false;
                 const contrast =
-                  props.contrastEditable &&
+                  contrastEditable &&
                   sc &&
                   isImageChannel(sc) &&
                   visible &&
@@ -1477,7 +1477,7 @@ export const ChannelGroupsMasterDetail = (
     const displayColor = effectiveDisplayColor(sc, sourceChannels, null);
     const displayLimits = effectiveSourceLimits(sc);
     const contrast =
-      expanded && props.contrastEditable && isImageChannel(sc) && !rgbDisplay
+      expanded && contrastEditable && isImageChannel(sc) && !rgbDisplay
         ? {
             ...contrastEditorPropsForSource(
               channelRendering,
