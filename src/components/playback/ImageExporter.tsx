@@ -314,7 +314,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
   const [nowMs, setNowMs] = useState(() => performance.now());
   const [cRange, setCRange] = useState<Index[] | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
-  /** IF multiplex always cube-root; RGB still forced to contrast in export helpers. */
+  /** Fluorescence is cube-root. Brightfield is contrast, or a byte copy when the source TIFF is already JPEG. */
   const jpegTransfer: JpegExportTransfer = "cube-root";
   /**
    * Folder JPEG pyramids remain implemented below but are not user-selectable.
@@ -723,7 +723,11 @@ export const ImageExporter = (props: ImageExporterProps) => {
       ) : !exportArmed ? (
         <div className={styles.exportStatus}>
           <div className={styles.exportMessage}>
-            Export JPEG OME-TIFF (cube-root IF)
+            <div>Export JPEG OME-TIFF</div>
+            <div className={styles.exportHint}>
+              JPEG brightfield is copied. Other brightfield is compressed.
+              Fluorescence is cube-root.
+            </div>
           </div>
           <div className={styles.confirmActions}>
             <button
