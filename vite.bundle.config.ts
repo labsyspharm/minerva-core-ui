@@ -1,7 +1,26 @@
+import fs from "node:fs";
 import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 import svgr from "vite-plugin-svgr";
+
+/**
+ * PR previews set `VITE_STORY_BUNDLE_URL`. List emitted player files so an export
+ * can copy them into the story folder (`storyBundle.ts`).
+ */
+function writeBundleManifest(): Plugin {
+  return {
+    name: "minerva-bundle-manifest",
+    writeBundle(options, bundle) {
+      if (!process.env.VITE_STORY_BUNDLE_URL || !options.dir) return;
+      const files = Object.keys(bundle);
+      fs.writeFileSync(
+        path.join(options.dir, "manifest.json"),
+        JSON.stringify(files),
+      );
+    },
+  };
+}
 
 /** Force `?worker` → `?worker&inline` so CDN pages do not fetch `/assets/*.js`. */
 function inlineWorkersForCdn(): Plugin {
@@ -33,6 +52,7 @@ export default defineConfig({
     ),
   },
   plugins: [
+    writeBundleManifest(),
     inlineWorkersForCdn(),
     react(),
     svgr({

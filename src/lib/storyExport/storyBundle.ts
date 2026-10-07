@@ -7,16 +7,17 @@ import { validateDocumentData } from "@/lib/stores/validateDocument";
 import { routerBasepath } from "@/router/appRouter";
 import { version as MINERVA_VERSION } from "../../../package.json";
 
+const LOCAL_PLAYER_DIR = "bundle";
+
 /**
- * PR previews build with `VITE_STORY_BUNDLE_URL` and ship `bundle/` beside the
- * app (see `pr-preview.yml`), so stories exported there load the player built
- * from the same commit instead of the published npm release.
+ * PR previews build with `VITE_STORY_BUNDLE_URL` and ship the story player next
+ * to the app (see `pr-preview.yml`). Exports from those builds copy that player
+ * into the story folder and load it with relative URLs, so the story keeps
+ * working after the preview is removed. Other builds keep the published npm player.
  */
-function storyBundleBaseUrl(version: string): string {
+function hostedPlayerBaseUrl(): string | null {
   const selfHosted = import.meta.env.VITE_STORY_BUNDLE_URL;
-  if (!selfHosted) {
-    return `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version}/bundle`;
-  }
+  if (!selfHosted) return null;
   // Relative values resolve against the deploy folder (e.g. `/pr-preview/pr-12/`).
   const deployDir = new URL(
     `${routerBasepath().replace(/\/$/, "")}/`,
@@ -25,8 +26,14 @@ function storyBundleBaseUrl(version: string): string {
   return new URL(selfHosted, deployDir).href.replace(/\/$/, "");
 }
 
-function minervaCdnUrls(version: string): { js: string; css: string } {
-  const base = storyBundleBaseUrl(version);
+function playerAssetUrls(version: string): { js: string; css: string } {
+  if (import.meta.env.VITE_STORY_BUNDLE_URL) {
+    return {
+      js: `${LOCAL_PLAYER_DIR}/minerva.js`,
+      css: `${LOCAL_PLAYER_DIR}/minerva.css`,
+    };
+  }
+  const base = `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version}/bundle`;
   return {
     js: `${base}/minerva.js`,
     css: `${base}/minerva.css`,
@@ -94,7 +101,7 @@ function imageSourceForExportMode(
 }
 
 function storyIndexHtml(title?: string, version = MINERVA_VERSION): string {
-  const { js, css } = minervaCdnUrls(version);
+  const { js, css } = playerAssetUrls(version);
   const safeTitle = (title?.trim() || "Minerva Story")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -137,11 +144,68 @@ async function writeTextFile(
   await write.close();
 }
 
+async function writeBytes(
+  directory: FileSystemDirectoryHandle,
+  relativePath: string,
+  bytes: ArrayBuffer,
+): Promise<void> {
+  const parts = relativePath.split("/");
+  const fileName = parts.pop();
+  if (!fileName) throw new Error(`Invalid story player path: ${relativePath}`);
+  let dir = directory;
+  for (const part of parts) {
+    dir = await dir.getDirectoryHandle(part, { create: true });
+  }
+  const fh = await dir.getFileHandle(fileName, { create: true });
+  const write = await fh.createWritable();
+  await write.write(bytes);
+  await write.close();
+}
+
+/** Copy the preview-hosted player into `bundle/` beside the story. */
+async function copyHostedPlayer(
+  directory: FileSystemDirectoryHandle,
+): Promise<void> {
+  const base = hostedPlayerBaseUrl();
+  if (!base) return;
+  const manifestRes = await fetch(`${base}/manifest.json`);
+  if (!manifestRes.ok) {
+    throw new Error(
+      `Story player manifest missing at ${base}/manifest.json (${manifestRes.status})`,
+    );
+  }
+  const listed: unknown = await manifestRes.json();
+  if (!Array.isArray(listed)) {
+    throw new Error("Story player manifest is invalid");
+  }
+  const files = listed.filter(
+    (name): name is string => typeof name === "string",
+  );
+  if (files.length === 0) {
+    throw new Error("Story player manifest is empty");
+  }
+  const playerDir = await directory.getDirectoryHandle(LOCAL_PLAYER_DIR, {
+    create: true,
+  });
+  for (const relativePath of files) {
+    const fileRes = await fetch(`${base}/${relativePath}`);
+    if (!fileRes.ok) {
+      throw new Error(
+        `Failed to copy story player file ${relativePath} (${fileRes.status})`,
+      );
+    }
+    await writeBytes(playerDir, relativePath, await fileRes.arrayBuffer());
+  }
+}
+
 export type WriteStoryBundleOptions = {
   mode?: StoryExportMode;
 };
 
-/** Write `document.json` + CDN-backed `index.html` into an export directory. */
+/**
+ * Write `document.json` + `index.html` into an export directory.
+ * PR previews also copy the story player into `bundle/`.
+ */
 export async function writeStoryBundleSidecars(
   directory: FileSystemDirectoryHandle,
   data: DocumentData,
@@ -159,6 +223,7 @@ export async function writeStoryBundleSidecars(
     "document.json",
     JSON.stringify(exported, null, 2),
   );
+  await copyHostedPlayer(directory);
   await writeTextFile(
     directory,
     "index.html",
