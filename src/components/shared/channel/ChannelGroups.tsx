@@ -12,7 +12,7 @@ const GroupRow = (props: { group: ChannelGroup }) => {
   const { group } = props;
   const { name } = group;
 
-  const { setActiveChannelGroup } = useAppStore();
+  const showOnlyChannelGroup = useAppStore((s) => s.showOnlyChannelGroup);
   const docChannelGroups = useDocumentStore((s) => s.channelGroups);
   const row_group = React.useMemo(
     () =>
@@ -21,9 +21,7 @@ const GroupRow = (props: { group: ChannelGroup }) => {
   );
 
   const toGroup = () => {
-    if (row_group) {
-      setActiveChannelGroup(row_group.id);
-    }
+    if (row_group) showOnlyChannelGroup(row_group.id);
   };
 
   return (

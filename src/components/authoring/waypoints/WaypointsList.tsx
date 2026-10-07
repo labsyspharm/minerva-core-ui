@@ -84,7 +84,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   const {
     activeStoryIndex,
     setActiveStory,
-    setActiveChannelGroup,
+    showOnlyChannelGroup,
     addStory,
     updateStory,
     reorderStories,
@@ -394,11 +394,9 @@ const WaypointsList = (props: WaypointsListProps) => {
         (story.groupId &&
           channelGroups.find((group) => group.id === story.groupId)) ||
         channelGroups[0];
-      if (foundGroup) {
-        setActiveChannelGroup(foundGroup.id);
-      }
+      if (foundGroup) showOnlyChannelGroup(foundGroup.id);
     },
-    [channelGroups, setActiveChannelGroup],
+    [channelGroups, showOnlyChannelGroup],
   );
 
   const scheduleThumbnailCaptureForStory = (
@@ -776,7 +774,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       );
       if (!nextGroup) return;
       updateStory(detailStoryIndex, { groupId: nextGroup.id });
-      setActiveChannelGroup(nextGroup.id);
+      showOnlyChannelGroup(nextGroup.id);
       setChannelGroupMenuOpen(false);
       scheduleThumbnailCaptureForStory(detailStoryIndex, true, true, 1100);
     };

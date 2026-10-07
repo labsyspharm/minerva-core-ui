@@ -2,7 +2,10 @@ import type { OrthographicViewState } from "@deck.gl/core";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import type { ConfigWaypoint } from "../authoring/config";
-import { applyStackVisibilities } from "../imaging/channelCompositor";
+import {
+  applyStackVisibilities,
+  visibilitiesShowingOnlyGroup,
+} from "../imaging/channelCompositor";
 import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
 import type { ImageOpacityPreview } from "../imaging/imageOpacity";
@@ -784,6 +787,8 @@ export interface AppStore {
 
   // Channel group and channel actions
   setActiveChannelGroup: (channelGroupId: string) => void;
+  /** Select a group and show only its channels. */
+  showOnlyChannelGroup: (channelGroupId: string) => void;
   setChannelVisibilities: (vis: Record<string, boolean>) => void;
   /** Per group-row uuid; independent of stack visibility in All Channels. */
   channelGroupRowVisibilities: Record<string, boolean>;
@@ -2409,6 +2414,24 @@ export const useAppStore = create<AppStore>()(
 
       setActiveChannelGroup: (channelGroupId: string) => {
         set({ activeChannelGroupId: channelGroupId });
+      },
+
+      showOnlyChannelGroup: (channelGroupId: string) => {
+        const doc = useDocumentStore.getState();
+        const group = doc.channelGroups.find((g) => g.id === channelGroupId);
+        if (!group) return;
+        const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+        const next = visibilitiesShowingOnlyGroup({
+          group,
+          channelGroups: doc.channelGroups,
+          sourceChannels,
+          stackVisibilities: get().channelVisibilities,
+        });
+        set({
+          activeChannelGroupId: group.id,
+          channelVisibilities: next.channelVisibilities,
+          channelGroupRowVisibilities: next.channelGroupRowVisibilities,
+        });
       },
 
       setTargetWaypointCamera: (waypoint) => {

@@ -111,6 +111,32 @@ export function isRgbDisplayFullyGrouped(
   return intensity.every((c) => groupedIds.has(c.id));
 }
 
+/**
+ * Every channel in `group` on, every other source channel and group row off.
+ * The selection-mask eye is left as it was.
+ */
+export function visibilitiesShowingOnlyGroup(args: {
+  group: ChannelGroup;
+  channelGroups: readonly ChannelGroup[];
+  sourceChannels: readonly Channel[];
+  stackVisibilities: Record<string, boolean>;
+}): {
+  channelVisibilities: Record<string, boolean>;
+  channelGroupRowVisibilities: Record<string, boolean>;
+} {
+  const memberIds = new Set(args.group.channels.map((gc) => gc.channelId));
+  const channelVisibilities = { ...args.stackVisibilities };
+  for (const sc of args.sourceChannels) {
+    channelVisibilities[sc.id] = memberIds.has(sc.id);
+  }
+  const channelGroupRowVisibilities: Record<string, boolean> = {};
+  for (const group of args.channelGroups) {
+    const on = group.id === args.group.id;
+    for (const gc of group.channels) channelGroupRowVisibilities[gc.id] = on;
+  }
+  return { channelVisibilities, channelGroupRowVisibilities };
+}
+
 /** Flip every RGB / H&E plane together (stack eyes and group-row eyes). */
 export function visibilitiesForRgbUnit(args: {
   rgbChannels: readonly Channel[];
