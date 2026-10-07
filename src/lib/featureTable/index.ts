@@ -1,10 +1,4 @@
 import {
-  ensureFileHandlePermission,
-  ephemeralFileHandleFromFile,
-  findFile,
-  hasFileHandlePermission,
-} from "@/lib/imaging/filesystem";
-import {
   type ClassVisibility,
   defaultClassColor,
   type MaskGpuStyle,
@@ -14,11 +8,7 @@ import {
   seedRgbForGroupChannelIndex,
 } from "@/lib/imaging/psudoPalette";
 import { deleteBlob, getBlob, putBlob } from "@/lib/persistence/db";
-import {
-  deleteFileHandle,
-  getFileHandle,
-  putFileHandle,
-} from "@/lib/persistence/fileHandles";
+import { deleteFileHandle } from "@/lib/persistence/fileHandles";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Color, FeatureTable } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
@@ -43,6 +33,14 @@ export { peekFeatureCsv } from "./columns";
 
 type FeatureTableColumns = { id: string; name: string };
 
+/** Dexie blob key, also tolerating a stored `{ handleKey }` with no `kind`. */
+export function featureTableHandleKey(
+  featureTable: Pick<FeatureTable, "source">,
+): string | undefined {
+  const { source } = featureTable;
+  return "handleKey" in source ? source.handleKey : undefined;
+}
+
 type AttachFeatureTableResult =
   | { ok: true; featureTable: FeatureTable }
   | { ok: false; error: string };
@@ -65,12 +63,10 @@ export function getFeatureTablePendingSourceIds(): readonly string[] {
 }
 
 type FeatureTableAccess = {
-  deniedHandleKeys: readonly string[];
   missingHandleKeys: readonly string[];
 };
 
 const emptyAccess: FeatureTableAccess = {
-  deniedHandleKeys: [],
   missingHandleKeys: [],
 };
 
@@ -95,8 +91,11 @@ export function getFeatureTableAccess(): FeatureTableAccess {
   return featureTableAccess;
 }
 
-async function dropStoredSource(handleKey: string): Promise<void> {
+async function dropStoredSource(featureTable: FeatureTable): Promise<void> {
+  const handleKey = featureTableHandleKey(featureTable);
+  if (!handleKey) return;
   await deleteBlob(handleKey).catch(() => undefined);
+  // Stories saved before Parquet also kept a file handle.
   await deleteFileHandle(handleKey).catch(() => undefined);
 }
 
@@ -336,9 +335,6 @@ type IngestedFeatureCsv = {
   names: string[];
   persist: Uint8Array;
   digest: string;
-  columns: FeatureTableColumns;
-  header: boolean;
-  handle: Handle.File;
 };
 
 export async function ingestFeatureCsvFile(
@@ -360,11 +356,6 @@ export async function ingestFeatureCsvFile(
         names: ingested.names,
         persist,
         digest: await sha256Hex(persist),
-        columns: ingested.columns,
-        header: ingested.header,
-        handle:
-          (file as File & { handle?: Handle.File }).handle ??
-          ephemeralFileHandleFromFile(file),
       },
     };
   } catch (e) {
@@ -385,7 +376,7 @@ async function commitIngestedFeatureTable(
   if (existing && existing.id !== ingested.featureTableId) {
     paletteJobs.delete(existing.id);
     await dropFeatureTable(existing.id).catch(() => undefined);
-    await dropStoredSource(existing.source.handleKey);
+    await dropStoredSource(existing);
   }
 
   let nameColors: FeatureTable["nameColors"] = [];
@@ -399,17 +390,14 @@ async function commitIngestedFeatureTable(
   const handleKey = storyId
     ? `story:${storyId}:featureTable:${ingested.featureTableId}`
     : `featureTable:${ingested.featureTableId}`;
-  await putFileHandle(handleKey, ingested.handle);
   await putBlob(handleKey, ingested.persist);
   const featureTable: FeatureTable = {
     id: ingested.featureTableId,
     sourceChannelId,
-    source: { handleKey },
+    source: { kind: "local", handleKey },
     maxClassId: ingested.maxClassId,
     nameColors,
     digest: ingested.digest,
-    columns: ingested.columns,
-    header: ingested.header,
   };
   const doc = useDocumentStore.getState();
   const next = existing
@@ -434,7 +422,7 @@ export async function detachFeatureTable(
   if (!featureTable) return;
   paletteJobs.delete(featureTable.id);
   await dropFeatureTable(featureTable.id).catch(() => undefined);
-  await dropStoredSource(featureTable.source.handleKey);
+  await dropStoredSource(featureTable);
   const doc = useDocumentStore.getState();
   if (doc.featureTables.some((c) => c.id === featureTable.id)) {
     doc.setFeatureTables(
@@ -498,70 +486,34 @@ export function setClassColor(
 export async function hydrateFeatureTables(
   featureTables: readonly FeatureTable[],
   reset: boolean,
-  opts?: { requestPermission?: boolean },
 ): Promise<void> {
   if (reset) {
     lutPending.clear();
     await resetFeatureTables();
   }
-  const deniedHandleKeys: string[] = [];
   const missingHandleKeys: string[] = [];
-  const canAccess = opts?.requestPermission
-    ? ensureFileHandlePermission
-    : hasFileHandlePermission;
-  const ingestSource = async (
-    featureTable: FeatureTable,
-    source: File | Uint8Array,
-  ) => {
-    const ingested = await ingestFeatureTable(featureTable.id, source, {
-      id: featureTable.columns.id,
-      name: featureTable.columns.name,
-      header: featureTable.header,
-    });
-    noteLut();
-    if (featureTable.nameColors.length === 0) {
-      scheduleClassPalette(featureTable.id, ingested.names);
-    }
-  };
   for (const featureTable of featureTables) {
     if (!reset && hasIngestedFeatureTable(featureTable.id)) continue;
-    const key = featureTable.source.handleKey;
-    const stored = await getFileHandle(key);
-    if (stored) {
-      const handle = stored as Handle.File;
-      if (!(await canAccess(handle))) {
-        deniedHandleKeys.push(key);
-        continue;
-      }
-      try {
-        if (!(await findFile({ handle }))) {
-          missingHandleKeys.push(key);
-          continue;
-        }
-        await ingestSource(featureTable, await handle.getFile());
-      } catch (e) {
-        console.error("[featureTable] hydrate failed", featureTable.id, e);
-        missingHandleKeys.push(key);
-      }
-      continue;
-    }
+    const key = featureTableHandleKey(featureTable);
+    if (!key) continue;
     const bytes = await getBlob(key);
-    if (bytes) {
-      try {
-        await ingestSource(featureTable, bytes);
-      } catch (e) {
-        console.error("[featureTable] hydrate failed", featureTable.id, e);
-        missingHandleKeys.push(key);
-      }
+    if (!bytes) {
+      missingHandleKeys.push(key);
       continue;
     }
-    missingHandleKeys.push(key);
+    try {
+      const ingested = await ingestFeatureTable(featureTable.id, bytes);
+      noteLut();
+      if (ingested.persist) {
+        // Legacy CSV blob. Keep the digest so `nameColors` stay matched.
+        await putBlob(key, ingested.persist);
+      } else if (featureTable.nameColors.length === 0) {
+        scheduleClassPalette(featureTable.id, ingested.names);
+      }
+    } catch (e) {
+      console.error("[featureTable] hydrate failed", featureTable.id, e);
+      missingHandleKeys.push(key);
+    }
   }
-  noteAccess({ deniedHandleKeys, missingHandleKeys });
-}
-
-export async function requestFeatureTableFileAccess(): Promise<void> {
-  await hydrateFeatureTables(useDocumentStore.getState().featureTables, false, {
-    requestPermission: true,
-  });
+  noteAccess({ missingHandleKeys });
 }

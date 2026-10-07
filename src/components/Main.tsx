@@ -25,7 +25,6 @@ import { extractChannels } from "@/lib/authoring/config";
 import {
   detachRemovedFeatureTables,
   hydrateFeatureTables,
-  requestFeatureTableFileAccess,
 } from "@/lib/featureTable";
 import {
   applyVisibilityTransition,
@@ -1386,7 +1385,6 @@ const Content = (props: Props) => {
         documentUrl: window.location.href,
       });
       applyHydratedLoaders(result);
-      await requestFeatureTableFileAccess();
       if (
         result.omeLoaderEntries.length +
           result.jpegLoaderEntries.length +

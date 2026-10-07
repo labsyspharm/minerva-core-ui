@@ -22,6 +22,7 @@ import {
   classNameVisible,
   completeFeatureTableIngest,
   detachFeatureTable,
+  featureTableHandleKey,
   getFeatureTableAccess,
   getFeatureTableIngestEpoch,
   getFeatureTablePendingSourceIds,
@@ -30,7 +31,6 @@ import {
   pageFeatureTable,
   peekClassIndex,
   peekFeatureCsv,
-  requestFeatureTableFileAccess,
   setAllClassesVisible,
   setClassColor,
   subscribeFeatureTableAccess,
@@ -325,17 +325,13 @@ function FeatureTableMaskAction(props: { featureTableId: string }) {
     getFeatureTableAccess,
     getFeatureTableAccess,
   );
-  const handleKey = useDocumentStore(
-    (s) =>
-      s.featureTables.find((c) => c.id === featureTableId)?.source.handleKey,
-  );
+  const handleKey = useDocumentStore((s) => {
+    const featureTable = s.featureTables.find((c) => c.id === featureTableId);
+    return featureTable ? featureTableHandleKey(featureTable) : undefined;
+  });
   void ingestEpoch;
   if (hasIngestedFeatureTable(featureTableId)) return null;
-  if (
-    handleKey != null &&
-    (access.deniedHandleKeys.includes(handleKey) ||
-      access.missingHandleKeys.includes(handleKey))
-  ) {
+  if (handleKey != null && access.missingHandleKeys.includes(handleKey)) {
     return null;
   }
   return (
@@ -438,10 +434,10 @@ function FeatureTableAttach(props: { sourceChannelId: string }) {
 function FeatureTableListBody(props: { featureTableId: string }) {
   const { featureTableId } = props;
   const list = useFeatureTableList(featureTableId);
-  const handleKey = useDocumentStore(
-    (s) =>
-      s.featureTables.find((c) => c.id === featureTableId)?.source.handleKey,
-  );
+  const handleKey = useDocumentStore((s) => {
+    const featureTable = s.featureTables.find((c) => c.id === featureTableId);
+    return featureTable ? featureTableHandleKey(featureTable) : undefined;
+  });
   const sourceChannelId = useDocumentStore(
     (s) =>
       s.featureTables.find((c) => c.id === featureTableId)?.sourceChannelId,
@@ -451,8 +447,6 @@ function FeatureTableListBody(props: { featureTableId: string }) {
     getFeatureTableAccess,
     getFeatureTableAccess,
   );
-  const needsPermission =
-    handleKey != null && access.deniedHandleKeys.includes(handleKey);
   const needsReselect =
     handleKey != null && access.missingHandleKeys.includes(handleKey);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -466,27 +460,22 @@ function FeatureTableListBody(props: { featureTableId: string }) {
 
   const showBusy = list.loading && list.rows.length === 0;
   const fadeColors = list.fadeColors;
-  const showAccess = needsPermission || needsReselect;
 
   const restoreFile = async () => {
-    if (needsReselect) {
-      if (!sourceChannelId) return;
-      const file = await pickFeatureCsv();
-      if (!file) return;
-      await completeFeatureTableIngest(
-        sourceChannelId,
-        ingestFeatureCsvFile(file),
-      );
-      return;
-    }
-    await requestFeatureTableFileAccess();
+    if (!sourceChannelId) return;
+    const file = await pickFeatureCsv();
+    if (!file) return;
+    await completeFeatureTableIngest(
+      sourceChannelId,
+      ingestFeatureCsvFile(file),
+    );
   };
 
   useEffect(() => {
     if (fadeColors) setPicker(null);
   }, [fadeColors]);
 
-  if (!hasIngestedFeatureTable(featureTableId) && !showAccess) return null;
+  if (!hasIngestedFeatureTable(featureTableId) && !needsReselect) return null;
 
   return (
     <div className={styles.root}>
@@ -536,22 +525,22 @@ function FeatureTableListBody(props: { featureTableId: string }) {
           list.onScroll(el.scrollTop, el.clientHeight);
         }}
       >
-        {showAccess ? (
+        {needsReselect ? (
           <div className={styles.accessPrompt}>
             <button
               type="button"
               className={`${minervaTheme.focusRing} ${styles.textBtn}`}
               onClick={() => void restoreFile()}
             >
-              {needsReselect ? "Choose file again" : "Allow file access"}
+              Choose file again
             </button>
           </div>
         ) : null}
-        {showBusy && !showAccess ? <TableLoading /> : null}
+        {showBusy && !needsReselect ? <TableLoading /> : null}
         <div
           style={{
             height:
-              Math.max(list.total, showBusy || showAccess ? 2 : 1) * ROW_H,
+              Math.max(list.total, showBusy || needsReselect ? 2 : 1) * ROW_H,
             position: "relative",
           }}
         >

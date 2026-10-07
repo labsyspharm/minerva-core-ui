@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  normalizeFeatureTableSource,
   normalizeWaypointRecord,
   preprocessJsonExportRoot,
 } from "./wirePreprocess";
@@ -227,13 +228,25 @@ export const ChannelGroupSchema = z.object({
 const ClassIdSchema = z.number().int().positive().max(0xffff_ffff);
 
 /**
+ * Where the Parquet file lives. `local` is a Dexie blob under `handleKey`;
+ * `url` is relative to `document.json` in an exported story.
+ */
+const FeatureTableSourceSchema = z.preprocess(
+  normalizeFeatureTableSource,
+  z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("local"), handleKey: z.string().min(1) }),
+    z.object({ kind: z.literal("url"), url: z.string().min(1) }),
+  ]),
+);
+
+/**
  * Sidecar name table for one mask plane (`sourceChannelId` = ImageChannel.id).
  * Name rows live in DuckDB, not in this JSON object.
  */
 const FeatureTableSchema = z.object({
   id: IdSchema,
   sourceChannelId: IdSchema,
-  source: z.object({ handleKey: z.string().min(1) }),
+  source: FeatureTableSourceSchema,
   maxClassId: ClassIdSchema,
   nameColors: z.array(
     z.object({
@@ -241,11 +254,8 @@ const FeatureTableSchema = z.object({
       color: ColorSchema,
     }),
   ),
-  /** SHA-256 of the attached CSV bytes. */
+  /** SHA-256 of the bytes stored at attach. Older stories hashed the CSV. */
   digest: z.string().min(1),
-  columns: z.object({ id: z.string().min(1), name: z.string().min(1) }),
-  /** False when the CSV has no header row (`column0`,`column1`). */
-  header: z.boolean(),
 });
 
 const waypointObjectZ = z.object({
