@@ -15,6 +15,7 @@
  */
 
 import type { ConfigWaypoint } from "../authoring/config";
+import { clampImageOpacity } from "../imaging/imageOpacity";
 import { effectiveOrientation } from "../imaging/imageOrientation";
 import { type Loader, loaderPixelSizeXY } from "../imaging/viv";
 import {
@@ -247,6 +248,21 @@ export function setImageOrientation(
   return next;
 }
 
+/** Set whole-image alpha (`0…1`) on one image row. */
+export function setImageOpacity(
+  images: Image[],
+  imageId: string,
+  opacity: number,
+): Image[] {
+  const idx = images.findIndex((im) => im.id === imageId);
+  if (idx < 0) return images;
+  const nextOpacity = clampImageOpacity(opacity);
+  if (clampImageOpacity(images[idx].opacity) === nextOpacity) return images;
+  const next = [...images];
+  next[idx] = { ...next[idx], opacity: nextOpacity };
+  return next;
+}
+
 /**
  * Copy stable channel ids (+ persisted styling) from `previous` onto
  * `incoming` by sorted OME index. Channel groups / waypoints keep working
@@ -283,6 +299,7 @@ export function rebindReplacementImageChannels(
     channels,
     contentRole: previous.contentRole ?? incoming.contentRole,
     rgbDisplay: previous.rgbDisplay ?? incoming.rgbDisplay,
+    opacity: clampImageOpacity(previous.opacity),
   };
 }
 

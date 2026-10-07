@@ -1,6 +1,12 @@
 import type { Layer } from "@deck.gl/core";
-import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+import { isInterleaved, MultiscaleImageLayer } from "@hms-dbmi/viv";
 import { useMemo, useRef } from "react";
+import {
+  bitmapLayerOpacity,
+  type ImageOpacityPreview,
+  imageFadeParameters,
+  opacityForImage,
+} from "@/lib/imaging/imageOpacity";
 import type {
   JpegLoaderEntry,
   LoaderList,
@@ -97,6 +103,7 @@ function createDicomTileLayer(args: {
   settings: unknown;
   remountKey?: string | number;
   orientation?: ImageOrientation | null;
+  opacity: number;
 }): Layer | null {
   const rgbImage = args.entry.modality === "Brightfield";
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
@@ -108,6 +115,7 @@ function createDicomTileLayer(args: {
     rgbImage,
     imageID: `${imageKey}${remount}`,
     modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
+    opacity: args.opacity,
   });
 }
 
@@ -139,6 +147,7 @@ function createMultiscaleLayer(args: {
   transfer?: JpegExportTransfer;
   overlay?: boolean;
   orientation?: ImageOrientation | null;
+  opacity: number;
 }): Layer {
   const base = args.settings as MainSettings;
   const settings: MainSettings =
@@ -159,6 +168,11 @@ function createMultiscaleLayer(args: {
     // waits on that decode even after tiles have painted.
     excludeBackground: true,
     ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
+    ...imageFadeParameters(Boolean(args.overlay), args.opacity),
+    // Viv draws interleaved (packed RGB) tiles with deck's BitmapLayer.
+    opacity: isInterleaved(args.loader.data[0].shape)
+      ? bitmapLayerOpacity(args.opacity)
+      : args.opacity,
     loader: args.loader.data,
     modelMatrix: layerModelMatrix(args.loader, args.orientation),
   } as never);
@@ -169,6 +183,7 @@ function createEncodedImageLayer(args: {
   settings: unknown;
   remountKey?: string | number;
   orientation?: ImageOrientation | null;
+  opacity: number;
 }): Layer {
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
   return createJpegLayers({
@@ -177,6 +192,7 @@ function createEncodedImageLayer(args: {
     transfer: args.entry.transfer ?? "contrast",
     layerId: `jpeg-${args.entry.sourceImageId}${remount}`,
     modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
+    opacity: args.opacity,
   });
 }
 
@@ -190,6 +206,7 @@ function buildImageLayers(args: {
   remountKey?: string | number;
   images?: Image[];
   orientationPreview?: ImageOrientationPreview | null;
+  opacityPreview?: ImageOpacityPreview | null;
 }): Layer[] {
   const dicomIndexList = args.dicomIndexList ?? [];
   const omeLoaderEntries = args.omeLoaderEntries ?? [];
@@ -197,20 +214,25 @@ function buildImageLayers(args: {
   const dicomSettingsList = args.dicomSettingsList ?? [];
   const omeSettingsList = args.omeSettingsList ?? [];
   const jpegSettingsList = args.jpegSettingsList ?? [];
-  const { images, orientationPreview } = args;
+  const { images, orientationPreview, opacityPreview } = args;
+  const opacityOf = (sourceImageId: string | undefined) =>
+    opacityForImage(images, sourceImageId, opacityPreview);
 
   let omeVisiblePainted = 0;
   return [
     ...dicomIndexList.flatMap((entry, i) => {
+      const settings = dicomSettingsList[i] as MainSettings | undefined;
+      if (!settings?.selections?.length) return [];
       const layer = createDicomTileLayer({
         entry,
-        settings: dicomSettingsList[i],
+        settings,
         remountKey: args.remountKey,
         orientation: orientationForImage(
           images,
           entry.sourceImageId,
           orientationPreview,
         ),
+        opacity: opacityOf(entry.sourceImageId),
       });
       if (!layer) return [];
       return [layer];
@@ -233,6 +255,7 @@ function buildImageLayers(args: {
             sourceImageId,
             orientationPreview,
           ),
+          opacity: opacityOf(sourceImageId),
           ...(transfer ? { transfer } : {}),
         }),
       ];
@@ -250,6 +273,7 @@ function buildImageLayers(args: {
             entry.sourceImageId,
             orientationPreview,
           ),
+          opacity: opacityOf(entry.sourceImageId),
         }),
       ];
     }),
@@ -272,6 +296,8 @@ export function useViewerLayers(args: {
   images?: Image[];
   /** Authoring: live orientation drag preview (CDN omits). */
   orientationPreview?: ImageOrientationPreview | null;
+  /** Authoring: live image-opacity slider (CDN omits). */
+  opacityPreview?: ImageOpacityPreview | null;
   /** Authoring: bump after export to recreate GL layers (CDN omits). */
   remountKey?: string | number;
 }) {
@@ -287,6 +313,7 @@ export function useViewerLayers(args: {
     channelRendering = null,
     images,
     orientationPreview = null,
+    opacityPreview = null,
     remountKey,
   } = args;
 
@@ -404,6 +431,7 @@ export function useViewerLayers(args: {
         remountKey,
         images,
         orientationPreview,
+        opacityPreview,
       }),
     [
       dicomIndexList,
@@ -415,6 +443,7 @@ export function useViewerLayers(args: {
       remountKey,
       images,
       orientationPreview,
+      opacityPreview,
     ],
   );
 

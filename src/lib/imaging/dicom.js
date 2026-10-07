@@ -4,6 +4,7 @@ import { MultiscaleImageLayer } from "@hms-dbmi/viv";
 import * as dcmjs from "dcmjs";
 import { DicomPixelSource } from "./dicomPixelSource";
 import { DicomTIFFImage } from "./dicomTiffImage";
+import { bitmapLayerOpacity, imageFadeParameters } from "./imageOpacity";
 import { TILE_CACHE_PROPS } from "./viv";
 
 const { naturalizeDataset } = dcmjs.data.DicomMetaDictionary;
@@ -776,6 +777,7 @@ function createTileLayers(meta) {
   const finest = primaryLevels[primaryLevels.length - 1];
   const { width, height } = finest;
   const minZoom = Math.round(-(primaryLevels.length - 1));
+  const { opacity } = meta;
   if (rgbImage) {
     return new TileLayer({
       // RGB TileLayer has no channelsVisible shader path.
@@ -802,6 +804,8 @@ function createTileLayers(meta) {
         }
       },
       refinementStrategy: "best-available",
+      ...imageFadeParameters(false, opacity),
+      opacity: bitmapLayerOpacity(opacity),
       tileSize: finest.tileSize || 1024,
       minZoom,
       maxZoom: 0,
@@ -840,6 +844,8 @@ function createTileLayers(meta) {
     contrastLimits,
     selections,
     modelMatrix: meta.modelMatrix,
+    ...imageFadeParameters(false, opacity),
+    opacity,
   });
 }
 

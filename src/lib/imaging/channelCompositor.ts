@@ -144,12 +144,24 @@ function groupsOnView(
   return activeGroup ? [activeGroup] : channelGroups;
 }
 
+/** A selected group paints only images it has at least one row from. */
+function onImagesInGroup(
+  channels: readonly Channel[],
+  activeGroup: ChannelGroup | undefined,
+): Channel[] {
+  if (!activeGroup) return [...channels];
+  const memberIds = new Set(activeGroup.channels.map((gc) => gc.channelId));
+  const imageIds = new Set(
+    channels.filter((sc) => memberIds.has(sc.id)).map((sc) => sc.imageId),
+  );
+  return channels.filter((sc) => imageIds.has(sc.imageId));
+}
+
 /** Intensity layers sent to Viv. The selected group supplies its own rows and colors. */
 export function buildCompositedIntensityLayers(
   args: CompositedLayersArgs,
 ): CompositedIntensityLayer[] {
   const {
-    onLoader,
     activeGroup,
     channelGroups = [],
     stackVisibilities,
@@ -157,6 +169,7 @@ export function buildCompositedIntensityLayers(
     hasVisibilityMap,
     requireColor = true,
   } = args;
+  const onLoader = onImagesInGroup(args.onLoader, activeGroup);
 
   const viewGroups = groupsOnView(activeGroup, channelGroups);
   const groupedIds = sourceIdsInAnyGroup(channelGroups);
@@ -280,6 +293,8 @@ export function vivIntensityCapExceeded(
 
 export function isMaskSourceRendered(args: {
   sc: Channel;
+  /** All document channels; resolves which images the active group includes. */
+  channels: readonly Channel[];
   channelGroups?: ChannelGroup[];
   /** When set, only this group's rows can show the mask. */
   activeGroup?: ChannelGroup;
@@ -288,11 +303,20 @@ export function isMaskSourceRendered(args: {
 }): boolean {
   const {
     sc,
+    channels,
     channelGroups = [],
     activeGroup,
     stackVisibilities,
     groupRowVisibilities,
   } = args;
+  if (
+    activeGroup &&
+    !onImagesInGroup(channels, activeGroup).some(
+      (c) => c.imageId === sc.imageId,
+    )
+  ) {
+    return false;
+  }
   const viewGroups = groupsOnView(activeGroup, channelGroups);
   return (
     isDisplayedViaGroupRow(sc.id, viewGroups, groupRowVisibilities) ||

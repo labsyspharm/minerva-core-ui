@@ -448,6 +448,7 @@ const Content = (props: Props) => {
     channelGroupRowVisibilities,
     channelRendering,
     imageOrientationPreview,
+    imageOpacityPreview,
     setGroupNames,
   } = useAppStore();
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
@@ -2008,6 +2009,7 @@ const Content = (props: Props) => {
     channelRendering,
     images: viewerImages,
     orientationPreview: imageOrientationPreview,
+    opacityPreview: imageOpacityPreview,
     remountKey: viewerRemountKey,
   });
 
