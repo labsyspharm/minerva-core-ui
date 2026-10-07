@@ -566,7 +566,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
           )
         : undefined;
       // Without a style the shader falls back to per-cell random colors.
-      if (featureTable && !classStyle) continue;
       const layer = createMaskTileLayer({
         id: `mask-channel-${sc.id}`,
         loader: entry.loader,
