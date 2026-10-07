@@ -13,6 +13,8 @@ type GeoTiffImage = {
     BitsPerSample?: number[] | ArrayLike<number>;
     SampleFormat?: number[];
     SamplesPerPixel?: number;
+    /** TIFF Compression. 7 is JPEG. May be a single code or a per-sample list. */
+    Compression?: number | number[];
     SubIFDs?: number[] | ArrayLike<number>;
   };
   getHeight: () => number;
@@ -219,36 +221,85 @@ function sampleMaxForBuffer(
   return 2 ** Math.max(1, Math.floor(bitsPerSample) || 8) - 1;
 }
 
+export type BrightfieldTally = { nDark: number; nLight: number };
+
+/** Tile-aligned sample starts at 15% / 50% / 85%. Center-only misses slide background. */
+export function brightfieldSampleOffsets(size: number, tile: number): number[] {
+  const tileSpan = Math.max(1, tile);
+  const seen = new Set<number>();
+  const out: number[] = [];
+  for (const frac of [0.15, 0.5, 0.85]) {
+    const aligned = Math.floor((size * frac) / tileSpan) * tileSpan;
+    const start = Math.max(0, Math.min(Math.max(0, size - 1), aligned));
+    const snapped = Math.floor(start / tileSpan) * tileSpan;
+    if (seen.has(snapped)) continue;
+    seen.add(snapped);
+    out.push(snapped);
+  }
+  return out;
+}
+
+function brightfieldWindows(
+  w: number,
+  h: number,
+  tileW: number,
+  tileH: number,
+): [number, number, number, number][] {
+  const out: [number, number, number, number][] = [];
+  for (const y0 of brightfieldSampleOffsets(h, tileH)) {
+    for (const x0 of brightfieldSampleOffsets(w, tileW)) {
+      out.push([x0, y0, Math.min(w, x0 + tileW), Math.min(h, y0 + tileH)]);
+    }
+  }
+  return out;
+}
+
 /**
  * QuPath GuiTools.estimateImageType dark/light heuristic: more near-white than
  * near-black → brightfield. Thresholds are 25/220 of 8-bit, rescaled to the
  * buffer's full scale. `channels` is 1 for the grayscale fallback.
  */
-function isBrightfieldRgb(
+export function tallyBrightfieldSamples(
   data: ArrayLike<number>,
   opts: { sampleMax: number; channels: number },
-): boolean {
+  tally: BrightfieldTally,
+): void {
   const { sampleMax } = opts;
   const channels = Math.max(1, opts.channels);
   const dark = (25 / 255) * sampleMax;
   const light = (220 / 255) * sampleMax;
   const nPixels = Math.floor(data.length / channels);
   const stride = Math.max(1, Math.ceil(nPixels / 10_000));
-  let nDark = 0;
-  let nLight = 0;
   for (let i = 0; i + channels - 1 < data.length; i += channels * stride) {
     const r = data[i];
     const g = channels >= 3 ? data[i + 1] : r;
     const b = channels >= 3 ? data[i + 2] : r;
-    if (r < dark && g < dark && b < dark) nDark += 1;
-    else if (r > light && g > light && b > light) nLight += 1;
+    if (r < dark && g < dark && b < dark) tally.nDark += 1;
+    else if (r > light && g > light && b > light) tally.nLight += 1;
   }
-  return nLight > nDark && nDark + nLight > 0;
+}
+
+export function brightfieldTallyMatches(tally: BrightfieldTally): boolean {
+  return tally.nLight > tally.nDark && tally.nDark + tally.nLight > 0;
+}
+
+/** Full scale for a decoded tile. Uint16 falls through to 65535. */
+export function brightfieldSampleMax(
+  data: ArrayLike<number>,
+  dtype?: string,
+): number {
+  if (dtype === "Uint8" || dtype === "Int8") return 255;
+  if (dtype === "Float32" || dtype === "Float64") return 1;
+  return sampleMaxForBuffer(
+    data,
+    dtype === "Uint32" || dtype === "Int32" ? 32 : 16,
+  );
 }
 
 /**
- * One coarsest tile, centered — (0,0) is often empty padding. Windowed, so
- * unlike `readRGB({ width, height })` it does not decode the full plane.
+ * Coarsest-level tiles on a 3×3 grid (inset from the rim so padding is not the
+ * only sample). A center tile is often tissue, which hides white glass.
+ * Windowed, so unlike a full-plane `readRGB` it does not decode the slide.
  */
 export async function detectOmeTiffBrightfield(
   source: Blob | string,
@@ -261,14 +312,7 @@ export async function detectOmeTiffBrightfield(
   const h = image.getHeight();
   const tileW = Math.max(1, image.getTileWidth?.() || 256);
   const tileH = Math.max(1, image.getTileHeight?.() || 256);
-  const x0 = Math.max(0, Math.floor(w / 2 / tileW) * tileW);
-  const y0 = Math.max(0, Math.floor(h / 2 / tileH) * tileH);
-  const window: [number, number, number, number] = [
-    x0,
-    y0,
-    Math.min(w, x0 + tileW),
-    Math.min(h, y0 + tileH),
-  ];
+  const windows = brightfieldWindows(w, h, tileW, tileH);
   const spp = image.fileDirectory?.SamplesPerPixel ?? 1;
   const bitsRaw = image.fileDirectory?.BitsPerSample?.[0];
   const bits = typeof bitsRaw === "number" ? bitsRaw : 8;
@@ -276,12 +320,18 @@ export async function detectOmeTiffBrightfield(
   // so nothing ever reads as light), WhiteIsZero is inverted, Palette is
   // indices. readRGB applies the photometric transform and always returns
   // interleaved RGB. It throws when the tag is missing or unsupported.
+  const tally: BrightfieldTally = { nDark: 0, nLight: 0 };
   try {
-    const rgb = await image.readRGB({ interleave: true, window, signal });
-    return isBrightfieldRgb(rgb, {
-      sampleMax: sampleMaxForBuffer(rgb, bits),
-      channels: 3,
-    });
+    for (const window of windows) {
+      if (signal?.aborted) return false;
+      const rgb = await image.readRGB({ interleave: true, window, signal });
+      tallyBrightfieldSamples(
+        rgb,
+        { sampleMax: sampleMaxForBuffer(rgb, bits), channels: 3 },
+        tally,
+      );
+    }
+    return brightfieldTallyMatches(tally);
   } catch (error) {
     if (signal?.aborted) return false;
     console.warn(
@@ -290,16 +340,41 @@ export async function detectOmeTiffBrightfield(
     );
   }
   const samples = spp >= 3 ? [0, 1, 2] : [0];
-  const raw = await image.readRasters({
-    samples,
-    interleave: true,
-    window,
-    signal,
-  });
-  return isBrightfieldRgb(raw, {
-    sampleMax: sampleMaxForBuffer(raw, bits),
-    channels: samples.length,
-  });
+  const rawTally: BrightfieldTally = { nDark: 0, nLight: 0 };
+  for (const window of windows) {
+    if (signal?.aborted) return false;
+    const raw = await image.readRasters({
+      samples,
+      interleave: true,
+      window,
+      signal,
+    });
+    tallyBrightfieldSamples(
+      raw,
+      { sampleMax: sampleMaxForBuffer(raw, bits), channels: samples.length },
+      rawTally,
+    );
+  }
+  return brightfieldTallyMatches(rawTally);
+}
+
+const TIFF_COMPRESSION_JPEG = 7;
+
+/** TIFF tag 259. JPEG is code 7; a per-sample list uses the first code. */
+export function isTiffJpegCompression(compression: unknown): boolean {
+  const code = Array.isArray(compression) ? compression[0] : compression;
+  return code === TIFF_COMPRESSION_JPEG;
+}
+
+/** Full-resolution IFD uses JPEG compression (pyramidal SubIFDs ride along on copy). */
+export async function omeTiffBaseIsJpeg(
+  source: Blob | string,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  const tiff = await openOmeTiff(source, signal);
+  const image = await tiff.getImage(0);
+  if (signal?.aborted) return false;
+  return isTiffJpegCompression(image.fileDirectory?.Compression);
 }
 
 /** Packed RGB (1×SPP=3) or three planar channels. */

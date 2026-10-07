@@ -85,7 +85,7 @@ type TransferImage = {
   }>;
 };
 
-/** RGB / H&E always uses contrast; IF multiplex uses the story transfer. */
+/** Brightfield / RGB / H&E stays contrast; IF multiplex uses the story transfer. */
 export function exportTransferForImage(
   image: TransferImage,
   storyTransfer: JpegExportTransfer,
