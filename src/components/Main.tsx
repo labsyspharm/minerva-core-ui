@@ -965,6 +965,7 @@ const Content = (props: Props) => {
     handles: Handle.File[],
     role: OmeImportRequest["role"] = "intensity",
     rgbDisplay?: boolean,
+    channelNames?: ReadonlyMap<number, string>,
   ) => {
     if (handles.length === 0) return;
     clearOmeDerivedCaches();
@@ -992,6 +993,7 @@ const Content = (props: Props) => {
         existingImages: nextImages,
         relevantGroups: relevant_groups,
         rgbDisplay,
+        channelNames,
       });
       nextImages = slice.nextImages;
       entries.push({ loader, sourceImageId });
@@ -1047,6 +1049,7 @@ const Content = (props: Props) => {
     handles: Handle.File[],
     role: OmeImportRequest["role"],
     rgbDisplay?: boolean,
+    channelNames?: ReadonlyMap<number, string>,
   ): Promise<OmeImportResult> => {
     if (handles.length === 0) {
       return { ok: false, error: "Choose a mask file first." };
@@ -1077,6 +1080,7 @@ const Content = (props: Props) => {
         sourceImageId,
         existingImages: nextImages,
         rgbDisplay,
+        channelNames,
       });
       nextImages = slice.nextImages;
       newEntries.push({ loader, sourceImageId });
@@ -1178,6 +1182,7 @@ const Content = (props: Props) => {
     url: string,
     role: OmeImportRequest["role"] = "intensity",
     rgbDisplay?: boolean,
+    channelNames?: ReadonlyMap<number, string>,
   ) => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
@@ -1208,6 +1213,7 @@ const Content = (props: Props) => {
       existingImages: [],
       relevantGroups: relevant_groups,
       rgbDisplay,
+      channelNames,
     });
     let nextImages = slice.nextImages;
     let ChannelGroups: ChannelGroup[];
@@ -1246,6 +1252,7 @@ const Content = (props: Props) => {
     url: string,
     role: OmeImportRequest["role"],
     rgbDisplay?: boolean,
+    channelNames?: ReadonlyMap<number, string>,
   ): Promise<OmeImportResult> => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
@@ -1272,6 +1279,7 @@ const Content = (props: Props) => {
       sourceImageId,
       existingImages: nextImages,
       rgbDisplay,
+      channelNames,
     });
     nextImages = slice.nextImages;
     nextImages = setImageSource(nextImages, sourceImageId, {
@@ -2191,6 +2199,7 @@ const Content = (props: Props) => {
                   req.source.handles,
                   req.role,
                   req.rgbDisplay,
+                  req.channelNames,
                 );
                 if (!result.ok) return result;
               } else {
@@ -2199,6 +2208,7 @@ const Content = (props: Props) => {
                   req.source.handles,
                   req.role,
                   req.rgbDisplay,
+                  req.channelNames,
                 );
               }
             } else if (req.append) {
@@ -2206,10 +2216,16 @@ const Content = (props: Props) => {
                 req.source.url,
                 req.role,
                 req.rgbDisplay,
+                req.channelNames,
               );
               if (!result.ok) return result;
             } else {
-              await onStartOmeTiffUrl(req.source.url, req.role, req.rgbDisplay);
+              await onStartOmeTiffUrl(
+                req.source.url,
+                req.role,
+                req.rgbDisplay,
+                req.channelNames,
+              );
             }
             const storyId = useDocumentStore.getState().activeStoryId;
             if (storyId) {

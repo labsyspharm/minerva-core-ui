@@ -59,6 +59,7 @@ export function ConsumePendingLibraryImport({
             role: pending.role,
             append: false,
             rgbDisplay: pending.rgbDisplay,
+            channelNames: pending.channelNames,
             source: pending.source,
           });
     // Always settle — Strict Mode remounts this effect after pending is already

@@ -1,8 +1,7 @@
-import { addDecoder, getDecoder } from "geotiff";
-import { LZWDecoder } from "./decoders";
+import { getDecoder } from "geotiff";
+import { registerLzwDecoder } from "./decoders";
 
-// Register the LZW decoder
-addDecoder(5, () => Promise.resolve(LZWDecoder));
+registerLzwDecoder();
 
 // @ts-expect-error - We are in a worker context
 const worker: ServiceWorker = self;
@@ -24,7 +23,12 @@ type Message = MessageEvent & {
 
 worker.addEventListener("message", async (e: Message) => {
   const { jobId, fileDirectory, buffer } = e.data;
-  const decoder = await getDecoder(fileDirectory);
-  const decoded = await decoder.decode(fileDirectory, buffer);
-  worker.postMessage({ decoded, jobId }, [decoded]);
+  try {
+    const decoder = await getDecoder(fileDirectory);
+    const decoded = await decoder.decode(fileDirectory, buffer);
+    worker.postMessage({ decoded, jobId }, [decoded]);
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err);
+    worker.postMessage({ error, jobId });
+  }
 });

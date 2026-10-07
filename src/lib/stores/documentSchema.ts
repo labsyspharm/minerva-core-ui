@@ -200,6 +200,8 @@ export const ImageSchema = z.object({
   translateY: z.number().default(0),
   /** Resize around the image center. 1 keeps the file's physical size. */
   displayScale: z.number().positive().default(1),
+  /** µm per pixel on both axes. Omitted uses the file's PhysicalSize. */
+  umPerPixel: z.number().positive().optional(),
   channels: z.array(ImageChannelSchema),
   source: ImageSourceSchema.optional(),
 });
@@ -397,7 +399,7 @@ export type Shape = z.infer<typeof ShapeSchema>;
 
 export type Image = z.infer<typeof ImageSchema>;
 export type ImageSource = z.infer<typeof ImageSourceSchema>;
-/** Resolved placement. Each field is always a number or boolean. */
+/** Resolved placement. Pose fields are always set. `umPerPixel` is omitted to use the file. */
 export type ImageOrientation = {
   rotationDegrees: number;
   flipHorizontal: boolean;
@@ -405,6 +407,8 @@ export type ImageOrientation = {
   translateX: number;
   translateY: number;
   displayScale: number;
+  /** µm per pixel on both axes. Absent uses the file's PhysicalSize. */
+  umPerPixel?: number;
 };
 export type ImageChannel = z.infer<typeof ImageChannelSchema>;
 export type ImageChannelKind = z.infer<typeof ImageChannelKindSchema>;

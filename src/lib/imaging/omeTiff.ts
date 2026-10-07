@@ -6,6 +6,7 @@ import {
   parseOmeXml,
   sanitizeOmeXml,
 } from "@/lib/imaging/omeXml";
+import { registerLzwDecoder } from "@/lib/imaging/workers/decoders";
 
 type GeoTiffImage = {
   fileDirectory?: {
@@ -50,6 +51,8 @@ type GeoTiffWithImage = {
 };
 
 async function openOmeTiff(source: Blob | string, signal?: AbortSignal) {
+  // After Viv's module init, which installs an LZW decoder sized for one sample.
+  registerLzwDecoder();
   return (
     typeof source === "string"
       ? await fromUrl(source, {}, signal)
@@ -183,11 +186,14 @@ export async function isOmeTiff(
   }
 }
 
-function threeChannelOmeFromXml(omeXml: string | null | undefined): boolean {
-  if (omeXml == null || omeXml.trim() === "") return false;
+/** Packed interleaved RGB, three separate planes, or neither. */
+type OmeRgbLayout = "packed" | "planar" | null;
+
+function omeRgbLayoutFromXml(omeXml: string | null | undefined): OmeRgbLayout {
+  if (omeXml == null || omeXml.trim() === "") return null;
   const doc = parseOmeXml(omeXml);
   const pixels = doc ? omePixelsElement(doc) : null;
-  if (!pixels) return false;
+  if (!pixels) return null;
   const channelEls = omeChannelElements(pixels);
   const samples = channelEls.map((ch) => {
     const raw = ch.getAttribute("SamplesPerPixel");
@@ -198,9 +204,9 @@ function threeChannelOmeFromXml(omeXml: string | null | undefined): boolean {
     }
     return n;
   });
-  const packed = samples.length === 1 && samples[0] === 3;
-  const planar = samples.length === 3 && samples.every((s) => s === 1);
-  return packed || planar;
+  if (samples.length === 1 && samples[0] === 3) return "packed";
+  if (samples.length === 3 && samples.every((s) => s === 1)) return "planar";
+  return null;
 }
 
 /**
@@ -377,12 +383,15 @@ export async function omeTiffBaseIsJpeg(
   return isTiffJpegCompression(image.fileDirectory?.Compression);
 }
 
-/** Packed RGB (1×SPP=3) or three planar channels. */
-export async function detectOmeTiffPlanarRgbAmbiguity(
+/**
+ * Packed RGB is one interleaved channel (SamplesPerPixel=3): H&E.
+ * Planar is three SPP=1 channels, which may be H&E or fluorescence.
+ */
+export async function detectOmeTiffRgbLayout(
   source: File | string,
   signal?: AbortSignal,
-): Promise<boolean> {
+): Promise<OmeRgbLayout> {
   const xml = await getOmeTiffImageDescriptionOmeXml(source, {}, signal);
-  if (signal?.aborted) return false;
-  return threeChannelOmeFromXml(xml);
+  if (signal?.aborted) return null;
+  return omeRgbLayoutFromXml(xml);
 }

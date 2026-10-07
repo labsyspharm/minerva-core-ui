@@ -73,10 +73,12 @@ type FeatureTableRow = {
 
 const EDGE = 10;
 
-export async function pickFeatureCsv(): Promise<File | undefined> {
+export async function pickFeatureCsv(
+  description = "Feature table CSV",
+): Promise<File | undefined> {
   try {
     return await fileOpen({
-      description: "Feature table CSV",
+      description,
       mimeTypes: ["text/csv"],
       extensions: [".csv"],
       multiple: false,
@@ -257,10 +259,10 @@ function useFeatureTableList(
 
 export function FeatureCsvColumnPick(props: {
   headers: string[];
-  id: string;
   name: string;
-  onId: (value: string) => void;
   onName: (value: string) => void;
+  id?: string;
+  onId?: (value: string) => void;
 }) {
   const select = (
     label: string,
@@ -285,7 +287,9 @@ export function FeatureCsvColumnPick(props: {
   );
   return (
     <div className={styles.colPick}>
-      {select("ID", props.id, props.onId)}
+      {props.id != null && props.onId
+        ? select("ID", props.id, props.onId)
+        : null}
       {select("Name", props.name, props.onName)}
     </div>
   );

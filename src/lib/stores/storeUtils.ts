@@ -240,7 +240,10 @@ export function setImageOrientation(
   const idx = images.findIndex((im) => im.id === imageId);
   if (idx < 0) return images;
   const next = [...images];
-  next[idx] = { ...next[idx], ...effectiveOrientation(orientation) };
+  const placed = effectiveOrientation(orientation);
+  const row = { ...next[idx], ...placed };
+  if (placed.umPerPixel == null) delete row.umPerPixel;
+  next[idx] = row;
   return next;
 }
 
