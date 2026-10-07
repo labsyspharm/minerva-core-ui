@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Baew3Aqo.js","./pako.esm-KbdoS3Oq.js","./lerc-DGMMik56.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-ChgdCrvp.js","./pako.esm-KbdoS3Oq.js","./lerc-C_iD8QYc.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18254,6 +18254,24 @@ let __tla = (async () => {
     if (intensity.length === 0 || !isRgbDisplaySource(channels2)) return false;
     const groupedIds = sourceIdsInAnyGroup(channelGroups);
     return intensity.every((c2) => groupedIds.has(c2.id));
+  }
+  function visibilitiesShowingOnlyGroup(args) {
+    const memberIds = new Set(args.group.channels.map((gc2) => gc2.channelId));
+    const channelVisibilities = {
+      ...args.stackVisibilities
+    };
+    for (const sc2 of args.sourceChannels) {
+      channelVisibilities[sc2.id] = memberIds.has(sc2.id);
+    }
+    const channelGroupRowVisibilities = {};
+    for (const group2 of args.channelGroups) {
+      const on = group2.id === args.group.id;
+      for (const gc2 of group2.channels) channelGroupRowVisibilities[gc2.id] = on;
+    }
+    return {
+      channelVisibilities,
+      channelGroupRowVisibilities
+    };
   }
   function visibilitiesForRgbUnit(args) {
     const ids = new Set(args.rgbChannels.filter(isImageChannel).map((c2) => c2.id));
@@ -76404,26 +76422,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-C0r-u-zs.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DTHP51Ns.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DrjTDDAg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CH0Ogsnb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-Dq_WSlxP.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BLbR9pcD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-Baew3Aqo.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-bQT-ogVE.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-DGMMik56.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-ChgdCrvp.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CS-ut77v.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-C_iD8QYc.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DX22wI4Y.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BzujiKiU.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CwN6__-u.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-6axTx7-x.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -88255,6 +88273,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     setActiveChannelGroup: (channelGroupId) => {
       set2({
         activeChannelGroupId: channelGroupId
+      });
+    },
+    showOnlyChannelGroup: (channelGroupId) => {
+      const doc = useDocumentStore.getState();
+      const group2 = doc.channelGroups.find((g2) => g2.id === channelGroupId);
+      if (!group2) return;
+      const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+      const next2 = visibilitiesShowingOnlyGroup({
+        group: group2,
+        channelGroups: doc.channelGroups,
+        sourceChannels,
+        stackVisibilities: get2().channelVisibilities
+      });
+      set2({
+        activeChannelGroupId: group2.id,
+        channelVisibilities: next2.channelVisibilities,
+        channelGroupRowVisibilities: next2.channelGroupRowVisibilities
       });
     },
     setTargetWaypointCamera: (waypoint) => {
@@ -245314,7 +245349,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
     const imageWidth = frame2.pixelWidth;
     const imageHeight = frame2.pixelHeight;
-    const { activeStoryIndex, setActiveStory, setActiveChannelGroup, addStory, updateStory, reorderStories, importWaypointShapes, persistImportedShapesToStory, setTargetWaypointCamera, captureSquareViewportThumbnail, removeStory, setShowSquareViewportOverlay, setAuthoringWaypointEditorOpen, setAuthoringWaypointShapesIndex, handleToolChange, setImageSelectionMaskFromWaypoint, layersPanelSelectedShapeIds } = useAppStore();
+    const { activeStoryIndex, setActiveStory, showOnlyChannelGroup, addStory, updateStory, reorderStories, importWaypointShapes, persistImportedShapesToStory, setTargetWaypointCamera, captureSquareViewportThumbnail, removeStory, setShowSquareViewportOverlay, setAuthoringWaypointEditorOpen, setAuthoringWaypointShapesIndex, handleToolChange, setImageSelectionMaskFromWaypoint, layersPanelSelectedShapeIds } = useAppStore();
     const previousDetailStoryIdRef = reactExports.useRef(null);
     const detailBodyRef = reactExports.useRef(null);
     const detailTitleFieldId = reactExports.useId();
@@ -245556,12 +245591,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const applyStoryChannelGroup = reactExports.useCallback((story) => {
       if (!story || channelGroups.length === 0) return;
       const foundGroup = story.groupId && channelGroups.find((group2) => group2.id === story.groupId) || channelGroups[0];
-      if (foundGroup) {
-        setActiveChannelGroup(foundGroup.id);
-      }
+      if (foundGroup) showOnlyChannelGroup(foundGroup.id);
     }, [
       channelGroups,
-      setActiveChannelGroup
+      showOnlyChannelGroup
     ]);
     const scheduleThumbnailCaptureForStory = (index2, overwriteView = false, thumbnailOnly = false, delayMs = 1100) => {
       if (pendingThumbnailCaptureTimeoutRef.current !== null) {
@@ -245895,7 +245928,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         updateStory(detailStoryIndex, {
           groupId: nextGroup.id
         });
-        setActiveChannelGroup(nextGroup.id);
+        showOnlyChannelGroup(nextGroup.id);
         setChannelGroupMenuOpen(false);
         scheduleThumbnailCaptureForStory(detailStoryIndex, true, true, 1100);
       };
@@ -252780,7 +252813,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
     const imageWidth = frame2.pixelWidth;
     const imageHeight = frame2.pixelHeight;
-    const { activeStoryIndex, setActiveStory, activeChannelGroupId, setActiveChannelGroup, importWaypointShapes, setTargetWaypointCamera } = useAppStore();
+    const { activeStoryIndex, setActiveStory, activeChannelGroupId, showOnlyChannelGroup, importWaypointShapes, setTargetWaypointCamera } = useAppStore();
     const previousActiveStoryIndexRef = reactExports.useRef(null);
     const groupAppliedForStoryRef = reactExports.useRef(null);
     const cameraAppliedForStoryRef = reactExports.useRef(null);
@@ -252818,18 +252851,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const story2 = waypoints[activeStoryIndex];
       if (!story2) return;
       if (groupAppliedForStoryRef.current === activeStoryIndex) return;
-      const authoringMap = useAppStore.getState().waypointAuthoring;
-      const wp = waypointToConfigWaypoint(story2, authoringMap.get(story2.id));
-      const gid = wp.groupId;
-      const foundGroup = gid ? channelGroups.find((g2) => g2.id === gid) || channelGroups[0] : channelGroups[0];
+      const gid = story2.groupId;
+      const foundGroup = gid && channelGroups.find((g2) => g2.id === gid) || channelGroups[0];
       if (!foundGroup) return;
       groupAppliedForStoryRef.current = activeStoryIndex;
-      setActiveChannelGroup(foundGroup.id);
+      showOnlyChannelGroup(foundGroup.id);
     }, [
       activeStoryIndex,
       channelGroups,
       waypoints,
-      setActiveChannelGroup
+      showOnlyChannelGroup
     ]);
     reactExports.useEffect(() => {
       return () => {
@@ -252850,9 +252881,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (!story2) return;
       const gid = story2.groupId;
       const found_group = gid && channelGroups.find(({ id: id2 }) => id2 === gid) || channelGroups[0];
-      if (found_group) {
-        setActiveChannelGroup(found_group.id);
-      }
+      if (found_group) showOnlyChannelGroup(found_group.id);
     };
     const storyFirst = () => {
       setActiveStory(0);
@@ -253145,16 +253174,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const GroupRow = (props) => {
     const { group: group2 } = props;
     const { name: name2 } = group2;
-    const { setActiveChannelGroup } = useAppStore();
+    const showOnlyChannelGroup = useAppStore((s2) => s2.showOnlyChannelGroup);
     const docChannelGroups = useDocumentStore((s2) => s2.channelGroups);
     const row_group = reactExports.useMemo(() => docChannelGroups.find((grp) => grp.name === name2) || docChannelGroups[0], [
       docChannelGroups,
       name2
     ]);
     const toGroup = () => {
-      if (row_group) {
-        setActiveChannelGroup(row_group.id);
-      }
+      if (row_group) showOnlyChannelGroup(row_group.id);
     };
     return jsxRuntimeExports.jsx("button", {
       type: "button",
@@ -254155,12 +254182,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-10-07T20:22:05.063Z");
+    const label2 = utcShort("2026-10-07T20:39:53.330Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$4.stamp,
       "aria-hidden": true,
-      title: "2026-10-07T20:22:05.063Z",
+      title: "2026-10-07T20:39:53.330Z",
       children: [
         "Updated ",
         label2,
