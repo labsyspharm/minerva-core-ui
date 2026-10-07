@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Cmugs-dz.js","./pako.esm-KbdoS3Oq.js","./lerc-Cmm0K5J-.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DQG0rjeI.js","./pako.esm-KbdoS3Oq.js","./lerc-CdH1icL5.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -17456,6 +17456,7 @@ let __tla = (async () => {
     translateX: numberType().default(0),
     translateY: numberType().default(0),
     displayScale: numberType().positive().default(1),
+    umPerPixel: numberType().positive().optional(),
     channels: arrayType(ImageChannelSchema),
     source: ImageSourceSchema.optional()
   });
@@ -21775,14 +21776,21 @@ let __tla = (async () => {
   function finiteOffset(n2) {
     return typeof n2 === "number" && Number.isFinite(n2) ? n2 : 0;
   }
+  function finiteUm(n2) {
+    return typeof n2 === "number" && Number.isFinite(n2) && n2 > 0 ? n2 : void 0;
+  }
   function effectiveOrientation(o2) {
+    const umPerPixel = finiteUm(o2 == null ? void 0 : o2.umPerPixel);
     return {
       rotationDegrees: wrapDisplayDeg((o2 == null ? void 0 : o2.rotationDegrees) ?? 0),
       flipHorizontal: (o2 == null ? void 0 : o2.flipHorizontal) ?? false,
       flipVertical: (o2 == null ? void 0 : o2.flipVertical) ?? false,
       translateX: finiteOffset(o2 == null ? void 0 : o2.translateX),
       translateY: finiteOffset(o2 == null ? void 0 : o2.translateY),
-      displayScale: finiteScale(o2 == null ? void 0 : o2.displayScale)
+      displayScale: finiteScale(o2 == null ? void 0 : o2.displayScale),
+      ...umPerPixel != null ? {
+        umPerPixel
+      } : {}
     };
   }
   function withOrientation(o2, patch2) {
@@ -21804,7 +21812,7 @@ let __tla = (async () => {
   }
   function isIdentityOrientation(o2) {
     const c2 = effectiveOrientation(o2);
-    return c2.rotationDegrees === 0 && !c2.flipHorizontal && !c2.flipVertical && c2.translateX === 0 && c2.translateY === 0 && c2.displayScale === 1;
+    return c2.rotationDegrees === 0 && !c2.flipHorizontal && !c2.flipVertical && c2.translateX === 0 && c2.translateY === 0 && c2.displayScale === 1 && c2.umPerPixel == null;
   }
   function orientationForImage(images, sourceImageId, preview) {
     if (!sourceImageId) return void 0;
@@ -66493,6 +66501,10 @@ in vec2 mask_texCoords;
   };
   function metresPerUnit(unit) {
     const u2 = unit.trim();
+    const word = u2.toLowerCase();
+    if (word === "micron" || word === "microns" || word === "micrometer" || word === "micrometers") {
+      return 1e-6;
+    }
     if (u2 === "m") return 1;
     if (!u2.endsWith("m")) return null;
     const prefix2 = u2.slice(0, -1);
@@ -66538,20 +66550,50 @@ in vec2 mask_texCoords;
     const dims = loaderPixelSizeXY(loader);
     return frameFromPixels((dims == null ? void 0 : dims.sizeX) ?? 0, (dims == null ? void 0 : dims.sizeY) ?? 0, parsePhysicalScale((_a2 = loader.metadata) == null ? void 0 : _a2.Pixels));
   }
+  function planeAxis(plane, axis) {
+    if (!(plane == null ? void 0 : plane.labels) || !plane.shape) return null;
+    const i2 = plane.labels.indexOf(axis);
+    if (i2 < 0) return null;
+    const n2 = Number(plane.shape[i2]);
+    if (!Number.isFinite(n2) || n2 <= 1) return null;
+    return Math.round(n2);
+  }
+  function fullResPixelSize(loader) {
+    let best = null;
+    let bestArea = 0;
+    for (const plane of loader.data ?? []) {
+      const sizeX = planeAxis(plane, "x");
+      const sizeY = planeAxis(plane, "y");
+      if (sizeX == null || sizeY == null) continue;
+      const area2 = sizeX * sizeY;
+      if (area2 > bestArea) {
+        best = {
+          sizeX,
+          sizeY
+        };
+        bestArea = area2;
+      }
+    }
+    return best;
+  }
+  function comparablePixelSize(loader) {
+    return fullResPixelSize(loader) ?? loaderPixelSizeXY(loader);
+  }
   function inheritUnitlessPhysicalSize(loaders) {
+    var _a2, _b2;
     for (const loader of loaders) {
-      if (isCalibratedScale(loader)) continue;
-      const dims = loaderPixelSizeXY(loader);
-      if (!dims) continue;
+      const pixels = (_a2 = loader.metadata) == null ? void 0 : _a2.Pixels;
+      const dims = comparablePixelSize(loader);
+      if (!dims || !pixels || isCalibratedScale(loader)) continue;
       const donor = loaders.find((peer) => {
-        var _a2, _b2;
-        return peer !== loader && isCalibratedScale(peer) && ((_a2 = loaderPixelSizeXY(peer)) == null ? void 0 : _a2.sizeX) === dims.sizeX && ((_b2 = loaderPixelSizeXY(peer)) == null ? void 0 : _b2.sizeY) === dims.sizeY;
+        if (peer === loader || !isCalibratedScale(peer)) return false;
+        const peerDims = comparablePixelSize(peer);
+        return (peerDims == null ? void 0 : peerDims.sizeX) === dims.sizeX && (peerDims == null ? void 0 : peerDims.sizeY) === dims.sizeY;
       });
       if (!donor) continue;
-      const { umPerPixelX, umPerPixelY } = worldFrameFromLoader(donor);
-      const pixels = loader.metadata.Pixels;
-      pixels.PhysicalSizeX = umPerPixelX;
-      pixels.PhysicalSizeY = umPerPixelY;
+      const scale2 = parsePhysicalScale((_b2 = donor.metadata) == null ? void 0 : _b2.Pixels);
+      pixels.PhysicalSizeX = scale2.umPerPixelX;
+      pixels.PhysicalSizeY = scale2.umPerPixelY;
       pixels.PhysicalSizeXUnit = WORLD_MICRON;
       pixels.PhysicalSizeYUnit = WORLD_MICRON;
     }
@@ -66569,8 +66611,11 @@ in vec2 mask_texCoords;
     return worldFrameFromPixelCounts(docWidth, docHeight);
   }
   function layerModelMatrix(loader, orientation) {
-    const { pixelWidth, pixelHeight, umPerPixelX, umPerPixelY } = worldFrameFromLoader(loader);
+    const frame2 = worldFrameFromLoader(loader);
     const o2 = effectiveOrientation(orientation);
+    const { pixelWidth, pixelHeight } = frame2;
+    const umPerPixelX = o2.umPerPixel ?? frame2.umPerPixelX;
+    const umPerPixelY = o2.umPerPixel ?? frame2.umPerPixelY;
     const cx = pixelWidth / 2;
     const cy = pixelHeight / 2;
     const ux = cx * umPerPixelX;
@@ -76346,26 +76391,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-D32JrvC_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CiCzG8SV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DaJlvgHH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BYRODbNu.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DBsgcUp1.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DTRxeV-L.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-Cmugs-dz.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-Djqs3TfQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Cmm0K5J-.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DQG0rjeI.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-2l2vlq9V.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CdH1icL5.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Bd17aeY2.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BqJgZ3nY.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BZs98qtb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-Dm_k-whH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -78894,7 +78939,7 @@ vec4 colormap(float intensity, float opacity) {
     __defNormalProp2(obj, key2 + "", value);
     return value;
   };
-  class LZWDecoder extends BaseDecoder {
+  let LZWDecoder$1 = class LZWDecoder extends BaseDecoder {
     constructor(fileDirectory) {
       super();
       __publicField2(this, "maxUncompressedSize");
@@ -78908,7 +78953,7 @@ vec4 colormap(float intensity, float opacity) {
       const decoded = await N(bytes, this.maxUncompressedSize);
       return decoded.buffer;
     }
-  }
+  };
   const DTYPE_LOOKUP$1 = {
     uint8: "Uint8",
     uint16: "Uint16",
@@ -80277,7 +80322,7 @@ vec4 colormap(float intensity, float opacity) {
     }
     return images;
   }
-  addDecoder(5, () => Promise.resolve(LZWDecoder));
+  addDecoder(5, () => Promise.resolve(LZWDecoder$1));
   function isSupportedCompanionOmeTiffFile(source2) {
     return typeof source2 === "string" && source2.endsWith(".companion.ome");
   }
@@ -83589,6 +83634,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...pixels.getElementsByTagNameNS("*", "Channel")
     ].filter((el2) => el2.parentElement === pixels);
   }
+  class LZWDecoder extends BaseDecoder {
+    constructor(fileDirectory) {
+      super();
+      __publicField(this, "maxUncompressedSize");
+      const width = fileDirectory.TileWidth || fileDirectory.ImageWidth;
+      const height = fileDirectory.TileLength || fileDirectory.ImageLength;
+      const bits = fileDirectory.BitsPerSample;
+      const bits0 = typeof bits === "number" ? bits : (bits == null ? void 0 : bits[0]) ?? 8;
+      const samples = fileDirectory.PlanarConfiguration === 2 ? 1 : fileDirectory.SamplesPerPixel ?? (typeof bits === "number" ? 1 : (bits == null ? void 0 : bits.length) ?? 1);
+      this.maxUncompressedSize = Math.ceil(width * height * (bits0 / 8) * Math.max(1, samples));
+    }
+    async decodeBlock(buffer2) {
+      const bytes = new Uint8Array(buffer2);
+      const decoded = await N(bytes, this.maxUncompressedSize);
+      return decoded.buffer;
+    }
+  }
+  function registerLzwDecoder() {
+    addDecoder(5, () => Promise.resolve(LZWDecoder));
+  }
+  registerLzwDecoder();
   function asAppLoader(image2) {
     return image2;
   }
@@ -83936,6 +84002,57 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       } : {}
     };
   }
+  function syncOmeSizeToPlane(loader) {
+    var _a2, _b2;
+    const plane = (_a2 = loader.data) == null ? void 0 : _a2[0];
+    const pixels = (_b2 = loader.metadata) == null ? void 0 : _b2.Pixels;
+    if (!plane || !pixels) return;
+    const xi2 = plane.labels.indexOf("x");
+    const yi2 = plane.labels.indexOf("y");
+    if (xi2 < 0 || yi2 < 0) return;
+    const width = plane.shape[xi2];
+    const height = plane.shape[yi2];
+    if (width > 1) pixels.SizeX = width;
+    if (height > 1) pixels.SizeY = height;
+  }
+  function isHalfResolution(prevW, prevH, width, height) {
+    if (width >= prevW || height >= prevH) return false;
+    return Math.abs(width - prevW / 2) <= 1 && Math.abs(height - prevH / 2) <= 1;
+  }
+  async function appendClassicIfdPyramid(loader, source2, pool) {
+    const planes = loader.data;
+    if (!planes || planes.length !== 1) return;
+    const base2 = planes[0];
+    const xi2 = base2.labels.indexOf("x");
+    const yi2 = base2.labels.indexOf("y");
+    if (xi2 < 0 || yi2 < 0) return;
+    const tiff = typeof source2 === "string" ? await fromUrl(source2) : await fromBlob(source2);
+    const count2 = await tiff.getImageCount();
+    let prevW = base2.shape[xi2];
+    let prevH = base2.shape[yi2];
+    const meta = base2.meta;
+    for (let i2 = 1; i2 < count2; i2++) {
+      const image2 = await tiff.getImage(i2);
+      const width = image2.getWidth();
+      const height = image2.getHeight();
+      if (!isHalfResolution(prevW, prevH, width, height)) break;
+      const shape = base2.shape.slice();
+      shape[xi2] = width;
+      shape[yi2] = height;
+      planes.push(new TiffPixelSource(async () => image2, base2.dtype, vivTileSize(image2), shape, base2.labels, meta, pool));
+      prevW = width;
+      prevH = height;
+    }
+  }
+  async function finishOmeIntensityLoader(loader, source2, pool) {
+    syncOmeSizeToPlane(loader);
+    try {
+      await appendClassicIfdPyramid(loader, source2, pool);
+    } catch (error2) {
+      console.warn("[minerva] TIFF pyramid levels were not attached", error2);
+    }
+    return loader;
+  }
   async function pickLocalOmeTiffHandle() {
     const picked = await toFile();
     if (picked.length === 0) return null;
@@ -83953,7 +84070,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (role === "segmentation") {
         return maskLoaderFromBlob(file);
       }
-      return asAppLoader(await loadOmeTiff(file, vivLoadOpts(source2.pool, packedRgb)));
+      return finishOmeIntensityLoader(asAppLoader(await loadOmeTiff(file, vivLoadOpts(source2.pool, packedRgb))), file, source2.pool);
     }
     if (role === "segmentation") {
       const response = await fetch(source2.url);
@@ -83962,7 +84079,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       return maskLoaderFromBlob(await response.blob());
     }
-    return asAppLoader(await loadOmeTiff(source2.url, vivLoadOpts(source2.pool, packedRgb)));
+    return finishOmeIntensityLoader(asAppLoader(await loadOmeTiff(source2.url, vivLoadOpts(source2.pool, packedRgb))), source2.url, source2.pool);
   }
   const sessionHandles = /* @__PURE__ */ new Map();
   async function putFileHandle(id2, handle2) {
@@ -84492,10 +84609,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const next2 = [
       ...images
     ];
-    next2[idx] = {
+    const placed = effectiveOrientation(orientation);
+    const row2 = {
       ...next2[idx],
-      ...effectiveOrientation(orientation)
+      ...placed
     };
+    if (placed.umPerPixel == null) delete row2.umPerPixel;
+    next2[idx] = row2;
     return next2;
   }
   function rebindReplacementImageChannels(previous2, incoming) {
@@ -91451,12 +91571,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     "celltype",
     "celltypes"
   ]);
-  function normHeader(h2) {
+  function normHeader$1(h2) {
     return h2.trim().toLowerCase().replace(/[\s_-]+/g, "");
   }
   function pickClassColumns(headers) {
-    const id2 = headers.find((h2) => ID_ALIASES.has(normHeader(h2)));
-    const name2 = headers.find((h2) => NAME_ALIASES.has(normHeader(h2)));
+    const id2 = headers.find((h2) => ID_ALIASES.has(normHeader$1(h2)));
+    const name2 = headers.find((h2) => NAME_ALIASES.has(normHeader$1(h2)));
     if (!id2 || !name2 || id2 === name2) return null;
     return {
       id: id2,
@@ -91998,10 +92118,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const ROW_H = 22;
   const WINDOW = 80;
   const EDGE = 10;
-  async function pickFeatureCsv() {
+  async function pickFeatureCsv(description = "Feature table CSV") {
     try {
       return await n$1({
-        description: "Feature table CSV",
+        description,
         mimeTypes: [
           "text/csv"
         ],
@@ -92207,7 +92327,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return jsxRuntimeExports.jsxs("div", {
       className: styles$q.colPick,
       children: [
-        select("ID", props.id, props.onId),
+        props.id != null && props.onId ? select("ID", props.id, props.onId) : null,
         select("Name", props.name, props.onName)
       ]
     });
@@ -157578,7 +157698,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, lengths) {
+        value: function writeBytes2(stream, value, lengths) {
           var writeOptions = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : {
             allowInvalidVRLength: false
           };
@@ -157698,7 +157818,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           var written = _get(_getPrototypeOf(AsciiStringRepresentation2.prototype), "write", this).call(this, stream, "AsciiString", value);
           return _get(_getPrototypeOf(AsciiStringRepresentation2.prototype), "writeBytes", this).call(this, stream, value, written, writeOptions);
         }
@@ -157723,7 +157843,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           var written = _get(_getPrototypeOf(EncodedStringRepresentation2.prototype), "write", this).call(this, stream, "UTF8String", value);
           return _get(_getPrototypeOf(EncodedStringRepresentation2.prototype), "writeBytes", this).call(this, stream, value, written, writeOptions);
         }
@@ -157745,7 +157865,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     _createClass(BinaryRepresentation2, [
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, syntax, isEncapsulated) {
+        value: function writeBytes2(stream, value, syntax, isEncapsulated) {
           var writeOptions = arguments.length > 4 && arguments[4] !== void 0 ? arguments[4] : {};
           var i2;
           var binaryStream;
@@ -158015,7 +158135,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(AttributeTag2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(AttributeTag2.prototype), "write", this).call(this, stream, "TwoUint16s", value), writeOptions);
         }
       }
@@ -158120,7 +158240,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           var _this8 = this;
           var val = Array.isArray(value) ? value.map(function(ds) {
             return _this8.convertToString(ds);
@@ -158189,7 +158309,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(FloatingPointSingle2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(FloatingPointSingle2.prototype), "write", this).call(this, stream, "Float", value), writeOptions);
         }
       }
@@ -158225,7 +158345,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(FloatingPointDouble2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(FloatingPointDouble2.prototype), "write", this).call(this, stream, "Double", value), writeOptions);
         }
       }
@@ -158267,7 +158387,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           var _this13 = this;
           var val = Array.isArray(value) ? value.map(function(is2) {
             return _this13.convertToString(is2);
@@ -158423,7 +158543,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(PersonName2.prototype), "writeBytes", this).call(this, stream, dicomJson.pnObjectToString(value), writeOptions);
         }
       }
@@ -158492,7 +158612,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(SignedLong2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(SignedLong2.prototype), "write", this).call(this, stream, "Int32", value), writeOptions);
         }
       }
@@ -158589,7 +158709,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, syntax, writeOptions) {
+        value: function writeBytes2(stream, value, syntax, writeOptions) {
           var written = 0;
           if (value) {
             for (var i2 = 0; i2 < value.length; i2++) {
@@ -158640,7 +158760,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(SignedShort2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(SignedShort2.prototype), "write", this).call(this, stream, "Int16", value), writeOptions);
         }
       }
@@ -158794,7 +158914,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(UnsignedShort2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(UnsignedShort2.prototype), "write", this).call(this, stream, "Uint16", value), writeOptions);
         }
       }
@@ -158824,7 +158944,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes(stream, value, writeOptions) {
+        value: function writeBytes2(stream, value, writeOptions) {
           return _get(_getPrototypeOf(UnsignedLong2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(UnsignedLong2.prototype), "write", this).call(this, stream, "Uint32", value), writeOptions);
         }
       }
@@ -166003,6 +166123,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return classifyPlane(plane, ch2);
   }
   async function openOmeTiff(source2, signal) {
+    registerLzwDecoder();
     return typeof source2 === "string" ? await fromUrl(source2, {}, signal) : await fromBlob(source2, signal);
   }
   async function getCoarsestTiffImage(tiff) {
@@ -166089,11 +166210,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return false;
     }
   }
-  function threeChannelOmeFromXml(omeXml) {
-    if (omeXml == null || omeXml.trim() === "") return false;
+  function omeRgbLayoutFromXml(omeXml) {
+    if (omeXml == null || omeXml.trim() === "") return null;
     const doc = parseOmeXml(omeXml);
     const pixels = doc ? omePixelsElement(doc) : null;
-    if (!pixels) return false;
+    if (!pixels) return null;
     const channelEls = omeChannelElements(pixels);
     const samples = channelEls.map((ch2) => {
       const raw2 = ch2.getAttribute("SamplesPerPixel");
@@ -166104,9 +166225,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       return n2;
     });
-    const packed = samples.length === 1 && samples[0] === 3;
-    const planar = samples.length === 3 && samples.every((s2) => s2 === 1);
-    return packed || planar;
+    if (samples.length === 1 && samples[0] === 3) return "packed";
+    if (samples.length === 3 && samples.every((s2) => s2 === 1)) return "planar";
+    return null;
   }
   function sampleMaxForBuffer(data2, bitsPerSample) {
     if (data2 instanceof Uint8Array || data2 instanceof Uint8ClampedArray) {
@@ -166245,10 +166366,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (signal == null ? void 0 : signal.aborted) return false;
     return isTiffJpegCompression((_a2 = image2.fileDirectory) == null ? void 0 : _a2.Compression);
   }
-  async function detectOmeTiffPlanarRgbAmbiguity(source2, signal) {
+  async function detectOmeTiffRgbLayout(source2, signal) {
     const xml2 = await getOmeTiffImageDescriptionOmeXml(source2, {}, signal);
-    if (signal == null ? void 0 : signal.aborted) return false;
-    return threeChannelOmeFromXml(xml2);
+    if (signal == null ? void 0 : signal.aborted) return null;
+    return omeRgbLayoutFromXml(xml2);
   }
   async function detectUrlImageFormat(url, signal) {
     const looksDicom = isDicomWebSeriesUrl(url);
@@ -166257,6 +166378,103 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     if (await isOmeTiff(url, signal)) return "ome-tiff";
     return looksDicom ? "dicomweb" : "ome-tiff";
+  }
+  const MARKER_ALIASES = /* @__PURE__ */ new Set([
+    "markername",
+    "marker",
+    "name",
+    "channelname",
+    "target"
+  ]);
+  const META_ALIASES = /* @__PURE__ */ new Set([
+    "cyclenumber",
+    "cycle",
+    "channelnumber",
+    "channel",
+    "channelindex",
+    "index",
+    "excitationwavelength",
+    "emissionwavelength",
+    "excitation",
+    "emission",
+    "filter"
+  ]);
+  function normHeader(header) {
+    return header.trim().toLowerCase().replace(/[\s_-]+/g, "");
+  }
+  function csvRows(text2) {
+    let body2 = text2;
+    if (body2.charCodeAt(0) === 65279) body2 = body2.slice(1);
+    return body2.split(/\r?\n/).map((line) => parseCsvLine(line)).filter((cells2) => cells2.some((cell) => cell.length > 0));
+  }
+  function guessMarkerName(headers) {
+    if (headers.length === 0 || /^\d+$/.test(headers[0] ?? "")) return null;
+    const nameHit = headers.find((h2) => MARKER_ALIASES.has(normHeader(h2)));
+    if (nameHit) return nameHit;
+    return headers.find((h2) => !META_ALIASES.has(normHeader(h2))) ?? null;
+  }
+  async function peekMarkerCsv(file) {
+    const bytes = new Uint8Array(await file.slice(0, 8192).arrayBuffer());
+    const text2 = new TextDecoder().decode(bytes);
+    const headers = csvRows(text2)[0];
+    if (!headers) return null;
+    const name2 = guessMarkerName(headers);
+    if (!name2) return null;
+    return {
+      headers,
+      name: name2
+    };
+  }
+  function markerNamesByChannelIndex(text2, columns) {
+    const rows2 = csvRows(text2);
+    if (rows2.length === 0) return {
+      ok: false,
+      error: "Markers CSV is empty."
+    };
+    const header = rows2[0] ?? [];
+    const selected = (columns == null ? void 0 : columns.name) || guessMarkerName(header);
+    let data2 = rows2;
+    let nameCol = 0;
+    if (selected && header.includes(selected)) {
+      nameCol = header.indexOf(selected);
+      data2 = rows2.slice(1);
+    } else if (/^\d+$/.test(header[0] ?? "") && header.length >= 2) {
+      nameCol = header.length - 1;
+    }
+    const names = /* @__PURE__ */ new Map();
+    for (const row2 of data2) {
+      const name2 = (row2[nameCol] ?? "").trim();
+      if (!name2) continue;
+      names.set(names.size, name2);
+    }
+    if (names.size === 0) {
+      return {
+        ok: false,
+        error: "Markers CSV has no channel names."
+      };
+    }
+    return {
+      ok: true,
+      names
+    };
+  }
+  function renameChannelsFromMarkers(channels2, names) {
+    let applied = 0;
+    const next2 = channels2.map((channel) => {
+      if (!isImageChannel(channel) || channel.index == null) return channel;
+      const name2 = names.get(channel.index);
+      if (!name2) return channel;
+      applied += 1;
+      if (name2 === channel.name) return channel;
+      return {
+        ...channel,
+        name: name2
+      };
+    });
+    return {
+      channels: next2,
+      applied
+    };
   }
   const JPEG_OME_TIFF_IMAGE_SOURCE = "jpeg-ome-tiff";
   const JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE = "jpeg-ome-tiff-contrast";
@@ -167000,17 +167218,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   const version = "1.0.0-alpha.10";
-  function storyBundleBaseUrl(version2) {
+  const LOCAL_PLAYER_DIR = "bundle";
+  function hostedPlayerBaseUrl() {
     const selfHosted = "bundle/";
     const deployDir = new URL(`${routerBasepath().replace(/\/$/, "")}/`, window.location.origin);
     return new URL(selfHosted, deployDir).href.replace(/\/$/, "");
   }
-  function minervaCdnUrls(version2) {
-    const base2 = storyBundleBaseUrl();
-    return {
-      js: `${base2}/minerva.js`,
-      css: `${base2}/minerva.css`
-    };
+  function playerAssetUrls(version2) {
+    {
+      return {
+        js: `${LOCAL_PLAYER_DIR}/minerva.js`,
+        css: `${LOCAL_PLAYER_DIR}/minerva.css`
+      };
+    }
   }
   function canExportWithRemoteUrls(images) {
     const withSource = images.filter((im) => im.source);
@@ -167059,7 +167279,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return current ?? "jpeg-pyramid";
   }
   function storyIndexHtml(title7, version$12 = version) {
-    const { js, css: css2 } = minervaCdnUrls();
+    const { js, css: css2 } = playerAssetUrls();
     const safeTitle = ((title7 == null ? void 0 : title7.trim()) || "Minerva Story").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     return `<!DOCTYPE html>
 <html lang="en">
@@ -167132,6 +167352,49 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       await write.close();
     }
   }
+  async function writeBytes(directory, relativePath, bytes) {
+    const parts = relativePath.split("/");
+    const fileName = parts.pop();
+    if (!fileName) throw new Error(`Invalid story player path: ${relativePath}`);
+    let dir2 = directory;
+    for (const part of parts) {
+      dir2 = await dir2.getDirectoryHandle(part, {
+        create: true
+      });
+    }
+    const fh2 = await dir2.getFileHandle(fileName, {
+      create: true
+    });
+    const write = await fh2.createWritable();
+    await write.write(bytes);
+    await write.close();
+  }
+  async function copyHostedPlayer(directory) {
+    const base2 = hostedPlayerBaseUrl();
+    if (!base2) return;
+    const manifestRes = await fetch(`${base2}/manifest.json`);
+    if (!manifestRes.ok) {
+      throw new Error(`Story player manifest missing at ${base2}/manifest.json (${manifestRes.status})`);
+    }
+    const listed = await manifestRes.json();
+    if (!Array.isArray(listed)) {
+      throw new Error("Story player manifest is invalid");
+    }
+    const files = listed.filter((name2) => typeof name2 === "string");
+    if (files.length === 0) {
+      throw new Error("Story player manifest is empty");
+    }
+    const playerDir = await directory.getDirectoryHandle(LOCAL_PLAYER_DIR, {
+      create: true
+    });
+    for (const relativePath of files) {
+      const fileRes = await fetch(`${base2}/${relativePath}`);
+      if (!fileRes.ok) {
+        throw new Error(`Failed to copy story player file ${relativePath} (${fileRes.status})`);
+      }
+      await writeBytes(playerDir, relativePath, await fileRes.arrayBuffer());
+    }
+  }
   async function writeStoryBundleSidecars(directory, data2, opts) {
     const mode = (opts == null ? void 0 : opts.mode) ?? "jpeg-pyramid";
     if (mode === "remote-url" && !canExportWithRemoteUrls(data2.images)) {
@@ -167144,6 +167407,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       featureTables
     }, mode);
     await writeTextFile(directory, "document.json", JSON.stringify(exported, null, 2));
+    await copyHostedPlayer(directory);
     await writeTextFile(directory, "index.html", storyIndexHtml(exported.metadata.title, exported.metadata.minervaVersion ?? version));
     return {
       skippedFeatureTables: skipped
@@ -167477,6 +167741,31 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setFeatureCsvFile(null);
       setFeatureCsvCols(null);
     }, []);
+    reactExports.useEffect(() => {
+      if (!featureCsvFile) return;
+      let cancel = false;
+      setFeatureCsvCols(null);
+      const peek = overlayRole === "segmentation" ? peekFeatureCsv : peekMarkerCsv;
+      void peek(featureCsvFile).then((cols) => {
+        if (cancel) return;
+        if (!cols) {
+          setFeatureCsvCols(null);
+          return;
+        }
+        const id2 = "id" in cols && typeof cols.id === "string" ? cols.id : "";
+        setFeatureCsvCols({
+          headers: cols.headers,
+          id: id2,
+          name: cols.name
+        });
+      });
+      return () => {
+        cancel = true;
+      };
+    }, [
+      featureCsvFile,
+      overlayRole
+    ]);
     const [dragging, setDragging] = reactExports.useState(false);
     const dragDepthRef = reactExports.useRef(0);
     const localPickInFlightRef = reactExports.useRef(false);
@@ -167551,12 +167840,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           const source2 = next2.kind === "local" ? await next2.handles[0].getFile() : next2.url;
           if (ac2.signal.aborted) return;
           setDetecting(true);
-          const rgbAmbiguous = await detectOmeTiffPlanarRgbAmbiguity(source2, ac2.signal);
+          const rgbLayout = await detectOmeTiffRgbLayout(source2, ac2.signal);
           if (ac2.signal.aborted) return;
-          if (rgbAmbiguous) {
+          if (rgbLayout) {
             setDetectedRole("intensity");
             if (!roleChosenByUserRef.current) {
               setOverlayRole("intensity");
+            }
+            if (rgbLayout === "packed") {
+              setDetectedRgbDisplay(true);
+              if (!rgbDisplayChosenByUserRef.current) {
+                setOverlayRgbDisplay(true);
+              }
+              return;
             }
             setDetectedRgbDisplay(false);
             try {
@@ -167740,6 +168036,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }
         const rgbDisplay = detectedRgbDisplay != null && role === "intensity" ? overlayRgbDisplay : void 0;
         const attachCsv = role === "segmentation" ? featureCsvFile : null;
+        const attachMarkers = role === "intensity" && !overlayRgbDisplay ? featureCsvFile : null;
+        let channelNames;
+        if (attachMarkers) {
+          const parsed = markerNamesByChannelIndex(await attachMarkers.text(), (featureCsvCols == null ? void 0 : featureCsvCols.name) ? {
+            name: featureCsvCols.name
+          } : null);
+          if (parsed.ok === false) {
+            setImportError(parsed.error);
+            return;
+          }
+          channelNames = parsed.names;
+        }
         const beforeMaskIds = attachCsv ? new Set(flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images).filter(isMaskChannel).map((c2) => c2.id)) : null;
         const csvJob = attachCsv ? ingestFeatureCsvFile(attachCsv, featureCsvCols ? {
           id: featureCsvCols.id,
@@ -167749,6 +168057,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           role,
           append: hasImages,
           rgbDisplay,
+          channelNames,
           source: pending2.kind === "local" ? {
             kind: "local",
             path: pending2.label,
@@ -168075,28 +168384,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 ]
               })
             }) : null,
-            overlayRole === "segmentation" ? jsxRuntimeExports.jsxs("div", {
+            overlayRole === "segmentation" || overlayRole === "intensity" && !overlayRgbDisplay ? jsxRuntimeExports.jsxs("div", {
               className: styles$r.typeRow,
               children: [
                 jsxRuntimeExports.jsx("span", {
                   className: styles$r.fieldLabel,
-                  children: "Feature table"
+                  children: overlayRole === "segmentation" ? "Feature table" : "Markers"
                 }),
                 jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
                   onClick: () => {
                     void (async () => {
-                      const file = await pickFeatureCsv();
+                      const file = await pickFeatureCsv(overlayRole === "segmentation" ? "Feature table CSV" : "Markers CSV");
                       if (!file) return;
                       setFeatureCsvFile(file);
-                      void peekFeatureCsv(file).then(setFeatureCsvCols);
                     })();
                   },
                   children: featureCsvFile ? featureCsvFile.name : "Optional CSV\u2026"
                 })
               ]
             }) : null,
-            overlayRole === "segmentation" && featureCsvCols ? jsxRuntimeExports.jsx(FeatureCsvColumnPick, {
+            featureCsvCols && overlayRole === "segmentation" && featureCsvCols.id ? jsxRuntimeExports.jsx(FeatureCsvColumnPick, {
               headers: featureCsvCols.headers,
               id: featureCsvCols.id,
               name: featureCsvCols.name,
@@ -168104,6 +168412,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 ...featureCsvCols,
                 id: id2
               }),
+              onName: (name2) => setFeatureCsvCols({
+                ...featureCsvCols,
+                name: name2
+              })
+            }) : null,
+            featureCsvCols && overlayRole === "intensity" && !overlayRgbDisplay && featureCsvCols.name ? jsxRuntimeExports.jsx(FeatureCsvColumnPick, {
+              headers: featureCsvCols.headers,
+              name: featureCsvCols.name,
               onName: (name2) => setFeatureCsvCols({
                 ...featureCsvCols,
                 name: name2
@@ -170510,6 +170826,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         role: pending2.role,
         append: false,
         rgbDisplay: pending2.rgbDisplay,
+        channelNames: pending2.channelNames,
         source: pending2.source
       });
       void imported.then((result) => {
@@ -250751,7 +251068,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return copy2;
   }
   function WorkerWrapper$2(options) {
-    return new Worker("" + new URL("jpegExport.worker-BdZpbmJc.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-Cm9uVyY1.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -253719,12 +254036,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-10-07T17:22:59.001Z");
+    const label2 = utcShort("2026-10-07T19:26:27.534Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$4.stamp,
       "aria-hidden": true,
-      title: "2026-10-07T17:22:59.001Z",
+      title: "2026-10-07T19:26:27.534Z",
       children: [
         "Updated ",
         label2,
@@ -253955,17 +254272,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }), reactExports.createElement("path", {
     d: "M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
   }));
-  const toolbar = "_toolbar_1hbkn_1";
-  const group = "_group_1hbkn_20";
-  const field = "_field_1hbkn_33";
-  const prefix = "_prefix_1hbkn_44";
-  const input = "_input_1hbkn_51";
+  const toolbar = "_toolbar_1nh7k_1";
+  const group = "_group_1nh7k_20";
+  const field = "_field_1nh7k_33";
+  const prefix = "_prefix_1nh7k_44";
+  const input = "_input_1nh7k_51";
+  const inputWide = "_inputWide_1nh7k_63";
   const styles$3 = {
     toolbar,
     group,
     field,
     prefix,
-    input
+    input,
+    inputWide
   };
   const UNPLACED = {
     rotationDegrees: 0,
@@ -253979,8 +254298,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const rounded = Math.round(n2 * 10) / 10;
     return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
   }
+  function formatPixelScale(n2) {
+    return String(Math.round(n2 * 1e6) / 1e6);
+  }
   function NumberField(props) {
-    const { label: label2, prefix: prefix2, unit, value, onCommit } = props;
+    const { label: label2, prefix: prefix2, unit, value, wide, onCommit } = props;
     const [draft, setDraft] = reactExports.useState(null);
     const cancel = reactExports.useRef(false);
     const finish = (raw2) => {
@@ -253999,7 +254321,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: prefix2
         }) : null,
         jsxRuntimeExports.jsx("input", {
-          className: `${minervaTheme.input} ${styles$3.input}`,
+          className: `${minervaTheme.input} ${styles$3.input} ${wide ? styles$3.inputWide : ""}`,
           type: "text",
           inputMode: "decimal",
           value: draft ?? value,
@@ -254027,7 +254349,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function ImageArrangeToolbar(props) {
-    const { imageId, orientation: o2 } = props;
+    const { imageId, orientation: o2, fileUmPerPixel } = props;
     const commit = (patch2) => {
       const doc = useDocumentStore.getState();
       doc.setImages(setImageOrientation(doc.images, imageId, withOrientation(o2, patch2)));
@@ -254091,13 +254413,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           className: styles$3.group,
           children: [
             jsxRuntimeExports.jsx(NumberField, {
-              label: "Scale",
+              label: "Microns per pixel",
               prefix: "Scale",
-              unit: "%",
-              value: formatNumber(o2.displayScale * 100),
-              onCommit: (pct) => {
-                if (pct > 0) commit({
-                  displayScale: clampDisplayScale(pct / 100)
+              unit: `${WORLD_MICRON}/px`,
+              wide: true,
+              value: formatPixelScale(o2.umPerPixel ?? fileUmPerPixel),
+              onCommit: (um) => {
+                if (um > 0) commit({
+                  umPerPixel: um
                 });
               }
             }),
@@ -254125,7 +254448,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           className: styles$3.group,
           children: jsxRuntimeExports.jsx(PanelActionButton, {
             disabled: isIdentityOrientation(o2),
-            onClick: () => commit(UNPLACED),
+            onClick: () => commit({
+              ...UNPLACED,
+              umPerPixel: void 0
+            }),
             children: "Reset"
           })
         })
@@ -254271,7 +254597,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const item2 = loaders.find((l2) => l2.sourceImageId === imageId);
     const o2 = orientationForImage(images, imageId, preview);
     if (!item2 || !o2) return null;
-    const { pixelWidth: w2, pixelHeight: h2 } = worldFrameFromLoader(item2.loader);
+    const fileFrame = worldFrameFromLoader(item2.loader);
+    const { pixelWidth: w2, pixelHeight: h2 } = fileFrame;
     if (w2 <= 1 || h2 <= 1) return null;
     const frameO = {
       ...o2,
@@ -254450,7 +254777,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsx(ImageArrangeToolbar, {
           imageId,
-          orientation: o2
+          orientation: o2,
+          fileUmPerPixel: fileFrame.umPerPixelX
         })
       ]
     });
@@ -255533,8 +255861,22 @@ uniform classStyleUniforms {
       loaderList,
       images
     ]);
-    const frame2 = reactExports.useMemo(() => firstLoader ? worldFrameFromLoader(firstLoader.loader) : null, [
-      firstLoader
+    const frame2 = reactExports.useMemo(() => {
+      var _a2;
+      if (!firstLoader) return null;
+      const base2 = worldFrameFromLoader(firstLoader.loader);
+      const um = (_a2 = images.find((im) => im.id === firstLoader.sourceImageId)) == null ? void 0 : _a2.umPerPixel;
+      if (typeof um !== "number" || !Number.isFinite(um) || um <= 0) return base2;
+      return {
+        ...base2,
+        umPerPixelX: um,
+        umPerPixelY: um,
+        worldWidth: base2.pixelWidth * um,
+        worldHeight: base2.pixelHeight * um
+      };
+    }, [
+      firstLoader,
+      images
     ]);
     reactExports.useEffect(() => {
       setViewerWorldFrame(frame2);
@@ -256275,7 +256617,7 @@ uniform classStyleUniforms {
   };
   ImageViewer.displayName = "ImageViewer";
   function WorkerWrapper(options) {
-    return new Worker("" + new URL("decoder.worker-DIAknyvn.js", import.meta.url).href, {
+    return new Worker("" + new URL("decoder.worker-CKbAr6AY.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -256586,7 +256928,7 @@ uniform classStyleUniforms {
     });
   }
   function buildOmeImportSlice(args) {
-    const { loader, role, basename: basename2, sourceImageId, existingImages, relevantGroups = [], rgbDisplay } = args;
+    const { loader, role, basename: basename2, sourceImageId, existingImages, relevantGroups = [], rgbDisplay, channelNames } = args;
     const defaultKind = role === "segmentation" ? "mask" : "channel";
     const extracted = extractChannels(loader, "Colorimetric", relevantGroups, sourceImageId, defaultKind);
     let sourceChannels = prepareImportedSourceChannels(extracted.SourceChannels, role, basename2, existingImages);
@@ -256601,6 +256943,13 @@ uniform classStyleUniforms {
     }
     if (role === "segmentation") {
       sourceChannels = seedMaskSourceChannelStyles(sourceChannels);
+    }
+    if (role === "intensity" && channelNames && channelNames.size > 0) {
+      const renamed = renameChannelsFromMarkers(sourceChannels, channelNames);
+      if (renamed.applied === 0) {
+        throw new Error("Markers CSV did not match any channel.");
+      }
+      sourceChannels = renamed.channels;
     }
     const taggedForRgb = rgbDisplay == null ? sourceChannels : sourceChannels.map((c2) => ({
       ...c2,
@@ -257848,7 +258197,7 @@ uniform classStyleUniforms {
     }, [
       setShowSquareViewportOverlay
     ]);
-    const onStartOmeTiff = async (in_f, handles, role = "intensity", rgbDisplay) => {
+    const onStartOmeTiff = async (in_f, handles, role = "intensity", rgbDisplay, channelNames) => {
       if (handles.length === 0) return;
       clearOmeDerivedCaches();
       setDicomIndexList([]);
@@ -257873,7 +258222,8 @@ uniform classStyleUniforms {
           sourceImageId,
           existingImages: nextImages,
           relevantGroups: relevant_groups,
-          rgbDisplay
+          rgbDisplay,
+          channelNames
         });
         nextImages = slice.nextImages;
         entries.push({
@@ -257919,7 +258269,7 @@ uniform classStyleUniforms {
       }
       setFileName(handles.length === 1 ? in_f : handles.map((h2) => h2.name).join(", ") || in_f);
     };
-    const onAppendLocalOmeTiff = async (in_f, handles, role, rgbDisplay) => {
+    const onAppendLocalOmeTiff = async (in_f, handles, role, rgbDisplay, channelNames) => {
       if (handles.length === 0) {
         return {
           ok: false,
@@ -257953,7 +258303,8 @@ uniform classStyleUniforms {
           basename: basename2,
           sourceImageId,
           existingImages: nextImages,
-          rgbDisplay
+          rgbDisplay,
+          channelNames
         });
         nextImages = slice.nextImages;
         newEntries.push({
@@ -258049,7 +258400,7 @@ uniform classStyleUniforms {
         throw e2;
       }
     };
-    const onStartOmeTiffUrl = async (url, role = "intensity", rgbDisplay) => {
+    const onStartOmeTiffUrl = async (url, role = "intensity", rgbDisplay, channelNames) => {
       omeTiffUrlLoadGenerationRef.current += 1;
       const loadGeneration = omeTiffUrlLoadGenerationRef.current;
       clearOmeDerivedCaches();
@@ -258073,7 +258424,8 @@ uniform classStyleUniforms {
         sourceImageId,
         existingImages: [],
         relevantGroups: relevant_groups,
-        rgbDisplay
+        rgbDisplay,
+        channelNames
       });
       let nextImages = slice.nextImages;
       let ChannelGroups2;
@@ -258111,7 +258463,7 @@ uniform classStyleUniforms {
       setLastOmeTiffUrl(url);
       setFileName(basename2);
     };
-    const onAppendOmeTiffUrl = async (url, role, rgbDisplay) => {
+    const onAppendOmeTiffUrl = async (url, role, rgbDisplay, channelNames) => {
       omeTiffUrlLoadGenerationRef.current += 1;
       const loadGeneration = omeTiffUrlLoadGenerationRef.current;
       clearOmeDerivedCaches();
@@ -258139,7 +258491,8 @@ uniform classStyleUniforms {
         basename: basename2,
         sourceImageId,
         existingImages: nextImages,
-        rgbDisplay
+        rgbDisplay,
+        channelNames
       });
       nextImages = slice.nextImages;
       nextImages = setImageSource(nextImages, sourceImageId, {
@@ -258885,16 +259238,16 @@ uniform classStyleUniforms {
             }
             if (req.source.kind === "local") {
               if (req.append) {
-                const result = await onAppendLocalOmeTiff(req.source.path, req.source.handles, req.role, req.rgbDisplay);
+                const result = await onAppendLocalOmeTiff(req.source.path, req.source.handles, req.role, req.rgbDisplay, req.channelNames);
                 if (!result.ok) return result;
               } else {
-                await onStartOmeTiff(req.source.path, req.source.handles, req.role, req.rgbDisplay);
+                await onStartOmeTiff(req.source.path, req.source.handles, req.role, req.rgbDisplay, req.channelNames);
               }
             } else if (req.append) {
-              const result = await onAppendOmeTiffUrl(req.source.url, req.role, req.rgbDisplay);
+              const result = await onAppendOmeTiffUrl(req.source.url, req.role, req.rgbDisplay, req.channelNames);
               if (!result.ok) return result;
             } else {
-              await onStartOmeTiffUrl(req.source.url, req.role, req.rgbDisplay);
+              await onStartOmeTiffUrl(req.source.url, req.role, req.rgbDisplay, req.channelNames);
             }
             const storyId = useDocumentStore.getState().activeStoryId;
             if (storyId) {

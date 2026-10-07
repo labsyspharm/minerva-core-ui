@@ -24,26 +24,26 @@ let __tla = (async ()=>{
     addDecoder([
         undefined,
         1
-    ], ()=>import('./raw-aoQOZzKs.js').then((m)=>m.default), false);
-    addDecoder(5, ()=>import('./lzw-ChLAkiEH.js').then((m)=>m.default));
+    ], ()=>import('./raw-MP5FbLb-.js').then((m)=>m.default), false);
+    addDecoder(5, ()=>import('./lzw-BlVvhqDF.js').then((m)=>m.default));
     addDecoder(6, ()=>{
         throw new Error('old style JPEG compression is not supported.');
     });
-    addDecoder(7, ()=>import('./jpeg-7YyPD_Aq.js').then((m)=>m.default));
+    addDecoder(7, ()=>import('./jpeg-Cko8vPGX.js').then((m)=>m.default));
     addDecoder([
         8,
         32946
-    ], ()=>import('./deflate-CIaeNlnd.js').then((m)=>m.default));
-    addDecoder(32773, ()=>import('./packbits-7i4OMaNG.js').then((m)=>m.default));
-    addDecoder(34887, ()=>import('./lerc-CTtzaBXu.js').then(async (m)=>{
+    ], ()=>import('./deflate-B8r4Vtqa.js').then((m)=>m.default));
+    addDecoder(32773, ()=>import('./packbits-54F1X8ed.js').then((m)=>m.default));
+    addDecoder(34887, ()=>import('./lerc-CGjZc23L.js').then(async (m)=>{
             await m.zstd.init();
             return m;
         }).then((m)=>m.default));
-    addDecoder(50000, ()=>import('./zstd-0ID5Rc9r.js').then(async (m)=>{
+    addDecoder(50000, ()=>import('./zstd-Cdd6haW0.js').then(async (m)=>{
             await m.zstd.init();
             return m;
         }).then((m)=>m.default));
-    addDecoder(50001, ()=>import('./webimage-A3cUpXbp.js').then((m)=>m.default), false);
+    addDecoder(50001, ()=>import('./webimage-CPtRqYxv.js').then((m)=>m.default), false);
     function decodeRowAcc(row, stride) {
         let length = row.length - stride;
         let offset = 0;
@@ -282,8 +282,10 @@ let __tla = (async ()=>{
             super();
             const width = fileDirectory.TileWidth || fileDirectory.ImageWidth;
             const height = fileDirectory.TileLength || fileDirectory.ImageLength;
-            const nbytes = fileDirectory.BitsPerSample[0] / 8;
-            this.maxUncompressedSize = width * height * nbytes;
+            const bits = fileDirectory.BitsPerSample;
+            const bits0 = typeof bits === "number" ? bits : bits?.[0] ?? 8;
+            const samples = fileDirectory.PlanarConfiguration === 2 ? 1 : fileDirectory.SamplesPerPixel ?? (typeof bits === "number" ? 1 : bits?.length ?? 1);
+            this.maxUncompressedSize = Math.ceil(width * height * (bits0 / 8) * Math.max(1, samples));
         }
         async decodeBlock(buffer) {
             const bytes = new Uint8Array(buffer);
@@ -291,18 +293,29 @@ let __tla = (async ()=>{
             return decoded.buffer;
         }
     }
-    addDecoder(5, ()=>Promise.resolve(LZWDecoder));
+    function registerLzwDecoder() {
+        addDecoder(5, ()=>Promise.resolve(LZWDecoder));
+    }
+    registerLzwDecoder();
     const worker = self;
     worker.addEventListener("message", async (e)=>{
         const { jobId, fileDirectory, buffer } = e.data;
-        const decoder = await getDecoder(fileDirectory);
-        const decoded = await decoder.decode(fileDirectory, buffer);
-        worker.postMessage({
-            decoded,
-            jobId
-        }, [
-            decoded
-        ]);
+        try {
+            const decoder = await getDecoder(fileDirectory);
+            const decoded = await decoder.decode(fileDirectory, buffer);
+            worker.postMessage({
+                decoded,
+                jobId
+            }, [
+                decoded
+            ]);
+        } catch (err) {
+            const error = err instanceof Error ? err.message : String(err);
+            worker.postMessage({
+                error,
+                jobId
+            });
+        }
     });
 })();
 export { BaseDecoder as B, __tla };
