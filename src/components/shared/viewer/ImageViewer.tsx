@@ -556,6 +556,15 @@ export const ImageViewer = (props: ImageViewerProps) => {
       const featureTable = featureTables.find(
         (c) => c.sourceChannelId === sc.id,
       );
+      const classStyle = featureTable
+        ? gpuStyleForFeatureTable(
+            featureTable,
+            featureTableVisibilities[featureTable.id],
+            visualization.colorSeed ?? 0,
+          )
+        : undefined;
+      // Without a style the shader falls back to per-cell random colors.
+      if (featureTable && !classStyle) continue;
       const layer = createMaskTileLayer({
         id: `mask-channel-${sc.id}`,
         loader: entry.loader,
@@ -563,13 +572,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         visualization,
         orientation,
         visible: rendered,
-        classStyle: featureTable
-          ? gpuStyleForFeatureTable(
-              featureTable,
-              featureTableVisibilities[featureTable.id],
-              visualization.colorSeed ?? 0,
-            )
-          : undefined,
+        classStyle,
       });
       if (layer) layers.push(layer);
     }

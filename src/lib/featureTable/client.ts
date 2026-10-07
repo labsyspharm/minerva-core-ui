@@ -41,7 +41,8 @@ let worker: Worker | null = null;
 let nextId = 1;
 let ingestEpoch = 0;
 const ingestListeners = new Set<() => void>();
-const classIndexCache = new Map<string, ClassIndexMap>();
+/** `null` is a settled miss: the worker had no index, so do not ask again. */
+const classIndexCache = new Map<string, ClassIndexMap | null>();
 const ingestedIds = new Set<string>();
 const pending = new Map<
   number,
@@ -74,7 +75,7 @@ function stashClassIndex(
   height?: number,
 ) {
   if (!index || !width || !height) {
-    classIndexCache.delete(featureTableId);
+    classIndexCache.set(featureTableId, null);
     return;
   }
   classIndexCache.set(featureTableId, { data: index, width, height, names });
@@ -82,7 +83,7 @@ function stashClassIndex(
 
 export function peekClassIndex(
   featureTableId: string,
-): ClassIndexMap | undefined {
+): ClassIndexMap | null | undefined {
   return classIndexCache.get(featureTableId);
 }
 
@@ -194,7 +195,7 @@ export async function fetchClassIndex(
   featureTableId: string,
 ): Promise<ClassIndexMap | undefined> {
   const hit = classIndexCache.get(featureTableId);
-  if (hit) return hit;
+  if (hit !== undefined) return hit ?? undefined;
   const msg = await request({ type: "classIndex", featureTableId });
   if (msg.type === "error") throw new Error(msg.message);
   if (msg.type !== "classIndex") throw new Error("unexpected classIndex reply");
@@ -205,7 +206,7 @@ export async function fetchClassIndex(
     msg.indexWidth,
     msg.indexHeight,
   );
-  return classIndexCache.get(featureTableId);
+  return classIndexCache.get(featureTableId) ?? undefined;
 }
 
 export async function dropFeatureTable(featureTableId: string): Promise<void> {

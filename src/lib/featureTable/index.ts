@@ -30,7 +30,7 @@ import {
   peekClassIndex,
   resetFeatureTables,
 } from "./client";
-import { MAX_CLASS_NAMES } from "./lutLayout";
+import { MAX_CLASS_NAMES, shouldFetchClassIndex } from "./lutLayout";
 
 export {
   getFeatureTableIngestEpoch,
@@ -252,16 +252,32 @@ function paletteRev(
   return `${featureTable.digest}:${seed}:${visPart}:${colors}`;
 }
 
-function ensureIndex(featureTableId: string) {
-  if (peekClassIndex(featureTableId) || lutPending.has(featureTableId)) return;
+// `noteLut` bumps the epoch that rebuilds mask layers, which call back here.
+// Only a fetched index notes it, so a miss or an error cannot loop.
+function ensureIndex(featureTable: FeatureTable) {
+  const featureTableId = featureTable.id;
+  if (
+    peekClassIndex(featureTableId) !== undefined ||
+    lutPending.has(featureTableId)
+  )
+    return;
+  if (
+    !shouldFetchClassIndex(
+      hasIngestedFeatureTable(featureTableId),
+      featureTable.maxClassId + 1,
+    )
+  )
+    return;
   lutPending.add(featureTableId);
   void fetchClassIndex(featureTableId)
+    .then((idx) => {
+      if (idx) noteLut();
+    })
     .catch((e) => {
       console.error("[featureTable] class index failed", e);
     })
     .finally(() => {
       lutPending.delete(featureTableId);
-      noteLut();
     });
 }
 
@@ -271,10 +287,8 @@ export function gpuStyleForFeatureTable(
   seed: number,
 ): MaskGpuStyle | undefined {
   const idx = peekClassIndex(featureTable.id);
-  if (!idx) {
-    ensureIndex(featureTable.id);
-    return undefined;
-  }
+  if (idx === undefined) ensureIndex(featureTable);
+  if (!idx) return undefined;
   const colors = new Map(featureTable.nameColors.map((c) => [c.name, c.color]));
   const n = Math.min(idx.names.length, MAX_CLASS_NAMES);
   const palette = new Uint8Array((n + 1) * 4);
