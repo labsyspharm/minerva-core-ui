@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-C0cX1IIb.js","./pako.esm-KbdoS3Oq.js","./lerc-Ct_O_Ja5.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-D71z0AtH.js","./pako.esm-KbdoS3Oq.js","./lerc-BPSuPxsE.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -76309,26 +76309,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-u8fx5lfW.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CO95oIRe.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-mSoqbgvF.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Be4Zyxq_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-5p_AwUMi.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-C1F7V4z3.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-C0cX1IIb.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CwdoPqqg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Ct_O_Ja5.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-D71z0AtH.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BlAVHsEW.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BPSuPxsE.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Y6-63C6E.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Bh8qkqiP.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-nog7IjRQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CP_59GXc.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -166665,9 +166665,134 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     return next2;
   }
+  const storySearchSchema = objectType({
+    storyid: stringType().uuid().optional()
+  });
+  function parseRootSearch(raw2) {
+    const r2 = storySearchSchema.safeParse(raw2);
+    if (!r2.success) return {};
+    return {
+      storyid: r2.data.storyid
+    };
+  }
+  const uuidParamSchema = stringType().uuid();
+  function parsePreferredStoryIdFromLocation() {
+    if (typeof window === "undefined") return null;
+    const raw2 = new URLSearchParams(window.location.search).get("storyid");
+    if (raw2 === null || raw2 === "") return null;
+    const r2 = uuidParamSchema.safeParse(raw2);
+    return r2.success ? r2.data : null;
+  }
+  const rootRouteApi = getRouteApi("__root__");
+  function StoryIdUrlSync() {
+    const search2 = rootRouteApi.useSearch();
+    const navigate = rootRouteApi.useNavigate();
+    const activeStoryId = useDocumentStore((s2) => s2.activeStoryId);
+    const switchStory = useDocumentStore((s2) => s2.switchStory);
+    reactExports.useEffect(() => {
+      const sid = search2.storyid;
+      if (sid === void 0) return;
+      if (activeStoryId === sid) return;
+      if (activeStoryId === null) {
+        navigate({
+          search: (prev) => {
+            const next2 = {
+              ...prev
+            };
+            delete next2.storyid;
+            return next2;
+          },
+          replace: true
+        });
+        return;
+      }
+      void (async () => {
+        useAppStore.getState().resetStoryViewerSession();
+        try {
+          await switchStory(sid);
+        } catch {
+          navigate({
+            search: (prev) => {
+              const next2 = {
+                ...prev
+              };
+              delete next2.storyid;
+              return next2;
+            },
+            replace: true
+          });
+        }
+      })();
+    }, [
+      search2.storyid,
+      activeStoryId,
+      switchStory,
+      navigate
+    ]);
+    reactExports.useEffect(() => {
+      if (activeStoryId === null) return;
+      if (search2.storyid === activeStoryId) return;
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          storyid: activeStoryId
+        }),
+        replace: true
+      });
+    }, [
+      activeStoryId,
+      navigate,
+      search2.storyid
+    ]);
+    return null;
+  }
+  function normalizeLoadedPathname(pathname) {
+    let path2 = pathname.replace(/\/$/, "") || "/";
+    if (path2.endsWith("/index.html")) {
+      path2 = path2.slice(0, -"/index.html".length).replace(/\/$/, "") || "/";
+    }
+    return path2 === "" ? "/" : path2;
+  }
+  function deploymentBasenameFromNormalizedPath(normalizedPath) {
+    if (normalizedPath === "/") return "/";
+    const segments = normalizedPath.split("/").filter(Boolean);
+    if (segments.length === 0) return "/";
+    const prPreviewIdx = segments.indexOf("pr-preview");
+    const next2 = segments[prPreviewIdx + 1];
+    if (prPreviewIdx >= 0 && next2 !== void 0 && /^pr-\d+$/.test(next2)) {
+      return `/${segments.slice(0, prPreviewIdx + 2).join("/")}`;
+    }
+    return `/${segments[0]}`;
+  }
+  function routerBasepath() {
+    {
+      if (typeof window === "undefined") return "/";
+      const path2 = normalizeLoadedPathname(window.location.pathname);
+      return deploymentBasenameFromNormalizedPath(path2);
+    }
+  }
+  function createAppRouter(MainComponent, mainProps) {
+    const rootRoute = createRootRoute({
+      validateSearch: parseRootSearch,
+      component: function RootLayout() {
+        return jsxRuntimeExports.jsx(MainComponent, {
+          ...mainProps
+        });
+      }
+    });
+    return createRouter({
+      routeTree: rootRoute,
+      basepath: routerBasepath()
+    });
+  }
   const version = "1.0.0-alpha.10";
+  function storyBundleBaseUrl(version2) {
+    {
+      return `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version2}/bundle`;
+    }
+  }
   function minervaCdnUrls(version2) {
-    const base2 = `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version2}/bundle`;
+    const base2 = storyBundleBaseUrl(version2);
     return {
       js: `${base2}/minerva.js`,
       css: `${base2}/minerva.css`
@@ -170050,126 +170175,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       exhibit_config: enabled2 ? jpeg ? jpeg_exhibit_config : exhibit_config : EMPTY_EXHIBIT_CONFIG,
       configWaypoints: enabled2 && !jpeg ? configWaypoints : []
     };
-  }
-  const storySearchSchema = objectType({
-    storyid: stringType().uuid().optional()
-  });
-  function parseRootSearch(raw2) {
-    const r2 = storySearchSchema.safeParse(raw2);
-    if (!r2.success) return {};
-    return {
-      storyid: r2.data.storyid
-    };
-  }
-  const uuidParamSchema = stringType().uuid();
-  function parsePreferredStoryIdFromLocation() {
-    if (typeof window === "undefined") return null;
-    const raw2 = new URLSearchParams(window.location.search).get("storyid");
-    if (raw2 === null || raw2 === "") return null;
-    const r2 = uuidParamSchema.safeParse(raw2);
-    return r2.success ? r2.data : null;
-  }
-  const rootRouteApi = getRouteApi("__root__");
-  function StoryIdUrlSync() {
-    const search2 = rootRouteApi.useSearch();
-    const navigate = rootRouteApi.useNavigate();
-    const activeStoryId = useDocumentStore((s2) => s2.activeStoryId);
-    const switchStory = useDocumentStore((s2) => s2.switchStory);
-    reactExports.useEffect(() => {
-      const sid = search2.storyid;
-      if (sid === void 0) return;
-      if (activeStoryId === sid) return;
-      if (activeStoryId === null) {
-        navigate({
-          search: (prev) => {
-            const next2 = {
-              ...prev
-            };
-            delete next2.storyid;
-            return next2;
-          },
-          replace: true
-        });
-        return;
-      }
-      void (async () => {
-        useAppStore.getState().resetStoryViewerSession();
-        try {
-          await switchStory(sid);
-        } catch {
-          navigate({
-            search: (prev) => {
-              const next2 = {
-                ...prev
-              };
-              delete next2.storyid;
-              return next2;
-            },
-            replace: true
-          });
-        }
-      })();
-    }, [
-      search2.storyid,
-      activeStoryId,
-      switchStory,
-      navigate
-    ]);
-    reactExports.useEffect(() => {
-      if (activeStoryId === null) return;
-      if (search2.storyid === activeStoryId) return;
-      navigate({
-        search: (prev) => ({
-          ...prev,
-          storyid: activeStoryId
-        }),
-        replace: true
-      });
-    }, [
-      activeStoryId,
-      navigate,
-      search2.storyid
-    ]);
-    return null;
-  }
-  function normalizeLoadedPathname(pathname) {
-    let path2 = pathname.replace(/\/$/, "") || "/";
-    if (path2.endsWith("/index.html")) {
-      path2 = path2.slice(0, -"/index.html".length).replace(/\/$/, "") || "/";
-    }
-    return path2 === "" ? "/" : path2;
-  }
-  function deploymentBasenameFromNormalizedPath(normalizedPath) {
-    if (normalizedPath === "/") return "/";
-    const segments = normalizedPath.split("/").filter(Boolean);
-    if (segments.length === 0) return "/";
-    const prPreviewIdx = segments.indexOf("pr-preview");
-    const next2 = segments[prPreviewIdx + 1];
-    if (prPreviewIdx >= 0 && next2 !== void 0 && /^pr-\d+$/.test(next2)) {
-      return `/${segments.slice(0, prPreviewIdx + 2).join("/")}`;
-    }
-    return `/${segments[0]}`;
-  }
-  function routerBasepath() {
-    {
-      if (typeof window === "undefined") return "/";
-      const path2 = normalizeLoadedPathname(window.location.pathname);
-      return deploymentBasenameFromNormalizedPath(path2);
-    }
-  }
-  function createAppRouter(MainComponent, mainProps) {
-    const rootRoute = createRootRoute({
-      validateSearch: parseRootSearch,
-      component: function RootLayout() {
-        return jsxRuntimeExports.jsx(MainComponent, {
-          ...mainProps
-        });
-      }
-    });
-    return createRouter({
-      routeTree: rootRoute,
-      basepath: routerBasepath()
-    });
   }
   const root$8 = "_root_la95u_6";
   const masthead = "_masthead_la95u_19";
@@ -253233,12 +253238,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-10-07T17:05:27.244Z");
+    const label2 = utcShort("2026-10-07T17:22:16.719Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$4.stamp,
       "aria-hidden": true,
-      title: "2026-10-07T17:05:27.244Z",
+      title: "2026-10-07T17:22:16.719Z",
       children: [
         "Updated ",
         label2,
