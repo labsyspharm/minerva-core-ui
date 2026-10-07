@@ -243,6 +243,38 @@ function noteLut() {
   for (const fn of lutListeners) fn();
 }
 
+/** In-progress class color. Painted over the stored view until the picker commits. */
+let classColorPreview: {
+  featureTableId: string;
+  name: string;
+  color: Color;
+} | null = null;
+
+export function previewClassColor(
+  featureTableId: string,
+  name: string,
+  color: Color,
+): void {
+  const prev = classColorPreview;
+  if (
+    prev?.featureTableId === featureTableId &&
+    prev.name === name &&
+    prev.color.r === color.r &&
+    prev.color.g === color.g &&
+    prev.color.b === color.b
+  ) {
+    return;
+  }
+  classColorPreview = { featureTableId, name, color };
+  noteLut();
+}
+
+export function clearClassColorPreview(): void {
+  if (!classColorPreview) return;
+  classColorPreview = null;
+  noteLut();
+}
+
 export function classViewFor(
   waypoint: Pick<Waypoint, "classViews"> | undefined,
   channelId: string,
@@ -258,6 +290,9 @@ export function classColorsFor(
 ): Map<string, Color> {
   const colors = new Map(featureTable.nameColors.map((c) => [c.name, c.color]));
   for (const c of view?.colors ?? []) colors.set(c.name, c.color);
+  if (classColorPreview?.featureTableId === featureTable.id) {
+    colors.set(classColorPreview.name, classColorPreview.color);
+  }
   return colors;
 }
 

@@ -684,11 +684,11 @@ export const ImageExporter = (props: ImageExporterProps) => {
   const percentLabel = `${(ratio * 100).toFixed(3)}%`;
   let etaLabel = "";
   if (done) {
-    etaLabel = "done";
+    etaLabel = "Done";
   } else if (remainingMs !== null) {
     etaLabel = formatMinutesLeft(remainingMs);
   } else if (total > 0) {
-    etaLabel = "estimating…";
+    etaLabel = "Estimating…";
   }
 
   const clampedRatio = Math.min(1, Math.max(0, ratio));

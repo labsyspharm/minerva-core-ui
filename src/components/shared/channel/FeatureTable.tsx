@@ -23,22 +23,26 @@ import {
   classColorsFor,
   classNameVisible,
   classViewFor,
+  clearClassColorPreview,
   completeFeatureTableIngest,
   detachFeatureTable,
   featureTableHandleKey,
   getFeatureTableAccess,
   getFeatureTableIngestEpoch,
+  getFeatureTableLutEpoch,
   getFeatureTablePendingSourceIds,
   hasIngestedFeatureTable,
   ingestFeatureCsvFile,
   pageFeatureTable,
   peekClassIndex,
   peekFeatureCsv,
+  previewClassColor,
   resetClassView,
   setAllClassesVisible,
   setClassColor,
   subscribeFeatureTableAccess,
   subscribeFeatureTableIngest,
+  subscribeFeatureTableLut,
   subscribeFeatureTablePending,
   toggleClassVisible,
 } from "@/lib/featureTable";
@@ -138,6 +142,11 @@ function useFeatureTableList(
     getFeatureTableIngestEpoch,
     getFeatureTableIngestEpoch,
   );
+  const lutEpoch = useSyncExternalStore(
+    subscribeFeatureTableLut,
+    getFeatureTableLutEpoch,
+    getFeatureTableLutEpoch,
+  );
   // Same lookup as the viewer: the active group's row for this mask first.
   const maskColor = useDocumentStore((s) => {
     const sourceId = featureTable?.sourceChannelId;
@@ -207,6 +216,7 @@ function useFeatureTableList(
 
   const rows = useMemo<FeatureTableRow[]>(() => {
     void ingestEpoch;
+    void lutEpoch;
     if (!featureTable) return [];
     const names =
       raw.length === 0 ? peekClassIndex(featureTableId)?.names : undefined;
@@ -218,7 +228,7 @@ function useFeatureTableList(
       color: colors.get(row.name),
       visible: classNameVisible(view?.visibility, row.name),
     }));
-  }, [featureTable, featureTableId, view, raw, ingestEpoch]);
+  }, [featureTable, featureTableId, view, raw, ingestEpoch, lutEpoch]);
   const usingCache = raw.length === 0 && rows.length > 0;
 
   return {
@@ -472,6 +482,21 @@ function ClassViewList(props: {
     top: number;
     left: number;
   } | null>(null);
+  const pickerRef = useRef(picker);
+  pickerRef.current = picker;
+  const waypointIdRef = useRef(waypoint?.id);
+  waypointIdRef.current = waypoint?.id;
+  const commitRef = useRef(() => {});
+  commitRef.current = () => {
+    const current = pickerRef.current;
+    if (!current) return;
+    pickerRef.current = null;
+    const waypointId = waypointIdRef.current;
+    if (current.pending && waypointId) {
+      setClassColor(waypointId, featureTableId, current.name, current.pending);
+    }
+    clearClassColorPreview();
+  };
 
   const showBusy = list.loading && list.rows.length === 0;
   const fadeColors = list.fadeColors;
@@ -481,8 +506,12 @@ function ClassViewList(props: {
     if (waypointId) toggleClassVisible(waypointId, featureTableId, name);
   };
 
+  useEffect(() => () => commitRef.current(), []);
+
   useEffect(() => {
-    if (fadeColors || readOnly) setPicker(null);
+    if (!fadeColors && !readOnly) return;
+    commitRef.current();
+    setPicker(null);
   }, [fadeColors, readOnly]);
 
   return (
@@ -556,7 +585,13 @@ function ClassViewList(props: {
                 <button
                   type="button"
                   className={`${minervaTheme.focusRing} ${styles.swatch}`}
-                  style={{ backgroundColor: `#${rgbToHex(row.color)}` }}
+                  style={{
+                    backgroundColor: `#${rgbToHex(
+                      picker?.name === row.name && picker.pending
+                        ? picker.pending
+                        : row.color,
+                    )}`,
+                  }}
                   aria-label={`Color for ${row.name}`}
                   disabled={fadeColors || readOnly}
                   onClick={(e) => {
@@ -598,11 +633,8 @@ function ClassViewList(props: {
         <ColorPickerPopover
           position={{ top: picker.top, left: picker.left }}
           onClose={() => {
-            const pending = picker.pending;
-            const name = picker.name;
+            commitRef.current();
             setPicker(null);
-            if (pending && waypointId)
-              setClassColor(waypointId, featureTableId, name, pending);
           }}
           color={`#${picker.hex}`}
           showAlpha={false}
@@ -612,9 +644,9 @@ function ClassViewList(props: {
             const g = Number.parseInt(raw.slice(2, 4), 16);
             const b = Number.parseInt(raw.slice(4, 6), 16);
             if ([r, g, b].some((n) => Number.isNaN(n))) return;
-            setPicker((p) =>
-              p ? { ...p, hex: raw, pending: { r, g, b } } : p,
-            );
+            const color = { r, g, b };
+            previewClassColor(featureTableId, picker.name, color);
+            setPicker((p) => (p ? { ...p, hex: raw, pending: color } : p));
           }}
         />
       ) : null}
