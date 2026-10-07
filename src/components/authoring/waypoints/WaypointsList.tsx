@@ -221,6 +221,44 @@ const WaypointsList = (props: WaypointsListProps) => {
     importWaypointShapes,
   ]);
 
+  // A class edit changes the picture, so retake a thumbnail that is already
+  // set. The capture rides on the edit's undo step instead of adding one.
+  const activeWaypointId =
+    activeStoryIndex == null ? undefined : waypoints[activeStoryIndex]?.id;
+  const activeClassViews =
+    activeStoryIndex == null
+      ? undefined
+      : waypoints[activeStoryIndex]?.classViews;
+  const lastClassViewsRef = React.useRef({
+    id: activeWaypointId,
+    classViews: activeClassViews,
+  });
+  React.useEffect(() => {
+    const last = lastClassViewsRef.current;
+    lastClassViewsRef.current = {
+      id: activeWaypointId,
+      classViews: activeClassViews,
+    };
+    if (activeStoryIndex == null || activeWaypointId == null) return;
+    if (last.id !== activeWaypointId) return;
+    if (last.classViews === activeClassViews) return;
+    const index = activeStoryIndex;
+    const timeout = window.setTimeout(() => {
+      const st = useAppStore.getState();
+      if (st.activeStoryIndex !== index || !st.viewerImageLayersLoaded) return;
+      const thumbnail = st.captureSquareViewportThumbnail();
+      if (!thumbnail) return;
+      const history = useDocumentStore.temporal.getState();
+      history.pause();
+      try {
+        st.updateStory(index, { ThumbnailDataUrl: thumbnail });
+      } finally {
+        history.resume();
+      }
+    }, 600);
+    return () => window.clearTimeout(timeout);
+  }, [activeStoryIndex, activeWaypointId, activeClassViews]);
+
   React.useEffect(() => {
     return () => {
       if (pendingThumbnailCaptureTimeoutRef.current !== null) {
@@ -446,10 +484,14 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   const handleAddWaypoint = () => {
     const storyIndex = waypoints.length;
+    const app = useAppStore.getState();
     const currentGroup =
-      channelGroups.find(
-        (group) => group.id === useAppStore.getState().activeChannelGroupId,
-      ) || channelGroups[0];
+      channelGroups.find((group) => group.id === app.activeChannelGroupId) ||
+      channelGroups[0];
+    const activeWaypoint =
+      app.activeStoryIndex == null
+        ? undefined
+        : waypoints[app.activeStoryIndex];
     const newWaypoint: ConfigWaypoint = {
       id: crypto.randomUUID(),
       State: { Expanded: true },
@@ -457,6 +499,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       Content: "",
       groupId: currentGroup?.id,
       shapeIds: [],
+      classViews: structuredClone(activeWaypoint?.classViews ?? []),
     };
 
     addStory(newWaypoint);

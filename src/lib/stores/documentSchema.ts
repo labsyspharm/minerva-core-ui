@@ -258,6 +258,24 @@ const FeatureTableSchema = z.object({
   digest: z.string().min(1),
 });
 
+export const ClassVisibilitySchema = z.discriminatedUnion("mode", [
+  z.object({ mode: z.literal("all") }),
+  z.object({ mode: z.literal("hide"), names: z.array(z.string()) }),
+  z.object({ mode: z.literal("show"), names: z.array(z.string()) }),
+]);
+
+/**
+ * One mask's classes on one waypoint. `channelId` is the mask's
+ * ImageChannel.id; `colors` override the table's `nameColors` by name.
+ */
+const ClassViewSchema = z.object({
+  channelId: IdSchema,
+  visibility: ClassVisibilitySchema,
+  colors: z
+    .array(z.object({ name: z.string(), color: ColorSchema }))
+    .default([]),
+});
+
 const waypointObjectZ = z.object({
   id: IdSchema,
   groupId: IdSchema.optional(),
@@ -267,6 +285,8 @@ const waypointObjectZ = z.object({
   content: z.string(),
   viewport: ViewportSchema,
   shapeIds: z.array(IdSchema),
+  /** No entry for a mask means every class in the table palette. */
+  classViews: z.array(ClassViewSchema).default([]),
 });
 
 export const WaypointSchema = z.preprocess((raw) => {
@@ -404,6 +424,7 @@ export type Channel = ImageChannel & {
 export type ChannelGroupChannel = z.infer<typeof ChannelGroupChannelSchema>;
 export type ChannelGroup = z.infer<typeof ChannelGroupSchema>;
 export type Waypoint = z.infer<typeof WaypointSchema>;
+export type ClassView = z.infer<typeof ClassViewSchema>;
 export type SourceDistributionData = z.infer<typeof SourceDistributionSchema>;
 export type FeatureTable = z.infer<typeof FeatureTableSchema>;
 

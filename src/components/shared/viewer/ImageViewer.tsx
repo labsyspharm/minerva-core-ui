@@ -18,6 +18,7 @@ import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
 import { ImageArrangeBox } from "@/components/shared/viewer/ImageArrangeBox";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import {
+  classViewFor,
   getFeatureTableLutEpoch,
   gpuStyleForFeatureTable,
   subscribeFeatureTableLut,
@@ -451,8 +452,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const featureTables = useDocumentStore((s) => s.featureTables);
-  const featureTableVisibilities = useAppStore(
-    (s) => s.featureTableVisibilities,
+  const activeStoryIndex = useAppStore((s) => s.activeStoryIndex);
+  const activeWaypoint = useDocumentStore((s) =>
+    activeStoryIndex == null ? undefined : s.waypoints[activeStoryIndex],
   );
   const featureTableLutEpoch = useSyncExternalStore(
     subscribeFeatureTableLut,
@@ -559,7 +561,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       const classStyle = featureTable
         ? gpuStyleForFeatureTable(
             featureTable,
-            featureTableVisibilities[featureTable.id],
+            classViewFor(activeWaypoint, featureTable.sourceChannelId),
             visualization.colorSeed ?? 0,
           )
         : undefined;
@@ -587,7 +589,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     maskVisualizationPreview,
     imageOrientationPreview,
     featureTables,
-    featureTableVisibilities,
+    activeWaypoint,
     featureTableLutEpoch,
   ]);
 

@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+  configWaypointToExportWaypoint,
+  waypointToConfigWaypoint,
+} from "./storeUtils";
 import { validateDocumentData } from "./validateDocument";
 import {
   isUuid,
@@ -167,5 +171,50 @@ describe("validateDocumentData", () => {
     });
     expect(doc.waypoints[0].shapeIds).toEqual([SHAPE_ID]);
     expect(doc.waypoints[0].thumbnail).toBe("");
+  });
+});
+
+describe("waypoint class views", () => {
+  const waypoint = {
+    id: WP_ID,
+    title: "Tumor edge",
+    name: "edge",
+    content: "",
+    thumbnail: "",
+    viewport: {
+      upperLeft: { x: 0, y: 0 },
+      lowerRight: { x: 50, y: 50 },
+    },
+    shapeIds: [],
+  };
+
+  it("parses a waypoint without classViews to an empty array", () => {
+    const doc = validateDocumentData({
+      metadata: {},
+      waypoints: [waypoint],
+      shapes: [],
+      channelGroups: [],
+      images: [],
+    });
+    expect(doc.waypoints[0].classViews).toEqual([]);
+  });
+
+  it("keeps classViews and name through the config round trip", () => {
+    const classViews = [
+      {
+        channelId: CHANNEL_ID,
+        visibility: { mode: "hide" as const, names: ["Stroma"] },
+        colors: [{ name: "Tumor", color: { r: 255, g: 0, b: 0 } }],
+      },
+    ];
+    const out = configWaypointToExportWaypoint(
+      waypointToConfigWaypoint({ ...waypoint, classViews }),
+      100,
+      100,
+      100,
+      100,
+    );
+    expect(out.classViews).toEqual(classViews);
+    expect(out.name).toBe("edge");
   });
 });

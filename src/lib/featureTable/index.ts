@@ -10,7 +10,12 @@ import {
 import { deleteBlob, getBlob, putBlob } from "@/lib/persistence/db";
 import { deleteFileHandle } from "@/lib/persistence/fileHandles";
 import { useAppStore } from "@/lib/stores/appStore";
-import type { Color, FeatureTable } from "@/lib/stores/documentSchema";
+import type {
+  ClassView,
+  Color,
+  FeatureTable,
+  Waypoint,
+} from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   dropFeatureTable,
@@ -238,17 +243,36 @@ function noteLut() {
   for (const fn of lutListeners) fn();
 }
 
+export function classViewFor(
+  waypoint: Pick<Waypoint, "classViews"> | undefined,
+  channelId: string,
+): ClassView | undefined {
+  // `?.` covers rows set from Dexie without a parse, which lack the default.
+  return waypoint?.classViews?.find((v) => v.channelId === channelId);
+}
+
+/** The waypoint's colors over the table's generated palette, by class name. */
+export function classColorsFor(
+  featureTable: FeatureTable,
+  view: ClassView | undefined,
+): Map<string, Color> {
+  const colors = new Map(featureTable.nameColors.map((c) => [c.name, c.color]));
+  for (const c of view?.colors ?? []) colors.set(c.name, c.color);
+  return colors;
+}
+
 function paletteRev(
   featureTable: FeatureTable,
   vis: ClassVisibility | undefined,
   seed: number,
+  colors: ReadonlyMap<string, Color>,
 ): string {
   const visPart =
     !vis || vis.mode === "all" ? "all" : `${vis.mode}:${vis.names.join("\0")}`;
-  const colors = featureTable.nameColors
-    .map((c) => `${c.name}:${c.color.r},${c.color.g},${c.color.b}`)
+  const colorPart = [...colors]
+    .map(([name, c]) => `${name}:${c.r},${c.g},${c.b}`)
     .join(";");
-  return `${featureTable.digest}:${seed}:${visPart}:${colors}`;
+  return `${featureTable.digest}:${seed}:${visPart}:${colorPart}`;
 }
 
 // `noteLut` bumps the epoch that rebuilds mask layers, which call back here.
@@ -282,13 +306,14 @@ function ensureIndex(featureTable: FeatureTable) {
 
 export function gpuStyleForFeatureTable(
   featureTable: FeatureTable,
-  vis: ClassVisibility | undefined,
+  view: ClassView | undefined,
   seed: number,
 ): MaskGpuStyle | undefined {
   const idx = peekClassIndex(featureTable.id);
   if (idx === undefined) ensureIndex(featureTable);
   if (!idx) return undefined;
-  const colors = new Map(featureTable.nameColors.map((c) => [c.name, c.color]));
+  const vis = view?.visibility;
+  const colors = classColorsFor(featureTable, view);
   const n = Math.min(idx.names.length, MAX_CLASS_NAMES);
   const palette = new Uint8Array((n + 1) * 4);
   for (let i = 0; i < n; i++) {
@@ -307,7 +332,7 @@ export function gpuStyleForFeatureTable(
     palette,
     missHidden: vis?.mode === "show",
     indexRev: featureTable.digest,
-    rev: paletteRev(featureTable, vis, seed),
+    rev: paletteRev(featureTable, vis, seed, colors),
   };
 }
 
@@ -404,11 +429,6 @@ async function commitIngestedFeatureTable(
     ? doc.featureTables.map((c) => (c.id === existing.id ? featureTable : c))
     : [...doc.featureTables, featureTable];
   doc.setFeatureTables(next);
-  const vis = { ...useAppStore.getState().featureTableVisibilities };
-  if (existing) delete vis[existing.id];
-  vis[ingested.featureTableId] =
-    vis[ingested.featureTableId] ?? visibilityAllOn();
-  useAppStore.setState({ featureTableVisibilities: vis });
   if (nameColors.length === 0) {
     scheduleClassPalette(ingested.featureTableId, ingested.names);
   }
@@ -429,9 +449,6 @@ export async function detachFeatureTable(
       doc.featureTables.filter((c) => c.id !== featureTable.id),
     );
   }
-  const vis = { ...useAppStore.getState().featureTableVisibilities };
-  delete vis[featureTable.id];
-  useAppStore.setState({ featureTableVisibilities: vis });
 }
 
 export function detachRemovedFeatureTables(
@@ -445,19 +462,57 @@ export function detachRemovedFeatureTables(
   useDocumentStore.getState().setFeatureTables([...remaining]);
 }
 
+/** Class edits target the waypoint on screen, `activeStoryIndex`. */
+function activeClassViewTarget(
+  featureTableId: string,
+):
+  | { waypointId: string; channelId: string; view: ClassView | undefined }
+  | undefined {
+  const doc = useDocumentStore.getState();
+  const featureTable = doc.featureTables.find((c) => c.id === featureTableId);
+  const index = useAppStore.getState().activeStoryIndex;
+  const waypoint = index == null ? undefined : doc.waypoints[index];
+  if (!featureTable || !waypoint) return undefined;
+  const channelId = featureTable.sourceChannelId;
+  return {
+    waypointId: waypoint.id,
+    channelId,
+    view: classViewFor(waypoint, channelId),
+  };
+}
+
+function updateActiveClassView(
+  featureTableId: string,
+  update: (view: ClassView | undefined) => Omit<ClassView, "channelId">,
+): void {
+  const target = activeClassViewTarget(featureTableId);
+  if (!target) return;
+  const next = update(target.view);
+  const isDefault = next.visibility.mode === "all" && next.colors.length === 0;
+  useAppStore
+    .getState()
+    .setWaypointClassView(
+      target.waypointId,
+      target.channelId,
+      isDefault ? null : next,
+    );
+}
+
 export function toggleClassVisible(featureTableId: string, name: string): void {
-  const vis = { ...useAppStore.getState().featureTableVisibilities };
-  vis[featureTableId] = toggleClassName(vis[featureTableId], name);
-  useAppStore.setState({ featureTableVisibilities: vis });
+  updateActiveClassView(featureTableId, (view) => ({
+    visibility: toggleClassName(view?.visibility, name),
+    colors: view?.colors ?? [],
+  }));
 }
 
 export function setAllClassesVisible(
   featureTableId: string,
   visible: boolean,
 ): void {
-  const vis = { ...useAppStore.getState().featureTableVisibilities };
-  vis[featureTableId] = visible ? visibilityAllOn() : visibilityAllOff();
-  useAppStore.setState({ featureTableVisibilities: vis });
+  updateActiveClassView(featureTableId, (view) => ({
+    visibility: visible ? visibilityAllOn() : visibilityAllOff(),
+    colors: view?.colors ?? [],
+  }));
 }
 
 export function setClassColor(
@@ -465,22 +520,22 @@ export function setClassColor(
   name: string,
   color: Color,
 ): void {
-  const doc = useDocumentStore.getState();
-  doc.setFeatureTables(
-    doc.featureTables.map((c) => {
-      if (c.id !== featureTableId) return c;
-      const i = c.nameColors.findIndex((o) => o.name === name);
-      if (i >= 0) {
-        const nameColors = c.nameColors.slice();
-        nameColors[i] = { name, color };
-        return { ...c, nameColors };
-      }
-      return {
-        ...c,
-        nameColors: [...c.nameColors, { name, color }],
-      };
-    }),
-  );
+  updateActiveClassView(featureTableId, (view) => ({
+    visibility: view?.visibility ?? visibilityAllOn(),
+    colors: [
+      ...(view?.colors ?? []).filter((c) => c.name !== name),
+      { name, color },
+    ],
+  }));
+}
+
+/** Back to every class in the table palette on the active waypoint. */
+export function resetClassView(featureTableId: string): void {
+  const target = activeClassViewTarget(featureTableId);
+  if (!target) return;
+  useAppStore
+    .getState()
+    .setWaypointClassView(target.waypointId, target.channelId, null);
 }
 
 export async function hydrateFeatureTables(

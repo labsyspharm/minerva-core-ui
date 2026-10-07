@@ -6,7 +6,6 @@ import { applyStackVisibilities } from "../imaging/channelCompositor";
 import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
 import {
-  type ClassVisibility,
   type ImageSelectionMask,
   polygonRingFromShape,
   rasterizePolygonToImageMask,
@@ -34,7 +33,7 @@ import {
 } from "../shapes/shapeModel";
 import { mergeShapesAfterWaypointImport } from "../shapes/shapeWaypointImport";
 import type { ViewportSize, ViewRect } from "../viewer/samViewport";
-import type { ImageOrientation, Waypoint } from "./documentSchema";
+import type { ClassView, ImageOrientation, Waypoint } from "./documentSchema";
 import {
   documentShapes,
   documentWaypoints,
@@ -731,6 +730,12 @@ export interface AppStore {
   updateStory: (index: number, updates: Partial<ConfigWaypoint>) => void;
   removeStory: (index: number) => void;
   reorderStories: (fromIndex: number, toIndex: number) => void;
+  /** Replace one mask's class view on a waypoint; `null` removes it. */
+  setWaypointClassView: (
+    waypointId: string,
+    channelId: string,
+    next: Omit<ClassView, "channelId"> | null,
+  ) => void;
 
   // SAM2 magic wand: image fetcher for visible viewport region (set by ImageViewer)
   sam2ImageFetcher:
@@ -799,10 +804,6 @@ export interface AppStore {
   arrangeImageId: string | null;
   setArrangeImageId: (imageId: string | null) => void;
   channelVisibilities: Record<string, boolean>;
-  /**
-   * Session-only per-feature-table class visibility. Missing key ≡ all visible.
-   */
-  featureTableVisibilities: Record<string, ClassVisibility>;
   groupNames: Record<string, string>;
 
   finalizeEllipse: () => void;
@@ -946,7 +947,6 @@ const overlayInitialState = {
   imageOrientationPreview: null,
   arrangeImageId: null,
   channelVisibilities: {},
-  featureTableVisibilities: {},
   channelGroupRowVisibilities: {},
   groupNames: {},
   targetWaypointCamera: null,
@@ -1219,7 +1219,6 @@ export const useAppStore = create<AppStore>()(
           imageSelectionMask: null,
           maskVisualizationPreview: null,
           channelVisibilities: vis,
-          featureTableVisibilities: {},
           activeStoryIndex: null,
           waypointAuthoring: new Map(),
           authoringWaypointShapesIndex: null,
@@ -2146,6 +2145,20 @@ export const useAppStore = create<AppStore>()(
                   : state.activeStoryIndex,
           };
         });
+      },
+
+      setWaypointClassView: (waypointId, channelId, next) => {
+        const doc = useDocumentStore.getState();
+        const index = doc.waypoints.findIndex((w) => w.id === waypointId);
+        const wp = doc.waypoints[index];
+        if (!wp) return;
+        const rest = (wp.classViews ?? []).filter(
+          (v) => v.channelId !== channelId,
+        );
+        const classViews = next ? [...rest, { channelId, ...next }] : rest;
+        const waypoints = [...doc.waypoints];
+        waypoints[index] = { ...wp, classViews };
+        doc.setWaypoints(waypoints);
       },
 
       reorderStories: (fromIndex: number, toIndex: number) => {

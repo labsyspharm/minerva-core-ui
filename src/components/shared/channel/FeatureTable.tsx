@@ -19,7 +19,9 @@ import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
 import {
+  classColorsFor,
   classNameVisible,
+  classViewFor,
   completeFeatureTableIngest,
   detachFeatureTable,
   featureTableHandleKey,
@@ -31,6 +33,7 @@ import {
   pageFeatureTable,
   peekClassIndex,
   peekFeatureCsv,
+  resetClassView,
   setAllClassesVisible,
   setClassColor,
   subscribeFeatureTableAccess,
@@ -38,7 +41,10 @@ import {
   subscribeFeatureTablePending,
   toggleClassVisible,
 } from "@/lib/featureTable";
-import { rgbToHex } from "@/lib/imaging/sourceChannelStyle";
+import {
+  effectiveMaskVisualizationForSource,
+  rgbToHex,
+} from "@/lib/imaging/sourceChannelStyle";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Color } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
@@ -108,31 +114,39 @@ function useFeatureTableList(featureTableId: string) {
   const [total, setTotal] = useState(0);
   const [loadedOffset, setLoadedOffset] = useState(0);
   const [loading, setLoading] = useState(false);
-  const vis = useAppStore((s) => s.featureTableVisibilities[featureTableId]);
   const featureTable = useDocumentStore((s) =>
     s.featureTables.find((c) => c.id === featureTableId),
   );
+  const activeStoryIndex = useAppStore((s) => s.activeStoryIndex);
+  const waypoint = useDocumentStore((s) =>
+    activeStoryIndex == null ? undefined : s.waypoints[activeStoryIndex],
+  );
+  const view = featureTable
+    ? classViewFor(waypoint, featureTable.sourceChannelId)
+    : undefined;
+  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const digest = featureTable?.digest;
   const ingestEpoch = useSyncExternalStore(
     subscribeFeatureTableIngest,
     getFeatureTableIngestEpoch,
     getFeatureTableIngestEpoch,
   );
-  const viz = useDocumentStore((s) => {
+  // Same lookup as the viewer: the active group's row for this mask first.
+  const maskColor = useDocumentStore((s) => {
     const sourceId = featureTable?.sourceChannelId;
     if (!sourceId) return undefined;
-    for (const g of s.channelGroups) {
-      const row = g.channels.find((gc) => gc.channelId === sourceId);
-      if (row?.maskVisualization) return row.maskVisualization;
-    }
     for (const im of s.images) {
-      for (const ch of im.channels) {
-        if (ch.id === sourceId) return ch.maskVisualization;
-      }
+      const ch = im.channels.find((c) => c.id === sourceId);
+      if (!ch) continue;
+      return effectiveMaskVisualizationForSource(
+        { ...ch, imageId: im.id },
+        s.channelGroups,
+        activeChannelGroupId,
+      ).color;
     }
     return undefined;
   });
-  const fadeColors = (viz?.color ?? "white") === "white";
+  const fadeColors = (maskColor ?? "white") === "white";
 
   const seq = useRef(0);
   const windowRef = useRef({ offset: 0, count: 0, total: 0 });
@@ -191,15 +205,13 @@ function useFeatureTableList(featureTableId: string) {
       raw.length === 0 ? peekClassIndex(featureTableId)?.names : undefined;
     const source =
       names && names.length > 0 ? names.map((name) => ({ name })) : raw;
-    const colors = new Map(
-      featureTable.nameColors.map((o) => [o.name, o.color]),
-    );
+    const colors = classColorsFor(featureTable, view);
     return source.map((row) => ({
       name: row.name,
       color: colors.get(row.name),
-      visible: classNameVisible(vis, row.name),
+      visible: classNameVisible(view?.visibility, row.name),
     }));
-  }, [featureTable, featureTableId, vis, raw, ingestEpoch]);
+  }, [featureTable, featureTableId, view, raw, ingestEpoch]);
   const usingCache = raw.length === 0 && rows.length > 0;
 
   return {
@@ -209,6 +221,8 @@ function useFeatureTableList(featureTableId: string) {
     loadedOffset: usingCache ? 0 : loadedOffset,
     loading,
     fadeColors,
+    waypoint,
+    hasView: view != null,
     setFilter,
     onScroll: (scrollTop: number, clientHeight: number) => {
       const first = Math.floor(scrollTop / ROW_H);
@@ -458,8 +472,13 @@ function FeatureTableListBody(props: { featureTableId: string }) {
     left: number;
   } | null>(null);
 
+  const waypointCount = useDocumentStore((s) => s.waypoints.length);
   const showBusy = list.loading && list.rows.length === 0;
   const fadeColors = list.fadeColors;
+  const readOnly = list.waypoint == null;
+  const toggle = (name: string) => {
+    if (!readOnly) toggleClassVisible(featureTableId, name);
+  };
 
   const restoreFile = async () => {
     if (!sourceChannelId) return;
@@ -472,13 +491,36 @@ function FeatureTableListBody(props: { featureTableId: string }) {
   };
 
   useEffect(() => {
-    if (fadeColors) setPicker(null);
-  }, [fadeColors]);
+    if (fadeColors || readOnly) setPicker(null);
+  }, [fadeColors, readOnly]);
 
   if (!hasIngestedFeatureTable(featureTableId) && !needsReselect) return null;
 
   return (
     <div className={styles.root}>
+      <div className={styles.toolbar}>
+        {list.waypoint ? (
+          <>
+            <span className={styles.viewTitle} title={list.waypoint.title}>
+              {list.waypoint.title.trim() || "Untitled waypoint"}
+            </span>
+            <button
+              type="button"
+              className={`${minervaTheme.focusRing} ${styles.textBtn}`}
+              disabled={!list.hasView}
+              onClick={() => resetClassView(featureTableId)}
+            >
+              Reset
+            </button>
+          </>
+        ) : (
+          <span className={styles.readOnlyNote}>
+            {waypointCount === 0
+              ? "Add a waypoint to customize classes"
+              : "Select a waypoint to customize classes"}
+          </span>
+        )}
+      </div>
       <div className={styles.toolbar}>
         <input
           className={styles.field}
@@ -494,6 +536,7 @@ function FeatureTableListBody(props: { featureTableId: string }) {
         <button
           type="button"
           className={`${minervaTheme.focusRing} ${styles.textBtn}`}
+          disabled={readOnly}
           onClick={() => setAllClassesVisible(featureTableId, true)}
         >
           Show all
@@ -501,6 +544,7 @@ function FeatureTableListBody(props: { featureTableId: string }) {
         <button
           type="button"
           className={`${minervaTheme.focusRing} ${styles.textBtn}`}
+          disabled={readOnly}
           onClick={() => setAllClassesVisible(featureTableId, false)}
         >
           Hide all
@@ -554,7 +598,7 @@ function FeatureTableListBody(props: { featureTableId: string }) {
                 visible={row.visible}
                 title={row.visible ? `Hide ${row.name}` : `Show ${row.name}`}
                 ariaLabel={`Toggle visibility for ${row.name}`}
-                onClick={() => toggleClassVisible(featureTableId, row.name)}
+                onClick={() => toggle(row.name)}
               />
               {row.color ? (
                 <button
@@ -562,7 +606,7 @@ function FeatureTableListBody(props: { featureTableId: string }) {
                   className={`${minervaTheme.focusRing} ${styles.swatch}`}
                   style={{ backgroundColor: `#${rgbToHex(row.color)}` }}
                   aria-label={`Color for ${row.name}`}
-                  disabled={fadeColors}
+                  disabled={fadeColors || readOnly}
                   onClick={(e) => {
                     const color = row.color;
                     if (!color) return;
@@ -589,7 +633,8 @@ function FeatureTableListBody(props: { featureTableId: string }) {
                 className={`${minervaTheme.focusRing} ${styles.name}`}
                 title={row.visible ? `Hide ${row.name}` : `Show ${row.name}`}
                 aria-pressed={row.visible}
-                onClick={() => toggleClassVisible(featureTableId, row.name)}
+                disabled={readOnly}
+                onClick={() => toggle(row.name)}
               >
                 {row.name.trim() ? row.name : "Unnamed"}
               </button>

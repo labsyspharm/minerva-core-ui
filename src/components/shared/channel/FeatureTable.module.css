@@ -54,6 +54,23 @@
   min-width: 0;
 }
 
+.viewTitle,
+.readOnlyNote {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewTitle {
+  color: var(--minerva-ink);
+}
+
+.readOnlyNote {
+  color: var(--minerva-quiet);
+}
+
 .field {
   flex: 1 1 auto;
   min-width: 0;
@@ -88,8 +105,17 @@
   cursor: pointer;
 }
 
-.textBtn:hover {
+.name:disabled {
+  cursor: default;
+}
+
+.textBtn:hover:not(:disabled) {
   background: var(--minerva-wash);
+}
+
+.textBtn:disabled {
+  color: var(--minerva-quiet);
+  cursor: default;
 }
 
 .colPick {
@@ -192,4 +218,8 @@
   color: inherit;
   font: inherit;
   cursor: pointer;
+}
+
+.name:disabled {
+  cursor: default;
 }
