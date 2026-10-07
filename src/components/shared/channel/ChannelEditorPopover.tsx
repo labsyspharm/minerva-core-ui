@@ -305,7 +305,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     ? isGroupRowVisible(groupRowVisibilities, gc.id)
     : isStackVisible(stackVisibilities, sc.id);
   const color = effectiveDisplayColor(sc, sourceChannels, gc);
-  const hex = assignedDisplayHex(sc, sourceChannels, gc);
+  const hex = assignedDisplayHex(sc, sourceChannels, gc, channelRendering);
   const palettePending = palettePendingIds.includes(sc.id);
   const showHistogram = isImageChannel(sc) && !rgbDisplay;
   const colorTargetForRow: ChannelColorTarget =

@@ -53,9 +53,7 @@
   z-index: 1;
   justify-self: center;
   align-self: start;
-  margin-top: calc(
-    (var(--minerva-strip-height) - var(--minerva-control)) / 2
-  );
+  margin-top: calc((var(--minerva-strip-height) - var(--minerva-control)) / 2);
   margin-right: 0;
 }
 
@@ -108,6 +106,10 @@
 
 .previewNav:not(:empty) {
   width: 350px;
+}
+
+.previewNavParked {
+  display: none;
 }
 
 .viewerRegion {

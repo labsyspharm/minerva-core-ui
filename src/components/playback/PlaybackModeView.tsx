@@ -5,6 +5,7 @@ import {
   PresentationFrame,
   PresentationNav,
   PresentationRibbon,
+  usePresentationNavHidden,
 } from "@/components/playback/Presentation";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
@@ -47,6 +48,7 @@ export type PlaybackModeViewProps = {
  */
 export const PlaybackModeView = (props: PlaybackModeViewProps) => {
   const { presenting } = props;
+  const hideNavPane = usePresentationNavHidden();
   const exporting = props.ioState === "EXPORTING";
   const folderPrompt = props.exportFolderPrompt;
   const overlayOpen = exporting || !!folderPrompt;
@@ -94,6 +96,7 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
             previewNav={
               presenting ? <PresentationNav showStoryName={false} /> : undefined
             }
+            previewNavHidden={hideNavPane}
             viewer={
               <ChannelPanel
                 hiddenChannel={!presenting && props.hiddenChannel}

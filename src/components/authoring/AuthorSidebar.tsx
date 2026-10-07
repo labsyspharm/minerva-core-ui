@@ -137,20 +137,31 @@ export type AuthorViewProps = {
   contrastEditable?: boolean;
   /** Story preview pane shown instead of the sidebar; the viewer stays mounted. */
   previewNav?: ReactNode;
+  /**
+   * Keep `previewNav` mounted (playback effects) but show the sidebar.
+   * Used when the pane renders nothing, e.g. one waypoint and no content.
+   */
+  previewNavHidden?: boolean;
 };
 
 export function AuthorView(props: AuthorViewProps) {
   const [expanded, setExpanded] = useState(true);
-  const previewing = props.previewNav !== undefined;
+  const hasPreview = props.previewNav != null;
+  const previewing = hasPreview && !props.previewNavHidden;
 
   return (
     <AuthorViewport
       collapsed={!expanded}
       className={previewing ? styles.viewportPreview : undefined}
     >
-      {previewing ? (
-        <div className={styles.previewNav}>{props.previewNav}</div>
-      ) : (
+      {hasPreview ? (
+        <div
+          className={previewing ? styles.previewNav : styles.previewNavParked}
+        >
+          {props.previewNav}
+        </div>
+      ) : null}
+      {previewing ? null : (
         <>
           <AuthorSidebar
             imagesPanel={props.imagesPanel}

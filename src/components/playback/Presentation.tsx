@@ -24,7 +24,7 @@ export type PresentationProps = {
 };
 
 /** One waypoint and no markdown: the nav has nothing to show. */
-function usePresentationNavHidden() {
+export function usePresentationNavHidden() {
   return useDocumentStore(
     (s) => s.waypoints.length === 1 && !(s.waypoints[0]?.content ?? "").trim(),
   );

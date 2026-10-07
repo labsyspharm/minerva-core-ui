@@ -4,6 +4,7 @@ import {
   isStackVisible,
 } from "@/lib/imaging/channelCompositor";
 import { assignedDisplayHex } from "@/lib/imaging/sourceChannelStyle";
+import type { ChannelRendering } from "@/lib/stores/appStore";
 import type {
   Channel,
   ChannelGroup,
@@ -81,6 +82,7 @@ export function buildImageChannelOverview(args: {
   stackVisibilities: Record<string, boolean>;
   groupRowVisibilities: Record<string, boolean>;
   activeChannelGroupId?: string | null;
+  channelRendering: ChannelRendering | null;
 }): ImageChannelOverviewModel {
   const byId = new Map(args.image.channels.map((c) => [c.id, c]));
 
@@ -95,7 +97,13 @@ export function buildImageChannelOverview(args: {
         key: `g:${group.id}:${gc.id}`,
         sourceId: sc.id,
         name: sc.name,
-        hex: assignedDisplayHex(channel, args.allSourceChannels, gc) ?? "",
+        hex:
+          assignedDisplayHex(
+            channel,
+            args.allSourceChannels,
+            gc,
+            args.channelRendering,
+          ) ?? "",
         visible: isGroupRowVisible(args.groupRowVisibilities, gc.id),
         groupId: group.id,
         groupRowId: gc.id,
@@ -128,6 +136,7 @@ export function buildImageChannelOverview(args: {
           channel,
           args.allSourceChannels,
           home?.row ?? null,
+          args.channelRendering,
         ) ?? "",
       visible: home
         ? isDisplayedViaGroupRow(
