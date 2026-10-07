@@ -4265,6 +4265,8 @@ const ImageSchema = objectType({
   translateY: numberType().default(0),
   /** Resize around the image center. 1 keeps the file's physical size. */
   displayScale: numberType().positive().default(1),
+  /** Whole-image alpha (`0…1`). Omitted input parses as 1. */
+  opacity: numberType().min(0).max(1).default(1),
   /** µm per pixel on both axes. Omitted uses the file's PhysicalSize. */
   umPerPixel: numberType().positive().optional(),
   channels: arrayType(ImageChannelSchema),
