@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CxfcvxTr.js","./pako.esm-KbdoS3Oq.js","./lerc-5kuei0Zl.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-dBENH2p9.js","./pako.esm-KbdoS3Oq.js","./lerc-CO7RYgIV.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -17667,6 +17667,9 @@ let __tla = (async () => {
     const intensity = channels2.filter(isImageChannel);
     if (intensity.length === 0) return false;
     const override = (_a2 = intensity.find((c2) => c2.rgbDisplay != null)) == null ? void 0 : _a2.rgbDisplay;
+    if (override != null && intensity.every((c2) => c2.rgbDisplay === override)) {
+      return override;
+    }
     if (intensity.length === 1 && intensity[0].samples === 3) {
       return override !== false;
     }
@@ -76306,26 +76309,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-SqdT4377.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-NK3kQ71v.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DSrgllco.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-D2vuPARa.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CPAW96o1.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CseyoYWK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CxfcvxTr.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-zQLSH2Br.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-5kuei0Zl.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-dBENH2p9.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DLeDwo0F.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CO7RYgIV.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-hG7abDDH.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CGOPg3uw.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CF1NUgPj.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DKq1F1qA.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -165900,23 +165903,60 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return 2 ** Math.max(1, Math.floor(bitsPerSample) || 8) - 1;
   }
-  function isBrightfieldRgb(data2, opts) {
+  function brightfieldSampleOffsets(size, tile) {
+    const tileSpan = Math.max(1, tile);
+    const seen2 = /* @__PURE__ */ new Set();
+    const out = [];
+    for (const frac of [
+      0.15,
+      0.5,
+      0.85
+    ]) {
+      const aligned = Math.floor(size * frac / tileSpan) * tileSpan;
+      const start = Math.max(0, Math.min(Math.max(0, size - 1), aligned));
+      const snapped = Math.floor(start / tileSpan) * tileSpan;
+      if (seen2.has(snapped)) continue;
+      seen2.add(snapped);
+      out.push(snapped);
+    }
+    return out;
+  }
+  function brightfieldWindows(w2, h2, tileW, tileH) {
+    const out = [];
+    for (const y0 of brightfieldSampleOffsets(h2, tileH)) {
+      for (const x0 of brightfieldSampleOffsets(w2, tileW)) {
+        out.push([
+          x0,
+          y0,
+          Math.min(w2, x0 + tileW),
+          Math.min(h2, y0 + tileH)
+        ]);
+      }
+    }
+    return out;
+  }
+  function tallyBrightfieldSamples(data2, opts, tally) {
     const { sampleMax } = opts;
     const channels2 = Math.max(1, opts.channels);
     const dark = 25 / 255 * sampleMax;
     const light = 220 / 255 * sampleMax;
     const nPixels = Math.floor(data2.length / channels2);
     const stride = Math.max(1, Math.ceil(nPixels / 1e4));
-    let nDark = 0;
-    let nLight = 0;
     for (let i2 = 0; i2 + channels2 - 1 < data2.length; i2 += channels2 * stride) {
       const r2 = data2[i2];
       const g2 = channels2 >= 3 ? data2[i2 + 1] : r2;
       const b2 = channels2 >= 3 ? data2[i2 + 2] : r2;
-      if (r2 < dark && g2 < dark && b2 < dark) nDark += 1;
-      else if (r2 > light && g2 > light && b2 > light) nLight += 1;
+      if (r2 < dark && g2 < dark && b2 < dark) tally.nDark += 1;
+      else if (r2 > light && g2 > light && b2 > light) tally.nLight += 1;
     }
-    return nLight > nDark && nDark + nLight > 0;
+  }
+  function brightfieldTallyMatches(tally) {
+    return tally.nLight > tally.nDark && tally.nDark + tally.nLight > 0;
+  }
+  function brightfieldSampleMax(data2, dtype) {
+    if (dtype === "Uint8" || dtype === "Int8") return 255;
+    if (dtype === "Float32" || dtype === "Float64") return 1;
+    return sampleMaxForBuffer(data2, dtype === "Uint32" || dtype === "Int32" ? 32 : 16);
   }
   async function detectOmeTiffBrightfield(source2, signal) {
     var _a2, _b2, _c2, _d, _e;
@@ -165927,27 +165967,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const h2 = image2.getHeight();
     const tileW = Math.max(1, ((_a2 = image2.getTileWidth) == null ? void 0 : _a2.call(image2)) || 256);
     const tileH = Math.max(1, ((_b2 = image2.getTileHeight) == null ? void 0 : _b2.call(image2)) || 256);
-    const x0 = Math.max(0, Math.floor(w2 / 2 / tileW) * tileW);
-    const y0 = Math.max(0, Math.floor(h2 / 2 / tileH) * tileH);
-    const window2 = [
-      x0,
-      y0,
-      Math.min(w2, x0 + tileW),
-      Math.min(h2, y0 + tileH)
-    ];
+    const windows = brightfieldWindows(w2, h2, tileW, tileH);
     const spp = ((_c2 = image2.fileDirectory) == null ? void 0 : _c2.SamplesPerPixel) ?? 1;
     const bitsRaw = (_e = (_d = image2.fileDirectory) == null ? void 0 : _d.BitsPerSample) == null ? void 0 : _e[0];
     const bits = typeof bitsRaw === "number" ? bitsRaw : 8;
+    const tally = {
+      nDark: 0,
+      nLight: 0
+    };
     try {
-      const rgb = await image2.readRGB({
-        interleave: true,
-        window: window2,
-        signal
-      });
-      return isBrightfieldRgb(rgb, {
-        sampleMax: sampleMaxForBuffer(rgb, bits),
-        channels: 3
-      });
+      for (const window2 of windows) {
+        if (signal == null ? void 0 : signal.aborted) return false;
+        const rgb = await image2.readRGB({
+          interleave: true,
+          window: window2,
+          signal
+        });
+        tallyBrightfieldSamples(rgb, {
+          sampleMax: sampleMaxForBuffer(rgb, bits),
+          channels: 3
+        }, tally);
+      }
+      return brightfieldTallyMatches(tally);
     } catch (error2) {
       if (signal == null ? void 0 : signal.aborted) return false;
       console.warn("[minerva] rgb detect: readRGB failed, falling back to raw samples", error2);
@@ -165959,16 +166000,36 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ] : [
       0
     ];
-    const raw2 = await image2.readRasters({
-      samples,
-      interleave: true,
-      window: window2,
-      signal
-    });
-    return isBrightfieldRgb(raw2, {
-      sampleMax: sampleMaxForBuffer(raw2, bits),
-      channels: samples.length
-    });
+    const rawTally = {
+      nDark: 0,
+      nLight: 0
+    };
+    for (const window2 of windows) {
+      if (signal == null ? void 0 : signal.aborted) return false;
+      const raw2 = await image2.readRasters({
+        samples,
+        interleave: true,
+        window: window2,
+        signal
+      });
+      tallyBrightfieldSamples(raw2, {
+        sampleMax: sampleMaxForBuffer(raw2, bits),
+        channels: samples.length
+      }, rawTally);
+    }
+    return brightfieldTallyMatches(rawTally);
+  }
+  const TIFF_COMPRESSION_JPEG = 7;
+  function isTiffJpegCompression(compression) {
+    const code2 = Array.isArray(compression) ? compression[0] : compression;
+    return code2 === TIFF_COMPRESSION_JPEG;
+  }
+  async function omeTiffBaseIsJpeg(source2, signal) {
+    var _a2;
+    const tiff = await openOmeTiff(source2, signal);
+    const image2 = await tiff.getImage(0);
+    if (signal == null ? void 0 : signal.aborted) return false;
+    return isTiffJpegCompression((_a2 = image2.fileDirectory) == null ? void 0 : _a2.Compression);
   }
   async function detectOmeTiffPlanarRgbAmbiguity(source2, signal) {
     const xml2 = await getOmeTiffImageDescriptionOmeXml(source2, {}, signal);
@@ -166530,6 +166591,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const path2 = new URL(opts.documentUrl, window.location.href).pathname;
         if (!/\/document\.json$/i.test(path2)) continue;
       }
+      const imageTransfer = exportTransferForImage(im, transfer);
       const storyRootUrl = resolveJpegStoryRoot(opts.documentUrl, im.source.url);
       const groupChannelFolders = {};
       for (const group2 of opts.channelGroups) {
@@ -166539,7 +166601,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         groupChannelFolders[group2.id] = await resolveChannelFolders({
           groupChannels: rows2,
           image: im,
-          transfer
+          transfer: imageTransfer
         });
       }
       const availablePyramidFolders = /* @__PURE__ */ new Set();
@@ -166557,7 +166619,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const desired = await resolveChannelFolders({
         groupChannels,
         image: im,
-        transfer
+        transfer: imageTransfer
       });
       const channelFolders = pickAvailableChannelFolders({
         desired,
@@ -166576,14 +166638,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         })),
         channelFolders,
         fetchTile: opts.fetchTile,
-        transfer
+        transfer: imageTransfer
       });
       entries.push({
         loader,
         sourceImageId: im.id,
         channelFolders,
         imagePath: storyRootUrl,
-        transfer,
+        transfer: imageTransfer,
         availablePyramidFolders,
         groupChannelFolders
       });
@@ -250462,6 +250524,181 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (pool) return pool.size;
     return defaultPoolSize;
   }
+  function interleavePlanar(planes) {
+    var _a2;
+    const n2 = planes.reduce((min2, plane) => Math.min(min2, plane.length), ((_a2 = planes[0]) == null ? void 0 : _a2.length) ?? 0);
+    const out = new Float64Array(n2 * planes.length);
+    for (let i2 = 0; i2 < n2; i2++) {
+      for (let c2 = 0; c2 < planes.length; c2++) {
+        out[i2 * planes.length + c2] = planes[c2][i2];
+      }
+    }
+    return out;
+  }
+  async function planesLookBrightfield(planes, channels2, signal) {
+    if (channels2.length !== 1 && channels2.length < 3) return false;
+    const level = planes[planes.length - 1];
+    if (!(level == null ? void 0 : level.getTile)) return false;
+    const { width, height, tileSize } = planeLevels(planes).at(-1) ?? {
+      width: 0,
+      height: 0,
+      tileSize: 256
+    };
+    if (width <= 0 || height <= 0) return false;
+    const tile = Math.max(1, tileSize);
+    const xs = brightfieldSampleOffsets(width, tile);
+    const ys = brightfieldSampleOffsets(height, tile);
+    const use = channels2.slice(0, 3);
+    const tally = {
+      nDark: 0,
+      nLight: 0
+    };
+    for (const y0 of ys) {
+      for (const x0 of xs) {
+        if (signal.aborted) return false;
+        const x2 = Math.floor(x0 / tile);
+        const y2 = Math.floor(y0 / tile);
+        let tiles;
+        try {
+          tiles = await Promise.all(use.map((ch2) => level.getTile({
+            selection: {
+              t: 0,
+              z: 0,
+              c: ch2.index
+            },
+            x: x2,
+            y: y2,
+            signal
+          })));
+        } catch {
+          continue;
+        }
+        if (signal.aborted) return false;
+        const sampleMax = brightfieldSampleMax(tiles[0].data, level.dtype);
+        if (use.length >= 3) {
+          tallyBrightfieldSamples(interleavePlanar(tiles.map((t2) => t2.data)), {
+            sampleMax,
+            channels: 3
+          }, tally);
+        } else {
+          tallyBrightfieldSamples(tiles[0].data, {
+            sampleMax,
+            channels: 1
+          }, tally);
+        }
+      }
+    }
+    return brightfieldTallyMatches(tally);
+  }
+  async function transferForBrightfield(image2, storyTransfer, planes, channels2, signal) {
+    const transfer = exportTransferForImage(image2, storyTransfer);
+    if (transfer !== "cube-root") return {
+      transfer,
+      image: image2
+    };
+    if (!await planesLookBrightfield(planes, channels2, signal)) {
+      return {
+        transfer,
+        image: image2
+      };
+    }
+    return {
+      transfer: "contrast",
+      image: image2.rgbDisplay === true ? image2 : {
+        ...image2,
+        rgbDisplay: true
+      }
+    };
+  }
+  function absoluteSourceUrl(url) {
+    const trimmed = url.trim();
+    if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("blob:") || trimmed.startsWith("file:")) {
+      return trimmed;
+    }
+    return new URL(trimmed, window.location.href).href;
+  }
+  async function openCopySource(image2, signal) {
+    const source2 = image2.source;
+    if (!source2) return null;
+    if (source2.kind === "local") {
+      const stored = await getFileHandle(source2.handleKey);
+      if (!stored || stored.kind !== "file") return null;
+      const file = await stored.getFile();
+      return {
+        probe: file,
+        openBody: async () => ({
+          stream: file.stream(),
+          size: file.size
+        })
+      };
+    }
+    if (source2.kind === "url") {
+      const url = absoluteSourceUrl(source2.url);
+      return {
+        probe: url,
+        openBody: async () => {
+          const response = await fetch(url, {
+            signal
+          });
+          if (!response.ok || !response.body) {
+            throw new Error(`Failed to fetch ${url} (${response.status})`);
+          }
+          const length2 = Number(response.headers.get("content-length"));
+          return {
+            stream: response.body,
+            size: Number.isFinite(length2) && length2 > 0 ? length2 : 0
+          };
+        }
+      };
+    }
+    return null;
+  }
+  async function writeStream(directory, fileName, stream, size, signal, onProgress) {
+    var _a2;
+    const fh2 = await directory.getFileHandle(fileName, {
+      create: true
+    });
+    const writable = await fh2.createWritable();
+    let written = 0;
+    const reader = stream.getReader();
+    try {
+      while (true) {
+        if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+        const { done, value } = await reader.read();
+        if (done) break;
+        const bytes = value.buffer instanceof ArrayBuffer ? new Uint8Array(value.buffer, value.byteOffset, value.byteLength) : new Uint8Array(value);
+        await writable.write(bytes);
+        written += value.byteLength;
+        if (size > 0) onProgress(written, size);
+      }
+      await writable.close();
+      onProgress(Math.max(written, size), Math.max(size, 1));
+    } catch (error2) {
+      try {
+        await reader.cancel();
+      } catch {
+      }
+      try {
+        await ((_a2 = writable.abort) == null ? void 0 : _a2.call(writable));
+      } catch {
+      }
+      throw error2;
+    }
+  }
+  async function copyJpegBrightfieldSource(image2, directory, fileName, signal, onProgress) {
+    const opened = await openCopySource(image2, signal);
+    if (!opened) return null;
+    if (!await omeTiffBaseIsJpeg(opened.probe, signal)) return null;
+    const body2 = await opened.openBody();
+    await writeStream(directory, fileName, body2.stream, body2.size, signal, onProgress);
+    return {
+      ...image2,
+      source: {
+        kind: "url",
+        url: fileName
+      }
+    };
+  }
   async function exportJpegOmeTiffImage(opts) {
     var _a2, _b2;
     const { directory, layoutPlanes, image: image2, channelSources, channelGroups, fileName, transfer, signal, onProgress } = opts;
@@ -250649,20 +250886,45 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const remappedById = /* @__PURE__ */ new Map();
     const insertedAfter = /* @__PURE__ */ new Map();
+    const copiedSourceIds = /* @__PURE__ */ new Set();
     for (let i2 = 0; i2 < intensityItems.length; i2++) {
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       const item2 = intensityItems[i2];
+      const decided = await transferForBrightfield(item2.image, transfer, item2.planes, item2.intensity, signal);
+      if (decided.transfer === "contrast") {
+        const imageTiles = tileCountForLevels(planeLevels(item2.planes), item2.intensity.length);
+        let credited = 0;
+        const credit = (written, total) => {
+          const next2 = total > 0 ? Math.min(imageTiles, Math.floor(written / total * imageTiles)) : 0;
+          if (next2 > credited) {
+            bump(next2 - credited);
+            credited = next2;
+          }
+        };
+        try {
+          const copied = await copyJpegBrightfieldSource(decided.image, directory, intensityFileNames[i2], signal, credit);
+          if (copied) {
+            if (credited < imageTiles) bump(imageTiles - credited);
+            copiedSourceIds.add(item2.image.id);
+            remappedById.set(item2.image.id, copied);
+            continue;
+          }
+        } catch (error2) {
+          if (signal.aborted) throw error2;
+          console.warn("[minerva] jpeg brightfield copy failed, re-encoding", error2);
+        }
+      }
       let jpegImage = await exportJpegOmeTiffImage({
         directory,
         layoutPlanes: item2.planes,
-        image: item2.image,
+        image: decided.image,
         channelSources: item2.intensity.map((channel) => ({
           channel,
           planes: item2.planes
         })),
         channelGroups,
         fileName: intensityFileNames[i2],
-        transfer: exportTransferForImage(item2.image, transfer),
+        transfer: decided.transfer,
         signal,
         onProgress: bump
       });
@@ -250677,6 +250939,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     for (let i2 = 0; i2 < maskItems.length; i2++) {
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       const item2 = maskItems[i2];
+      if (copiedSourceIds.has(item2.image.id)) {
+        bump(maskExportTileCount(item2.entry, item2.masks.length));
+        continue;
+      }
       const splitFromIntensity = remappedById.has(item2.image.id);
       const maskSource = splitFromIntensity ? {
         ...item2.image,
@@ -252957,12 +253223,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-10-07T14:53:10.919Z");
+    const label2 = utcShort("2026-10-07T16:26:24.283Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$4.stamp,
       "aria-hidden": true,
-      title: "2026-10-07T14:53:10.919Z",
+      title: "2026-10-07T16:26:24.283Z",
       children: [
         "Updated ",
         label2,

@@ -1,4 +1,4 @@
-import { B as BaseDecoder } from "./index-CCOBOw2X.js";
+import { B as BaseDecoder } from "./index-CYEitbD-.js";
 const dctZigZag = new Int32Array([
   0,
   1,
