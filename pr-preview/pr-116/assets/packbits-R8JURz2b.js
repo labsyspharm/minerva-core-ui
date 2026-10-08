@@ -1,4 +1,4 @@
-import { B as BaseDecoder } from "./index-DHSQ4llr.js";
+import { B as BaseDecoder } from "./index-CJEkk2An.js";
 class PackbitsDecoder extends BaseDecoder {
   decodeBlock(buffer) {
     const dataView = new DataView(buffer);
