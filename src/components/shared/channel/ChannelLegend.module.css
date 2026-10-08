@@ -26,6 +26,11 @@
   min-width: 0;
 }
 
+/* Hidden while the presentation frame is wide; the static label is the header then. */
+.collapseToggle {
+  display: none;
+}
+
 .toolbarSlot {
   display: flex;
   align-items: center;
@@ -143,4 +148,45 @@
   align-items: center;
   font-size: 11px;
   line-height: 1.2;
+}
+
+/**
+ * Same breakpoint as the stacked preview/player (`Presentation` is the container).
+ * Wide frames keep the list open; the toggle is not a control there.
+ */
+@container (width < 768px) {
+  .channelsSectionHeader {
+    padding: 7px 8px;
+  }
+
+  .collapseToggle {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: var(--minerva-quiet);
+  }
+
+  .collapseToggle:hover,
+  .collapseToggle:hover .sectionLabel {
+    color: var(--minerva-ink);
+  }
+
+  .sectionLabelStatic {
+    display: none;
+  }
+
+  .channelsCollapsed .legendBody {
+    display: none;
+  }
+
+  .channelsCollapsed .channelsSectionHeader {
+    border-bottom-color: transparent;
+  }
 }
