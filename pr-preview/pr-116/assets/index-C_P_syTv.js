@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-ChgdCrvp.js","./pako.esm-KbdoS3Oq.js","./lerc-C_iD8QYc.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DoRqfQRb.js","./pako.esm-KbdoS3Oq.js","./lerc-YXlXZ99B.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -76422,26 +76422,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DrjTDDAg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CH0Ogsnb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-YWpMQb3-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-GW9MHcqB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BLbR9pcD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-B-hkNCcD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-ChgdCrvp.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CS-ut77v.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-C_iD8QYc.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DoRqfQRb.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-B1YNOwP4.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-YXlXZ99B.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BzujiKiU.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-WoPPNicY.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-6axTx7-x.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-Bd91YnpZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -93119,8 +93119,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (source2.kind === "url") {
         try {
           const bytes2 = await fetchTableBytes(source2.url, opts == null ? void 0 : opts.documentUrl);
-          await ingestFeatureTable(featureTable.id, bytes2);
+          const ingested = await ingestFeatureTable(featureTable.id, bytes2);
           noteLut();
+          if (featureTable.nameColors.length === 0) {
+            scheduleClassPalette(featureTable.id, ingested.names);
+          }
         } catch (e2) {
           console.error("[featureTable] hydrate failed", featureTable.id, e2);
         }
@@ -166485,18 +166488,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return brightfieldTallyMatches(rawTally);
   }
-  const TIFF_COMPRESSION_JPEG = 7;
-  function isTiffJpegCompression(compression) {
-    const code2 = Array.isArray(compression) ? compression[0] : compression;
-    return code2 === TIFF_COMPRESSION_JPEG;
-  }
-  async function omeTiffBaseIsJpeg(source2, signal) {
-    var _a2;
-    const tiff = await openOmeTiff(source2, signal);
-    const image2 = await tiff.getImage(0);
-    if (signal == null ? void 0 : signal.aborted) return false;
-    return isTiffJpegCompression((_a2 = image2.fileDirectory) == null ? void 0 : _a2.Compression);
-  }
   async function detectOmeTiffRgbLayout(source2, signal) {
     const xml2 = await getOmeTiffImageDescriptionOmeXml(source2, {}, signal);
     if (signal == null ? void 0 : signal.aborted) return null;
@@ -166649,6 +166640,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return storyTransfer;
   }
   function hydrateJpegTransferForImage(image2, storyTransfer) {
+    var _a2;
+    if ((_a2 = image2.channels) == null ? void 0 : _a2.some((c2) => c2.samples === 3)) return null;
     if (resolveImageContentRole({
       contentRole: image2.contentRole,
       channels: [
@@ -247663,20 +247656,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })
     });
   }
-  const sidebarHost = "_sidebarHost_10vsv_1";
-  const sidebarHostCollapsed = "_sidebarHostCollapsed_10vsv_18";
-  const panelOuter = "_panelOuter_10vsv_23";
-  const tabRow = "_tabRow_10vsv_33";
-  const stripActions = "_stripActions_10vsv_41";
-  const expandControl = "_expandControl_10vsv_50";
-  const expandControlExpanded = "_expandControlExpanded_10vsv_60";
-  const panelContent = "_panelContent_10vsv_66";
-  const viewport = "_viewport_10vsv_76";
-  const viewportCollapsed = "_viewportCollapsed_10vsv_88";
-  const viewportPreview = "_viewportPreview_10vsv_93";
-  const previewNav = "_previewNav_10vsv_97";
-  const previewNavParked = "_previewNavParked_10vsv_111";
-  const viewerRegion = "_viewerRegion_10vsv_115";
+  const sidebarHost = "_sidebarHost_1gyqk_1";
+  const sidebarHostCollapsed = "_sidebarHostCollapsed_1gyqk_18";
+  const panelOuter = "_panelOuter_1gyqk_23";
+  const tabRow = "_tabRow_1gyqk_33";
+  const stripActions = "_stripActions_1gyqk_41";
+  const expandControl = "_expandControl_1gyqk_50";
+  const expandControlExpanded = "_expandControlExpanded_1gyqk_60";
+  const panelContent = "_panelContent_1gyqk_66";
+  const viewport = "_viewport_1gyqk_76";
+  const viewportCollapsed = "_viewportCollapsed_1gyqk_88";
+  const viewportPreview = "_viewportPreview_1gyqk_93";
+  const previewNav = "_previewNav_1gyqk_97";
+  const previewNavParked = "_previewNavParked_1gyqk_111";
+  const viewerRegion = "_viewerRegion_1gyqk_115";
   const styles$d = {
     sidebarHost,
     sidebarHostCollapsed,
@@ -249027,8 +249020,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return ` ${name2}="${escapeXmlAttr(value)}"`;
   }
   function buildOmeTiffXml(opts) {
-    const { imageName, channels: channels2, width, height, fileName, pixelType, significantBits, pixels } = opts;
-    const sizeC = channels2.length;
+    const { imageName, channels: channels2, width, height, fileName, pixelType, significantBits, pixels, samplesPerPixel = 1 } = opts;
+    const sizeC = channels2.length * samplesPerPixel;
     const channelXml = channels2.map((ch2, i2) => {
       var _a2;
       const id2 = escapeXmlAttr(ch2.id || `Channel:0:${i2}`);
@@ -249038,14 +249031,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         g: ch2.color.g,
         b: ch2.color.b
       })}"` : "";
-      return `<Channel ID="${id2}" Name="${chName}" SamplesPerPixel="1"${colorAttr}/>`;
+      return `<Channel ID="${id2}" Name="${chName}" SamplesPerPixel="${samplesPerPixel}"${colorAttr}/>`;
     }).join("");
     const tiffDataXml = channels2.map((_2, i2) => {
       const uuid = escapeXmlAttr(fileName);
       return `<TiffData FirstC="${i2}" FirstT="0" FirstZ="0" IFD="${i2}" PlaneCount="1"><UUID FileName="${uuid}">${uuid}</UUID></TiffData>`;
     }).join("");
     const physicalAttrs = optionalNumberAttr("PhysicalSizeX", pixels == null ? void 0 : pixels.PhysicalSizeX) + optionalNumberAttr("PhysicalSizeY", pixels == null ? void 0 : pixels.PhysicalSizeY) + optionalNumberAttr("PhysicalSizeZ", pixels == null ? void 0 : pixels.PhysicalSizeZ) + optionalStringAttr("PhysicalSizeXUnit", pixels == null ? void 0 : pixels.PhysicalSizeXUnit) + optionalStringAttr("PhysicalSizeYUnit", pixels == null ? void 0 : pixels.PhysicalSizeYUnit) + optionalStringAttr("PhysicalSizeZUnit", pixels == null ? void 0 : pixels.PhysicalSizeZUnit);
-    return `<?xml version="1.0" encoding="UTF-8"?><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"><Image ID="Image:0" Name="${escapeXmlAttr(imageName)}"><Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="${escapeXmlAttr(pixelType)}" SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1" SignificantBits="${significantBits}" Interleaved="false" BigEndian="false"${physicalAttrs}>${channelXml}${tiffDataXml}</Pixels></Image></OME>`;
+    return `<?xml version="1.0" encoding="UTF-8"?><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"><Image ID="Image:0" Name="${escapeXmlAttr(imageName)}"><Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="${escapeXmlAttr(pixelType)}" SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1" SignificantBits="${significantBits}" Interleaved="${samplesPerPixel > 1}" BigEndian="false"${physicalAttrs}>${channelXml}${tiffDataXml}</Pixels></Image></OME>`;
   }
   function omeTiffExportBaseName(image2) {
     var _a2;
@@ -251131,6 +251124,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return resultView.buffer;
   }
   const MOZJPEG_COLORSPACE_GRAYSCALE = 1;
+  const MOZJPEG_COLORSPACE_YCBCR = 3;
   const JPEG_EXPORT_QUALITY = 0.95;
   function clampValue$1(x2, min2, max2) {
     if (max2 === min2) return 0;
@@ -251181,16 +251175,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return jsquashReady;
   }
-  async function encodeRgbaToJpeg(width, height, rgba, quality) {
+  async function encodeRgbaToJpeg(width, height, rgba, quality, colorSpace = MOZJPEG_COLORSPACE_GRAYSCALE) {
     await ensureJpegEncoderReady();
     const imageData = new ImageData(rgba, width, height);
     return encode(imageData, {
       quality: mozJpegQuality(quality),
-      color_space: MOZJPEG_COLORSPACE_GRAYSCALE,
+      color_space: colorSpace,
       baseline: true,
       progressive: false,
       arithmetic: false,
-      optimize_coding: false
+      optimize_coding: false,
+      auto_subsample: false,
+      chroma_subsample: 1
     });
   }
   async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
@@ -251206,6 +251202,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const padded = padGrayscaleRgbaToTile(rgba, width, height, padTileSize);
     return encodeRgbaToJpeg(padTileSize, padTileSize, padded, quality);
   }
+  async function encodeRgbJpeg(width, height, pixels, limits, quality, padTileSize) {
+    const outW = padTileSize ?? width;
+    const outH = padTileSize ?? height;
+    const rgba = new Uint8ClampedArray(new ArrayBuffer(outW * outH * 4)).fill(255);
+    for (let row2 = 0; row2 < height; row2++) {
+      for (let col = 0; col < width; col++) {
+        const s2 = (row2 * width + col) * 3;
+        const o2 = (row2 * outW + col) * 4;
+        for (let c2 = 0; c2 < 3; c2++) {
+          rgba[o2 + c2] = clampValue$1(pixels[s2 + c2], limits[c2][0], limits[c2][1]);
+        }
+      }
+    }
+    return encodeRgbaToJpeg(outW, outH, rgba, quality, MOZJPEG_COLORSPACE_YCBCR);
+  }
   function typedArrayCtorName(data2) {
     var _a2;
     return ((_a2 = data2.constructor) == null ? void 0 : _a2.name) ?? "";
@@ -251220,7 +251231,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return copy2;
   }
   function WorkerWrapper$2(options) {
-    return new Worker("" + new URL("jpegExport.worker-Dq6Yo12E.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-BhYN9Ovx.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -251289,7 +251300,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         })();
       }
     }
-    async encode(width, height, buffer2, arrayCtorName, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
+    async encode(width, height, buffer2, arrayCtorName, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize, rgbLimits) {
       const workerWrappersPromise = this.workerWrappers;
       if (!workerWrappersPromise) {
         throw new Error("JpegExportPool has no workers");
@@ -251305,7 +251316,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         upperLimit,
         quality,
         transfer,
-        padTileSize
+        padTileSize,
+        rgbLimits
       }, [
         buffer2
       ]);
@@ -251332,15 +251344,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return singleton;
   }
   async function encodeTileJpeg(input2) {
-    const { width, height, data: data2, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize } = input2;
+    const { width, height, data: data2, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize, rgbLimits } = input2;
     const pool = getJpegExportPool();
     if (pool) {
       try {
         const copy2 = copyPixelBuffer(data2);
-        return await pool.encode(width, height, copy2, typedArrayCtorName(data2), lowerLimit, upperLimit, quality, transfer, padTileSize);
+        return await pool.encode(width, height, copy2, typedArrayCtorName(data2), lowerLimit, upperLimit, quality, transfer, padTileSize, rgbLimits);
       } catch (err2) {
         console.warn("[minerva] jpegExport worker failed, using main thread:", err2);
       }
+    }
+    if (rgbLimits) {
+      return encodeRgbJpeg(width, height, data2, rgbLimits, quality, padTileSize);
     }
     return encodeGrayscaleJpeg(width, height, data2, lowerLimit, upperLimit, quality, transfer, padTileSize);
   }
@@ -251349,6 +251364,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (pool) return pool.size;
     return defaultPoolSize;
   }
+  const RGB_JPEG_TAGS = [
+    tiffTag("BitsPerSample", "SHORT", [
+      8,
+      8,
+      8
+    ]),
+    tiffTag("Compression", "SHORT", 7),
+    tiffTag("PhotometricInterpretation", "SHORT", 6),
+    tiffTag("SamplesPerPixel", "SHORT", 3),
+    tiffTag("PlanarConfiguration", "SHORT", 1),
+    tiffTag(530, "SHORT", [
+      1,
+      1
+    ]),
+    tiffTag("SampleFormat", "SHORT", [
+      1,
+      1,
+      1
+    ])
+  ];
   function interleavePlanar(planes) {
     var _a2;
     const n2 = planes.reduce((min2, plane) => Math.min(min2, plane.length), ((_a2 = planes[0]) == null ? void 0 : _a2.length) ?? 0);
@@ -251359,6 +251394,69 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     }
     return out;
+  }
+  const HE_COLOR = {
+    r: 204,
+    g: 0,
+    b: 255
+  };
+  function rgbExportChannels(image2, channels2) {
+    if (!isRgbDisplayImage(image2)) return null;
+    if (channels2.length === 1 && channels2[0].samples === 3) return channels2;
+    if (channels2.length !== 3 || channels2.some((c2) => c2.samples === 3)) {
+      return null;
+    }
+    const slots = channels2.map((c2) => planarRgbSlotFromName(c2.name));
+    const named = !slots.includes(null) && new Set(slots).size === 3;
+    return channels2.map((c2, i2) => ({
+      c: c2,
+      key: named ? slots[i2] : c2.index
+    })).sort((a2, b2) => a2.key - b2.key).map(({ c: c2 }) => c2);
+  }
+  function rgbFileChannel(rgb) {
+    const [first] = rgb;
+    if (rgb.length === 1) return {
+      ...first,
+      sourceDataTypeId: "Uint8"
+    };
+    return {
+      id: first.id,
+      index: 0,
+      name: "H&E",
+      kind: "channel",
+      samples: 3,
+      sourceDataTypeId: "Uint8"
+    };
+  }
+  function collapsePlanarRgbRows(groups, triplets) {
+    if (triplets.length === 0) return groups;
+    const keepOf = new Map(triplets.flatMap((rgb) => rgb.map((c2) => [
+      c2.id,
+      rgb[0].id
+    ])));
+    return groups.map((group2) => {
+      const seen2 = /* @__PURE__ */ new Set();
+      return {
+        ...group2,
+        channels: group2.channels.flatMap((row2) => {
+          const keep = keepOf.get(row2.channelId);
+          if (keep == null) return [
+            row2
+          ];
+          if (seen2.has(keep)) return [];
+          seen2.add(keep);
+          return [
+            {
+              ...row2,
+              channelId: keep,
+              color: HE_COLOR,
+              lowerLimit: 0,
+              upperLimit: 255
+            }
+          ];
+        })
+      };
+    });
   }
   async function planesLookBrightfield(planes, channels2, signal) {
     if (channels2.length !== 1 && channels2.length < 3) return false;
@@ -251417,10 +251515,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   async function transferForBrightfield(image2, storyTransfer, planes, channels2, signal) {
     const transfer = exportTransferForImage(image2, storyTransfer);
-    if (transfer !== "cube-root") return {
-      transfer,
-      image: image2
-    };
+    if (transfer !== "cube-root" || image2.rgbDisplay === false) {
+      return {
+        transfer,
+        image: image2
+      };
+    }
     if (!await planesLookBrightfield(planes, channels2, signal)) {
       return {
         transfer,
@@ -251435,98 +251535,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  function absoluteSourceUrl(url) {
-    const trimmed = url.trim();
-    if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("blob:") || trimmed.startsWith("file:")) {
-      return trimmed;
-    }
-    return new URL(trimmed, window.location.href).href;
-  }
-  async function openCopySource(image2, signal) {
-    const source2 = image2.source;
-    if (!source2) return null;
-    if (source2.kind === "local") {
-      const stored = await getFileHandle(source2.handleKey);
-      if (!stored || stored.kind !== "file") return null;
-      const file = await stored.getFile();
-      return {
-        probe: file,
-        openBody: async () => ({
-          stream: file.stream(),
-          size: file.size
-        })
-      };
-    }
-    if (source2.kind === "url") {
-      const url = absoluteSourceUrl(source2.url);
-      return {
-        probe: url,
-        openBody: async () => {
-          const response = await fetch(url, {
-            signal
-          });
-          if (!response.ok || !response.body) {
-            throw new Error(`Failed to fetch ${url} (${response.status})`);
-          }
-          const length2 = Number(response.headers.get("content-length"));
-          return {
-            stream: response.body,
-            size: Number.isFinite(length2) && length2 > 0 ? length2 : 0
-          };
-        }
-      };
-    }
-    return null;
-  }
-  async function writeStream(directory, fileName, stream, size, signal, onProgress) {
-    var _a2;
-    const fh2 = await directory.getFileHandle(fileName, {
-      create: true
-    });
-    const writable = await fh2.createWritable();
-    let written = 0;
-    const reader = stream.getReader();
-    try {
-      while (true) {
-        if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-        const { done, value } = await reader.read();
-        if (done) break;
-        const bytes = value.buffer instanceof ArrayBuffer ? new Uint8Array(value.buffer, value.byteOffset, value.byteLength) : new Uint8Array(value);
-        await writable.write(bytes);
-        written += value.byteLength;
-        if (size > 0) onProgress(written, size);
-      }
-      await writable.close();
-      onProgress(Math.max(written, size), Math.max(size, 1));
-    } catch (error2) {
-      try {
-        await reader.cancel();
-      } catch {
-      }
-      try {
-        await ((_a2 = writable.abort) == null ? void 0 : _a2.call(writable));
-      } catch {
-      }
-      throw error2;
-    }
-  }
-  async function copyJpegBrightfieldSource(image2, directory, fileName, signal, onProgress) {
-    const opened = await openCopySource(image2, signal);
-    if (!opened) return null;
-    if (!await omeTiffBaseIsJpeg(opened.probe, signal)) return null;
-    const body2 = await opened.openBody();
-    await writeStream(directory, fileName, body2.stream, body2.size, signal, onProgress);
-    return {
-      ...image2,
-      source: {
-        kind: "url",
-        url: fileName
-      }
-    };
-  }
   async function exportJpegOmeTiffImage(opts) {
     var _a2, _b2;
-    const { directory, layoutPlanes, image: image2, channelSources, channelGroups, fileName, transfer, signal, onProgress } = opts;
+    const { directory, layoutPlanes, image: image2, channelSources, channelGroups, fileName, transfer, signal, onProgress, rgb, pixels } = opts;
     const channels2 = channelSources.map((s2) => s2.channel);
     if (channels2.length === 0) {
       throw new Error(`No intensity channels to export for ${image2.basename || image2.id}`);
@@ -251535,23 +251546,38 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       throw new Error(`Loader has no pyramid levels for ${image2.basename || image2.id}`);
     }
     const levels = planeLevels(layoutPlanes);
+    const fileChannels = rgb ? [
+      rgbFileChannel(rgb)
+    ] : channels2;
     const channelLimits = channels2.map((ch2) => {
       const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
       return folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
     });
+    const rgbLimits = (rgb == null ? void 0 : rgb.length) === 1 ? Array(3).fill([
+      0,
+      sourceDtypeMax(layoutPlanes[0].dtype)
+    ]) : rgb == null ? void 0 : rgb.map((ch2) => {
+      const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
+      return [
+        lim.lowerLimit,
+        lim.upperLimit
+      ];
+    });
     const omeXml = buildOmeTiffXml({
       imageName: image2.basename || image2.id || "image",
-      channels: channels2,
+      channels: fileChannels,
       width: levels[0].width,
       height: levels[0].height,
       fileName,
       pixelType: "uint8",
-      significantBits: 8
+      significantBits: 8,
+      samplesPerPixel: rgb ? 3 : 1,
+      pixels
     });
     const { layouts, jobs } = planPyramid({
       levels,
-      channelCount: channels2.length,
-      baseTags: grayscaleJpegTags(),
+      channelCount: fileChannels.length,
+      baseTags: rgb ? RGB_JPEG_TAGS : grayscaleJpegTags(),
       imageDescription: omeXml
     });
     const fh2 = await directory.getFileHandle(fileName, {
@@ -251593,9 +251619,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const levelIndex = Math.min(job.levelIndex, source2.planes.length - 1);
       const plane = source2.planes[levelIndex];
       const tileSize = levels[job.levelIndex].tileSize;
-      const channel = source2.channel;
       const limits = channelLimits[job.channelIndex];
-      const tile = await plane.getTile({
+      const readTile = (channel) => plane.getTile({
         selection: {
           t: 0,
           z: 0,
@@ -251605,8 +251630,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         y: job.y,
         signal: workSignal
       });
+      const tiles = await Promise.all((rgb ?? [
+        source2.channel
+      ]).map(readTile));
       if (workSignal.aborted) return;
-      const { width, height, data: data2 } = tile;
+      const { width, height } = tiles[0];
+      const data2 = tiles.length === 3 ? interleavePlanar(tiles.map((t2) => t2.data)) : tiles[0].data;
       const jpeg = await encodeTileJpeg({
         width,
         height,
@@ -251614,7 +251643,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         lowerLimit: limits.lowerLimit,
         upperLimit: limits.upperLimit,
         transfer,
-        padTileSize: tileSize
+        padTileSize: tileSize,
+        rgbLimits
       });
       if (workSignal.aborted) return;
       await writer.writeSegment(job.address, new Uint8Array(jpeg));
@@ -251661,9 +251691,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     } finally {
       signal.removeEventListener("abort", onOuterAbort);
     }
-    return remappedImageForOmeTiffExport(image2, channels2, fileName);
+    return remappedImageForOmeTiffExport(rgb ? {
+      ...image2,
+      rgbDisplay: true
+    } : image2, fileChannels, fileName);
   }
   async function exportJpegOmeTiffStory(opts) {
+    var _a2;
     const { directory, omeLoaderEntries, images, channelGroups, transfer, signal, onProgress } = opts;
     if (omeLoaderEntries.length === 0) {
       throw new Error("OME-TIFF export needs an OME or DICOM source image loaded.");
@@ -251695,9 +251729,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (intensityItems.length === 0 && maskItems.length === 0) {
       throw new Error("No channels available for OME-TIFF export.");
     }
+    const decisions = [];
     let totalTiles = 0;
     for (const item2 of intensityItems) {
-      totalTiles += tileCountForLevels(planeLevels(item2.planes), item2.intensity.length);
+      const decided = await transferForBrightfield(item2.image, transfer, item2.planes, item2.intensity, signal);
+      const rgb = rgbExportChannels(decided.image, item2.intensity);
+      decisions.push({
+        ...decided,
+        rgb
+      });
+      totalTiles += tileCountForLevels(planeLevels(item2.planes), rgb ? 1 : item2.intensity.length);
     }
     for (const item2 of maskItems) {
       totalTiles += maskExportTileCount(item2.entry, item2.masks.length);
@@ -251711,34 +251752,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const remappedById = /* @__PURE__ */ new Map();
     const insertedAfter = /* @__PURE__ */ new Map();
-    const copiedSourceIds = /* @__PURE__ */ new Set();
     for (let i2 = 0; i2 < intensityItems.length; i2++) {
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       const item2 = intensityItems[i2];
-      const decided = await transferForBrightfield(item2.image, transfer, item2.planes, item2.intensity, signal);
-      if (decided.transfer === "contrast") {
-        const imageTiles = tileCountForLevels(planeLevels(item2.planes), item2.intensity.length);
-        let credited = 0;
-        const credit = (written, total) => {
-          const next2 = total > 0 ? Math.min(imageTiles, Math.floor(written / total * imageTiles)) : 0;
-          if (next2 > credited) {
-            bump(next2 - credited);
-            credited = next2;
-          }
-        };
-        try {
-          const copied = await copyJpegBrightfieldSource(decided.image, directory, intensityFileNames[i2], signal, credit);
-          if (copied) {
-            if (credited < imageTiles) bump(imageTiles - credited);
-            copiedSourceIds.add(item2.image.id);
-            remappedById.set(item2.image.id, copied);
-            continue;
-          }
-        } catch (error2) {
-          if (signal.aborted) throw error2;
-          console.warn("[minerva] jpeg brightfield copy failed, re-encoding", error2);
-        }
-      }
+      const decided = decisions[i2];
       let jpegImage = await exportJpegOmeTiffImage({
         directory,
         layoutPlanes: item2.planes,
@@ -251751,7 +251768,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         fileName: intensityFileNames[i2],
         transfer: decided.transfer,
         signal,
-        onProgress: bump
+        onProgress: bump,
+        rgb: decided.rgb,
+        pixels: (_a2 = item2.entry.loader.metadata) == null ? void 0 : _a2.Pixels
       });
       if (item2.masks.length > 0) {
         jpegImage = {
@@ -251764,10 +251783,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     for (let i2 = 0; i2 < maskItems.length; i2++) {
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       const item2 = maskItems[i2];
-      if (copiedSourceIds.has(item2.image.id)) {
-        bump(maskExportTileCount(item2.entry, item2.masks.length));
-        continue;
-      }
       const splitFromIntensity = remappedById.has(item2.image.id);
       const maskSource = splitFromIntensity ? {
         ...item2.image,
@@ -251790,7 +251805,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         remappedById.set(item2.image.id, maskImage);
       }
     }
-    return stitchOmeTiffExportImages(images, remappedById, insertedAfter, /* @__PURE__ */ new Set());
+    return {
+      images: stitchOmeTiffExportImages(images, remappedById, insertedAfter, /* @__PURE__ */ new Set()),
+      channelGroups: collapsePlanarRgbRows(channelGroups, decisions.flatMap((d2) => {
+        var _a3;
+        return ((_a3 = d2.rgb) == null ? void 0 : _a3.length) === 3 ? [
+          d2.rgb
+        ] : [];
+      }))
+    };
   }
   const imageExporter = "_imageExporter_s6bvo_1";
   const exportStatus = "_exportStatus_s6bvo_13";
@@ -252167,7 +252190,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       void (async () => {
         try {
           const imagesSnapshot = await paintUngroupedExportColors(imagesAtStart, channelGroupsSnapshot);
-          const remappedImages = await exportJpegOmeTiffStory({
+          const exported = await exportJpegOmeTiffStory({
             directory: directory_handle,
             omeLoaderEntries: loaderEntries,
             images: imagesSnapshot,
@@ -252190,7 +252213,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           const baseDoc = useDocumentStore.getState().toDocumentData();
           const doc = {
             ...baseDoc,
-            images: remappedImages,
+            images: exported.images,
+            channelGroups: exported.channelGroups,
             metadata: {
               ...baseDoc.metadata,
               imageSource: nextSource
@@ -252201,7 +252225,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           });
           setSkippedTables(written.skippedFeatureTables);
           const store = useDocumentStore.getState();
-          store.setImages(remappedImages);
+          store.setImages(exported.images);
+          store.setChannelGroups(exported.channelGroups);
           store.setMetadata({
             imageSource: nextSource
           });
@@ -252422,7 +252447,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               }),
               jsxRuntimeExports.jsx("div", {
                 className: styles$c.exportHint,
-                children: "JPEG brightfield is copied. Other brightfield is compressed. Fluorescence is cube-root."
+                children: "Brightfield is re-encoded as RGB. Fluorescence is cube-root."
               })
             ]
           }),
@@ -252675,28 +252700,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return "";
   }
-  const presentation = "_presentation_1qjqa_6";
-  const frame$1 = "_frame_1qjqa_14";
-  const previewRibbon = "_previewRibbon_1qjqa_33";
-  const previewRibbonChevron = "_previewRibbonChevron_1qjqa_40";
-  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_1qjqa_52";
-  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_1qjqa_69";
-  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_1qjqa_74";
-  const navPane = "_navPane_1qjqa_126";
-  const navPaneHasStoryName = "_navPaneHasStoryName_1qjqa_139";
-  const storyTitle = "_storyTitle_1qjqa_143";
-  const toolbar$1 = "_toolbar_1qjqa_150";
-  const contentWrap = "_contentWrap_1qjqa_162";
-  const navInactive = "_navInactive_1qjqa_199";
-  const heading = "_heading_1qjqa_211";
-  const tocButton = "_tocButton_1qjqa_227";
-  const navLeft = "_navLeft_1qjqa_232";
-  const count = "_count_1qjqa_236";
-  const navRight = "_navRight_1qjqa_240";
-  const inlineNext = "_inlineNext_1qjqa_303";
-  const nextLink = "_nextLink_1qjqa_321";
-  const tocWrapper = "_tocWrapper_1qjqa_365";
-  const channelName = "_channelName_1qjqa_374";
+  const presentation = "_presentation_o48fs_6";
+  const frame$1 = "_frame_o48fs_14";
+  const previewRibbon = "_previewRibbon_o48fs_35";
+  const previewRibbonChevron = "_previewRibbonChevron_o48fs_42";
+  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_o48fs_54";
+  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_o48fs_71";
+  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_o48fs_76";
+  const navPane = "_navPane_o48fs_128";
+  const navPaneHasStoryName = "_navPaneHasStoryName_o48fs_141";
+  const storyTitle = "_storyTitle_o48fs_145";
+  const toolbar$1 = "_toolbar_o48fs_152";
+  const contentWrap = "_contentWrap_o48fs_164";
+  const navInactive = "_navInactive_o48fs_201";
+  const heading = "_heading_o48fs_213";
+  const tocButton = "_tocButton_o48fs_229";
+  const navLeft = "_navLeft_o48fs_234";
+  const count = "_count_o48fs_238";
+  const navRight = "_navRight_o48fs_242";
+  const inlineNext = "_inlineNext_o48fs_305";
+  const nextLink = "_nextLink_o48fs_323";
+  const tocWrapper = "_tocWrapper_o48fs_367";
+  const channelName = "_channelName_o48fs_376";
   const styles$b = {
     presentation,
     frame: frame$1,
@@ -253347,26 +253372,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...plainProps
     });
   };
-  const channelsSection = "_channelsSection_60gku_1";
-  const channelsSectionHeader = "_channelsSectionHeader_60gku_9";
-  const sectionLabel = "_sectionLabel_60gku_18";
-  const toolbarSlot = "_toolbarSlot_60gku_29";
-  const legendBody = "_legendBody_60gku_37";
-  const imageSection = "_imageSection_60gku_44";
-  const imageSectionLabel = "_imageSectionLabel_60gku_50";
-  const channelList = "_channelList_60gku_62";
-  const legendRowWrap = "_legendRowWrap_60gku_68";
-  const rowClickArea = "_rowClickArea_60gku_83";
-  const swatchButton = "_swatchButton_60gku_95";
-  const nameButton = "_nameButton_60gku_96";
-  const swatch = "_swatch_60gku_95";
-  const swatchFilled = "_swatchFilled_60gku_130";
-  const legendDivider = "_legendDivider_60gku_134";
-  const nameSlot = "_nameSlot_60gku_139";
+  const channelsSection = "_channelsSection_esy1z_1";
+  const channelsSectionHeader = "_channelsSectionHeader_esy1z_9";
+  const sectionLabel = "_sectionLabel_esy1z_18";
+  const collapseToggle = "_collapseToggle_esy1z_30";
+  const toolbarSlot = "_toolbarSlot_esy1z_34";
+  const legendBody = "_legendBody_esy1z_42";
+  const imageSection = "_imageSection_esy1z_49";
+  const imageSectionLabel = "_imageSectionLabel_esy1z_55";
+  const channelList = "_channelList_esy1z_67";
+  const legendRowWrap = "_legendRowWrap_esy1z_73";
+  const rowClickArea = "_rowClickArea_esy1z_88";
+  const swatchButton = "_swatchButton_esy1z_100";
+  const nameButton = "_nameButton_esy1z_101";
+  const swatch = "_swatch_esy1z_100";
+  const swatchFilled = "_swatchFilled_esy1z_135";
+  const legendDivider = "_legendDivider_esy1z_139";
+  const nameSlot = "_nameSlot_esy1z_144";
+  const sectionLabelStatic = "_sectionLabelStatic_esy1z_181";
+  const channelsCollapsed = "_channelsCollapsed_esy1z_185";
   const styles$7 = {
     channelsSection,
     channelsSectionHeader,
     sectionLabel,
+    collapseToggle,
     toolbarSlot,
     legendBody,
     imageSection,
@@ -253379,7 +253408,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     swatch,
     swatchFilled,
     legendDivider,
-    nameSlot
+    nameSlot,
+    sectionLabelStatic,
+    channelsCollapsed
   };
   const defaultChannels = [
     {
@@ -253576,6 +253607,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       a: 1
     }));
     const [colorPickerChannel, setColorPickerChannel] = reactExports.useState(null);
+    const [legendOpen, setLegendOpen] = reactExports.useState(false);
     const closeColorPicker = reactExports.useCallback(() => {
       setColorPickerChannel(null);
       setColorPickerPos(null);
@@ -253610,13 +253642,34 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     let rowIdx = 0;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$7.channelsSection,
+      className: [
+        styles$7.channelsSection,
+        legendOpen ? null : styles$7.channelsCollapsed
+      ].filter(Boolean).join(" "),
       children: [
         jsxRuntimeExports.jsxs("div", {
           className: styles$7.channelsSectionHeader,
           children: [
+            jsxRuntimeExports.jsxs("button", {
+              type: "button",
+              className: `${minervaTheme.focusRing} ${styles$7.collapseToggle}`,
+              "aria-expanded": legendOpen,
+              onClick: () => {
+                if (legendOpen) closeColorPicker();
+                setLegendOpen((open) => !open);
+              },
+              children: [
+                jsxRuntimeExports.jsx(ChevronIcon, {
+                  direction: legendOpen ? "up" : "down"
+                }),
+                jsxRuntimeExports.jsx("span", {
+                  className: styles$7.sectionLabel,
+                  children: "Channels"
+                })
+              ]
+            }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$7.sectionLabel,
+              className: `${styles$7.sectionLabel} ${styles$7.sectionLabelStatic}`,
               children: "Channels"
             }),
             jsxRuntimeExports.jsx("div", {
@@ -254182,12 +254235,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-10-07T20:39:53.330Z");
+    const label2 = utcShort("2026-10-08T14:29:01.953Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$4.stamp,
       "aria-hidden": true,
-      title: "2026-10-07T20:39:53.330Z",
+      title: "2026-10-08T14:29:01.953Z",
       children: [
         "Updated ",
         label2,

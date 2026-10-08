@@ -4450,6 +4450,7 @@ function encodeCubeRootU16ToU8(pixel) {
 const JPEG_PYRAMID_TILE_SIZE = 1024;
 
 const MOZJPEG_COLORSPACE_GRAYSCALE = 1;
+const MOZJPEG_COLORSPACE_YCBCR = 3;
 const JPEG_EXPORT_QUALITY = 0.95;
 const PIXEL_CTORS = {
   Uint8Array,
@@ -4513,16 +4514,19 @@ function ensureJpegEncoderReady() {
   }
   return jsquashReady;
 }
-async function encodeRgbaToJpeg(width, height, rgba, quality) {
+async function encodeRgbaToJpeg(width, height, rgba, quality, colorSpace = MOZJPEG_COLORSPACE_GRAYSCALE) {
   await ensureJpegEncoderReady();
   const imageData = new ImageData(rgba, width, height);
   return encode(imageData, {
     quality: mozJpegQuality(quality),
-    color_space: MOZJPEG_COLORSPACE_GRAYSCALE,
+    color_space: colorSpace,
     baseline: true,
     progressive: false,
     arithmetic: false,
-    optimize_coding: false
+    optimize_coding: false,
+    // 4:4:4. Packed RGB TIFF tags declare YCbCrSubSampling [1, 1].
+    auto_subsample: false,
+    chroma_subsample: 1
   });
 }
 async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
@@ -4540,6 +4544,23 @@ async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit
   const padded = padGrayscaleRgbaToTile(rgba, width, height, padTileSize);
   return encodeRgbaToJpeg(padTileSize, padTileSize, padded, quality);
 }
+async function encodeRgbJpeg(width, height, pixels, limits, quality, padTileSize) {
+  const outW = padTileSize ?? width;
+  const outH = padTileSize ?? height;
+  const rgba = new Uint8ClampedArray(new ArrayBuffer(outW * outH * 4)).fill(
+    255
+  );
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const s = (row * width + col) * 3;
+      const o = (row * outW + col) * 4;
+      for (let c = 0; c < 3; c++) {
+        rgba[o + c] = clampValue(pixels[s + c], limits[c][0], limits[c][1]);
+      }
+    }
+  }
+  return encodeRgbaToJpeg(outW, outH, rgba, quality, MOZJPEG_COLORSPACE_YCBCR);
+}
 
 const worker = self;
 void ensureJpegEncoderReady().catch((err) => {
@@ -4556,7 +4577,8 @@ worker.addEventListener("message", async (e) => {
     upperLimit,
     quality = JPEG_EXPORT_QUALITY,
     transfer = "contrast",
-    padTileSize
+    padTileSize,
+    rgbLimits
   } = e.data;
   try {
     const Ctor = PIXEL_CTORS[arrayCtorName];
@@ -4564,7 +4586,7 @@ worker.addEventListener("message", async (e) => {
       throw new Error(`unsupported pixel array ${arrayCtorName}`);
     }
     const pixels = new Ctor(buffer);
-    const jpeg = await encodeGrayscaleJpeg(
+    const jpeg = await (rgbLimits ? encodeRgbJpeg(width, height, pixels, rgbLimits, quality, padTileSize) : encodeGrayscaleJpeg(
       width,
       height,
       pixels,
@@ -4573,7 +4595,7 @@ worker.addEventListener("message", async (e) => {
       quality,
       transfer,
       padTileSize
-    );
+    ));
     worker.postMessage({ jpeg, jobId }, [jpeg]);
   } catch (err) {
     worker.postMessage({
