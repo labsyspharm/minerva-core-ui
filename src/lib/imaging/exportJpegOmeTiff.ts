@@ -21,11 +21,12 @@ import {
   folderLimitsForTransfer,
   type JpegExportTransfer,
 } from "./cubeRootEncoding";
+import { readExportTile } from "./exportTileReader";
 import {
   exportZlibOmeTiffImage,
   maskExportTileCount,
 } from "./exportZlibOmeTiff";
-import { encodeTileJpeg, jpegExportConcurrency } from "./jpegExportPool";
+import { encodeTileJpeg } from "./jpegExportPool";
 import type { OmeLoaderEntry } from "./loaderEntries";
 import {
   type BrightfieldTally,
@@ -38,6 +39,7 @@ import {
   allocateOmeTiffExportFileNames,
   buildOmeTiffXml,
   contrastLimitsForExportedChannel,
+  exportPlaneLevels,
   groupIntensityChannelsForOmeExport,
   groupMaskChannelsForOmeExport,
   type LoaderPlane,
@@ -69,16 +71,24 @@ type ExportJpegOmeTiffOpts = {
   pixels?: OmePixelsMeta | null;
 };
 
-/** Brightfield: one IFD, 4:4:4 YCbCr JPEG tiles (Viv converts to RGB). Must match `encodeRgbJpeg`. */
+/** Brightfield: one IFD, 4:2:0 YCbCr JPEG tiles (Viv converts to RGB). Must match `encodeRgbJpeg`. */
 const RGB_JPEG_TAGS = [
   tiffTag("BitsPerSample", "SHORT", [8, 8, 8]),
   tiffTag("Compression", "SHORT", 7),
   tiffTag("PhotometricInterpretation", "SHORT", 6),
   tiffTag("SamplesPerPixel", "SHORT", 3),
   tiffTag("PlanarConfiguration", "SHORT", 1),
-  tiffTag(530, "SHORT", [1, 1]), // YCbCrSubSampling
+  tiffTag(530, "SHORT", [2, 2]), // YCbCrSubSampling
   tiffTag("SampleFormat", "SHORT", [1, 1, 1]),
 ];
+
+/**
+ * Tiles in flight. Reads dominate (a network share takes ~20 ms each), so this
+ * is well above the encoder pool size.
+ */
+const TILES_IN_FLIGHT = 32;
+/** Encoded bytes queued for the (serial) TIFF writer before tiles wait on it. */
+const MAX_PENDING_WRITE_BYTES = 64 * 1024 * 1024;
 
 function interleavePlanar(planes: ArrayLike<number>[]): Float64Array {
   const n = planes.reduce(
@@ -280,7 +290,7 @@ async function exportJpegOmeTiffImage(
     );
   }
 
-  const levels = planeLevels(layoutPlanes);
+  const levels = exportPlaneLevels(layoutPlanes);
   const fileChannels = rgb ? [rgbFileChannel(rgb)] : channels;
   const channelLimits = channels.map((ch) => {
     const lim = contrastLimitsForExportedChannel(ch, channelGroups);
@@ -351,11 +361,26 @@ async function exportJpegOmeTiffImage(
     throw e;
   }
 
-  const concurrency = Math.min(
-    jpegExportConcurrency(),
-    Math.max(1, jobs.length),
-  );
+  const concurrency = Math.min(TILES_IN_FLIGHT, Math.max(1, jobs.length));
   let next = 0;
+
+  // The writer appends one tile at a time; tiles queue their bytes and move on.
+  const pendingWrites = new Set<Promise<void>>();
+  let pendingWriteBytes = 0;
+  const queueWrite = async (job: PlanPyramidJob, bytes: Uint8Array) => {
+    while (pendingWriteBytes >= MAX_PENDING_WRITE_BYTES) {
+      await Promise.race(pendingWrites);
+    }
+    pendingWriteBytes += bytes.byteLength;
+    const write = writer
+      .writeSegment(job.address, bytes)
+      .then(() => onProgress?.(1), failExport)
+      .finally(() => {
+        pendingWriteBytes -= bytes.byteLength;
+        pendingWrites.delete(write);
+      });
+    pendingWrites.add(write);
+  };
 
   const runJob = async (job: PlanPyramidJob) => {
     if (workSignal.aborted) return;
@@ -365,12 +390,14 @@ async function exportJpegOmeTiffImage(
     const tileSize = levels[job.levelIndex].tileSize;
     const limits = channelLimits[job.channelIndex];
     const readTile = (channel: ImageChannel) =>
-      plane.getTile({
-        selection: { t: 0, z: 0, c: channel.index },
-        x: job.x,
-        y: job.y,
-        signal: workSignal,
-      });
+      readExportTile(
+        plane,
+        tileSize,
+        { t: 0, z: 0, c: channel.index },
+        job.x,
+        job.y,
+        workSignal,
+      );
     const tiles = await Promise.all((rgb ?? [source.channel]).map(readTile));
     if (workSignal.aborted) return;
     const { width, height } = tiles[0];
@@ -393,8 +420,7 @@ async function exportJpegOmeTiffImage(
       rgbLimits,
     });
     if (workSignal.aborted) return;
-    await writer.writeSegment(job.address, new Uint8Array(jpeg));
-    onProgress?.(1);
+    await queueWrite(job, new Uint8Array(jpeg));
   };
 
   const workerLoop = async () => {
@@ -419,6 +445,7 @@ async function exportJpegOmeTiffImage(
 
   try {
     await Promise.all(Array.from({ length: concurrency }, () => workerLoop()));
+    await Promise.all(pendingWrites);
     if (exportFailed) throw exportFailed;
     if (signal.aborted || workSignal.aborted) {
       throw new DOMException("Aborted", "AbortError");
@@ -525,7 +552,7 @@ export async function exportJpegOmeTiffStory(
     const rgb = rgbExportChannels(decided.image, item.intensity);
     decisions.push({ ...decided, rgb });
     totalTiles += tileCountForLevels(
-      planeLevels(item.planes),
+      exportPlaneLevels(item.planes),
       rgb ? 1 : item.intensity.length,
     );
   }

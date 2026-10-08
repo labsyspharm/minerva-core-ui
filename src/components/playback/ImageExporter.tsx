@@ -56,6 +56,9 @@ type Progress = {
   startedAt: number | null;
 };
 
+/** Progress re-renders at most this often; tiles finish far faster. */
+const PROGRESS_INTERVAL_MS = 250;
+
 const formatMinutesLeft = (ms: number): string => {
   const mins = Math.round(ms / 60000);
   if (mins < 1) return "<1m left";
@@ -467,6 +470,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
       if (!cancelled) setNowMs(performance.now());
     }, 1000);
 
+    let lastProgressAt = 0;
     void (async () => {
       try {
         const imagesSnapshot = await paintUngroupedExportColors(
@@ -481,7 +485,11 @@ export const ImageExporter = (props: ImageExporterProps) => {
           transfer: jpegTransfer,
           signal: abort.signal,
           onProgress: (completed, total) => {
-            if (cancelled) return;
+            const now = performance.now();
+            if (cancelled || now - lastProgressAt < PROGRESS_INTERVAL_MS) {
+              return;
+            }
+            lastProgressAt = now;
             setProgress({
               completed,
               total: Math.max(total, 1),
