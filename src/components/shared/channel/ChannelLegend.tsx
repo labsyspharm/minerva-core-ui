@@ -272,8 +272,8 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
   );
   const [colorPickerChannel, setColorPickerChannel] =
     React.useState<LegendChannel | null>(null);
-  /** Starts closed; the list stays visible until the presentation frame is narrow. */
-  const [legendOpen, setLegendOpen] = React.useState(false);
+  /** Starts open. The header collapses the list when the presentation frame is narrow. */
+  const [legendOpen, setLegendOpen] = React.useState(true);
 
   const closeColorPicker = React.useCallback(() => {
     setColorPickerChannel(null);
