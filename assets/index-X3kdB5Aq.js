@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DBkBjFkj.js","./pako.esm-KbdoS3Oq.js","./lerc-s4erOsUc.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-NY0L2gXJ.js","./pako.esm-KbdoS3Oq.js","./lerc-Bg2Is4-F.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -76367,26 +76367,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CqzGaKdo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CJbPY-hJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-C-4QumkH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-v78w6Bpf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DKvl7N1b.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-H8TU6HG5.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DBkBjFkj.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-Cs-jqAo0.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-s4erOsUc.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-NY0L2gXJ.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BOrazMca.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Bg2Is4-F.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BDCPin2g.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CHb-__cX.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BkHBa3q4.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DK9F1_er.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -247276,20 +247276,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })
     });
   }
-  const sidebarHost = "_sidebarHost_10vsv_1";
-  const sidebarHostCollapsed = "_sidebarHostCollapsed_10vsv_18";
-  const panelOuter = "_panelOuter_10vsv_23";
-  const tabRow = "_tabRow_10vsv_33";
-  const stripActions = "_stripActions_10vsv_41";
-  const expandControl = "_expandControl_10vsv_50";
-  const expandControlExpanded = "_expandControlExpanded_10vsv_60";
-  const panelContent = "_panelContent_10vsv_66";
-  const viewport = "_viewport_10vsv_76";
-  const viewportCollapsed = "_viewportCollapsed_10vsv_88";
-  const viewportPreview = "_viewportPreview_10vsv_93";
-  const previewNav = "_previewNav_10vsv_97";
-  const previewNavParked = "_previewNavParked_10vsv_111";
-  const viewerRegion = "_viewerRegion_10vsv_115";
+  const sidebarHost = "_sidebarHost_1gyqk_1";
+  const sidebarHostCollapsed = "_sidebarHostCollapsed_1gyqk_18";
+  const panelOuter = "_panelOuter_1gyqk_23";
+  const tabRow = "_tabRow_1gyqk_33";
+  const stripActions = "_stripActions_1gyqk_41";
+  const expandControl = "_expandControl_1gyqk_50";
+  const expandControlExpanded = "_expandControlExpanded_1gyqk_60";
+  const panelContent = "_panelContent_1gyqk_66";
+  const viewport = "_viewport_1gyqk_76";
+  const viewportCollapsed = "_viewportCollapsed_1gyqk_88";
+  const viewportPreview = "_viewportPreview_1gyqk_93";
+  const previewNav = "_previewNav_1gyqk_97";
+  const previewNavParked = "_previewNavParked_1gyqk_111";
+  const viewerRegion = "_viewerRegion_1gyqk_115";
   const styles$d = {
     sidebarHost,
     sidebarHostCollapsed,
@@ -252275,28 +252275,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return "";
   }
-  const presentation = "_presentation_1qjqa_6";
-  const frame$1 = "_frame_1qjqa_14";
-  const previewRibbon = "_previewRibbon_1qjqa_33";
-  const previewRibbonChevron = "_previewRibbonChevron_1qjqa_40";
-  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_1qjqa_52";
-  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_1qjqa_69";
-  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_1qjqa_74";
-  const navPane = "_navPane_1qjqa_126";
-  const navPaneHasStoryName = "_navPaneHasStoryName_1qjqa_139";
-  const storyTitle = "_storyTitle_1qjqa_143";
-  const toolbar$1 = "_toolbar_1qjqa_150";
-  const contentWrap = "_contentWrap_1qjqa_162";
-  const navInactive = "_navInactive_1qjqa_199";
-  const heading = "_heading_1qjqa_211";
-  const tocButton = "_tocButton_1qjqa_227";
-  const navLeft = "_navLeft_1qjqa_232";
-  const count = "_count_1qjqa_236";
-  const navRight = "_navRight_1qjqa_240";
-  const inlineNext = "_inlineNext_1qjqa_303";
-  const nextLink = "_nextLink_1qjqa_321";
-  const tocWrapper = "_tocWrapper_1qjqa_365";
-  const channelName = "_channelName_1qjqa_374";
+  const presentation = "_presentation_o48fs_6";
+  const frame$1 = "_frame_o48fs_14";
+  const previewRibbon = "_previewRibbon_o48fs_35";
+  const previewRibbonChevron = "_previewRibbonChevron_o48fs_42";
+  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_o48fs_54";
+  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_o48fs_71";
+  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_o48fs_76";
+  const navPane = "_navPane_o48fs_128";
+  const navPaneHasStoryName = "_navPaneHasStoryName_o48fs_141";
+  const storyTitle = "_storyTitle_o48fs_145";
+  const toolbar$1 = "_toolbar_o48fs_152";
+  const contentWrap = "_contentWrap_o48fs_164";
+  const navInactive = "_navInactive_o48fs_201";
+  const heading = "_heading_o48fs_213";
+  const tocButton = "_tocButton_o48fs_229";
+  const navLeft = "_navLeft_o48fs_234";
+  const count = "_count_o48fs_238";
+  const navRight = "_navRight_o48fs_242";
+  const inlineNext = "_inlineNext_o48fs_305";
+  const nextLink = "_nextLink_o48fs_323";
+  const tocWrapper = "_tocWrapper_o48fs_367";
+  const channelName = "_channelName_o48fs_376";
   const styles$b = {
     presentation,
     frame: frame$1,
@@ -252953,26 +252953,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...plainProps
     });
   };
-  const channelsSection = "_channelsSection_60gku_1";
-  const channelsSectionHeader = "_channelsSectionHeader_60gku_9";
-  const sectionLabel = "_sectionLabel_60gku_18";
-  const toolbarSlot = "_toolbarSlot_60gku_29";
-  const legendBody = "_legendBody_60gku_37";
-  const imageSection = "_imageSection_60gku_44";
-  const imageSectionLabel = "_imageSectionLabel_60gku_50";
-  const channelList = "_channelList_60gku_62";
-  const legendRowWrap = "_legendRowWrap_60gku_68";
-  const rowClickArea = "_rowClickArea_60gku_83";
-  const swatchButton = "_swatchButton_60gku_95";
-  const nameButton = "_nameButton_60gku_96";
-  const swatch = "_swatch_60gku_95";
-  const swatchFilled = "_swatchFilled_60gku_130";
-  const legendDivider = "_legendDivider_60gku_134";
-  const nameSlot = "_nameSlot_60gku_139";
+  const channelsSection = "_channelsSection_esy1z_1";
+  const channelsSectionHeader = "_channelsSectionHeader_esy1z_9";
+  const sectionLabel = "_sectionLabel_esy1z_18";
+  const collapseToggle = "_collapseToggle_esy1z_30";
+  const toolbarSlot = "_toolbarSlot_esy1z_34";
+  const legendBody = "_legendBody_esy1z_42";
+  const imageSection = "_imageSection_esy1z_49";
+  const imageSectionLabel = "_imageSectionLabel_esy1z_55";
+  const channelList = "_channelList_esy1z_67";
+  const legendRowWrap = "_legendRowWrap_esy1z_73";
+  const rowClickArea = "_rowClickArea_esy1z_88";
+  const swatchButton = "_swatchButton_esy1z_100";
+  const nameButton = "_nameButton_esy1z_101";
+  const swatch = "_swatch_esy1z_100";
+  const swatchFilled = "_swatchFilled_esy1z_135";
+  const legendDivider = "_legendDivider_esy1z_139";
+  const nameSlot = "_nameSlot_esy1z_144";
+  const sectionLabelStatic = "_sectionLabelStatic_esy1z_181";
+  const channelsCollapsed = "_channelsCollapsed_esy1z_185";
   const styles$7 = {
     channelsSection,
     channelsSectionHeader,
     sectionLabel,
+    collapseToggle,
     toolbarSlot,
     legendBody,
     imageSection,
@@ -252985,7 +252989,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     swatch,
     swatchFilled,
     legendDivider,
-    nameSlot
+    nameSlot,
+    sectionLabelStatic,
+    channelsCollapsed
   };
   const defaultChannels = [
     {
@@ -253182,6 +253188,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       a: 1
     }));
     const [colorPickerChannel, setColorPickerChannel] = reactExports.useState(null);
+    const [legendOpen, setLegendOpen] = reactExports.useState(false);
     const closeColorPicker = reactExports.useCallback(() => {
       setColorPickerChannel(null);
       setColorPickerPos(null);
@@ -253216,13 +253223,34 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     let rowIdx = 0;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$7.channelsSection,
+      className: [
+        styles$7.channelsSection,
+        legendOpen ? null : styles$7.channelsCollapsed
+      ].filter(Boolean).join(" "),
       children: [
         jsxRuntimeExports.jsxs("div", {
           className: styles$7.channelsSectionHeader,
           children: [
+            jsxRuntimeExports.jsxs("button", {
+              type: "button",
+              className: `${minervaTheme.focusRing} ${styles$7.collapseToggle}`,
+              "aria-expanded": legendOpen,
+              onClick: () => {
+                if (legendOpen) closeColorPicker();
+                setLegendOpen((open) => !open);
+              },
+              children: [
+                jsxRuntimeExports.jsx(ChevronIcon, {
+                  direction: legendOpen ? "up" : "down"
+                }),
+                jsxRuntimeExports.jsx("span", {
+                  className: styles$7.sectionLabel,
+                  children: "Channels"
+                })
+              ]
+            }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$7.sectionLabel,
+              className: `${styles$7.sectionLabel} ${styles$7.sectionLabelStatic}`,
               children: "Channels"
             }),
             jsxRuntimeExports.jsx("div", {
@@ -253671,12 +253699,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-10-07T20:21:34.915Z");
+    const label2 = utcShort("2026-10-08T13:59:24.344Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$4.stamp,
       "aria-hidden": true,
-      title: "2026-10-07T20:21:34.915Z",
+      title: "2026-10-08T13:59:24.344Z",
       children: [
         "Updated ",
         label2,
