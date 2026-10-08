@@ -243,21 +243,24 @@ function noteLut() {
   for (const fn of lutListeners) fn();
 }
 
-/** In-progress class color. Painted over the stored view until the picker commits. */
+/** In-progress class color for one waypoint. Painted over that waypoint's view until the picker commits. */
 let classColorPreview: {
+  waypointId: string;
   featureTableId: string;
   name: string;
   color: Color;
 } | null = null;
 
 export function previewClassColor(
+  waypointId: string,
   featureTableId: string,
   name: string,
   color: Color,
 ): void {
   const prev = classColorPreview;
   if (
-    prev?.featureTableId === featureTableId &&
+    prev?.waypointId === waypointId &&
+    prev.featureTableId === featureTableId &&
     prev.name === name &&
     prev.color.r === color.r &&
     prev.color.g === color.g &&
@@ -265,7 +268,7 @@ export function previewClassColor(
   ) {
     return;
   }
-  classColorPreview = { featureTableId, name, color };
+  classColorPreview = { waypointId, featureTableId, name, color };
   noteLut();
 }
 
@@ -287,10 +290,14 @@ export function classViewFor(
 export function classColorsFor(
   featureTable: FeatureTable,
   view: ClassView | undefined,
+  waypointId?: string,
 ): Map<string, Color> {
   const colors = new Map(featureTable.nameColors.map((c) => [c.name, c.color]));
   for (const c of view?.colors ?? []) colors.set(c.name, c.color);
-  if (classColorPreview?.featureTableId === featureTable.id) {
+  if (
+    classColorPreview?.waypointId === waypointId &&
+    classColorPreview.featureTableId === featureTable.id
+  ) {
     colors.set(classColorPreview.name, classColorPreview.color);
   }
   return colors;
@@ -305,10 +312,11 @@ export function shownClassRows(
   featureTable: FeatureTable,
   view: ClassView | undefined,
   seed: number,
+  waypointId?: string,
 ): { name: string; color: Color }[] | undefined {
   const idx = peekClassIndex(featureTable.id);
   if (!idx) return undefined;
-  const colors = classColorsFor(featureTable, view);
+  const colors = classColorsFor(featureTable, view, waypointId);
   const rows: { name: string; color: Color }[] = [];
   const n = Math.min(idx.names.length, MAX_CLASS_NAMES);
   for (let i = 0; i < n; i++) {
@@ -368,12 +376,13 @@ export function gpuStyleForFeatureTable(
   featureTable: FeatureTable,
   view: ClassView | undefined,
   seed: number,
+  waypointId?: string,
 ): MaskGpuStyle | undefined {
   const idx = peekClassIndex(featureTable.id);
   if (idx === undefined) ensureIndex(featureTable);
   if (!idx) return undefined;
   const vis = view?.visibility;
-  const colors = classColorsFor(featureTable, view);
+  const colors = classColorsFor(featureTable, view, waypointId);
   const n = Math.min(idx.names.length, MAX_CLASS_NAMES);
   const palette = new Uint8Array((n + 1) * 4);
   for (let i = 0; i < n; i++) {

@@ -224,13 +224,21 @@ function useFeatureTableList(
       raw.length === 0 ? peekClassIndex(featureTableId)?.names : undefined;
     const source =
       names && names.length > 0 ? names.map((name) => ({ name })) : raw;
-    const colors = classColorsFor(featureTable, view);
+    const colors = classColorsFor(featureTable, view, waypoint?.id);
     return source.map((row) => ({
       name: row.name,
       color: colors.get(row.name),
       visible: classNameVisible(view?.visibility, row.name),
     }));
-  }, [featureTable, featureTableId, view, raw, ingestEpoch, lutEpoch]);
+  }, [
+    featureTable,
+    featureTableId,
+    view,
+    waypoint?.id,
+    raw,
+    ingestEpoch,
+    lutEpoch,
+  ]);
   const usingCache = raw.length === 0 && rows.length > 0;
 
   return {
@@ -488,23 +496,33 @@ function ClassViewList(props: {
   } | null>(null);
   const pickerRef = useRef(picker);
   pickerRef.current = picker;
-  const waypointIdRef = useRef(waypoint?.id);
-  waypointIdRef.current = waypoint?.id;
+  const waypointId = waypoint?.id;
+  // The waypoint the open picker belongs to. Updating it during render would
+  // commit a pending color onto the waypoint just switched to.
+  const waypointIdRef = useRef(waypointId);
   const commitRef = useRef(() => {});
   commitRef.current = () => {
     const current = pickerRef.current;
     if (!current) return;
     pickerRef.current = null;
-    const waypointId = waypointIdRef.current;
-    if (current.pending && waypointId) {
-      setClassColor(waypointId, featureTableId, current.name, current.pending);
+    const ownedId = waypointIdRef.current;
+    if (current.pending && ownedId) {
+      setClassColor(ownedId, featureTableId, current.name, current.pending);
     }
     clearClassColorPreview();
   };
 
+  useEffect(() => {
+    if (waypointIdRef.current === waypointId) return;
+    waypointIdRef.current = waypointId;
+    if (!pickerRef.current) return;
+    pickerRef.current = null;
+    setPicker(null);
+    clearClassColorPreview();
+  }, [waypointId]);
+
   const showBusy = list.loading && list.rows.length === 0;
   const fadeColors = list.fadeColors;
-  const waypointId = waypoint?.id;
   const readOnly = waypointId == null;
   const toggle = (name: string) => {
     if (waypointId) toggleClassVisible(waypointId, featureTableId, name);
@@ -649,7 +667,9 @@ function ClassViewList(props: {
             const b = Number.parseInt(raw.slice(4, 6), 16);
             if ([r, g, b].some((n) => Number.isNaN(n))) return;
             const color = { r, g, b };
-            previewClassColor(featureTableId, picker.name, color);
+            if (waypointId) {
+              previewClassColor(waypointId, featureTableId, picker.name, color);
+            }
             setPicker((p) => (p ? { ...p, hex: raw, pending: color } : p));
           }}
         />

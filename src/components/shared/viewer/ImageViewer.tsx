@@ -590,6 +590,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
             featureTable,
             classViewFor(activeWaypoint, featureTable.sourceChannelId),
             visualization.colorSeed ?? 0,
+            activeWaypoint?.id,
           )
         : undefined;
       // Without a style the shader falls back to per-cell random colors.

@@ -188,6 +188,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         featureTable,
         classViewFor(activeWaypoint, sc.id),
         viz.colorSeed ?? 0,
+        activeWaypoint?.id,
       );
       if (!rows) continue;
       out.push({
