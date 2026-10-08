@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DoRqfQRb.js","./pako.esm-KbdoS3Oq.js","./lerc-YXlXZ99B.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DgSV9SGU.js","./pako.esm-KbdoS3Oq.js","./lerc-CfTw4YnZ.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -76422,26 +76422,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-YWpMQb3-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-GW9MHcqB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CJlGtGN2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-o6dyXAhn.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-B-hkNCcD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DdkIXxTQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DoRqfQRb.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-B1YNOwP4.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-YXlXZ99B.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DgSV9SGU.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-KT_mea0f.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CfTw4YnZ.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-WoPPNicY.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-JIXLvToL.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-Bd91YnpZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CIO3ZXme.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -92859,12 +92859,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     for (const fn of lutListeners) fn();
   }
   let classColorPreview = null;
-  function previewClassColor(featureTableId, name2, color2) {
+  function previewClassColor(waypointId, featureTableId, name2, color2) {
     const prev = classColorPreview;
-    if ((prev == null ? void 0 : prev.featureTableId) === featureTableId && prev.name === name2 && prev.color.r === color2.r && prev.color.g === color2.g && prev.color.b === color2.b) {
+    if ((prev == null ? void 0 : prev.waypointId) === waypointId && prev.featureTableId === featureTableId && prev.name === name2 && prev.color.r === color2.r && prev.color.g === color2.g && prev.color.b === color2.b) {
       return;
     }
     classColorPreview = {
+      waypointId,
       featureTableId,
       name: name2,
       color: color2
@@ -92880,21 +92881,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     var _a2;
     return (_a2 = waypoint == null ? void 0 : waypoint.classViews) == null ? void 0 : _a2.find((v2) => v2.channelId === channelId);
   }
-  function classColorsFor(featureTable, view) {
+  function classColorsFor(featureTable, view, waypointId) {
     const colors = new Map(featureTable.nameColors.map((c2) => [
       c2.name,
       c2.color
     ]));
     for (const c2 of (view == null ? void 0 : view.colors) ?? []) colors.set(c2.name, c2.color);
-    if ((classColorPreview == null ? void 0 : classColorPreview.featureTableId) === featureTable.id) {
+    if ((classColorPreview == null ? void 0 : classColorPreview.waypointId) === waypointId && classColorPreview.featureTableId === featureTable.id) {
       colors.set(classColorPreview.name, classColorPreview.color);
     }
     return colors;
   }
-  function shownClassRows(featureTable, view, seed) {
+  function shownClassRows(featureTable, view, seed, waypointId) {
     const idx = peekClassIndex(featureTable.id);
     if (!idx) return void 0;
-    const colors = classColorsFor(featureTable, view);
+    const colors = classColorsFor(featureTable, view, waypointId);
     const rows2 = [];
     const n2 = Math.min(idx.names.length, MAX_CLASS_NAMES);
     for (let i2 = 0; i2 < n2; i2++) {
@@ -92927,12 +92928,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       lutPending.delete(featureTableId);
     });
   }
-  function gpuStyleForFeatureTable(featureTable, view, seed) {
+  function gpuStyleForFeatureTable(featureTable, view, seed, waypointId) {
     const idx = peekClassIndex(featureTable.id);
     if (idx === void 0) ensureIndex(featureTable);
     if (!idx) return void 0;
     const vis = view == null ? void 0 : view.visibility;
-    const colors = classColorsFor(featureTable, view);
+    const colors = classColorsFor(featureTable, view, waypointId);
     const n2 = Math.min(idx.names.length, MAX_CLASS_NAMES);
     const palette = new Uint8Array((n2 + 1) * 4);
     for (let i2 = 0; i2 < n2; i2++) {
@@ -93346,7 +93347,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const source2 = names && names.length > 0 ? names.map((name2) => ({
         name: name2
       })) : raw2;
-      const colors = classColorsFor(featureTable, view);
+      const colors = classColorsFor(featureTable, view, waypoint == null ? void 0 : waypoint.id);
       return source2.map((row2) => ({
         name: row2.name,
         color: colors.get(row2.name),
@@ -93356,6 +93357,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       featureTable,
       featureTableId,
       view,
+      waypoint == null ? void 0 : waypoint.id,
       raw2,
       ingestEpoch2,
       lutEpoch2
@@ -93541,23 +93543,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [picker, setPicker] = reactExports.useState(null);
     const pickerRef = reactExports.useRef(picker);
     pickerRef.current = picker;
-    const waypointIdRef = reactExports.useRef(waypoint == null ? void 0 : waypoint.id);
-    waypointIdRef.current = waypoint == null ? void 0 : waypoint.id;
+    const waypointId = waypoint == null ? void 0 : waypoint.id;
+    const waypointIdRef = reactExports.useRef(waypointId);
     const commitRef = reactExports.useRef(() => {
     });
     commitRef.current = () => {
       const current = pickerRef.current;
       if (!current) return;
       pickerRef.current = null;
-      const waypointId2 = waypointIdRef.current;
-      if (current.pending && waypointId2) {
-        setClassColor(waypointId2, featureTableId, current.name, current.pending);
+      const ownedId = waypointIdRef.current;
+      if (current.pending && ownedId) {
+        setClassColor(ownedId, featureTableId, current.name, current.pending);
       }
       clearClassColorPreview();
     };
+    reactExports.useEffect(() => {
+      if (waypointIdRef.current === waypointId) return;
+      waypointIdRef.current = waypointId;
+      if (!pickerRef.current) return;
+      pickerRef.current = null;
+      setPicker(null);
+      clearClassColorPreview();
+    }, [
+      waypointId
+    ]);
     const showBusy = list2.loading && list2.rows.length === 0;
     const fadeColors = list2.fadeColors;
-    const waypointId = waypoint == null ? void 0 : waypoint.id;
     const readOnly2 = waypointId == null;
     const toggle2 = (name2) => {
       if (waypointId) toggleClassVisible(waypointId, featureTableId, name2);
@@ -93704,7 +93715,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               g: g2,
               b: b2
             };
-            previewClassColor(featureTableId, picker.name, color2);
+            if (waypointId) {
+              previewClassColor(waypointId, featureTableId, picker.name, color2);
+            }
             setPicker((p2) => p2 ? {
               ...p2,
               hex: raw2,
@@ -253939,7 +253952,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const sc2 = findSourceChannel(sourceChannels, featureTable.sourceChannelId);
         if (!sc2 || !isMaskChannel(sc2)) continue;
         const viz = effectiveMaskVisualizationForSource(sc2, docChannelGroups, activeChannelGroupId);
-        const rows2 = shownClassRows(featureTable, classViewFor(activeWaypoint, sc2.id), viz.colorSeed ?? 0);
+        const rows2 = shownClassRows(featureTable, classViewFor(activeWaypoint, sc2.id), viz.colorSeed ?? 0, activeWaypoint == null ? void 0 : activeWaypoint.id);
         if (!rows2) continue;
         out.push({
           channelId: sc2.id,
@@ -254235,12 +254248,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   const BuildStamp = () => {
-    const label2 = utcShort("2026-10-08T14:29:01.953Z");
+    const label2 = utcShort("2026-10-08T14:50:53.161Z");
     if (!label2) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$4.stamp,
       "aria-hidden": true,
-      title: "2026-10-08T14:29:01.953Z",
+      title: "2026-10-08T14:50:53.161Z",
       children: [
         "Updated ",
         label2,
@@ -256109,7 +256122,7 @@ uniform classStyleUniforms {
         } : visualization;
         const orientation = orientationForImage(images, sc2.imageId, imageOrientationPreview);
         const featureTable = featureTables.find((c2) => c2.sourceChannelId === sc2.id);
-        const classStyle = featureTable ? gpuStyleForFeatureTable(featureTable, classViewFor(activeWaypoint, featureTable.sourceChannelId), visualization.colorSeed ?? 0) : void 0;
+        const classStyle = featureTable ? gpuStyleForFeatureTable(featureTable, classViewFor(activeWaypoint, featureTable.sourceChannelId), visualization.colorSeed ?? 0, activeWaypoint == null ? void 0 : activeWaypoint.id) : void 0;
         const layer2 = createMaskTileLayer({
           id: `mask-channel-${sc2.id}`,
           loader: entry.loader,
@@ -256833,23 +256846,54 @@ uniform classStyleUniforms {
   function createOmeDecodePool() {
     return new Pool(void 0, () => new WorkerWrapper());
   }
-  function expandCubeRootTileData(data2) {
+  const CUBE_ROOT_U8_TO_U16 = Uint16Array.from({
+    length: 256
+  }, (_2, b2) => decodeCubeRootU8ToU16(b2));
+  const CONTRAST_U8_TO_U16 = Uint16Array.from({
+    length: 256
+  }, (_2, b2) => b2 << 8);
+  function expandThroughLut(data2, lut) {
     const out = new Uint16Array(data2.length);
     for (let i2 = 0; i2 < data2.length; i2++) {
-      out[i2] = decodeCubeRootU8ToU16(data2[i2]);
+      out[i2] = lut[data2[i2] & 255];
     }
     return out;
   }
-  function expandContrastBakedTileData(data2) {
-    const out = new Uint16Array(data2.length);
-    for (let i2 = 0; i2 < data2.length; i2++) {
-      out[i2] = (data2[i2] & 255) << 8;
+  async function readTileThroughLut(plane, args, lut) {
+    var _a2;
+    const source2 = plane;
+    if (!source2._indexer || !source2._getTileExtent || !source2.pool) return null;
+    try {
+      const image2 = await source2._indexer(args.selection);
+      if (!image2.isTiled || image2.getTileWidth() !== source2.tileSize || image2.getTileHeight() !== source2.tileSize || image2.getSamplesPerPixel() !== 1 || image2.getBitsPerSample(0) !== 8) {
+        return null;
+      }
+      const { width, height } = source2._getTileExtent(args.x, args.y);
+      const tile = await image2.getTileOrStrip(args.x, args.y, 0, source2.pool);
+      if ((_a2 = args.signal) == null ? void 0 : _a2.aborted) throw SIGNAL_ABORTED;
+      const src = new Uint8Array(tile.data);
+      const stride = source2.tileSize;
+      const out = new Uint16Array(width * height);
+      for (let row2 = 0; row2 < height; row2++) {
+        const from = row2 * stride;
+        const to = row2 * width;
+        for (let col = 0; col < width; col++) {
+          out[to + col] = lut[src[from + col]];
+        }
+      }
+      return {
+        data: out,
+        width,
+        height
+      };
+    } catch (err2) {
+      if (err2 === SIGNAL_ABORTED) throw err2;
+      return null;
     }
-    return out;
   }
   function wrapOmeLoaderJpegExport(loader, transfer) {
     var _a2;
-    const expand = transfer === "cube-root" ? expandCubeRootTileData : expandContrastBakedTileData;
+    const lut = transfer === "cube-root" ? CUBE_ROOT_U8_TO_U16 : CONTRAST_U8_TO_U16;
     const data2 = (_a2 = loader.data) == null ? void 0 : _a2.map((plane) => {
       var _a3;
       const getTile = (_a3 = plane.getTile) == null ? void 0 : _a3.bind(plane);
@@ -256858,11 +256902,12 @@ uniform classStyleUniforms {
         ...plane,
         dtype: "Uint16",
         getTile: async (args) => {
+          const fast = await readTileThroughLut(plane, args, lut);
+          if (fast) return fast;
           const tile = await getTile(args);
-          const raw2 = tile.data;
           return {
             ...tile,
-            data: expand(raw2)
+            data: expandThroughLut(tile.data, lut)
           };
         }
       };
