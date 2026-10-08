@@ -4524,9 +4524,9 @@ async function encodeRgbaToJpeg(width, height, rgba, quality, colorSpace = MOZJP
     progressive: false,
     arithmetic: false,
     optimize_coding: false,
-    // 4:4:4. Packed RGB TIFF tags declare YCbCrSubSampling [1, 1].
+    // 4:2:0. Packed RGB TIFF tags declare YCbCrSubSampling [2, 2].
     auto_subsample: false,
-    chroma_subsample: 1
+    chroma_subsample: 2
   });
 }
 async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
