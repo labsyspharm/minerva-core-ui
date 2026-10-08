@@ -3,8 +3,10 @@ import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { encodeCubeRootU16ToU8 } from "./cubeRootEncoding";
 import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
 
-/** MozJpegColorSpace.GRAYSCALE — const enum is erased at runtime. */
+/** MozJpegColorSpace — const enum is erased at runtime. */
 const MOZJPEG_COLORSPACE_GRAYSCALE = 1;
+/** RGB colorspace output does not decode in geotiff; YCbCr does. */
+const MOZJPEG_COLORSPACE_YCBCR = 3;
 
 /** Historical 0–1 scale (Canvas); MozJPEG uses 0–100 via {@link mozJpegQuality}. */
 export const JPEG_EXPORT_QUALITY = 0.95;
@@ -111,16 +113,20 @@ async function encodeRgbaToJpeg(
   height: number,
   rgba: Uint8ClampedArray<ArrayBuffer>,
   quality: number,
+  colorSpace = MOZJPEG_COLORSPACE_GRAYSCALE,
 ): Promise<ArrayBuffer> {
   await ensureJpegEncoderReady();
   const imageData = new ImageData(rgba, width, height);
   return encodeJpeg(imageData, {
     quality: mozJpegQuality(quality),
-    color_space: MOZJPEG_COLORSPACE_GRAYSCALE,
+    color_space: colorSpace,
     baseline: true,
     progressive: false,
     arithmetic: false,
     optimize_coding: false,
+    // 4:4:4. Packed RGB TIFF tags declare YCbCrSubSampling [1, 1].
+    auto_subsample: false,
+    chroma_subsample: 1,
   });
 }
 
@@ -151,6 +157,38 @@ export async function encodeGrayscaleJpeg(
   }
   const padded = padGrayscaleRgbaToTile(rgba, width, height, padTileSize);
   return encodeRgbaToJpeg(padTileSize, padTileSize, padded, quality);
+}
+
+/** Per-sample contrast window for {@link encodeRgbJpeg}: [R, G, B] of [lower, upper]. */
+export type RgbLimits = readonly (readonly [number, number])[];
+
+/**
+ * Encode interleaved RGB (brightfield) as a 3-component YCbCr JPEG, windowing
+ * each sample to 8-bit. Edge tiles pad with white so the margin reads as glass.
+ */
+export async function encodeRgbJpeg(
+  width: number,
+  height: number,
+  pixels: ArrayLike<number>,
+  limits: RgbLimits,
+  quality: number,
+  padTileSize?: number,
+): Promise<ArrayBuffer> {
+  const outW = padTileSize ?? width;
+  const outH = padTileSize ?? height;
+  const rgba = new Uint8ClampedArray(new ArrayBuffer(outW * outH * 4)).fill(
+    255,
+  ) as Uint8ClampedArray<ArrayBuffer>;
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const s = (row * width + col) * 3;
+      const o = (row * outW + col) * 4;
+      for (let c = 0; c < 3; c++) {
+        rgba[o + c] = clampValue(pixels[s + c], limits[c][0], limits[c][1]);
+      }
+    }
+  }
+  return encodeRgbaToJpeg(outW, outH, rgba, quality, MOZJPEG_COLORSPACE_YCBCR);
 }
 
 export function typedArrayCtorName(data: ArrayLike<number>): string {

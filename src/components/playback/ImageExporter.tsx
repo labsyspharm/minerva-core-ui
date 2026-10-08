@@ -473,7 +473,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
           imagesAtStart,
           channelGroupsSnapshot,
         );
-        const remappedImages = await exportJpegOmeTiffStory({
+        const exported = await exportJpegOmeTiffStory({
           directory: directory_handle,
           omeLoaderEntries: loaderEntries,
           images: imagesSnapshot,
@@ -496,7 +496,8 @@ export const ImageExporter = (props: ImageExporterProps) => {
         const baseDoc = useDocumentStore.getState().toDocumentData();
         const doc = {
           ...baseDoc,
-          images: remappedImages,
+          images: exported.images,
+          channelGroups: exported.channelGroups,
           metadata: {
             ...baseDoc.metadata,
             imageSource: nextSource,
@@ -507,7 +508,8 @@ export const ImageExporter = (props: ImageExporterProps) => {
         });
         setSkippedTables(written.skippedFeatureTables);
         const store = useDocumentStore.getState();
-        store.setImages(remappedImages);
+        store.setImages(exported.images);
+        store.setChannelGroups(exported.channelGroups);
         store.setMetadata({
           imageSource: nextSource,
         });
@@ -737,8 +739,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
           <div className={styles.exportMessage}>
             <div>Export JPEG OME-TIFF</div>
             <div className={styles.exportHint}>
-              JPEG brightfield is copied. Other brightfield is compressed.
-              Fluorescence is cube-root.
+              Brightfield is re-encoded as RGB. Fluorescence is cube-root.
             </div>
           </div>
           <div className={styles.confirmActions}>

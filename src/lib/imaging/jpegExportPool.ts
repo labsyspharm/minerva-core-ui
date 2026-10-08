@@ -2,7 +2,9 @@ import type { JpegExportTransfer } from "./cubeRootEncoding";
 import {
   copyPixelBuffer,
   encodeGrayscaleJpeg,
+  encodeRgbJpeg,
   JPEG_EXPORT_QUALITY,
+  type RgbLimits,
   typedArrayCtorName,
 } from "./jpegExportEncode";
 import JpegExportWorker from "./workers/jpegExport.worker?worker";
@@ -108,6 +110,7 @@ export class JpegExportPool {
     quality = JPEG_EXPORT_QUALITY,
     transfer: JpegExportTransfer = "contrast",
     padTileSize?: number,
+    rgbLimits?: RgbLimits,
   ): Promise<ArrayBuffer> {
     const workerWrappersPromise = this.workerWrappers;
     if (!workerWrappersPromise) {
@@ -128,6 +131,7 @@ export class JpegExportPool {
         quality,
         transfer,
         padTileSize,
+        rgbLimits,
       },
       [buffer],
     );
@@ -171,6 +175,8 @@ export type EncodeTilePixelsIn = {
   quality?: number;
   transfer?: JpegExportTransfer;
   padTileSize?: number;
+  /** Set for an interleaved RGB tile; `lowerLimit`/`upperLimit`/`transfer` are ignored. */
+  rgbLimits?: RgbLimits;
 };
 
 /**
@@ -189,6 +195,7 @@ export async function encodeTileJpeg(
     quality = JPEG_EXPORT_QUALITY,
     transfer = "contrast",
     padTileSize,
+    rgbLimits,
   } = input;
   const pool = getJpegExportPool();
   if (pool) {
@@ -204,6 +211,7 @@ export async function encodeTileJpeg(
         quality,
         transfer,
         padTileSize,
+        rgbLimits,
       );
     } catch (err) {
       console.warn(
@@ -211,6 +219,9 @@ export async function encodeTileJpeg(
         err,
       );
     }
+  }
+  if (rgbLimits) {
+    return encodeRgbJpeg(width, height, data, rgbLimits, quality, padTileSize);
   }
   return encodeGrayscaleJpeg(
     width,

@@ -638,8 +638,11 @@ export async function hydrateFeatureTables(
     if (source.kind === "url") {
       try {
         const bytes = await fetchTableBytes(source.url, opts?.documentUrl);
-        await ingestFeatureTable(featureTable.id, bytes);
+        const ingested = await ingestFeatureTable(featureTable.id, bytes);
         noteLut();
+        if (featureTable.nameColors.length === 0) {
+          scheduleClassPalette(featureTable.id, ingested.names);
+        }
       } catch (e) {
         console.error("[featureTable] hydrate failed", featureTable.id, e);
       }

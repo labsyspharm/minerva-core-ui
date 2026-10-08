@@ -95,13 +95,15 @@ export function exportTransferForImage(
 }
 
 /**
- * JPEG OME-TIFF hydrate wrap. `null` means do not wrap (masks).
- * RGB is contrast even when the story `imageSource` is cube-root.
+ * JPEG OME-TIFF hydrate wrap. `null` means do not wrap (masks, packed RGB).
+ * Planar RGB is contrast even when the story `imageSource` is cube-root.
+ * Packed RGB stays uint8: Viv uploads interleaved tiles as rgba8unorm.
  */
 export function hydrateJpegTransferForImage(
   image: TransferImage,
   storyTransfer: JpegExportTransfer,
 ): JpegExportTransfer | null {
+  if (image.channels?.some((c) => c.samples === 3)) return null;
   if (
     resolveImageContentRole({
       contentRole: image.contentRole,
