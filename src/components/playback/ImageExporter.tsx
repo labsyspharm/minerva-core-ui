@@ -53,7 +53,6 @@ type Progress = {
   completed: number;
   total: number;
   done: boolean;
-  startedAt: number | null;
 };
 
 /** Progress re-renders at most this often; tiles finish far faster. */
@@ -68,17 +67,23 @@ const formatMinutesLeft = (ms: number): string => {
   return rm > 0 ? `~${h}h ${rm}m left` : `~${h}h left`;
 };
 
-/** Remaining time from average tile throughput so far; null until first tile finishes. */
+/** Recent completions only. Startup and the first tiles are slower than the run. */
+const RATE_WINDOW_MS = 5_000;
+
+type RateSample = { at: number; completed: number };
+
 const estimateRemainingMs = (
-  completed: number,
+  samples: readonly RateSample[],
   total: number,
-  startedAt: number | null,
-  now: number,
 ): number | null => {
-  if (startedAt === null || completed <= 0 || total <= completed) return null;
-  const elapsed = now - startedAt;
-  if (elapsed <= 0) return null;
-  return ((total - completed) * elapsed) / completed;
+  if (samples.length < 2) return null;
+  const base = samples[0];
+  const tip = samples[samples.length - 1];
+  const elapsed = tip.at - base.at;
+  const gained = tip.completed - base.completed;
+  if (elapsed < RATE_WINDOW_MS || gained <= 0 || total <= tip.completed)
+    return null;
+  return ((total - tip.completed) * elapsed) / gained;
 };
 
 const toFilename = (index: Index) => {
@@ -312,9 +317,8 @@ export const ImageExporter = (props: ImageExporterProps) => {
     completed: 0,
     total: 0,
     done: false,
-    startedAt: null,
   });
-  const [nowMs, setNowMs] = useState(() => performance.now());
+  const rateSamplesRef = React.useRef<RateSample[]>([]);
   const [cRange, setCRange] = useState<Index[] | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   /** Masks whose feature table was not loaded, so the export left it out. */
@@ -402,8 +406,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     if (mode !== "remote-url") return;
     if (exportError) return;
     let cancelled = false;
-    const wallStart = performance.now();
-    setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
+    setProgress({ completed: 0, total: 1, done: false });
     void (async () => {
       try {
         const doc = useDocumentStore.getState().toDocumentData();
@@ -424,7 +427,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
           completed: 1,
           total: 1,
           done: true,
-          startedAt: wallStart,
         });
       } catch (e) {
         if (cancelled) return;
@@ -464,11 +466,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     const channelGroupsSnapshot = docAtStart.channelGroups;
     const imagesAtStart = docAtStart.images;
 
-    setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
-
-    const etaInterval = window.setInterval(() => {
-      if (!cancelled) setNowMs(performance.now());
-    }, 1000);
+    setProgress({ completed: 0, total: 1, done: false });
 
     let lastProgressAt = 0;
     void (async () => {
@@ -494,7 +492,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
               completed,
               total: Math.max(total, 1),
               done: false,
-              startedAt: wallStart,
             });
           },
         });
@@ -540,7 +537,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
 
     return () => {
       cancelled = true;
-      window.clearInterval(etaInterval);
       if (!finishedOk) abort.abort();
     };
   }, [mode, exportArmed, exportError, directory_handle]);
@@ -564,11 +560,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     const total = indices.length;
     const wallStart = performance.now();
 
-    setProgress({ completed: 0, total, done: false, startedAt: wallStart });
-
-    const etaInterval = window.setInterval(() => {
-      if (!cancelled) setNowMs(performance.now());
-    }, 1000);
+    setProgress({ completed: 0, total, done: false });
 
     const run = async () => {
       let nextIndex = 0;
@@ -607,7 +599,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
             completed,
             total,
             done: completed >= total,
-            startedAt: wallStart,
           });
         }
       };
@@ -657,7 +648,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
         completed: total,
         total,
         done: true,
-        startedAt: wallStart,
       });
     };
 
@@ -669,13 +659,22 @@ export const ImageExporter = (props: ImageExporterProps) => {
 
     return () => {
       cancelled = true;
-      window.clearInterval(etaInterval);
       // Avoid aborting the shared Viv loader after a successful export.
       if (!finishedOk) abort.abort();
     };
   }, [state, cRange, exportError, directory_handle, mode, exportArmed]);
 
-  const { completed, total, done, startedAt } = progress;
+  const { completed, total, done } = progress;
+  const rateSamples = rateSamplesRef.current;
+  if (done || completed <= 0) {
+    rateSamples.length = 0;
+  } else if (rateSamples[rateSamples.length - 1]?.completed !== completed) {
+    const at = performance.now();
+    rateSamples.push({ at, completed });
+    while (rateSamples.length > 2 && at - rateSamples[1].at >= RATE_WINDOW_MS) {
+      rateSamples.shift();
+    }
+  }
   let ratio = done ? 1 : 0;
   if (!done && total > 1) {
     ratio = completed / total;
@@ -685,12 +684,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     ratio = 0;
   }
 
-  const remainingMs = estimateRemainingMs(
-    completed,
-    total,
-    startedAt,
-    Math.max(nowMs, performance.now()),
-  );
+  const remainingMs = estimateRemainingMs(rateSamples, total);
   const percentLabel = `${(ratio * 100).toFixed(3)}%`;
   let etaLabel = "";
   if (done) {
@@ -747,7 +741,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
           <div className={styles.exportMessage}>
             <div>Export JPEG OME-TIFF</div>
             <div className={styles.exportHint}>
-              Brightfield is re-encoded as RGB. Fluorescence is cube-root.
+              Brightfield: RGB. Fluorescence: cube-root.
             </div>
           </div>
           <div className={styles.confirmActions}>

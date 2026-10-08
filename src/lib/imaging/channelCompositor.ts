@@ -162,32 +162,24 @@ export function visibilitiesForRgbUnit(args: {
   return { channelGroupRowVisibilities, channelVisibilities };
 }
 
-/** Groups whose rows may paint. A selected group does not include the others. */
+/**
+ * Every group's visible rows may paint. The active group is first so its
+ * color wins when the same source is showing in more than one group.
+ */
 function groupsOnView(
   activeGroup: ChannelGroup | undefined,
   channelGroups: readonly ChannelGroup[],
 ): readonly ChannelGroup[] {
-  return activeGroup ? [activeGroup] : channelGroups;
+  if (!activeGroup) return channelGroups;
+  return [activeGroup, ...channelGroups.filter((g) => g.id !== activeGroup.id)];
 }
 
-/** A selected group paints only images it has at least one row from. */
-function onImagesInGroup(
-  channels: readonly Channel[],
-  activeGroup: ChannelGroup | undefined,
-): Channel[] {
-  if (!activeGroup) return [...channels];
-  const memberIds = new Set(activeGroup.channels.map((gc) => gc.channelId));
-  const imageIds = new Set(
-    channels.filter((sc) => memberIds.has(sc.id)).map((sc) => sc.imageId),
-  );
-  return channels.filter((sc) => imageIds.has(sc.imageId));
-}
-
-/** Intensity layers sent to Viv. The selected group supplies its own rows and colors. */
+/** Intensity layers sent to Viv. Visible rows from every group; active group color wins ties. */
 export function buildCompositedIntensityLayers(
   args: CompositedLayersArgs,
 ): CompositedIntensityLayer[] {
   const {
+    onLoader,
     activeGroup,
     channelGroups = [],
     stackVisibilities,
@@ -195,7 +187,6 @@ export function buildCompositedIntensityLayers(
     hasVisibilityMap,
     requireColor = true,
   } = args;
-  const onLoader = onImagesInGroup(args.onLoader, activeGroup);
 
   const viewGroups = groupsOnView(activeGroup, channelGroups);
   const groupedIds = sourceIdsInAnyGroup(channelGroups);
@@ -203,9 +194,8 @@ export function buildCompositedIntensityLayers(
 
   if (rgbSource) {
     const intensity = onLoader.filter(isImageChannel);
-    const viewIds = sourceIdsInAnyGroup(viewGroups);
     const unitOn = intensity.every((sc) =>
-      viewIds.has(sc.id)
+      groupedIds.has(sc.id)
         ? isDisplayedViaGroupRow(sc.id, viewGroups, groupRowVisibilities)
         : !hasVisibilityMap || isStackVisible(stackVisibilities, sc.id),
     );
@@ -319,33 +309,18 @@ export function vivIntensityCapExceeded(
 
 export function isMaskSourceRendered(args: {
   sc: Channel;
-  /** All document channels; resolves which images the active group includes. */
-  channels: readonly Channel[];
   channelGroups?: ChannelGroup[];
-  /** When set, only this group's rows can show the mask. */
-  activeGroup?: ChannelGroup;
   stackVisibilities: Record<string, boolean>;
   groupRowVisibilities: Record<string, boolean>;
 }): boolean {
   const {
     sc,
-    channels,
     channelGroups = [],
-    activeGroup,
     stackVisibilities,
     groupRowVisibilities,
   } = args;
-  if (
-    activeGroup &&
-    !onImagesInGroup(channels, activeGroup).some(
-      (c) => c.imageId === sc.imageId,
-    )
-  ) {
-    return false;
-  }
-  const viewGroups = groupsOnView(activeGroup, channelGroups);
   return (
-    isDisplayedViaGroupRow(sc.id, viewGroups, groupRowVisibilities) ||
+    isDisplayedViaGroupRow(sc.id, channelGroups, groupRowVisibilities) ||
     (!sourceChannelInAnyGroup(channelGroups, sc.id) &&
       isStackVisible(stackVisibilities, sc.id))
   );

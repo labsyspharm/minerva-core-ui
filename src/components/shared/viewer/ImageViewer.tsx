@@ -547,9 +547,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       if (!isMaskChannel(sc)) continue;
       const rendered = isMaskSourceRendered({
         sc,
-        channels,
         channelGroups,
-        activeGroup: channelGroups.find((g) => g.id === activeChannelGroupId),
         stackVisibilities: channelVisibilities ?? {},
         groupRowVisibilities: channelGroupRowVisibilities,
       });
@@ -621,19 +619,28 @@ export const ImageViewer = (props: ImageViewerProps) => {
     featureTableLutEpoch,
   ]);
 
-  // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last
-  // idle snapshot (overlays / Zustand). `orthoSeed` matches it except during a
-  // waypoint fly, when the seed carries transition props.
+  // Fit the whole image. Pyramid depth says nothing about size on screen:
+  // some files keep halving down to a few pixels.
   const fitViewState = useMemo(() => {
-    const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
+    const { width, height } = viewportSize;
+    const zoom =
+      frame && frame.worldWidth > 0 && frame.worldHeight > 0 && width > 0
+        ? Math.log2(
+            0.95 *
+              Math.min(width / frame.worldWidth, height / frame.worldHeight),
+          )
+        : 0;
     return withOrthoZoom({
-      zoom: -n_levels,
+      zoom,
       target: frame
         ? [frame.worldWidth / 2, frame.worldHeight / 2, 0]
         : [0, 0, 0],
     });
-  }, [firstLoader, frame]);
+  }, [frame, viewportSize]);
 
+  // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last
+  // idle snapshot (overlays / Zustand). `orthoSeed` matches it except during a
+  // waypoint fly, when the seed carries transition props.
   const [viewState, setViewState] =
     useState<OrthographicViewState>(fitViewState);
   const [orthoSeed, setOrthoSeed] =

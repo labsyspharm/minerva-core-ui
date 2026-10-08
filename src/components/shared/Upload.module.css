@@ -322,9 +322,12 @@
   inset: 0;
   z-index: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   padding: 12px;
+  text-align: center;
   background: color-mix(
     in srgb,
     var(--minerva-danger-surface) 88%,
@@ -333,12 +336,38 @@
   border: 1px solid var(--minerva-danger-border);
 }
 
+.fileAccessName {
+  max-width: 100%;
+  font-size: var(--minerva-size);
+  line-height: 1.3;
+  word-break: break-word;
+  color: var(--minerva-danger);
+}
+
 .fileAccessAction {
   color: var(--minerva-danger);
 }
 
 .fileAccessAction:hover:not(:disabled) {
   background: var(--minerva-danger-wash);
+}
+
+.pointBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.pointPopup {
+  position: fixed;
+  z-index: 9999;
+  width: 320px;
+  background: var(--minerva-paper);
 }
 
 .imageCardHeader {

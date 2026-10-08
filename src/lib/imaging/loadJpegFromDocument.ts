@@ -73,6 +73,13 @@ export function jpegSourceNeedsLocalRoot(url: string): boolean {
   );
 }
 
+/** OME-TIFF path beside the story JSON. The browser cannot read it until the user picks the file. */
+export function isRelativeOmeTiffUrl(url: string): boolean {
+  const u = url.trim();
+  if (!u || /^https?:\/\//i.test(u) || u.startsWith("blob:")) return false;
+  return /\.tiff?$/i.test(u);
+}
+
 function channelFoldersEqual(
   a: Record<number, string> | undefined,
   b: Record<number, string> | undefined,

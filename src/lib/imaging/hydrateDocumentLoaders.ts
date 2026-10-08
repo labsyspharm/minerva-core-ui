@@ -10,6 +10,7 @@ import {
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import {
   type GroupLike,
+  isRelativeOmeTiffUrl,
   jpegLoaderEntriesFromImages,
 } from "@/lib/imaging/loadJpegFromDocument";
 import { getFileHandle } from "@/lib/persistence/fileHandles";
@@ -135,6 +136,7 @@ export async function hydrateDocumentLoaders(
     if (im.source.kind === "jpeg") continue;
     switch (im.source.kind) {
       case "url": {
+        if (isRelativeOmeTiffUrl(im.source.url)) break;
         try {
           const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
             kind: "url",
