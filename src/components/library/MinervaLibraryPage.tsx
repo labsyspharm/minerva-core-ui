@@ -7,13 +7,16 @@ import type {
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
 import { useClickOutside } from "@/components/shared/useClickOutside";
-import { toFile } from "@/lib/imaging/filesystem";
+import { hasDirectoryPickerAccess, toFile } from "@/lib/imaging/filesystem";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
-import { importStoryJsonFromPicker } from "@/lib/storyExport/importStoryFolder";
+import {
+  importStoryFolderFromPicker,
+  importStoryJsonFromPicker,
+} from "@/lib/storyExport/importStoryFolder";
 import { rootRouteApi } from "@/router/appRouter";
 import styles from "./MinervaLibraryPage.module.css";
 
@@ -314,22 +317,25 @@ export function MinervaLibraryPage() {
     [goToStory, openNewStory],
   );
 
-  const handleImport = React.useCallback(async () => {
-    setAddOpen(false);
-    setShelfBusy(true);
-    setError(null);
-    try {
-      useAppStore.getState().resetStoryViewerSession();
-      goToStory(await importStoryJsonFromPicker());
-    } catch (e: unknown) {
-      // AbortError = user cancelled the picker; finally still clears busy.
-      if (!(e instanceof DOMException && e.name === "AbortError")) {
-        setError(e instanceof Error ? e.message : "Could not import story");
+  const handleImport = React.useCallback(
+    async (importStory: () => Promise<string>) => {
+      setAddOpen(false);
+      setShelfBusy(true);
+      setError(null);
+      try {
+        useAppStore.getState().resetStoryViewerSession();
+        goToStory(await importStory());
+      } catch (e: unknown) {
+        // AbortError = user cancelled the picker; finally still clears busy.
+        if (!(e instanceof DOMException && e.name === "AbortError")) {
+          setError(e instanceof Error ? e.message : "Could not import story");
+        }
+      } finally {
+        setShelfBusy(false);
       }
-    } finally {
-      setShelfBusy(false);
-    }
-  }, [goToStory]);
+    },
+    [goToStory],
+  );
 
   const handleDelete = React.useCallback(
     (id: string, title: string) => {
@@ -402,10 +408,25 @@ export function MinervaLibraryPage() {
                         role="menuitem"
                         className={minervaTheme.menuItem}
                         disabled={shelfBusy}
-                        onClick={() => void handleImport()}
+                        onClick={() =>
+                          void handleImport(importStoryJsonFromPicker)
+                        }
                       >
                         Import story
                       </button>
+                      {hasDirectoryPickerAccess() ? (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={minervaTheme.menuItem}
+                          disabled={shelfBusy}
+                          onClick={() =>
+                            void handleImport(importStoryFolderFromPicker)
+                          }
+                        >
+                          Import folder
+                        </button>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>

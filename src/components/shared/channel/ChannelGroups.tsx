@@ -10,29 +10,15 @@ import styles from "./ChannelGroups.module.css";
 
 const GroupRow = (props: { group: ChannelGroup }) => {
   const { group } = props;
-  const { name } = group;
-
-  const { setActiveChannelGroup } = useAppStore();
-  const docChannelGroups = useDocumentStore((s) => s.channelGroups);
-  const row_group = React.useMemo(
-    () =>
-      docChannelGroups.find((grp) => grp.name === name) || docChannelGroups[0],
-    [docChannelGroups, name],
-  );
-
-  const toGroup = () => {
-    if (row_group) {
-      setActiveChannelGroup(row_group.id);
-    }
-  };
+  const showOnlyChannelGroup = useAppStore((s) => s.showOnlyChannelGroup);
 
   return (
     <button
       type="button"
       className={`${minervaTheme.focusRing} ${styles.groupAltRow}`}
-      onClick={toGroup}
+      onClick={() => showOnlyChannelGroup(group.id)}
     >
-      {name}
+      {group.name}
     </button>
   );
 };

@@ -1,5 +1,4 @@
-import type { TiffPixelSource } from "@hms-dbmi/viv";
-import { getImageSize } from "@hms-dbmi/viv";
+import { getImageSize, TiffPixelSource } from "@hms-dbmi/viv";
 import {
   effectiveChannelKind,
   isRgbDisplayImage,
@@ -110,6 +109,8 @@ export type BuildOmeTiffXmlOpts = {
   pixelType: string;
   significantBits: number;
   pixels?: OmePixelsMeta | null;
+  /** 3 for packed (interleaved) RGB in one IFD. */
+  samplesPerPixel?: 1 | 3;
 };
 
 /**
@@ -126,8 +127,9 @@ export function buildOmeTiffXml(opts: BuildOmeTiffXmlOpts): string {
     pixelType,
     significantBits,
     pixels,
+    samplesPerPixel = 1,
   } = opts;
-  const sizeC = channels.length;
+  const sizeC = channels.length * samplesPerPixel;
 
   const channelXml = channels
     .map((ch, i) => {
@@ -140,7 +142,7 @@ export function buildOmeTiffXml(opts: BuildOmeTiffXmlOpts): string {
         typeof ch.color.b === "number"
           ? ` Color="${omeColorInt({ r: ch.color.r, g: ch.color.g, b: ch.color.b })}"`
           : "";
-      return `<Channel ID="${id}" Name="${chName}" SamplesPerPixel="1"${colorAttr}/>`;
+      return `<Channel ID="${id}" Name="${chName}" SamplesPerPixel="${samplesPerPixel}"${colorAttr}/>`;
     })
     .join("");
 
@@ -171,7 +173,7 @@ export function buildOmeTiffXml(opts: BuildOmeTiffXmlOpts): string {
     `<Image ID="Image:0" Name="${escapeXmlAttr(imageName)}">` +
     `<Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="${escapeXmlAttr(pixelType)}"` +
     ` SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1"` +
-    ` SignificantBits="${significantBits}" Interleaved="false" BigEndian="false"${physicalAttrs}>` +
+    ` SignificantBits="${significantBits}" Interleaved="${samplesPerPixel > 1}" BigEndian="false"${physicalAttrs}>` +
     `${channelXml}${tiffDataXml}` +
     `</Pixels></Image></OME>`
   );
@@ -460,6 +462,22 @@ export function planeLevels(loaderData: LoaderPlane[]): OmeExportLevelSize[] {
         : JPEG_PYRAMID_TILE_SIZE;
     return { width, height, tileSize };
   });
+}
+
+/** JPEG export tile edge. Every tile costs a read, decode, encode and write. */
+const EXPORT_TILE_SIZE = 512;
+
+/** {@link planeLevels} as the JPEG export writes them: TIFF tiles grow to 512px. */
+export function exportPlaneLevels(
+  loaderData: LoaderPlane[],
+): OmeExportLevelSize[] {
+  return planeLevels(loaderData).map((level, i) => ({
+    ...level,
+    tileSize:
+      loaderData[i] instanceof TiffPixelSource
+        ? Math.max(EXPORT_TILE_SIZE, level.tileSize)
+        : level.tileSize,
+  }));
 }
 
 export function tileCountForLevels(

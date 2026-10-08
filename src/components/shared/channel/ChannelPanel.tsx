@@ -1,6 +1,14 @@
 import type { ReactNode } from "react";
 import * as React from "react";
 import {
+  classViewFor,
+  getFeatureTableIngestEpoch,
+  getFeatureTableLutEpoch,
+  shownClassRows,
+  subscribeFeatureTableIngest,
+  subscribeFeatureTableLut,
+} from "@/lib/featureTable";
+import {
   applyStackVisibilities,
   isStackVisible,
   sourceChannelInAnyGroup,
@@ -13,6 +21,10 @@ import {
   isMaskChannel,
   isRgbDisplayChannel,
 } from "@/lib/imaging/channelKind";
+import {
+  effectiveMaskVisualizationForSource,
+  rgbToHex,
+} from "@/lib/imaging/sourceChannelStyle";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { ChannelGroup, Image } from "@/lib/stores/documentStore";
 import {
@@ -23,6 +35,8 @@ import {
 import { ChannelGroups } from "./ChannelGroups";
 import {
   ChannelLegend,
+  ClassLegend,
+  type ClassLegendSection,
   type LegendChannel,
   type LegendEntry,
   type LegendSection,
@@ -130,6 +144,73 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     docChannelGroups,
     activeChannelGroupId,
     channelVisibilities,
+  ]);
+
+  const featureTables = useDocumentStore((s) => s.featureTables);
+  const activeStoryIndex = useAppStore((s) => s.activeStoryIndex);
+  const activeWaypoint = useDocumentStore((s) =>
+    activeStoryIndex == null ? undefined : s.waypoints[activeStoryIndex],
+  );
+  const ingestEpoch = React.useSyncExternalStore(
+    subscribeFeatureTableIngest,
+    getFeatureTableIngestEpoch,
+    getFeatureTableIngestEpoch,
+  );
+  const lutEpoch = React.useSyncExternalStore(
+    subscribeFeatureTableLut,
+    getFeatureTableLutEpoch,
+    getFeatureTableLutEpoch,
+  );
+  const classSections = React.useMemo((): ClassLegendSection[] => {
+    void ingestEpoch;
+    void lutEpoch;
+    const inLegend = new Set(
+      legendSections.flatMap((section) =>
+        section.entries.flatMap((e) =>
+          e.type === "channel" ? [e.channel.source_uuid] : [],
+        ),
+      ),
+    );
+    const out: ClassLegendSection[] = [];
+    for (const featureTable of featureTables) {
+      if (!inLegend.has(featureTable.sourceChannelId)) continue;
+      const sc = findSourceChannel(
+        sourceChannels,
+        featureTable.sourceChannelId,
+      );
+      if (!sc || !isMaskChannel(sc)) continue;
+      const viz = effectiveMaskVisualizationForSource(
+        sc,
+        docChannelGroups,
+        activeChannelGroupId,
+      );
+      const rows = shownClassRows(
+        featureTable,
+        classViewFor(activeWaypoint, sc.id),
+        viz.colorSeed ?? 0,
+        activeWaypoint?.id,
+      );
+      if (!rows) continue;
+      out.push({
+        channelId: sc.id,
+        label: sc.name,
+        showSwatches: viz.color !== "white",
+        rows: rows.map((row) => ({
+          name: row.name,
+          color: rgbToHex(row.color),
+        })),
+      });
+    }
+    return out;
+  }, [
+    legendSections,
+    featureTables,
+    sourceChannels,
+    docChannelGroups,
+    activeChannelGroupId,
+    activeWaypoint,
+    ingestEpoch,
+    lutEpoch,
   ]);
 
   const groups = useDocumentStore((s) => s.channelGroups);
@@ -272,6 +353,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
             toggleChannel={toggleChannel}
             updateChannel={updateChannel}
           />
+          <ClassLegend sections={classSections} />
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { fileOpen } from "browser-fs-access";
 import {
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
@@ -19,29 +20,46 @@ import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
 import {
+  classColorsFor,
   classNameVisible,
+  classViewFor,
+  clearClassColorPreview,
   completeFeatureTableIngest,
   detachFeatureTable,
+  featureTableHandleKey,
   getFeatureTableAccess,
   getFeatureTableIngestEpoch,
+  getFeatureTableLutEpoch,
   getFeatureTablePendingSourceIds,
   hasIngestedFeatureTable,
   ingestFeatureCsvFile,
   pageFeatureTable,
   peekClassIndex,
   peekFeatureCsv,
-  requestFeatureTableFileAccess,
+  previewClassColor,
+  resetClassView,
   setAllClassesVisible,
   setClassColor,
   subscribeFeatureTableAccess,
   subscribeFeatureTableIngest,
+  subscribeFeatureTableLut,
   subscribeFeatureTablePending,
   toggleClassVisible,
 } from "@/lib/featureTable";
-import { rgbToHex } from "@/lib/imaging/sourceChannelStyle";
+import {
+  effectiveMaskVisualizationForSource,
+  rgbToHex,
+} from "@/lib/imaging/sourceChannelStyle";
 import { useAppStore } from "@/lib/stores/appStore";
-import type { Color } from "@/lib/stores/documentSchema";
-import { useDocumentStore } from "@/lib/stores/documentStore";
+import type {
+  Color,
+  FeatureTable,
+  Waypoint,
+} from "@/lib/stores/documentSchema";
+import {
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
 import styles from "./FeatureTable.module.css";
 
 const ROW_H = 22;
@@ -104,37 +122,49 @@ function TableLoading() {
   );
 }
 
-function useFeatureTableList(featureTableId: string) {
+function useFeatureTableList(
+  featureTableId: string,
+  waypoint: Waypoint | undefined,
+) {
   const [filter, setFilter] = useState("");
   const [raw, setRaw] = useState<{ name: string }[]>([]);
   const [total, setTotal] = useState(0);
   const [loadedOffset, setLoadedOffset] = useState(0);
   const [loading, setLoading] = useState(false);
-  const vis = useAppStore((s) => s.featureTableVisibilities[featureTableId]);
   const featureTable = useDocumentStore((s) =>
     s.featureTables.find((c) => c.id === featureTableId),
   );
+  const view = featureTable
+    ? classViewFor(waypoint, featureTable.sourceChannelId)
+    : undefined;
+  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const digest = featureTable?.digest;
   const ingestEpoch = useSyncExternalStore(
     subscribeFeatureTableIngest,
     getFeatureTableIngestEpoch,
     getFeatureTableIngestEpoch,
   );
-  const viz = useDocumentStore((s) => {
+  const lutEpoch = useSyncExternalStore(
+    subscribeFeatureTableLut,
+    getFeatureTableLutEpoch,
+    getFeatureTableLutEpoch,
+  );
+  // Same lookup as the viewer: the active group's row for this mask first.
+  const maskColor = useDocumentStore((s) => {
     const sourceId = featureTable?.sourceChannelId;
     if (!sourceId) return undefined;
-    for (const g of s.channelGroups) {
-      const row = g.channels.find((gc) => gc.channelId === sourceId);
-      if (row?.maskVisualization) return row.maskVisualization;
-    }
     for (const im of s.images) {
-      for (const ch of im.channels) {
-        if (ch.id === sourceId) return ch.maskVisualization;
-      }
+      const ch = im.channels.find((c) => c.id === sourceId);
+      if (!ch) continue;
+      return effectiveMaskVisualizationForSource(
+        { ...ch, imageId: im.id },
+        s.channelGroups,
+        activeChannelGroupId,
+      ).color;
     }
     return undefined;
   });
-  const fadeColors = (viz?.color ?? "white") === "white";
+  const fadeColors = (maskColor ?? "white") === "white";
 
   const seq = useRef(0);
   const windowRef = useRef({ offset: 0, count: 0, total: 0 });
@@ -188,20 +218,27 @@ function useFeatureTableList(featureTableId: string) {
 
   const rows = useMemo<FeatureTableRow[]>(() => {
     void ingestEpoch;
+    void lutEpoch;
     if (!featureTable) return [];
     const names =
       raw.length === 0 ? peekClassIndex(featureTableId)?.names : undefined;
     const source =
       names && names.length > 0 ? names.map((name) => ({ name })) : raw;
-    const colors = new Map(
-      featureTable.nameColors.map((o) => [o.name, o.color]),
-    );
+    const colors = classColorsFor(featureTable, view, waypoint?.id);
     return source.map((row) => ({
       name: row.name,
       color: colors.get(row.name),
-      visible: classNameVisible(vis, row.name),
+      visible: classNameVisible(view?.visibility, row.name),
     }));
-  }, [featureTable, featureTableId, vis, raw, ingestEpoch]);
+  }, [
+    featureTable,
+    featureTableId,
+    view,
+    waypoint?.id,
+    raw,
+    ingestEpoch,
+    lutEpoch,
+  ]);
   const usingCache = raw.length === 0 && rows.length > 0;
 
   return {
@@ -329,17 +366,13 @@ function FeatureTableMaskAction(props: { featureTableId: string }) {
     getFeatureTableAccess,
     getFeatureTableAccess,
   );
-  const handleKey = useDocumentStore(
-    (s) =>
-      s.featureTables.find((c) => c.id === featureTableId)?.source.handleKey,
-  );
+  const handleKey = useDocumentStore((s) => {
+    const featureTable = s.featureTables.find((c) => c.id === featureTableId);
+    return featureTable ? featureTableHandleKey(featureTable) : undefined;
+  });
   void ingestEpoch;
   if (hasIngestedFeatureTable(featureTableId)) return null;
-  if (
-    handleKey != null &&
-    (access.deniedHandleKeys.includes(handleKey) ||
-      access.missingHandleKeys.includes(handleKey))
-  ) {
+  if (handleKey != null && access.missingHandleKeys.includes(handleKey)) {
     return null;
   }
   return (
@@ -439,26 +472,20 @@ function FeatureTableAttach(props: { sourceChannelId: string }) {
   );
 }
 
-function FeatureTableListBody(props: { featureTableId: string }) {
-  const { featureTableId } = props;
-  const list = useFeatureTableList(featureTableId);
-  const handleKey = useDocumentStore(
-    (s) =>
-      s.featureTables.find((c) => c.id === featureTableId)?.source.handleKey,
-  );
-  const sourceChannelId = useDocumentStore(
-    (s) =>
-      s.featureTables.find((c) => c.id === featureTableId)?.sourceChannelId,
-  );
-  const access = useSyncExternalStore(
-    subscribeFeatureTableAccess,
-    getFeatureTableAccess,
-    getFeatureTableAccess,
-  );
-  const needsPermission =
-    handleKey != null && access.deniedHandleKeys.includes(handleKey);
-  const needsReselect =
-    handleKey != null && access.missingHandleKeys.includes(handleKey);
+/**
+ * One table's classes as `waypoint` shows them. Edits write that waypoint's
+ * class view; with no waypoint the list is read-only.
+ */
+function ClassViewList(props: {
+  featureTableId: string;
+  waypoint: Waypoint | undefined;
+  /** Extra controls at the end of the filter row. */
+  tools?: ReactNode;
+  /** Covers the rows, e.g. a prompt to choose the file again. */
+  overlay?: ReactNode;
+}) {
+  const { featureTableId, waypoint, tools, overlay } = props;
+  const list = useFeatureTableList(featureTableId, waypoint);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [picker, setPicker] = useState<{
     name: string;
@@ -467,33 +494,50 @@ function FeatureTableListBody(props: { featureTableId: string }) {
     top: number;
     left: number;
   } | null>(null);
-
-  const showBusy = list.loading && list.rows.length === 0;
-  const fadeColors = list.fadeColors;
-  const showAccess = needsPermission || needsReselect;
-
-  const restoreFile = async () => {
-    if (needsReselect) {
-      if (!sourceChannelId) return;
-      const file = await pickFeatureCsv();
-      if (!file) return;
-      await completeFeatureTableIngest(
-        sourceChannelId,
-        ingestFeatureCsvFile(file),
-      );
-      return;
+  const pickerRef = useRef(picker);
+  pickerRef.current = picker;
+  const waypointId = waypoint?.id;
+  // The waypoint the open picker belongs to. Updating it during render would
+  // commit a pending color onto the waypoint just switched to.
+  const waypointIdRef = useRef(waypointId);
+  const commitRef = useRef(() => {});
+  commitRef.current = () => {
+    const current = pickerRef.current;
+    if (!current) return;
+    pickerRef.current = null;
+    const ownedId = waypointIdRef.current;
+    if (current.pending && ownedId) {
+      setClassColor(ownedId, featureTableId, current.name, current.pending);
     }
-    await requestFeatureTableFileAccess();
+    clearClassColorPreview();
   };
 
   useEffect(() => {
-    if (fadeColors) setPicker(null);
-  }, [fadeColors]);
+    if (waypointIdRef.current === waypointId) return;
+    waypointIdRef.current = waypointId;
+    if (!pickerRef.current) return;
+    pickerRef.current = null;
+    setPicker(null);
+    clearClassColorPreview();
+  }, [waypointId]);
 
-  if (!hasIngestedFeatureTable(featureTableId) && !showAccess) return null;
+  const showBusy = list.loading && list.rows.length === 0;
+  const fadeColors = list.fadeColors;
+  const readOnly = waypointId == null;
+  const toggle = (name: string) => {
+    if (waypointId) toggleClassVisible(waypointId, featureTableId, name);
+  };
+
+  useEffect(() => () => commitRef.current(), []);
+
+  useEffect(() => {
+    if (!fadeColors && !readOnly) return;
+    commitRef.current();
+    setPicker(null);
+  }, [fadeColors, readOnly]);
 
   return (
-    <div className={styles.root}>
+    <>
       <div className={styles.toolbar}>
         <input
           className={styles.field}
@@ -509,27 +553,26 @@ function FeatureTableListBody(props: { featureTableId: string }) {
         <button
           type="button"
           className={`${minervaTheme.focusRing} ${styles.textBtn}`}
-          onClick={() => setAllClassesVisible(featureTableId, true)}
+          disabled={readOnly}
+          onClick={() => {
+            if (waypointId)
+              setAllClassesVisible(waypointId, featureTableId, true);
+          }}
         >
           Show all
         </button>
         <button
           type="button"
           className={`${minervaTheme.focusRing} ${styles.textBtn}`}
-          onClick={() => setAllClassesVisible(featureTableId, false)}
+          disabled={readOnly}
+          onClick={() => {
+            if (waypointId)
+              setAllClassesVisible(waypointId, featureTableId, false);
+          }}
         >
           Hide all
         </button>
-        <PanelIconButton
-          variant="row"
-          title="Delete table"
-          aria-label="Delete table"
-          onClick={() => {
-            if (sourceChannelId) void detachFeatureTable(sourceChannelId);
-          }}
-        >
-          <TrashIcon title="Delete table" size={14} />
-        </PanelIconButton>
+        {tools}
       </div>
       <div
         ref={scrollerRef}
@@ -540,22 +583,11 @@ function FeatureTableListBody(props: { featureTableId: string }) {
           list.onScroll(el.scrollTop, el.clientHeight);
         }}
       >
-        {showAccess ? (
-          <div className={styles.accessPrompt}>
-            <button
-              type="button"
-              className={`${minervaTheme.focusRing} ${styles.textBtn}`}
-              onClick={() => void restoreFile()}
-            >
-              {needsReselect ? "Choose file again" : "Allow file access"}
-            </button>
-          </div>
-        ) : null}
-        {showBusy && !showAccess ? <TableLoading /> : null}
+        {overlay ? <div className={styles.accessPrompt}>{overlay}</div> : null}
+        {showBusy && !overlay ? <TableLoading /> : null}
         <div
           style={{
-            height:
-              Math.max(list.total, showBusy || showAccess ? 2 : 1) * ROW_H,
+            height: Math.max(list.total, showBusy || overlay ? 2 : 1) * ROW_H,
             position: "relative",
           }}
         >
@@ -569,15 +601,21 @@ function FeatureTableListBody(props: { featureTableId: string }) {
                 visible={row.visible}
                 title={row.visible ? `Hide ${row.name}` : `Show ${row.name}`}
                 ariaLabel={`Toggle visibility for ${row.name}`}
-                onClick={() => toggleClassVisible(featureTableId, row.name)}
+                onClick={() => toggle(row.name)}
               />
               {row.color ? (
                 <button
                   type="button"
                   className={`${minervaTheme.focusRing} ${styles.swatch}`}
-                  style={{ backgroundColor: `#${rgbToHex(row.color)}` }}
+                  style={{
+                    backgroundColor: `#${rgbToHex(
+                      picker?.name === row.name && picker.pending
+                        ? picker.pending
+                        : row.color,
+                    )}`,
+                  }}
                   aria-label={`Color for ${row.name}`}
-                  disabled={fadeColors}
+                  disabled={fadeColors || readOnly}
                   onClick={(e) => {
                     const color = row.color;
                     if (!color) return;
@@ -604,7 +642,8 @@ function FeatureTableListBody(props: { featureTableId: string }) {
                 className={`${minervaTheme.focusRing} ${styles.name}`}
                 title={row.visible ? `Hide ${row.name}` : `Show ${row.name}`}
                 aria-pressed={row.visible}
-                onClick={() => toggleClassVisible(featureTableId, row.name)}
+                disabled={readOnly}
+                onClick={() => toggle(row.name)}
               >
                 {row.name.trim() ? row.name : "Unnamed"}
               </button>
@@ -616,10 +655,8 @@ function FeatureTableListBody(props: { featureTableId: string }) {
         <ColorPickerPopover
           position={{ top: picker.top, left: picker.left }}
           onClose={() => {
-            const pending = picker.pending;
-            const name = picker.name;
+            commitRef.current();
             setPicker(null);
-            if (pending) setClassColor(featureTableId, name, pending);
           }}
           color={`#${picker.hex}`}
           showAlpha={false}
@@ -629,12 +666,193 @@ function FeatureTableListBody(props: { featureTableId: string }) {
             const g = Number.parseInt(raw.slice(2, 4), 16);
             const b = Number.parseInt(raw.slice(4, 6), 16);
             if ([r, g, b].some((n) => Number.isNaN(n))) return;
-            setPicker((p) =>
-              p ? { ...p, hex: raw, pending: { r, g, b } } : p,
-            );
+            const color = { r, g, b };
+            if (waypointId) {
+              previewClassColor(waypointId, featureTableId, picker.name, color);
+            }
+            setPicker((p) => (p ? { ...p, hex: raw, pending: color } : p));
           }}
         />
       ) : null}
+    </>
+  );
+}
+
+function ClassViewReset(props: { featureTableId: string; waypoint: Waypoint }) {
+  const { featureTableId, waypoint } = props;
+  const hasView = useDocumentStore((s) => {
+    const featureTable = s.featureTables.find((c) => c.id === featureTableId);
+    return (
+      featureTable != null &&
+      classViewFor(waypoint, featureTable.sourceChannelId) != null
+    );
+  });
+  return (
+    <button
+      type="button"
+      className={`${minervaTheme.focusRing} ${styles.textBtn}`}
+      disabled={!hasView}
+      onClick={() => resetClassView(waypoint.id, featureTableId)}
+    >
+      Reset
+    </button>
+  );
+}
+
+/** Channel panel: the class list under a mask row edits the waypoint on screen. */
+function FeatureTableListBody(props: { featureTableId: string }) {
+  const { featureTableId } = props;
+  const activeStoryIndex = useAppStore((s) => s.activeStoryIndex);
+  const waypoint = useDocumentStore((s) =>
+    activeStoryIndex == null ? undefined : s.waypoints[activeStoryIndex],
+  );
+  const handleKey = useDocumentStore((s) => {
+    const featureTable = s.featureTables.find((c) => c.id === featureTableId);
+    return featureTable ? featureTableHandleKey(featureTable) : undefined;
+  });
+  const sourceChannelId = useDocumentStore(
+    (s) =>
+      s.featureTables.find((c) => c.id === featureTableId)?.sourceChannelId,
+  );
+  const access = useSyncExternalStore(
+    subscribeFeatureTableAccess,
+    getFeatureTableAccess,
+    getFeatureTableAccess,
+  );
+  const ingestEpoch = useSyncExternalStore(
+    subscribeFeatureTableIngest,
+    getFeatureTableIngestEpoch,
+    getFeatureTableIngestEpoch,
+  );
+  const waypointCount = useDocumentStore((s) => s.waypoints.length);
+  const needsReselect =
+    handleKey != null && access.missingHandleKeys.includes(handleKey);
+
+  const restoreFile = async () => {
+    if (!sourceChannelId) return;
+    const file = await pickFeatureCsv();
+    if (!file) return;
+    await completeFeatureTableIngest(
+      sourceChannelId,
+      ingestFeatureCsvFile(file),
+    );
+  };
+
+  void ingestEpoch;
+  if (!hasIngestedFeatureTable(featureTableId) && !needsReselect) return null;
+
+  return (
+    <div className={styles.root}>
+      <div className={styles.toolbar}>
+        {waypoint ? (
+          <>
+            <span className={styles.viewTitle} title={waypoint.title}>
+              {waypoint.title.trim() || "Untitled waypoint"}
+            </span>
+            <ClassViewReset
+              featureTableId={featureTableId}
+              waypoint={waypoint}
+            />
+          </>
+        ) : (
+          <span className={styles.readOnlyNote}>
+            {waypointCount === 0
+              ? "Add a waypoint to customize classes"
+              : "Select a waypoint to customize classes"}
+          </span>
+        )}
+      </div>
+      <ClassViewList
+        featureTableId={featureTableId}
+        waypoint={waypoint}
+        tools={
+          <PanelIconButton
+            variant="row"
+            title="Delete table"
+            aria-label="Delete table"
+            onClick={() => {
+              if (sourceChannelId) void detachFeatureTable(sourceChannelId);
+            }}
+          >
+            <TrashIcon title="Delete table" size={14} />
+          </PanelIconButton>
+        }
+        overlay={
+          needsReselect ? (
+            <button
+              type="button"
+              className={`${minervaTheme.focusRing} ${styles.textBtn}`}
+              onClick={() => void restoreFile()}
+            >
+              Choose file again
+            </button>
+          ) : null
+        }
+      />
+    </div>
+  );
+}
+
+/**
+ * Waypoint detail view: the listed tables as this waypoint shows them.
+ * Attaching, deleting, and re-choosing tables stay in the channel panel.
+ */
+export function WaypointClassViews(props: {
+  waypoint: Waypoint;
+  /** Tables whose mask is in the waypoint's channel group. */
+  featureTables: readonly FeatureTable[];
+  readOnly?: boolean;
+}) {
+  const { waypoint, featureTables, readOnly } = props;
+  const images = useDocumentStore((s) => s.images);
+  const ingestEpoch = useSyncExternalStore(
+    subscribeFeatureTableIngest,
+    getFeatureTableIngestEpoch,
+    getFeatureTableIngestEpoch,
+  );
+  const maskNames = useMemo(
+    () =>
+      new Map(
+        flattenImageChannelsInDocumentOrder(images).map((sc) => [
+          sc.id,
+          sc.name,
+        ]),
+      ),
+    [images],
+  );
+  void ingestEpoch;
+  if (featureTables.length === 0) return null;
+  return (
+    <div className={styles.waypointClasses}>
+      {featureTables.map((featureTable) => {
+        const label = maskNames.get(featureTable.sourceChannelId) ?? "Mask";
+        const loaded = hasIngestedFeatureTable(featureTable.id);
+        return (
+          <div key={featureTable.id} className={styles.root}>
+            <div className={styles.toolbar}>
+              <span className={styles.viewTitle} title={label}>
+                {label}
+              </span>
+              {loaded && !readOnly ? (
+                <ClassViewReset
+                  featureTableId={featureTable.id}
+                  waypoint={waypoint}
+                />
+              ) : null}
+            </div>
+            {loaded ? (
+              <ClassViewList
+                featureTableId={featureTable.id}
+                waypoint={readOnly ? undefined : waypoint}
+              />
+            ) : (
+              <span className={styles.readOnlyNote}>
+                Table not loaded. Choose the file again in the channel panel.
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

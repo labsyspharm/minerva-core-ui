@@ -583,6 +583,8 @@ function exportViewportToBounds(v: Viewport): WaypointBounds {
   return { x0, x1, y0, y1 };
 }
 
+// Every waypoint field must be copied here and in `waypointToConfigWaypoint`;
+// `updateStory` round-trips through both and drops anything else.
 function configWaypointToExportWaypoint(
   wp: ConfigWaypoint,
   imageWidth: number,
@@ -620,9 +622,13 @@ function configWaypointToExportWaypoint(
     content: wp.Content ?? "",
     viewport: boundsToExportViewport(bounds),
     shapeIds: [...(wp.shapeIds ?? [])],
+    classViews: wp.classViews ?? [],
   };
   if (wp.groupId) {
     out.groupId = wp.groupId;
+  }
+  if (wp.name !== undefined) {
+    out.name = wp.name;
   }
   if (wp.ThumbnailDataUrl) {
     out.thumbnail = wp.ThumbnailDataUrl;
@@ -672,9 +678,13 @@ export function waypointToConfigWaypoint(
     ViewState: authoring?.ViewState,
     Pan: authoring?.Pan,
     Zoom: authoring?.Zoom,
+    classViews: wp.classViews ?? [],
   };
   if (wp.groupId !== undefined) {
     out.groupId = wp.groupId;
+  }
+  if (wp.name !== undefined) {
+    out.name = wp.name;
   }
   if (wp.thumbnail !== undefined) {
     out.ThumbnailDataUrl = wp.thumbnail;

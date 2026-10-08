@@ -36,6 +36,16 @@ export function normalizeWaypointRecord(
   return w;
 }
 
+/** Legacy feature table `source: { handleKey }` → `{ kind: "local", handleKey }`. */
+export function normalizeFeatureTableSource(raw: unknown): unknown {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    return raw;
+  }
+  const s = raw as Record<string, unknown>;
+  if ("kind" in s || typeof s.handleKey !== "string") return s;
+  return { kind: "local", handleKey: s.handleKey };
+}
+
 function normalizeRawShape(shape: unknown): unknown {
   if (shape === null || typeof shape !== "object" || Array.isArray(shape)) {
     return shape;

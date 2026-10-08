@@ -1,8 +1,16 @@
 import {
+  exportFeatureTableParquet,
+  hasIngestedFeatureTable,
+} from "@/lib/featureTable/client";
+import {
   isJpegOmeTiffImageSource,
   JPEG_OME_TIFF_IMAGE_SOURCE,
 } from "@/lib/imaging/cubeRootEncoding";
-import type { DocumentData, Image } from "@/lib/stores/documentSchema";
+import type {
+  DocumentData,
+  FeatureTable,
+  Image,
+} from "@/lib/stores/documentSchema";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 import { routerBasepath } from "@/router/appRouter";
 import { version as MINERVA_VERSION } from "../../../package.json";
@@ -144,6 +152,56 @@ async function writeTextFile(
   await write.close();
 }
 
+const FEATURE_TABLE_DIR = "feature-tables";
+
+/**
+ * Point each loaded table at `feature-tables/<id>.parquet` beside
+ * `document.json`. A table the worker has not loaded has no bytes to write:
+ * it is left out and its mask's name is returned in `skipped`.
+ */
+function planFeatureTableSidecars(
+  data: Pick<DocumentData, "featureTables" | "images">,
+): { featureTables: FeatureTable[]; skipped: string[] } {
+  const featureTables: FeatureTable[] = [];
+  const skipped: string[] = [];
+  for (const featureTable of data.featureTables) {
+    if (!hasIngestedFeatureTable(featureTable.id)) {
+      const channel = data.images
+        .flatMap((im) => im.channels)
+        .find((ch) => ch.id === featureTable.sourceChannelId);
+      skipped.push(channel?.name ?? featureTable.sourceChannelId);
+      continue;
+    }
+    featureTables.push({
+      ...featureTable,
+      source: {
+        kind: "url",
+        url: `${FEATURE_TABLE_DIR}/${featureTable.id}.parquet`,
+      },
+    });
+  }
+  return { featureTables, skipped };
+}
+
+async function writeFeatureTableFiles(
+  directory: FileSystemDirectoryHandle,
+  featureTables: readonly FeatureTable[],
+): Promise<void> {
+  if (featureTables.length === 0) return;
+  const dir = await directory.getDirectoryHandle(FEATURE_TABLE_DIR, {
+    create: true,
+  });
+  for (const featureTable of featureTables) {
+    const bytes = await exportFeatureTableParquet(featureTable.id);
+    const fh = await dir.getFileHandle(`${featureTable.id}.parquet`, {
+      create: true,
+    });
+    const write = await fh.createWritable();
+    await write.write(bytes);
+    await write.close();
+  }
+}
+
 async function writeBytes(
   directory: FileSystemDirectoryHandle,
   relativePath: string,
@@ -202,22 +260,30 @@ export type WriteStoryBundleOptions = {
   mode?: StoryExportMode;
 };
 
+export type WriteStoryBundleResult = {
+  /** Masks whose feature table was not loaded, so the export left it out. */
+  skippedFeatureTables: string[];
+};
+
 /**
- * Write `document.json` + `index.html` into an export directory.
- * PR previews also copy the story player into `bundle/`.
+ * Write `document.json`, `index.html`, and each loaded feature table as
+ * Parquet into an export directory. PR previews also copy the story player
+ * into `bundle/`.
  */
 export async function writeStoryBundleSidecars(
   directory: FileSystemDirectoryHandle,
   data: DocumentData,
   opts?: WriteStoryBundleOptions,
-): Promise<void> {
+): Promise<WriteStoryBundleResult> {
   const mode = opts?.mode ?? "jpeg-pyramid";
   if (mode === "remote-url" && !canExportWithRemoteUrls(data.images)) {
     throw new Error(
       "Remote URL export requires all images to use OME-TIFF URLs (no local files).",
     );
   }
-  const exported = toExportedStoryDocument(data, mode);
+  const { featureTables, skipped } = planFeatureTableSidecars(data);
+  await writeFeatureTableFiles(directory, featureTables);
+  const exported = toExportedStoryDocument({ ...data, featureTables }, mode);
   await writeTextFile(
     directory,
     "document.json",
@@ -232,4 +298,5 @@ export async function writeStoryBundleSidecars(
       exported.metadata.minervaVersion ?? MINERVA_VERSION,
     ),
   );
+  return { skippedFeatureTables: skipped };
 }

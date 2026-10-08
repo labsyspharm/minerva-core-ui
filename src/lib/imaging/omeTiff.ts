@@ -14,8 +14,6 @@ type GeoTiffImage = {
     BitsPerSample?: number[] | ArrayLike<number>;
     SampleFormat?: number[];
     SamplesPerPixel?: number;
-    /** TIFF Compression. 7 is JPEG. May be a single code or a per-sample list. */
-    Compression?: number | number[];
     SubIFDs?: number[] | ArrayLike<number>;
   };
   getHeight: () => number;
@@ -362,25 +360,6 @@ export async function detectOmeTiffBrightfield(
     );
   }
   return brightfieldTallyMatches(rawTally);
-}
-
-const TIFF_COMPRESSION_JPEG = 7;
-
-/** TIFF tag 259. JPEG is code 7; a per-sample list uses the first code. */
-export function isTiffJpegCompression(compression: unknown): boolean {
-  const code = Array.isArray(compression) ? compression[0] : compression;
-  return code === TIFF_COMPRESSION_JPEG;
-}
-
-/** Full-resolution IFD uses JPEG compression (pyramidal SubIFDs ride along on copy). */
-export async function omeTiffBaseIsJpeg(
-  source: Blob | string,
-  signal?: AbortSignal,
-): Promise<boolean> {
-  const tiff = await openOmeTiff(source, signal);
-  const image = await tiff.getImage(0);
-  if (signal?.aborted) return false;
-  return isTiffJpegCompression(image.fileDirectory?.Compression);
 }
 
 /**

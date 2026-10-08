@@ -9,6 +9,7 @@ import {
 } from "@/lib/featureTable/duckdbBundles";
 import { parseCsvLine, peekCsvHeaders } from "./columns";
 import { indexTexSize, MAX_CLASS_NAMES } from "./lutLayout";
+import { PERSISTED_COLUMNS, storedTableFormat } from "./persistFormat";
 
 type FeatureTableColumns = { id: string; name: string };
 
@@ -20,7 +21,6 @@ type Inbound =
       bytes?: Uint8Array;
       file?: File;
       columns?: FeatureTableColumns;
-      header?: boolean;
     }
   | {
       id: number;
@@ -31,6 +31,7 @@ type Inbound =
       limit: number;
     }
   | { id: number; type: "classIndex"; featureTableId: string }
+  | { id: number; type: "exportParquet"; featureTableId: string }
   | { id: number; type: "drop"; featureTableId: string }
   | { id: number; type: "reset" };
 
@@ -41,8 +42,6 @@ type Outbound =
       maxClassId: number;
       names: string[];
       persist?: Uint8Array;
-      columns: FeatureTableColumns;
-      header: boolean;
       index?: Uint8Array;
       indexWidth?: number;
       indexHeight?: number;
@@ -61,6 +60,7 @@ type Outbound =
       indexWidth?: number;
       indexHeight?: number;
     }
+  | { id: number; type: "parquet"; bytes: Uint8Array }
   | { id: number; type: "ok" }
   | { id: number; type: "error"; message: string };
 
@@ -116,15 +116,12 @@ async function uniqueNames(
 }
 
 async function resolveColumns(
-  source: { file?: File; bytes?: Uint8Array },
+  file: File,
   columns?: FeatureTableColumns,
-  header?: boolean,
 ): Promise<{ cols: FeatureTableColumns; header: boolean }> {
-  if (columns) return { cols: columns, header: header ?? true };
-  const head = source.file
-    ? new Uint8Array(await source.file.slice(0, 8192).arrayBuffer())
-    : source.bytes?.subarray(0, Math.min(8192, source.bytes.byteLength));
-  if (!head) throw new Error("CSV is empty");
+  if (columns) return { cols: columns, header: true };
+  const head = new Uint8Array(await file.slice(0, 8192).arrayBuffer());
+  if (head.byteLength === 0) throw new Error("CSV is empty");
   const peeked = peekCsvHeaders(head);
   if (peeked)
     return { cols: { id: peeked.id, name: peeked.name }, header: true };
@@ -160,53 +157,98 @@ async function registerSource(
   await duck.registerFileBuffer(name, copy);
 }
 
-async function exportTwoColCsv(
+async function exportParquet(
   duck: duckdb.AsyncDuckDB,
   c: duckdb.AsyncDuckDBConnection,
   table: string,
 ): Promise<Uint8Array> {
-  const out = `${table}_persist.csv`;
+  const out = `${table}_persist.parquet`;
   await duck.registerEmptyFileBuffer(out);
-  await c.query(
-    `COPY ${table} TO ${sqlString(out)} (HEADER true, DELIMITER ',')`,
-  );
-  const buf = await duck.copyFileToBuffer(out);
-  await duck.dropFile(out).catch(() => undefined);
-  return buf.slice();
+  try {
+    await c.query(
+      `COPY (SELECT class_id, class_name FROM ${table} ORDER BY class_id) TO ${sqlString(out)} (FORMAT parquet, COMPRESSION zstd)`,
+    );
+    const buf = await duck.copyFileToBuffer(out);
+    // Copy out before any later register call reuses the buffer.
+    return buf.slice();
+  } finally {
+    await duck.dropFile(out).catch(() => undefined);
+  }
+}
+
+type ReadPlan = {
+  file: string;
+  cols: FeatureTableColumns;
+  reader: string;
+  /** False when the source is already the stored Parquet. */
+  persist: boolean;
+};
+
+// The sniffer samples the first rows only; a quoted comma past them would split.
+const CSV_QUOTING = `quote='"', escape='"'`;
+
+async function planRead(
+  table: string,
+  source: { file?: File; bytes?: Uint8Array },
+  columns?: FeatureTableColumns,
+): Promise<ReadPlan> {
+  if (source.file) {
+    const { cols, header } = await resolveColumns(source.file, columns);
+    const file = `${table}.csv`;
+    return {
+      file,
+      cols,
+      reader: `read_csv(${sqlString(file)}, header=${header ? "true" : "false"}, all_varchar=true, ${CSV_QUOTING})`,
+      persist: true,
+    };
+  }
+  if (!source.bytes || source.bytes.byteLength === 0) {
+    throw new Error("Feature table is empty");
+  }
+  const format = storedTableFormat(source.bytes);
+  if (format.kind === "parquet") {
+    const file = `${table}.parquet`;
+    return {
+      file,
+      cols: PERSISTED_COLUMNS,
+      reader: `read_parquet(${sqlString(file)})`,
+      persist: false,
+    };
+  }
+  const file = `${table}.csv`;
+  return {
+    file,
+    cols: PERSISTED_COLUMNS,
+    reader: `read_csv(${sqlString(file)}, header=true, all_varchar=true, ${CSV_QUOTING})`,
+    persist: true,
+  };
 }
 
 async function ingest(
   featureTableId: string,
   source: { file?: File; bytes?: Uint8Array },
   columns?: FeatureTableColumns,
-  header?: boolean,
 ): Promise<{
   maxClassId: number;
   names: string[];
   persist?: Uint8Array;
-  columns: FeatureTableColumns;
-  header: boolean;
   index?: { data: Uint8Array; width: number; height: number };
 }> {
   const c = await ensureConn();
   const duck = db;
   if (!duck) throw new Error("DuckDB failed to start");
 
-  const { cols, header: hasHeader } = await resolveColumns(
-    source,
-    columns,
-    header,
-  );
   const table = tableName(featureTableId);
+  const plan = await planRead(table, source, columns);
+  const { cols, file } = plan;
   const staging = `${table}_stg`;
   const raw = `${table}_raw`;
-  const file = `${table}.csv`;
   await c.query(`DROP TABLE IF EXISTS ${staging}`);
   await c.query(`DROP TABLE IF EXISTS ${raw}`);
   await registerSource(duck, file, source);
   try {
     await c.query(
-      `CREATE TABLE ${raw} AS SELECT trim(CAST(${sqlIdent(cols.id)} AS VARCHAR)) AS class_id, CAST(COALESCE(${sqlIdent(cols.name)}, '') AS VARCHAR) AS class_name FROM read_csv(${sqlString(file)}, header=${hasHeader ? "true" : "false"}, all_varchar=true)`,
+      `CREATE TABLE ${raw} AS SELECT trim(CAST(${sqlIdent(cols.id)} AS VARCHAR)) AS class_id, CAST(COALESCE(${sqlIdent(cols.name)}, '') AS VARCHAR) AS class_name FROM ${plan.reader}`,
     );
 
     const valid = `regexp_matches(class_id, '^[0-9]+$') AND TRY_CAST(class_id AS UINTEGER) BETWEEN 1 AND 4294967295`;
@@ -239,17 +281,10 @@ async function ingest(
     await c.query(`ALTER TABLE ${staging} RENAME TO ${table}`);
     const names = await uniqueNames(c, table);
     const index = await fillClassIndex(c, table, maxClassId, names);
-    const persist = source.file
-      ? await exportTwoColCsv(duck, c, table)
+    const persist = plan.persist
+      ? await exportParquet(duck, c, table)
       : undefined;
-    return {
-      maxClassId,
-      names,
-      persist,
-      columns: cols,
-      header: hasHeader,
-      index,
-    };
+    return { maxClassId, names, persist, index };
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     if (
@@ -349,6 +384,18 @@ async function readClassIndex(featureTableId: string): Promise<{
   return { names, index };
 }
 
+/** Parquet of an ingested table, whatever format its blob was stored in. */
+async function exportTableParquet(featureTableId: string): Promise<Uint8Array> {
+  const c = await ensureConn();
+  const duck = db;
+  if (!duck) throw new Error("DuckDB failed to start");
+  const table = tableName(featureTableId);
+  if (!(await tableExists(c, table))) {
+    throw new Error("Feature table is not loaded");
+  }
+  return exportParquet(duck, c, table);
+}
+
 async function drop(featureTableId: string): Promise<void> {
   if (!conn) return;
   await conn.query(`DROP TABLE IF EXISTS ${tableName(featureTableId)}`);
@@ -373,13 +420,11 @@ self.onmessage = (e: MessageEvent<Inbound>) => {
 async function handle(msg: Inbound): Promise<void> {
   try {
     if (msg.type === "ingest") {
-      const { maxClassId, names, persist, columns, header, index } =
-        await ingest(
-          msg.featureTableId,
-          { file: msg.file, bytes: msg.bytes },
-          msg.columns,
-          msg.header,
-        );
+      const { maxClassId, names, persist, index } = await ingest(
+        msg.featureTableId,
+        { file: msg.file, bytes: msg.bytes },
+        msg.columns,
+      );
       const transfer: Transferable[] = [];
       if (persist) transfer.push(persist.buffer);
       if (index) transfer.push(index.data.buffer);
@@ -390,8 +435,6 @@ async function handle(msg: Inbound): Promise<void> {
           maxClassId,
           names,
           persist,
-          columns,
-          header,
           index: index?.data,
           indexWidth: index?.width,
           indexHeight: index?.height,
@@ -412,6 +455,14 @@ async function handle(msg: Inbound): Promise<void> {
           indexHeight: index?.height,
         } satisfies Outbound,
         index ? { transfer: [index.data.buffer] } : undefined,
+      );
+      return;
+    }
+    if (msg.type === "exportParquet") {
+      const bytes = await exportTableParquet(msg.featureTableId);
+      self.postMessage(
+        { id: msg.id, type: "parquet", bytes } satisfies Outbound,
+        { transfer: [bytes.buffer] },
       );
       return;
     }

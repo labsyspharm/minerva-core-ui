@@ -18,6 +18,7 @@ import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
 import { ImageArrangeBox } from "@/components/shared/viewer/ImageArrangeBox";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import {
+  classViewFor,
   getFeatureTableLutEpoch,
   gpuStyleForFeatureTable,
   subscribeFeatureTableLut,
@@ -453,8 +454,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const featureTables = useDocumentStore((s) => s.featureTables);
-  const featureTableVisibilities = useAppStore(
-    (s) => s.featureTableVisibilities,
+  const activeStoryIndex = useAppStore((s) => s.activeStoryIndex);
+  const activeWaypoint = useDocumentStore((s) =>
+    activeStoryIndex == null ? undefined : s.waypoints[activeStoryIndex],
   );
   const featureTableLutEpoch = useSyncExternalStore(
     subscribeFeatureTableLut,
@@ -545,9 +547,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       if (!isMaskChannel(sc)) continue;
       const rendered = isMaskSourceRendered({
         sc,
-        channels,
         channelGroups,
-        activeGroup: channelGroups.find((g) => g.id === activeChannelGroupId),
         stackVisibilities: channelVisibilities ?? {},
         groupRowVisibilities: channelGroupRowVisibilities,
       });
@@ -583,6 +583,15 @@ export const ImageViewer = (props: ImageViewerProps) => {
       const featureTable = featureTables.find(
         (c) => c.sourceChannelId === sc.id,
       );
+      const classStyle = featureTable
+        ? gpuStyleForFeatureTable(
+            featureTable,
+            classViewFor(activeWaypoint, featureTable.sourceChannelId),
+            visualization.colorSeed ?? 0,
+            activeWaypoint?.id,
+          )
+        : undefined;
+      // Without a style the shader falls back to per-cell random colors.
       const layer = createMaskTileLayer({
         id: `mask-channel-${sc.id}`,
         loader: entry.loader,
@@ -590,13 +599,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         visualization: paintedVisualization,
         orientation,
         visible: rendered,
-        classStyle: featureTable
-          ? gpuStyleForFeatureTable(
-              featureTable,
-              featureTableVisibilities[featureTable.id],
-              visualization.colorSeed ?? 0,
-            )
-          : undefined,
+        classStyle,
       });
       if (layer) layers.push(layer);
     }
@@ -612,23 +615,32 @@ export const ImageViewer = (props: ImageViewerProps) => {
     imageOpacityPreview,
     imageOrientationPreview,
     featureTables,
-    featureTableVisibilities,
+    activeWaypoint,
     featureTableLutEpoch,
   ]);
 
-  // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last
-  // idle snapshot (overlays / Zustand). `orthoSeed` matches it except during a
-  // waypoint fly, when the seed carries transition props.
+  // Fit the whole image. Pyramid depth says nothing about size on screen:
+  // some files keep halving down to a few pixels.
   const fitViewState = useMemo(() => {
-    const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
+    const { width, height } = viewportSize;
+    const zoom =
+      frame && frame.worldWidth > 0 && frame.worldHeight > 0 && width > 0
+        ? Math.log2(
+            0.95 *
+              Math.min(width / frame.worldWidth, height / frame.worldHeight),
+          )
+        : 0;
     return withOrthoZoom({
-      zoom: -n_levels,
+      zoom,
       target: frame
         ? [frame.worldWidth / 2, frame.worldHeight / 2, 0]
         : [0, 0, 0],
     });
-  }, [firstLoader, frame]);
+  }, [frame, viewportSize]);
 
+  // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last
+  // idle snapshot (overlays / Zustand). `orthoSeed` matches it except during a
+  // waypoint fly, when the seed carries transition props.
   const [viewState, setViewState] =
     useState<OrthographicViewState>(fitViewState);
   const [orthoSeed, setOrthoSeed] =

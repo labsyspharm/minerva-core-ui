@@ -12,7 +12,11 @@ import {
   JPEG_BAKED_CONTRAST_LIMIT,
   jpegPyramidFolderName,
 } from "@/lib/imaging/jpegPyramid";
-import { jpegSourceNeedsLocalRoot } from "@/lib/imaging/loadJpegFromDocument";
+import {
+  isRelativeOmeTiffUrl,
+  jpegSourceNeedsLocalRoot,
+} from "@/lib/imaging/loadJpegFromDocument";
+import { putBlob } from "@/lib/persistence/db";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
 import { imageHandleStorageKey } from "@/lib/persistence/imageHandles";
 import {
@@ -190,18 +194,51 @@ async function assertPyramidFoldersExist(
   }
 }
 
-function isRelativeOmeTiffUrl(url: string): boolean {
-  const u = url.trim();
-  if (!u || /^https?:\/\//i.test(u) || u.startsWith("blob:")) return false;
-  return /\.ome\.tiff?$/i.test(u) || /\.tiff?$/i.test(u);
-}
-
 async function readDocumentJson(
   root: FileSystemDirectoryHandle,
 ): Promise<DocumentData> {
-  const fh = await root.getFileHandle("document.json");
+  let fh: FileSystemFileHandle;
+  try {
+    fh = await root.getFileHandle("document.json");
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "NotFoundError") {
+      throw new Error("Pick the export folder that contains document.json.");
+    }
+    throw e;
+  }
   const file = await fh.getFile();
   return validateDocumentData(JSON.parse(await file.text()) as unknown);
+}
+
+/** File beside `document.json`. Missing files stay unbound so the story can still open. */
+async function fileInDirectory(
+  root: FileSystemDirectoryHandle,
+  relativePath: string,
+): Promise<FileSystemFileHandle | undefined> {
+  const parts = relativePath
+    .trim()
+    .split(/[/\\]/)
+    .filter((part) => part && part !== ".");
+  const name = parts.pop();
+  if (!name || parts.includes("..")) return undefined;
+  let dir = root;
+  try {
+    for (const part of parts) dir = await dir.getDirectoryHandle(part);
+    return await dir.getFileHandle(name);
+  } catch (e) {
+    if (
+      e instanceof DOMException &&
+      (e.name === "NotFoundError" || e.name === "TypeMismatchError")
+    ) {
+      return undefined;
+    }
+    throw e;
+  }
+}
+
+function isRemoteOrBlobUrl(url: string): boolean {
+  const u = url.trim();
+  return /^https?:\/\//i.test(u) || u.startsWith("blob:");
 }
 
 async function persistImportedStory(
@@ -236,22 +273,44 @@ async function persistImportedStory(
       })
     : imagesBase;
 
-  if (root && omeTiffBundle) {
-    const next: typeof images = [];
+  let featureTables = data.featureTables;
+  if (root) {
+    const nextImages: typeof images = [];
     for (const im of images) {
       if (im.source?.kind === "url" && isRelativeOmeTiffUrl(im.source.url)) {
-        const fh = await root.getFileHandle(im.source.url);
-        const handleKey = imageHandleStorageKey(rec.id, im.id);
-        await putFileHandle(handleKey, fh);
-        next.push({
-          ...im,
-          source: { kind: "local", handleKey },
-        });
-      } else {
-        next.push(im);
+        const fh = await fileInDirectory(root, im.source.url);
+        if (fh) {
+          const handleKey = imageHandleStorageKey(rec.id, im.id);
+          await putFileHandle(handleKey, fh);
+          nextImages.push({
+            ...im,
+            source: { kind: "local", handleKey },
+          });
+          continue;
+        }
       }
+      nextImages.push(im);
     }
-    images = next;
+    images = nextImages;
+
+    const nextTables: typeof featureTables = [];
+    for (const table of featureTables) {
+      if (table.source.kind === "url" && !isRemoteOrBlobUrl(table.source.url)) {
+        const fh = await fileInDirectory(root, table.source.url);
+        if (fh) {
+          const handleKey = `story:${rec.id}:featureTable:${table.id}`;
+          const file = await fh.getFile();
+          await putBlob(handleKey, new Uint8Array(await file.arrayBuffer()));
+          nextTables.push({
+            ...table,
+            source: { kind: "local", handleKey },
+          });
+          continue;
+        }
+      }
+      nextTables.push(table);
+    }
+    featureTables = nextTables;
   }
 
   const next = validateDocumentData({
@@ -262,6 +321,7 @@ async function persistImportedStory(
       title,
     },
     images,
+    featureTables,
   });
   await saveStoryDocument(rec.id, next);
   if (root) await setStoryRootHandle(rec.id, root);
@@ -270,7 +330,7 @@ async function persistImportedStory(
   return rec.id;
 }
 
-/** Pick a story JSON. If it needs local image files, a folder picker follows. */
+/** Pick a story JSON and open it. Image files are located from the story, one at a time. */
 export async function importStoryJsonFromPicker(): Promise<string> {
   const file = await fileOpen({
     description: "Minerva story JSON",
@@ -279,35 +339,14 @@ export async function importStoryJsonFromPicker(): Promise<string> {
     multiple: false,
   });
   const data = validateDocumentData(JSON.parse(await file.text()) as unknown);
-
-  let root: FileSystemDirectoryHandle | undefined;
-  if (
-    storyNeedsLocalJpegRoot(data.images) ||
-    (isJpegOmeTiffImageSource(data.metadata.imageSource) &&
-      data.images.some(
-        (im) =>
-          im.source?.kind === "url" && isRelativeOmeTiffUrl(im.source.url),
-      ))
-  ) {
-    if (!hasDirectoryPickerAccess()) {
-      throw new Error(
-        "This story uses local image files. Open it in Chrome or Edge and choose the story folder to grant access.",
-      );
-    }
-    root = await window.showDirectoryPicker({
-      id: "minerva-story-import",
-      mode: "read",
-    });
-    await assertPyramidFoldersExist(root, data);
-  }
-
   const base = file.name.replace(/\.json$/i, "").trim();
   const fallback = /^(document|story)$/i.test(base) ? "Imported Story" : base;
-  return persistImportedStory(data, fallback, root);
+  return persistImportedStory(data, fallback);
 }
 
 /**
- * Pick a story export folder, import `document.json` into Dexie, and open it.
+ * Pick a story export folder and open it. Image files and feature-table
+ * sidecars found in the folder are attached; JPEG pyramids use the folder itself.
  * Returns the new story id.
  */
 export async function importStoryFolderFromPicker(): Promise<string> {
@@ -322,8 +361,7 @@ export async function importStoryFolderFromPicker(): Promise<string> {
   });
   const data = await readDocumentJson(root);
   await assertPyramidFoldersExist(root, data);
-  const title = data.metadata.title?.trim() || root.name || "Imported Story";
-  return persistImportedStory(data, title, root);
+  return persistImportedStory(data, root.name, root);
 }
 
 export async function reconnectStoryRootFromPicker(

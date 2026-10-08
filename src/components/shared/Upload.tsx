@@ -1,5 +1,6 @@
 import type { DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { OpacitySlider } from "@/components/shared/channel/ChannelRow";
 import {
   FeatureCsvColumnPick,
@@ -36,6 +37,10 @@ import {
 } from "@/lib/imaging/filesystem";
 import { clampImageOpacity } from "@/lib/imaging/imageOpacity";
 import {
+  isRelativeOmeTiffUrl,
+  jpegSourceNeedsLocalRoot,
+} from "@/lib/imaging/loadJpegFromDocument";
+import {
   markerNamesByChannelIndex,
   peekMarkerCsv,
 } from "@/lib/imaging/markerCsv";
@@ -43,6 +48,7 @@ import type {
   OmeImageImportRole,
   OmeImportResult,
 } from "@/lib/imaging/omeImport";
+import type { OmeImageSource } from "@/lib/imaging/omeImportPipeline";
 import {
   detectOmeTiffBrightfield,
   detectOmeTiffMask,
@@ -55,7 +61,6 @@ import {
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import { setImageOpacity } from "@/lib/stores/storeUtils";
-import { jpegSourceNeedsLocalRoot } from "@/lib/storyExport/importStoryFolder";
 import styles from "./Upload.module.css";
 
 export type { OmeImportResult };
@@ -122,17 +127,26 @@ type UploadProps = {
    * cleared — user must pick the file again.
    */
   missingHandleKeys?: string[];
-  onReselectFile?: (imageId: string) => void | Promise<void>;
+  /** File chosen in the add strip for an image that still needs its file. */
+  onReselectFile?: (
+    imageId: string,
+    handle: Handle.File,
+  ) => void | Promise<void>;
+  /** http(s) OME-TIFF from the add strip. Keeps the image id. */
+  onReselectUrl?: (imageId: string, url: string) => void | Promise<void>;
   /** JPEG-pyramid story needs its export directory re-selected. */
   needsStoryRootReconnect?: boolean;
   onReconnectStoryRoot?: () => void | Promise<void>;
   /** Remove a document image (and its loaders / group rows). */
   onRemoveImage?: (imageId: string) => void | Promise<void>;
   /**
-   * Replace pixels for an image with a new OME-TIFF. Keeps channel ids so
-   * groups and waypoints stay linked; assigns a new image id.
+   * Replace pixels for an image with a new OME-TIFF file or URL. Keeps channel
+   * ids so groups and waypoints stay linked; assigns a new image id.
    */
-  onReplaceImage?: (imageId: string) => void | Promise<void>;
+  onReplaceImage?: (
+    imageId: string,
+    source: OmeImageSource,
+  ) => void | Promise<void>;
   /** Library strip (horizontal); default is the Images panel stack. */
   row?: boolean;
   disabled?: boolean;
@@ -190,6 +204,19 @@ const formatDims = (w: number, h: number, c: number) => {
   const ch = c > 0 ? `${c} channel${c === 1 ? "" : "s"}` : null;
   return [dims, ch].filter(Boolean).join(" · ") || null;
 };
+
+function sourceFileReference(im: Image): string | null {
+  const src = im.source;
+  if (src?.kind === "url" || src?.kind === "jpeg") {
+    const url = src.url.trim();
+    if (url && url !== "." && url !== "./") {
+      const leaf = url.split(/[/\\]/).pop()?.trim();
+      if (leaf) return leaf;
+    }
+  }
+  const base = im.basename.trim();
+  return base || null;
+}
 
 function imageDisplayLabel(
   im: Image,
@@ -254,6 +281,22 @@ function pendingLabel(pending: PendingSource): string {
   return pending.url;
 }
 
+type PointTarget = {
+  imageId: string;
+  mode: "locate" | "replace";
+  top: number;
+  left: number;
+};
+
+/** Below the clicked control, clamped on-screen. Matches `.pointPopup` width. */
+function pointPopupPosition(el: Element): { top: number; left: number } {
+  const rect = el.getBoundingClientRect();
+  return {
+    top: Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 200)),
+    left: Math.max(8, Math.min(rect.left, window.innerWidth - 328)),
+  };
+}
+
 const Upload = (props: UploadProps) => {
   const {
     onAllow,
@@ -268,6 +311,7 @@ const Upload = (props: UploadProps) => {
     onRequestFileAccess,
     missingHandleKeys = [],
     onReselectFile,
+    onReselectUrl,
     needsStoryRootReconnect = false,
     onReconnectStoryRoot,
     onRemoveImage,
@@ -276,7 +320,35 @@ const Upload = (props: UploadProps) => {
     disabled = false,
   } = props;
 
+  const [pointTarget, setPointTarget] = useState<PointTarget | null>(null);
+  const pointTargetRef = useRef(pointTarget);
+  pointTargetRef.current = pointTarget;
+  const togglePoint = (
+    imageId: string,
+    mode: PointTarget["mode"],
+    el: Element,
+  ) => {
+    setPointTarget(
+      pointTarget?.imageId === imageId && pointTarget.mode === mode
+        ? null
+        : { imageId, mode, ...pointPopupPosition(el) },
+    );
+  };
+
   const images = useDocumentStore((s) => s.images);
+
+  useEffect(() => {
+    if (!pointTarget) return;
+    if (!images.some((im) => im.id === pointTarget.imageId)) {
+      setPointTarget(null);
+      return;
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPointTarget(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [images, pointTarget]);
   const arrangeImageId = useAppStore((s) => s.arrangeImageId);
   const setArrangeImageId = useAppStore((s) => s.setArrangeImageId);
   const hasImages =
@@ -489,6 +561,23 @@ const Upload = (props: UploadProps) => {
     clearFeatureCsv();
   }, [abortFormatDetect, clearFeatureCsv]);
 
+  const applyPointedSource = useCallback(
+    async (source: OmeImageSource): Promise<boolean> => {
+      const target = pointTargetRef.current;
+      if (!target) return false;
+      setPointTarget(null);
+      if (target.mode === "replace") {
+        await onReplaceImage?.(target.imageId, source);
+      } else if (source.kind === "local") {
+        await onReselectFile?.(target.imageId, source.handle);
+      } else {
+        await onReselectUrl?.(target.imageId, source.url);
+      }
+      return true;
+    },
+    [onReplaceImage, onReselectFile, onReselectUrl],
+  );
+
   const acceptLocalHandles = useCallback(
     async (handles: Handle.File[]) => {
       if (handles.length === 0) return;
@@ -503,13 +592,14 @@ const Upload = (props: UploadProps) => {
         setImportError("Could not read the selected file.");
         return;
       }
+      if (await applyPointedSource({ kind: "local", handle })) return;
       openPending({
         kind: "local",
         handles: [handle],
         label: handle.name || "image.ome.tif",
       });
     },
-    [openPending],
+    [applyPointedSource, openPending],
   );
 
   const browseLocal = useCallback(async () => {
@@ -533,8 +623,13 @@ const Upload = (props: UploadProps) => {
       setImportError("Enter a valid http(s) URL.");
       return;
     }
+    if (pointTargetRef.current) {
+      setUrlDraft("");
+      void applyPointedSource({ kind: "url", url });
+      return;
+    }
     openPending({ kind: "url", url });
-  }, [disabled, openPending, urlDraft]);
+  }, [applyPointedSource, disabled, openPending, urlDraft]);
 
   const onDragEnter = (e: ReactDragEvent) => {
     e.preventDefault();
@@ -705,6 +800,10 @@ const Upload = (props: UploadProps) => {
       im.source?.kind === "local" ? im.source.handleKey : undefined;
     const needsReselect =
       !!localKey && missingHandleKeys.includes(localKey) && !!onReselectFile;
+    const needsLocateFile =
+      !!onReselectFile &&
+      im.source?.kind === "url" &&
+      isRelativeOmeTiffUrl(im.source.url);
     const needsPermission =
       needsFileAccess &&
       !!onRequestFileAccess &&
@@ -715,8 +814,11 @@ const Upload = (props: UploadProps) => {
       !!onReconnectStoryRoot &&
       im.source?.kind === "jpeg" &&
       jpegSourceNeedsLocalRoot(im.source.url);
-    const showAccessOverlay = needsReselect || needsPermission || needsStoryDir;
+    const showAccessOverlay =
+      needsReselect || needsLocateFile || needsPermission || needsStoryDir;
+    const fileReference = showAccessOverlay ? sourceFileReference(im) : null;
 
+    const pointing = pointTarget?.imageId === im.id ? pointTarget.mode : null;
     return (
       <article key={im.id} className={styles.imageCard}>
         <div className={styles.imageCardHeader}>
@@ -744,7 +846,9 @@ const Upload = (props: UploadProps) => {
               <PanelIconButton
                 title={`Browse for an image to replace ${title}`}
                 aria-label={`Browse for an image to replace ${title}`}
-                onClick={() => void onReplaceImage(im.id)}
+                aria-pressed={pointing === "replace"}
+                active={pointing === "replace"}
+                onClick={(e) => togglePoint(im.id, "replace", e.currentTarget)}
               >
                 <BrowseIcon title="Browse for image" size={14} />
               </PanelIconButton>
@@ -780,19 +884,31 @@ const Upload = (props: UploadProps) => {
         <ImageChannelOverviewCard image={im} />
         {showAccessOverlay ? (
           <div className={styles.fileAccessOverlay}>
+            {fileReference ? (
+              <div className={styles.fileAccessName} title={fileReference}>
+                {fileReference}
+              </div>
+            ) : null}
             <PanelActionButton
               type="button"
               className={styles.fileAccessAction}
-              onClick={() => {
+              active={pointing === "locate"}
+              aria-pressed={
+                needsReselect || needsLocateFile
+                  ? pointing === "locate"
+                  : undefined
+              }
+              onClick={(e) => {
                 if (needsStoryDir) void onReconnectStoryRoot?.();
-                else if (needsReselect) void onReselectFile?.(im.id);
-                else void onRequestFileAccess?.();
+                else if (needsReselect || needsLocateFile) {
+                  togglePoint(im.id, "locate", e.currentTarget);
+                } else void onRequestFileAccess?.();
               }}
             >
               {needsStoryDir
                 ? "Choose story folder"
-                : needsReselect
-                  ? "Choose file again"
+                : needsReselect || needsLocateFile
+                  ? "Locate file"
                   : "Allow file access"}
             </PanelActionButton>
           </div>
@@ -834,16 +950,16 @@ const Upload = (props: UploadProps) => {
   const stripError = importError && !pending ? importError : null;
   const dropError = stripError && stripErrorAt === "drop" ? stripError : null;
   const urlError = stripError && stripErrorAt === "url" ? stripError : null;
-  const addStrip = (
+  const renderAddStrip = (popup: boolean) => (
     <div
       className={[
         styles.addStrip,
-        row ? styles.addStripRow : "",
-        row && dragging ? styles.panelDropActive : "",
+        row && !popup ? styles.addStripRow : "",
+        (row || popup) && dragging ? styles.panelDropActive : "",
       ]
         .filter(Boolean)
         .join(" ")}
-      {...(row ? dropHandlers : {})}
+      {...(row || popup ? dropHandlers : {})}
     >
       <button
         type="button"
@@ -870,7 +986,7 @@ const Upload = (props: UploadProps) => {
       <div className={styles.urlRow}>
         <div className={styles.urlField}>
           <input
-            id="upload-add-url"
+            id={popup ? undefined : "upload-add-url"}
             type="url"
             className={`${minervaTheme.input} ${styles.urlInput}`}
             placeholder="Image URL (OME-TIFF or DICOMweb)"
@@ -915,8 +1031,35 @@ const Upload = (props: UploadProps) => {
     overlayBusyLabel = "Loading feature table…";
   }
 
+  const addStrip = renderAddStrip(false);
+
   return (
     <>
+      {pointTarget
+        ? createPortal(
+            <>
+              <button
+                type="button"
+                className={styles.pointBackdrop}
+                aria-label="Close"
+                onClick={() => setPointTarget(null)}
+              />
+              <div
+                className={styles.pointPopup}
+                style={{ top: pointTarget.top, left: pointTarget.left }}
+                role="dialog"
+                aria-label={
+                  pointTarget.mode === "locate"
+                    ? "Locate image file or URL"
+                    : "Replace image with a file or URL"
+                }
+              >
+                {renderAddStrip(true)}
+              </div>
+            </>,
+            document.body,
+          )
+        : null}
       {row ? (
         addStrip
       ) : (

@@ -10,6 +10,7 @@ import {
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import {
   type GroupLike,
+  isRelativeOmeTiffUrl,
   jpegLoaderEntriesFromImages,
 } from "@/lib/imaging/loadJpegFromDocument";
 import { getFileHandle } from "@/lib/persistence/fileHandles";
@@ -135,6 +136,9 @@ export async function hydrateDocumentLoaders(
     if (im.source.kind === "jpeg") continue;
     switch (im.source.kind) {
       case "url": {
+        // Authoring has no served story root, so a relative TIFF must be
+        // located by the user. The player resolves it against document.json.
+        if (includeLocal && isRelativeOmeTiffUrl(im.source.url)) break;
         try {
           const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
             kind: "url",

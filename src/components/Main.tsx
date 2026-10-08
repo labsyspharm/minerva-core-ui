@@ -25,7 +25,6 @@ import { extractChannels } from "@/lib/authoring/config";
 import {
   detachRemovedFeatureTables,
   hydrateFeatureTables,
-  requestFeatureTableFileAccess,
 } from "@/lib/featureTable";
 import {
   applyVisibilityTransition,
@@ -50,7 +49,6 @@ import {
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
   loadOmeLoaderForRole,
-  pickLocalOmeTiffHandle,
 } from "@/lib/imaging/filesystem";
 import { channelFloatRange } from "@/lib/imaging/floatRange";
 import {
@@ -73,6 +71,7 @@ import type {
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
 import {
+  isRelativeOmeTiffUrl,
   jpegLoaderEntriesFromImages,
   useSyncJpegChannelFolders,
 } from "@/lib/imaging/loadJpegFromDocument";
@@ -82,7 +81,8 @@ import {
   applyPaletteToFlatImportImages,
   buildOmeImportSlice,
   finalizeAppendedIntensityGroups,
-  replaceOmeLocalImageInDocument,
+  type OmeImageSource,
+  replaceOmeImageInDocument,
 } from "@/lib/imaging/omeImportPipeline";
 import { getOmeTiffImageDescriptionOmeXml } from "@/lib/imaging/omeTiff";
 import {
@@ -837,22 +837,19 @@ const Content = (props: Props) => {
   }, []);
 
   /**
-   * Swap an image's pixel source for a new OME-TIFF. New image id, same channel
-   * ids (by index) so groups and waypoints keep their links.
+   * Swap an image's pixel source for a new OME-TIFF file or URL. New image id,
+   * same channel ids (by index) so groups and waypoints keep their links.
    */
   const onReplaceImage = useCallback(
-    async (imageId: string) => {
+    async (imageId: string, source: OmeImageSource) => {
       const loadEpoch = beginImageLoading();
       try {
-        const handle = await pickLocalOmeTiffHandle();
-        if (!handle) return;
-
         const doc = useDocumentStore.getState();
         const replacedImage = doc.images.find((im) => im.id === imageId);
         if (!replacedImage) return;
         const duplicate = await findDuplicateImportTarget(
           doc.images,
-          { kind: "local", handle },
+          source.kind === "local" ? source : { ...source, dicomWeb: false },
           { excludeImageId: imageId },
         );
         if (duplicate) {
@@ -861,10 +858,10 @@ const Content = (props: Props) => {
         }
 
         clearOmeDerivedCaches();
-        const prep = await replaceOmeLocalImageInDocument({
+        const prep = await replaceOmeImageInDocument({
           images: doc.images,
           imageId,
-          handle,
+          source,
           pool: createOmeDecodePool(),
         });
         if (prep.ok === false) {
@@ -873,12 +870,15 @@ const Content = (props: Props) => {
         }
 
         const storyId = useDocumentStore.getState().activeStoryId;
-        const nextImagesPersisted = await persistLocalImageHandle({
-          storyId,
-          imageId: prep.newImageId,
-          handle,
-          images: prep.nextImages,
-        });
+        const nextImagesPersisted =
+          source.kind === "local"
+            ? await persistLocalImageHandle({
+                storyId,
+                imageId: prep.newImageId,
+                handle: source.handle,
+                images: prep.nextImages,
+              })
+            : setImageSource(prep.nextImages, prep.newImageId, source);
 
         const loaderEntry = {
           loader: prep.loader,
@@ -909,7 +909,7 @@ const Content = (props: Props) => {
           transition: { kind: "sync" },
         });
         setFileName(prep.basename);
-        setLastOmeTiffUrl(null);
+        setLastOmeTiffUrl(source.kind === "url" ? source.url : null);
         setViewerRemountKey((k) => k + 1);
         setImportRevision((r) => r + 1);
       } catch (e) {
@@ -1396,7 +1396,6 @@ const Content = (props: Props) => {
         documentUrl: window.location.href,
       });
       applyHydratedLoaders(result);
-      await requestFeatureTableFileAccess();
       if (
         result.omeLoaderEntries.length +
           result.jpegLoaderEntries.length +
@@ -1424,21 +1423,39 @@ const Content = (props: Props) => {
    * refresh, bind it to the image's handleKey (session map), then hydrate loaders.
    */
   const reselectLoaderFile = React.useCallback(
-    async (imageId: string) => {
+    async (imageId: string, handle: Handle.File) => {
       const loadEpoch = beginImageLoading();
       try {
-        const handle = await pickLocalOmeTiffHandle();
-        if (!handle) return;
-
         const doc = useDocumentStore.getState();
         const im = doc.images.find((i) => i.id === imageId);
-        if (!im?.source || im.source.kind !== "local") return;
+        if (!im?.source) return;
 
-        await putFileHandle(im.source.handleKey, handle);
-        const result = await hydrateLoadersFromImages(doc.images, true, {
-          channelGroups: doc.channelGroups,
-          documentUrl: window.location.href,
-        });
+        let images = doc.images;
+        if (im.source.kind === "local") {
+          await putFileHandle(im.source.handleKey, handle);
+        } else if (
+          im.source.kind === "url" &&
+          isRelativeOmeTiffUrl(im.source.url)
+        ) {
+          images = await persistLocalImageHandle({
+            storyId: doc.activeStoryId,
+            imageId,
+            handle,
+            images,
+          });
+          doc.setImages(images);
+        } else {
+          return;
+        }
+
+        const result = await hydrateLoadersFromImages(
+          useDocumentStore.getState().images,
+          true,
+          {
+            channelGroups: doc.channelGroups,
+            documentUrl: window.location.href,
+          },
+        );
         applyHydratedLoaders(result);
         if (
           result.omeLoaderEntries.length +
@@ -1453,6 +1470,68 @@ const Content = (props: Props) => {
         }
       } catch (e) {
         console.error("[minerva] reselectLoaderFile failed", e);
+      } finally {
+        endImageLoading(loadEpoch);
+        document.getElementById("global-loader")?.remove();
+      }
+    },
+    [
+      applyHydratedLoaders,
+      beginImageLoading,
+      endImageLoading,
+      syncRegistryFromDocument,
+    ],
+  );
+
+  /** Point an existing image at an http(s) OME-TIFF. Keeps the image id. */
+  const reselectImageUrl = React.useCallback(
+    async (imageId: string, url: string) => {
+      const loadEpoch = beginImageLoading();
+      try {
+        const doc = useDocumentStore.getState();
+        const im = doc.images.find((i) => i.id === imageId);
+        if (!im?.source) return;
+        if (im.source.kind === "jpeg" || im.source.kind === "dicomWeb") return;
+        const duplicate = await findDuplicateImportTarget(
+          doc.images,
+          { kind: "url", url, dicomWeb: false },
+          { excludeImageId: imageId },
+        );
+        if (duplicate) {
+          window.alert(duplicateImportError(duplicate));
+          return;
+        }
+        const images = setImageSource(doc.images, imageId, {
+          kind: "url",
+          url,
+        });
+        const result = await hydrateLoadersFromImages(images, true, {
+          channelGroups: doc.channelGroups,
+          documentUrl: window.location.href,
+        });
+        if (result.loaderErrors.length > 0) {
+          window.alert(result.loaderErrors.join("\n"));
+          return;
+        }
+        doc.setImages(images);
+        applyHydratedLoaders(result);
+        if (
+          result.omeLoaderEntries.length +
+            result.jpegLoaderEntries.length +
+            result.dicomIndexList.length >
+          0
+        ) {
+          syncRegistryFromDocument();
+          setImportRevision((r) => r + 1);
+          const leaf = url.trim().split(/[?#]/)[0].split("/").pop();
+          if (leaf) setFileName(leaf);
+          setLastOmeTiffUrl(url);
+        }
+      } catch (e) {
+        console.error("[minerva] reselectImageUrl failed", e);
+        window.alert(
+          e instanceof Error ? e.message : "Could not load image URL",
+        );
       } finally {
         endImageLoading(loadEpoch);
         document.getElementById("global-loader")?.remove();
@@ -1941,12 +2020,17 @@ const Content = (props: Props) => {
           if (!handle) {
             throw new Error("No export folder selected");
           }
-          await writeStoryBundleSidecars(
+          const written = await writeStoryBundleSidecars(
             handle,
             useDocumentStore.getState().toDocumentData(),
             { mode: "jpeg-ome-tiff" },
           );
           stopExport();
+          if (written.skippedFeatureTables.length > 0) {
+            window.alert(
+              `document.json updated. Feature tables not loaded, left out: ${written.skippedFeatureTables.join(", ")}`,
+            );
+          }
         }
       : undefined,
     presenting,
@@ -2297,6 +2381,7 @@ const Content = (props: Props) => {
           onRequestFileAccess: requestLoaderFileAccess,
           missingHandleKeys,
           onReselectFile: reselectLoaderFile,
+          onReselectUrl: reselectImageUrl,
           needsStoryRootReconnect: missingStoryRoot,
           onReconnectStoryRoot: reconnectStoryRoot,
           onRemoveImage,
