@@ -5,6 +5,7 @@ import {
   ColorPickerPopover,
   colorPickerAnchorPosition,
 } from "@/components/shared/ColorPickerPopover";
+import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
   PopUpdate as PopUpdateChannel,
@@ -271,6 +272,8 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
   );
   const [colorPickerChannel, setColorPickerChannel] =
     React.useState<LegendChannel | null>(null);
+  /** Starts closed; the list stays visible until the presentation frame is narrow. */
+  const [legendOpen, setLegendOpen] = React.useState(false);
 
   const closeColorPicker = React.useCallback(() => {
     setColorPickerChannel(null);
@@ -303,9 +306,30 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
 
   let rowIdx = 0;
   return (
-    <div className={styles.channelsSection}>
+    <div
+      className={[
+        styles.channelsSection,
+        legendOpen ? null : styles.channelsCollapsed,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div className={styles.channelsSectionHeader}>
-        <div className={styles.sectionLabel}>Channels</div>
+        <button
+          type="button"
+          className={`${minervaTheme.focusRing} ${styles.collapseToggle}`}
+          aria-expanded={legendOpen}
+          onClick={() => {
+            if (legendOpen) closeColorPicker();
+            setLegendOpen((open) => !open);
+          }}
+        >
+          <ChevronIcon direction={legendOpen ? "up" : "down"} />
+          <span className={styles.sectionLabel}>Channels</span>
+        </button>
+        <div className={`${styles.sectionLabel} ${styles.sectionLabelStatic}`}>
+          Channels
+        </div>
         <div className={styles.toolbarSlot}>{addChannelUI}</div>
       </div>
       <div className={styles.legendBody}>
