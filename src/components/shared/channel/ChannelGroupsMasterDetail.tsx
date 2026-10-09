@@ -494,6 +494,7 @@ export const ChannelGroupsMasterDetail = (
   props: ChannelGroupsMasterDetailProps,
 ) => {
   const setActiveChannelGroup = useAppStore((s) => s.setActiveChannelGroup);
+  const showOnlyChannelGroup = useAppStore((s) => s.showOnlyChannelGroup);
   const clearImageSelectionMask = useAppStore((s) => s.clearImageSelectionMask);
   const setImageSelectionMaskVisualization = useAppStore(
     (s) => s.setImageSelectionMaskVisualization,
@@ -567,7 +568,11 @@ export const ChannelGroupsMasterDetail = (
       Pick<VivIntensityCapVis, "stackVisibilities" | "groupRowVisibilities">
     >,
   ) => !vivIntensityCapExceeded(imageId, { ...capVis, ...next });
-  const applyRgbUnit = (imageId: string, visible: boolean) => {
+  const applyRgbUnit = (
+    imageId: string,
+    visible: boolean,
+    groupId?: string,
+  ) => {
     const next = visibilitiesForRgbUnit({
       rgbChannels: sourceChannels.filter(
         (c) => c.imageId === imageId && isImageChannel(c),
@@ -576,6 +581,7 @@ export const ChannelGroupsMasterDetail = (
       groupRowVisibilities: channelGroupRowVisibilities,
       stackVisibilities: stackVisibilities,
       visible,
+      groupId,
     });
     if (
       visible &&
@@ -710,7 +716,13 @@ export const ChannelGroupsMasterDetail = (
 
   const activateGroup = React.useCallback(
     (groupId: string) => {
-      setActiveChannelGroup(groupId);
+      // Switching groups shows only the new one, like picking it from a
+      // waypoint; re-selecting the active group keeps the author's toggles.
+      if (useAppStore.getState().activeChannelGroupId === groupId) {
+        setActiveChannelGroup(groupId);
+      } else {
+        showOnlyChannelGroup(groupId);
+      }
       const groups = useDocumentStore.getState().channelGroups;
       syncGroupState(
         groups.map((g) => ({
@@ -719,7 +731,7 @@ export const ChannelGroupsMasterDetail = (
         })),
       );
     },
-    [setActiveChannelGroup, syncGroupState],
+    [setActiveChannelGroup, showOnlyChannelGroup, syncGroupState],
   );
 
   const renameSourceChannelDisplayName = React.useCallback(
@@ -824,21 +836,14 @@ export const ChannelGroupsMasterDetail = (
     const allOn = group.channels.every((gc) =>
       isGroupRowVisible(channelGroupRowVisibilities, gc.id),
     );
-    const first = findSourceChannel(
-      sourceChannels,
-      group.channels[0].channelId,
-    );
-    if (first && isRgbDisplayChannel(first, sourceChannels)) {
-      applyRgbUnit(first.imageId, !allOn);
-      return;
-    }
     if (!allOn) {
-      const imageId = first?.imageId;
-      if (
-        imageId &&
-        !fitsImage(imageId, { groupRowVisibilities: showAllNext })
-      ) {
-        return;
+      const imageIds = new Set<string>();
+      for (const gc of group.channels) {
+        const sc = findSourceChannel(sourceChannels, gc.channelId);
+        if (sc && isImageChannel(sc)) imageIds.add(sc.imageId);
+      }
+      for (const imageId of imageIds) {
+        if (!fitsImage(imageId, { groupRowVisibilities: showAllNext })) return;
       }
       setChannelGroupRowVisibilities(showAllNext);
       return;
@@ -1417,7 +1422,7 @@ export const ChannelGroupsMasterDetail = (
                         onToggleVisibility={(event) =>
                           toggleWithScrollOnShow(event, !visible, () => {
                             if (rgbDisplay && sc) {
-                              applyRgbUnit(sc.imageId, !visible);
+                              applyRgbUnit(sc.imageId, !visible, group.id);
                               return;
                             }
                             setChannelGroupRowVisibilities(

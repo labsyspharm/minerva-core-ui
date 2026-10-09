@@ -11,6 +11,7 @@ type Source = {
 type RangeSource = {
   fetch: (
     slices: Slice[],
+    signal?: AbortSignal,
   ) => Promise<(ArrayBuffer | { data: ArrayBuffer; offset: number })[]>;
 };
 
@@ -60,7 +61,11 @@ function mergedBlockRanges(
 }
 
 /** Starts the merged reads; geotiff's per-block fetches are then served from them. */
-function prefetchedSource(base: Source, ranges: Slice[]): Source {
+function prefetchedSource(
+  base: Source,
+  ranges: Slice[],
+  exportSignal: AbortSignal,
+): Source {
   // geotiff's BlockedSource (URLs) shares its eviction map across fetches,
   // so large reads go to the range source underneath it.
   const blocked = base as Source & { blockSize?: number; source?: RangeSource };
@@ -68,7 +73,7 @@ function prefetchedSource(base: Source, ranges: Slice[]): Source {
     blocked.blockSize && blocked.source ? blocked.source : base;
   const runs = ranges.map((range) => ({
     ...range,
-    data: bulk.fetch([range]).then(
+    data: bulk.fetch([range], exportSignal).then(
       ([result]) => {
         const { data, offset } =
           result instanceof ArrayBuffer
@@ -91,6 +96,10 @@ function prefetchedSource(base: Source, ranges: Slice[]): Source {
               slice.offset + slice.length <= r.offset + r.length,
           );
           const data = await run?.data;
+          // A cancelled export does not fall back to fetching the slice again.
+          if (exportSignal.aborted) {
+            throw new DOMException("Aborted", "AbortError");
+          }
           if (!run || !data) return (await base.fetch([slice], signal))[0];
           // A copy: the decode pool transfers (detaches) what it gets.
           const start = slice.offset - run.offset;
@@ -134,6 +143,7 @@ export async function readExportTile(
   const source = prefetchedSource(
     image.source as unknown as Source,
     mergedBlockRanges(image, window),
+    signal,
   );
   const reader = new GeoTIFFImage(
     image.fileDirectory,

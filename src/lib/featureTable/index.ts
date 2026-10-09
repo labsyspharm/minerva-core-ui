@@ -28,15 +28,23 @@ import {
 import { indexTexSize, MAX_CLASS_NAMES } from "./lutLayout";
 
 export {
-  getFeatureTableIngestEpoch,
   hasIngestedFeatureTable,
   pageFeatureTable,
   peekClassIndex,
-  subscribeFeatureTableIngest,
 } from "./client";
 export { peekFeatureCsv } from "./columns";
 
 type FeatureTableColumns = { id: string; name: string };
+
+/** Dexie blob key for a table's stored Parquet. */
+export function featureTableBlobKey(
+  storyId: string | null | undefined,
+  featureTableId: string,
+): string {
+  return storyId
+    ? `story:${storyId}:featureTable:${featureTableId}`
+    : `featureTable:${featureTableId}`;
+}
 
 /** Dexie blob key, also tolerating a stored `{ handleKey }` with no `kind`. */
 export function featureTableHandleKey(
@@ -68,11 +76,12 @@ export function getFeatureTablePendingSourceIds(): readonly string[] {
 }
 
 type FeatureTableAccess = {
-  missingHandleKeys: readonly string[];
+  /** Tables whose stored or sidecar bytes could not be read. */
+  missingTableIds: readonly string[];
 };
 
 const emptyAccess: FeatureTableAccess = {
-  missingHandleKeys: [],
+  missingTableIds: [],
 };
 
 let featureTableAccess: FeatureTableAccess = emptyAccess;
@@ -104,13 +113,22 @@ async function dropStoredSource(featureTable: FeatureTable): Promise<void> {
   await deleteFileHandle(handleKey).catch(() => undefined);
 }
 
+/** Visibility test for many class names: builds the name set once. */
+export function classVisibilityTest(
+  vis: ClassVisibility | undefined,
+): (name: string) => boolean {
+  if (!vis || vis.mode === "all") return () => true;
+  const names = new Set(vis.names);
+  return vis.mode === "hide"
+    ? (name) => !names.has(name)
+    : (name) => names.has(name);
+}
+
 export function classNameVisible(
   vis: ClassVisibility | undefined,
   name: string,
 ): boolean {
-  if (!vis || vis.mode === "all") return true;
-  const names = new Set(vis.names);
-  return vis.mode === "hide" ? !names.has(name) : names.has(name);
+  return classVisibilityTest(vis)(name);
 }
 
 function visibilityAllOn(): ClassVisibility {
@@ -243,8 +261,13 @@ function noteLut() {
   for (const fn of lutListeners) fn();
 }
 
-/** In-progress class color for one waypoint. Painted over that waypoint's view until the picker commits. */
+/**
+ * In-progress class color for one waypoint. Painted over that waypoint's view
+ * until the picker commits. `owner` is the list whose picker set it, so another
+ * list closing its picker leaves this one alone.
+ */
 let classColorPreview: {
+  owner: string;
   waypointId: string;
   featureTableId: string;
   name: string;
@@ -252,6 +275,7 @@ let classColorPreview: {
 } | null = null;
 
 export function previewClassColor(
+  owner: string,
   waypointId: string,
   featureTableId: string,
   name: string,
@@ -259,7 +283,8 @@ export function previewClassColor(
 ): void {
   const prev = classColorPreview;
   if (
-    prev?.waypointId === waypointId &&
+    prev?.owner === owner &&
+    prev.waypointId === waypointId &&
     prev.featureTableId === featureTableId &&
     prev.name === name &&
     prev.color.r === color.r &&
@@ -268,12 +293,12 @@ export function previewClassColor(
   ) {
     return;
   }
-  classColorPreview = { waypointId, featureTableId, name, color };
+  classColorPreview = { owner, waypointId, featureTableId, name, color };
   noteLut();
 }
 
-export function clearClassColorPreview(): void {
-  if (!classColorPreview) return;
+export function clearClassColorPreview(owner: string): void {
+  if (classColorPreview?.owner !== owner) return;
   classColorPreview = null;
   noteLut();
 }
@@ -284,6 +309,29 @@ export function classViewFor(
 ): ClassView | undefined {
   // `?.` covers rows set from Dexie without a parse, which lack the default.
   return waypoint?.classViews?.find((v) => v.channelId === channelId);
+}
+
+/**
+ * `view` with `hidden` classes also off. The playback legend hides classes
+ * for the session this way; the waypoint's own view is not changed.
+ */
+export function withHiddenClasses(
+  view: ClassView | undefined,
+  channelId: string,
+  hidden: readonly string[] | undefined,
+): ClassView | undefined {
+  if (!hidden?.length) return view;
+  const vis = view?.visibility ?? visibilityAllOn();
+  const visibility: ClassVisibility =
+    vis.mode === "show"
+      ? { mode: "show", names: vis.names.filter((n) => !hidden.includes(n)) }
+      : {
+          mode: "hide",
+          names: [
+            ...new Set([...(vis.mode === "hide" ? vis.names : []), ...hidden]),
+          ],
+        };
+  return { channelId, colors: view?.colors ?? [], visibility };
 }
 
 /** The waypoint's colors over the table's generated palette, by class name. */
@@ -304,9 +352,26 @@ export function classColorsFor(
 }
 
 /**
+ * One entry per palette slot (slot `i + 1`), as the mask draws it. Names past
+ * the palette's slots draw unlabeled, so they are left out.
+ */
+function classSlots(
+  names: readonly string[],
+  view: ClassView | undefined,
+  seed: number,
+  colors: ReadonlyMap<string, Color>,
+): { name: string; color: Color; visible: boolean }[] {
+  const visible = classVisibilityTest(view?.visibility);
+  return names.slice(0, MAX_CLASS_NAMES).map((name, i) => ({
+    name,
+    color: colors.get(name) ?? defaultClassColor(i + 1, seed),
+    visible: visible(name),
+  }));
+}
+
+/**
  * Classes the view shows, in palette order, with the swatch the mask draws.
- * Undefined until the class index is loaded. Names past the palette's slots
- * draw unlabeled, so they are left out.
+ * Undefined until the class index is loaded.
  */
 export function shownClassRows(
   featureTable: FeatureTable,
@@ -317,17 +382,9 @@ export function shownClassRows(
   const idx = peekClassIndex(featureTable.id);
   if (!idx) return undefined;
   const colors = classColorsFor(featureTable, view, waypointId);
-  const rows: { name: string; color: Color }[] = [];
-  const n = Math.min(idx.names.length, MAX_CLASS_NAMES);
-  for (let i = 0; i < n; i++) {
-    const name = idx.names[i];
-    if (!classNameVisible(view?.visibility, name)) continue;
-    rows.push({
-      name,
-      color: colors.get(name) ?? defaultClassColor(i + 1, seed),
-    });
-  }
-  return rows;
+  return classSlots(idx.names, view, seed, colors)
+    .filter((slot) => slot.visible)
+    .map(({ name, color }) => ({ name, color }));
 }
 
 function paletteRev(
@@ -383,17 +440,15 @@ export function gpuStyleForFeatureTable(
   if (!idx) return undefined;
   const vis = view?.visibility;
   const colors = classColorsFor(featureTable, view, waypointId);
-  const n = Math.min(idx.names.length, MAX_CLASS_NAMES);
-  const palette = new Uint8Array((n + 1) * 4);
-  for (let i = 0; i < n; i++) {
-    const name = idx.names[i];
-    const color = colors.get(name) ?? defaultClassColor(i + 1, seed);
+  const slots = classSlots(idx.names, view, seed, colors);
+  const palette = new Uint8Array((slots.length + 1) * 4);
+  slots.forEach(({ color, visible }, i) => {
     const o = (i + 1) * 4;
     palette[o] = color.r;
     palette[o + 1] = color.g;
     palette[o + 2] = color.b;
-    palette[o + 3] = classNameVisible(vis, name) ? 255 : 0;
-  }
+    palette[o + 3] = visible ? 255 : 0;
+  });
   return {
     index: idx.data,
     width: idx.width,
@@ -480,10 +535,10 @@ async function commitIngestedFeatureTable(
     existing.nameColors.length > 0;
   if (reuse) nameColors = existing.nameColors;
 
-  const storyId = useDocumentStore.getState().activeStoryId;
-  const handleKey = storyId
-    ? `story:${storyId}:featureTable:${ingested.featureTableId}`
-    : `featureTable:${ingested.featureTableId}`;
+  const handleKey = featureTableBlobKey(
+    useDocumentStore.getState().activeStoryId,
+    ingested.featureTableId,
+  );
   await putBlob(handleKey, ingested.persist);
   const featureTable: FeatureTable = {
     id: ingested.featureTableId,
@@ -518,6 +573,25 @@ export async function detachFeatureTable(
       doc.featureTables.filter((c) => c.id !== featureTable.id),
     );
   }
+  dropClassViews(sourceChannelId);
+}
+
+/** Remove one mask's class views from every waypoint. */
+function dropClassViews(channelId: string): void {
+  const doc = useDocumentStore.getState();
+  if (!doc.waypoints.some((w) => classViewFor(w, channelId))) return;
+  doc.setWaypoints(
+    doc.waypoints.map((w) =>
+      classViewFor(w, channelId)
+        ? {
+            ...w,
+            classViews: (w.classViews ?? []).filter(
+              (v) => v.channelId !== channelId,
+            ),
+          }
+        : w,
+    ),
+  );
 }
 
 export function detachRemovedFeatureTables(
@@ -627,9 +701,21 @@ async function fetchTableBytes(
   return new Uint8Array(await res.arrayBuffer());
 }
 
+/** Stored bytes for one table, or undefined when there are none to read. */
+async function readTableBytes(
+  featureTable: FeatureTable,
+  documentUrl: string | undefined,
+): Promise<Uint8Array | undefined> {
+  const { source } = featureTable;
+  if (source.kind === "url") return fetchTableBytes(source.url, documentUrl);
+  const key = featureTableHandleKey(featureTable);
+  return key ? getBlob(key) : undefined;
+}
+
 /**
  * Ingest every table into the worker. A `local` source reads its Dexie blob;
  * a `url` source is fetched relative to `documentUrl` (the page by default).
+ * A table that cannot be read is listed in `missingTableIds`.
  */
 export async function hydrateFeatureTables(
   featureTables: readonly FeatureTable[],
@@ -640,43 +726,38 @@ export async function hydrateFeatureTables(
     lutPending.clear();
     await resetFeatureTables();
   }
-  const missingHandleKeys: string[] = [];
-  for (const featureTable of featureTables) {
-    if (!reset && hasIngestedFeatureTable(featureTable.id)) continue;
-    const { source } = featureTable;
-    if (source.kind === "url") {
-      try {
-        const bytes = await fetchTableBytes(source.url, opts?.documentUrl);
-        const ingested = await ingestFeatureTable(featureTable.id, bytes);
-        noteLut();
-        if (featureTable.nameColors.length === 0) {
-          scheduleClassPalette(featureTable.id, ingested.names);
-        }
-      } catch (e) {
-        console.error("[featureTable] hydrate failed", featureTable.id, e);
-      }
-      continue;
-    }
-    const key = featureTableHandleKey(featureTable);
-    if (!key) continue;
-    const bytes = await getBlob(key);
+  const pending = featureTables.filter(
+    (featureTable) => reset || !hasIngestedFeatureTable(featureTable.id),
+  );
+  // Reads overlap; ingests stay in order on the worker's one DuckDB connection.
+  const reads = pending.map((featureTable) =>
+    readTableBytes(featureTable, opts?.documentUrl).catch((e) => {
+      console.error("[featureTable] hydrate failed", featureTable.id, e);
+      return undefined;
+    }),
+  );
+  const missingTableIds: string[] = [];
+  for (const [i, featureTable] of pending.entries()) {
+    const bytes = await reads[i];
     if (!bytes) {
-      missingHandleKeys.push(key);
+      missingTableIds.push(featureTable.id);
       continue;
     }
     try {
       const ingested = await ingestFeatureTable(featureTable.id, bytes);
       noteLut();
-      if (ingested.persist) {
+      const key = featureTableHandleKey(featureTable);
+      if (ingested.persist && key) {
         // Legacy CSV blob. Keep the digest so `nameColors` stay matched.
         await putBlob(key, ingested.persist);
-      } else if (featureTable.nameColors.length === 0) {
+      }
+      if (featureTable.nameColors.length === 0) {
         scheduleClassPalette(featureTable.id, ingested.names);
       }
     } catch (e) {
       console.error("[featureTable] hydrate failed", featureTable.id, e);
-      missingHandleKeys.push(key);
+      missingTableIds.push(featureTable.id);
     }
   }
-  noteAccess({ missingHandleKeys });
+  noteAccess({ missingTableIds });
 }

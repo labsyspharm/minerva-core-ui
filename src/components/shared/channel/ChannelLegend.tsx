@@ -17,6 +17,7 @@ import {
   isGroupRowVisible,
   isStackVisible,
 } from "@/lib/imaging/channelCompositor";
+import { isMaskChannel } from "@/lib/imaging/channelKind";
 import {
   getStackPalettePendingIds,
   subscribeStackPalettePending,
@@ -48,6 +49,7 @@ export type LegendChannel = {
   group_uuid: string;
   source_uuid: string;
   channel_uuid: string;
+  mask?: boolean;
 };
 
 export type LegendEntry =
@@ -78,6 +80,7 @@ export function legendChannelFromLayer(
     group_uuid: groupId,
     source_uuid: sc.id,
     channel_uuid: gc.id,
+    mask: isMaskChannel(sc),
   };
 }
 
@@ -98,6 +101,7 @@ export function legendChannelFromSource(
     group_uuid: "",
     source_uuid: sc.id,
     channel_uuid: sc.id,
+    mask: isMaskChannel(sc),
   };
 }
 
@@ -170,33 +174,35 @@ const LegendRow = (props: LegendRowProps) => {
       className={styles.rowClickArea}
       style={{ opacity: rowVisible ? 1 : 0.55 }}
     >
-      <button
-        type="button"
-        className={[
-          styles.swatchButton,
-          colorPending ? minervaTheme.busyOverlay : null,
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        onClick={onColorClick}
-        title={swatchLabel}
-        aria-label={swatchLabel}
-        aria-busy={colorPending || undefined}
-      >
-        <div
+      {channel.mask ? null : (
+        <button
+          type="button"
           className={[
-            styles.swatch,
-            channel.color && rowVisible ? styles.swatchFilled : null,
+            styles.swatchButton,
+            colorPending ? minervaTheme.busyOverlay : null,
           ]
             .filter(Boolean)
             .join(" ")}
-          style={
-            {
-              "--swatch-color": channel.color ? `#${channel.color}` : "#fff",
-            } as CSSProperties
-          }
-        />
-      </button>
+          onClick={onColorClick}
+          title={swatchLabel}
+          aria-label={swatchLabel}
+          aria-busy={colorPending || undefined}
+        >
+          <div
+            className={[
+              styles.swatch,
+              channel.color && rowVisible ? styles.swatchFilled : null,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            style={
+              {
+                "--swatch-color": channel.color ? `#${channel.color}` : "#fff",
+              } as CSSProperties
+            }
+          />
+        </button>
+      )}
       <button
         type="button"
         className={styles.nameButton}
@@ -403,15 +409,21 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
 export type ClassLegendSection = {
   channelId: string;
   label: string;
-  /** `color` is hex without `#`. */
-  rows: { name: string; color: string }[];
+  /** `color` is hex without `#`; `hidden` was turned off from the legend. */
+  rows: { name: string; color: string; hidden: boolean }[];
   /** False for a white mask, which draws every class the same. */
   showSwatches: boolean;
 };
 
 const CLASS_LEGEND_ROWS = 12;
 
-function ClassLegendList({ section }: { section: ClassLegendSection }) {
+function ClassLegendList({
+  section,
+  onToggle,
+}: {
+  section: ClassLegendSection;
+  onToggle: (channelId: string, name: string) => void;
+}) {
   const [expanded, setExpanded] = React.useState(false);
   const more = section.rows.length - CLASS_LEGEND_ROWS;
   const rows =
@@ -424,21 +436,40 @@ function ClassLegendList({ section }: { section: ClassLegendSection }) {
         {section.label}
       </div>
       <div className={styles.channelList}>
-        {rows.map((row) => (
-          <div className={styles.legendRowWrap} key={row.name}>
-            <div className={styles.rowClickArea}>
-              {section.showSwatches ? (
-                <div
-                  className={`${styles.swatch} ${styles.swatchFilled}`}
-                  style={{ "--swatch-color": `#${row.color}` } as CSSProperties}
-                />
-              ) : null}
-              <span className={styles.nameSlot}>
-                {row.name.trim() ? row.name : "Unnamed"}
-              </span>
+        {rows.map((row) => {
+          const label = row.name.trim() ? row.name : "Unnamed";
+          return (
+            <div className={styles.legendRowWrap} key={row.name}>
+              <div
+                className={styles.rowClickArea}
+                style={{ opacity: row.hidden ? 0.55 : 1 }}
+              >
+                <button
+                  type="button"
+                  className={`${minervaTheme.focusRing} ${styles.nameButton}`}
+                  onClick={() => onToggle(section.channelId, row.name)}
+                  title={row.hidden ? `Show ${label}` : `Hide ${label}`}
+                  aria-pressed={!row.hidden}
+                >
+                  {section.showSwatches ? (
+                    <div
+                      className={[
+                        styles.swatch,
+                        row.hidden ? null : styles.swatchFilled,
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      style={
+                        { "--swatch-color": `#${row.color}` } as CSSProperties
+                      }
+                    />
+                  ) : null}
+                  <span className={styles.nameSlot}>{label}</span>
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {more > 0 && !expanded ? (
           <div className={styles.legendRowWrap}>
             <button
@@ -455,11 +486,16 @@ function ClassLegendList({ section }: { section: ClassLegendSection }) {
   );
 }
 
-/** Classes the active waypoint shows, one list per mask with a table. */
+/**
+ * Classes the active waypoint shows, one list per mask with a table.
+ * Clicking a class hides or shows it for this session.
+ */
 export const ClassLegend = ({
   sections,
+  onToggle,
 }: {
   sections: ClassLegendSection[];
+  onToggle: (channelId: string, name: string) => void;
 }) => {
   if (sections.length === 0) return null;
   return (
@@ -469,7 +505,11 @@ export const ClassLegend = ({
       </div>
       <div className={styles.legendBody}>
         {sections.map((section) => (
-          <ClassLegendList key={section.channelId} section={section} />
+          <ClassLegendList
+            key={section.channelId}
+            section={section}
+            onToggle={onToggle}
+          />
         ))}
       </div>
     </div>

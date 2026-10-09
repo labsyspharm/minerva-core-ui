@@ -54,6 +54,7 @@ import {
   detectOmeTiffMask,
   detectOmeTiffRgbLayout,
 } from "@/lib/imaging/omeTiff";
+import { urlFileName } from "@/lib/imaging/sourceUrl";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentStore";
 import {
@@ -127,6 +128,8 @@ type UploadProps = {
    * cleared — user must pick the file again.
    */
   missingHandleKeys?: string[];
+  /** Images with an open loader; a relative TIFF among them needs no locating. */
+  loadedImageIds?: ReadonlySet<string>;
   /** File chosen in the add strip for an image that still needs its file. */
   onReselectFile?: (
     imageId: string,
@@ -208,11 +211,8 @@ const formatDims = (w: number, h: number, c: number) => {
 function sourceFileReference(im: Image): string | null {
   const src = im.source;
   if (src?.kind === "url" || src?.kind === "jpeg") {
-    const url = src.url.trim();
-    if (url && url !== "." && url !== "./") {
-      const leaf = url.split(/[/\\]/).pop()?.trim();
-      if (leaf) return leaf;
-    }
+    const leaf = urlFileName(src.url);
+    if (leaf && leaf !== ".") return leaf;
   }
   const base = im.basename.trim();
   return base || null;
@@ -286,14 +286,24 @@ type PointTarget = {
   mode: "locate" | "replace";
   top: number;
   left: number;
+  maxHeight: number;
 };
 
-/** Below the clicked control, clamped on-screen. Matches `.pointPopup` width. */
-function pointPopupPosition(el: Element): { top: number; left: number } {
+/**
+ * Below the clicked control, clamped on-screen. Matches `.pointPopup` width;
+ * `maxHeight` keeps it inside the window, scrolling when the space is short.
+ */
+function pointPopupPosition(el: Element): {
+  top: number;
+  left: number;
+  maxHeight: number;
+} {
   const rect = el.getBoundingClientRect();
+  const top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 200));
   return {
-    top: Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 200)),
+    top,
     left: Math.max(8, Math.min(rect.left, window.innerWidth - 328)),
+    maxHeight: window.innerHeight - top - 8,
   };
 }
 
@@ -310,6 +320,7 @@ const Upload = (props: UploadProps) => {
     needsFileAccess = false,
     onRequestFileAccess,
     missingHandleKeys = [],
+    loadedImageIds,
     onReselectFile,
     onReselectUrl,
     needsStoryRootReconnect = false,
@@ -333,6 +344,9 @@ const Upload = (props: UploadProps) => {
         ? null
         : { imageId, mode, ...pointPopupPosition(el) },
     );
+    // The popup and the panel strip share one draft; each starts empty.
+    setUrlDraft("");
+    setImportError(null);
   };
 
   const images = useDocumentStore((s) => s.images);
@@ -803,7 +817,8 @@ const Upload = (props: UploadProps) => {
     const needsLocateFile =
       !!onReselectFile &&
       im.source?.kind === "url" &&
-      isRelativeOmeTiffUrl(im.source.url);
+      isRelativeOmeTiffUrl(im.source.url) &&
+      !loadedImageIds?.has(im.id);
     const needsPermission =
       needsFileAccess &&
       !!onRequestFileAccess &&
@@ -950,80 +965,91 @@ const Upload = (props: UploadProps) => {
   const stripError = importError && !pending ? importError : null;
   const dropError = stripError && stripErrorAt === "drop" ? stripError : null;
   const urlError = stripError && stripErrorAt === "url" ? stripError : null;
-  const renderAddStrip = (popup: boolean) => (
-    <div
-      className={[
-        styles.addStrip,
-        row && !popup ? styles.addStripRow : "",
-        (row || popup) && dragging ? styles.panelDropActive : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      {...(row || popup ? dropHandlers : {})}
-    >
-      <button
-        type="button"
+  const renderAddStrip = (popup: boolean) => {
+    // While the popup is open it owns the shared draft, errors, and drag state.
+    const inUse = popup || !pointTarget;
+    const draft = inUse ? urlDraft : "";
+    const stripDropError = inUse ? dropError : null;
+    const stripUrlError = inUse ? urlError : null;
+    const stripDragging = inUse && dragging;
+    return (
+      <div
         className={[
-          styles.dropZone,
-          dragging ? styles.dropZoneActive : "",
-        ].join(" ")}
-        disabled={disabled}
-        aria-invalid={dropError ? true : undefined}
-        onClick={() => void browseLocal()}
+          styles.addStrip,
+          row && !popup ? styles.addStripRow : "",
+          (row || popup) && stripDragging ? styles.panelDropActive : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        {...(row || popup ? dropHandlers : {})}
       >
-        <span
-          className={[styles.dropZoneTitle, dropError ? styles.importError : ""]
-            .filter(Boolean)
-            .join(" ")}
-          role={dropError ? "alert" : undefined}
+        <button
+          type="button"
+          className={[
+            styles.dropZone,
+            stripDragging ? styles.dropZoneActive : "",
+          ].join(" ")}
+          disabled={disabled}
+          aria-invalid={stripDropError ? true : undefined}
+          onClick={() => void browseLocal()}
         >
-          {dropError ?? "Drop or Browse Image File"}
-        </span>
-      </button>
-      <div className={styles.orDivider}>
-        <span>or</span>
-      </div>
-      <div className={styles.urlRow}>
-        <div className={styles.urlField}>
-          <input
-            id={popup ? undefined : "upload-add-url"}
-            type="url"
-            className={`${minervaTheme.input} ${styles.urlInput}`}
-            placeholder="Image URL (OME-TIFF or DICOMweb)"
-            aria-label="Image URL"
-            aria-invalid={urlError ? true : undefined}
-            value={urlDraft}
-            disabled={disabled}
-            onChange={(e) => {
-              setUrlDraft(e.target.value);
-              setImportError(null);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                acceptUrlDraft();
-              }
-            }}
-          />
-          {urlDraft.trim() ? (
-            <PanelActionButton
-              type="button"
-              className={styles.urlAdd}
-              disabled={disabled || !urlReady}
-              onClick={acceptUrlDraft}
-            >
-              Add
-            </PanelActionButton>
+          <span
+            className={[
+              styles.dropZoneTitle,
+              stripDropError ? styles.importError : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            role={stripDropError ? "alert" : undefined}
+          >
+            {stripDropError ?? "Drop or Browse Image File"}
+          </span>
+        </button>
+        <div className={styles.orDivider}>
+          <span>or</span>
+        </div>
+        <div className={styles.urlRow}>
+          <div className={styles.urlField}>
+            <input
+              id={popup ? undefined : "upload-add-url"}
+              type="url"
+              className={`${minervaTheme.input} ${styles.urlInput}`}
+              placeholder="Image URL (OME-TIFF or DICOMweb)"
+              aria-label="Image URL"
+              aria-invalid={stripUrlError ? true : undefined}
+              value={draft}
+              disabled={disabled}
+              onChange={(e) => {
+                setUrlDraft(e.target.value);
+                setImportError(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  acceptUrlDraft();
+                }
+              }}
+            />
+            {draft.trim() ? (
+              <PanelActionButton
+                type="button"
+                className={styles.urlAdd}
+                disabled={disabled || !urlReady}
+                onClick={acceptUrlDraft}
+              >
+                Add
+              </PanelActionButton>
+            ) : null}
+          </div>
+          {stripUrlError ? (
+            <div className={styles.importError} role="alert">
+              {stripUrlError}
+            </div>
           ) : null}
         </div>
-        {urlError ? (
-          <div className={styles.importError} role="alert">
-            {urlError}
-          </div>
-        ) : null}
       </div>
-    </div>
-  );
+    );
+  };
 
   let overlayBusyLabel = "Importing…";
   if (detecting) overlayBusyLabel = "Detecting…";
@@ -1046,7 +1072,11 @@ const Upload = (props: UploadProps) => {
               />
               <div
                 className={styles.pointPopup}
-                style={{ top: pointTarget.top, left: pointTarget.left }}
+                style={{
+                  top: pointTarget.top,
+                  left: pointTarget.left,
+                  maxHeight: pointTarget.maxHeight,
+                }}
                 role="dialog"
                 aria-label={
                   pointTarget.mode === "locate"

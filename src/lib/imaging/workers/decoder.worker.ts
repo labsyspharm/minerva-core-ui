@@ -1,7 +1,8 @@
 import { getDecoder } from "geotiff";
-import { registerLzwDecoder } from "./decoders";
+import { registerJpegDecoder, registerLzwDecoder } from "./decoders";
 
 registerLzwDecoder();
+registerJpegDecoder();
 
 // @ts-expect-error - We are in a worker context
 const worker: ServiceWorker = self;

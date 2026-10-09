@@ -1,19 +1,14 @@
 import { SIGNAL_ABORTED } from "@hms-dbmi/viv";
 import type { GeoTIFFImage } from "geotiff";
 import {
-  decodeCubeRootU8ToU16,
+  expandThroughLut,
   type JpegExportTransfer,
+  u8ToU16Lut,
 } from "./cubeRootEncoding";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
 import type { Loader } from "./viv";
 
 type TileArgs = Parameters<LoaderPlane["getTile"]>[0];
-
-const CUBE_ROOT_U8_TO_U16 = Uint16Array.from({ length: 256 }, (_, b) =>
-  decodeCubeRootU8ToU16(b),
-);
-
-const CONTRAST_U8_TO_U16 = Uint16Array.from({ length: 256 }, (_, b) => b << 8);
 
 /** Viv `TiffPixelSource` internals read by the fast path; absent on other planes. */
 type TiffPlaneInternals = {
@@ -22,17 +17,6 @@ type TiffPlaneInternals = {
   _indexer?: (selection: TileArgs["selection"]) => Promise<GeoTIFFImage>;
   _getTileExtent?: (x: number, y: number) => { width: number; height: number };
 };
-
-function expandThroughLut(
-  data: ArrayLike<number>,
-  lut: Uint16Array,
-): Uint16Array {
-  const out = new Uint16Array(data.length);
-  for (let i = 0; i < data.length; i++) {
-    out[i] = lut[data[i] & 0xff];
-  }
-  return out;
-}
 
 /**
  * Read one decoded 8-bit tile and widen it through `lut`. Skips geotiff's
@@ -46,7 +30,6 @@ async function readTileThroughLut(
   lut: Uint16Array,
 ): Promise<HasTile | null> {
   const source = plane as unknown as TiffPlaneInternals;
-  // geotiff's `readRasters` does `pool || getDecoder(...)`. No pool here.
   if (!source._indexer || !source._getTileExtent || !source.pool) return null;
   try {
     const image = await source._indexer(args.selection);
@@ -60,7 +43,6 @@ async function readTileThroughLut(
       return null;
     }
     const { width, height } = source._getTileExtent(args.x, args.y);
-    // Like Viv's `_readRasters`, do not hand `signal` to geotiff (shared blocks).
     const tile = await image.getTileOrStrip(
       args.x,
       args.y,
@@ -93,14 +75,15 @@ export function wrapOmeLoaderJpegExport(
   loader: Loader,
   transfer: JpegExportTransfer,
 ): Loader {
-  const lut =
-    transfer === "cube-root" ? CUBE_ROOT_U8_TO_U16 : CONTRAST_U8_TO_U16;
+  const lut = u8ToU16Lut(transfer);
   const data = loader.data?.map((plane) => {
     const getTile = plane.getTile?.bind(plane);
     if (!getTile) return plane;
     const wrapped: LoaderPlane = {
       ...plane,
       dtype: "Uint16",
+      // A prototype method, so the spread drops it; Viv falls back to it.
+      onTileError: plane.onTileError?.bind(plane),
       getTile: async (args) => {
         const fast = await readTileThroughLut(plane, args, lut);
         if (fast) return fast;

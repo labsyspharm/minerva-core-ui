@@ -557,17 +557,30 @@ async function finishOmeIntensityLoader(
 
 type OmeLoaderRole = "intensity" | "segmentation";
 
-/**
- * Open the OME-TIFF file picker, then verify permission and that the file
- * still resolves. Returns null on cancel / denied / missing.
- */
-export async function pickLocalOmeTiffHandle(): Promise<Handle.File | null> {
-  const picked = await toFile();
-  if (picked.length === 0) return null;
-  const handle = picked[0];
-  if (!(await ensureFileHandlePermission(handle))) return null;
-  if (!(await findFile({ handle }))) return null;
-  return handle;
+/** File at `relativePath` under `root` (e.g. beside `document.json`); undefined when missing. */
+export async function fileInDirectory(
+  root: FileSystemDirectoryHandle,
+  relativePath: string,
+): Promise<FileSystemFileHandle | undefined> {
+  const parts = relativePath
+    .trim()
+    .split(/[/\\]/)
+    .filter((part) => part && part !== ".");
+  const name = parts.pop();
+  if (!name || parts.includes("..")) return undefined;
+  let dir = root;
+  try {
+    for (const part of parts) dir = await dir.getDirectoryHandle(part);
+    return await dir.getFileHandle(name);
+  } catch (e) {
+    if (
+      e instanceof DOMException &&
+      (e.name === "NotFoundError" || e.name === "TypeMismatchError")
+    ) {
+      return undefined;
+    }
+    throw e;
+  }
 }
 
 export async function loadOmeLoaderForRole(

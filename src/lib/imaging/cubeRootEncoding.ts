@@ -69,9 +69,32 @@ export function encodeCubeRootU16ToU8(pixel: number): number {
   );
 }
 
-export function decodeCubeRootU8ToU16(byte: number): number {
+function decodeCubeRootU8ToU16(byte: number): number {
   if (!Number.isFinite(byte) || byte <= 0) return 0;
   return Math.min(65535, Math.max(0, Math.round((byte / 256) ** 3 * 65536)));
+}
+
+const CUBE_ROOT_U8_TO_U16 = Uint16Array.from({ length: 256 }, (_, b) =>
+  decodeCubeRootU8ToU16(b),
+);
+
+const CONTRAST_U8_TO_U16 = Uint16Array.from({ length: 256 }, (_, b) => b << 8);
+
+/** Decoded JPEG byte → display uint16: inverse cube root, or `byte << 8` (baked window). */
+export function u8ToU16Lut(transfer: JpegExportTransfer): Uint16Array {
+  return transfer === "cube-root" ? CUBE_ROOT_U8_TO_U16 : CONTRAST_U8_TO_U16;
+}
+
+/** Widen decoded JPEG bytes through a {@link u8ToU16Lut} table. */
+export function expandThroughLut(
+  data: ArrayLike<number>,
+  lut: Uint16Array,
+): Uint16Array<ArrayBuffer> {
+  const out = new Uint16Array(data.length);
+  for (let i = 0; i < data.length; i++) {
+    out[i] = lut[data[i] & 0xff];
+  }
+  return out;
 }
 
 type TransferImage = {

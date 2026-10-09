@@ -246,11 +246,19 @@ const WaypointsList = (props: WaypointsListProps) => {
     };
     if (activeStoryIndex == null || activeWaypointId == null) return;
     if (last.id !== activeWaypointId) return;
-    if (last.classViews === activeClassViews) return;
+    // Identity also changes on a row normalized from undefined to []; only a
+    // change in the classes themselves alters the picture.
+    if (
+      JSON.stringify(last.classViews ?? []) ===
+      JSON.stringify(activeClassViews ?? [])
+    ) {
+      return;
+    }
     const index = activeStoryIndex;
     const timeout = window.setTimeout(() => {
       const st = useAppStore.getState();
       if (st.activeStoryIndex !== index || !st.viewerImageLayersLoaded) return;
+      if (!useDocumentStore.getState().waypoints[index]?.thumbnail) return;
       const thumbnail = st.captureSquareViewportThumbnail();
       if (!thumbnail) return;
       const history = useDocumentStore.temporal.getState();

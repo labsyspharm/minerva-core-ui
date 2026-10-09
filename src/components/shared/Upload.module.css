@@ -367,6 +367,7 @@
   position: fixed;
   z-index: 9999;
   width: 320px;
+  overflow-y: auto;
   background: var(--minerva-paper);
 }
 

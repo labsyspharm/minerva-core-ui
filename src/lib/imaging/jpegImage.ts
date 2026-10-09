@@ -1,8 +1,10 @@
 import {
-  decodeCubeRootU8ToU16,
+  expandThroughLut,
   type JpegExportTransfer,
+  u8ToU16Lut,
 } from "./cubeRootEncoding";
 import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
+import { sharedOmeDecodePool } from "./omeDecodePool";
 
 export type JpegTileFetcher = (
   folder: string,
@@ -35,6 +37,8 @@ class JpegImage {
   imageWidth: number;
   fetchTile: JpegTileFetcher;
   transfer: JpegExportTransfer;
+  /** One grayscale JPEG tile, described as a TIFF tile for the decode worker. */
+  tileDirectory: Record<string, number>;
 
   constructor(opts: JpegImageOpts) {
     const tileSize = opts.tileSize ?? JPEG_PYRAMID_TILE_SIZE;
@@ -48,6 +52,12 @@ class JpegImage {
     this.imageHeight = opts.imageHeight;
     this.imageWidth = opts.imageWidth;
     this.transfer = opts.transfer ?? "contrast";
+    this.tileDirectory = {
+      Compression: 7,
+      SamplesPerPixel: 1,
+      TileWidth: tileSize,
+      TileLength: tileSize,
+    };
     this.fetchTile =
       opts.fetchTile ??
       (async (folder, filename) => {
@@ -63,34 +73,14 @@ class JpegImage {
   async getTileOrStrip(x: number, y: number, sample: number) {
     const fname = `${this.level}_${x}_${y}.jpg`;
     const blob = await this.fetchTile(this.folder, fname);
-    const decoder = new ImageDecoder({
-      data: await blob.arrayBuffer(),
-      type: "image/jpeg",
-    });
-    const { image } = await decoder.decode();
-    const { displayWidth, displayHeight } = image;
-    const tileSize = this.tileSize;
-    const copyOptions = {
-      format: "BGRX" as const,
-      layout: [{ offset: 0, stride: displayWidth * 4 }],
-    };
-    const in_data = new Uint8Array(image.allocationSize(copyOptions));
-    // Viv expects a full tile buffer; pad short edge tiles with zeros.
-    const data = new Uint16Array(tileSize ** 2);
-    await image.copyTo(in_data, copyOptions);
-    const rowWidth = Math.min(displayWidth, tileSize);
-    const rowCount = Math.min(displayHeight, tileSize);
-    for (let row = 0; row < rowCount; row += 1) {
-      for (let col = 0; col < rowWidth; col += 1) {
-        const byte = in_data[(row * displayWidth + col) * 4];
-        data[row * tileSize + col] =
-          this.transfer === "cube-root"
-            ? decodeCubeRootU8ToU16(byte)
-            : byte << 8;
-      }
-    }
-    image.close();
-    decoder.close();
+    // The decoder pads short edge tiles, so this is the full tile Viv expects.
+    const bytes = new Uint8Array(
+      await sharedOmeDecodePool().decode(
+        this.tileDirectory,
+        await blob.arrayBuffer(),
+      ),
+    );
+    const data = expandThroughLut(bytes, u8ToU16Lut(this.transfer));
     return { x, y, sample, data };
   }
 

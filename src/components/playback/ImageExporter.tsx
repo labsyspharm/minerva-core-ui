@@ -72,18 +72,23 @@ const RATE_WINDOW_MS = 5_000;
 
 type RateSample = { at: number; completed: number };
 
+/** Rate over the window up to `now`, so time since the last tile slows it. */
 const estimateRemainingMs = (
   samples: readonly RateSample[],
   total: number,
+  now: number,
 ): number | null => {
   if (samples.length < 2) return null;
   const base = samples[0];
   const tip = samples[samples.length - 1];
-  const elapsed = tip.at - base.at;
   const gained = tip.completed - base.completed;
-  if (elapsed < RATE_WINDOW_MS || gained <= 0 || total <= tip.completed)
+  if (
+    tip.at - base.at < RATE_WINDOW_MS ||
+    gained <= 0 ||
+    total <= tip.completed
+  )
     return null;
-  return ((total - tip.completed) * elapsed) / gained;
+  return ((total - tip.completed) * (now - base.at)) / gained;
 };
 
 const toFilename = (index: Index) => {
@@ -319,6 +324,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     done: false,
   });
   const rateSamplesRef = React.useRef<RateSample[]>([]);
+  const [remainingMs, setRemainingMs] = useState<number | null>(null);
   const [cRange, setCRange] = useState<Index[] | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   /** Masks whose feature table was not loaded, so the export left it out. */
@@ -513,8 +519,10 @@ export const ImageExporter = (props: ImageExporterProps) => {
         });
         setSkippedTables(written.skippedFeatureTables);
         const store = useDocumentStore.getState();
-        store.setImages(exported.images);
-        store.setChannelGroups(exported.channelGroups);
+        store.setImagesAndChannelGroups(
+          exported.images,
+          exported.channelGroups,
+        );
         store.setMetadata({
           imageSource: nextSource,
         });
@@ -665,16 +673,27 @@ export const ImageExporter = (props: ImageExporterProps) => {
   }, [state, cRange, exportError, directory_handle, mode, exportArmed]);
 
   const { completed, total, done } = progress;
-  const rateSamples = rateSamplesRef.current;
-  if (done || completed <= 0) {
-    rateSamples.length = 0;
-  } else if (rateSamples[rateSamples.length - 1]?.completed !== completed) {
-    const at = performance.now();
-    rateSamples.push({ at, completed });
-    while (rateSamples.length > 2 && at - rateSamples[1].at >= RATE_WINDOW_MS) {
-      rateSamples.shift();
+  React.useEffect(() => {
+    const samples = rateSamplesRef.current;
+    if (done || completed <= 0) {
+      samples.length = 0;
+      setRemainingMs(null);
+      return;
     }
-  }
+    const at = performance.now();
+    if (samples[samples.length - 1]?.completed !== completed) {
+      samples.push({ at, completed });
+      while (samples.length > 2 && at - samples[1].at >= RATE_WINDOW_MS) {
+        samples.shift();
+      }
+    }
+    const update = () =>
+      setRemainingMs(estimateRemainingMs(samples, total, performance.now()));
+    update();
+    // Re-estimate while waiting on the next tile, so a stall lengthens the ETA.
+    const tick = window.setInterval(update, 1000);
+    return () => window.clearInterval(tick);
+  }, [completed, total, done]);
   let ratio = done ? 1 : 0;
   if (!done && total > 1) {
     ratio = completed / total;
@@ -684,7 +703,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
     ratio = 0;
   }
 
-  const remainingMs = estimateRemainingMs(rateSamples, total);
   const percentLabel = `${(ratio * 100).toFixed(3)}%`;
   let etaLabel = "";
   if (done) {

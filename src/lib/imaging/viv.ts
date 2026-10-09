@@ -4,6 +4,7 @@ import type {
   Channel as SourceChannel,
 } from "@/lib/stores/documentStore";
 import type { Roi } from "../shapes/roiParser";
+import { isMobileDevice } from "../viewer/isMobileDevice";
 import {
   applyVisibilityTransition,
   buildCompositedIntensityLayers,
@@ -16,8 +17,12 @@ import {
   effectiveSourceLimits,
 } from "./sourceChannelStyle";
 
-/** CPU raster bytes Deck may keep per layer (not GPU textures). */
-const VIV_TILE_MAX_CACHE_BYTE_SIZE = 512 * 1024 * 1024;
+/**
+ * CPU raster bytes Deck may keep per layer; each cached tile also holds its
+ * GPU textures. Phones and tablets keep only the tiles on screen: iOS kills a
+ * tab long before desktop memory runs out.
+ */
+const VIV_TILE_MAX_CACHE_BYTE_SIZE = isMobileDevice() ? 0 : 512 * 1024 * 1024;
 
 function rasterTileByteLength(data: unknown): number {
   if (data == null) return 0;

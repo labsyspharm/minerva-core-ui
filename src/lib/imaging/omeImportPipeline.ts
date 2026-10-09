@@ -27,6 +27,7 @@ import {
   applySharedImportPaletteToSourceChannels,
 } from "./psudoPalette";
 import { seedMaskSourceChannelStyles } from "./sourceChannelStyle";
+import { urlFileName } from "./sourceUrl";
 
 const PACKED_RGB_IF_NAMES = new Set(["r", "g", "b"]);
 
@@ -204,12 +205,6 @@ export type ReplaceOmeImageResult =
     }
   | { ok: false; reason: "missing" | "unsupported" | "error"; error?: string };
 
-function urlLeaf(url: string): string {
-  const path = url.trim().split(/[?#]/)[0];
-  const leaf = path.split("/").pop()?.trim();
-  return leaf || "remote.ome.tif";
-}
-
 /**
  * Load an OME-TIFF file or URL as a replacement for `imageId`: new image id,
  * same channel ids (by index). Caller persists a local handle or URL source
@@ -236,7 +231,7 @@ export async function replaceOmeImageInDocument(args: {
   const basename =
     source.kind === "local"
       ? (await source.handle.getFile()).name
-      : urlLeaf(source.url);
+      : urlFileName(source.url) || "remote.ome.tif";
   const role = resolveImageImportRole({
     contentRole: oldImage.contentRole,
     channels: oldImage.channels ?? [],

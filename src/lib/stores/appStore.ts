@@ -814,6 +814,17 @@ export interface AppStore {
   setArrangeImageId: (imageId: string | null) => void;
   channelVisibilities: Record<string, boolean>;
   groupNames: Record<string, string>;
+  /**
+   * Classes turned off from the playback legend, by `legendClassKey`.
+   * Session only: the waypoint's class view is not changed.
+   */
+  hiddenLegendClasses: Record<string, string[]>;
+  toggleLegendClass: (
+    waypointId: string | undefined,
+    channelId: string,
+    name: string,
+  ) => void;
+  clearLegendClasses: () => void;
 
   finalizeEllipse: () => void;
   finalizeLasso: (points: [number, number][]) => void;
@@ -911,6 +922,14 @@ function maybePersistShapesAfterMutation(get: () => AppStore) {
   get().persistImportedShapesToStory(resolved);
 }
 
+/** `hiddenLegendClasses` key: one list per waypoint and mask channel. */
+export function legendClassKey(
+  waypointId: string | undefined,
+  channelId: string,
+): string {
+  return `${waypointId ?? ""}:${channelId}`;
+}
+
 // Initial state for overlay store
 const overlayInitialState = {
   overlayLayers: [],
@@ -959,6 +978,7 @@ const overlayInitialState = {
   channelVisibilities: {},
   channelGroupRowVisibilities: {},
   groupNames: {},
+  hiddenLegendClasses: {} as Record<string, string[]>,
   targetWaypointCamera: null,
   authoringWaypointEditorOpen: false,
   layersPanelSelectedShapeIds: [] as string[],
@@ -1213,6 +1233,21 @@ export const useAppStore = create<AppStore>()(
         set({ shapes: [] });
       },
 
+      toggleLegendClass: (waypointId, channelId, name) => {
+        const key = legendClassKey(waypointId, channelId);
+        const prev = get().hiddenLegendClasses;
+        const names = prev[key] ?? [];
+        const next = names.includes(name)
+          ? names.filter((n) => n !== name)
+          : [...names, name];
+        set({ hiddenLegendClasses: { ...prev, [key]: next } });
+      },
+
+      clearLegendClasses: () => {
+        if (Object.keys(get().hiddenLegendClasses).length === 0) return;
+        set({ hiddenLegendClasses: {} });
+      },
+
       resetStoryViewerSession: () => {
         const vis = { ...get().channelVisibilities };
         delete vis[SELECTION_MASK_CHANNEL_KEY];
@@ -1229,6 +1264,7 @@ export const useAppStore = create<AppStore>()(
           imageSelectionMask: null,
           maskVisualizationPreview: null,
           channelVisibilities: vis,
+          hiddenLegendClasses: {},
           activeStoryIndex: null,
           waypointAuthoring: new Map(),
           authoringWaypointShapesIndex: null,

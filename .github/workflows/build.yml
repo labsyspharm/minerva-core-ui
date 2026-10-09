@@ -38,6 +38,7 @@ jobs:
       - name: Build with pnpm
         env:
           BASE_PATH: ${{ (github.ref == 'refs/heads/annotation' || github.ref == 'refs/heads/main') && './' || '' }}
+          VITE_APP_GIT_SHA: ${{ github.sha }}
         run: |
           pnpm run pages
 

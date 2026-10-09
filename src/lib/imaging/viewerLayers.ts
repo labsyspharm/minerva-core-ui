@@ -31,6 +31,7 @@ import { orientationForImage } from "./imageOrientation";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
 import { type Loader, TILE_CACHE_PROPS, toSettings } from "./viv";
+import "./vivNearestSampling";
 import { inheritUnitlessPhysicalSize, layerModelMatrix } from "./worldFrame";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */

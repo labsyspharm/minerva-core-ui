@@ -7,7 +7,6 @@ import {
   MinervaLibraryPage,
 } from "@/components/library/MinervaLibraryPage";
 import { PlaybackModeView } from "@/components/playback/PlaybackModeView";
-import { BuildStamp } from "@/components/shared/BuildStamp";
 import { FileHandler } from "@/components/shared/FileHandler";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import type {
@@ -46,6 +45,7 @@ import {
 } from "@/lib/imaging/dicom.js";
 import type { DicomIndex, DicomLoader } from "@/lib/imaging/dicomIndex";
 import {
+  fileInDirectory,
   hasAuthorShellSupport,
   hasDirectoryPickerAccess,
   loadOmeLoaderForRole,
@@ -76,7 +76,7 @@ import {
   useSyncJpegChannelFolders,
 } from "@/lib/imaging/loadJpegFromDocument";
 import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/maskLayers";
-import { createOmeDecodePool } from "@/lib/imaging/omeDecodePool";
+import { sharedOmeDecodePool } from "@/lib/imaging/omeDecodePool";
 import {
   applyPaletteToFlatImportImages,
   buildOmeImportSlice,
@@ -93,13 +93,17 @@ import {
   resetInitPalette,
   warmupPsudoPalette,
 } from "@/lib/imaging/psudoPalette";
+import { urlFileName } from "@/lib/imaging/sourceUrl";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
 import { effectiveWorldFrame } from "@/lib/imaging/worldFrame";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
-import { putFileHandle } from "@/lib/persistence/fileHandles";
-import { persistLocalImageHandle } from "@/lib/persistence/imageHandles";
+import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
+import {
+  imageHandleStorageKey,
+  persistLocalImageHandle,
+} from "@/lib/persistence/imageHandles";
 import {
   isBlankOrUntitledStoryTitle,
   saveStoryDocument,
@@ -284,10 +288,19 @@ async function hydrateLoadersFromImages(
   const result = await hydrateDocumentLoaders(images, {
     channelGroups: opts?.channelGroups ?? [],
     documentUrl: opts?.documentUrl ?? window.location.href,
-    pool: createOmeDecodePool(),
+    pool: sharedOmeDecodePool(),
     requestPermission,
     includeLocal: true,
     imageSource: useDocumentStore.getState().metadata.imageSource,
+    // A relative TIFF: the file the user located for it, else the story folder's.
+    resolveRelativeFile: async (im) => {
+      const located = await getFileHandle(
+        imageHandleStorageKey(storyId, im.id),
+      );
+      if (located?.kind === "file") return located as Handle.File;
+      if (!root || im.source?.kind !== "url") return undefined;
+      return fileInDirectory(root, im.source.url);
+    },
     ...(root
       ? {
           fetchTile: tileFetcherForDirectory(root),
@@ -649,6 +662,28 @@ const Content = (props: Props) => {
           console.warn("[minerva] post-export jpeg refresh failed", e);
         }
       }
+      const doc = useDocumentStore.getState();
+      if (
+        modeAtStop === "jpeg-ome-tiff" &&
+        doc.images.some(
+          (im) =>
+            im.source?.kind === "url" && isRelativeOmeTiffUrl(im.source.url),
+        )
+      ) {
+        // The document now names the exported files (planar H&E became one
+        // packed channel). Reopen loaders from the story folder to match.
+        try {
+          applyHydratedLoaders(
+            await hydrateLoadersFromImages(doc.images, false, {
+              channelGroups: doc.channelGroups,
+              documentUrl: window.location.href,
+            }),
+          );
+          syncRegistryFromDocument();
+        } catch (e) {
+          console.warn("[minerva] post-export loader refresh failed", e);
+        }
+      }
       setViewerRemountKey((k) => k + 1);
     })();
   };
@@ -862,7 +897,7 @@ const Content = (props: Props) => {
           images: doc.images,
           imageId,
           source,
-          pool: createOmeDecodePool(),
+          pool: sharedOmeDecodePool(),
         });
         if (prep.ok === false) {
           if (prep.error) window.alert(prep.error);
@@ -982,7 +1017,7 @@ const Content = (props: Props) => {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "local",
         handle,
-        pool: createOmeDecodePool(),
+        pool: sharedOmeDecodePool(),
         rgbDisplay,
       });
       const sourceImageId = crypto.randomUUID();
@@ -1071,7 +1106,7 @@ const Content = (props: Props) => {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "local",
         handle,
-        pool: createOmeDecodePool(),
+        pool: sharedOmeDecodePool(),
         rgbDisplay,
       });
       const sourceImageId = crypto.randomUUID();
@@ -1193,7 +1228,7 @@ const Content = (props: Props) => {
     const loader = await loadOmeLoaderForRole(role, {
       kind: "url",
       url,
-      pool: createOmeDecodePool(),
+      pool: sharedOmeDecodePool(),
       rgbDisplay,
     });
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
@@ -1262,7 +1297,7 @@ const Content = (props: Props) => {
     const loader = await loadOmeLoaderForRole(role, {
       kind: "url",
       url,
-      pool: createOmeDecodePool(),
+      pool: sharedOmeDecodePool(),
       rgbDisplay,
     });
     if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
@@ -1430,32 +1465,25 @@ const Content = (props: Props) => {
         const im = doc.images.find((i) => i.id === imageId);
         if (!im?.source) return;
 
-        let images = doc.images;
         if (im.source.kind === "local") {
           await putFileHandle(im.source.handleKey, handle);
         } else if (
           im.source.kind === "url" &&
           isRelativeOmeTiffUrl(im.source.url)
         ) {
-          images = await persistLocalImageHandle({
-            storyId: doc.activeStoryId,
-            imageId,
+          // Keep the relative path in the document; hydrate reads this file for it.
+          await putFileHandle(
+            imageHandleStorageKey(doc.activeStoryId, imageId),
             handle,
-            images,
-          });
-          doc.setImages(images);
+          );
         } else {
           return;
         }
 
-        const result = await hydrateLoadersFromImages(
-          useDocumentStore.getState().images,
-          true,
-          {
-            channelGroups: doc.channelGroups,
-            documentUrl: window.location.href,
-          },
-        );
+        const result = await hydrateLoadersFromImages(doc.images, true, {
+          channelGroups: doc.channelGroups,
+          documentUrl: window.location.href,
+        });
         applyHydratedLoaders(result);
         if (
           result.omeLoaderEntries.length +
@@ -1505,7 +1533,10 @@ const Content = (props: Props) => {
           kind: "url",
           url,
         });
-        const result = await hydrateLoadersFromImages(images, true, {
+        const located = images.find((i) => i.id === imageId);
+        if (!located) return;
+        // Only this image's loader changes; the others stay open.
+        const result = await hydrateLoadersFromImages([located], true, {
           channelGroups: doc.channelGroups,
           documentUrl: window.location.href,
         });
@@ -1514,16 +1545,21 @@ const Content = (props: Props) => {
           return;
         }
         doc.setImages(images);
-        applyHydratedLoaders(result);
-        if (
-          result.omeLoaderEntries.length +
-            result.jpegLoaderEntries.length +
-            result.dicomIndexList.length >
-          0
-        ) {
+        skipLoaderHydrateRef.current = true;
+        setOmeLoaderEntries((prev) => [
+          ...prev.filter((e) => e.sourceImageId !== imageId),
+          ...result.omeLoaderEntries,
+        ]);
+        const oldKey =
+          im.source.kind === "local" ? im.source.handleKey : undefined;
+        if (oldKey) {
+          setMissingHandleKeys((prev) => prev.filter((k) => k !== oldKey));
+          setDeniedHandleKeys((prev) => prev.filter((k) => k !== oldKey));
+        }
+        if (result.omeLoaderEntries.length > 0) {
           syncRegistryFromDocument();
           setImportRevision((r) => r + 1);
-          const leaf = url.trim().split(/[?#]/)[0].split("/").pop();
+          const leaf = urlFileName(url);
           if (leaf) setFileName(leaf);
           setLastOmeTiffUrl(url);
         }
@@ -1537,12 +1573,7 @@ const Content = (props: Props) => {
         document.getElementById("global-loader")?.remove();
       }
     },
-    [
-      applyHydratedLoaders,
-      beginImageLoading,
-      endImageLoading,
-      syncRegistryFromDocument,
-    ],
+    [beginImageLoading, endImageLoading, syncRegistryFromDocument],
   );
 
   /** Shared by FileHandler: auto-restore on mount, “Use recent”, and PWA launch — same rules. */
@@ -2380,6 +2411,11 @@ const Content = (props: Props) => {
           needsFileAccess: deniedHandleKeys.length > 0,
           onRequestFileAccess: requestLoaderFileAccess,
           missingHandleKeys,
+          loadedImageIds: new Set(
+            [...omeLoaderEntries, ...jpegLoaderEntries, ...dicomIndexList].map(
+              (entry) => entry.sourceImageId,
+            ),
+          ),
           onReselectFile: reselectLoaderFile,
           onReselectUrl: reselectImageUrl,
           needsStoryRootReconnect: missingStoryRoot,
@@ -2396,17 +2432,27 @@ const Content = (props: Props) => {
           viewerImages,
         };
         const imagesPanel = <Upload {...uploadProps} />;
-        const viewer = noLoader ? null : (
-          <ImageViewer
-            key={viewerRemountKey}
-            {...imageProps}
-            overlayLayers={overlayLayers}
-            activeTool={activeTool}
-            isDragging={dragState.isDragging}
-            hoveredShapeId={hoverState.hoveredShapeId}
-            onOverlayInteraction={handleOverlayInteraction}
-            canArrange={!presenting}
-          />
+        const viewer = (
+          <div className={styles.viewerHost}>
+            {noLoader ? null : (
+              <ImageViewer
+                key={viewerRemountKey}
+                {...imageProps}
+                overlayLayers={overlayLayers}
+                activeTool={activeTool}
+                isDragging={dragState.isDragging}
+                hoveredShapeId={hoverState.hoveredShapeId}
+                onOverlayInteraction={handleOverlayInteraction}
+                canArrange={!presenting}
+              />
+            )}
+            {isLoadingImage ? (
+              <output className={styles.importLoadingOverlay} aria-busy="true">
+                <div className={minervaTheme.spinner} />
+                <span>Loading…</span>
+              </output>
+            ) : null}
+          </div>
         );
         const imager = (
           <div className={styles.full}>
@@ -2440,12 +2486,6 @@ const Content = (props: Props) => {
               />
             ) : null}
             {imager}
-            {isLoadingImage ? (
-              <output className={styles.importLoadingOverlay} aria-busy="true">
-                <div className={minervaTheme.spinner} />
-                <span>Loading…</span>
-              </output>
-            ) : null}
           </div>
         );
       }}
@@ -2478,26 +2518,19 @@ const Main = (props: Props) => {
 
   if (props.demo_dicom_web || props.demo_url || hasAuthorShellSupport()) {
     return (
-      <>
-        <StoryPersistenceRoot>
-          <LibraryOrAuthor {...props} />
-        </StoryPersistenceRoot>
-        <BuildStamp />
-      </>
-    );
-  } else {
-    return (
-      <>
-        <div>
-          <p>
-            Minerva needs a secure context (HTTPS or localhost). Serve this app
-            over HTTPS and reload.
-          </p>
-        </div>
-        <BuildStamp />
-      </>
+      <StoryPersistenceRoot>
+        <LibraryOrAuthor {...props} />
+      </StoryPersistenceRoot>
     );
   }
+  return (
+    <div>
+      <p>
+        Minerva needs a secure context (HTTPS or localhost). Serve this app over
+        HTTPS and reload.
+      </p>
+    </div>
+  );
 };
 
 export { Main };

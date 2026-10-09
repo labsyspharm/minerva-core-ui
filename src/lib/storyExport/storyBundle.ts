@@ -1,11 +1,14 @@
+import { featureTableHandleKey } from "@/lib/featureTable";
 import {
   exportFeatureTableParquet,
   hasIngestedFeatureTable,
 } from "@/lib/featureTable/client";
+import { storedTableFormat } from "@/lib/featureTable/persistFormat";
 import {
   isJpegOmeTiffImageSource,
   JPEG_OME_TIFF_IMAGE_SOURCE,
 } from "@/lib/imaging/cubeRootEncoding";
+import { getBlob } from "@/lib/persistence/db";
 import type {
   DocumentData,
   FeatureTable,
@@ -155,23 +158,55 @@ async function writeTextFile(
 const FEATURE_TABLE_DIR = "feature-tables";
 
 /**
- * Point each loaded table at `feature-tables/<id>.parquet` beside
- * `document.json`. A table the worker has not loaded has no bytes to write:
- * it is left out and its mask's name is returned in `skipped`.
+ * A table's Parquet: the stored blob when it already is Parquet (no worker
+ * round trip, and present before the table finishes ingesting), else an export
+ * from the worker. `null` when neither has the rows.
  */
-function planFeatureTableSidecars(
+async function featureTableParquet(
+  featureTable: FeatureTable,
+): Promise<Uint8Array | null> {
+  const key = featureTableHandleKey(featureTable);
+  const stored = key ? await getBlob(key) : undefined;
+  if (stored && storedTableFormat(stored).kind === "parquet") return stored;
+  if (hasIngestedFeatureTable(featureTable.id)) {
+    return exportFeatureTableParquet(featureTable.id);
+  }
+  return null;
+}
+
+/**
+ * Write each table as `feature-tables/<id>.parquet` beside `document.json` and
+ * point it there. A table with no rows to write is left out and its mask's
+ * name is returned in `skipped`.
+ */
+async function writeFeatureTableSidecars(
+  directory: FileSystemDirectoryHandle,
   data: Pick<DocumentData, "featureTables" | "images">,
-): { featureTables: FeatureTable[]; skipped: string[] } {
+): Promise<{ featureTables: FeatureTable[]; skipped: string[] }> {
   const featureTables: FeatureTable[] = [];
   const skipped: string[] = [];
-  for (const featureTable of data.featureTables) {
-    if (!hasIngestedFeatureTable(featureTable.id)) {
+  const parquets = await Promise.all(
+    data.featureTables.map(featureTableParquet),
+  );
+  let dir: FileSystemDirectoryHandle | undefined;
+  for (const [i, featureTable] of data.featureTables.entries()) {
+    const bytes = parquets[i];
+    if (!bytes) {
       const channel = data.images
         .flatMap((im) => im.channels)
         .find((ch) => ch.id === featureTable.sourceChannelId);
       skipped.push(channel?.name ?? featureTable.sourceChannelId);
       continue;
     }
+    dir ??= await directory.getDirectoryHandle(FEATURE_TABLE_DIR, {
+      create: true,
+    });
+    const fh = await dir.getFileHandle(`${featureTable.id}.parquet`, {
+      create: true,
+    });
+    const write = await fh.createWritable();
+    await write.write(bytes as Uint8Array<ArrayBuffer>);
+    await write.close();
     featureTables.push({
       ...featureTable,
       source: {
@@ -181,25 +216,6 @@ function planFeatureTableSidecars(
     });
   }
   return { featureTables, skipped };
-}
-
-async function writeFeatureTableFiles(
-  directory: FileSystemDirectoryHandle,
-  featureTables: readonly FeatureTable[],
-): Promise<void> {
-  if (featureTables.length === 0) return;
-  const dir = await directory.getDirectoryHandle(FEATURE_TABLE_DIR, {
-    create: true,
-  });
-  for (const featureTable of featureTables) {
-    const bytes = await exportFeatureTableParquet(featureTable.id);
-    const fh = await dir.getFileHandle(`${featureTable.id}.parquet`, {
-      create: true,
-    });
-    const write = await fh.createWritable();
-    await write.write(bytes);
-    await write.close();
-  }
 }
 
 async function writeBytes(
@@ -281,8 +297,10 @@ export async function writeStoryBundleSidecars(
       "Remote URL export requires all images to use OME-TIFF URLs (no local files).",
     );
   }
-  const { featureTables, skipped } = planFeatureTableSidecars(data);
-  await writeFeatureTableFiles(directory, featureTables);
+  const { featureTables, skipped } = await writeFeatureTableSidecars(
+    directory,
+    data,
+  );
   const exported = toExportedStoryDocument({ ...data, featureTables }, mode);
   await writeTextFile(
     directory,

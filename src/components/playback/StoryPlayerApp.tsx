@@ -11,7 +11,8 @@ import styles from "./StoryPlayerApp.module.css";
 
 /** CDN story player. Authoring preview reuses the Presentation ribbon and nav. */
 export function StoryPlayerApp({ documentUrl }: { documentUrl: string }) {
-  const [loading, setLoading] = useState(true);
+  const [documentReady, setDocumentReady] = useState(false);
+  const [imagesReady, setImagesReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jpegLoaderEntries, setJpegLoaderEntries] = useState<JpegLoaderEntry[]>(
     [],
@@ -23,22 +24,25 @@ export function StoryPlayerApp({ documentUrl }: { documentUrl: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    setDocumentReady(false);
+    setImagesReady(false);
     setError(null);
-    void loadStoryDocument(documentUrl)
+    void loadStoryDocument(documentUrl, {
+      onDocument: () => {
+        if (!cancelled) setDocumentReady(true);
+      },
+    })
       .then((result) => {
         if (cancelled) return;
         setJpegLoaderEntries(result.jpegLoaderEntries);
         setOmeLoaderEntries(result.omeLoaderEntries);
         setDicomIndexList(result.dicomIndexList);
+        setImagesReady(true);
       })
       .catch((e) => {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : String(e));
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -48,9 +52,10 @@ export function StoryPlayerApp({ documentUrl }: { documentUrl: string }) {
   const sourceCount =
     jpegLoaderEntries.length + omeLoaderEntries.length + dicomIndexList.length;
 
-  if (loading) return <div className={styles.status}>Loading story…</div>;
   if (error) return <div className={styles.status}>{error}</div>;
-  if (sourceCount === 0) {
+  if (!documentReady)
+    return <div className={styles.status}>Loading story…</div>;
+  if (imagesReady && sourceCount === 0) {
     return (
       <div className={styles.status}>
         No image sources in document.json. Re-export the story from Minerva
@@ -66,6 +71,7 @@ export function StoryPlayerApp({ documentUrl }: { documentUrl: string }) {
         setJpegLoaderEntries={setJpegLoaderEntries}
         omeLoaderEntries={omeLoaderEntries}
         dicomIndexList={dicomIndexList}
+        imagesLoading={!imagesReady}
       />
     </Presentation>
   );

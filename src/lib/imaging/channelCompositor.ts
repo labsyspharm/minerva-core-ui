@@ -137,13 +137,14 @@ export function visibilitiesShowingOnlyGroup(args: {
   return { channelVisibilities, channelGroupRowVisibilities };
 }
 
-/** Flip every RGB / H&E plane together (stack eyes and group-row eyes). */
+/** Flip every RGB / H&E plane of one image together. */
 export function visibilitiesForRgbUnit(args: {
   rgbChannels: readonly Channel[];
   channelGroups: readonly ChannelGroup[];
   groupRowVisibilities: Record<string, boolean>;
   stackVisibilities: Record<string, boolean>;
   visible: boolean;
+  groupId?: string;
 }): {
   channelGroupRowVisibilities: Record<string, boolean>;
   channelVisibilities: Record<string, boolean>;
@@ -151,6 +152,7 @@ export function visibilitiesForRgbUnit(args: {
   const ids = new Set(args.rgbChannels.filter(isImageChannel).map((c) => c.id));
   const channelGroupRowVisibilities = { ...args.groupRowVisibilities };
   for (const group of args.channelGroups) {
+    if (args.groupId && group.id !== args.groupId) continue;
     for (const gc of group.channels) {
       if (ids.has(gc.channelId)) {
         channelGroupRowVisibilities[gc.id] = args.visible;
@@ -158,7 +160,9 @@ export function visibilitiesForRgbUnit(args: {
     }
   }
   const channelVisibilities = { ...args.stackVisibilities };
-  for (const id of ids) channelVisibilities[id] = args.visible;
+  if (!args.groupId) {
+    for (const id of ids) channelVisibilities[id] = args.visible;
+  }
   return { channelGroupRowVisibilities, channelVisibilities };
 }
 

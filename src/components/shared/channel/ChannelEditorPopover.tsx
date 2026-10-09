@@ -335,6 +335,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
         groupRowVisibilities,
         stackVisibilities,
         visible: !visible,
+        groupId: chip.groupId ?? undefined,
       })
     : null;
   const nextGroupVis = gc

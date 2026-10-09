@@ -1,11 +1,15 @@
 import { fileOpen } from "browser-fs-access";
+import { featureTableBlobKey } from "@/lib/featureTable";
 import {
   folderLimitsForTransfer,
   isJpegOmeTiffImageSource,
   type JpegExportTransfer,
   jpegTransferFromImageSource,
 } from "@/lib/imaging/cubeRootEncoding";
-import { hasDirectoryPickerAccess } from "@/lib/imaging/filesystem";
+import {
+  fileInDirectory,
+  hasDirectoryPickerAccess,
+} from "@/lib/imaging/filesystem";
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import {
   folderByChannelIndexFromGroup,
@@ -16,6 +20,7 @@ import {
   isRelativeOmeTiffUrl,
   jpegSourceNeedsLocalRoot,
 } from "@/lib/imaging/loadJpegFromDocument";
+import { isAbsoluteUrl } from "@/lib/imaging/sourceUrl";
 import { putBlob } from "@/lib/persistence/db";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
 import { imageHandleStorageKey } from "@/lib/persistence/imageHandles";
@@ -210,37 +215,6 @@ async function readDocumentJson(
   return validateDocumentData(JSON.parse(await file.text()) as unknown);
 }
 
-/** File beside `document.json`. Missing files stay unbound so the story can still open. */
-async function fileInDirectory(
-  root: FileSystemDirectoryHandle,
-  relativePath: string,
-): Promise<FileSystemFileHandle | undefined> {
-  const parts = relativePath
-    .trim()
-    .split(/[/\\]/)
-    .filter((part) => part && part !== ".");
-  const name = parts.pop();
-  if (!name || parts.includes("..")) return undefined;
-  let dir = root;
-  try {
-    for (const part of parts) dir = await dir.getDirectoryHandle(part);
-    return await dir.getFileHandle(name);
-  } catch (e) {
-    if (
-      e instanceof DOMException &&
-      (e.name === "NotFoundError" || e.name === "TypeMismatchError")
-    ) {
-      return undefined;
-    }
-    throw e;
-  }
-}
-
-function isRemoteOrBlobUrl(url: string): boolean {
-  const u = url.trim();
-  return /^https?:\/\//i.test(u) || u.startsWith("blob:");
-}
-
 async function persistImportedStory(
   data: DocumentData,
   titleFallback: string,
@@ -295,10 +269,10 @@ async function persistImportedStory(
 
     const nextTables: typeof featureTables = [];
     for (const table of featureTables) {
-      if (table.source.kind === "url" && !isRemoteOrBlobUrl(table.source.url)) {
+      if (table.source.kind === "url" && !isAbsoluteUrl(table.source.url)) {
         const fh = await fileInDirectory(root, table.source.url);
         if (fh) {
-          const handleKey = `story:${rec.id}:featureTable:${table.id}`;
+          const handleKey = featureTableBlobKey(rec.id, table.id);
           const file = await fh.getFile();
           await putBlob(handleKey, new Uint8Array(await file.arrayBuffer()));
           nextTables.push({

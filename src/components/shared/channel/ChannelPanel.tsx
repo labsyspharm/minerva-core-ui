@@ -1,13 +1,10 @@
 import type { ReactNode } from "react";
 import * as React from "react";
+import { classViewFor, shownClassRows } from "@/lib/featureTable";
 import {
-  classViewFor,
-  getFeatureTableIngestEpoch,
-  getFeatureTableLutEpoch,
-  shownClassRows,
-  subscribeFeatureTableIngest,
-  subscribeFeatureTableLut,
-} from "@/lib/featureTable";
+  useFeatureTableIngestEpoch,
+  useFeatureTableLutEpoch,
+} from "@/lib/featureTable/hooks";
 import {
   applyStackVisibilities,
   isStackVisible,
@@ -25,13 +22,14 @@ import {
   effectiveMaskVisualizationForSource,
   rgbToHex,
 } from "@/lib/imaging/sourceChannelStyle";
-import { useAppStore } from "@/lib/stores/appStore";
+import { legendClassKey, useAppStore } from "@/lib/stores/appStore";
 import type { ChannelGroup, Image } from "@/lib/stores/documentStore";
 import {
   findSourceChannel,
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
+import { useActiveWaypoint } from "@/lib/stores/useActiveWaypoint";
 import { ChannelGroups } from "./ChannelGroups";
 import {
   ChannelLegend,
@@ -147,20 +145,16 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
   ]);
 
   const featureTables = useDocumentStore((s) => s.featureTables);
-  const activeStoryIndex = useAppStore((s) => s.activeStoryIndex);
-  const activeWaypoint = useDocumentStore((s) =>
-    activeStoryIndex == null ? undefined : s.waypoints[activeStoryIndex],
-  );
-  const ingestEpoch = React.useSyncExternalStore(
-    subscribeFeatureTableIngest,
-    getFeatureTableIngestEpoch,
-    getFeatureTableIngestEpoch,
-  );
-  const lutEpoch = React.useSyncExternalStore(
-    subscribeFeatureTableLut,
-    getFeatureTableLutEpoch,
-    getFeatureTableLutEpoch,
-  );
+  const activeWaypoint = useActiveWaypoint();
+  const hiddenLegendClasses = useAppStore((s) => s.hiddenLegendClasses);
+  const toggleLegendClass = useAppStore((s) => s.toggleLegendClass);
+  const clearLegendClasses = useAppStore((s) => s.clearLegendClasses);
+  // Legend toggles are for the playback session; authoring hides the legend.
+  React.useEffect(() => {
+    if (hide) clearLegendClasses();
+  }, [hide, clearLegendClasses]);
+  const ingestEpoch = useFeatureTableIngestEpoch();
+  const lutEpoch = useFeatureTableLutEpoch();
   const classSections = React.useMemo((): ClassLegendSection[] => {
     void ingestEpoch;
     void lutEpoch;
@@ -191,6 +185,9 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         activeWaypoint?.id,
       );
       if (!rows) continue;
+      const hiddenNames = new Set(
+        hiddenLegendClasses[legendClassKey(activeWaypoint?.id, sc.id)],
+      );
       out.push({
         channelId: sc.id,
         label: sc.name,
@@ -198,6 +195,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         rows: rows.map((row) => ({
           name: row.name,
           color: rgbToHex(row.color),
+          hidden: hiddenNames.has(row.name),
         })),
       });
     }
@@ -209,6 +207,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     docChannelGroups,
     activeChannelGroupId,
     activeWaypoint,
+    hiddenLegendClasses,
     ingestEpoch,
     lutEpoch,
   ]);
@@ -300,6 +299,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         groupRowVisibilities: channelGroupRowVisibilities,
         stackVisibilities: channelVisibilities,
         visible: nextVisible,
+        groupId: c.group_uuid,
       });
       setChannelGroupRowVisibilities(next.channelGroupRowVisibilities);
       setChannelVisibilities(next.channelVisibilities);
@@ -353,7 +353,12 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
             toggleChannel={toggleChannel}
             updateChannel={updateChannel}
           />
-          <ClassLegend sections={classSections} />
+          <ClassLegend
+            sections={classSections}
+            onToggle={(channelId, name) =>
+              toggleLegendClass(activeWaypoint?.id, channelId, name)
+            }
+          />
         </div>
       </div>
     </div>

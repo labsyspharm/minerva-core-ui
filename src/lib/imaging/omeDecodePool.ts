@@ -38,7 +38,17 @@ class OmeDecodePool extends Pool {
   }
 }
 
-/** Viv Pool, with a Vite `?worker` factory so the CDN IIFE can inline the decoder. */
-export function createOmeDecodePool(): DecodePool {
-  return new OmeDecodePool(undefined, () => new DecoderWorker() as Worker);
+let sharedPool: DecodePool | null = null;
+
+/**
+ * The one decode pool, created on first use. Each pool starts a worker per
+ * core and never stops them. The Vite `?worker` factory lets the CDN IIFE
+ * inline the decoder.
+ */
+export function sharedOmeDecodePool(): DecodePool {
+  sharedPool ??= new OmeDecodePool(
+    undefined,
+    () => new DecoderWorker() as Worker,
+  );
+  return sharedPool;
 }
