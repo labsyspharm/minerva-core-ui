@@ -889,8 +889,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   // Apply waypoint camera when requested — resolve with this viewer's live size
   // so author vs preview layout changes cannot mix stale width/height with Deck.
+  // Wait for a measured viewport: requests made while images open (player nav,
+  // embed API) would otherwise resolve against the window-size guess and then
+  // be overwritten by the initial fit above.
   useEffect(() => {
     if (targetWaypointCamera === null) return;
+    if (!viewportMeasured) return;
     if (viewportSize.width <= 0 || viewportSize.height <= 0) return;
     if (refImageWidth <= 0 || refImageHeight <= 0) return;
 
@@ -928,9 +932,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
       },
     } as OrthographicViewState;
 
+    // Deck still starting (images just arrived): there is nothing to fly from,
+    // and a seeded transition would never report its end. Land on the view.
+    const deck = deckRef.current?.deck;
+    if (!deck?.isInitialized) {
+      inTransitionRef.current = false;
+      commitIdleCamera(settled, true);
+      clearTargetWaypointCamera();
+      return;
+    }
+
     // Deck transitions from the previous seed, not the live camera. Jump the
     // seed to the live view first, then apply the destination.
-    const deck = deckRef.current?.deck;
     const liveFlat =
       toFlatViewState(getViewerViewportSnapshotFromDeck(deck)?.viewState) ??
       toFlatViewState(cameraRef.current);
@@ -943,18 +956,17 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
     inTransitionRef.current = true;
     isCameraBusyRef.current = true;
-    if (deck?.isInitialized) {
-      const setViews = (ortho: OrthographicViewState) =>
-        deck.setProps({
-          initialViewState: deckViewStates(ortho, viewportW, viewportH),
-        } as unknown as Parameters<typeof deck.setProps>[0]);
-      setViews(from);
-      setViews(next);
-    }
+    const setViews = (ortho: OrthographicViewState) =>
+      deck.setProps({
+        initialViewState: deckViewStates(ortho, viewportW, viewportH),
+      } as unknown as Parameters<typeof deck.setProps>[0]);
+    setViews(from);
+    setViews(next);
     setOrthoSeed(next);
     clearTargetWaypointCamera();
   }, [
     targetWaypointCamera,
+    viewportMeasured,
     viewportSize.width,
     viewportSize.height,
     refImageWidth,
