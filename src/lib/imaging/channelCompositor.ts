@@ -503,6 +503,8 @@ export function applyVisibilityTransition(
   stackVisibilities: Record<string, boolean>,
   groupRowVisibilities: Record<string, boolean>,
   transition: VisibilityTransition,
+  /** Rows new to its group show; see {@link applyGroupRowVisibilities}. */
+  activeGroupId?: string | null,
 ) {
   const useStored = transition.kind === "fresh" || transition.kind === "sync";
   const channelVisibilities = applyStackVisibilities(
@@ -516,6 +518,7 @@ export function applyVisibilityTransition(
       channelGroups,
       groupRowVisibilities,
       transition,
+      activeGroupId,
     ),
   };
 }

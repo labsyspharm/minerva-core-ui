@@ -761,6 +761,7 @@ const Content = (props: Props) => {
         app.channelVisibilities,
         app.channelGroupRowVisibilities,
         opts.transition,
+        app.activeChannelGroupId,
       );
       setChannelVisibilities(visibilities.channelVisibilities);
       setChannelGroupRowVisibilities(visibilities.channelGroupRowVisibilities);
@@ -1393,6 +1394,7 @@ const Content = (props: Props) => {
       app.channelVisibilities,
       app.channelGroupRowVisibilities,
       { kind: "sync" },
+      app.activeChannelGroupId,
     );
     setChannelVisibilities(visibility.channelVisibilities);
     setChannelGroupRowVisibilities(visibility.channelGroupRowVisibilities);

@@ -24,6 +24,7 @@ export function syncAppStoreChannelMirrorsFromDocument(): void {
     app.channelVisibilities,
     app.channelGroupRowVisibilities,
     { kind: "sync" },
+    app.activeChannelGroupId,
   );
   const { channelVisibilities } = visibility;
   delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];

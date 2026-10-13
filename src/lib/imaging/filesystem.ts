@@ -125,9 +125,9 @@ function parseFirstOmeImagePixels(
 }
 
 /**
- * IFD of each of `sizeC` channels from the first image's `TiffData` (Minerva's
- * mask export writes one IFD per channel). Null unless every channel has its
- * own IFD; channels are then samples of one IFD.
+ * IFD of each of `sizeC` channels (at Z 0, T 0) from the first image's
+ * `TiffData` (Minerva's mask export writes one IFD per channel). Null unless
+ * every channel has its own IFD; channels are then samples of one IFD.
  */
 function omeChannelIfds(
   imageDescription: unknown,
@@ -137,19 +137,50 @@ function omeChannelIfds(
   const doc = parseOmeXml(imageDescription);
   const pixels = doc ? omePixelsElement(doc) : null;
   if (!pixels) return null;
-  const ifds: (number | undefined)[] = [];
+  // Planes run in `DimensionOrder` after XY, fastest first (XYZCT: Z, C, T).
+  const order = pixels.getAttribute("DimensionOrder") ?? "XYZCT";
+  const dims = order.slice(2).split("");
+  if (!/^XY/.test(order) || [...dims].sort().join("") !== "CTZ") return null;
+  const sizes: Record<string, number> = {
+    Z: Number(pixels.getAttribute("SizeZ") ?? 1),
+    C: sizeC,
+    T: Number(pixels.getAttribute("SizeT") ?? 1),
+  };
+  const planeIndex = (at: Record<string, number>) => {
+    let index = 0;
+    let stride = 1;
+    for (const d of dims) {
+      index += at[d] * stride;
+      stride *= sizes[d];
+    }
+    return index;
+  };
+  const totalPlanes = sizes.Z * sizes.C * sizes.T;
+  const planeIfds: number[] = [];
   for (const td of pixels.getElementsByTagNameNS("*", "TiffData")) {
     if (td.parentElement !== pixels) continue;
-    const firstC = Number(td.getAttribute("FirstC") ?? 0);
-    const ifd = Number(td.getAttribute("IFD") ?? 0);
-    const planes = Number(td.getAttribute("PlaneCount") ?? 1);
-    for (let k = 0; k < planes && firstC + k < sizeC; k++) {
-      ifds[firstC + k] = ifd + k;
+    const attr = (name: string) => Number(td.getAttribute(name) ?? 0);
+    const first = planeIndex({
+      Z: attr("FirstZ"),
+      C: attr("FirstC"),
+      T: attr("FirstT"),
+    });
+    // OME: no attributes at all means every plane, from IFD 0.
+    const planes = td.hasAttribute("PlaneCount")
+      ? attr("PlaneCount")
+      : td.attributes.length === 0
+        ? totalPlanes
+        : 1;
+    for (let k = 0; k < planes && first + k < totalPlanes; k++) {
+      planeIfds[first + k] = attr("IFD") + k;
     }
   }
-  const byChannel = Array.from({ length: sizeC }, (_, c) => ifds[c]);
+  const byChannel = Array.from(
+    { length: sizeC },
+    (_, c) => planeIfds[planeIndex({ Z: 0, C: c, T: 0 })],
+  );
   return byChannel.every(Number.isInteger) && new Set(byChannel).size === sizeC
-    ? (byChannel as number[])
+    ? byChannel
     : null;
 }
 
