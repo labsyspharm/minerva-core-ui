@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BTudmaRd.js","./pako.esm-KbdoS3Oq.js","./lerc-BZooSJE1.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DmMqCaYX.js","./pako.esm-KbdoS3Oq.js","./lerc-CxUAhIKH.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18508,7 +18508,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "db01147db5cf38460c9b67d25af2df08423c96e1",
+    "VITE_APP_GIT_SHA": "739e82e0d85cb6c35732bcf8b57791de06cc78c6",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -79232,26 +79232,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DKsX4Oxp.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CoyQmnvc.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-sTQPHTEf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-B5Yh0pit.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-iUJ98AN8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DJTBtkkh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BTudmaRd.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DkQTr4Ue.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BZooSJE1.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DmMqCaYX.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CAHcFKNb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CxUAhIKH.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BCuCM8_d.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-0pXO44oK.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BYey-sxs.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BmFwX0z2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -256384,30 +256384,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return "";
   }
-  const presentation = "_presentation_2toty_6";
-  const frame$1 = "_frame_2toty_14";
-  const previewRibbon = "_previewRibbon_2toty_35";
-  const previewRibbonChevron = "_previewRibbonChevron_2toty_43";
-  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_2toty_55";
-  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_2toty_72";
-  const previewRibbonEdit = "_previewRibbonEdit_2toty_79";
-  const previewRibbonDocumentTitleBesideEdit = "_previewRibbonDocumentTitleBesideEdit_2toty_88";
-  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_2toty_92";
-  const navPane = "_navPane_2toty_144";
-  const navPaneHasStoryName = "_navPaneHasStoryName_2toty_157";
-  const storyTitle = "_storyTitle_2toty_161";
-  const toolbar$1 = "_toolbar_2toty_168";
-  const contentWrap = "_contentWrap_2toty_180";
-  const navInactive = "_navInactive_2toty_217";
-  const heading = "_heading_2toty_229";
-  const tocButton = "_tocButton_2toty_245";
-  const navLeft = "_navLeft_2toty_250";
-  const count = "_count_2toty_254";
-  const navRight = "_navRight_2toty_258";
-  const inlineNext = "_inlineNext_2toty_321";
-  const nextLink = "_nextLink_2toty_339";
-  const tocWrapper = "_tocWrapper_2toty_383";
-  const channelName = "_channelName_2toty_392";
+  const presentation = "_presentation_1da39_6";
+  const frame$1 = "_frame_1da39_14";
+  const previewRibbon = "_previewRibbon_1da39_35";
+  const previewRibbonChevron = "_previewRibbonChevron_1da39_43";
+  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_1da39_55";
+  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_1da39_72";
+  const previewRibbonEdit = "_previewRibbonEdit_1da39_79";
+  const previewRibbonDocumentTitleBesideEdit = "_previewRibbonDocumentTitleBesideEdit_1da39_87";
+  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_1da39_91";
+  const navPane = "_navPane_1da39_143";
+  const navPaneHasStoryName = "_navPaneHasStoryName_1da39_156";
+  const storyTitle = "_storyTitle_1da39_160";
+  const toolbar$1 = "_toolbar_1da39_167";
+  const contentWrap = "_contentWrap_1da39_179";
+  const navInactive = "_navInactive_1da39_216";
+  const heading = "_heading_1da39_228";
+  const tocButton = "_tocButton_1da39_244";
+  const navLeft = "_navLeft_1da39_249";
+  const count = "_count_1da39_253";
+  const navRight = "_navRight_1da39_257";
+  const inlineNext = "_inlineNext_1da39_320";
+  const nextLink = "_nextLink_1da39_338";
+  const tocWrapper = "_tocWrapper_1da39_382";
+  const channelName = "_channelName_1da39_391";
   const styles$a = {
     presentation,
     frame: frame$1,
@@ -259506,8 +259506,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-13T21:34:07.156Z";
-    const sha = "db01147db5cf38460c9b67d25af2df08423c96e1";
+    const iso = "2026-10-13T21:46:46.401Z";
+    const sha = "739e82e0d85cb6c35732bcf8b57791de06cc78c6";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
