@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BJVKiZwM.js","./pako.esm-KbdoS3Oq.js","./lerc-CFZ4PAvy.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BTudmaRd.js","./pako.esm-KbdoS3Oq.js","./lerc-BZooSJE1.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18508,7 +18508,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "30784a673bd522d885626e92d13a6166b673407f",
+    "VITE_APP_GIT_SHA": "db01147db5cf38460c9b67d25af2df08423c96e1",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -79232,26 +79232,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CsvmCsdd.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BSKUbcJ5.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DKsX4Oxp.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CoyQmnvc.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DD8wfzWr.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-iUJ98AN8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BJVKiZwM.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CJiYYtx7.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CFZ4PAvy.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BTudmaRd.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DkQTr4Ue.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BZooSJE1.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BWLXu-Ri.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BCuCM8_d.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-zAbLprzI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BYey-sxs.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -92660,22 +92660,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  const wrap$2 = "_wrap_sur29_1";
-  const histogramHost = "_histogramHost_sur29_13";
-  const histogramPlot = "_histogramPlot_sur29_22";
-  const histogramPlotTrimmed = "_histogramPlotTrimmed_sur29_30";
-  const histogramLoading = "_histogramLoading_sur29_35";
-  const histogramLoadingVisible = "_histogramLoadingVisible_sur29_47";
-  const histogramSvg = "_histogramSvg_sur29_51";
-  const axisBreak = "_axisBreak_sur29_59";
-  const histogramFill = "_histogramFill_sur29_84";
-  const histogramLine = "_histogramLine_sur29_89";
-  const histogramOutOfRange = "_histogramOutOfRange_sur29_96";
-  const sliderRow = "_sliderRow_sur29_100";
-  const rangeInput = "_rangeInput_sur29_112";
-  const rangeInputMin = "_rangeInputMin_sur29_137";
-  const rangeInputMax = "_rangeInputMax_sur29_144";
-  const limitInput = "_limitInput_sur29_182";
+  const wrap$2 = "_wrap_1sovl_1";
+  const histogramHost = "_histogramHost_1sovl_13";
+  const histogramPlot = "_histogramPlot_1sovl_22";
+  const histogramPlotTrimmed = "_histogramPlotTrimmed_1sovl_30";
+  const histogramLoading = "_histogramLoading_1sovl_35";
+  const histogramLoadingVisible = "_histogramLoadingVisible_1sovl_47";
+  const histogramSvg = "_histogramSvg_1sovl_51";
+  const axisBreak = "_axisBreak_1sovl_59";
+  const histogramFill = "_histogramFill_1sovl_84";
+  const histogramLine = "_histogramLine_1sovl_89";
+  const histogramOutOfRange = "_histogramOutOfRange_1sovl_96";
+  const sliderRow = "_sliderRow_1sovl_100";
+  const rangeInput = "_rangeInput_1sovl_113";
+  const rangeInputMin = "_rangeInputMin_1sovl_138";
+  const rangeInputMax = "_rangeInputMax_1sovl_145";
+  const limitInput = "_limitInput_1sovl_183";
   const styles$t = {
     wrap: wrap$2,
     histogramHost,
@@ -92949,8 +92949,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       props.sourceChannelId
     ]);
     const syncFromSliders = (loStep, hiStep, commit) => {
-      const lo = snapContrastLimit(scale2.fromSlider(loStep), fractional);
-      const hi2 = snapContrastLimit(scale2.fromSlider(hiStep), fractional);
+      const active = scaleRef.current;
+      const lo = snapContrastLimit(active.fromSlider(loStep), fractional);
+      const hi2 = snapContrastLimit(active.fromSlider(hiStep), fractional);
       setMinInput(formatContrastLimit(lo, range2));
       setMaxInput(formatContrastLimit(hi2, range2));
       if (commit) {
@@ -92959,12 +92960,66 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         previewRange(lo, hi2);
       }
     };
+    const trimmedRef = reactExports.useRef(false);
+    const distRef = reactExports.useRef(dist2);
+    trimmedRef.current = chart.startBin > 0;
+    distRef.current = dist2;
     const onMinSlider = (e2) => {
       editingLimitRef.current = true;
       const v2 = Math.min(Number(e2.target.value), sliderMaxRef.current);
       sliderMinRef.current = v2;
       setSliderMin(v2);
       syncFromSliders(v2, sliderMaxRef.current, false);
+    };
+    const onMinPointerDown = (e2) => {
+      if (e2.button !== 0) return;
+      const pointerId = e2.pointerId;
+      let markX = sliderMinRef.current <= 0 ? e2.clientX : null;
+      const stop = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
+      };
+      const openPastCut = () => {
+        editingLimitRef.current = true;
+        const active = scaleRef.current;
+        const lo = active.fromSlider(sliderMinRef.current);
+        const hi2 = active.fromSlider(sliderMaxRef.current);
+        const full2 = buildContrastScale(resolveHistogramChartView(distRef.current, {
+          floatRange: range2,
+          dtypeMax,
+          expanded: true,
+          lowerLimit: lo
+        }).scaleInput);
+        const loStep = full2.toSlider(lo);
+        const hiStep = full2.toSlider(hi2);
+        scaleRef.current = full2;
+        sliderMinRef.current = loStep;
+        sliderMaxRef.current = hiStep;
+        setSliderMin(loStep);
+        setSliderMax(hiStep);
+        setMinInput(formatContrastLimit(snapContrastLimit(lo, fractional), range2));
+        setMaxInput(formatContrastLimit(snapContrastLimit(hi2, fractional), range2));
+        setExpanded(true);
+      };
+      const move = (ev) => {
+        if (ev.pointerId !== pointerId || !trimmedRef.current) return;
+        if (sliderMinRef.current > 0) {
+          markX = null;
+          return;
+        }
+        if (markX == null) markX = ev.clientX;
+        if (markX - ev.clientX < 4) return;
+        stop();
+        openPastCut();
+      };
+      const up = (ev) => {
+        if (ev.pointerId !== pointerId) return;
+        stop();
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
     };
     const onMaxSlider = (e2) => {
       editingLimitRef.current = true;
@@ -93119,6 +93174,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     max: scale2.sliderSteps,
                     value: sliderMin,
                     onChange: onMinSlider,
+                    onPointerDown: onMinPointerDown,
                     onMouseUp: onSliderCommit,
                     onTouchEnd: onSliderCommit,
                     onKeyUp: onSliderCommit,
@@ -95872,7 +95928,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       c2.color
     ]));
     for (const c2 of (view == null ? void 0 : view.colors) ?? []) colors.set(c2.name, c2.color);
-    if ((classColorPreview == null ? void 0 : classColorPreview.waypointId) === waypointId && classColorPreview.featureTableId === featureTable.id) {
+    if (classColorPreview && classColorPreview.waypointId === waypointId && classColorPreview.featureTableId === featureTable.id) {
       colors.set(classColorPreview.name, classColorPreview.color);
     }
     return colors;
@@ -170059,20 +170115,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       };
     }));
   }
-  async function groupChannelFoldersForImage(image2, channelGroups, transfer) {
-    const out = {};
-    for (const group2 of channelGroups) {
-      if (typeof group2.id !== "string") continue;
-      const rows2 = toGroupChannelRows(group2.channels ?? []);
-      if (rows2.length === 0) continue;
-      out[group2.id] = await resolveChannelFolders({
-        groupChannels: rows2,
-        image: image2,
-        transfer
-      });
-    }
-    return out;
-  }
   async function syncJpegEntryChannelFolders(entries, images, groupChannels, activeGroupId) {
     const channels2 = toGroupChannelRows(groupChannels);
     let changed = false;
@@ -170137,7 +170179,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       const imageTransfer = exportTransferForImage(im, transfer);
       const storyRootUrl = resolveJpegStoryRoot(opts.documentUrl, im.source.url);
-      const groupChannelFolders = await groupChannelFoldersForImage(im, opts.channelGroups, imageTransfer);
+      const groupChannelFolders = {};
+      for (const group2 of opts.channelGroups) {
+        if (typeof group2.id !== "string") continue;
+        const rows2 = toGroupChannelRows(group2.channels ?? []);
+        if (rows2.length === 0) continue;
+        groupChannelFolders[group2.id] = await resolveChannelFolders({
+          groupChannels: rows2,
+          image: im,
+          transfer: imageTransfer
+        });
+      }
       const availablePyramidFolders = /* @__PURE__ */ new Set();
       if (opts.existingPyramidFolders) {
         for (const name2 of opts.existingPyramidFolders) {
@@ -173797,75 +173849,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       loaderErrors
     };
   }
-  async function fetchStoryDocument(documentUrl) {
-    const res = await fetch(documentUrl);
-    if (!res.ok) {
-      throw new Error(`Failed to load ${documentUrl} (${res.status})`);
-    }
-    return validateDocumentData(await res.json());
-  }
-  function storyDocumentUrl(input2) {
-    let url;
-    try {
-      url = new URL(input2.trim());
-    } catch {
-      throw new Error(`Not a story URL: ${input2}`);
-    }
-    url.hash = "";
-    if (/\.json$/i.test(url.pathname)) return url.href;
-    if (/\.html?$/i.test(url.pathname)) {
-      url.pathname = url.pathname.replace(/[^/]*$/, "");
-    } else if (!url.pathname.endsWith("/")) {
-      url.pathname += "/";
-    }
-    url.pathname += "document.json";
-    return url.href;
-  }
-  function withHostedSources(data2, documentUrl) {
-    const hosted = (url) => new URL(url.trim() || ".", documentUrl).href;
-    return {
-      ...data2,
-      images: data2.images.map((im) => {
-        const source2 = im.source;
-        if ((source2 == null ? void 0 : source2.kind) === "jpeg") {
-          const url = hosted(source2.url).replace(/\/$/, "");
-          return {
-            ...im,
-            source: {
-              kind: "jpeg",
-              url
-            }
-          };
-        }
-        if ((source2 == null ? void 0 : source2.kind) === "url") {
-          return {
-            ...im,
-            source: {
-              kind: "url",
-              url: hosted(source2.url)
-            }
-          };
-        }
-        return im;
-      }),
-      featureTables: data2.featureTables.map((table2) => table2.source.kind === "url" ? {
-        ...table2,
-        source: {
-          kind: "url",
-          url: hosted(table2.source.url)
-        }
-      } : table2)
-    };
-  }
-  function hostedStoryFolderName(documentUrl) {
-    const segments = new URL(documentUrl).pathname.split("/").filter(Boolean);
-    const folder = segments.length > 1 ? segments[segments.length - 2] : "";
-    try {
-      return decodeURIComponent(folder);
-    } catch {
-      return folder;
-    }
-  }
   function storedTableFormat(bytes) {
     const parquet = bytes.byteLength >= 4 && bytes[0] === 80 && bytes[1] === 65 && bytes[2] === 82 && bytes[3] === 49;
     if (parquet) return {
@@ -173895,17 +173878,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const storySearchSchema = objectType({
     storyid: stringType().uuid().optional()
   });
-  const editSearchSchema = stringType().trim().min(1);
   function parseRootSearch(raw2) {
     const r2 = storySearchSchema.safeParse(raw2);
-    const edit = editSearchSchema.safeParse(raw2.edit);
+    if (!r2.success) return {};
     return {
-      ...r2.success ? {
-        storyid: r2.data.storyid
-      } : {},
-      ...edit.success ? {
-        edit: edit.data
-      } : {}
+      storyid: r2.data.storyid
     };
   }
   const uuidParamSchema = stringType().uuid();
@@ -174019,78 +173996,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   const version = "1.0.0-alpha.10";
-  const PROBE_TILE = "0_0_0.jpg";
-  async function hostedFileExists(url) {
-    const head2 = await fetch(url, {
-      method: "HEAD"
-    });
-    if (head2.status !== 405 && head2.status !== 501) return head2.ok;
-    const get2 = await fetch(url, {
-      headers: {
-        Range: "bytes=0-0"
-      }
-    });
-    return get2.ok;
-  }
-  async function channelGroupsMissingHostedPyramids(data2) {
-    var _a2;
-    const storyTransfer = jpegTransferFromImageSource(data2.metadata.imageSource);
-    const missing = /* @__PURE__ */ new Set();
-    for (const im of data2.images) {
-      if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "jpeg" || jpegSourceNeedsLocalRoot(im.source.url)) {
-        continue;
-      }
-      const root2 = im.source.url.replace(/\/$/, "");
-      const byGroup = await groupChannelFoldersForImage(im, data2.channelGroups, exportTransferForImage(im, storyTransfer));
-      const folders = [
-        ...new Set(Object.values(byGroup).flatMap((f2) => Object.values(f2)))
-      ];
-      const present = /* @__PURE__ */ new Set();
-      await Promise.all(folders.map(async (folder) => {
-        if (await hostedFileExists(`${root2}/${folder}/${PROBE_TILE}`)) {
-          present.add(folder);
-        }
-      }));
-      for (const [groupId, byIndex] of Object.entries(byGroup)) {
-        if (Object.values(byIndex).some((folder) => !present.has(folder))) {
-          missing.add(groupId);
-        }
-      }
-    }
-    return data2.channelGroups.filter((g2) => missing.has(g2.id)).map((g2) => g2.name.trim() || "Untitled group");
-  }
   const LOCAL_PLAYER_DIR = "bundle";
   function hostedPlayerBaseUrl() {
     const selfHosted = "bundle/";
-    return new URL(selfHosted, authorAppUrl()).href.replace(/\/$/, "");
-  }
-  function authorAppUrl() {
-    return new URL(`${routerBasepath().replace(/\/$/, "")}/`, window.location.origin).href;
-  }
-  function storyEditUrl() {
-    return null;
+    const deployDir = new URL(`${routerBasepath().replace(/\/$/, "")}/`, window.location.origin);
+    return new URL(selfHosted, deployDir).href.replace(/\/$/, "");
   }
   function playerAssetUrls(version2) {
     {
       return {
-        js: `${LOCAL_PLAYER_DIR}/minerva.js`,
-        css: `${LOCAL_PLAYER_DIR}/minerva.css`
+        js: `./${LOCAL_PLAYER_DIR}/minerva.js`,
+        css: `./${LOCAL_PLAYER_DIR}/minerva.css`
       };
     }
   }
-  const isHttpUrl = (url) => /^https?:\/\//i.test(url.trim());
   function canExportWithRemoteUrls(images) {
     const withSource = images.filter((im) => im.source);
     if (withSource.length === 0) return false;
     return withSource.every((im) => {
       var _a2, _b2;
       if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "url" && ((_b2 = im.source) == null ? void 0 : _b2.kind) !== "jpeg") return false;
-      return isHttpUrl(im.source.url);
+      return /^https?:\/\//i.test(im.source.url.trim());
     });
   }
   function withPortableJpegSources(images) {
     return images.map((im) => {
-      if (!im.source || im.source.kind !== "jpeg" && im.source.kind !== "local" && im.source.kind !== "url" || im.source.kind === "jpeg" && isHttpUrl(im.source.url)) {
+      if (!im.source || im.source.kind !== "jpeg" && im.source.kind !== "local" && im.source.kind !== "url" || im.source.kind === "jpeg" && !jpegSourceNeedsLocalRoot(im.source.url)) {
         return im;
       }
       return {
@@ -174129,7 +174060,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function storyIndexHtml(title7, version$12 = version) {
     const { js, css: css2 } = playerAssetUrls();
-    const editUrl = storyEditUrl();
     const safeTitle = ((title7 == null ? void 0 : title7.trim()) || "Minerva Story").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     return `<!DOCTYPE html>
 <html lang="en">
@@ -174145,11 +174075,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   </head>
   <body>
     <div id="minerva-root"></div>
-    <script src="${js}"><\/script>
-    <script>
-      MinervaStory.play({
-        documentUrl: "document.json",${editUrl ? `
-        editUrl: ${JSON.stringify(editUrl)},` : ""}
+    <script type="module">
+      import { play } from "${js}";
+      play({
+        documentUrl: "document.json",
+        editable: true,
         root: document.getElementById("minerva-root"),
       });
     <\/script>
@@ -174167,19 +174097,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return null;
   }
-  function isHostedFeatureTable(featureTable) {
-    return featureTable.source.kind === "url" && isHttpUrl(featureTable.source.url);
-  }
   async function writeFeatureTableSidecars(directory, data2) {
     const featureTables = [];
     const skipped = [];
-    const parquets = await Promise.all(data2.featureTables.map(featureTableParquet));
+    const isHosted = (t2) => t2.source.kind === "url" && isAbsoluteUrl(t2.source.url);
+    const parquets = await Promise.all(data2.featureTables.map((t2) => isHosted(t2) ? null : featureTableParquet(t2)));
     for (const [i2, featureTable] of data2.featureTables.entries()) {
-      const bytes = parquets[i2];
-      if (!bytes && isHostedFeatureTable(featureTable)) {
+      if (isHosted(featureTable)) {
         featureTables.push(featureTable);
         continue;
       }
+      const bytes = parquets[i2];
       if (!bytes) {
         const channel = data2.images.flatMap((im) => im.channels).find((ch2) => ch2.id === featureTable.sourceChannelId);
         skipped.push((channel == null ? void 0 : channel.name) ?? featureTable.sourceChannelId);
@@ -174229,13 +174157,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   async function writeStoryBundleSidecars(directory, data2, opts) {
     const mode = (opts == null ? void 0 : opts.mode) ?? "jpeg-pyramid";
     if (mode === "remote-url" && !canExportWithRemoteUrls(data2.images)) {
-      throw new Error("Remote URL export requires all images to use hosted URLs (no local files).");
-    }
-    if (mode === "remote-url") {
-      const missing = await channelGroupsMissingHostedPyramids(data2);
-      if (missing.length > 0) {
-        throw new Error(`The hosted story has no image tiles for some channels in ${missing.join(", ")}. Remove channels added since it was published, or export from the original images.`);
-      }
+      throw new Error("Remote URL export requires all images to use OME-TIFF URLs (no local files).");
     }
     const { featureTables, skipped } = await writeFeatureTableSidecars(directory, data2);
     const exported = toExportedStoryDocument({
@@ -174348,17 +174270,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   async function assertPyramidFoldersExist(root2, data2) {
     if (data2.metadata.imageSource === "remote-url") return;
     if (isJpegOmeTiffImageSource(data2.metadata.imageSource)) return;
-    const hosted = new Set(data2.images.filter((im) => {
-      var _a2;
-      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg" && !jpegSourceNeedsLocalRoot(im.source.url);
-    }));
-    const hostedChannelIds = new Set([
-      ...hosted
-    ].flatMap((im) => im.channels.map((ch2) => ch2.id)));
-    const needed = await neededJpegPyramidFolderNames(data2.channelGroups.map((g2) => ({
-      ...g2,
-      channels: g2.channels.filter((c2) => !hostedChannelIds.has(c2.channelId))
-    })), data2.images.filter((im) => !hosted.has(im)), jpegTransferFromImageSource(data2.metadata.imageSource));
+    const needed = await neededJpegPyramidFolderNames(data2.channelGroups, data2.images, jpegTransferFromImageSource(data2.metadata.imageSource));
     if (needed.size === 0) return;
     const existing = await listExistingPyramidFolders(root2);
     const missing = [
@@ -174483,15 +174395,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const base2 = file.name.replace(/\.json$/i, "").trim();
     const fallback = /^(document|story)$/i.test(base2) ? "Imported Story" : base2;
     return persistImportedStory(data2, fallback);
-  }
-  async function importStoryFromUrl(input2) {
-    const documentUrl = storyDocumentUrl(input2);
-    const data2 = await fetchStoryDocument(documentUrl);
-    const hosted = withHostedSources({
-      ...data2,
-      images: portableImportImages(data2)
-    }, documentUrl);
-    return persistImportedStory(hosted, hostedStoryFolderName(documentUrl));
   }
   async function importStoryFolderFromPicker() {
     if (!hasDirectoryPickerAccess()) {
@@ -174845,35 +174748,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }, [
       goToStory
     ]);
-    const { edit } = rootRouteApi.useSearch();
-    const editTakenRef = reactExports.useRef(false);
-    reactExports.useEffect(() => {
-      if (!edit || editTakenRef.current) return;
-      editTakenRef.current = true;
-      navigate({
-        search: ({ edit: _2, ...rest2 }) => rest2,
-        replace: true
-      });
-      if (!window.confirm(`Add the story at ${edit} to your library to edit?`)) {
-        return;
-      }
-      void handleImport(() => importStoryFromUrl(edit));
-    }, [
-      edit,
-      handleImport,
-      navigate
-    ]);
-    const handleOpenFromUrl = reactExports.useCallback(() => {
-      var _a2;
-      const url = (_a2 = window.prompt("Published story URL (its page or document.json)")) == null ? void 0 : _a2.trim();
-      if (url) {
-        void handleImport(() => importStoryFromUrl(url));
-      } else {
-        setAddOpen(false);
-      }
-    }, [
-      handleImport
-    ]);
     const handleDelete2 = reactExports.useCallback((id2, title7) => {
       if (!window.confirm(`Remove \u201C${title7}\u201D from the shelf?`)) return;
       setBusyId(id2);
@@ -174963,14 +174837,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                                   disabled: shelfBusy,
                                   onClick: () => void handleImport(importStoryJsonFromPicker),
                                   children: "Import story"
-                                }),
-                                jsxRuntimeExports.jsx("button", {
-                                  type: "button",
-                                  role: "menuitem",
-                                  className: minervaTheme.menuItem,
-                                  disabled: shelfBusy,
-                                  onClick: handleOpenFromUrl,
-                                  children: "Open from URL"
                                 }),
                                 hasDirectoryPickerAccess() ? jsxRuntimeExports.jsx("button", {
                                   type: "button",
@@ -256518,30 +256384,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return "";
   }
-  const presentation = "_presentation_e5872_6";
-  const frame$1 = "_frame_e5872_14";
-  const previewRibbon = "_previewRibbon_e5872_35";
-  const previewRibbonChevron = "_previewRibbonChevron_e5872_43";
-  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_e5872_55";
-  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_e5872_72";
-  const previewRibbonEdit = "_previewRibbonEdit_e5872_79";
-  const previewRibbonDocumentTitleBesideEdit = "_previewRibbonDocumentTitleBesideEdit_e5872_89";
-  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_e5872_93";
-  const navPane = "_navPane_e5872_145";
-  const navPaneHasStoryName = "_navPaneHasStoryName_e5872_158";
-  const storyTitle = "_storyTitle_e5872_162";
-  const toolbar$1 = "_toolbar_e5872_169";
-  const contentWrap = "_contentWrap_e5872_181";
-  const navInactive = "_navInactive_e5872_218";
-  const heading = "_heading_e5872_230";
-  const tocButton = "_tocButton_e5872_246";
-  const navLeft = "_navLeft_e5872_251";
-  const count = "_count_e5872_255";
-  const navRight = "_navRight_e5872_259";
-  const inlineNext = "_inlineNext_e5872_322";
-  const nextLink = "_nextLink_e5872_340";
-  const tocWrapper = "_tocWrapper_e5872_384";
-  const channelName = "_channelName_e5872_393";
+  const presentation = "_presentation_2toty_6";
+  const frame$1 = "_frame_2toty_14";
+  const previewRibbon = "_previewRibbon_2toty_35";
+  const previewRibbonChevron = "_previewRibbonChevron_2toty_43";
+  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_2toty_55";
+  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_2toty_72";
+  const previewRibbonEdit = "_previewRibbonEdit_2toty_79";
+  const previewRibbonDocumentTitleBesideEdit = "_previewRibbonDocumentTitleBesideEdit_2toty_88";
+  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_2toty_92";
+  const navPane = "_navPane_2toty_144";
+  const navPaneHasStoryName = "_navPaneHasStoryName_2toty_157";
+  const storyTitle = "_storyTitle_2toty_161";
+  const toolbar$1 = "_toolbar_2toty_168";
+  const contentWrap = "_contentWrap_2toty_180";
+  const navInactive = "_navInactive_2toty_217";
+  const heading = "_heading_2toty_229";
+  const tocButton = "_tocButton_2toty_245";
+  const navLeft = "_navLeft_2toty_250";
+  const count = "_count_2toty_254";
+  const navRight = "_navRight_2toty_258";
+  const inlineNext = "_inlineNext_2toty_321";
+  const nextLink = "_nextLink_2toty_339";
+  const tocWrapper = "_tocWrapper_2toty_383";
+  const channelName = "_channelName_2toty_392";
   const styles$a = {
     presentation,
     frame: frame$1,
@@ -256608,7 +256474,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             minervaTheme.title,
             styles$a.previewRibbonDocumentTitle,
             flushTitle ? styles$a.previewRibbonDocumentTitleFlush : null,
-            props.editHref ? styles$a.previewRibbonDocumentTitleBesideEdit : null
+            props.onEdit ? styles$a.previewRibbonDocumentTitleBesideEdit : null
           ].filter(Boolean).join(" "),
           children: [
             jsxRuntimeExports.jsx(StorySpines, {}),
@@ -256619,15 +256485,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           className: styles$a.previewRibbonPreviewBadge,
           children: "Story preview"
         }) : null,
-        props.editHref ? jsxRuntimeExports.jsx("a", {
-          href: props.editHref,
-          target: "_blank",
-          rel: "noopener",
-          title: "Open this story in Minerva to edit it",
-          className: `${minervaTheme.control} ${minervaTheme.controlText} ${styles$a.previewRibbonEdit}`,
-          children: "Edit"
+        props.onEdit ? jsxRuntimeExports.jsx(RibbonEditButton, {
+          onEdit: props.onEdit
         }) : null
       ]
+    });
+  }
+  function RibbonEditButton(props) {
+    const [opening2, setOpening] = reactExports.useState(false);
+    return jsxRuntimeExports.jsx(PanelActionButton, {
+      className: styles$a.previewRibbonEdit,
+      title: "Edit this story",
+      disabled: opening2,
+      "aria-busy": opening2,
+      onClick: () => {
+        setOpening(true);
+        props.onEdit().catch((e2) => {
+          console.error("[minerva] could not open the editor", e2);
+          window.alert(e2 instanceof Error ? e2.message : "Could not open the editor");
+          setOpening(false);
+        });
+      },
+      children: "Edit"
     });
   }
   const NavChevron = (props) => {
@@ -259627,8 +259506,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-13T18:06:34.103Z";
-    const sha = "30784a673bd522d885626e92d13a6166b673407f";
+    const iso = "2026-10-13T21:34:07.156Z";
+    const sha = "db01147db5cf38460c9b67d25af2df08423c96e1";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -261939,7 +261818,7 @@ uniform classStyleUniforms {
       }
       const doc = useDocumentStore.getState();
       if (mode === "remote-url" && !canExportWithRemoteUrls(doc.images)) {
-        window.alert("Remote URL export needs every image to use a hosted URL (no local files).");
+        window.alert("Remote URL export needs every image to use an OME-TIFF URL (no local files).");
         return;
       }
       if (mode === "jpeg-ome-tiff") {
@@ -262430,7 +262309,11 @@ uniform classStyleUniforms {
       const documentUrl = `${storyRoot}/document.json`;
       skipLoaderHydrateRef.current = true;
       try {
-        const data2 = await fetchStoryDocument(documentUrl);
+        const res = await fetch(documentUrl);
+        if (!res.ok) {
+          throw new Error(`Failed to load ${documentUrl} (${res.status})`);
+        }
+        const data2 = validateDocumentData(await res.json());
         if (loadGeneration !== jpegUrlLoadGenerationRef.current) return;
         const storyId = useDocumentStore.getState().activeStoryId ?? data2.metadata.id ?? crypto.randomUUID();
         useDocumentStore.getState().hydrateFromDocument(data2, storyId);

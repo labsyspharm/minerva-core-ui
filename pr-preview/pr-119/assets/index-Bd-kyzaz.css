@@ -533,7 +533,7 @@ body {
   field-sizing: content;
   overflow-x: auto;
 }
-._wrap_sur29_1 {
+._wrap_1sovl_1 {
   --range-input-width: 3.25rem;
   display: grid;
   grid-template-columns:
@@ -545,7 +545,7 @@ body {
   width: 100%;
 }
 
-._histogramHost_sur29_13 {
+._histogramHost_1sovl_13 {
   width: 100%;
   min-width: 0;
   padding-right: 8px;
@@ -554,7 +554,7 @@ body {
   --handle-max: url("./histogram-handle-max-CwFVdUGP.svg");
 }
 
-._histogramPlot_sur29_22 {
+._histogramPlot_1sovl_22 {
   position: relative;
   box-sizing: border-box;
   width: 100%;
@@ -562,12 +562,12 @@ body {
   padding-top: 5px;
 }
 
-._histogramPlotTrimmed_sur29_30 {
+._histogramPlotTrimmed_1sovl_30 {
   width: calc(100% - 32px);
   margin-left: 32px;
 }
 
-._histogramLoading_sur29_35 {
+._histogramLoading_1sovl_35 {
   display: none;
   position: absolute;
   inset: 0;
@@ -579,11 +579,11 @@ body {
   pointer-events: none;
 }
 
-._histogramLoadingVisible_sur29_47 {
+._histogramLoadingVisible_1sovl_47 {
   display: flex;
 }
 
-._histogramSvg_sur29_51 {
+._histogramSvg_1sovl_51 {
   background: transparent;
   width: 100%;
   height: 18px;
@@ -591,7 +591,7 @@ body {
   overflow: visible;
 }
 
-._axisBreak_sur29_59 {
+._axisBreak_1sovl_59 {
   position: absolute;
   left: -32px;
   bottom: 0.5px;
@@ -609,30 +609,30 @@ body {
   cursor: pointer;
 }
 
-._axisBreak_sur29_59 svg {
+._axisBreak_1sovl_59 svg {
   display: block;
   width: 100%;
   height: 100%;
   cursor: pointer;
 }
 
-._histogramFill_sur29_84 {
+._histogramFill_1sovl_84 {
   fill: var(--histogram-color, none);
   stroke: none;
 }
 
-._histogramLine_sur29_89 {
+._histogramLine_1sovl_89 {
   fill: none;
   stroke: var(--minerva-ink);
   stroke-width: 0.7;
   stroke-linejoin: round;
 }
 
-._histogramOutOfRange_sur29_96 {
+._histogramOutOfRange_1sovl_96 {
   opacity: 0.25;
 }
 
-._sliderRow_sur29_100 {
+._sliderRow_1sovl_100 {
   position: absolute;
   right: 0;
   bottom: 5px;
@@ -641,10 +641,11 @@ body {
   height: var(--handle-width);
   padding: 0;
   box-sizing: border-box;
-  z-index: 5;
+  /* Above the axis-break control. At the trimmed edge the min thumb sits on that icon. */
+  z-index: 7;
 }
 
-._rangeInput_sur29_112 {
+._rangeInput_1sovl_113 {
   position: absolute;
   left: calc(var(--handle-width) / -2);
   top: 0;
@@ -658,7 +659,7 @@ body {
   pointer-events: none;
 }
 
-._rangeInput_sur29_112::-webkit-slider-thumb {
+._rangeInput_1sovl_113::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: var(--handle-width);
@@ -669,21 +670,21 @@ body {
   pointer-events: auto;
 }
 
-._rangeInputMin_sur29_137::-webkit-slider-thumb {
+._rangeInputMin_1sovl_138::-webkit-slider-thumb {
   margin-left: calc(var(--handle-width) / -2);
   background-color: var(--minerva-ink);
   -webkit-mask: var(--handle-min) center / 100% 100% no-repeat;
   mask: var(--handle-min) center / 100% 100% no-repeat;
 }
 
-._rangeInputMax_sur29_144::-webkit-slider-thumb {
+._rangeInputMax_1sovl_145::-webkit-slider-thumb {
   margin-left: calc(var(--handle-width) / 2);
   background-color: var(--minerva-ink);
   -webkit-mask: var(--handle-max) center / 100% 100% no-repeat;
   mask: var(--handle-max) center / 100% 100% no-repeat;
 }
 
-._rangeInput_sur29_112::-moz-range-thumb {
+._rangeInput_1sovl_113::-moz-range-thumb {
   width: var(--handle-width);
   height: var(--handle-width);
   border: none;
@@ -692,29 +693,29 @@ body {
   pointer-events: auto;
 }
 
-._rangeInputMin_sur29_137::-moz-range-thumb {
+._rangeInputMin_1sovl_138::-moz-range-thumb {
   margin-left: calc(var(--handle-width) / -2);
   background-color: var(--minerva-ink);
   mask: var(--handle-min) center / 100% 100% no-repeat;
 }
 
-._rangeInputMax_sur29_144::-moz-range-thumb {
+._rangeInputMax_1sovl_145::-moz-range-thumb {
   margin-left: calc(var(--handle-width) / 2);
   background-color: var(--minerva-ink);
   mask: var(--handle-max) center / 100% 100% no-repeat;
 }
 
-._rangeInput_sur29_112::-webkit-slider-runnable-track {
+._rangeInput_1sovl_113::-webkit-slider-runnable-track {
   height: var(--handle-width);
   background: transparent;
 }
 
-._rangeInput_sur29_112::-moz-range-track {
+._rangeInput_1sovl_113::-moz-range-track {
   height: var(--handle-width);
   background: transparent;
 }
 
-._limitInput_sur29_182 {
+._limitInput_1sovl_183 {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -725,8 +726,8 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-._limitInput_sur29_182::-webkit-outer-spin-button,
-._limitInput_sur29_182::-webkit-inner-spin-button {
+._limitInput_1sovl_183::-webkit-outer-spin-button,
+._limitInput_1sovl_183::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
@@ -5826,22 +5827,22 @@ body[data-color-mode*='light'] {
  * Tokens are sealed via the global `.minerva-seal` class on the root.
  */
 
-._presentation_e5872_6,
-._presentation_e5872_6 *,
-._presentation_e5872_6 *::before,
-._presentation_e5872_6 *::after {
+._presentation_2toty_6,
+._presentation_2toty_6 *,
+._presentation_2toty_6 *::before,
+._presentation_2toty_6 *::after {
   box-sizing: border-box;
 }
 
 /** `PresentationFrame` layout; `.presentation` adds tokens when active. */
-._frame_e5872_14 {
+._frame_2toty_14 {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
 }
 
-._presentation_e5872_6 {
+._presentation_2toty_6 {
   /* Query its own width, not the viewport's: the player may be embedded. */
   container-type: inline-size;
   overflow: hidden;
@@ -5855,7 +5856,7 @@ body[data-color-mode*='light'] {
   -moz-osx-font-smoothing: grayscale;
 }
 
-._previewRibbon_e5872_35 {
+._previewRibbon_2toty_35 {
   --ribbon-edit-width: 3.5rem;
   position: relative;
   z-index: 2;
@@ -5863,7 +5864,7 @@ body[data-color-mode*='light'] {
 }
 
 /** Left-pointing chevron (down icon rotated). */
-._previewRibbonChevron_e5872_43 {
+._previewRibbonChevron_2toty_43 {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
@@ -5875,7 +5876,7 @@ body[data-color-mode*='light'] {
 }
 
 /** Document title — shares the ribbon with the “Story preview” badge. */
-._previewRibbonDocumentTitle_e5872_55 {
+._previewRibbonDocumentTitle_2toty_55 {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -5892,28 +5893,27 @@ body[data-color-mode*='light'] {
 }
 
 /* CDN title-only: center like StoryTitleBar. Preview mode: sit after Back. */
-._previewRibbonDocumentTitleFlush_e5872_72 {
+._previewRibbonDocumentTitleFlush_2toty_72 {
   justify-content: center;
   text-align: center;
 }
 
-/* CDN Edit link: pinned right; the title keeps clear of its width on both
-   sides so it stays centered and never runs under the link. */
-._previewRibbonEdit_e5872_79 {
+/* CDN Edit button: pinned right; the title keeps clear of its width on both
+   sides so it stays centered and never runs under the button. */
+._previewRibbonEdit_2toty_79 {
   position: absolute;
   right: var(--minerva-inset);
   width: var(--ribbon-edit-width);
   justify-content: center;
-  text-decoration: none;
 }
 
 /* Margin, not padding: overflow clips at the padding edge, so a long title
-   would still paint under the link. */
-._previewRibbonDocumentTitleBesideEdit_e5872_89 {
+   would still paint under the button. */
+._previewRibbonDocumentTitleBesideEdit_2toty_88 {
   margin-inline: calc(var(--ribbon-edit-width) + var(--minerva-gap));
 }
 
-._previewRibbonPreviewBadge_e5872_93 {
+._previewRibbonPreviewBadge_2toty_92 {
   flex-shrink: 0;
   font-size: var(--minerva-size-note);
   font-style: italic;
@@ -5922,7 +5922,7 @@ body[data-color-mode*='light'] {
   color: var(--minerva-quiet);
 }
 
-._splitGrid_e5872_102 {
+._splitGrid_2toty_101 {
   flex: 1;
   min-height: 0;
   position: relative;
@@ -5933,13 +5933,13 @@ body[data-color-mode*='light'] {
   grid-template-rows: 1fr;
 }
 
-._splitGrid_e5872_102 > :nth-child(1) {
+._splitGrid_2toty_101 > :nth-child(1) {
   grid-column: 1;
   grid-row: 1;
   min-height: 0;
 }
 
-._splitGrid_e5872_102 > :nth-child(2) {
+._splitGrid_2toty_101 > :nth-child(2) {
   grid-column: 2;
   grid-row: 1;
   min-height: 0;
@@ -5948,16 +5948,16 @@ body[data-color-mode*='light'] {
 }
 
 /** Single empty waypoint: no nav column, viewer fills the row. */
-._splitGridViewerOnly_e5872_128 {
+._splitGridViewerOnly_2toty_127 {
   grid-template-columns: 1fr;
 }
 
-._splitGridViewerOnly_e5872_128 > ._presentationViewerRegion_e5872_132 {
+._splitGridViewerOnly_2toty_127 > ._presentationViewerRegion_2toty_131 {
   max-height: 100%;
 }
 
 /** Positioned containing block so author .root.grid (absolute + inset 0) fills viewer area only */
-._presentationViewerRegion_e5872_132 {
+._presentationViewerRegion_2toty_131 {
   position: relative;
   min-height: 0;
   height: 100%;
@@ -5965,7 +5965,7 @@ body[data-color-mode*='light'] {
 }
 
 /** TOC / chevron SVGs are 16px; row must clear icons with equal vertical padding. */
-._navPane_e5872_145 {
+._navPane_2toty_144 {
   border-right: 1px solid var(--minerva-edge);
   background: var(--minerva-paper);
   display: grid;
@@ -5978,18 +5978,18 @@ body[data-color-mode*='light'] {
 }
 
 /* Title row only when not already shown in the top ribbon (preview / CDN). */
-._navPaneHasStoryName_e5872_158 {
+._navPaneHasStoryName_2toty_157 {
   grid-template-rows: auto 36px 1fr;
 }
 
-._navPane_e5872_145 > ._storyTitle_e5872_162 {
+._navPane_2toty_144 > ._storyTitle_2toty_161 {
   grid-column: 1;
   grid-row: 1;
   padding: 8px 8px 4px;
   margin: 0;
 }
 
-._navPane_e5872_145 > ._toolbar_e5872_169 {
+._navPane_2toty_144 > ._toolbar_2toty_168 {
   grid-column: 1;
   grid-row: 1;
   /* Symmetric padding — previous `8px 8px 0` in a 24px row clipped the icons. */
@@ -5997,11 +5997,11 @@ body[data-color-mode*='light'] {
   margin: 0;
 }
 
-._navPaneHasStoryName_e5872_158 > ._toolbar_e5872_169 {
+._navPaneHasStoryName_2toty_157 > ._toolbar_2toty_168 {
   grid-row: 2;
 }
 
-._navPane_e5872_145 > ._contentWrap_e5872_181 {
+._navPane_2toty_144 > ._contentWrap_2toty_180 {
   overflow-y: auto;
   grid-column: 1;
   grid-row: 2;
@@ -6011,12 +6011,12 @@ body[data-color-mode*='light'] {
   margin: 0;
 }
 
-._navPaneHasStoryName_e5872_158 > ._contentWrap_e5872_181 {
+._navPaneHasStoryName_2toty_157 > ._contentWrap_2toty_180 {
   grid-row: 3;
 }
 
 /* Same button reset in preview (Bootstrap) and CDN (native). */
-._navPane_e5872_145 button {
+._navPane_2toty_144 button {
   all: unset;
   box-sizing: border-box;
   color: inherit;
@@ -6028,21 +6028,21 @@ body[data-color-mode*='light'] {
 }
 
 /* Inline SVG baseline gap otherwise lifts glyphs toward the top of the row. */
-._navPane_e5872_145 button svg {
+._navPane_2toty_144 button svg {
   display: block;
   flex-shrink: 0;
 }
 
-._navPane_e5872_145 button:focus-visible {
+._navPane_2toty_144 button:focus-visible {
   outline: var(--minerva-focus-width) solid var(--minerva-ink);
   outline-offset: var(--minerva-focus-offset);
 }
 
-._navInactive_e5872_218 {
+._navInactive_2toty_217 {
   color: var(--minerva-quiet);
 }
 
-._storyTitle_e5872_162 {
+._storyTitle_2toty_161 {
   font-size: var(--minerva-title-size);
   font-style: italic;
   font-weight: 400;
@@ -6050,14 +6050,14 @@ body[data-color-mode*='light'] {
   min-width: 0;
 }
 
-._heading_e5872_230 {
+._heading_2toty_229 {
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.2;
   margin: 0 0 0.5em;
 }
 
-._toolbar_e5872_169 {
+._toolbar_2toty_168 {
   display: grid;
   height: 100%;
   overflow: hidden;
@@ -6066,24 +6066,24 @@ body[data-color-mode*='light'] {
   grid-template-columns: 30px 1fr 30px 50px 30px;
 }
 
-._toolbar_e5872_169 > ._tocButton_e5872_246 {
+._toolbar_2toty_168 > ._tocButton_2toty_245 {
   grid-column: 1;
   text-align: left;
 }
 
-._toolbar_e5872_169 > ._navLeft_e5872_251 {
+._toolbar_2toty_168 > ._navLeft_2toty_250 {
   grid-column: 3;
 }
 
-._toolbar_e5872_169 > ._count_e5872_255 {
+._toolbar_2toty_168 > ._count_2toty_254 {
   grid-column: 4;
 }
 
-._toolbar_e5872_169 > ._navRight_e5872_259 {
+._toolbar_2toty_168 > ._navRight_2toty_258 {
   grid-column: 5;
 }
 
-._toolbar_e5872_169 > button {
+._toolbar_2toty_168 > button {
   all: unset;
   box-sizing: border-box;
   display: inline-flex;
@@ -6095,12 +6095,12 @@ body[data-color-mode*='light'] {
   cursor: pointer;
 }
 
-._toolbar_e5872_169 > button:focus-visible {
+._toolbar_2toty_168 > button:focus-visible {
   outline: var(--minerva-focus-width) solid var(--minerva-ink);
   outline-offset: var(--minerva-focus-offset);
 }
 
-._toolbar_e5872_169 > button._navInactive_e5872_218 {
+._toolbar_2toty_168 > button._navInactive_2toty_217 {
   cursor: default;
   pointer-events: none;
 }
@@ -6109,66 +6109,66 @@ body[data-color-mode*='light'] {
  * Prose only in the waypoint pane — never the channel legend / viewer overlays
  * (those use their own 11–12px metrics; a root line-height: 1.5 bloated them).
  */
-._contentWrap_e5872_181 {
+._contentWrap_2toty_180 {
   scrollbar-color: var(--minerva-quiet) var(--minerva-paper);
   font-size: 1rem;
   line-height: 1.5;
   font-weight: 400;
 }
 
-._contentWrap_e5872_181 p {
+._contentWrap_2toty_180 p {
   margin-top: 0;
   margin-bottom: 1rem;
 }
 
-._contentWrap_e5872_181 ul,
-._contentWrap_e5872_181 ol {
+._contentWrap_2toty_180 ul,
+._contentWrap_2toty_180 ol {
   margin-top: 0;
   margin-bottom: 1rem;
   padding-left: 2rem;
 }
 
-._contentWrap_e5872_181 a {
+._contentWrap_2toty_180 a {
   color: var(--minerva-ink);
   text-decoration: underline;
 }
 
-._contentWrap_e5872_181 a:hover {
+._contentWrap_2toty_180 a:hover {
   color: var(--minerva-ink);
   opacity: 0.85;
 }
 
-._contentWrap_e5872_181 strong {
+._contentWrap_2toty_180 strong {
   font-weight: bold;
 }
 
-._inlineNext_e5872_322 {
+._inlineNext_2toty_321 {
   display: grid;
   grid-template-columns: 1fr 30px;
   align-items: center;
   margin-bottom: 1em;
 }
 
-._inlineNext_e5872_322 > :nth-child(1) {
+._inlineNext_2toty_321 > :nth-child(1) {
   grid-column: 1;
   text-align: right;
   font-style: italic;
   margin: 0;
 }
 
-._inlineNext_e5872_322 > :nth-child(2) {
+._inlineNext_2toty_321 > :nth-child(2) {
   grid-column: 2;
 }
 
-._inlineNext_e5872_322 ._nextLink_e5872_340 {
+._inlineNext_2toty_321 ._nextLink_2toty_339 {
   cursor: pointer;
 }
 
-._inlineNext_e5872_322 ._nextLink_e5872_340:hover {
+._inlineNext_2toty_321 ._nextLink_2toty_339:hover {
   text-decoration: underline;
 }
 
-._inlineNext_e5872_322 > button {
+._inlineNext_2toty_321 > button {
   all: unset;
   box-sizing: border-box;
   display: inline-flex;
@@ -6178,12 +6178,12 @@ body[data-color-mode*='light'] {
   cursor: pointer;
 }
 
-._inlineNext_e5872_322 > button._navInactive_e5872_218 {
+._inlineNext_2toty_321 > button._navInactive_2toty_217 {
   cursor: default;
   pointer-events: none;
 }
 
-._count_e5872_255 {
+._count_2toty_254 {
   text-align: center;
   display: grid;
   align-items: center;
@@ -6192,28 +6192,28 @@ body[data-color-mode*='light'] {
   grid-template-columns: 2fr 1fr 2fr;
 }
 
-._count_e5872_255 > :nth-child(1) {
+._count_2toty_254 > :nth-child(1) {
   grid-column: 1;
 }
 
-._count_e5872_255 > :nth-child(2) {
+._count_2toty_254 > :nth-child(2) {
   grid-column: 2;
 }
 
-._count_e5872_255 > :nth-child(3) {
+._count_2toty_254 > :nth-child(3) {
   grid-column: 3;
 }
 
-._tocWrapper_e5872_384 li {
+._tocWrapper_2toty_383 li {
   color: var(--minerva-ink);
   cursor: pointer;
 }
 
-._tocWrapper_e5872_384 li:hover {
+._tocWrapper_2toty_383 li:hover {
   text-decoration: underline;
 }
 
-._channelName_e5872_393 {
+._channelName_2toty_392 {
   text-decoration: underline;
   text-decoration-color: var(--channel-color);
   text-decoration-thickness: 2px;
@@ -6222,26 +6222,26 @@ body[data-color-mode*='light'] {
 
 /** Narrow (phones, small embeds): viewer on top, nav pane below. */
 @container (width < 768px) {
-  ._splitGrid_e5872_102 {
+  ._splitGrid_2toty_101 {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
   }
 
-  ._splitGrid_e5872_102 > ._presentationViewerRegion_e5872_132 {
+  ._splitGrid_2toty_101 > ._presentationViewerRegion_2toty_131 {
     grid-column: 1;
     grid-row: 1;
   }
 
-  ._splitGrid_e5872_102 > ._navPane_e5872_145 {
+  ._splitGrid_2toty_101 > ._navPane_2toty_144 {
     grid-column: 1;
     grid-row: 2;
   }
 
-  ._splitGridViewerOnly_e5872_128 {
+  ._splitGridViewerOnly_2toty_127 {
     grid-template-rows: minmax(0, 1fr);
   }
 
-  ._navPane_e5872_145 {
+  ._navPane_2toty_144 {
     border-right: none;
     border-top: 1px solid var(--minerva-edge);
   }
