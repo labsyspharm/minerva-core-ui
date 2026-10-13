@@ -32,6 +32,8 @@ import {
 import type { DocumentData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
+import { fetchStoryDocument } from "@/lib/story/loadStoryDocument";
+import { withHostedSources } from "./hostedStory";
 import { withPortableJpegSources } from "./storyBundle";
 
 export { jpegSourceNeedsLocalRoot };
@@ -225,6 +227,20 @@ async function readDocumentJson(
   return validateDocumentData(JSON.parse(await file.text()) as unknown);
 }
 
+/**
+ * Image sources as an imported story reads them. Remote-URL exports keep
+ * `kind: "url"`. JPEG-pyramid bundles rewrite to `{ kind: "jpeg", url: "." }`.
+ * JPEG OME-TIFF bundles use relative `.ome.tif` URLs (bound to local handles
+ * when the story folder is known).
+ */
+function portableImportImages(data: DocumentData): DocumentData["images"] {
+  const keep =
+    data.metadata.imageSource === "remote-url" ||
+    data.images.some((im) => im.source?.kind === "local") ||
+    isJpegOmeTiffImageSource(data.metadata.imageSource);
+  return keep ? data.images : withPortableJpegSources(data.images);
+}
+
 async function persistImportedStory(
   data: DocumentData,
   titleFallback: string,
@@ -233,16 +249,7 @@ async function persistImportedStory(
   const title =
     data.metadata.title?.trim() || titleFallback || "Imported Story";
   const hasLocalSources = data.images.some((im) => im.source?.kind === "local");
-  const omeTiffBundle = isJpegOmeTiffImageSource(data.metadata.imageSource);
-  // Remote-URL exports keep `kind: "url"`. JPEG-pyramid bundles rewrite to
-  // `{ kind: "jpeg", url: "." }`. JPEG OME-TIFF bundles use relative `.ome.tif`
-  // URLs (bound to local handles below when `root` is set).
-  const imagesBase =
-    data.metadata.imageSource === "remote-url" ||
-    hasLocalSources ||
-    omeTiffBundle
-      ? data.images
-      : withPortableJpegSources(data.images);
+  const imagesBase = portableImportImages(data);
   const rec = await createStoryRecord(title);
   let images = hasLocalSources
     ? imagesBase.map((im) => {
@@ -326,6 +333,21 @@ export async function importStoryJsonFromPicker(): Promise<string> {
   const base = file.name.replace(/\.json$/i, "").trim();
   const fallback = /^(document|story)$/i.test(base) ? "Imported Story" : base;
   return persistImportedStory(data, fallback);
+}
+
+/**
+ * Copy the published story at `documentUrl` (absolute) into the library.
+ * Pixels and feature tables stay on the host. Returns the new story id.
+ */
+export async function importStoryFromUrl(documentUrl: string): Promise<string> {
+  const data = await fetchStoryDocument(documentUrl);
+  // Normalize first so legacy sources become the story-root pyramid, then
+  // point every relative path at the host.
+  const hosted = withHostedSources(
+    { ...data, images: portableImportImages(data) },
+    documentUrl,
+  );
+  return persistImportedStory(hosted, "");
 }
 
 /**

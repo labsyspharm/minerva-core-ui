@@ -5,9 +5,12 @@ import {
 } from "@/lib/featureTable/client";
 import { storedTableFormat } from "@/lib/featureTable/persistFormat";
 import {
+  isJpegEncodedImageSource,
   isJpegOmeTiffImageSource,
   JPEG_OME_TIFF_IMAGE_SOURCE,
 } from "@/lib/imaging/cubeRootEncoding";
+import { jpegSourceNeedsLocalRoot } from "@/lib/imaging/loadJpegFromDocument";
+import { isAbsoluteUrl } from "@/lib/imaging/sourceUrl";
 import { getBlob } from "@/lib/persistence/db";
 import { writeDirectoryFile } from "@/lib/persistence/directoryFiles";
 import type {
@@ -40,9 +43,10 @@ function hostedPlayerBaseUrl(): string | null {
 
 function playerAssetUrls(version: string): { js: string; css: string } {
   if (import.meta.env.VITE_STORY_BUNDLE_URL) {
+    // `./`: the module import needs a relative path, not a bare specifier.
     return {
-      js: `${LOCAL_PLAYER_DIR}/minerva.js`,
-      css: `${LOCAL_PLAYER_DIR}/minerva.css`,
+      js: `./${LOCAL_PLAYER_DIR}/minerva.js`,
+      css: `./${LOCAL_PLAYER_DIR}/minerva.css`,
     };
   }
   const base = `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version}/bundle`;
@@ -55,24 +59,31 @@ function playerAssetUrls(version: string): { js: string; css: string } {
 /** How pixel data is referenced in an exported story folder. */
 export type StoryExportMode = "jpeg-pyramid" | "jpeg-ome-tiff" | "remote-url";
 
-/** True when every intensity source is an absolute http(s) URL (no local / relative files). */
+/**
+ * True when every pixel source is an absolute http(s) URL (no local / relative
+ * files): OME-TIFFs, or the hosted JPEG pyramids of a story opened from its URL.
+ */
 export function canExportWithRemoteUrls(images: Image[]): boolean {
   const withSource = images.filter((im) => im.source);
   if (withSource.length === 0) return false;
   return withSource.every((im) => {
-    if (im.source?.kind !== "url") return false;
+    if (im.source?.kind !== "url" && im.source?.kind !== "jpeg") return false;
     return /^https?:\/\//i.test(im.source.url.trim());
   });
 }
 
-/** Point intensity images at the story-folder JPEG root. */
+/**
+ * Point intensity images at the story-folder JPEG root. Hosted pyramids
+ * (absolute http(s) roots) keep reading from their host.
+ */
 export function withPortableJpegSources(images: Image[]): Image[] {
   return images.map((im) => {
     if (
       !im.source ||
       (im.source.kind !== "jpeg" &&
         im.source.kind !== "local" &&
-        im.source.kind !== "url")
+        im.source.kind !== "url") ||
+      (im.source.kind === "jpeg" && !jpegSourceNeedsLocalRoot(im.source.url))
     ) {
       return im;
     }
@@ -99,11 +110,16 @@ function toExportedStoryDocument(
   });
 }
 
-function imageSourceForExportMode(
+export function imageSourceForExportMode(
   mode: StoryExportMode,
   current?: string,
 ): string {
-  if (mode === "remote-url") return "remote-url";
+  if (mode === "remote-url") {
+    // Hosted JPEG pixels keep the marker the player decodes them with.
+    return current && isJpegEncodedImageSource(current)
+      ? current
+      : "remote-url";
+  }
   if (mode === "jpeg-ome-tiff") {
     // Preserve contrast vs cube-root variant set by the exporter.
     if (current && isJpegOmeTiffImageSource(current)) return current;
@@ -112,7 +128,10 @@ function imageSourceForExportMode(
   return current ?? "jpeg-pyramid";
 }
 
-function storyIndexHtml(title?: string, version = MINERVA_VERSION): string {
+export function storyIndexHtml(
+  title?: string,
+  version = MINERVA_VERSION,
+): string {
   const { js, css } = playerAssetUrls(version);
   const safeTitle = (title?.trim() || "Minerva Story")
     .replace(/&/g, "&amp;")
@@ -133,10 +152,11 @@ function storyIndexHtml(title?: string, version = MINERVA_VERSION): string {
   </head>
   <body>
     <div id="minerva-root"></div>
-    <script src="${js}"></script>
-    <script>
-      MinervaStory.play({
+    <script type="module">
+      import { play } from "${js}";
+      play({
         documentUrl: "document.json",
+        editable: true,
         root: document.getElementById("minerva-root"),
       });
     </script>
@@ -166,8 +186,9 @@ async function featureTableParquet(
 
 /**
  * Write each table as `feature-tables/<id>.parquet` beside `document.json` and
- * point it there. A table with no rows to write is left out and its mask's
- * name is returned in `skipped`.
+ * point it there. A hosted table (absolute URL) keeps its URL: its rows are
+ * the published ones. A table with no rows to write is left out and its
+ * mask's name is returned in `skipped`.
  */
 async function writeFeatureTableSidecars(
   directory: FileSystemDirectoryHandle,
@@ -175,10 +196,18 @@ async function writeFeatureTableSidecars(
 ): Promise<{ featureTables: FeatureTable[]; skipped: string[] }> {
   const featureTables: FeatureTable[] = [];
   const skipped: string[] = [];
+  const isHosted = (t: FeatureTable) =>
+    t.source.kind === "url" && isAbsoluteUrl(t.source.url);
   const parquets = await Promise.all(
-    data.featureTables.map(featureTableParquet),
+    data.featureTables.map((t) =>
+      isHosted(t) ? null : featureTableParquet(t),
+    ),
   );
   for (const [i, featureTable] of data.featureTables.entries()) {
+    if (isHosted(featureTable)) {
+      featureTables.push(featureTable);
+      continue;
+    }
     const bytes = parquets[i];
     if (!bytes) {
       const channel = data.images

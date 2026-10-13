@@ -58,7 +58,7 @@ let sharedPool: DecodePool | null = null;
 
 /**
  * The one decode pool, created on first use. Each pool starts a worker per
- * core and never stops them. The Vite `?worker` factory lets the CDN IIFE
+ * core and never stops them. The Vite `?worker` factory lets the CDN bundle
  * inline the decoder.
  */
 export function sharedOmeDecodePool(): DecodePool {
