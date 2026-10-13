@@ -1,8 +1,5 @@
-import {
-  expandThroughLut,
-  type JpegExportTransfer,
-  u8ToU16Lut,
-} from "./cubeRootEncoding";
+import { type JpegExportTransfer, u8ToU16Lut } from "./cubeRootEncoding";
+import { expandThroughLut } from "./expandThroughLut";
 import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
 import { sharedOmeDecodePool } from "./omeDecodePool";
 

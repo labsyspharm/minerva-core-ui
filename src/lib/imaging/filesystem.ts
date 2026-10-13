@@ -208,8 +208,11 @@ async function resolveMaskPyramidImages(
   const source = baseInternals.source ?? internals.source;
   if (source == null) return images;
 
-  for (const offset of offsets) {
-    const parsed = await internals.parseFileDirectoryAt(offset);
+  // Parsed together: from a URL, each one may be its own round trip.
+  const parsedLevels = await Promise.all(
+    offsets.map((offset) => internals.parseFileDirectoryAt(offset)),
+  );
+  for (const parsed of parsedLevels) {
     images.push(
       new GeoTIFFImage(
         parsed.fileDirectory as never,
@@ -267,9 +270,13 @@ function maskPlaneFromImage(
  * Viv `loadOmeTiff` requires OME-XML `<Pixels>`. Mask TIFFs (tifffile JSON
  * ImageDescription, or OME-XML with extra non-IFD `<Image>` entries) go
  * through IFD0 + SubIFDs instead; OME Pixels is size/units only.
+ * A URL is range-read like Viv's: the IFDs, then only the tiles drawn.
  */
-async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
-  const tiff = await fromBlob(inFile);
+async function maskLoader(source: Blob | string): Promise<Loader> {
+  const tiff =
+    typeof source === "string"
+      ? await fromUrl(source, { cacheSize: Number.POSITIVE_INFINITY })
+      : await fromBlob(source);
   const baseImage = await tiff.getImage(0);
   const fd = baseImage.fileDirectory;
   const width = baseImage.getWidth();
@@ -598,7 +605,7 @@ export async function loadOmeLoaderForRole(
   if (source.kind === "local") {
     const file = await source.handle.getFile();
     if (role === "segmentation") {
-      return maskLoaderFromBlob(file);
+      return maskLoader(file);
     }
     return finishOmeIntensityLoader(
       asAppLoader(await loadOmeTiff(file, vivLoadOpts(source.pool, packedRgb))),
@@ -607,11 +614,7 @@ export async function loadOmeLoaderForRole(
     );
   }
   if (role === "segmentation") {
-    const response = await fetch(source.url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch mask OME-TIFF (${response.status})`);
-    }
-    return maskLoaderFromBlob(await response.blob());
+    return maskLoader(source.url);
   }
   return finishOmeIntensityLoader(
     asAppLoader(

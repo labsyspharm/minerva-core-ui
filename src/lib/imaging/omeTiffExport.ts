@@ -1,4 +1,4 @@
-import { getImageSize, TiffPixelSource } from "@hms-dbmi/viv";
+import { getImageSize, type TiffPixelSource } from "@hms-dbmi/viv";
 import {
   effectiveChannelKind,
   isRgbDisplayImage,
@@ -464,20 +464,20 @@ export function planeLevels(loaderData: LoaderPlane[]): OmeExportLevelSize[] {
   });
 }
 
-/** JPEG export tile edge. Every tile costs a read, decode, encode and write. */
-const EXPORT_TILE_SIZE = 512;
+/**
+ * Exported TIFF tile edge, whatever the source's tiles are (see
+ * `readExportTile`). Every tile costs a read, decode, encode and write.
+ */
+export const EXPORT_TILE_SIZE = 1024;
 
-/** {@link planeLevels} as the JPEG export writes them: TIFF tiles grow to 512px. */
+/** Pyramid level sizes written by the export, in {@link EXPORT_TILE_SIZE} tiles. */
 export function exportPlaneLevels(
-  loaderData: LoaderPlane[],
+  loaderData: Parameters<typeof getImageSize>[0][],
 ): OmeExportLevelSize[] {
-  return planeLevels(loaderData).map((level, i) => ({
-    ...level,
-    tileSize:
-      loaderData[i] instanceof TiffPixelSource
-        ? Math.max(EXPORT_TILE_SIZE, level.tileSize)
-        : level.tileSize,
-  }));
+  return loaderData.map((plane) => {
+    const { width, height } = getImageSize(plane);
+    return { width, height, tileSize: EXPORT_TILE_SIZE };
+  });
 }
 
 export function tileCountForLevels(

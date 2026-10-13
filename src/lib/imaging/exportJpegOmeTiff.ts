@@ -50,6 +50,7 @@ import {
   stitchOmeTiffExportImages,
   tileCountForLevels,
 } from "./omeTiffExport";
+import { writeTiffOffsetsJson } from "./tiffOffsetsJson";
 
 type JpegExportChannelSource = {
   channel: ImageChannel;
@@ -595,6 +596,7 @@ export async function exportJpegOmeTiffStory(
       rgb: decided.rgb,
       pixels: item.entry.loader.metadata?.Pixels,
     });
+    await writeTiffOffsetsJson(directory, intensityFileNames[i]);
     if (item.masks.length > 0) {
       jpegImage = { ...jpegImage, contentRole: "intensity" };
     }
@@ -617,6 +619,7 @@ export async function exportJpegOmeTiffStory(
       signal,
       onProgress: bump,
     });
+    await writeTiffOffsetsJson(directory, maskFileNames[i]);
     if (splitFromIntensity) {
       const extra = insertedAfter.get(item.image.id) ?? [];
       extra.push(maskImage);

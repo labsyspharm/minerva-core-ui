@@ -85,18 +85,6 @@ export function u8ToU16Lut(transfer: JpegExportTransfer): Uint16Array {
   return transfer === "cube-root" ? CUBE_ROOT_U8_TO_U16 : CONTRAST_U8_TO_U16;
 }
 
-/** Widen decoded JPEG bytes through a {@link u8ToU16Lut} table. */
-export function expandThroughLut(
-  data: ArrayLike<number>,
-  lut: Uint16Array,
-): Uint16Array<ArrayBuffer> {
-  const out = new Uint16Array(data.length);
-  for (let i = 0; i < data.length; i++) {
-    out[i] = lut[data[i] & 0xff];
-  }
-  return out;
-}
-
 type TransferImage = {
   contentRole?: "intensity" | "segmentation";
   rgbDisplay?: boolean;

@@ -1,8 +1,10 @@
 import { getImageSize, TiffPixelSource } from "@hms-dbmi/viv";
 import { GeoTIFFImage } from "geotiff";
-import type { LoaderPlane } from "./omeTiffExport";
+import type { HasTile, SupportedTypedArray } from "./loaderTypes";
 
 type Selection = { t: number; z: number; c: number };
+/** What re-tiling reads from a plane: Viv TIFF, DICOM and wrapped planes all fit. */
+type ExportTilePlane = Parameters<typeof getImageSize>[0];
 type Slice = { offset: number; length: number };
 type Source = {
   fetch: (slices: Slice[], signal?: AbortSignal) => Promise<ArrayBuffer[]>;
@@ -110,22 +112,74 @@ function prefetchedSource(
 }
 
 /**
- * Export tile (x, y), `tileSize` px. A TIFF plane reads the source blocks
- * under the tile in a few merged reads (a row of neighboring blocks is
- * usually contiguous on disk), then decodes through Viv as usual. Other
- * planes keep their own tile size (see `exportPlaneLevels`).
+ * Export tile (x, y) from a plane whose tiles are another size: copy in the
+ * source tiles under it, one row of them at a time so a 1024 tile over 128px
+ * source tiles does not start 64 reads at once.
  */
-export async function readExportTile(
-  plane: Pick<LoaderPlane, "getTile">,
+async function composeExportTile(
+  plane: ExportTilePlane,
   tileSize: number,
   selection: Selection,
   x: number,
   y: number,
   signal: AbortSignal,
-) {
+): Promise<HasTile> {
+  const { width, height } = getImageSize(plane);
+  const src = plane.tileSize;
+  const x0 = x * tileSize;
+  const y0 = y * tileSize;
+  const w = Math.min(tileSize, width - x0);
+  const h = Math.min(tileSize, height - y0);
+  const sx0 = Math.floor(x0 / src);
+  const columns = Math.ceil((x0 + w) / src) - sx0;
+  let out: SupportedTypedArray | undefined;
+  for (let sy = Math.floor(y0 / src); sy * src < y0 + h; sy++) {
+    const top = sy * src;
+    const tiles = Array.from({ length: columns }, async (_, i) => {
+      const sx = sx0 + i;
+      const left = sx * src;
+      const tile = await plane.getTile({ selection, x: sx, y: sy, signal });
+      const samples = tile.data.length / (tile.width * tile.height);
+      out ??= new (
+        tile.data.constructor as new (
+          n: number,
+        ) => SupportedTypedArray
+      )(w * h * samples);
+      const from0 = Math.max(x0, left);
+      const run = (Math.min(x0 + w, left + tile.width) - from0) * samples;
+      const rowEnd = Math.min(y0 + h, top + tile.height);
+      for (let row = Math.max(y0, top); row < rowEnd; row++) {
+        const from = ((row - top) * tile.width + (from0 - left)) * samples;
+        const to = ((row - y0) * w + (from0 - x0)) * samples;
+        out.set(tile.data.subarray(from, from + run), to);
+      }
+    });
+    await Promise.all(tiles);
+  }
+  if (!out) throw new Error(`No source tiles under export tile ${x},${y}`);
+  return { data: out, width: w, height: h };
+}
+
+/**
+ * Export tile (x, y), `tileSize` px. A TIFF plane reads the source blocks
+ * under the tile in a few merged reads (a row of neighboring blocks is
+ * usually contiguous on disk), then decodes through Viv as usual. Other
+ * planes are assembled from their own tiles.
+ */
+export async function readExportTile(
+  plane: ExportTilePlane,
+  tileSize: number,
+  selection: Selection,
+  x: number,
+  y: number,
+  signal: AbortSignal,
+): Promise<HasTile> {
   // DICOM planes, and the JPEG-export hydrate wrap (a spread copy), are not instances.
   if (!(plane instanceof TiffPixelSource)) {
-    return plane.getTile({ selection, x, y, signal });
+    if (plane.tileSize === tileSize) {
+      return plane.getTile({ selection, x, y, signal });
+    }
+    return composeExportTile(plane, tileSize, selection, x, y, signal);
   }
   const indexer = (
     plane as unknown as {

@@ -123,7 +123,10 @@ async function encodeRgbaToJpeg(
     baseline: true,
     progressive: false,
     arithmetic: false,
-    optimize_coding: false,
+    // Per-tile Huffman tables, still baseline. With the standard tables
+    // (`false`), @jsquash/jpeg 1.6.0 writes a corrupt scan for ~12% of 4:2:0
+    // YCbCr tiles; optimized ones are also smaller and faster to encode.
+    optimize_coding: true,
     // 4:2:0. Packed RGB TIFF tags declare YCbCrSubSampling [2, 2].
     auto_subsample: false,
     chroma_subsample: 2,

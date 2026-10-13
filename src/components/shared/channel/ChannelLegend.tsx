@@ -29,6 +29,7 @@ import {
 } from "@/lib/imaging/sourceChannelStyle";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
 import { basenameImportLabel } from "@/lib/stores/storeUtils";
+import { isMobileDevice } from "@/lib/viewer/isMobileDevice";
 import styles from "./ChannelLegend.module.css";
 
 const defaultChannels = [
@@ -278,8 +279,8 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
   );
   const [colorPickerChannel, setColorPickerChannel] =
     React.useState<LegendChannel | null>(null);
-  /** Starts closed; the list stays visible until the presentation frame is narrow. */
-  const [legendOpen, setLegendOpen] = React.useState(false);
+  /** Phones and tablets start collapsed. A wide frame shows the list either way. */
+  const [legendOpen, setLegendOpen] = React.useState(() => !isMobileDevice());
 
   const closeColorPicker = React.useCallback(() => {
     setColorPickerChannel(null);

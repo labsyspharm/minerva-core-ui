@@ -29,10 +29,26 @@ function withoutBlockTables(fileDirectory: FileDirectory): FileDirectory {
   return tags;
 }
 
-class OmeDecodePool extends Pool {
+export class OmeDecodePool extends Pool {
   decode(fileDirectory: unknown, buffer: ArrayBuffer): Promise<ArrayBuffer> {
     return super.decode(
       withoutBlockTables(fileDirectory as FileDirectory),
+      buffer,
+    );
+  }
+
+  /** Decode, then widen the uint8 samples to uint16 through `lut` in the worker. */
+  decodeWidened(
+    fileDirectory: unknown,
+    buffer: ArrayBuffer,
+    lut: Uint16Array,
+  ): Promise<ArrayBuffer> {
+    // `decoder.worker.ts` widens through the table in this extra tag.
+    return super.decode(
+      {
+        ...withoutBlockTables(fileDirectory as FileDirectory),
+        MinervaWidenLut: lut,
+      },
       buffer,
     );
   }
