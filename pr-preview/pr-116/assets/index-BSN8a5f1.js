@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CWyhqGnT.js","./pako.esm-KbdoS3Oq.js","./lerc-Dn-yBApz.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Co2qzrPS.js","./pako.esm-KbdoS3Oq.js","./lerc-QXL6cj9l.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18469,8 +18469,7 @@ let __tla = (async () => {
       }
     }
   }
-  function applyGroupRowVisibilities(channelGroups, prev, transition) {
-    var _a2;
+  function applyGroupRowVisibilities(channelGroups, prev, transition, activeGroupId) {
     const rowIds = new Set(channelGroups.flatMap((g2) => g2.channels.map((gc2) => gc2.id)));
     const out = {};
     for (const [id2, visible] of Object.entries(prev)) {
@@ -18478,16 +18477,12 @@ let __tla = (async () => {
     }
     if (transition.kind === "remove") return out;
     const newRowIds = transition.kind === "appendIntensity" ? new Set(transition.newGroupRowIds) : null;
-    const defaultGroupId = (_a2 = channelGroups[0]) == null ? void 0 : _a2.id;
     const inherited = Object.keys(out).length > 0;
+    const showing = new Set(inherited ? channelGroups.filter((g2) => g2.id === activeGroupId || g2.channels.some((gc2) => out[gc2.id])).map((g2) => g2.id) : channelGroups.slice(0, 1).map((g2) => g2.id));
     for (const group2 of channelGroups) {
       for (const gc2 of group2.channels) {
         if (out[gc2.id] !== void 0) continue;
-        if (newRowIds == null ? void 0 : newRowIds.has(gc2.id)) {
-          out[gc2.id] = false;
-        } else {
-          out[gc2.id] = inherited || group2.id === defaultGroupId;
-        }
+        out[gc2.id] = !(newRowIds == null ? void 0 : newRowIds.has(gc2.id)) && showing.has(group2.id);
       }
     }
     return out;
@@ -18513,7 +18508,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "8954391f2884a4c248142d355f1f3095fe9d7097",
+    "VITE_APP_GIT_SHA": "990d5f73fa71d1687b0149b80da015ce16cd57fc",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -79237,26 +79232,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-fWG0zQnX.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CrkGprdB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DRr4cISJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Bqpq7p24.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CIGylnSb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BWt_IW4b.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CWyhqGnT.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-Can8bBxX.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Dn-yBApz.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-Co2qzrPS.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BuoAReiY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-QXL6cj9l.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DXdrr0Lf.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CXxu5ICi.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DysCGCsV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CtfLv2xh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -86604,6 +86599,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       BigEndian: false
     };
   }
+  function omeChannelIfds(imageDescription, sizeC) {
+    if (typeof imageDescription !== "string" || sizeC < 2) return null;
+    const doc = parseOmeXml(imageDescription);
+    const pixels = doc ? omePixelsElement(doc) : null;
+    if (!pixels) return null;
+    const ifds = [];
+    for (const td2 of pixels.getElementsByTagNameNS("*", "TiffData")) {
+      if (td2.parentElement !== pixels) continue;
+      const firstC = Number(td2.getAttribute("FirstC") ?? 0);
+      const ifd = Number(td2.getAttribute("IFD") ?? 0);
+      const planes = Number(td2.getAttribute("PlaneCount") ?? 1);
+      for (let k2 = 0; k2 < planes && firstC + k2 < sizeC; k2++) {
+        ifds[firstC + k2] = ifd + k2;
+      }
+    }
+    const byChannel = Array.from({
+      length: sizeC
+    }, (_2, c2) => ifds[c2]);
+    return byChannel.every(Number.isInteger) && new Set(byChannel).size === sizeC ? byChannel : null;
+  }
   const FALLBACK_MAX_TEXTURE_SIZE = 4096;
   let cachedMaxTextureSize;
   function queryMaxTextureSize() {
@@ -86639,7 +86654,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const size = Math.min(tw, th2);
     return 2 ** Math.floor(Math.log2(Math.max(1, size)));
   }
-  async function readTiffSample(image2, sample, window2) {
+  async function readTiffSample(image2, sample, window2, signal) {
     const width = window2 ? window2[2] - window2[0] : image2.getWidth();
     const height = window2 ? window2[3] - window2[1] : image2.getHeight();
     const raster = await image2.readRasters({
@@ -86647,6 +86662,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         sample
       ],
       interleave: true,
+      signal,
       ...window2 ? {
         window: window2,
         width,
@@ -86683,7 +86699,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const tiled = isTiffTiled(image2);
     const tileSize = tiled ? vivTileSize(image2) : Math.max(width, height, 1);
     const clampC = (c2) => Math.max(0, Math.min(sizeC - 1, c2));
-    const readChannel2 = (c2, window2) => images.length > 1 ? readTiffSample(images[clampC(c2)], 0, window2) : readTiffSample(image2, clampC(c2), window2);
+    const readChannel2 = (c2, window2, signal) => images.length > 1 ? readTiffSample(images[clampC(c2)], 0, window2, signal) : readTiffSample(image2, clampC(c2), window2, signal);
     const getRaster = ({ selection }) => readChannel2(selection.c);
     return {
       dtype,
@@ -86704,7 +86720,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ],
       onTileError: () => void 0,
       getRaster,
-      readWindow: ({ selection, window: window2 }) => readChannel2(selection.c, window2),
+      readWindow: ({ selection, window: window2, signal }) => readChannel2(selection.c, window2, signal),
       getTile: tiled ? ({ x: x2, y: y2, selection }) => {
         const x0 = x2 * tileSize;
         const y0 = y2 * tileSize;
@@ -86745,9 +86761,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const dtype = dtypeFromTiffDirectory(fd2);
     const ome = parseFirstOmeImagePixels(fd2.ImageDescription);
     const sizeC = Math.max(1, (ome == null ? void 0 : ome.SizeC) ?? fd2.SamplesPerPixel ?? 1);
-    const channelBases = sizeC > (fd2.SamplesPerPixel ?? 1) && await tiff.getImageCount() >= sizeC ? await Promise.all(Array.from({
-      length: sizeC
-    }, (_2, c2) => tiff.getImage(c2))) : [
+    const channelIfds = omeChannelIfds(fd2.ImageDescription, sizeC);
+    const channelBases = channelIfds ? await Promise.all(channelIfds.map((ifd) => tiff.getImage(ifd))) : [
       baseImage
     ];
     const channelPyramids = await Promise.all(channelBases.map((base2) => resolveMaskPyramidImages(tiff, base2)));
@@ -86967,7 +86982,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       for (const part of parts) dir2 = await dir2.getDirectoryHandle(part);
       return await dir2.getFileHandle(name2);
     } catch (e2) {
-      if (e2 instanceof DOMException && (e2.name === "NotFoundError" || e2.name === "TypeMismatchError")) {
+      if (e2 instanceof TypeError || e2 instanceof DOMException && (e2.name === "NotFoundError" || e2.name === "TypeMismatchError")) {
         return void 0;
       }
       throw e2;
@@ -96063,10 +96078,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const key2 = featureTableHandleKey(featureTable);
     return key2 ? getBlob(key2) : void 0;
   }
+  let hydrateGeneration = 0;
   async function hydrateFeatureTables(featureTables, reset, opts) {
+    const generation2 = ++hydrateGeneration;
+    const superseded = () => generation2 !== hydrateGeneration;
     if (reset) {
       lutPending.clear();
       await resetFeatureTables();
+      if (superseded()) return;
     }
     const pending2 = featureTables.filter((featureTable) => reset || !hasIngestedFeatureTable(featureTable.id));
     const reads = pending2.map((featureTable) => readTableBytes(featureTable).catch((e2) => {
@@ -96076,6 +96095,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const missingTableIds = [];
     for (const [i2, featureTable] of pending2.entries()) {
       const bytes = await reads[i2];
+      if (superseded()) return;
       if (!bytes) {
         missingTableIds.push(featureTable.id);
         continue;
@@ -96095,7 +96115,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         missingTableIds.push(featureTable.id);
       }
     }
-    noteAccess({
+    if (!superseded()) noteAccess({
       missingTableIds
     });
   }
@@ -170775,8 +170795,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ].filter(Boolean);
       const localKey = ((_a2 = im.source) == null ? void 0 : _a2.kind) === "local" ? im.source.handleKey : void 0;
       const needsReselect = !!localKey && missingHandleKeys.includes(localKey) && !!onLocateImage;
-      const relativeUnloaded = ((_b2 = im.source) == null ? void 0 : _b2.kind) === "url" && isRelativeOmeTiffUrl(im.source.url) && !(loadedImageIds == null ? void 0 : loadedImageIds.has(im.id));
-      const needsPermission = needsFileAccess && !!onRequestFileAccess && (((_c2 = im.source) == null ? void 0 : _c2.kind) === "local" ? !needsReselect : relativeUnloaded);
+      const unloaded = !(loadedImageIds == null ? void 0 : loadedImageIds.has(im.id));
+      const relativeUnloaded = ((_b2 = im.source) == null ? void 0 : _b2.kind) === "url" && isRelativeOmeTiffUrl(im.source.url) && unloaded;
+      const needsPermission = needsFileAccess && !!onRequestFileAccess && (((_c2 = im.source) == null ? void 0 : _c2.kind) === "local" ? !needsReselect && unloaded : relativeUnloaded);
       const needsLocateFile = !!onLocateImage && relativeUnloaded && !needsPermission;
       const needsStoryDir = needsStoryRootReconnect && !!onReconnectStoryRoot && ((_d = im.source) == null ? void 0 : _d.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
       const showAccessOverlay = needsReselect || needsLocateFile || needsPermission || needsStoryDir;
@@ -248645,7 +248666,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         classViews: activeClassViews
       };
       if (activeStoryIndex == null || activeWaypointId == null) return;
-      if (last2.id !== activeWaypointId || last2.classViews === activeClassViews) {
+      if (last2.id !== activeWaypointId || JSON.stringify(last2.classViews) === JSON.stringify(activeClassViews)) {
         return;
       }
       const index2 = activeStoryIndex;
@@ -249927,9 +249948,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         id2,
         name2
       ])));
-      setChannelGroupRowVisibilities(applyGroupRowVisibilities(normalized, useAppStore.getState().channelGroupRowVisibilities, {
+      const app = useAppStore.getState();
+      setChannelGroupRowVisibilities(applyGroupRowVisibilities(normalized, app.channelGroupRowVisibilities, {
         kind: "sync"
-      }));
+      }, app.activeChannelGroupId));
     }, [
       setChannelGroups,
       setGroupNames,
@@ -249990,7 +250012,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         })),
         newGroup
       ]);
-      setActiveChannelGroup(newGroup.id);
+      if (seedingFirst) setActiveChannelGroup(newGroup.id);
+      else showOnlyChannelGroup(newGroup.id);
       if (seedingFirst && seededChannels.length > 0) {
         const stackOff = {
           ...stackVisibilities
@@ -259127,8 +259150,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-13T14:03:29.190Z";
-    const sha = "8954391f2884a4c248142d355f1f3095fe9d7097";
+    const iso = "2026-10-13T14:43:59.167Z";
+    const sha = "990d5f73fa71d1687b0149b80da015ce16cd57fc";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -260366,7 +260389,8 @@ uniform classStyleUniforms {
     channels: im.channels ?? []
   }) === "segmentation" ? "segmentation" : "intensity";
   function omeLoaderForHydrate(loader, im, wrapOmeJpeg, storyTransfer) {
-    const jpegTransfer = wrapOmeJpeg ? hydrateJpegTransferForImage(im, storyTransfer) : null;
+    var _a2, _b2;
+    const jpegTransfer = wrapOmeJpeg && ((_b2 = (_a2 = loader.data) == null ? void 0 : _a2[0]) == null ? void 0 : _b2.dtype) === "Uint8" ? hydrateJpegTransferForImage(im, storyTransfer) : null;
     if (!jpegTransfer) {
       return {
         loader
@@ -260433,7 +260457,13 @@ uniform classStyleUniforms {
       switch (im.source.kind) {
         case "url": {
           if (includeLocal && isRelativeOmeTiffUrl(im.source.url)) {
-            const resolved = await ((_a2 = opts.resolveRelativeFile) == null ? void 0 : _a2.call(opts, im));
+            let resolved;
+            try {
+              resolved = await ((_a2 = opts.resolveRelativeFile) == null ? void 0 : _a2.call(opts, im));
+            } catch (e2) {
+              console.warn("[minerva] could not resolve", im.source.url, e2);
+              break;
+            }
             if (!resolved) break;
             if (!resolved.handle || !await canAccess(resolved.handle)) {
               deniedHandleKeys.push(resolved.key);
@@ -262416,7 +262446,6 @@ uniform classStyleUniforms {
         const doc = useDocumentStore.getState();
         const im = doc.images.find((i2) => i2.id === imageId);
         if (!(im == null ? void 0 : im.source)) return;
-        let images2 = doc.images;
         if (source2.kind === "url") {
           if (im.source.kind === "jpeg" || im.source.kind === "dicomWeb") {
             return;
@@ -262431,41 +262460,53 @@ uniform classStyleUniforms {
             window.alert(duplicateImportError(duplicate));
             return;
           }
-          images2 = setImageSource(images2, imageId, source2);
           clearOmeDerivedCaches();
-        } else if (im.source.kind === "local") {
-          await putFileHandle(im.source.handleKey, source2.handle);
-        } else if (im.source.kind === "url" && isRelativeOmeTiffUrl(im.source.url)) {
-          await putFileHandle(locatedFileStorageKey(doc.activeStoryId, imageId, im.source.url), source2.handle);
-        } else {
-          return;
-        }
-        const result = await hydrateLoadersFromImages(images2, true, {
-          channelGroups: doc.channelGroups,
-          documentUrl: window.location.href
-        });
-        const opened = result.omeLoaderEntries.some((e2) => e2.sourceImageId === imageId);
-        if (source2.kind === "url") {
-          if (!opened) {
-            window.alert(result.loaderErrors.join("\n") || "Could not load image URL");
+          const result2 = await hydrateLoadersFromImages(setImageSource([
+            im
+          ], imageId, source2), false, {
+            channelGroups: doc.channelGroups,
+            documentUrl: window.location.href
+          });
+          if (result2.omeLoaderEntries.length === 0) {
+            window.alert(result2.loaderErrors.join("\n") || "Could not load image URL");
             return;
           }
           const current = useDocumentStore.getState();
           if (!current.images.some((i2) => i2.id === imageId)) return;
           skipLoaderHydrateRef.current = true;
           current.setImages(setImageSource(current.images, imageId, source2));
-        }
-        applyHydratedLoaders(result);
-        if (opened) {
+          setOmeLoaderEntries((prev) => [
+            ...prev.filter((e2) => e2.sourceImageId !== imageId),
+            ...result2.omeLoaderEntries
+          ]);
+          if (im.source.kind === "local") {
+            const oldKey = im.source.handleKey;
+            setMissingHandleKeys((prev) => prev.filter((k2) => k2 !== oldKey));
+            setDeniedHandleKeys((prev) => prev.filter((k2) => k2 !== oldKey));
+          }
           syncRegistryFromDocument();
           setImportRevision((r2) => r2 + 1);
-          if (source2.kind === "url") {
-            const leaf = urlFileName(source2.url);
-            if (leaf) setFileName(leaf);
-            setLastOmeTiffUrl(source2.url);
-          } else {
-            setFileName((await source2.handle.getFile()).name);
-          }
+          const leaf = urlFileName(source2.url);
+          if (leaf) setFileName(leaf);
+          setLastOmeTiffUrl(source2.url);
+          return;
+        }
+        if (im.source.kind === "local") {
+          await putFileHandle(im.source.handleKey, source2.handle);
+        } else if (im.source.kind === "url" && isRelativeOmeTiffUrl(im.source.url)) {
+          await putFileHandle(locatedFileStorageKey(doc.activeStoryId, imageId, im.source.url), source2.handle);
+        } else {
+          return;
+        }
+        const result = await hydrateLoadersFromImages(doc.images, true, {
+          channelGroups: doc.channelGroups,
+          documentUrl: window.location.href
+        });
+        applyHydratedLoaders(result);
+        if (result.omeLoaderEntries.some((e2) => e2.sourceImageId === imageId)) {
+          syncRegistryFromDocument();
+          setImportRevision((r2) => r2 + 1);
+          setFileName((await source2.handle.getFile()).name);
         }
       } catch (e2) {
         console.error("[minerva] locateImage failed", e2);
