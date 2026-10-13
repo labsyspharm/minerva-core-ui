@@ -1,8 +1,20 @@
+import { featureTableHandleKey } from "@/lib/featureTable";
+import {
+  exportFeatureTableParquet,
+  hasIngestedFeatureTable,
+} from "@/lib/featureTable/client";
+import { storedTableFormat } from "@/lib/featureTable/persistFormat";
 import {
   isJpegOmeTiffImageSource,
   JPEG_OME_TIFF_IMAGE_SOURCE,
 } from "@/lib/imaging/cubeRootEncoding";
-import type { DocumentData, Image } from "@/lib/stores/documentSchema";
+import { getBlob } from "@/lib/persistence/db";
+import { writeDirectoryFile } from "@/lib/persistence/directoryFiles";
+import type {
+  DocumentData,
+  FeatureTable,
+  Image,
+} from "@/lib/stores/documentSchema";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 import { routerBasepath } from "@/router/appRouter";
 import { version as MINERVA_VERSION } from "../../../package.json";
@@ -133,33 +145,53 @@ function storyIndexHtml(title?: string, version = MINERVA_VERSION): string {
 `;
 }
 
-async function writeTextFile(
-  directory: FileSystemDirectoryHandle,
-  name: string,
-  text: string,
-): Promise<void> {
-  const fh = await directory.getFileHandle(name, { create: true });
-  const write = await fh.createWritable();
-  await write.write(text);
-  await write.close();
+const FEATURE_TABLE_DIR = "feature-tables";
+
+/**
+ * A table's Parquet: the stored blob when it already is Parquet (no worker
+ * round trip, and present before the table finishes ingesting), else an export
+ * from the worker. `null` when neither has the rows.
+ */
+async function featureTableParquet(
+  featureTable: FeatureTable,
+): Promise<Uint8Array | null> {
+  const key = featureTableHandleKey(featureTable);
+  const stored = key ? await getBlob(key) : undefined;
+  if (stored && storedTableFormat(stored).kind === "parquet") return stored;
+  if (hasIngestedFeatureTable(featureTable.id)) {
+    return exportFeatureTableParquet(featureTable.id);
+  }
+  return null;
 }
 
-async function writeBytes(
+/**
+ * Write each table as `feature-tables/<id>.parquet` beside `document.json` and
+ * point it there. A table with no rows to write is left out and its mask's
+ * name is returned in `skipped`.
+ */
+async function writeFeatureTableSidecars(
   directory: FileSystemDirectoryHandle,
-  relativePath: string,
-  bytes: ArrayBuffer,
-): Promise<void> {
-  const parts = relativePath.split("/");
-  const fileName = parts.pop();
-  if (!fileName) throw new Error(`Invalid story player path: ${relativePath}`);
-  let dir = directory;
-  for (const part of parts) {
-    dir = await dir.getDirectoryHandle(part, { create: true });
+  data: Pick<DocumentData, "featureTables" | "images">,
+): Promise<{ featureTables: FeatureTable[]; skipped: string[] }> {
+  const featureTables: FeatureTable[] = [];
+  const skipped: string[] = [];
+  const parquets = await Promise.all(
+    data.featureTables.map(featureTableParquet),
+  );
+  for (const [i, featureTable] of data.featureTables.entries()) {
+    const bytes = parquets[i];
+    if (!bytes) {
+      const channel = data.images
+        .flatMap((im) => im.channels)
+        .find((ch) => ch.id === featureTable.sourceChannelId);
+      skipped.push(channel?.name ?? featureTable.sourceChannelId);
+      continue;
+    }
+    const url = `${FEATURE_TABLE_DIR}/${featureTable.id}.parquet`;
+    await writeDirectoryFile(directory, url, bytes as Uint8Array<ArrayBuffer>);
+    featureTables.push({ ...featureTable, source: { kind: "url", url } });
   }
-  const fh = await dir.getFileHandle(fileName, { create: true });
-  const write = await fh.createWritable();
-  await write.write(bytes);
-  await write.close();
+  return { featureTables, skipped };
 }
 
 /** Copy the preview-hosted player into `bundle/` beside the story. */
@@ -194,7 +226,11 @@ async function copyHostedPlayer(
         `Failed to copy story player file ${relativePath} (${fileRes.status})`,
       );
     }
-    await writeBytes(playerDir, relativePath, await fileRes.arrayBuffer());
+    await writeDirectoryFile(
+      playerDir,
+      relativePath,
+      await fileRes.arrayBuffer(),
+    );
   }
 }
 
@@ -202,29 +238,39 @@ export type WriteStoryBundleOptions = {
   mode?: StoryExportMode;
 };
 
+export type WriteStoryBundleResult = {
+  /** Masks whose feature table was not loaded, so the export left it out. */
+  skippedFeatureTables: string[];
+};
+
 /**
- * Write `document.json` + `index.html` into an export directory.
- * PR previews also copy the story player into `bundle/`.
+ * Write `document.json`, `index.html`, and each loaded feature table as
+ * Parquet into an export directory. PR previews also copy the story player
+ * into `bundle/`.
  */
 export async function writeStoryBundleSidecars(
   directory: FileSystemDirectoryHandle,
   data: DocumentData,
   opts?: WriteStoryBundleOptions,
-): Promise<void> {
+): Promise<WriteStoryBundleResult> {
   const mode = opts?.mode ?? "jpeg-pyramid";
   if (mode === "remote-url" && !canExportWithRemoteUrls(data.images)) {
     throw new Error(
       "Remote URL export requires all images to use OME-TIFF URLs (no local files).",
     );
   }
-  const exported = toExportedStoryDocument(data, mode);
-  await writeTextFile(
+  const { featureTables, skipped } = await writeFeatureTableSidecars(
+    directory,
+    data,
+  );
+  const exported = toExportedStoryDocument({ ...data, featureTables }, mode);
+  await writeDirectoryFile(
     directory,
     "document.json",
     JSON.stringify(exported, null, 2),
   );
   await copyHostedPlayer(directory);
-  await writeTextFile(
+  await writeDirectoryFile(
     directory,
     "index.html",
     storyIndexHtml(
@@ -232,4 +278,5 @@ export async function writeStoryBundleSidecars(
       exported.metadata.minervaVersion ?? MINERVA_VERSION,
     ),
   );
+  return { skippedFeatureTables: skipped };
 }

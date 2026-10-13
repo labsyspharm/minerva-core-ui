@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  normalizeFeatureTableSource,
   normalizeWaypointRecord,
   preprocessJsonExportRoot,
 } from "./wirePreprocess";
@@ -231,13 +232,25 @@ export const ChannelGroupSchema = z.object({
 const ClassIdSchema = z.number().int().positive().max(0xffff_ffff);
 
 /**
+ * Where the Parquet file lives. `local` is a Dexie blob under `handleKey`;
+ * `url` is relative to `document.json` in an exported story.
+ */
+const FeatureTableSourceSchema = z.preprocess(
+  normalizeFeatureTableSource,
+  z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("local"), handleKey: z.string().min(1) }),
+    z.object({ kind: z.literal("url"), url: z.string().min(1) }),
+  ]),
+);
+
+/**
  * Sidecar name table for one mask plane (`sourceChannelId` = ImageChannel.id).
  * Name rows live in DuckDB, not in this JSON object.
  */
 const FeatureTableSchema = z.object({
   id: IdSchema,
   sourceChannelId: IdSchema,
-  source: z.object({ handleKey: z.string().min(1) }),
+  source: FeatureTableSourceSchema,
   maxClassId: ClassIdSchema,
   nameColors: z.array(
     z.object({
@@ -245,11 +258,26 @@ const FeatureTableSchema = z.object({
       color: ColorSchema,
     }),
   ),
-  /** SHA-256 of the attached CSV bytes. */
+  /** SHA-256 of the bytes stored at attach. Older stories hashed the CSV. */
   digest: z.string().min(1),
-  columns: z.object({ id: z.string().min(1), name: z.string().min(1) }),
-  /** False when the CSV has no header row (`column0`,`column1`). */
-  header: z.boolean(),
+});
+
+export const ClassVisibilitySchema = z.discriminatedUnion("mode", [
+  z.object({ mode: z.literal("all") }),
+  z.object({ mode: z.literal("hide"), names: z.array(z.string()) }),
+  z.object({ mode: z.literal("show"), names: z.array(z.string()) }),
+]);
+
+/**
+ * One mask's classes on one waypoint. `channelId` is the mask's
+ * ImageChannel.id; `colors` override the table's `nameColors` by name.
+ */
+const ClassViewSchema = z.object({
+  channelId: IdSchema,
+  visibility: ClassVisibilitySchema,
+  colors: z
+    .array(z.object({ name: z.string(), color: ColorSchema }))
+    .default([]),
 });
 
 const waypointObjectZ = z.object({
@@ -261,6 +289,8 @@ const waypointObjectZ = z.object({
   content: z.string(),
   viewport: ViewportSchema,
   shapeIds: z.array(IdSchema),
+  /** No entry for a mask means every class in the table palette. */
+  classViews: z.array(ClassViewSchema).default([]),
 });
 
 export const WaypointSchema = z.preprocess((raw) => {
@@ -400,6 +430,7 @@ export type Channel = ImageChannel & {
 export type ChannelGroupChannel = z.infer<typeof ChannelGroupChannelSchema>;
 export type ChannelGroup = z.infer<typeof ChannelGroupSchema>;
 export type Waypoint = z.infer<typeof WaypointSchema>;
+export type ClassView = z.infer<typeof ClassViewSchema>;
 export type SourceDistributionData = z.infer<typeof SourceDistributionSchema>;
 export type FeatureTable = z.infer<typeof FeatureTableSchema>;
 

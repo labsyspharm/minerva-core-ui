@@ -15,6 +15,19 @@ export function imageHandleStorageKey(
 }
 
 /**
+ * Key for the file the user located for a relative OME-TIFF `url`. The path is
+ * part of it: once the source names another file (an export rewrites it), the
+ * file located for the old path no longer answers.
+ */
+export function locatedFileStorageKey(
+  storyId: string | null | undefined,
+  imageId: string,
+  url: string,
+): string {
+  return `${imageHandleStorageKey(storyId, imageId)}:located:${url.trim()}`;
+}
+
+/**
  * Bind a local file handle to `imageId` (new key). Old keys remain available
  * for document undo and are removed with their owning story.
  */

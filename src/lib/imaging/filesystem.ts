@@ -124,6 +124,66 @@ function parseFirstOmeImagePixels(
   };
 }
 
+/**
+ * IFD of each of `sizeC` channels (at Z 0, T 0) from the first image's
+ * `TiffData` (Minerva's mask export writes one IFD per channel). Null unless
+ * every channel has its own IFD; channels are then samples of one IFD.
+ */
+function omeChannelIfds(
+  imageDescription: unknown,
+  sizeC: number,
+): number[] | null {
+  if (typeof imageDescription !== "string" || sizeC < 2) return null;
+  const doc = parseOmeXml(imageDescription);
+  const pixels = doc ? omePixelsElement(doc) : null;
+  if (!pixels) return null;
+  // Planes run in `DimensionOrder` after XY, fastest first (XYZCT: Z, C, T).
+  const order = pixels.getAttribute("DimensionOrder") ?? "XYZCT";
+  const dims = order.slice(2).split("");
+  if (!/^XY/.test(order) || [...dims].sort().join("") !== "CTZ") return null;
+  const sizes: Record<string, number> = {
+    Z: Number(pixels.getAttribute("SizeZ") ?? 1),
+    C: sizeC,
+    T: Number(pixels.getAttribute("SizeT") ?? 1),
+  };
+  const planeIndex = (at: Record<string, number>) => {
+    let index = 0;
+    let stride = 1;
+    for (const d of dims) {
+      index += at[d] * stride;
+      stride *= sizes[d];
+    }
+    return index;
+  };
+  const totalPlanes = sizes.Z * sizes.C * sizes.T;
+  const planeIfds: number[] = [];
+  for (const td of pixels.getElementsByTagNameNS("*", "TiffData")) {
+    if (td.parentElement !== pixels) continue;
+    const attr = (name: string) => Number(td.getAttribute(name) ?? 0);
+    const first = planeIndex({
+      Z: attr("FirstZ"),
+      C: attr("FirstC"),
+      T: attr("FirstT"),
+    });
+    // OME: no attributes at all means every plane, from IFD 0.
+    const planes = td.hasAttribute("PlaneCount")
+      ? attr("PlaneCount")
+      : td.attributes.length === 0
+        ? totalPlanes
+        : 1;
+    for (let k = 0; k < planes && first + k < totalPlanes; k++) {
+      planeIfds[first + k] = attr("IFD") + k;
+    }
+  }
+  const byChannel = Array.from(
+    { length: sizeC },
+    (_, c) => planeIfds[planeIndex({ Z: 0, C: c, T: 0 })],
+  );
+  return byChannel.every(Number.isInteger) && new Set(byChannel).size === sizeC
+    ? byChannel
+    : null;
+}
+
 const FALLBACK_MAX_TEXTURE_SIZE = 4096;
 let cachedMaxTextureSize: number | undefined;
 
@@ -178,12 +238,14 @@ async function readTiffSample(
   image: GeoTiffImage,
   sample: number,
   window?: [number, number, number, number],
+  signal?: AbortSignal,
 ): Promise<HasTile> {
   const width = window ? window[2] - window[0] : image.getWidth();
   const height = window ? window[3] - window[1] : image.getHeight();
   const raster = (await image.readRasters({
     samples: [sample],
     interleave: true,
+    signal,
     ...(window ? { window, width, height } : {}),
   })) as ArrayLike<number> & { width?: number; height?: number };
   return {
@@ -208,8 +270,11 @@ async function resolveMaskPyramidImages(
   const source = baseInternals.source ?? internals.source;
   if (source == null) return images;
 
-  for (const offset of offsets) {
-    const parsed = await internals.parseFileDirectoryAt(offset);
+  // Parsed together: from a URL, each one may be its own round trip.
+  const parsedLevels = await Promise.all(
+    offsets.map((offset) => internals.parseFileDirectoryAt(offset)),
+  );
+  for (const parsed of parsedLevels) {
     images.push(
       new GeoTIFFImage(
         parsed.fileDirectory as never,
@@ -224,18 +289,32 @@ async function resolveMaskPyramidImages(
   return images;
 }
 
-function maskPlaneFromImage(
-  image: GeoTiffImage,
+/**
+ * One pyramid level. `images` holds the level's IFD for each channel when the
+ * channels are separate IFDs (as Minerva's mask export writes them), else just
+ * the one IFD whose samples are the channels.
+ */
+function maskPlaneFromImages(
+  images: GeoTiffImage[],
   sizeC: number,
   dtype: Dtype,
 ): LoaderPlane {
+  const [image] = images;
   const width = image.getWidth();
   const height = image.getHeight();
   const tiled = isTiffTiled(image);
   const tileSize = tiled ? vivTileSize(image) : Math.max(width, height, 1);
   const clampC = (c: number) => Math.max(0, Math.min(sizeC - 1, c));
+  const readChannel = (
+    c: number,
+    window?: [number, number, number, number],
+    signal?: AbortSignal,
+  ) =>
+    images.length > 1
+      ? readTiffSample(images[clampC(c)], 0, window, signal)
+      : readTiffSample(image, clampC(c), window, signal);
   const getRaster = ({ selection }: { selection: Selection }) =>
-    readTiffSample(image, clampC(selection.c));
+    readChannel(selection.c);
   return {
     dtype,
     shape: [1, sizeC, 1, height, width],
@@ -243,11 +322,13 @@ function maskPlaneFromImage(
     labels: ["t", "c", "z", "y", "x"],
     onTileError: () => undefined,
     getRaster,
+    readWindow: ({ selection, window, signal }) =>
+      readChannel(selection.c, window, signal),
     getTile: tiled
       ? ({ x, y, selection }) => {
           const x0 = x * tileSize;
           const y0 = y * tileSize;
-          return readTiffSample(image, clampC(selection.c), [
+          return readChannel(selection.c, [
             x0,
             y0,
             Math.min(x0 + tileSize, width),
@@ -267,9 +348,13 @@ function maskPlaneFromImage(
  * Viv `loadOmeTiff` requires OME-XML `<Pixels>`. Mask TIFFs (tifffile JSON
  * ImageDescription, or OME-XML with extra non-IFD `<Image>` entries) go
  * through IFD0 + SubIFDs instead; OME Pixels is size/units only.
+ * A URL is range-read like Viv's: the IFDs, then only the tiles drawn.
  */
-async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
-  const tiff = await fromBlob(inFile);
+async function maskLoader(source: Blob | string): Promise<Loader> {
+  const tiff =
+    typeof source === "string"
+      ? await fromUrl(source, { cacheSize: Number.POSITIVE_INFINITY })
+      : await fromBlob(source);
   const baseImage = await tiff.getImage(0);
   const fd = baseImage.fileDirectory;
   const width = baseImage.getWidth();
@@ -282,10 +367,19 @@ async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
       );
     }
   }
-  const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
   const dtype = dtypeFromTiffDirectory(fd);
   const ome = parseFirstOmeImagePixels(fd.ImageDescription);
   const sizeC = Math.max(1, ome?.SizeC ?? fd.SamplesPerPixel ?? 1);
+  // Channels the OME-XML puts in their own IFDs (each with its own SubIFD
+  // levels); otherwise they are samples of IFD 0.
+  const channelIfds = omeChannelIfds(fd.ImageDescription, sizeC);
+  const channelBases = channelIfds
+    ? await Promise.all(channelIfds.map((ifd) => tiff.getImage(ifd)))
+    : [baseImage];
+  const channelPyramids = await Promise.all(
+    channelBases.map((base) => resolveMaskPyramidImages(tiff, base)),
+  );
+  const levelCount = Math.min(...channelPyramids.map((p) => p.length));
   const unitlessResolution = isUnitlessPlaceholderResolution(fd);
   const channels = Array.from({ length: sizeC }, (_, i) => ({
     ID: `Channel:0:${i}`,
@@ -311,8 +405,12 @@ async function maskLoaderFromBlob(inFile: Blob): Promise<Loader> {
     Channels: channels,
   };
   return {
-    data: pyramidImages.map((image) =>
-      maskPlaneFromImage(image, channels.length, dtype),
+    data: Array.from({ length: levelCount }, (_, level) =>
+      maskPlaneFromImages(
+        channelPyramids.map((pyramid) => pyramid[level]),
+        channels.length,
+        dtype,
+      ),
     ),
     metadata: {
       ID: "Image:0",
@@ -557,17 +655,32 @@ async function finishOmeIntensityLoader(
 
 type OmeLoaderRole = "intensity" | "segmentation";
 
-/**
- * Open the OME-TIFF file picker, then verify permission and that the file
- * still resolves. Returns null on cancel / denied / missing.
- */
-export async function pickLocalOmeTiffHandle(): Promise<Handle.File | null> {
-  const picked = await toFile();
-  if (picked.length === 0) return null;
-  const handle = picked[0];
-  if (!(await ensureFileHandlePermission(handle))) return null;
-  if (!(await findFile({ handle }))) return null;
-  return handle;
+/** File at `relativePath` under `root` (e.g. beside `document.json`); undefined when missing. */
+export async function fileInDirectory(
+  root: FileSystemDirectoryHandle,
+  relativePath: string,
+): Promise<FileSystemFileHandle | undefined> {
+  const parts = relativePath
+    .trim()
+    .split(/[/\\]/)
+    .filter((part) => part && part !== ".");
+  const name = parts.pop();
+  if (!name || parts.includes("..")) return undefined;
+  let dir = root;
+  try {
+    for (const part of parts) dir = await dir.getDirectoryHandle(part);
+    return await dir.getFileHandle(name);
+  } catch (e) {
+    // A name the file system rejects (`TypeError`) cannot be there either.
+    if (
+      e instanceof TypeError ||
+      (e instanceof DOMException &&
+        (e.name === "NotFoundError" || e.name === "TypeMismatchError"))
+    ) {
+      return undefined;
+    }
+    throw e;
+  }
 }
 
 export async function loadOmeLoaderForRole(
@@ -585,7 +698,7 @@ export async function loadOmeLoaderForRole(
   if (source.kind === "local") {
     const file = await source.handle.getFile();
     if (role === "segmentation") {
-      return maskLoaderFromBlob(file);
+      return maskLoader(file);
     }
     return finishOmeIntensityLoader(
       asAppLoader(await loadOmeTiff(file, vivLoadOpts(source.pool, packedRgb))),
@@ -594,11 +707,7 @@ export async function loadOmeLoaderForRole(
     );
   }
   if (role === "segmentation") {
-    const response = await fetch(source.url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch mask OME-TIFF (${response.status})`);
-    }
-    return maskLoaderFromBlob(await response.blob());
+    return maskLoader(source.url);
   }
   return finishOmeIntensityLoader(
     asAppLoader(

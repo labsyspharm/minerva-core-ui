@@ -50,6 +50,13 @@ export type LoaderPlane = {
   onTileError: (e: Error) => void;
   getRaster: (s: SelectionConfig) => Promise<HasTile>;
   getTile: (s: TileConfig) => Promise<HasTile>;
+  /**
+   * Any `[x0, y0, x1, y1]` window in one read. Mask planes set it: their
+   * tiles can be a whole level, which re-tiling would read once per tile.
+   */
+  readWindow?: (
+    s: SelectionConfig & { window: [number, number, number, number] },
+  ) => Promise<HasTile>;
 };
 
 export type VivLoaderPlane = LoaderPlane & {

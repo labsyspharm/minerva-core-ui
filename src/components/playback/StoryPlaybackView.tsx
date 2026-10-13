@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import type {
@@ -16,6 +17,7 @@ import {
   type Image,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
+import styles from "./StoryPlaybackView.module.css";
 
 /** Loader state shared by CDN player and authoring Story preview. */
 export type StoryPlaybackLoaders = {
@@ -23,6 +25,8 @@ export type StoryPlaybackLoaders = {
   setJpegLoaderEntries: Dispatch<SetStateAction<JpegLoaderEntry[]>>;
   omeLoaderEntries: OmeLoaderEntry[];
   dicomIndexList: DicomIndex[];
+  /** True while image metadata is still opening. The channel list can render. */
+  imagesLoading?: boolean;
 };
 
 /** JPEG folder sync + Viv layers for StoryPlaybackView. */
@@ -108,7 +112,13 @@ export function StoryPlaybackView(props: StoryPlaybackLoaders) {
         isDragging={dragState.isDragging}
         hoveredShapeId={hoverState.hoveredShapeId}
         onOverlayInteraction={handleOverlayInteraction}
+        preserveDrawingBuffer={false}
       />
+      {props.imagesLoading ? (
+        <output className={styles.imageLoading} aria-busy="true">
+          <div className={minervaTheme.spinner} />
+        </output>
+      ) : null}
     </ChannelPanel>
   );
 }

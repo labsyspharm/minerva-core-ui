@@ -3,6 +3,7 @@ import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 import svgr from "vite-plugin-svgr";
+import { gitSha } from "./vite.gitSha.js";
 
 /**
  * PR previews set `VITE_STORY_BUNDLE_URL`. List emitted player files so an export
@@ -50,6 +51,7 @@ export default defineConfig({
     __BUILD_TIME_ISO__: JSON.stringify(
       process.env.VITE_APP_BUILD_TIME ?? new Date().toISOString(),
     ),
+    __BUILD_GIT_SHA__: JSON.stringify(gitSha()),
   },
   plugins: [
     writeBundleManifest(),

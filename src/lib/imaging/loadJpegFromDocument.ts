@@ -13,6 +13,7 @@ import {
   folderByChannelIndexFromImageChannels,
   JPEG_BAKED_CONTRAST_LIMIT,
 } from "./jpegPyramid";
+import { isAbsoluteUrl } from "./sourceUrl";
 
 type GroupChannelRow = {
   channelId: string;
@@ -71,6 +72,13 @@ export function jpegSourceNeedsLocalRoot(url: string): boolean {
   return (
     url === "." || url === "./" || url === "" || !/^https?:\/\//i.test(url)
   );
+}
+
+/** OME-TIFF path beside the story JSON. The browser cannot read it until the user picks the file. */
+export function isRelativeOmeTiffUrl(url: string): boolean {
+  const u = url.trim();
+  if (!u || isAbsoluteUrl(u)) return false;
+  return /\.tiff?$/i.test(u);
 }
 
 function channelFoldersEqual(

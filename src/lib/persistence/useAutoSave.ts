@@ -42,6 +42,7 @@ export function useStoryAutoSave(): void {
         state.shapes !== prev.shapes ||
         state.channelGroups !== prev.channelGroups ||
         state.images !== prev.images ||
+        state.featureTables !== prev.featureTables ||
         state.metadata !== prev.metadata;
       if (!docChanged) return;
       if (!state.activeStoryId) return;
@@ -50,7 +51,8 @@ export function useStoryAutoSave(): void {
         state.waypoints === prev.waypoints &&
         state.shapes === prev.shapes &&
         state.channelGroups === prev.channelGroups &&
-        state.images === prev.images;
+        state.images === prev.images &&
+        state.featureTables === prev.featureTables;
       schedule(metadataOnly ? METADATA_DEBOUNCE_MS : DEBOUNCE_MS);
     });
 

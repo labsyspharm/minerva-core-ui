@@ -165,7 +165,7 @@ export function PresentationNav(props: { showStoryName: boolean }) {
     activeStoryIndex,
     setActiveStory,
     activeChannelGroupId,
-    setActiveChannelGroup,
+    showOnlyChannelGroup,
     importWaypointShapes,
     setTargetWaypointCamera,
   } = useAppStore();
@@ -221,16 +221,13 @@ export function PresentationNav(props: { showStoryName: boolean }) {
 
     if (groupAppliedForStoryRef.current === activeStoryIndex) return;
 
-    const authoringMap = useAppStore.getState().waypointAuthoring;
-    const wp = waypointToConfigWaypoint(story, authoringMap.get(story.id));
-    const gid = wp.groupId;
-    const foundGroup = gid
-      ? channelGroups.find((g) => g.id === gid) || channelGroups[0]
-      : channelGroups[0];
+    const gid = story.groupId;
+    const foundGroup =
+      (gid && channelGroups.find((g) => g.id === gid)) || channelGroups[0];
     if (!foundGroup) return;
     groupAppliedForStoryRef.current = activeStoryIndex;
-    setActiveChannelGroup(foundGroup.id);
-  }, [activeStoryIndex, channelGroups, waypoints, setActiveChannelGroup]);
+    showOnlyChannelGroup(foundGroup.id);
+  }, [activeStoryIndex, channelGroups, waypoints, showOnlyChannelGroup]);
 
   useEffect(() => {
     return () => {
@@ -257,9 +254,7 @@ export function PresentationNav(props: { showStoryName: boolean }) {
     const gid = story.groupId;
     const found_group =
       (gid && channelGroups.find(({ id }) => id === gid)) || channelGroups[0];
-    if (found_group) {
-      setActiveChannelGroup(found_group.id);
-    }
+    if (found_group) showOnlyChannelGroup(found_group.id);
   };
 
   // Camera is applied solely by the activeStoryIndex effect above — do not also

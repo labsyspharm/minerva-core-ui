@@ -105,7 +105,7 @@ const PLANAR_RGB_DISPLAY_COLORS = [
   { r: 0, g: 0, b: 255 },
 ] as const;
 
-function planarRgbSlotFromName(name: string): 0 | 1 | 2 | null {
+export function planarRgbSlotFromName(name: string): 0 | 1 | 2 | null {
   const n = name.toLowerCase();
   if (n.endsWith("_r") || n.endsWith("-r") || n.endsWith("[r]") || n === "r") {
     return 0;

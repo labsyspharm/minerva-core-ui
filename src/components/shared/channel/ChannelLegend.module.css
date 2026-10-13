@@ -118,6 +118,7 @@
   display: flex;
   align-items: center;
   flex: 1;
+  gap: 5px;
   min-width: 0;
   text-align: left;
 }

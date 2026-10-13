@@ -1,14 +1,7 @@
 import { OrthographicView, type OrthographicViewState } from "@deck.gl/core";
 import Deck, { type DeckGLRef } from "@deck.gl/react";
 import { ScaleBarLayer } from "@hms-dbmi/viv";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import "@deck.gl/widgets/stylesheet.css";
 
@@ -18,10 +11,11 @@ import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
 import { ImageArrangeBox } from "@/components/shared/viewer/ImageArrangeBox";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import {
-  getFeatureTableLutEpoch,
+  classViewFor,
   gpuStyleForFeatureTable,
-  subscribeFeatureTableLut,
+  withHiddenClasses,
 } from "@/lib/featureTable";
+import { useFeatureTableLutEpoch } from "@/lib/featureTable/hooks";
 import { isMaskSourceRendered } from "@/lib/imaging/channelCompositor";
 import {
   DEFAULT_MASK_VISUALIZATION,
@@ -38,7 +32,7 @@ import {
 } from "@/lib/imaging/maskLayers";
 import { createMaskTileLayer } from "@/lib/imaging/maskTileLayer";
 import { effectiveMaskVisualizationForSource } from "@/lib/imaging/sourceChannelStyle";
-import type { Loader } from "@/lib/imaging/viv";
+import { type Loader, TILE_CACHE_PROPS } from "@/lib/imaging/viv";
 import {
   viewStateToWorld,
   WORLD_MICRON,
@@ -47,12 +41,14 @@ import {
 import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
-import { useAppStore } from "@/lib/stores/appStore";
+import { legendClassKey, useAppStore } from "@/lib/stores/appStore";
 import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
 import { uniqueImageDisplayLabels } from "@/lib/stores/storeUtils";
+import { useActiveWaypoint } from "@/lib/stores/useActiveWaypoint";
+import { isMobileDevice } from "@/lib/viewer/isMobileDevice";
 import {
   getViewerViewportSnapshotFromDeck,
   orthographicZoomToNumber,
@@ -77,6 +73,35 @@ const WAYPOINT_FLY_MS = 1400;
 const CAMERA_IDLE_COMMIT_MS = 160;
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+
+function utcShort(iso: string): string | null {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return null;
+  return new Date(t).toISOString().replace("T", " ").slice(0, 16);
+}
+
+function buildStamp(): { text: string; title: string } | null {
+  const iso = typeof __BUILD_TIME_ISO__ === "string" ? __BUILD_TIME_ISO__ : "";
+  const sha = typeof __BUILD_GIT_SHA__ === "string" ? __BUILD_GIT_SHA__ : "";
+  const label = utcShort(iso);
+  const short = sha.slice(0, 7);
+  const text = [label ? `Updated ${label} UTC` : "", short]
+    .filter(Boolean)
+    .join(" · ");
+  if (!text) return null;
+  return { text, title: [iso, sha].filter(Boolean).join("\n") };
+}
+
+/** Device class and the tile cache it gets, for the info box. */
+function deviceLabel(): string {
+  const mb = TILE_CACHE_PROPS.maxCacheByteSize / 2 ** 20;
+  const cache = mb > 0 ? `${mb} MB` : "off";
+  return `${isMobileDevice() ? "Mobile" : "Desktop"} · tile cache ${cache}`;
+}
+
+// Both are fixed for the life of the page.
+const BUILD_STAMP = buildStamp();
+const DEVICE_LABEL = deviceLabel();
 
 function planeWidth(plane: Loader["data"][number]): number {
   const i = plane.labels.indexOf("x");
@@ -134,12 +159,15 @@ function formatPyramidHudLines(
     });
   }
   if (rows.length === 0) return [];
-  if (rows.every((row) => row.status === rows[0].status)) {
-    return [{ key: rows[0].key, text: rows[0].status }];
+  if (rows.length > 1 && rows.every((row) => row.status === rows[0].status)) {
+    return [
+      ...rows.map((row) => ({ key: row.key, text: row.label })),
+      { key: `${rows[0].key}-level`, text: rows[0].status },
+    ];
   }
   return rows.map((row) => ({
     key: row.key,
-    text: `${row.label} ${row.status}`,
+    text: `${row.label} · ${row.status}`,
   }));
 }
 
@@ -405,6 +433,12 @@ export type ImageViewerProps = {
   squareViewportScale?: number;
   squareViewportColor?: string;
   squareViewportBorderWidth?: number;
+  /**
+   * Keep the drawn frame for later reads (thumbnail capture, SAM2). The
+   * published player reads nothing back, and a preserved buffer costs an
+   * extra full-canvas copy each frame on mobile GPUs.
+   */
+  preserveDrawingBuffer?: boolean;
 };
 
 const _isElement = (x = {}): x is HTMLElement => {
@@ -428,6 +462,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     squareViewportScale = 0.9,
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
     squareViewportBorderWidth = 2,
+    preserveDrawingBuffer = true,
   } = props;
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
@@ -453,20 +488,17 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const featureTables = useDocumentStore((s) => s.featureTables);
-  const featureTableVisibilities = useAppStore(
-    (s) => s.featureTableVisibilities,
-  );
-  const featureTableLutEpoch = useSyncExternalStore(
-    subscribeFeatureTableLut,
-    getFeatureTableLutEpoch,
-    getFeatureTableLutEpoch,
-  );
+  const activeWaypoint = useActiveWaypoint();
+  const hiddenLegendClasses = useAppStore((s) => s.hiddenLegendClasses);
+  const featureTableLutEpoch = useFeatureTableLutEpoch();
   const selectionMaskActive =
     imageSelectionMask != null &&
     (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
   const maskExtension = useMemo(() => new MaskExtension(), []);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
+  /** False until the viewer element reports its size; the window size is only a guess. */
+  const [viewportMeasured, setViewportMeasured] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<DeckGLRef | null>(null);
   const arrangeLayoutRef = useRef<(() => void) | null>(null);
@@ -482,6 +514,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     const publish = (width: number, height: number) => {
       if (width <= 0 || height <= 0) return;
       setViewportSize({ width, height });
+      setViewportMeasured(true);
       useAppStore.getState().setViewerViewportSize({ width, height });
     };
     publish(element.clientWidth, element.clientHeight);
@@ -502,6 +535,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
     [loaderList],
   );
   const [pyramidHud, setPyramidHud] = useState<PyramidHudLine[]>([]);
+  const [pyramidInfoOpen, setPyramidInfoOpen] = useState(false);
+  const pyramidInfoRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!pyramidInfoOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const root = pyramidInfoRef.current;
+      if (!root || root.contains(event.target as Node)) return;
+      setPyramidInfoOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [pyramidInfoOpen]);
   const publishPyramidHud = useCallback(
     (zoom: number) => {
       const next = formatPyramidHudLines(zoom, loaderList, images);
@@ -545,9 +590,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       if (!isMaskChannel(sc)) continue;
       const rendered = isMaskSourceRendered({
         sc,
-        channels,
         channelGroups,
-        activeGroup: channelGroups.find((g) => g.id === activeChannelGroupId),
         stackVisibilities: channelVisibilities ?? {},
         groupRowVisibilities: channelGroupRowVisibilities,
       });
@@ -583,6 +626,19 @@ export const ImageViewer = (props: ImageViewerProps) => {
       const featureTable = featureTables.find(
         (c) => c.sourceChannelId === sc.id,
       );
+      const classStyle = featureTable
+        ? gpuStyleForFeatureTable(
+            featureTable,
+            withHiddenClasses(
+              classViewFor(activeWaypoint, sc.id),
+              sc.id,
+              hiddenLegendClasses[legendClassKey(activeWaypoint?.id, sc.id)],
+            ),
+            visualization.colorSeed ?? 0,
+            activeWaypoint?.id,
+          )
+        : undefined;
+      // Without a style the shader falls back to per-cell random colors.
       const layer = createMaskTileLayer({
         id: `mask-channel-${sc.id}`,
         loader: entry.loader,
@@ -590,13 +646,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         visualization: paintedVisualization,
         orientation,
         visible: rendered,
-        classStyle: featureTable
-          ? gpuStyleForFeatureTable(
-              featureTable,
-              featureTableVisibilities[featureTable.id],
-              visualization.colorSeed ?? 0,
-            )
-          : undefined,
+        classStyle,
       });
       if (layer) layers.push(layer);
     }
@@ -612,23 +662,37 @@ export const ImageViewer = (props: ImageViewerProps) => {
     imageOpacityPreview,
     imageOrientationPreview,
     featureTables,
-    featureTableVisibilities,
+    activeWaypoint,
+    hiddenLegendClasses,
     featureTableLutEpoch,
   ]);
 
-  // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last
-  // idle snapshot (overlays / Zustand). `orthoSeed` matches it except during a
-  // waypoint fly, when the seed carries transition props.
+  // Fit the whole image. Pyramid depth says nothing about size on screen:
+  // some files keep halving down to a few pixels.
   const fitViewState = useMemo(() => {
-    const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
+    const { width, height } = viewportSize;
+    const zoom =
+      frame &&
+      frame.worldWidth > 0 &&
+      frame.worldHeight > 0 &&
+      width > 0 &&
+      height > 0
+        ? Math.log2(
+            0.95 *
+              Math.min(width / frame.worldWidth, height / frame.worldHeight),
+          )
+        : 0;
     return withOrthoZoom({
-      zoom: -n_levels,
+      zoom,
       target: frame
         ? [frame.worldWidth / 2, frame.worldHeight / 2, 0]
         : [0, 0, 0],
     });
-  }, [firstLoader, frame]);
+  }, [frame, viewportSize]);
 
+  // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last
+  // idle snapshot (overlays / Zustand). `orthoSeed` matches it except during a
+  // waypoint fly, when the seed carries transition props.
   const [viewState, setViewState] =
     useState<OrthographicViewState>(fitViewState);
   const [orthoSeed, setOrthoSeed] =
@@ -710,11 +774,11 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const refImageHeight = frame?.pixelHeight ?? 0;
 
   useEffect(() => {
-    if (firstLoader !== null && !hasInitialized.current) {
+    if (firstLoader !== null && viewportMeasured && !hasInitialized.current) {
       commitIdleCamera(fitViewState, true);
       hasInitialized.current = true;
     }
-  }, [fitViewState, firstLoader, commitIdleCamera]);
+  }, [fitViewState, firstLoader, viewportMeasured, commitIdleCamera]);
 
   useEffect(() => {
     const zoom =
@@ -1350,7 +1414,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         controller={controllerConfig}
         deviceProps={{
           webgl: {
-            preserveDrawingBuffer: true,
+            preserveDrawingBuffer,
           },
         }}
         initialViewState={deckInitialViewState}
@@ -1378,13 +1442,70 @@ export const ImageViewer = (props: ImageViewerProps) => {
         />
       ) : null}
       <LoadingWidget ref={loadingWidgetRef} placement="center" />
-      {pyramidHud.length > 0 ? (
-        <output className={styles.pyramidHud}>
-          {pyramidHud.map((line) => (
-            <div key={line.key}>{line.text}</div>
-          ))}
-        </output>
-      ) : null}
+      <div className={styles.viewerInfo} ref={pyramidInfoRef}>
+        {pyramidInfoOpen ? (
+          <div
+            className={styles.viewerInfoPanel}
+            role="dialog"
+            aria-label="Image list and resolution"
+          >
+            <div className={styles.viewerInfoPanelHead}>
+              <span>Images</span>
+              <button
+                type="button"
+                className={styles.viewerInfoClose}
+                aria-label="Close image list"
+                onClick={() => setPyramidInfoOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            {pyramidHud.length > 0 ? (
+              <output className={styles.viewerInfoList}>
+                {pyramidHud.map((line) => (
+                  <div key={line.key} title={line.text}>
+                    {line.text}
+                  </div>
+                ))}
+              </output>
+            ) : null}
+            <div
+              className={styles.viewerInfoStamp}
+              title={[BUILD_STAMP?.title, navigator.userAgent]
+                .filter(Boolean)
+                .join("\n")}
+            >
+              {BUILD_STAMP ? <div>{BUILD_STAMP.text}</div> : null}
+              <div>{DEVICE_LABEL}</div>
+            </div>
+          </div>
+        ) : null}
+        <button
+          type="button"
+          className={styles.viewerInfoButton}
+          aria-label="Image list and resolution"
+          aria-expanded={pyramidInfoOpen}
+          onClick={() => setPyramidInfoOpen((open) => !open)}
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <circle
+              cx="8"
+              cy="8"
+              r="6.25"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.25"
+            />
+            <path
+              d="M8 7.2v4.2M8 4.6v.6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      </div>
       {showSquareViewportOverlay && (
         <div
           className={styles.squareViewportOverlay}

@@ -69,9 +69,20 @@ export function encodeCubeRootU16ToU8(pixel: number): number {
   );
 }
 
-export function decodeCubeRootU8ToU16(byte: number): number {
+function decodeCubeRootU8ToU16(byte: number): number {
   if (!Number.isFinite(byte) || byte <= 0) return 0;
   return Math.min(65535, Math.max(0, Math.round((byte / 256) ** 3 * 65536)));
+}
+
+const CUBE_ROOT_U8_TO_U16 = Uint16Array.from({ length: 256 }, (_, b) =>
+  decodeCubeRootU8ToU16(b),
+);
+
+const CONTRAST_U8_TO_U16 = Uint16Array.from({ length: 256 }, (_, b) => b << 8);
+
+/** Decoded JPEG byte → display uint16: inverse cube root, or `byte << 8` (baked window). */
+export function u8ToU16Lut(transfer: JpegExportTransfer): Uint16Array {
+  return transfer === "cube-root" ? CUBE_ROOT_U8_TO_U16 : CONTRAST_U8_TO_U16;
 }
 
 type TransferImage = {
@@ -95,13 +106,15 @@ export function exportTransferForImage(
 }
 
 /**
- * JPEG OME-TIFF hydrate wrap. `null` means do not wrap (masks).
- * RGB is contrast even when the story `imageSource` is cube-root.
+ * JPEG OME-TIFF hydrate wrap. `null` means do not wrap (masks, packed RGB).
+ * Planar RGB is contrast even when the story `imageSource` is cube-root.
+ * Packed RGB stays uint8: Viv uploads interleaved tiles as rgba8unorm.
  */
 export function hydrateJpegTransferForImage(
   image: TransferImage,
   storyTransfer: JpegExportTransfer,
 ): JpegExportTransfer | null {
+  if (image.channels?.some((c) => c.samples === 3)) return null;
   if (
     resolveImageContentRole({
       contentRole: image.contentRole,
