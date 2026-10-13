@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Co2qzrPS.js","./pako.esm-KbdoS3Oq.js","./lerc-QXL6cj9l.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-cVRB67Ye.js","./pako.esm-KbdoS3Oq.js","./lerc-Jle6KNlH.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18494,12 +18494,12 @@ let __tla = (async () => {
       kind: "sync"
     };
   }
-  function applyVisibilityTransition(sourceChannels, channelGroups, stackVisibilities, groupRowVisibilities, transition) {
+  function applyVisibilityTransition(sourceChannels, channelGroups, stackVisibilities, groupRowVisibilities, transition, activeGroupId) {
     const useStored = transition.kind === "fresh" || transition.kind === "sync";
     const channelVisibilities = applyStackVisibilities(sourceChannels, stackVisibilities, useStored ? visibilityKindForMap(stackVisibilities) : transition);
     return {
       channelVisibilities,
-      channelGroupRowVisibilities: applyGroupRowVisibilities(channelGroups, groupRowVisibilities, transition)
+      channelGroupRowVisibilities: applyGroupRowVisibilities(channelGroups, groupRowVisibilities, transition, activeGroupId)
     };
   }
   const __vite_import_meta_env__ = {
@@ -18508,7 +18508,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "990d5f73fa71d1687b0149b80da015ce16cd57fc",
+    "VITE_APP_GIT_SHA": "e6de07014d7c131a77ae611d3445401474be1795",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -79232,26 +79232,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DRr4cISJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Bqpq7p24.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CHuULqhX.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Rs65fYAW.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BWt_IW4b.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-Bi6JfxB1.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-Co2qzrPS.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BuoAReiY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-QXL6cj9l.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-cVRB67Ye.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DNaMnT30.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Jle6KNlH.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CXxu5ICi.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CUu-BJzt.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CtfLv2xh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CTEG4PwQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -86604,19 +86604,47 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const doc = parseOmeXml(imageDescription);
     const pixels = doc ? omePixelsElement(doc) : null;
     if (!pixels) return null;
-    const ifds = [];
+    const order2 = pixels.getAttribute("DimensionOrder") ?? "XYZCT";
+    const dims = order2.slice(2).split("");
+    if (!/^XY/.test(order2) || [
+      ...dims
+    ].sort().join("") !== "CTZ") return null;
+    const sizes = {
+      Z: Number(pixels.getAttribute("SizeZ") ?? 1),
+      C: sizeC,
+      T: Number(pixels.getAttribute("SizeT") ?? 1)
+    };
+    const planeIndex = (at) => {
+      let index2 = 0;
+      let stride = 1;
+      for (const d2 of dims) {
+        index2 += at[d2] * stride;
+        stride *= sizes[d2];
+      }
+      return index2;
+    };
+    const totalPlanes = sizes.Z * sizes.C * sizes.T;
+    const planeIfds = [];
     for (const td2 of pixels.getElementsByTagNameNS("*", "TiffData")) {
       if (td2.parentElement !== pixels) continue;
-      const firstC = Number(td2.getAttribute("FirstC") ?? 0);
-      const ifd = Number(td2.getAttribute("IFD") ?? 0);
-      const planes = Number(td2.getAttribute("PlaneCount") ?? 1);
-      for (let k2 = 0; k2 < planes && firstC + k2 < sizeC; k2++) {
-        ifds[firstC + k2] = ifd + k2;
+      const attr2 = (name2) => Number(td2.getAttribute(name2) ?? 0);
+      const first = planeIndex({
+        Z: attr2("FirstZ"),
+        C: attr2("FirstC"),
+        T: attr2("FirstT")
+      });
+      const planes = td2.hasAttribute("PlaneCount") ? attr2("PlaneCount") : td2.attributes.length === 0 ? totalPlanes : 1;
+      for (let k2 = 0; k2 < planes && first + k2 < totalPlanes; k2++) {
+        planeIfds[first + k2] = attr2("IFD") + k2;
       }
     }
     const byChannel = Array.from({
       length: sizeC
-    }, (_2, c2) => ifds[c2]);
+    }, (_2, c2) => planeIfds[planeIndex({
+      Z: 0,
+      C: c2,
+      T: 0
+    })]);
     return byChannel.every(Number.isInteger) && new Set(byChannel).size === sizeC ? byChannel : null;
   }
   const FALLBACK_MAX_TEXTURE_SIZE = 4096;
@@ -91236,7 +91264,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const app = useAppStore.getState();
     const visibility = applyVisibilityTransition(sourceChannels, groups, app.channelVisibilities, app.channelGroupRowVisibilities, {
       kind: "sync"
-    });
+    }, app.activeChannelGroupId);
     const { channelVisibilities } = visibility;
     delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
     const activeId = app.activeChannelGroupId;
@@ -259150,8 +259178,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-13T14:43:59.167Z";
-    const sha = "990d5f73fa71d1687b0149b80da015ce16cd57fc";
+    const iso = "2026-10-13T14:50:41.383Z";
+    const sha = "e6de07014d7c131a77ae611d3445401474be1795";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -261811,7 +261839,7 @@ uniform classStyleUniforms {
         ChannelGroups: nextChannelGroups
       });
       const app = useAppStore.getState();
-      const visibilities = applyVisibilityTransition(flat, nextChannelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, opts.transition);
+      const visibilities = applyVisibilityTransition(flat, nextChannelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, opts.transition, app.activeChannelGroupId);
       setChannelVisibilities(visibilities.channelVisibilities);
       setChannelGroupRowVisibilities(visibilities.channelGroupRowVisibilities);
     }, [
@@ -262373,7 +262401,7 @@ uniform classStyleUniforms {
       const app = useAppStore.getState();
       const visibility = applyVisibilityTransition(flat, doc.channelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, {
         kind: "sync"
-      });
+      }, app.activeChannelGroupId);
       setChannelVisibilities(visibility.channelVisibilities);
       setChannelGroupRowVisibilities(visibility.channelGroupRowVisibilities);
     }, [
