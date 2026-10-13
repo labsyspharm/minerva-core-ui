@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-B6KY48QV.js","./pako.esm-KbdoS3Oq.js","./lerc-DXFfS6v1.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DLOh0USZ.js","./pako.esm-KbdoS3Oq.js","./lerc-Bq_hwHs_.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -17210,6 +17210,17 @@ let __tla = (async () => {
     }
     return w2;
   }
+  function normalizeFeatureTableSource(raw2) {
+    if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
+      return raw2;
+    }
+    const s2 = raw2;
+    if ("kind" in s2 || typeof s2.handleKey !== "string") return s2;
+    return {
+      kind: "local",
+      handleKey: s2.handleKey
+    };
+  }
   function normalizeRawShape(shape) {
     if (shape === null || typeof shape !== "object" || Array.isArray(shape)) {
       return shape;
@@ -17465,23 +17476,47 @@ let __tla = (async () => {
     channels: arrayType(ChannelGroupChannelSchema)
   });
   const ClassIdSchema = numberType().int().positive().max(4294967295);
+  const FeatureTableSourceSchema = preprocessType(normalizeFeatureTableSource, discriminatedUnionType("kind", [
+    objectType({
+      kind: literalType("local"),
+      handleKey: stringType().min(1)
+    }),
+    objectType({
+      kind: literalType("url"),
+      url: stringType().min(1)
+    })
+  ]));
   const FeatureTableSchema = objectType({
     id: IdSchema,
     sourceChannelId: IdSchema,
-    source: objectType({
-      handleKey: stringType().min(1)
-    }),
+    source: FeatureTableSourceSchema,
     maxClassId: ClassIdSchema,
     nameColors: arrayType(objectType({
       name: stringType(),
       color: ColorSchema
     })),
-    digest: stringType().min(1),
-    columns: objectType({
-      id: stringType().min(1),
-      name: stringType().min(1)
+    digest: stringType().min(1)
+  });
+  const ClassVisibilitySchema = discriminatedUnionType("mode", [
+    objectType({
+      mode: literalType("all")
     }),
-    header: booleanType()
+    objectType({
+      mode: literalType("hide"),
+      names: arrayType(stringType())
+    }),
+    objectType({
+      mode: literalType("show"),
+      names: arrayType(stringType())
+    })
+  ]);
+  const ClassViewSchema = objectType({
+    channelId: IdSchema,
+    visibility: ClassVisibilitySchema,
+    colors: arrayType(objectType({
+      name: stringType(),
+      color: ColorSchema
+    })).default([])
   });
   const waypointObjectZ = objectType({
     id: IdSchema,
@@ -17491,7 +17526,8 @@ let __tla = (async () => {
     name: stringType().optional(),
     content: stringType(),
     viewport: ViewportSchema,
-    shapeIds: arrayType(IdSchema)
+    shapeIds: arrayType(IdSchema),
+    classViews: arrayType(ClassViewSchema).default([])
   });
   const WaypointSchema = preprocessType((raw2) => {
     if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
@@ -18219,12 +18255,31 @@ let __tla = (async () => {
     const groupedIds = sourceIdsInAnyGroup(channelGroups);
     return intensity.every((c2) => groupedIds.has(c2.id));
   }
+  function visibilitiesShowingOnlyGroup(args) {
+    const memberIds = new Set(args.group.channels.map((gc2) => gc2.channelId));
+    const channelVisibilities = {
+      ...args.stackVisibilities
+    };
+    for (const sc2 of args.sourceChannels) {
+      channelVisibilities[sc2.id] = memberIds.has(sc2.id);
+    }
+    const channelGroupRowVisibilities = {};
+    for (const group2 of args.channelGroups) {
+      const on = group2.id === args.group.id;
+      for (const gc2 of group2.channels) channelGroupRowVisibilities[gc2.id] = on;
+    }
+    return {
+      channelVisibilities,
+      channelGroupRowVisibilities
+    };
+  }
   function visibilitiesForRgbUnit(args) {
     const ids = new Set(args.rgbChannels.filter(isImageChannel).map((c2) => c2.id));
     const channelGroupRowVisibilities = {
       ...args.groupRowVisibilities
     };
     for (const group2 of args.channelGroups) {
+      if (args.groupId && group2.id !== args.groupId) continue;
       for (const gc2 of group2.channels) {
         if (ids.has(gc2.channelId)) {
           channelGroupRowVisibilities[gc2.id] = args.visible;
@@ -18234,35 +18289,29 @@ let __tla = (async () => {
     const channelVisibilities = {
       ...args.stackVisibilities
     };
-    for (const id2 of ids) channelVisibilities[id2] = args.visible;
+    if (!args.groupId) {
+      for (const id2 of ids) channelVisibilities[id2] = args.visible;
+    }
     return {
       channelGroupRowVisibilities,
       channelVisibilities
     };
   }
   function groupsOnView(activeGroup, channelGroups) {
-    return activeGroup ? [
-      activeGroup
-    ] : channelGroups;
-  }
-  function onImagesInGroup(channels2, activeGroup) {
-    if (!activeGroup) return [
-      ...channels2
+    if (!activeGroup) return channelGroups;
+    return [
+      activeGroup,
+      ...channelGroups.filter((g2) => g2.id !== activeGroup.id)
     ];
-    const memberIds = new Set(activeGroup.channels.map((gc2) => gc2.channelId));
-    const imageIds = new Set(channels2.filter((sc2) => memberIds.has(sc2.id)).map((sc2) => sc2.imageId));
-    return channels2.filter((sc2) => imageIds.has(sc2.imageId));
   }
   function buildCompositedIntensityLayers(args) {
-    const { activeGroup, channelGroups = [], stackVisibilities, groupRowVisibilities, hasVisibilityMap, requireColor = true } = args;
-    const onLoader = onImagesInGroup(args.onLoader, activeGroup);
+    const { onLoader, activeGroup, channelGroups = [], stackVisibilities, groupRowVisibilities, hasVisibilityMap, requireColor = true } = args;
     const viewGroups = groupsOnView(activeGroup, channelGroups);
     const groupedIds = sourceIdsInAnyGroup(channelGroups);
     const rgbSource = isRgbDisplaySource(onLoader);
     if (rgbSource) {
       const intensity = onLoader.filter(isImageChannel);
-      const viewIds = sourceIdsInAnyGroup(viewGroups);
-      const unitOn = intensity.every((sc2) => viewIds.has(sc2.id) ? isDisplayedViaGroupRow(sc2.id, viewGroups, groupRowVisibilities) : !hasVisibilityMap || isStackVisible(stackVisibilities, sc2.id));
+      const unitOn = intensity.every((sc2) => groupedIds.has(sc2.id) ? isDisplayedViaGroupRow(sc2.id, viewGroups, groupRowVisibilities) : !hasVisibilityMap || isStackVisible(stackVisibilities, sc2.id));
       if (!unitOn) return [];
       return intensity.map((sc2) => {
         let gc2 = null;
@@ -18346,12 +18395,8 @@ let __tla = (async () => {
     return vivIntensityLayerCount(imageId, vis) > MAX_VIV_INTENSITY_CHANNELS;
   }
   function isMaskSourceRendered(args) {
-    const { sc: sc2, channels: channels2, channelGroups = [], activeGroup, stackVisibilities, groupRowVisibilities } = args;
-    if (activeGroup && !onImagesInGroup(channels2, activeGroup).some((c2) => c2.imageId === sc2.imageId)) {
-      return false;
-    }
-    const viewGroups = groupsOnView(activeGroup, channelGroups);
-    return isDisplayedViaGroupRow(sc2.id, viewGroups, groupRowVisibilities) || !sourceChannelInAnyGroup(channelGroups, sc2.id) && isStackVisible(stackVisibilities, sc2.id);
+    const { sc: sc2, channelGroups = [], stackVisibilities, groupRowVisibilities } = args;
+    return isDisplayedViaGroupRow(sc2.id, channelGroups, groupRowVisibilities) || !sourceChannelInAnyGroup(channelGroups, sc2.id) && isStackVisible(stackVisibilities, sc2.id);
   }
   function diffChannelIds(before, after) {
     const beforeIds = new Set(before.map((sc2) => sc2.id));
@@ -18424,8 +18469,7 @@ let __tla = (async () => {
       }
     }
   }
-  function applyGroupRowVisibilities(channelGroups, prev, transition) {
-    var _a2;
+  function applyGroupRowVisibilities(channelGroups, prev, transition, activeGroupId) {
     const rowIds = new Set(channelGroups.flatMap((g2) => g2.channels.map((gc2) => gc2.id)));
     const out = {};
     for (const [id2, visible] of Object.entries(prev)) {
@@ -18433,16 +18477,12 @@ let __tla = (async () => {
     }
     if (transition.kind === "remove") return out;
     const newRowIds = transition.kind === "appendIntensity" ? new Set(transition.newGroupRowIds) : null;
-    const defaultGroupId = (_a2 = channelGroups[0]) == null ? void 0 : _a2.id;
     const inherited = Object.keys(out).length > 0;
+    const showing = new Set(inherited ? channelGroups.filter((g2) => g2.id === activeGroupId || g2.channels.some((gc2) => out[gc2.id])).map((g2) => g2.id) : channelGroups.slice(0, 1).map((g2) => g2.id));
     for (const group2 of channelGroups) {
       for (const gc2 of group2.channels) {
         if (out[gc2.id] !== void 0) continue;
-        if (newRowIds == null ? void 0 : newRowIds.has(gc2.id)) {
-          out[gc2.id] = false;
-        } else {
-          out[gc2.id] = inherited || group2.id === defaultGroupId;
-        }
+        out[gc2.id] = !(newRowIds == null ? void 0 : newRowIds.has(gc2.id)) && showing.has(group2.id);
       }
     }
     return out;
@@ -18454,12 +18494,12 @@ let __tla = (async () => {
       kind: "sync"
     };
   }
-  function applyVisibilityTransition(sourceChannels, channelGroups, stackVisibilities, groupRowVisibilities, transition) {
+  function applyVisibilityTransition(sourceChannels, channelGroups, stackVisibilities, groupRowVisibilities, transition, activeGroupId) {
     const useStored = transition.kind === "fresh" || transition.kind === "sync";
     const channelVisibilities = applyStackVisibilities(sourceChannels, stackVisibilities, useStored ? visibilityKindForMap(stackVisibilities) : transition);
     return {
       channelVisibilities,
-      channelGroupRowVisibilities: applyGroupRowVisibilities(channelGroups, groupRowVisibilities, transition)
+      channelGroupRowVisibilities: applyGroupRowVisibilities(channelGroups, groupRowVisibilities, transition, activeGroupId)
     };
   }
   const __vite_import_meta_env__ = {
@@ -18467,7 +18507,8 @@ let __tla = (async () => {
     "DEV": false,
     "MODE": "production",
     "PROD": true,
-    "SSR": false
+    "SSR": false,
+    "VITE_APP_GIT_SHA": "2d6ab1f2fa4fa82f6a374d50090793d9cdd2ce96"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -66114,6 +66155,2773 @@ in vec2 mask_texCoords;
   }
   MaskExtension.defaultProps = defaultProps$a;
   MaskExtension.extensionName = "MaskExtension";
+  var uaParser = {
+    exports: {}
+  };
+  (function(module, exports) {
+    (function(window2, undefined$1) {
+      var LIBVERSION = "1.0.41", EMPTY2 = "", UNKNOWN = "?", FUNC_TYPE = "function", UNDEF_TYPE = "undefined", OBJ_TYPE = "object", STR_TYPE = "string", MAJOR = "major", MODEL = "model", NAME2 = "name", TYPE2 = "type", VENDOR = "vendor", VERSION2 = "version", ARCHITECTURE = "architecture", CONSOLE = "console", MOBILE = "mobile", TABLET = "tablet", SMARTTV = "smarttv", WEARABLE = "wearable", EMBEDDED = "embedded", UA_MAX_LENGTH = 500;
+      var AMAZON = "Amazon", APPLE = "Apple", ASUS = "ASUS", BLACKBERRY = "BlackBerry", BROWSER = "Browser", CHROME = "Chrome", EDGE2 = "Edge", FIREFOX = "Firefox", GOOGLE = "Google", HONOR = "Honor", HUAWEI = "Huawei", LENOVO = "Lenovo", LG = "LG", MICROSOFT = "Microsoft", MOTOROLA = "Motorola", NVIDIA = "Nvidia", ONEPLUS = "OnePlus", OPERA = "Opera", OPPO = "OPPO", SAMSUNG = "Samsung", SHARP = "Sharp", SONY = "Sony", XIAOMI = "Xiaomi", ZEBRA = "Zebra", FACEBOOK = "Facebook", CHROMIUM_OS = "Chromium OS", MAC_OS = "Mac OS", SUFFIX_BROWSER = " Browser";
+      var extend2 = function(regexes2, extensions) {
+        var mergedRegexes = {};
+        for (var i2 in regexes2) {
+          if (extensions[i2] && extensions[i2].length % 2 === 0) {
+            mergedRegexes[i2] = extensions[i2].concat(regexes2[i2]);
+          } else {
+            mergedRegexes[i2] = regexes2[i2];
+          }
+        }
+        return mergedRegexes;
+      }, enumerize = function(arr) {
+        var enums = {};
+        for (var i2 = 0; i2 < arr.length; i2++) {
+          enums[arr[i2].toUpperCase()] = arr[i2];
+        }
+        return enums;
+      }, has2 = function(str1, str2) {
+        return typeof str1 === STR_TYPE ? lowerize(str2).indexOf(lowerize(str1)) !== -1 : false;
+      }, lowerize = function(str2) {
+        return str2.toLowerCase();
+      }, majorize = function(version2) {
+        return typeof version2 === STR_TYPE ? version2.replace(/[^\d\.]/g, EMPTY2).split(".")[0] : undefined$1;
+      }, trim2 = function(str2, len2) {
+        if (typeof str2 === STR_TYPE) {
+          str2 = str2.replace(/^\s\s*/, EMPTY2);
+          return typeof len2 === UNDEF_TYPE ? str2 : str2.substring(0, UA_MAX_LENGTH);
+        }
+      };
+      var rgxMapper = function(ua2, arrays) {
+        var i2 = 0, j2, k2, p2, q2, matches2, match;
+        while (i2 < arrays.length && !matches2) {
+          var regex2 = arrays[i2], props = arrays[i2 + 1];
+          j2 = k2 = 0;
+          while (j2 < regex2.length && !matches2) {
+            if (!regex2[j2]) {
+              break;
+            }
+            matches2 = regex2[j2++].exec(ua2);
+            if (!!matches2) {
+              for (p2 = 0; p2 < props.length; p2++) {
+                match = matches2[++k2];
+                q2 = props[p2];
+                if (typeof q2 === OBJ_TYPE && q2.length > 0) {
+                  if (q2.length === 2) {
+                    if (typeof q2[1] == FUNC_TYPE) {
+                      this[q2[0]] = q2[1].call(this, match);
+                    } else {
+                      this[q2[0]] = q2[1];
+                    }
+                  } else if (q2.length === 3) {
+                    if (typeof q2[1] === FUNC_TYPE && !(q2[1].exec && q2[1].test)) {
+                      this[q2[0]] = match ? q2[1].call(this, match, q2[2]) : undefined$1;
+                    } else {
+                      this[q2[0]] = match ? match.replace(q2[1], q2[2]) : undefined$1;
+                    }
+                  } else if (q2.length === 4) {
+                    this[q2[0]] = match ? q2[3].call(this, match.replace(q2[1], q2[2])) : undefined$1;
+                  }
+                } else {
+                  this[q2] = match ? match : undefined$1;
+                }
+              }
+            }
+          }
+          i2 += 2;
+        }
+      }, strMapper = function(str2, map2) {
+        for (var i2 in map2) {
+          if (typeof map2[i2] === OBJ_TYPE && map2[i2].length > 0) {
+            for (var j2 = 0; j2 < map2[i2].length; j2++) {
+              if (has2(map2[i2][j2], str2)) {
+                return i2 === UNKNOWN ? undefined$1 : i2;
+              }
+            }
+          } else if (has2(map2[i2], str2)) {
+            return i2 === UNKNOWN ? undefined$1 : i2;
+          }
+        }
+        return map2.hasOwnProperty("*") ? map2["*"] : str2;
+      };
+      var oldSafariMap = {
+        "1.0": "/8",
+        "1.2": "/1",
+        "1.3": "/3",
+        "2.0": "/412",
+        "2.0.2": "/416",
+        "2.0.3": "/417",
+        "2.0.4": "/419",
+        "?": "/"
+      }, windowsVersionMap = {
+        "ME": "4.90",
+        "NT 3.11": "NT3.51",
+        "NT 4.0": "NT4.0",
+        "2000": "NT 5.0",
+        "XP": [
+          "NT 5.1",
+          "NT 5.2"
+        ],
+        "Vista": "NT 6.0",
+        "7": "NT 6.1",
+        "8": "NT 6.2",
+        "8.1": "NT 6.3",
+        "10": [
+          "NT 6.4",
+          "NT 10.0"
+        ],
+        "RT": "ARM"
+      };
+      var regexes = {
+        browser: [
+          [
+            /\b(?:crmo|crios)\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Chrome"
+            ]
+          ],
+          [
+            /edg(?:e|ios|a)?\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Edge"
+            ]
+          ],
+          [
+            /(opera mini)\/([-\w\.]+)/i,
+            /(opera [mobiletab]{3,6})\b.+version\/([-\w\.]+)/i,
+            /(opera)(?:.+version\/|[\/ ]+)([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /opios[\/ ]+([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              OPERA + " Mini"
+            ]
+          ],
+          [
+            /\bop(?:rg)?x\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              OPERA + " GX"
+            ]
+          ],
+          [
+            /\bopr\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              OPERA
+            ]
+          ],
+          [
+            /\bb[ai]*d(?:uhd|[ub]*[aekoprswx]{5,6})[\/ ]?([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Baidu"
+            ]
+          ],
+          [
+            /\b(?:mxbrowser|mxios|myie2)\/?([-\w\.]*)\b/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Maxthon"
+            ]
+          ],
+          [
+            /(kindle)\/([\w\.]+)/i,
+            /(lunascape|maxthon|netfront|jasmine|blazer|sleipnir)[\/ ]?([\w\.]*)/i,
+            /(avant|iemobile|slim(?:browser|boat|jet))[\/ ]?([\d\.]*)/i,
+            /(?:ms|\()(ie) ([\w\.]+)/i,
+            /(flock|rockmelt|midori|epiphany|silk|skyfire|ovibrowser|bolt|iron|vivaldi|iridium|phantomjs|bowser|qupzilla|falkon|rekonq|puffin|brave|whale(?!.+naver)|qqbrowserlite|duckduckgo|klar|helio|(?=comodo_)?dragon)\/([-\w\.]+)/i,
+            /(heytap|ovi|115)browser\/([\d\.]+)/i,
+            /(weibo)__([\d\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /quark(?:pc)?\/([-\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Quark"
+            ]
+          ],
+          [
+            /\bddg\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "DuckDuckGo"
+            ]
+          ],
+          [
+            /(?:\buc? ?browser|(?:juc.+)ucweb)[\/ ]?([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "UC" + BROWSER
+            ]
+          ],
+          [
+            /microm.+\bqbcore\/([\w\.]+)/i,
+            /\bqbcore\/([\w\.]+).+microm/i,
+            /micromessenger\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "WeChat"
+            ]
+          ],
+          [
+            /konqueror\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Konqueror"
+            ]
+          ],
+          [
+            /trident.+rv[: ]([\w\.]{1,9})\b.+like gecko/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "IE"
+            ]
+          ],
+          [
+            /ya(?:search)?browser\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Yandex"
+            ]
+          ],
+          [
+            /slbrowser\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Smart Lenovo " + BROWSER
+            ]
+          ],
+          [
+            /(avast|avg)\/([\w\.]+)/i
+          ],
+          [
+            [
+              NAME2,
+              /(.+)/,
+              "$1 Secure " + BROWSER
+            ],
+            VERSION2
+          ],
+          [
+            /\bfocus\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              FIREFOX + " Focus"
+            ]
+          ],
+          [
+            /\bopt\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              OPERA + " Touch"
+            ]
+          ],
+          [
+            /coc_coc\w+\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Coc Coc"
+            ]
+          ],
+          [
+            /dolfin\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Dolphin"
+            ]
+          ],
+          [
+            /coast\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              OPERA + " Coast"
+            ]
+          ],
+          [
+            /miuibrowser\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "MIUI" + SUFFIX_BROWSER
+            ]
+          ],
+          [
+            /fxios\/([\w\.-]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              FIREFOX
+            ]
+          ],
+          [
+            /\bqihoobrowser\/?([\w\.]*)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "360"
+            ]
+          ],
+          [
+            /\b(qq)\/([\w\.]+)/i
+          ],
+          [
+            [
+              NAME2,
+              /(.+)/,
+              "$1Browser"
+            ],
+            VERSION2
+          ],
+          [
+            /(oculus|sailfish|huawei|vivo|pico)browser\/([\w\.]+)/i
+          ],
+          [
+            [
+              NAME2,
+              /(.+)/,
+              "$1" + SUFFIX_BROWSER
+            ],
+            VERSION2
+          ],
+          [
+            /samsungbrowser\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              SAMSUNG + " Internet"
+            ]
+          ],
+          [
+            /metasr[\/ ]?([\d\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Sogou Explorer"
+            ]
+          ],
+          [
+            /(sogou)mo\w+\/([\d\.]+)/i
+          ],
+          [
+            [
+              NAME2,
+              "Sogou Mobile"
+            ],
+            VERSION2
+          ],
+          [
+            /(electron)\/([\w\.]+) safari/i,
+            /(tesla)(?: qtcarbrowser|\/(20\d\d\.[-\w\.]+))/i,
+            /m?(qqbrowser|2345(?=browser|chrome|explorer))\w*[\/ ]?v?([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /(lbbrowser|rekonq)/i,
+            /\[(linkedin)app\]/i
+          ],
+          [
+            NAME2
+          ],
+          [
+            /ome\/([\w\.]+) \w* ?(iron) saf/i,
+            /ome\/([\w\.]+).+qihu (360)[es]e/i
+          ],
+          [
+            VERSION2,
+            NAME2
+          ],
+          [
+            /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i
+          ],
+          [
+            [
+              NAME2,
+              FACEBOOK
+            ],
+            VERSION2
+          ],
+          [
+            /(Klarna)\/([\w\.]+)/i,
+            /(kakao(?:talk|story))[\/ ]([\w\.]+)/i,
+            /(naver)\(.*?(\d+\.[\w\.]+).*\)/i,
+            /(daum)apps[\/ ]([\w\.]+)/i,
+            /safari (line)\/([\w\.]+)/i,
+            /\b(line)\/([\w\.]+)\/iab/i,
+            /(alipay)client\/([\w\.]+)/i,
+            /(twitter)(?:and| f.+e\/([\w\.]+))/i,
+            /(chromium|instagram|snapchat)[\/ ]([-\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /\bgsa\/([\w\.]+) .*safari\//i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "GSA"
+            ]
+          ],
+          [
+            /musical_ly(?:.+app_?version\/|_)([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "TikTok"
+            ]
+          ],
+          [
+            /headlesschrome(?:\/([\w\.]+)| )/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              CHROME + " Headless"
+            ]
+          ],
+          [
+            / wv\).+(chrome)\/([\w\.]+)/i
+          ],
+          [
+            [
+              NAME2,
+              CHROME + " WebView"
+            ],
+            VERSION2
+          ],
+          [
+            /droid.+ version\/([\w\.]+)\b.+(?:mobile safari|safari)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Android " + BROWSER
+            ]
+          ],
+          [
+            /(chrome|omniweb|arora|[tizenoka]{5} ?browser)\/v?([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /version\/([\w\.\,]+) .*mobile\/\w+ (safari)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Mobile Safari"
+            ]
+          ],
+          [
+            /version\/([\w(\.|\,)]+) .*(mobile ?safari|safari)/i
+          ],
+          [
+            VERSION2,
+            NAME2
+          ],
+          [
+            /webkit.+?(mobile ?safari|safari)(\/[\w\.]+)/i
+          ],
+          [
+            NAME2,
+            [
+              VERSION2,
+              strMapper,
+              oldSafariMap
+            ]
+          ],
+          [
+            /(webkit|khtml)\/([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /(navigator|netscape\d?)\/([-\w\.]+)/i
+          ],
+          [
+            [
+              NAME2,
+              "Netscape"
+            ],
+            VERSION2
+          ],
+          [
+            /(wolvic|librewolf)\/([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /mobile vr; rv:([\w\.]+)\).+firefox/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              FIREFOX + " Reality"
+            ]
+          ],
+          [
+            /ekiohf.+(flow)\/([\w\.]+)/i,
+            /(swiftfox)/i,
+            /(icedragon|iceweasel|camino|chimera|fennec|maemo browser|minimo|conkeror)[\/ ]?([\w\.\+]+)/i,
+            /(seamonkey|k-meleon|icecat|iceape|firebird|phoenix|palemoon|basilisk|waterfox)\/([-\w\.]+)$/i,
+            /(firefox)\/([\w\.]+)/i,
+            /(mozilla)\/([\w\.]+) .+rv\:.+gecko\/\d+/i,
+            /(amaya|dillo|doris|icab|ladybird|lynx|mosaic|netsurf|obigo|polaris|w3m|(?:go|ice|up)[\. ]?browser)[-\/ ]?v?([\w\.]+)/i,
+            /\b(links) \(([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            [
+              VERSION2,
+              /_/g,
+              "."
+            ]
+          ],
+          [
+            /(cobalt)\/([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            [
+              VERSION2,
+              /master.|lts./,
+              ""
+            ]
+          ]
+        ],
+        cpu: [
+          [
+            /\b((amd|x|x86[-_]?|wow|win)64)\b/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              "amd64"
+            ]
+          ],
+          [
+            /(ia32(?=;))/i,
+            /\b((i[346]|x)86)(pc)?\b/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              "ia32"
+            ]
+          ],
+          [
+            /\b(aarch64|arm(v?[89]e?l?|_?64))\b/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              "arm64"
+            ]
+          ],
+          [
+            /\b(arm(v[67])?ht?n?[fl]p?)\b/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              "armhf"
+            ]
+          ],
+          [
+            /( (ce|mobile); ppc;|\/[\w\.]+arm\b)/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              "arm"
+            ]
+          ],
+          [
+            /((ppc|powerpc)(64)?)( mac|;|\))/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              /ower/,
+              EMPTY2,
+              lowerize
+            ]
+          ],
+          [
+            / sun4\w[;\)]/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              "sparc"
+            ]
+          ],
+          [
+            /\b(avr32|ia64(?=;)|68k(?=\))|\barm(?=v([1-7]|[5-7]1)l?|;|eabi)|(irix|mips|sparc)(64)?\b|pa-risc)/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              lowerize
+            ]
+          ]
+        ],
+        device: [
+          [
+            /\b(sch-i[89]0\d|shw-m380s|sm-[ptx]\w{2,4}|gt-[pn]\d{2,4}|sgh-t8[56]9|nexus 10)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SAMSUNG
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b((?:s[cgp]h|gt|sm)-(?![lr])\w+|sc[g-]?[\d]+a?|galaxy nexus)/i,
+            /samsung[- ]((?!sm-[lr])[-\w]+)/i,
+            /sec-(sgh\w+)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SAMSUNG
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(?:\/|\()(ip(?:hone|od)[\w, ]*)(?:\/|;)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              APPLE
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\((ipad);[-\w\),; ]+apple/i,
+            /applecoremedia\/[\w\.]+ \((ipad)/i,
+            /\b(ipad)\d\d?,\d\d?[;\]].+ios/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              APPLE
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(macintosh);/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              APPLE
+            ]
+          ],
+          [
+            /\b(sh-?[altvz]?\d\d[a-ekm]?)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SHARP
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b((?:brt|eln|hey2?|gdi|jdn)-a?[lnw]09|(?:ag[rm]3?|jdn2|kob2)-a?[lw]0[09]hn)(?: bui|\)|;)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              HONOR
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /honor([-\w ]+)[;\)]/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              HONOR
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b((?:ag[rs][2356]?k?|bah[234]?|bg[2o]|bt[kv]|cmr|cpn|db[ry]2?|jdn2|got|kob2?k?|mon|pce|scm|sht?|[tw]gr|vrd)-[ad]?[lw][0125][09]b?|605hw|bg2-u03|(?:gem|fdr|m2|ple|t1)-[7a]0[1-4][lu]|t1-a2[13][lw]|mediapad[\w\. ]*(?= bui|\)))\b(?!.+d\/s)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              HUAWEI
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(?:huawei)([-\w ]+)[;\)]/i,
+            /\b(nexus 6p|\w{2,4}e?-[atu]?[ln][\dx][012359c][adn]?)\b(?!.+d\/s)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              HUAWEI
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /oid[^\)]+; (2[\dbc]{4}(182|283|rp\w{2})[cgl]|m2105k81a?c)(?: bui|\))/i,
+            /\b((?:red)?mi[-_ ]?pad[\w- ]*)(?: bui|\))/i
+          ],
+          [
+            [
+              MODEL,
+              /_/g,
+              " "
+            ],
+            [
+              VENDOR,
+              XIAOMI
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(poco[\w ]+|m2\d{3}j\d\d[a-z]{2})(?: bui|\))/i,
+            /\b; (\w+) build\/hm\1/i,
+            /\b(hm[-_ ]?note?[_ ]?(?:\d\w)?) bui/i,
+            /\b(redmi[\-_ ]?(?:note|k)?[\w_ ]+)(?: bui|\))/i,
+            /oid[^\)]+; (m?[12][0-389][01]\w{3,6}[c-y])( bui|; wv|\))/i,
+            /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max|cc)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite|pro)?)(?: bui|\))/i,
+            / ([\w ]+) miui\/v?\d/i
+          ],
+          [
+            [
+              MODEL,
+              /_/g,
+              " "
+            ],
+            [
+              VENDOR,
+              XIAOMI
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /; (\w+) bui.+ oppo/i,
+            /\b(cph[12]\d{3}|p(?:af|c[al]|d\w|e[ar])[mt]\d0|x9007|a101op)\b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              OPPO
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(opd2(\d{3}a?))(?: bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              strMapper,
+              {
+                "OnePlus": [
+                  "304",
+                  "403",
+                  "203"
+                ],
+                "*": OPPO
+              }
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /vivo (\w+)(?: bui|\))/i,
+            /\b(v[12]\d{3}\w?[at])(?: bui|;)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Vivo"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(rmx[1-3]\d{3})(?: bui|;|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Realme"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(milestone|droid(?:[2-4x]| (?:bionic|x2|pro|razr))?:?( 4g)?)\b[\w ]+build\//i,
+            /\bmot(?:orola)?[- ](\w*)/i,
+            /((?:moto(?! 360)[\w\(\) ]+|xt\d{3,4}|nexus 6)(?= bui|\)))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              MOTOROLA
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(mz60\d|xoom[2 ]{0,2}) build\//i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              MOTOROLA
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /((?=lg)?[vl]k\-?\d{3}) bui| 3\.[-\w; ]{10}lg?-([06cv9]{3,4})/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              LG
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(lm(?:-?f100[nv]?|-[\w\.]+)(?= bui|\))|nexus [45])/i,
+            /\blg[-e;\/ ]+((?!browser|netcast|android tv|watch)\w+)/i,
+            /\blg-?([\d\w]+) bui/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              LG
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(ideatab[-\w ]+|602lv|d-42a|a101lv|a2109a|a3500-hv|s[56]000|pb-6505[my]|tb-?x?\d{3,4}(?:f[cu]|xu|[av])|yt\d?-[jx]?\d+[lfmx])( bui|;|\)|\/)/i,
+            /lenovo ?(b[68]0[08]0-?[hf]?|tab(?:[\w- ]+?)|tb[\w-]{6,7})( bui|;|\)|\/)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              LENOVO
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(nokia) (t[12][01])/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(?:maemo|nokia).*(n900|lumia \d+|rm-\d+)/i,
+            /nokia[-_ ]?(([-\w\. ]*))/i
+          ],
+          [
+            [
+              MODEL,
+              /_/g,
+              " "
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ],
+            [
+              VENDOR,
+              "Nokia"
+            ]
+          ],
+          [
+            /(pixel (c|tablet))\b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              GOOGLE
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /droid.+; (pixel[\daxl ]{0,6})(?: bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              GOOGLE
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /droid.+; (a?\d[0-2]{2}so|[c-g]\d{4}|so[-gl]\w+|xq-a\w[4-7][12])(?= bui|\).+chrome\/(?![1-6]{0,1}\d\.))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SONY
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /sony tablet [ps]/i,
+            /\b(?:sony)?sgp\w+(?: bui|\))/i
+          ],
+          [
+            [
+              MODEL,
+              "Xperia Tablet"
+            ],
+            [
+              VENDOR,
+              SONY
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            / (kb2005|in20[12]5|be20[12][59])\b/i,
+            /(?:one)?(?:plus)? (a\d0\d\d)(?: b|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ONEPLUS
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(alexa)webm/i,
+            /(kf[a-z]{2}wi|aeo(?!bc)\w\w)( bui|\))/i,
+            /(kf[a-z]+)( bui|\)).+silk\//i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              AMAZON
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /((?:sd|kf)[0349hijorstuw]+)( bui|\)).+silk\//i
+          ],
+          [
+            [
+              MODEL,
+              /(.+)/g,
+              "Fire Phone $1"
+            ],
+            [
+              VENDOR,
+              AMAZON
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(playbook);[-\w\),; ]+(rim)/i
+          ],
+          [
+            MODEL,
+            VENDOR,
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b((?:bb[a-f]|st[hv])100-\d)/i,
+            /\(bb10; (\w+)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              BLACKBERRY
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(?:\b|asus_)(transfo[prime ]{4,10} \w+|eeepc|slider \w+|nexus 7|padfone|p00[cj])/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ASUS
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            / (z[bes]6[027][012][km][ls]|zenfone \d\w?)\b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ASUS
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(nexus 9)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "HTC"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(htc)[-;_ ]{1,2}([\w ]+(?=\)| bui)|\w+)/i,
+            /(zte)[- ]([\w ]+?)(?: bui|\/|\))/i,
+            /(alcatel|geeksphone|nexian|panasonic(?!(?:;|\.))|sony(?!-bra))[-_ ]?([-\w]*)/i
+          ],
+          [
+            VENDOR,
+            [
+              MODEL,
+              /_/g,
+              " "
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /droid [\w\.]+; ((?:8[14]9[16]|9(?:0(?:48|60|8[01])|1(?:3[27]|66)|2(?:6[69]|9[56])|466))[gqswx])\w*(\)| bui)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "TCL"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(itel) ((\w+))/i
+          ],
+          [
+            [
+              VENDOR,
+              lowerize
+            ],
+            MODEL,
+            [
+              TYPE2,
+              strMapper,
+              {
+                "tablet": [
+                  "p10001l",
+                  "w7001"
+                ],
+                "*": "mobile"
+              }
+            ]
+          ],
+          [
+            /droid.+; ([ab][1-7]-?[0178a]\d\d?)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Acer"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /droid.+; (m[1-5] note) bui/i,
+            /\bmz-([-\w]{2,})/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Meizu"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /; ((?:power )?armor(?:[\w ]{0,8}))(?: bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Ulefone"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /; (energy ?\w+)(?: bui|\))/i,
+            /; energizer ([\w ]+)(?: bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Energizer"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /; cat (b35);/i,
+            /; (b15q?|s22 flip|s48c|s62 pro)(?: bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Cat"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /((?:new )?andromax[\w- ]+)(?: bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Smartfren"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /droid.+; (a(?:015|06[35]|142p?))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Nothing"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /; (x67 5g|tikeasy \w+|ac[1789]\d\w+)( b|\))/i,
+            /archos ?(5|gamepad2?|([\w ]*[t1789]|hello) ?\d+[\w ]*)( b|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Archos"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /archos ([\w ]+)( b|\))/i,
+            /; (ac[3-6]\d\w{2,8})( b|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Archos"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(imo) (tab \w+)/i,
+            /(infinix) (x1101b?)/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus(?! zenw)|dell|jolla|meizu|motorola|polytron|infinix|tecno|micromax|advan)[-_ ]?([-\w]*)/i,
+            /; (hmd|imo) ([\w ]+?)(?: bui|\))/i,
+            /(hp) ([\w ]+\w)/i,
+            /(microsoft); (lumia[\w ]+)/i,
+            /(lenovo)[-_ ]?([-\w ]+?)(?: bui|\)|\/)/i,
+            /(oppo) ?([\w ]+) bui/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(kobo)\s(ereader|touch)/i,
+            /(hp).+(touchpad(?!.+tablet)|tablet)/i,
+            /(kindle)\/([\w\.]+)/i,
+            /(nook)[\w ]+build\/(\w+)/i,
+            /(dell) (strea[kpr\d ]*[\dko])/i,
+            /(le[- ]+pan)[- ]+(\w{1,9}) bui/i,
+            /(trinity)[- ]*(t\d{3}) bui/i,
+            /(gigaset)[- ]+(q\w{1,9}) bui/i,
+            /(vodafone) ([\w ]+)(?:\)| bui)/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(surface duo)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              MICROSOFT
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /droid [\d\.]+; (fp\du?)(?: b|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Fairphone"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(u304aa)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "AT&T"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\bsie-(\w*)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Siemens"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(rct\w+) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "RCA"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(venue[\d ]{2,7}) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Dell"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(q(?:mv|ta)\w+) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Verizon"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(?:barnes[& ]+noble |bn[rt])([\w\+ ]*) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Barnes & Noble"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(tm\d{3}\w+) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "NuVision"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(k88) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "ZTE"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(nx\d{3}j) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "ZTE"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(gen\d{3}) b.+49h/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Swiss"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(zur\d{3}) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Swiss"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b((zeki)?tb.*\b) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Zeki"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b([yr]\d{2}) b/i,
+            /\b(dragon[- ]+touch |dt)(\w{5}) b/i
+          ],
+          [
+            [
+              VENDOR,
+              "Dragon Touch"
+            ],
+            MODEL,
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(ns-?\w{0,9}) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Insignia"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b((nxa|next)-?\w{0,9}) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "NextBook"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(xtreme\_)?(v(1[045]|2[015]|[3469]0|7[05])) b/i
+          ],
+          [
+            [
+              VENDOR,
+              "Voice"
+            ],
+            MODEL,
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(lvtel\-)?(v1[12]) b/i
+          ],
+          [
+            [
+              VENDOR,
+              "LvTel"
+            ],
+            MODEL,
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(ph-1) /i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Essential"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(v(100md|700na|7011|917g).*\b) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Envizen"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(trio[-\w\. ]+) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "MachSpeed"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\btu_(1491) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Rotor"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /((?:tegranote|shield t(?!.+d tv))[\w- ]*?)(?: b|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              NVIDIA
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(sprint) (\w+)/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(kin\.[onetw]{3})/i
+          ],
+          [
+            [
+              MODEL,
+              /\./g,
+              " "
+            ],
+            [
+              VENDOR,
+              MICROSOFT
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /droid.+; (cc6666?|et5[16]|mc[239][23]x?|vc8[03]x?)\)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ZEBRA
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /droid.+; (ec30|ps20|tc[2-8]\d[kx])\)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ZEBRA
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /smart-tv.+(samsung)/i
+          ],
+          [
+            VENDOR,
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /hbbtv.+maple;(\d+)/i
+          ],
+          [
+            [
+              MODEL,
+              /^/,
+              "SmartTV"
+            ],
+            [
+              VENDOR,
+              SAMSUNG
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /(nux; netcast.+smarttv|lg (netcast\.tv-201\d|android tv))/i
+          ],
+          [
+            [
+              VENDOR,
+              LG
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /(apple) ?tv/i
+          ],
+          [
+            VENDOR,
+            [
+              MODEL,
+              APPLE + " TV"
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /crkey/i
+          ],
+          [
+            [
+              MODEL,
+              CHROME + "cast"
+            ],
+            [
+              VENDOR,
+              GOOGLE
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /droid.+aft(\w+)( bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              AMAZON
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /(shield \w+ tv)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              NVIDIA
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /\(dtv[\);].+(aquos)/i,
+            /(aquos-tv[\w ]+)\)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SHARP
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /(bravia[\w ]+)( bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SONY
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /(mi(tv|box)-?\w+) bui/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              XIAOMI
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /Hbbtv.*(technisat) (.*);/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /\b(roku)[\dx]*[\)\/]((?:dvp-)?[\d\.]*)/i,
+            /hbbtv\/\d+\.\d+\.\d+ +\([\w\+ ]*; *([\w\d][^;]*);([^;]*)/i
+          ],
+          [
+            [
+              VENDOR,
+              trim2
+            ],
+            [
+              MODEL,
+              trim2
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /droid.+; ([\w- ]+) (?:android tv|smart[- ]?tv)/i
+          ],
+          [
+            MODEL,
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /\b(android tv|smart[- ]?tv|opera tv|tv; rv:)\b/i
+          ],
+          [
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /(ouya)/i,
+            /(nintendo) ([wids3utch]+)/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              CONSOLE
+            ]
+          ],
+          [
+            /droid.+; (shield)( bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              NVIDIA
+            ],
+            [
+              TYPE2,
+              CONSOLE
+            ]
+          ],
+          [
+            /(playstation \w+)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SONY
+            ],
+            [
+              TYPE2,
+              CONSOLE
+            ]
+          ],
+          [
+            /\b(xbox(?: one)?(?!; xbox))[\); ]/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              MICROSOFT
+            ],
+            [
+              TYPE2,
+              CONSOLE
+            ]
+          ],
+          [
+            /\b(sm-[lr]\d\d[0156][fnuw]?s?|gear live)\b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SAMSUNG
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /((pebble))app/i,
+            /(asus|google|lg|oppo) ((pixel |zen)?watch[\w ]*)( bui|\))/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(ow(?:19|20)?we?[1-3]{1,3})/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              OPPO
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(watch)(?: ?os[,\/]|\d,\d\/)[\d\.]+/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              APPLE
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(opwwe\d{3})/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ONEPLUS
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(moto 360)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              MOTOROLA
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(smartwatch 3)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SONY
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(g watch r)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              LG
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /droid.+; (wt63?0{2,3})\)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ZEBRA
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /droid.+; (glass) \d/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              GOOGLE
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(pico) (4|neo3(?: link|pro)?)/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /; (quest( \d| pro)?)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              FACEBOOK
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(tesla)(?: qtcarbrowser|\/[-\w\.]+)/i
+          ],
+          [
+            VENDOR,
+            [
+              TYPE2,
+              EMBEDDED
+            ]
+          ],
+          [
+            /(aeobc)\b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              AMAZON
+            ],
+            [
+              TYPE2,
+              EMBEDDED
+            ]
+          ],
+          [
+            /(homepod).+mac os/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              APPLE
+            ],
+            [
+              TYPE2,
+              EMBEDDED
+            ]
+          ],
+          [
+            /windows iot/i
+          ],
+          [
+            [
+              TYPE2,
+              EMBEDDED
+            ]
+          ],
+          [
+            /droid .+?; ([^;]+?)(?: bui|; wv\)|\) applew).+? mobile safari/i
+          ],
+          [
+            MODEL,
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /droid .+?; ([^;]+?)(?: bui|\) applew).+?(?! mobile) safari/i
+          ],
+          [
+            MODEL,
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b((tablet|tab)[;\/]|focus\/\d(?!.+mobile))/i
+          ],
+          [
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(phone|mobile(?:[;\/]| [ \w\/\.]*safari)|pda(?=.+windows ce))/i
+          ],
+          [
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /droid .+?; ([\w\. -]+)( bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Generic"
+            ]
+          ]
+        ],
+        engine: [
+          [
+            /windows.+ edge\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              EDGE2 + "HTML"
+            ]
+          ],
+          [
+            /(arkweb)\/([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /webkit\/537\.36.+chrome\/(?!27)([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Blink"
+            ]
+          ],
+          [
+            /(presto)\/([\w\.]+)/i,
+            /(webkit|trident|netfront|netsurf|amaya|lynx|w3m|goanna|servo)\/([\w\.]+)/i,
+            /ekioh(flow)\/([\w\.]+)/i,
+            /(khtml|tasman|links)[\/ ]\(?([\w\.]+)/i,
+            /(icab)[\/ ]([23]\.[\d\.]+)/i,
+            /\b(libweb)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /ladybird\//i
+          ],
+          [
+            [
+              NAME2,
+              "LibWeb"
+            ]
+          ],
+          [
+            /rv\:([\w\.]{1,9})\b.+(gecko)/i
+          ],
+          [
+            VERSION2,
+            NAME2
+          ]
+        ],
+        os: [
+          [
+            /microsoft (windows) (vista|xp)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /(windows (?:phone(?: os)?|mobile|iot))[\/ ]?([\d\.\w ]*)/i
+          ],
+          [
+            NAME2,
+            [
+              VERSION2,
+              strMapper,
+              windowsVersionMap
+            ]
+          ],
+          [
+            /windows nt 6\.2; (arm)/i,
+            /windows[\/ ]([ntce\d\. ]+\w)(?!.+xbox)/i,
+            /(?:win(?=3|9|n)|win 9x )([nt\d\.]+)/i
+          ],
+          [
+            [
+              VERSION2,
+              strMapper,
+              windowsVersionMap
+            ],
+            [
+              NAME2,
+              "Windows"
+            ]
+          ],
+          [
+            /[adehimnop]{4,7}\b(?:.*os ([\w]+) like mac|; opera)/i,
+            /(?:ios;fbsv\/|iphone.+ios[\/ ])([\d\.]+)/i,
+            /cfnetwork\/.+darwin/i
+          ],
+          [
+            [
+              VERSION2,
+              /_/g,
+              "."
+            ],
+            [
+              NAME2,
+              "iOS"
+            ]
+          ],
+          [
+            /(mac os x) ?([\w\. ]*)/i,
+            /(macintosh|mac_powerpc\b)(?!.+haiku)/i
+          ],
+          [
+            [
+              NAME2,
+              MAC_OS
+            ],
+            [
+              VERSION2,
+              /_/g,
+              "."
+            ]
+          ],
+          [
+            /droid ([\w\.]+)\b.+(android[- ]x86|harmonyos)/i
+          ],
+          [
+            VERSION2,
+            NAME2
+          ],
+          [
+            /(ubuntu) ([\w\.]+) like android/i
+          ],
+          [
+            [
+              NAME2,
+              /(.+)/,
+              "$1 Touch"
+            ],
+            VERSION2
+          ],
+          [
+            /(android|bada|blackberry|kaios|maemo|meego|openharmony|qnx|rim tablet os|sailfish|series40|symbian|tizen|webos)\w*[-\/; ]?([\d\.]*)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /\(bb(10);/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              BLACKBERRY
+            ]
+          ],
+          [
+            /(?:symbian ?os|symbos|s60(?=;)|series ?60)[-\/ ]?([\w\.]*)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Symbian"
+            ]
+          ],
+          [
+            /mozilla\/[\d\.]+ \((?:mobile|tablet|tv|mobile; [\w ]+); rv:.+ gecko\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              FIREFOX + " OS"
+            ]
+          ],
+          [
+            /web0s;.+rt(tv)/i,
+            /\b(?:hp)?wos(?:browser)?\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "webOS"
+            ]
+          ],
+          [
+            /watch(?: ?os[,\/]|\d,\d\/)([\d\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "watchOS"
+            ]
+          ],
+          [
+            /crkey\/([\d\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              CHROME + "cast"
+            ]
+          ],
+          [
+            /(cros) [\w]+(?:\)| ([\w\.]+)\b)/i
+          ],
+          [
+            [
+              NAME2,
+              CHROMIUM_OS
+            ],
+            VERSION2
+          ],
+          [
+            /panasonic;(viera)/i,
+            /(netrange)mmh/i,
+            /(nettv)\/(\d+\.[\w\.]+)/i,
+            /(nintendo|playstation) ([wids345portablevuch]+)/i,
+            /(xbox); +xbox ([^\);]+)/i,
+            /\b(joli|palm)\b ?(?:os)?\/?([\w\.]*)/i,
+            /(mint)[\/\(\) ]?(\w*)/i,
+            /(mageia|vectorlinux)[; ]/i,
+            /([kxln]?ubuntu|debian|suse|opensuse|gentoo|arch(?= linux)|slackware|fedora|mandriva|centos|pclinuxos|red ?hat|zenwalk|linpus|raspbian|plan 9|minix|risc os|contiki|deepin|manjaro|elementary os|sabayon|linspire)(?: gnu\/linux)?(?: enterprise)?(?:[- ]linux)?(?:-gnu)?[-\/ ]?(?!chrom|package)([-\w\.]*)/i,
+            /(hurd|linux)(?: arm\w*| x86\w*| ?)([\w\.]*)/i,
+            /(gnu) ?([\w\.]*)/i,
+            /\b([-frentopcghs]{0,5}bsd|dragonfly)[\/ ]?(?!amd|[ix346]{1,2}86)([\w\.]*)/i,
+            /(haiku) (\w+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /(sunos) ?([\w\.\d]*)/i
+          ],
+          [
+            [
+              NAME2,
+              "Solaris"
+            ],
+            VERSION2
+          ],
+          [
+            /((?:open)?solaris)[-\/ ]?([\w\.]*)/i,
+            /(aix) ((\d)(?=\.|\)| )[\w\.])*/i,
+            /\b(beos|os\/2|amigaos|morphos|openvms|fuchsia|hp-ux|serenityos)/i,
+            /(unix) ?([\w\.]*)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ]
+        ]
+      };
+      var UAParser2 = function(ua2, extensions) {
+        if (typeof ua2 === OBJ_TYPE) {
+          extensions = ua2;
+          ua2 = undefined$1;
+        }
+        if (!(this instanceof UAParser2)) {
+          return new UAParser2(ua2, extensions).getResult();
+        }
+        var _navigator = typeof window2 !== UNDEF_TYPE && window2.navigator ? window2.navigator : undefined$1;
+        var _ua = ua2 || (_navigator && _navigator.userAgent ? _navigator.userAgent : EMPTY2);
+        var _uach = _navigator && _navigator.userAgentData ? _navigator.userAgentData : undefined$1;
+        var _rgxmap = extensions ? extend2(regexes, extensions) : regexes;
+        var _isSelfNav = _navigator && _navigator.userAgent == _ua;
+        this.getBrowser = function() {
+          var _browser = {};
+          _browser[NAME2] = undefined$1;
+          _browser[VERSION2] = undefined$1;
+          rgxMapper.call(_browser, _ua, _rgxmap.browser);
+          _browser[MAJOR] = majorize(_browser[VERSION2]);
+          if (_isSelfNav && _navigator && _navigator.brave && typeof _navigator.brave.isBrave == FUNC_TYPE) {
+            _browser[NAME2] = "Brave";
+          }
+          return _browser;
+        };
+        this.getCPU = function() {
+          var _cpu = {};
+          _cpu[ARCHITECTURE] = undefined$1;
+          rgxMapper.call(_cpu, _ua, _rgxmap.cpu);
+          return _cpu;
+        };
+        this.getDevice = function() {
+          var _device = {};
+          _device[VENDOR] = undefined$1;
+          _device[MODEL] = undefined$1;
+          _device[TYPE2] = undefined$1;
+          rgxMapper.call(_device, _ua, _rgxmap.device);
+          if (_isSelfNav && !_device[TYPE2] && _uach && _uach.mobile) {
+            _device[TYPE2] = MOBILE;
+          }
+          if (_isSelfNav && _device[MODEL] == "Macintosh" && _navigator && typeof _navigator.standalone !== UNDEF_TYPE && _navigator.maxTouchPoints && _navigator.maxTouchPoints > 2) {
+            _device[MODEL] = "iPad";
+            _device[TYPE2] = TABLET;
+          }
+          return _device;
+        };
+        this.getEngine = function() {
+          var _engine = {};
+          _engine[NAME2] = undefined$1;
+          _engine[VERSION2] = undefined$1;
+          rgxMapper.call(_engine, _ua, _rgxmap.engine);
+          return _engine;
+        };
+        this.getOS = function() {
+          var _os = {};
+          _os[NAME2] = undefined$1;
+          _os[VERSION2] = undefined$1;
+          rgxMapper.call(_os, _ua, _rgxmap.os);
+          if (_isSelfNav && !_os[NAME2] && _uach && _uach.platform && _uach.platform != "Unknown") {
+            _os[NAME2] = _uach.platform.replace(/chrome os/i, CHROMIUM_OS).replace(/macos/i, MAC_OS);
+          }
+          return _os;
+        };
+        this.getResult = function() {
+          return {
+            ua: this.getUA(),
+            browser: this.getBrowser(),
+            engine: this.getEngine(),
+            os: this.getOS(),
+            device: this.getDevice(),
+            cpu: this.getCPU()
+          };
+        };
+        this.getUA = function() {
+          return _ua;
+        };
+        this.setUA = function(ua3) {
+          _ua = typeof ua3 === STR_TYPE && ua3.length > UA_MAX_LENGTH ? trim2(ua3, UA_MAX_LENGTH) : ua3;
+          return this;
+        };
+        this.setUA(_ua);
+        return this;
+      };
+      UAParser2.VERSION = LIBVERSION;
+      UAParser2.BROWSER = enumerize([
+        NAME2,
+        VERSION2,
+        MAJOR
+      ]);
+      UAParser2.CPU = enumerize([
+        ARCHITECTURE
+      ]);
+      UAParser2.DEVICE = enumerize([
+        MODEL,
+        VENDOR,
+        TYPE2,
+        CONSOLE,
+        MOBILE,
+        SMARTTV,
+        TABLET,
+        WEARABLE,
+        EMBEDDED
+      ]);
+      UAParser2.ENGINE = UAParser2.OS = enumerize([
+        NAME2,
+        VERSION2
+      ]);
+      {
+        if (module.exports) {
+          exports = module.exports = UAParser2;
+        }
+        exports.UAParser = UAParser2;
+      }
+      var $2 = typeof window2 !== UNDEF_TYPE && (window2.jQuery || window2.Zepto);
+      if ($2 && !$2.ua) {
+        var parser2 = new UAParser2();
+        $2.ua = parser2.getResult();
+        $2.ua.get = function() {
+          return parser2.getUA();
+        };
+        $2.ua.set = function(ua2) {
+          parser2.setUA(ua2);
+          var result = parser2.getResult();
+          for (var prop in result) {
+            $2.ua[prop] = result[prop];
+          }
+        };
+      }
+    })(typeof window === "object" ? window : commonjsGlobal$1);
+  })(uaParser, uaParser.exports);
+  var uaParserExports = uaParser.exports;
+  const UAParser = getDefaultExportFromCjs$1(uaParserExports);
+  function isMobileDevice() {
+    if (typeof navigator === "undefined") return false;
+    const { device, os } = UAParser(navigator.userAgent);
+    if (device.type === "mobile" || device.type === "tablet") return true;
+    return os.name === "Mac OS" && navigator.maxTouchPoints > 1;
+  }
   const IMPORT_DEFAULT_SEED_HEX = [
     "0dabff",
     "c3ff00",
@@ -66287,7 +69095,7 @@ in vec2 mask_texCoords;
       };
     });
   }
-  const VIV_TILE_MAX_CACHE_BYTE_SIZE = 512 * 1024 * 1024;
+  const VIV_TILE_MAX_CACHE_BYTE_SIZE = isMobileDevice() ? 0 : 512 * 1024 * 1024;
   function rasterTileByteLength(data2) {
     if (data2 == null) return 0;
     if (ArrayBuffer.isView(data2)) return data2.byteLength;
@@ -66313,7 +69121,63 @@ in vec2 mask_texCoords;
         return x2 >= 0 && y2 >= 0 && x2 * size < extent[2] && y2 * size < extent[3];
       });
     }
+    reloadAll() {
+      super.reloadAll();
+      this._cacheByteSize = 0;
+    }
   }
+  const PLACEHOLDER_LEVELS_UP = 3;
+  class PlaceholderTileset2D extends ImageTileset2D {
+    getTileIndices(opts) {
+      const indices = super.getTileIndices(opts);
+      if (this.opts.refinementStrategy !== "best-available" || indices.length === 0) {
+        return indices;
+      }
+      const z2 = indices[0].z;
+      const coarsest = opts.minZoom ?? z2;
+      if (coarsest >= z2) return indices;
+      const levels = [
+        coarsest,
+        Math.max(coarsest, z2 - PLACEHOLDER_LEVELS_UP)
+      ];
+      const placeholders = /* @__PURE__ */ new Map();
+      for (const level of levels) {
+        const scale2 = 2 ** (z2 - level);
+        for (const { x: x2, y: y2 } of indices) {
+          const parent2 = {
+            x: Math.floor(x2 / scale2),
+            y: Math.floor(y2 / scale2),
+            z: level
+          };
+          placeholders.set(this.getTileId(parent2), parent2);
+        }
+      }
+      return [
+        ...placeholders.values(),
+        ...indices
+      ];
+    }
+  }
+  const deckUpdateTileStates = ImageTileset2D.prototype.updateTileStates;
+  PlaceholderTileset2D.prototype.updateTileStates = function() {
+    const tiles = Array.from(this._cache.values());
+    const before = tiles.map((tile) => tile.isVisible);
+    deckUpdateTileStates.call(this);
+    let fineZ = Number.NEGATIVE_INFINITY;
+    for (const tile of tiles) {
+      if (tile.isSelected) fineZ = Math.max(fineZ, tile.index.z);
+    }
+    const isPlaceholder = (tile) => tile.isSelected && tile.index.z < fineZ;
+    const needed = /* @__PURE__ */ new Set();
+    for (const tile of tiles) {
+      if (!tile.isSelected || tile.isLoaded || isPlaceholder(tile)) continue;
+      for (let up = tile.parent; up; up = up.parent) needed.add(up);
+    }
+    for (const tile of tiles) {
+      if (isPlaceholder(tile) && !needed.has(tile)) tile.isVisible = false;
+    }
+    return tiles.some((tile, i2) => tile.isVisible !== before[i2]);
+  };
   const TILE_CACHE_PROPS = {
     maxCacheByteSize: VIV_TILE_MAX_CACHE_BYTE_SIZE,
     onTileLoad: stampDeckTileByteLength,
@@ -76367,26 +79231,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BiDB-6sW.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Dh_iq07L.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-5sNwxZAb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CpR2oamU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-Brg923KK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CaESX1n-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-B6KY48QV.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DXRVWquB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-DXFfS6v1.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DLOh0USZ.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-ChS0VhgY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Bq_hwHs_.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DZLyA4NW.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CtYCNYfw.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CtoPADLn.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BwdrA-Pg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -83610,6 +86474,44 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...pixels.getElementsByTagNameNS("*", "Channel")
     ].filter((el2) => el2.parentElement === pixels);
   }
+  function initEmscriptenModule(moduleFactory, wasmModule, moduleOptionOverrides = {}) {
+    let instantiateWasm;
+    if (wasmModule) {
+      instantiateWasm = (imports, callback) => {
+        const instance = new WebAssembly.Instance(wasmModule, imports);
+        callback(instance);
+        return instance.exports;
+      };
+    }
+    return moduleFactory({
+      noInitialRun: true,
+      instantiateWasm,
+      ...moduleOptionOverrides
+    });
+  }
+  const defaultOptions = {
+    quality: 75,
+    baseline: false,
+    arithmetic: false,
+    progressive: true,
+    optimize_coding: true,
+    smoothing: 0,
+    color_space: 3,
+    quant_table: 3,
+    trellis_multipass: false,
+    trellis_opt_zero: false,
+    trellis_opt_table: false,
+    trellis_loops: 1,
+    auto_subsample: true,
+    chroma_subsample: 2,
+    separate_chroma_quality: false,
+    chroma_quality: 75
+  };
+  function samplesPerTile(fileDirectory) {
+    const bits = fileDirectory.BitsPerSample;
+    const samples = fileDirectory.PlanarConfiguration === 2 ? 1 : fileDirectory.SamplesPerPixel ?? (typeof bits === "number" ? 1 : (bits == null ? void 0 : bits.length) ?? 1);
+    return Math.max(1, samples);
+  }
   class LZWDecoder extends BaseDecoder {
     constructor(fileDirectory) {
       super();
@@ -83618,14 +86520,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const height = fileDirectory.TileLength || fileDirectory.ImageLength;
       const bits = fileDirectory.BitsPerSample;
       const bits0 = typeof bits === "number" ? bits : (bits == null ? void 0 : bits[0]) ?? 8;
-      const samples = fileDirectory.PlanarConfiguration === 2 ? 1 : fileDirectory.SamplesPerPixel ?? (typeof bits === "number" ? 1 : (bits == null ? void 0 : bits.length) ?? 1);
-      this.maxUncompressedSize = Math.ceil(width * height * (bits0 / 8) * Math.max(1, samples));
+      this.maxUncompressedSize = Math.ceil(width * height * (bits0 / 8) * samplesPerTile(fileDirectory));
     }
     async decodeBlock(buffer2) {
       const bytes = new Uint8Array(buffer2);
       const decoded = await N(bytes, this.maxUncompressedSize);
       return decoded.buffer;
     }
+  }
+  if (typeof globalThis.ImageData === "undefined") {
+    globalThis.ImageData = class {
+      constructor(data2, width, height) {
+        this.data = data2;
+        this.width = width;
+        this.height = height;
+      }
+    };
   }
   function registerLzwDecoder() {
     addDecoder(5, () => Promise.resolve(LZWDecoder));
@@ -83688,6 +86598,54 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       BigEndian: false
     };
   }
+  function omeChannelIfds(imageDescription, sizeC) {
+    if (typeof imageDescription !== "string" || sizeC < 2) return null;
+    const doc = parseOmeXml(imageDescription);
+    const pixels = doc ? omePixelsElement(doc) : null;
+    if (!pixels) return null;
+    const order2 = pixels.getAttribute("DimensionOrder") ?? "XYZCT";
+    const dims = order2.slice(2).split("");
+    if (!/^XY/.test(order2) || [
+      ...dims
+    ].sort().join("") !== "CTZ") return null;
+    const sizes = {
+      Z: Number(pixels.getAttribute("SizeZ") ?? 1),
+      C: sizeC,
+      T: Number(pixels.getAttribute("SizeT") ?? 1)
+    };
+    const planeIndex = (at) => {
+      let index2 = 0;
+      let stride = 1;
+      for (const d2 of dims) {
+        index2 += at[d2] * stride;
+        stride *= sizes[d2];
+      }
+      return index2;
+    };
+    const totalPlanes = sizes.Z * sizes.C * sizes.T;
+    const planeIfds = [];
+    for (const td2 of pixels.getElementsByTagNameNS("*", "TiffData")) {
+      if (td2.parentElement !== pixels) continue;
+      const attr2 = (name2) => Number(td2.getAttribute(name2) ?? 0);
+      const first = planeIndex({
+        Z: attr2("FirstZ"),
+        C: attr2("FirstC"),
+        T: attr2("FirstT")
+      });
+      const planes = td2.hasAttribute("PlaneCount") ? attr2("PlaneCount") : td2.attributes.length === 0 ? totalPlanes : 1;
+      for (let k2 = 0; k2 < planes && first + k2 < totalPlanes; k2++) {
+        planeIfds[first + k2] = attr2("IFD") + k2;
+      }
+    }
+    const byChannel = Array.from({
+      length: sizeC
+    }, (_2, c2) => planeIfds[planeIndex({
+      Z: 0,
+      C: c2,
+      T: 0
+    })]);
+    return byChannel.every(Number.isInteger) && new Set(byChannel).size === sizeC ? byChannel : null;
+  }
   const FALLBACK_MAX_TEXTURE_SIZE = 4096;
   let cachedMaxTextureSize;
   function queryMaxTextureSize() {
@@ -83723,7 +86681,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const size = Math.min(tw, th2);
     return 2 ** Math.floor(Math.log2(Math.max(1, size)));
   }
-  async function readTiffSample(image2, sample, window2) {
+  async function readTiffSample(image2, sample, window2, signal) {
     const width = window2 ? window2[2] - window2[0] : image2.getWidth();
     const height = window2 ? window2[3] - window2[1] : image2.getHeight();
     const raster = await image2.readRasters({
@@ -83731,6 +86689,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         sample
       ],
       interleave: true,
+      signal,
       ...window2 ? {
         window: window2,
         width,
@@ -83754,19 +86713,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (typeof internals.parseFileDirectoryAt !== "function") return images;
     const source2 = baseInternals.source ?? internals.source;
     if (source2 == null) return images;
-    for (const offset of offsets) {
-      const parsed = await internals.parseFileDirectoryAt(offset);
+    const parsedLevels = await Promise.all(offsets.map((offset) => internals.parseFileDirectoryAt(offset)));
+    for (const parsed of parsedLevels) {
       images.push(new GeoTIFFImage(parsed.fileDirectory, parsed.geoKeyDirectory, baseInternals.dataView ?? internals.dataView, baseInternals.littleEndian ?? internals.littleEndian ?? true, baseInternals.cache ?? internals.cache, source2));
     }
     return images;
   }
-  function maskPlaneFromImage(image2, sizeC, dtype) {
+  function maskPlaneFromImages(images, sizeC, dtype) {
+    const [image2] = images;
     const width = image2.getWidth();
     const height = image2.getHeight();
     const tiled = isTiffTiled(image2);
     const tileSize = tiled ? vivTileSize(image2) : Math.max(width, height, 1);
     const clampC = (c2) => Math.max(0, Math.min(sizeC - 1, c2));
-    const getRaster = ({ selection }) => readTiffSample(image2, clampC(selection.c));
+    const readChannel2 = (c2, window2, signal) => images.length > 1 ? readTiffSample(images[clampC(c2)], 0, window2, signal) : readTiffSample(image2, clampC(c2), window2, signal);
+    const getRaster = ({ selection }) => readChannel2(selection.c);
     return {
       dtype,
       shape: [
@@ -83786,10 +86747,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ],
       onTileError: () => void 0,
       getRaster,
+      readWindow: ({ selection, window: window2, signal }) => readChannel2(selection.c, window2, signal),
       getTile: tiled ? ({ x: x2, y: y2, selection }) => {
         const x0 = x2 * tileSize;
         const y0 = y2 * tileSize;
-        return readTiffSample(image2, clampC(selection.c), [
+        return readChannel2(selection.c, [
           x0,
           y0,
           Math.min(x0 + tileSize, width),
@@ -83809,8 +86771,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  async function maskLoaderFromBlob(inFile) {
-    const tiff = await fromBlob(inFile);
+  async function maskLoader(source2) {
+    const tiff = typeof source2 === "string" ? await fromUrl(source2, {
+      cacheSize: Number.POSITIVE_INFINITY
+    }) : await fromBlob(source2);
     const baseImage = await tiff.getImage(0);
     const fd2 = baseImage.fileDirectory;
     const width = baseImage.getWidth();
@@ -83821,10 +86785,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         throw new Error(`This mask is not tiled or pyramided and is too large for the GPU (${width}\xD7${height}; max texture ${maxTextureSize}). Export it as a tiled OME-TIFF pyramid and import again.`);
       }
     }
-    const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
     const dtype = dtypeFromTiffDirectory(fd2);
     const ome = parseFirstOmeImagePixels(fd2.ImageDescription);
     const sizeC = Math.max(1, (ome == null ? void 0 : ome.SizeC) ?? fd2.SamplesPerPixel ?? 1);
+    const channelIfds = omeChannelIfds(fd2.ImageDescription, sizeC);
+    const channelBases = channelIfds ? await Promise.all(channelIfds.map((ifd) => tiff.getImage(ifd))) : [
+      baseImage
+    ];
+    const channelPyramids = await Promise.all(channelBases.map((base2) => resolveMaskPyramidImages(tiff, base2)));
+    const levelCount = Math.min(...channelPyramids.map((p2) => p2.length));
     const unitlessResolution = isUnitlessPlaceholderResolution(fd2);
     const channels2 = Array.from({
       length: sizeC
@@ -83852,7 +86821,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       Channels: channels2
     };
     return {
-      data: pyramidImages.map((image2) => maskPlaneFromImage(image2, channels2.length, dtype)),
+      data: Array.from({
+        length: levelCount
+      }, (_2, level) => maskPlaneFromImages(channelPyramids.map((pyramid) => pyramid[level]), channels2.length, dtype)),
       metadata: {
         ID: "Image:0",
         AquisitionDate: "",
@@ -84029,31 +87000,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return loader;
   }
-  async function pickLocalOmeTiffHandle() {
-    const picked = await toFile();
-    if (picked.length === 0) return null;
-    const handle2 = picked[0];
-    if (!await ensureFileHandlePermission(handle2)) return null;
-    if (!await findFile({
-      handle: handle2
-    })) return null;
-    return handle2;
+  async function fileInDirectory(root2, relativePath) {
+    const parts = relativePath.trim().split(/[/\\]/).filter((part) => part && part !== ".");
+    const name2 = parts.pop();
+    if (!name2 || parts.includes("..")) return void 0;
+    let dir2 = root2;
+    try {
+      for (const part of parts) dir2 = await dir2.getDirectoryHandle(part);
+      return await dir2.getFileHandle(name2);
+    } catch (e2) {
+      if (e2 instanceof TypeError || e2 instanceof DOMException && (e2.name === "NotFoundError" || e2.name === "TypeMismatchError")) {
+        return void 0;
+      }
+      throw e2;
+    }
   }
   async function loadOmeLoaderForRole(role, source2) {
     const packedRgb = source2.rgbDisplay === false ? "planar" : void 0;
     if (source2.kind === "local") {
       const file = await source2.handle.getFile();
       if (role === "segmentation") {
-        return maskLoaderFromBlob(file);
+        return maskLoader(file);
       }
       return finishOmeIntensityLoader(asAppLoader(await loadOmeTiff(file, vivLoadOpts(source2.pool, packedRgb))), file, source2.pool);
     }
     if (role === "segmentation") {
-      const response = await fetch(source2.url);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch mask OME-TIFF (${response.status})`);
-      }
-      return maskLoaderFromBlob(await response.blob());
+      return maskLoader(source2.url);
     }
     return finishOmeIntensityLoader(asAppLoader(await loadOmeTiff(source2.url, vivLoadOpts(source2.pool, packedRgb))), source2.url, source2.pool);
   }
@@ -84918,10 +87890,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       viewport: boundsToExportViewport(bounds),
       shapeIds: [
         ...wp.shapeIds ?? []
-      ]
+      ],
+      classViews: wp.classViews ?? []
     };
     if (wp.groupId) {
       out.groupId = wp.groupId;
+    }
+    if (wp.name !== void 0) {
+      out.name = wp.name;
     }
     if (wp.ThumbnailDataUrl) {
       out.thumbnail = wp.ThumbnailDataUrl;
@@ -84955,10 +87931,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ],
       ViewState: authoring == null ? void 0 : authoring.ViewState,
       Pan: authoring == null ? void 0 : authoring.Pan,
-      Zoom: authoring == null ? void 0 : authoring.Zoom
+      Zoom: authoring == null ? void 0 : authoring.Zoom,
+      classViews: wp.classViews ?? []
     };
     if (wp.groupId !== void 0) {
       out.groupId = wp.groupId;
+    }
+    if (wp.name !== void 0) {
+      out.name = wp.name;
     }
     if (wp.thumbnail !== void 0) {
       out.ThumbnailDataUrl = wp.thumbnail;
@@ -86826,6 +89806,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     get2().persistImportedShapesToStory(resolved);
   }
+  function legendClassKey(waypointId, channelId) {
+    return `${waypointId ?? ""}:${channelId}`;
+  }
   const overlayInitialState = {
     overlayLayers: [],
     activeTool: "move",
@@ -86876,9 +89859,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     imageOpacityPreview: null,
     arrangeImageId: null,
     channelVisibilities: {},
-    featureTableVisibilities: {},
     channelGroupRowVisibilities: {},
     groupNames: {},
+    hiddenLegendClasses: {},
     targetWaypointCamera: null,
     authoringWaypointEditorOpen: false,
     layersPanelSelectedShapeIds: [],
@@ -87124,6 +90107,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         shapes: []
       });
     },
+    toggleLegendClass: (waypointId, channelId, name2) => {
+      const key2 = legendClassKey(waypointId, channelId);
+      const prev = get2().hiddenLegendClasses;
+      const names = prev[key2] ?? [];
+      const next2 = names.includes(name2) ? names.filter((n2) => n2 !== name2) : [
+        ...names,
+        name2
+      ];
+      set2({
+        hiddenLegendClasses: {
+          ...prev,
+          [key2]: next2
+        }
+      });
+    },
+    clearLegendClasses: () => {
+      if (Object.keys(get2().hiddenLegendClasses).length === 0) return;
+      set2({
+        hiddenLegendClasses: {}
+      });
+    },
     resetStoryViewerSession: () => {
       const vis = {
         ...get2().channelVisibilities
@@ -87142,7 +90146,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         imageSelectionMask: null,
         maskVisualizationPreview: null,
         channelVisibilities: vis,
-        featureTableVisibilities: {},
+        hiddenLegendClasses: {},
         activeStoryIndex: null,
         waypointAuthoring: /* @__PURE__ */ new Map(),
         authoringWaypointShapesIndex: null,
@@ -87955,6 +90959,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         };
       });
     },
+    setWaypointClassView: (waypointId, channelId, next2) => {
+      const doc = useDocumentStore.getState();
+      const index2 = doc.waypoints.findIndex((w2) => w2.id === waypointId);
+      const wp = doc.waypoints[index2];
+      if (!wp) return;
+      const rest2 = (wp.classViews ?? []).filter((v2) => v2.channelId !== channelId);
+      const classViews = next2 ? [
+        ...rest2,
+        {
+          channelId,
+          ...next2
+        }
+      ] : rest2;
+      const waypoints = [
+        ...doc.waypoints
+      ];
+      waypoints[index2] = {
+        ...wp,
+        classViews
+      };
+      doc.setWaypoints(waypoints);
+    },
     reorderStories: (fromIndex, toIndex) => {
       const doc = useDocumentStore.getState();
       const next2 = [
@@ -88192,6 +91218,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         activeChannelGroupId: channelGroupId
       });
     },
+    showOnlyChannelGroup: (channelGroupId) => {
+      const doc = useDocumentStore.getState();
+      const group2 = doc.channelGroups.find((g2) => g2.id === channelGroupId);
+      if (!group2) return;
+      const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+      const next2 = visibilitiesShowingOnlyGroup({
+        group: group2,
+        channelGroups: doc.channelGroups,
+        sourceChannels,
+        stackVisibilities: get2().channelVisibilities
+      });
+      set2({
+        activeChannelGroupId: group2.id,
+        channelVisibilities: next2.channelVisibilities,
+        channelGroupRowVisibilities: next2.channelGroupRowVisibilities
+      });
+    },
     setTargetWaypointCamera: (waypoint) => {
       const next2 = waypoint === null ? null : {
         ...waypoint
@@ -88220,22 +91263,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const app = useAppStore.getState();
     const visibility = applyVisibilityTransition(sourceChannels, groups, app.channelVisibilities, app.channelGroupRowVisibilities, {
       kind: "sync"
-    });
+    }, app.activeChannelGroupId);
     const { channelVisibilities } = visibility;
     delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
-    const featureTableIds = new Set(doc.featureTables.map((c2) => c2.id));
-    const featureTableVisibilities = {
-      ...app.featureTableVisibilities
-    };
-    for (const id2 of Object.keys(featureTableVisibilities)) {
-      if (!featureTableIds.has(id2)) delete featureTableVisibilities[id2];
-    }
     const activeId = app.activeChannelGroupId;
     const nextActiveId = activeId && groups.some((g2) => g2.id === activeId) ? activeId : ((_a2 = groups[0]) == null ? void 0 : _a2.id) ?? null;
     useAppStore.setState({
       groupNames,
       channelVisibilities,
-      featureTableVisibilities,
       channelGroupRowVisibilities: visibility.channelGroupRowVisibilities,
       activeChannelGroupId: nextActiveId
     });
@@ -88304,14 +91339,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return useStore(useDocumentStore.temporal, (s2) => s2.futureStates.length > 0);
   }
   const clusterFieldset = "_clusterFieldset_18uri_1";
-  const styles$y = {
+  const styles$x = {
     clusterFieldset
   };
   function DocumentUndoControls() {
     const canUndo = useCanDocumentUndo();
     const canRedo = useCanDocumentRedo();
     return jsxRuntimeExports.jsxs("fieldset", {
-      className: styles$y.clusterFieldset,
+      className: styles$x.clusterFieldset,
       "aria-label": "Document undo and redo",
       children: [
         jsxRuntimeExports.jsx(PanelIconButton, {
@@ -89200,7 +92235,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const hiddenFileInput = "_hiddenFileInput_14ty9_14";
   const xmlFeedbackOk = "_xmlFeedbackOk_14ty9_25";
   const xmlFeedbackErr = "_xmlFeedbackErr_14ty9_26";
-  const styles$x = {
+  const styles$w = {
     menuWrap,
     menuItemGap,
     hiddenFileInput,
@@ -89260,7 +92295,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$x.menuWrap,
+      className: styles$w.menuWrap,
       ref: wrapRef,
       children: [
         jsxRuntimeExports.jsx(PanelIconButton, {
@@ -89294,7 +92329,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsx("button", {
               type: "button",
               role: "menuitem",
-              className: `${minervaTheme.menuItem} ${styles$x.menuItemGap}`,
+              className: `${minervaTheme.menuItem} ${styles$w.menuItemGap}`,
               disabled: !waypointsOk,
               onClick: (e2) => {
                 e2.stopPropagation();
@@ -89321,7 +92356,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsx("button", {
               type: "button",
               role: "menuitem",
-              className: `${minervaTheme.menuItem} ${styles$x.menuItemGap}`,
+              className: `${minervaTheme.menuItem} ${styles$w.menuItemGap}`,
               onClick: (e2) => {
                 var _a2;
                 e2.stopPropagation();
@@ -89334,14 +92369,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }) : null,
         jsxRuntimeExports.jsx("input", {
           ref: xmlInputRef,
-          className: styles$x.hiddenFileInput,
+          className: styles$w.hiddenFileInput,
           type: "file",
           accept: ".xml,application/xml,text/xml",
           "aria-label": "OME-XML annotations file",
           onChange: onAnnotationXmlSelected
         }),
         xmlFeedback ? jsxRuntimeExports.jsx("output", {
-          className: xmlFeedback.type === "ok" ? styles$x.xmlFeedbackOk : styles$x.xmlFeedbackErr,
+          className: xmlFeedback.type === "ok" ? styles$w.xmlFeedbackOk : styles$w.xmlFeedbackErr,
           children: xmlFeedback.text
         }) : null
       ]
@@ -89359,7 +92394,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }));
   const volume = "_volume_drqkm_1";
   const spine = "_spine_drqkm_9";
-  const styles$w = {
+  const styles$v = {
     volume,
     spine
   };
@@ -89375,10 +92410,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   ];
   function StorySpines() {
     return jsxRuntimeExports.jsx("span", {
-      className: styles$w.volume,
+      className: styles$v.volume,
       "aria-hidden": true,
       children: SPINE_HEIGHTS.map((frac, i2) => jsxRuntimeExports.jsx("span", {
-        className: styles$w.spine,
+        className: styles$v.spine,
         style: {
           height: `${frac * 100}%`,
           background: `var(--cloth-${SPINE_CLOTH[i2]})`
@@ -89394,7 +92429,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const titleDisplay = "_titleDisplay_1juq2_52";
   const titleInput = "_titleInput_1juq2_53";
   const titlePlaceholder = "_titlePlaceholder_1juq2_67";
-  const styles$v = {
+  const styles$u = {
     banner,
     leading,
     play,
@@ -89423,32 +92458,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       editing
     ]);
     return jsxRuntimeExports.jsxs("section", {
-      className: `${minervaTheme.bar} ${styles$v.banner}`,
+      className: `${minervaTheme.bar} ${styles$u.banner}`,
       "aria-label": "Story title",
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$v.leading,
+          className: styles$u.leading,
           children: [
             onExport ? jsxRuntimeExports.jsx(StoryAuthorOverflowMenu, {
               onReturnToLibrary,
               onExport
             }) : null,
             jsxRuntimeExports.jsx("span", {
-              className: `${minervaTheme.wordmark} ${styles$v.wordmark}`,
+              className: `${minervaTheme.wordmark} ${styles$u.wordmark}`,
               children: "Minerva"
             }),
             jsxRuntimeExports.jsx(DocumentUndoControls, {})
           ]
         }),
         jsxRuntimeExports.jsxs("label", {
-          className: styles$v.titleFieldWrap,
+          className: styles$u.titleFieldWrap,
           htmlFor: editing ? fieldId : void 0,
           children: [
             jsxRuntimeExports.jsx(StorySpines, {}),
             editing ? jsxRuntimeExports.jsx("input", {
               ref: inputRef,
               id: fieldId,
-              className: `${minervaTheme.field} ${styles$v.titleInput}`,
+              className: `${minervaTheme.field} ${styles$u.titleInput}`,
               type: "text",
               value: draftTitle,
               placeholder: "Untitled story",
@@ -89473,21 +92508,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               spellCheck: false
             }) : jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.field} ${styles$v.titleDisplay}`,
+              className: `${minervaTheme.field} ${styles$u.titleDisplay}`,
               "aria-label": "Story title",
               onClick: () => {
                 setDraftTitle(titleText);
                 setEditing(true);
               },
               children: titleText.trim() ? titleText : jsxRuntimeExports.jsx("span", {
-                className: styles$v.titlePlaceholder,
+                className: styles$u.titlePlaceholder,
                 children: "Untitled story"
               })
             })
           ]
         }),
         onEnterPlaybackPreview ? jsxRuntimeExports.jsx(PanelIconButton, {
-          className: styles$v.play,
+          className: styles$u.play,
           onClick: onEnterPlaybackPreview,
           disabled: playbackPreviewDisabled,
           title: playbackPreviewDisabled ? "Add a waypoint to preview" : "Preview playback",
@@ -89640,7 +92675,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const rangeInputMin = "_rangeInputMin_sur29_137";
   const rangeInputMax = "_rangeInputMax_sur29_144";
   const limitInput = "_limitInput_sur29_182";
-  const styles$u = {
+  const styles$t = {
     wrap: wrap$2,
     histogramHost,
     histogramPlot,
@@ -89971,11 +93006,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
     const trimmed = chart.startBin > 0;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$u.wrap,
+      className: styles$t.wrap,
       children: [
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$u.limitInput}`,
+          className: `${minervaTheme.input} ${styles$t.limitInput}`,
           value: minInput,
           "aria-label": `${props.channelLabel} contrast minimum value`,
           min: scale2.dtypeMin,
@@ -89994,23 +93029,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$u.histogramHost,
+          className: styles$t.histogramHost,
           style: props.r != null && props.g != null && props.b != null ? {
             "--histogram-color": `rgb(${props.r},${props.g},${props.b})`
           } : void 0,
           children: jsxRuntimeExports.jsxs("div", {
-            className: trimmed ? `${styles$u.histogramPlot} ${styles$u.histogramPlotTrimmed}` : styles$u.histogramPlot,
+            className: trimmed ? `${styles$t.histogramPlot} ${styles$t.histogramPlotTrimmed}` : styles$t.histogramPlot,
             children: [
               trimmed ? jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$u.axisBreak}`,
+                className: `${minervaTheme.focusRing} ${styles$t.axisBreak}`,
                 title: "Full range",
                 "aria-label": `${props.channelLabel} full histogram range`,
                 onClick: () => setExpanded(true),
                 children: jsxRuntimeExports.jsx(SvgAxisBreak, {})
               }) : null,
               jsxRuntimeExports.jsxs("svg", {
-                className: styles$u.histogramSvg,
+                className: styles$t.histogramSvg,
                 viewBox: "1.15 0 96.7 11",
                 preserveAspectRatio: "none",
                 role: "img",
@@ -90042,22 +93077,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     clipPath: `url(#${histogramClipId}-frame)`,
                     children: [
                       jsxRuntimeExports.jsx("path", {
-                        className: `${styles$u.histogramFill} ${styles$u.histogramOutOfRange}`,
+                        className: `${styles$t.histogramFill} ${styles$t.histogramOutOfRange}`,
                         d: histFillPath
                       }),
                       jsxRuntimeExports.jsx("path", {
-                        className: `${styles$u.histogramLine} ${styles$u.histogramOutOfRange}`,
+                        className: `${styles$t.histogramLine} ${styles$t.histogramOutOfRange}`,
                         d: histLinePath
                       }),
                       jsxRuntimeExports.jsxs("g", {
                         clipPath: `url(#${histogramClipId})`,
                         children: [
                           jsxRuntimeExports.jsx("path", {
-                            className: styles$u.histogramFill,
+                            className: styles$t.histogramFill,
                             d: histFillPath
                           }),
                           jsxRuntimeExports.jsx("path", {
-                            className: styles$u.histogramLine,
+                            className: styles$t.histogramLine,
                             d: histLinePath
                           })
                         ]
@@ -90067,18 +93102,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: `${styles$u.histogramLoading}${props.histogramLoading ? ` ${styles$u.histogramLoadingVisible}` : ""}`,
+                className: `${styles$t.histogramLoading}${props.histogramLoading ? ` ${styles$t.histogramLoadingVisible}` : ""}`,
                 title: "Loading histogram",
                 children: jsxRuntimeExports.jsx("div", {
                   className: minervaTheme.spinnerSm
                 })
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$u.sliderRow,
+                className: styles$t.sliderRow,
                 children: [
                   jsxRuntimeExports.jsx("input", {
                     type: "range",
-                    className: `${styles$u.rangeInput} ${styles$u.rangeInputMin}`,
+                    className: `${styles$t.rangeInput} ${styles$t.rangeInputMin}`,
                     min: 0,
                     max: scale2.sliderSteps,
                     value: sliderMin,
@@ -90092,7 +93127,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   }),
                   jsxRuntimeExports.jsx("input", {
                     type: "range",
-                    className: `${styles$u.rangeInput} ${styles$u.rangeInputMax}`,
+                    className: `${styles$t.rangeInput} ${styles$t.rangeInputMax}`,
                     min: 0,
                     max: scale2.sliderSteps,
                     value: sliderMax,
@@ -90111,7 +93146,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$u.limitInput}`,
+          className: `${minervaTheme.input} ${styles$t.limitInput}`,
           value: maxInput,
           "aria-label": `${props.channelLabel} contrast maximum value`,
           min: scale2.dtypeMin,
@@ -90165,7 +93200,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const maskVizSwatchWhite = "_maskVizSwatchWhite_1d485_355";
   const maskVizSwatchRandom = "_maskVizSwatchRandom_1d485_356";
   const channelRow = "_channelRow_1d485_12";
-  const styles$t = {
+  const styles$s = {
     channelNameInput,
     channelRowMain,
     channelRowTitle,
@@ -90265,7 +93300,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return jsxRuntimeExports.jsxs("span", {
       className: [
-        styles$t.cursorHintHost,
+        styles$s.cursorHintHost,
         props.className
       ].filter(Boolean).join(" "),
       onPointerEnter: track,
@@ -90274,7 +93309,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         props.children,
         props.enabled && pos ? reactDomExports.createPortal(jsxRuntimeExports.jsx("output", {
-          className: styles$t.cursorHint,
+          className: styles$s.cursorHint,
           style: {
             "--hint-x": `${pos.x}px`,
             "--hint-y": `${pos.y}px`
@@ -90285,7 +93320,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function ChannelVisibilitySwatch(props) {
-    const { visible, title: title7, ariaLabel, blocked, onClick } = props;
+    const { visible, title: title7, ariaLabel, blocked, disabled: disabled2, onClick } = props;
     return jsxRuntimeExports.jsx(CursorHint, {
       enabled: Boolean(blocked),
       label: VIEWER_INTENSITY_LIMIT_HINT,
@@ -90293,13 +93328,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         type: "button",
         className: [
           minervaTheme.focusRing,
-          styles$t.channelVisibilityButton,
-          visible ? "" : styles$t.channelVisibilityButtonHidden
+          styles$s.channelVisibilityButton,
+          visible ? "" : styles$s.channelVisibilityButtonHidden
         ].filter(Boolean).join(" "),
         title: blocked ? void 0 : title7,
         "aria-label": blocked ? VIEWER_INTENSITY_LIMIT_HINT : ariaLabel,
         "aria-pressed": visible,
         "aria-disabled": blocked || void 0,
+        disabled: disabled2,
         onClick: (e2) => {
           if (blocked) return;
           onClick(e2);
@@ -90315,8 +93351,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       type: "button",
       className: [
         minervaTheme.focusRing,
-        styles$t.channelColorSwatch,
-        fill ? null : styles$t.channelColorSwatchUnfilled,
+        styles$s.channelColorSwatch,
+        fill ? null : styles$s.channelColorSwatchUnfilled,
         busy ? minervaTheme.busyOverlay : null
       ].filter(Boolean).join(" "),
       style: fill ? {
@@ -90333,7 +93369,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function MaskVizButton(props) {
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: `${minervaTheme.focusRing} ${styles$t.maskVizOption}${props.active ? ` ${styles$t.maskVizOptionActive}` : ""}`,
+      className: `${minervaTheme.focusRing} ${styles$s.maskVizOption}${props.active ? ` ${styles$s.maskVizOptionActive}` : ""}`,
       "aria-pressed": props.active,
       title: props.title ?? props.label,
       "aria-label": props.label,
@@ -90377,7 +93413,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return jsxRuntimeExports.jsxs("label", {
       className: [
-        styles$t.maskOpacityControl,
+        styles$s.maskOpacityControl,
         className2
       ].filter(Boolean).join(" "),
       title: `Opacity ${pct}%`,
@@ -90386,11 +93422,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       children: [
         jsxRuntimeExports.jsxs("span", {
-          className: styles$t.maskOpacityInputRow,
+          className: styles$s.maskOpacityInputRow,
           children: [
             jsxRuntimeExports.jsx("input", {
               type: "range",
-              className: styles$t.maskOpacitySlider,
+              className: styles$s.maskOpacitySlider,
               min: 0,
               max: 100,
               step: 1,
@@ -90410,7 +93446,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onBlur: commit
             }),
             jsxRuntimeExports.jsxs("span", {
-              className: styles$t.maskOpacityValue,
+              className: styles$s.maskOpacityValue,
               children: [
                 pct,
                 "%"
@@ -90419,7 +93455,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         jsxRuntimeExports.jsx("span", {
-          className: styles$t.maskOpacityLabel,
+          className: styles$s.maskOpacityLabel,
           children: "Opacity"
         })
       ]
@@ -90438,19 +93474,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       colorTitle = "Random colors (click to re-seed)";
     }
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$t.maskModeControls,
+      className: styles$s.maskModeControls,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$t.maskModeGroup,
+          className: styles$s.maskModeGroup,
           children: [
             jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$t.maskVizToggle,
+              className: styles$s.maskVizToggle,
               "aria-label": `${ariaLabel} fill`,
               children: [
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.style === "outline",
                   label: "Outline",
-                  iconClass: styles$t.maskVizIconOutline,
+                  iconClass: styles$s.maskVizIconOutline,
                   onClick: () => onChange({
                     ...value,
                     style: "outline"
@@ -90459,7 +93495,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.style === "full",
                   label: "Full",
-                  iconClass: styles$t.maskVizIconFull,
+                  iconClass: styles$s.maskVizIconFull,
                   onClick: () => onChange({
                     ...value,
                     style: "full"
@@ -90468,22 +93504,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$t.maskModeGroupLabel,
+              className: styles$s.maskModeGroupLabel,
               children: "Fill"
             })
           ]
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$t.maskModeGroup,
+          className: styles$s.maskModeGroup,
           children: [
             jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$t.maskVizToggle,
+              className: styles$s.maskVizToggle,
               "aria-label": `${ariaLabel} color`,
               children: [
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.color === "white",
                   label: "White",
-                  iconClass: styles$t.maskVizSwatchWhite,
+                  iconClass: styles$s.maskVizSwatchWhite,
                   onClick: () => onChange({
                     ...value,
                     color: "white"
@@ -90493,7 +93529,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   active: colored,
                   label: colorLabel,
                   title: colorTitle,
-                  iconClass: styles$t.maskVizSwatchRandom,
+                  iconClass: styles$s.maskVizSwatchRandom,
                   onClick: () => onChange(classColors ? {
                     ...value,
                     color: "random"
@@ -90502,7 +93538,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$t.maskModeGroupLabel,
+              className: styles$s.maskModeGroupLabel,
               children: "Color"
             })
           ]
@@ -90533,7 +93569,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       props.onBlur(trimmed);
     };
     return jsxRuntimeExports.jsx("input", {
-      className: `${minervaTheme.field} ${styles$t.channelNameInput}`,
+      className: `${minervaTheme.field} ${styles$s.channelNameInput}`,
       type: "text",
       value: draft,
       title: props.name,
@@ -90560,15 +93596,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showColor = !isMask && onColorClick;
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$t.channelRow,
-        locked ? styles$t.detailChannelRowLocked : null,
+        styles$s.channelRow,
+        locked ? styles$s.detailChannelRowLocked : null,
         fitting ? minervaTheme.busyOverlay : null
       ].filter(Boolean).join(" "),
       "aria-busy": fitting || void 0,
       title: fitting ? "Fitting contrast\u2026" : void 0,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: `${styles$t.channelRowMain}${showMask ? ` ${styles$t.channelRowMainMask}` : ""}`,
+          className: `${styles$s.channelRowMain}${showMask ? ` ${styles$s.channelRowMainMask}` : ""}`,
           children: [
             jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible,
@@ -90578,10 +93614,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: onToggleVisibility
             }),
             jsxRuntimeExports.jsxs("div", {
-              className: styles$t.channelRowTitle,
+              className: styles$s.channelRowTitle,
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$t.channelNameSlot,
+                  className: styles$s.channelNameSlot,
                   children: name2.mode === "label" ? jsxRuntimeExports.jsx("span", {
                     className: name2.className,
                     title: name2.title ?? name2.name,
@@ -90591,14 +93627,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   })
                 }),
                 imageSubtitle ? jsxRuntimeExports.jsx("span", {
-                  className: styles$t.channelImageSubtitle,
+                  className: styles$s.channelImageSubtitle,
                   title: `From ${imageSubtitle}`,
                   children: imageSubtitle
                 }) : null
               ]
             }),
             jsxRuntimeExports.jsxs("div", {
-              className: styles$t.channelRowMid,
+              className: styles$s.channelRowMid,
               children: [
                 contrast ? jsxRuntimeExports.jsx(ChannelContrastEditor, {
                   ...contrast
@@ -90612,7 +93648,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             showMask && fixedColorHex ? jsxRuntimeExports.jsx("span", {
-              className: styles$t.channelColorSwatchStatic,
+              className: styles$s.channelColorSwatchStatic,
               style: {
                 backgroundColor: `#${fixedColorHex}`
               },
@@ -90627,7 +93663,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: onColorClick
             }) : null,
             jsxRuntimeExports.jsx("div", {
-              className: styles$t.channelRowTrailing,
+              className: styles$s.channelRowTrailing,
               children: trailing
             }),
             showMask && onMaskVisualizationChange ? jsxRuntimeExports.jsx(OpacitySlider, {
@@ -90646,7 +93682,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         showMask && maskFooter ? jsxRuntimeExports.jsx("div", {
-          className: styles$t.maskControlsPanel,
+          className: styles$s.maskControlsPanel,
           children: maskFooter
         }) : null
       ]
@@ -91410,17 +94446,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const chevronLeft = "_chevronLeft_m5cf6_2";
   const chevronDown = "_chevronDown_m5cf6_3";
   const chevronUp = "_chevronUp_m5cf6_4";
-  const styles$s = {
+  const styles$r = {
     chevronRight,
     chevronLeft,
     chevronDown,
     chevronUp
   };
   const DIRECTION_CLASS = {
-    right: styles$s.chevronRight,
-    left: styles$s.chevronLeft,
-    down: styles$s.chevronDown,
-    up: styles$s.chevronUp
+    right: styles$r.chevronRight,
+    left: styles$r.chevronLeft,
+    down: styles$r.chevronDown,
+    up: styles$r.chevronUp
   };
   function ChevronIcon({ direction: direction2 = "down", className: className2 }) {
     return jsxRuntimeExports.jsx(SvgChevronDown, {
@@ -91454,7 +94490,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const closeIcon = "_closeIcon_1v3n3_54";
   const saturation = "_saturation_1v3n3_77";
   const saturationHidden = "_saturationHidden_1v3n3_83";
-  const styles$r = {
+  const styles$q = {
     backdrop,
     panel: panel$2,
     colorGrid,
@@ -91501,7 +94537,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const saturationProps = {
       hsva: currentColor.hsva,
-      className: expanded ? styles$r.saturation : `${styles$r.saturation} ${styles$r.saturationHidden}`,
+      className: expanded ? styles$q.saturation : `${styles$q.saturation} ${styles$q.saturationHidden}`,
       style: expanded ? void 0 : {
         height: 0
       },
@@ -91519,26 +94555,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$r.backdrop,
+          className: styles$q.backdrop,
           "aria-label": "Close color picker",
           onClick: onClose
         }),
         jsxRuntimeExports.jsx("div", {
           "data-minerva-color-picker": "",
-          className: styles$r.panel,
+          className: styles$q.panel,
           style: {
             top: position2.top,
             left: position2.left
           },
           children: jsxRuntimeExports.jsxs("div", {
-            className: expanded ? `${styles$r.colorGrid} ${styles$r.colorGridExpanded}` : styles$r.colorGrid,
+            className: expanded ? `${styles$q.colorGrid} ${styles$q.colorGridExpanded}` : styles$q.colorGrid,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$r.hueRow,
+                className: styles$q.hueRow,
                 children: [
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: styles$r.iconButton,
+                    className: styles$q.iconButton,
                     "aria-expanded": expanded,
                     title: expanded ? "Fewer colors" : "More colors",
                     onClick: () => setExpanded(!expanded),
@@ -91555,7 +94591,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   }),
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: styles$r.whiteSwatch,
+                    className: styles$q.whiteSwatch,
                     "aria-pressed": isWhite,
                     "aria-label": "White",
                     title: "White",
@@ -91565,14 +94601,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     type: "button",
                     title: "Close",
                     "aria-label": "Close color picker",
-                    className: styles$r.iconButton,
+                    className: styles$q.iconButton,
                     onClick: (e2) => {
                       e2.stopPropagation();
                       onClose();
                     },
                     children: jsxRuntimeExports.jsx(SvgClose, {
                       "aria-hidden": true,
-                      className: styles$r.closeIcon
+                      className: styles$q.closeIcon
                     })
                   })
                 ]
@@ -91604,42 +94640,45 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  const stack = "_stack_1sv2a_1";
-  const panelDropActive = "_panelDropActive_1sv2a_11";
-  const addStrip = "_addStrip_1sv2a_16";
-  const addStripRow = "_addStripRow_1sv2a_27";
-  const dropZone = "_dropZone_1sv2a_41";
-  const dropZoneTitle = "_dropZoneTitle_1sv2a_51";
-  const orDivider = "_orDivider_1sv2a_57";
-  const urlRow = "_urlRow_1sv2a_68";
-  const urlField = "_urlField_1sv2a_77";
-  const urlInput = "_urlInput_1sv2a_83";
-  const urlAdd = "_urlAdd_1sv2a_91";
-  const dropZoneActive = "_dropZoneActive_1sv2a_121";
-  const importError = "_importError_1sv2a_175";
-  const fieldLabel = "_fieldLabel_1sv2a_188";
-  const typeOverlay = "_typeOverlay_1sv2a_202";
-  const typeOverlayBackdrop = "_typeOverlayBackdrop_1sv2a_214";
-  const typeOverlayCard = "_typeOverlayCard_1sv2a_220";
-  const typeOverlayFields = "_typeOverlayFields_1sv2a_234";
-  const typeOverlayFile = "_typeOverlayFile_1sv2a_244";
-  const typeRow = "_typeRow_1sv2a_253";
-  const typeChipActive = "_typeChipActive_1sv2a_261";
-  const typeChipSuggested = "_typeChipSuggested_1sv2a_265";
-  const typeChipMuted = "_typeChipMuted_1sv2a_270";
-  const typeFooter = "_typeFooter_1sv2a_284";
-  const typeImport = "_typeImport_1sv2a_293";
-  const typeSection = "_typeSection_1sv2a_300";
-  const imageCard = "_imageCard_1sv2a_308";
-  const fileAccessOverlay = "_fileAccessOverlay_1sv2a_320";
-  const fileAccessAction = "_fileAccessAction_1sv2a_336";
-  const imageCardHeader = "_imageCardHeader_1sv2a_344";
-  const imageCardText = "_imageCardText_1sv2a_352";
-  const imageCardTitle = "_imageCardTitle_1sv2a_360";
-  const imageCardMeta = "_imageCardMeta_1sv2a_368";
-  const imageCardActions = "_imageCardActions_1sv2a_374";
-  const imageOpacity = "_imageOpacity_1sv2a_383";
-  const styles$q = {
+  const stack = "_stack_eiqoz_1";
+  const panelDropActive = "_panelDropActive_eiqoz_11";
+  const addStrip = "_addStrip_eiqoz_16";
+  const addStripRow = "_addStripRow_eiqoz_27";
+  const dropZone = "_dropZone_eiqoz_41";
+  const dropZoneTitle = "_dropZoneTitle_eiqoz_51";
+  const orDivider = "_orDivider_eiqoz_57";
+  const urlRow = "_urlRow_eiqoz_68";
+  const urlField = "_urlField_eiqoz_77";
+  const urlInput = "_urlInput_eiqoz_83";
+  const urlAdd = "_urlAdd_eiqoz_91";
+  const dropZoneActive = "_dropZoneActive_eiqoz_121";
+  const importError = "_importError_eiqoz_175";
+  const fieldLabel = "_fieldLabel_eiqoz_188";
+  const typeOverlay = "_typeOverlay_eiqoz_202";
+  const typeOverlayBackdrop = "_typeOverlayBackdrop_eiqoz_214";
+  const typeOverlayCard = "_typeOverlayCard_eiqoz_220";
+  const typeOverlayFields = "_typeOverlayFields_eiqoz_234";
+  const typeOverlayFile = "_typeOverlayFile_eiqoz_244";
+  const typeRow = "_typeRow_eiqoz_253";
+  const typeChipActive = "_typeChipActive_eiqoz_261";
+  const typeChipSuggested = "_typeChipSuggested_eiqoz_265";
+  const typeChipMuted = "_typeChipMuted_eiqoz_270";
+  const typeFooter = "_typeFooter_eiqoz_284";
+  const typeImport = "_typeImport_eiqoz_293";
+  const typeSection = "_typeSection_eiqoz_300";
+  const imageCard = "_imageCard_eiqoz_308";
+  const fileAccessOverlay = "_fileAccessOverlay_eiqoz_320";
+  const fileAccessName = "_fileAccessName_eiqoz_339";
+  const fileAccessAction = "_fileAccessAction_eiqoz_347";
+  const pointBackdrop = "_pointBackdrop_eiqoz_355";
+  const pointPopup = "_pointPopup_eiqoz_366";
+  const imageCardHeader = "_imageCardHeader_eiqoz_374";
+  const imageCardText = "_imageCardText_eiqoz_382";
+  const imageCardTitle = "_imageCardTitle_eiqoz_390";
+  const imageCardMeta = "_imageCardMeta_eiqoz_398";
+  const imageCardActions = "_imageCardActions_eiqoz_404";
+  const imageOpacity = "_imageOpacity_eiqoz_413";
+  const styles$p = {
     stack,
     panelDropActive,
     addStrip,
@@ -91668,7 +94707,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     typeSection,
     imageCard,
     fileAccessOverlay,
+    fileAccessName,
     fileAccessAction,
+    pointBackdrop,
+    pointPopup,
     imageCardHeader,
     imageCardText,
     imageCardTitle,
@@ -91679,37 +94721,37 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function ImportOverlay(props) {
     const busy = props.busy === true;
     return reactDomExports.createPortal(jsxRuntimeExports.jsxs("div", {
-      className: styles$q.typeOverlay,
+      className: styles$p.typeOverlay,
       role: "dialog",
       "aria-modal": "true",
       "aria-busy": busy,
       "aria-labelledby": props.titleId,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$q.typeOverlayBackdrop,
+          className: styles$p.typeOverlayBackdrop,
           "aria-hidden": "true"
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: `${minervaTheme.surface} ${styles$q.typeOverlayCard}`,
+          className: `${minervaTheme.surface} ${styles$p.typeOverlayCard}`,
           children: [
             jsxRuntimeExports.jsx("div", {
               id: props.titleId,
-              className: styles$q.typeOverlayFile,
+              className: styles$p.typeOverlayFile,
               title: props.title,
               children: props.title
             }),
             props.children != null ? jsxRuntimeExports.jsx("fieldset", {
               disabled: props.importDisabled,
-              className: styles$q.typeOverlayFields,
+              className: styles$p.typeOverlayFields,
               children: props.children
             }) : null,
             props.error ? jsxRuntimeExports.jsx("div", {
-              className: styles$q.importError,
+              className: styles$p.importError,
               role: "alert",
               children: props.error
             }) : null,
             jsxRuntimeExports.jsxs("div", {
-              className: styles$q.typeFooter,
+              className: styles$p.typeFooter,
               children: [
                 jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
@@ -91719,7 +94761,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
-                  className: styles$q.typeImport,
+                  className: styles$p.typeImport,
                   disabled: props.importDisabled,
                   onClick: props.onImport,
                   children: busy ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
@@ -92362,8 +95404,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!changed) return;
     docNow.setImages(applySourceChannelsToImages(docNow.images, next2));
   }
+  function isAbsoluteUrl(url) {
+    const u2 = url.trim();
+    return /^[a-z][a-z\d+.-]*:/i.test(u2) || u2.startsWith("//");
+  }
+  function urlFileName(url) {
+    var _a2;
+    const path2 = url.trim().split(/[?#]/)[0];
+    return ((_a2 = path2.split(/[/\\]/).pop()) == null ? void 0 : _a2.trim()) ?? "";
+  }
   function WorkerWrapper$4(options) {
-    return new Worker("" + new URL("worker-B_-QM7Av.js", import.meta.url).href, {
+    return new Worker("" + new URL("worker-fsJuxFmL.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -92390,7 +95441,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function stashClassIndex(featureTableId, names, index2, width, height) {
     if (!index2 || !width || !height) {
-      classIndexCache.delete(featureTableId);
+      classIndexCache.set(featureTableId, null);
       return;
     }
     classIndexCache.set(featureTableId, {
@@ -92439,19 +95490,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   async function ingestFeatureTable(featureTableId, source2, columns) {
-    const cols = columns ? {
-      id: columns.id,
-      name: columns.name
-    } : void 0;
-    const header = columns == null ? void 0 : columns.header;
     let msg;
     if (source2 instanceof File) {
       msg = await request({
         type: "ingest",
         featureTableId,
         file: source2,
-        columns: cols,
-        header
+        columns
       });
     } else {
       const copy2 = new Uint8Array(source2.byteLength);
@@ -92459,9 +95504,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       msg = await request({
         type: "ingest",
         featureTableId,
-        bytes: copy2,
-        columns: cols,
-        header
+        bytes: copy2
       }, [
         copy2.buffer
       ]);
@@ -92474,9 +95517,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return {
       maxClassId: msg.maxClassId,
       names: msg.names,
-      persist: msg.persist,
-      columns: msg.columns,
-      header: msg.header
+      persist: msg.persist
     };
   }
   async function pageFeatureTable(featureTableId, query, offset, limit) {
@@ -92496,7 +95537,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   async function fetchClassIndex(featureTableId) {
     const hit = classIndexCache.get(featureTableId);
-    if (hit) return hit;
+    if (hit !== void 0) return hit ?? void 0;
     const msg = await request({
       type: "classIndex",
       featureTableId
@@ -92504,7 +95545,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (msg.type === "error") throw new Error(msg.message);
     if (msg.type !== "classIndex") throw new Error("unexpected classIndex reply");
     stashClassIndex(featureTableId, msg.names, msg.index, msg.indexWidth, msg.indexHeight);
-    return classIndexCache.get(featureTableId);
+    return classIndexCache.get(featureTableId) ?? void 0;
+  }
+  async function exportFeatureTableParquet(featureTableId) {
+    const msg = await request({
+      type: "exportParquet",
+      featureTableId
+    });
+    if (msg.type === "error") throw new Error(msg.message);
+    if (msg.type !== "parquet") throw new Error("unexpected export reply");
+    return msg.bytes;
   }
   async function dropFeatureTable(featureTableId) {
     ingestedIds.delete(featureTableId);
@@ -92525,7 +95575,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (msg.type === "error") throw new Error(msg.message);
     noteIngest();
   }
+  const LUT_MAX_DIM = 2048;
+  const INDEX_TEX_MAX = LUT_MAX_DIM * LUT_MAX_DIM;
   const MAX_CLASS_NAMES = 255;
+  function indexTexSize(count2) {
+    const n2 = Math.max(1, count2 | 0);
+    if (n2 > INDEX_TEX_MAX) return null;
+    let width = Math.min(LUT_MAX_DIM, n2);
+    width = Math.max(4, width + 3 & -4);
+    return {
+      width,
+      height: Math.max(1, Math.ceil(n2 / width))
+    };
+  }
   const ID_ALIASES = /* @__PURE__ */ new Set([
     "classid",
     "classids",
@@ -92594,6 +95656,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const bytes = new Uint8Array(await file.slice(0, 8192).arrayBuffer());
     return peekCsvHeaders(bytes);
   }
+  function featureTableBlobKey(storyId, featureTableId) {
+    return storyId ? `story:${storyId}:featureTable:${featureTableId}` : `featureTable:${featureTableId}`;
+  }
+  function featureTableHandleKey(featureTable) {
+    const { source: source2 } = featureTable;
+    return "handleKey" in source2 ? source2.handleKey : void 0;
+  }
   const attachListeners = /* @__PURE__ */ new Set();
   const pendingAttachSet = /* @__PURE__ */ new Set();
   let pendingAttachIds = [];
@@ -92607,8 +95676,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return pendingAttachIds;
   }
   const emptyAccess = {
-    deniedHandleKeys: [],
-    missingHandleKeys: []
+    missingTableIds: []
   };
   let featureTableAccess = emptyAccess;
   const accessListeners = /* @__PURE__ */ new Set();
@@ -92625,14 +95693,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function getFeatureTableAccess() {
     return featureTableAccess;
   }
-  async function dropStoredSource(handleKey) {
+  async function dropStoredSource(featureTable) {
+    const handleKey = featureTableHandleKey(featureTable);
+    if (!handleKey) return;
     await deleteBlob(handleKey).catch(() => void 0);
     await deleteFileHandle(handleKey).catch(() => void 0);
   }
-  function classNameVisible(vis, name2) {
-    if (!vis || vis.mode === "all") return true;
+  function classVisibilityTest(vis) {
+    if (!vis || vis.mode === "all") return () => true;
     const names = new Set(vis.names);
-    return vis.mode === "hide" ? !names.has(name2) : names.has(name2);
+    return vis.mode === "hide" ? (name2) => !names.has(name2) : (name2) => names.has(name2);
   }
   function visibilityAllOn() {
     return {
@@ -92647,7 +95717,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function toggleClassName(vis, name2) {
     if (name2.length === 0) return vis ?? visibilityAllOn();
-    const visible = classNameVisible(vis, name2);
+    const visible = classVisibilityTest(vis)(name2);
     const current = vis ?? visibilityAllOn();
     if (!visible) {
       if (current.mode === "all") return current;
@@ -92750,42 +95820,114 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     lutEpoch += 1;
     for (const fn of lutListeners) fn();
   }
-  function paletteRev(featureTable, vis, seed) {
-    const visPart = !vis || vis.mode === "all" ? "all" : `${vis.mode}:${vis.names.join("\0")}`;
-    const colors = featureTable.nameColors.map((c2) => `${c2.name}:${c2.color.r},${c2.color.g},${c2.color.b}`).join(";");
-    return `${featureTable.digest}:${seed}:${visPart}:${colors}`;
-  }
-  function ensureIndex(featureTableId) {
-    if (peekClassIndex(featureTableId) || lutPending.has(featureTableId)) return;
-    lutPending.add(featureTableId);
-    void fetchClassIndex(featureTableId).catch((e2) => {
-      console.error("[featureTable] class index failed", e2);
-    }).finally(() => {
-      lutPending.delete(featureTableId);
-      noteLut();
-    });
-  }
-  function gpuStyleForFeatureTable(featureTable, vis, seed) {
-    const idx = peekClassIndex(featureTable.id);
-    if (!idx) {
-      ensureIndex(featureTable.id);
-      return void 0;
+  let classColorPreview = null;
+  function previewClassColor(owner, waypointId, featureTableId, name2, color2) {
+    const prev = classColorPreview;
+    if ((prev == null ? void 0 : prev.owner) === owner && prev.waypointId === waypointId && prev.featureTableId === featureTableId && prev.name === name2 && prev.color.r === color2.r && prev.color.g === color2.g && prev.color.b === color2.b) {
+      return;
     }
+    classColorPreview = {
+      owner,
+      waypointId,
+      featureTableId,
+      name: name2,
+      color: color2
+    };
+    noteLut();
+  }
+  function clearClassColorPreview(owner) {
+    if ((classColorPreview == null ? void 0 : classColorPreview.owner) !== owner) return;
+    classColorPreview = null;
+    noteLut();
+  }
+  function classViewFor(waypoint, channelId) {
+    var _a2;
+    return (_a2 = waypoint == null ? void 0 : waypoint.classViews) == null ? void 0 : _a2.find((v2) => v2.channelId === channelId);
+  }
+  function withHiddenClasses(view, channelId, hidden) {
+    if (!(hidden == null ? void 0 : hidden.length)) return view;
+    const vis = (view == null ? void 0 : view.visibility) ?? visibilityAllOn();
+    const visibility = vis.mode === "show" ? {
+      mode: "show",
+      names: vis.names.filter((n2) => !hidden.includes(n2))
+    } : {
+      mode: "hide",
+      names: [
+        .../* @__PURE__ */ new Set([
+          ...vis.mode === "hide" ? vis.names : [],
+          ...hidden
+        ])
+      ]
+    };
+    return {
+      channelId,
+      colors: (view == null ? void 0 : view.colors) ?? [],
+      visibility
+    };
+  }
+  function classColorsFor(featureTable, view, waypointId) {
     const colors = new Map(featureTable.nameColors.map((c2) => [
       c2.name,
       c2.color
     ]));
-    const n2 = Math.min(idx.names.length, MAX_CLASS_NAMES);
-    const palette = new Uint8Array((n2 + 1) * 4);
-    for (let i2 = 0; i2 < n2; i2++) {
-      const name2 = idx.names[i2];
-      const color2 = colors.get(name2) ?? defaultClassColor(i2 + 1, seed);
+    for (const c2 of (view == null ? void 0 : view.colors) ?? []) colors.set(c2.name, c2.color);
+    if ((classColorPreview == null ? void 0 : classColorPreview.waypointId) === waypointId && classColorPreview.featureTableId === featureTable.id) {
+      colors.set(classColorPreview.name, classColorPreview.color);
+    }
+    return colors;
+  }
+  function classSlots(names, view, seed, colors) {
+    const visible = classVisibilityTest(view == null ? void 0 : view.visibility);
+    return names.slice(0, MAX_CLASS_NAMES).map((name2, i2) => ({
+      name: name2,
+      color: colors.get(name2) ?? defaultClassColor(i2 + 1, seed),
+      visible: visible(name2)
+    }));
+  }
+  function shownClassRows(featureTable, view, seed, waypointId) {
+    const idx = peekClassIndex(featureTable.id);
+    if (!idx) return void 0;
+    const colors = classColorsFor(featureTable, view, waypointId);
+    return classSlots(idx.names, view, seed, colors).filter((slot) => slot.visible).map(({ name: name2, color: color2 }) => ({
+      name: name2,
+      color: color2
+    }));
+  }
+  function paletteRev(featureTable, vis, seed, colors) {
+    const visPart = !vis || vis.mode === "all" ? "all" : `${vis.mode}:${vis.names.join("\0")}`;
+    const colorPart = [
+      ...colors
+    ].map(([name2, c2]) => `${name2}:${c2.r},${c2.g},${c2.b}`).join(";");
+    return `${featureTable.digest}:${seed}:${visPart}:${colorPart}`;
+  }
+  function ensureIndex(featureTable) {
+    const featureTableId = featureTable.id;
+    if (peekClassIndex(featureTableId) !== void 0 || lutPending.has(featureTableId)) return;
+    if (!hasIngestedFeatureTable(featureTableId) || indexTexSize(featureTable.maxClassId + 1) == null) return;
+    lutPending.add(featureTableId);
+    void fetchClassIndex(featureTableId).then((idx) => {
+      if (idx) noteLut();
+    }).catch((e2) => {
+      console.error("[featureTable] class index failed", e2);
+    }).finally(() => {
+      lutPending.delete(featureTableId);
+    });
+  }
+  function gpuStyleForFeatureTable(featureTable, view, seed, waypointId) {
+    const idx = peekClassIndex(featureTable.id);
+    if (idx === void 0) ensureIndex(featureTable);
+    if (!idx) return void 0;
+    const vis = view == null ? void 0 : view.visibility;
+    const colors = classColorsFor(featureTable, view, waypointId);
+    const slots = classSlots(idx.names, view, seed, colors);
+    const palette = new Uint8Array((slots.length + 1) * 4);
+    slots.forEach(({ color: color2, visible }, i2) => {
       const o2 = (i2 + 1) * 4;
       palette[o2] = color2.r;
       palette[o2 + 1] = color2.g;
       palette[o2 + 2] = color2.b;
-      palette[o2 + 3] = classNameVisible(vis, name2) ? 255 : 0;
-    }
+      palette[o2 + 3] = visible ? 255 : 0;
+    });
     return {
       index: idx.data,
       width: idx.width,
@@ -92793,7 +95935,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       palette,
       missHidden: (vis == null ? void 0 : vis.mode) === "show",
       indexRev: featureTable.digest,
-      rev: paletteRev(featureTable, vis, seed)
+      rev: paletteRev(featureTable, vis, seed, colors)
     };
   }
   async function completeFeatureTableIngest(sourceChannelId, job) {
@@ -92818,8 +95960,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const featureTableId = crypto.randomUUID();
     try {
       const ingested = await ingestFeatureTable(featureTableId, file, columns);
-      const persist = ingested.persist;
-      if (!persist) throw new Error("Feature table CSV ingest produced no data");
+      const persist = ingested.persist ?? new Uint8Array(await file.arrayBuffer());
       return {
         ok: true,
         ingested: {
@@ -92827,10 +95968,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           maxClassId: ingested.maxClassId,
           names: ingested.names,
           persist,
-          digest: await sha256Hex(persist),
-          columns: ingested.columns,
-          header: ingested.header,
-          handle: file.handle ?? ephemeralFileHandleFromFile(file)
+          digest: await sha256Hex(persist)
         }
       };
     } catch (e2) {
@@ -92846,26 +95984,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (existing && existing.id !== ingested.featureTableId) {
       paletteJobs.delete(existing.id);
       await dropFeatureTable(existing.id).catch(() => void 0);
-      await dropStoredSource(existing.source.handleKey);
+      await dropStoredSource(existing);
     }
     let nameColors = [];
     const reuse = existing && existing.digest === ingested.digest && existing.nameColors.length > 0;
     if (reuse) nameColors = existing.nameColors;
-    const storyId = useDocumentStore.getState().activeStoryId;
-    const handleKey = storyId ? `story:${storyId}:featureTable:${ingested.featureTableId}` : `featureTable:${ingested.featureTableId}`;
-    await putFileHandle(handleKey, ingested.handle);
+    const handleKey = featureTableBlobKey(useDocumentStore.getState().activeStoryId, ingested.featureTableId);
     await putBlob(handleKey, ingested.persist);
     const featureTable = {
       id: ingested.featureTableId,
       sourceChannelId,
       source: {
+        kind: "local",
         handleKey
       },
       maxClassId: ingested.maxClassId,
       nameColors,
-      digest: ingested.digest,
-      columns: ingested.columns,
-      header: ingested.header
+      digest: ingested.digest
     };
     const doc = useDocumentStore.getState();
     const next2 = existing ? doc.featureTables.map((c2) => c2.id === existing.id ? featureTable : c2) : [
@@ -92873,14 +96008,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       featureTable
     ];
     doc.setFeatureTables(next2);
-    const vis = {
-      ...useAppStore.getState().featureTableVisibilities
-    };
-    if (existing) delete vis[existing.id];
-    vis[ingested.featureTableId] = vis[ingested.featureTableId] ?? visibilityAllOn();
-    useAppStore.setState({
-      featureTableVisibilities: vis
-    });
     if (nameColors.length === 0) {
       scheduleClassPalette(ingested.featureTableId, ingested.names);
     }
@@ -92894,18 +96021,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!featureTable) return;
     paletteJobs.delete(featureTable.id);
     await dropFeatureTable(featureTable.id).catch(() => void 0);
-    await dropStoredSource(featureTable.source.handleKey);
+    await dropStoredSource(featureTable);
     const doc = useDocumentStore.getState();
     if (doc.featureTables.some((c2) => c2.id === featureTable.id)) {
       doc.setFeatureTables(doc.featureTables.filter((c2) => c2.id !== featureTable.id));
     }
-    const vis = {
-      ...useAppStore.getState().featureTableVisibilities
-    };
-    delete vis[featureTable.id];
-    useAppStore.setState({
-      featureTableVisibilities: vis
-    });
+    dropClassViews(sourceChannelId);
+  }
+  function dropClassViews(channelId) {
+    const doc = useDocumentStore.getState();
+    if (!doc.waypoints.some((w2) => classViewFor(w2, channelId))) return;
+    doc.setWaypoints(doc.waypoints.map((w2) => classViewFor(w2, channelId) ? {
+      ...w2,
+      classViews: (w2.classViews ?? []).filter((v2) => v2.channelId !== channelId)
+    } : w2));
   }
   function detachRemovedFeatureTables(previous2, remaining) {
     for (const featureTable of previous2) {
@@ -92916,138 +96045,147 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...remaining
     ]);
   }
-  function toggleClassVisible(featureTableId, name2) {
-    const vis = {
-      ...useAppStore.getState().featureTableVisibilities
-    };
-    vis[featureTableId] = toggleClassName(vis[featureTableId], name2);
-    useAppStore.setState({
-      featureTableVisibilities: vis
-    });
-  }
-  function setAllClassesVisible(featureTableId, visible) {
-    const vis = {
-      ...useAppStore.getState().featureTableVisibilities
-    };
-    vis[featureTableId] = visible ? visibilityAllOn() : visibilityAllOff();
-    useAppStore.setState({
-      featureTableVisibilities: vis
-    });
-  }
-  function setClassColor(featureTableId, name2, color2) {
+  function classViewTarget(waypointId, featureTableId) {
     const doc = useDocumentStore.getState();
-    doc.setFeatureTables(doc.featureTables.map((c2) => {
-      if (c2.id !== featureTableId) return c2;
-      const i2 = c2.nameColors.findIndex((o2) => o2.name === name2);
-      if (i2 >= 0) {
-        const nameColors = c2.nameColors.slice();
-        nameColors[i2] = {
-          name: name2,
-          color: color2
-        };
-        return {
-          ...c2,
-          nameColors
-        };
-      }
-      return {
-        ...c2,
-        nameColors: [
-          ...c2.nameColors,
-          {
-            name: name2,
-            color: color2
-          }
-        ]
-      };
+    const featureTable = doc.featureTables.find((c2) => c2.id === featureTableId);
+    const waypoint = doc.waypoints.find((w2) => w2.id === waypointId);
+    if (!featureTable || !waypoint) return void 0;
+    const channelId = featureTable.sourceChannelId;
+    return {
+      channelId,
+      view: classViewFor(waypoint, channelId)
+    };
+  }
+  function updateClassView(waypointId, featureTableId, update) {
+    const target = classViewTarget(waypointId, featureTableId);
+    if (!target) return;
+    const next2 = update(target.view);
+    const isDefault = next2.visibility.mode === "all" && next2.colors.length === 0;
+    useAppStore.getState().setWaypointClassView(waypointId, target.channelId, isDefault ? null : next2);
+  }
+  function toggleClassVisible(waypointId, featureTableId, name2) {
+    updateClassView(waypointId, featureTableId, (view) => ({
+      visibility: toggleClassName(view == null ? void 0 : view.visibility, name2),
+      colors: (view == null ? void 0 : view.colors) ?? []
     }));
   }
+  function setAllClassesVisible(waypointId, featureTableId, visible) {
+    updateClassView(waypointId, featureTableId, (view) => ({
+      visibility: visible ? visibilityAllOn() : visibilityAllOff(),
+      colors: (view == null ? void 0 : view.colors) ?? []
+    }));
+  }
+  function setClassColor(waypointId, featureTableId, name2, color2) {
+    updateClassView(waypointId, featureTableId, (view) => ({
+      visibility: (view == null ? void 0 : view.visibility) ?? visibilityAllOn(),
+      colors: [
+        ...((view == null ? void 0 : view.colors) ?? []).filter((c2) => c2.name !== name2),
+        {
+          name: name2,
+          color: color2
+        }
+      ]
+    }));
+  }
+  function resetClassView(waypointId, featureTableId) {
+    const target = classViewTarget(waypointId, featureTableId);
+    if (!target) return;
+    useAppStore.getState().setWaypointClassView(waypointId, target.channelId, null);
+  }
+  async function fetchTableBytes(url, documentUrl) {
+    if (!isAbsoluteUrl(url)) return void 0;
+    const base2 = new URL(window.location.href, window.location.href);
+    const res = await fetch(new URL(url, base2));
+    if (!res.ok) throw new Error(`Failed to load ${url} (${res.status})`);
+    return new Uint8Array(await res.arrayBuffer());
+  }
+  async function readTableBytes(featureTable, documentUrl) {
+    const { source: source2 } = featureTable;
+    if (source2.kind === "url") return fetchTableBytes(source2.url);
+    const key2 = featureTableHandleKey(featureTable);
+    return key2 ? getBlob(key2) : void 0;
+  }
+  let hydrateGeneration = 0;
   async function hydrateFeatureTables(featureTables, reset, opts) {
+    const generation2 = ++hydrateGeneration;
+    const superseded = () => generation2 !== hydrateGeneration;
     if (reset) {
       lutPending.clear();
       await resetFeatureTables();
+      if (superseded()) return;
     }
-    const deniedHandleKeys = [];
-    const missingHandleKeys = [];
-    const canAccess = (opts == null ? void 0 : opts.requestPermission) ? ensureFileHandlePermission : hasFileHandlePermission;
-    const ingestSource = async (featureTable, source2) => {
-      const ingested = await ingestFeatureTable(featureTable.id, source2, {
-        id: featureTable.columns.id,
-        name: featureTable.columns.name,
-        header: featureTable.header
-      });
-      noteLut();
-      if (featureTable.nameColors.length === 0) {
-        scheduleClassPalette(featureTable.id, ingested.names);
-      }
-    };
-    for (const featureTable of featureTables) {
-      if (!reset && hasIngestedFeatureTable(featureTable.id)) continue;
-      const key2 = featureTable.source.handleKey;
-      const stored = await getFileHandle(key2);
-      if (stored) {
-        const handle2 = stored;
-        if (!await canAccess(handle2)) {
-          deniedHandleKeys.push(key2);
-          continue;
-        }
-        try {
-          if (!await findFile({
-            handle: handle2
-          })) {
-            missingHandleKeys.push(key2);
-            continue;
-          }
-          await ingestSource(featureTable, await handle2.getFile());
-        } catch (e2) {
-          console.error("[featureTable] hydrate failed", featureTable.id, e2);
-          missingHandleKeys.push(key2);
-        }
+    const pending2 = featureTables.filter((featureTable) => reset || !hasIngestedFeatureTable(featureTable.id));
+    const reads = pending2.map((featureTable) => readTableBytes(featureTable).catch((e2) => {
+      console.error("[featureTable] hydrate failed", featureTable.id, e2);
+      return void 0;
+    }));
+    const missingTableIds = [];
+    for (const [i2, featureTable] of pending2.entries()) {
+      const bytes = await reads[i2];
+      if (superseded()) return;
+      if (!bytes) {
+        missingTableIds.push(featureTable.id);
         continue;
       }
-      const bytes = await getBlob(key2);
-      if (bytes) {
-        try {
-          await ingestSource(featureTable, bytes);
-        } catch (e2) {
-          console.error("[featureTable] hydrate failed", featureTable.id, e2);
-          missingHandleKeys.push(key2);
+      try {
+        const ingested = await ingestFeatureTable(featureTable.id, bytes);
+        noteLut();
+        const key2 = featureTableHandleKey(featureTable);
+        if (ingested.persist && key2) {
+          await putBlob(key2, ingested.persist);
         }
-        continue;
+        if (featureTable.nameColors.length === 0) {
+          scheduleClassPalette(featureTable.id, ingested.names);
+        }
+      } catch (e2) {
+        console.error("[featureTable] hydrate failed", featureTable.id, e2);
+        missingTableIds.push(featureTable.id);
       }
-      missingHandleKeys.push(key2);
     }
-    noteAccess({
-      deniedHandleKeys,
-      missingHandleKeys
+    if (!superseded()) noteAccess({
+      missingTableIds
     });
   }
-  async function requestFeatureTableFileAccess() {
-    await hydrateFeatureTables(useDocumentStore.getState().featureTables, false, {
-      requestPermission: true
-    });
+  function useFeatureTableIngestEpoch() {
+    return reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
   }
-  const attach = "_attach_16e0a_1";
-  const attachBtn = "_attachBtn_16e0a_9";
-  const attachLabel = "_attachLabel_16e0a_34";
-  const root$a = "_root_16e0a_42";
-  const toolbar$2 = "_toolbar_16e0a_50";
-  const field$2 = "_field_16e0a_57";
-  const textBtn = "_textBtn_16e0a_79";
-  const colPick = "_colPick_16e0a_95";
-  const scroller = "_scroller_16e0a_118";
-  const accessPrompt = "_accessPrompt_16e0a_126";
-  const loading = "_loading_16e0a_136";
-  const row = "_row_16e0a_150";
-  const swatch$1 = "_swatch_16e0a_162";
-  const swatchPending = "_swatchPending_16e0a_177";
-  const name$3 = "_name_16e0a_182";
-  const styles$p = {
+  function useFeatureTableLutEpoch() {
+    return reactExports.useSyncExternalStore(subscribeFeatureTableLut, getFeatureTableLutEpoch, getFeatureTableLutEpoch);
+  }
+  function useFeatureTableAccess() {
+    return reactExports.useSyncExternalStore(subscribeFeatureTableAccess, getFeatureTableAccess, getFeatureTableAccess);
+  }
+  function useActiveWaypoint() {
+    const activeStoryIndex = useAppStore((s2) => s2.activeStoryIndex);
+    return useDocumentStore((s2) => activeStoryIndex == null ? void 0 : s2.waypoints[activeStoryIndex]);
+  }
+  const attach = "_attach_mykh6_1";
+  const attachBtn = "_attachBtn_mykh6_9";
+  const attachLabel = "_attachLabel_mykh6_34";
+  const root$a = "_root_mykh6_42";
+  const waypointClasses = "_waypointClasses_mykh6_50";
+  const toolbar$2 = "_toolbar_mykh6_58";
+  const viewTitle = "_viewTitle_mykh6_65";
+  const readOnlyNote = "_readOnlyNote_mykh6_66";
+  const field$2 = "_field_mykh6_82";
+  const textBtn = "_textBtn_mykh6_104";
+  const colPick = "_colPick_mykh6_125";
+  const scroller = "_scroller_mykh6_148";
+  const accessPrompt = "_accessPrompt_mykh6_156";
+  const loading = "_loading_mykh6_166";
+  const row = "_row_mykh6_180";
+  const swatch$1 = "_swatch_mykh6_192";
+  const swatchPending = "_swatchPending_mykh6_207";
+  const name$3 = "_name_mykh6_212";
+  const styles$o = {
     attach,
     attachBtn,
     attachLabel,
     root: root$a,
+    waypointClasses,
     toolbar: toolbar$2,
+    viewTitle,
+    readOnlyNote,
     field: field$2,
     textBtn,
     colPick,
@@ -93062,14 +96200,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const ROW_H = 22;
   const WINDOW = 80;
   const EDGE = 10;
-  async function pickFeatureCsv(description = "Feature table CSV") {
+  async function pickFeatureCsv(description = "Feature table CSV", opts) {
     try {
       return await n$1({
         description,
-        mimeTypes: [
+        mimeTypes: (opts == null ? void 0 : opts.parquet) ? [
+          "text/csv",
+          "application/vnd.apache.parquet"
+        ] : [
           "text/csv"
         ],
-        extensions: [
+        extensions: (opts == null ? void 0 : opts.parquet) ? [
+          ".csv",
+          ".parquet"
+        ] : [
           ".csv"
         ],
         multiple: false
@@ -93116,7 +96260,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function TableLoading() {
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.loading,
+      className: styles$o.loading,
       children: [
         jsxRuntimeExports.jsx("div", {
           className: minervaTheme.spinnerSm,
@@ -93128,31 +96272,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  function useFeatureTableList(featureTableId) {
+  function useFeatureTableList(featureTableId, waypoint) {
     const [filter2, setFilter] = reactExports.useState("");
     const [raw2, setRaw] = reactExports.useState([]);
     const [total, setTotal] = reactExports.useState(0);
     const [loadedOffset, setLoadedOffset] = reactExports.useState(0);
     const [loading2, setLoading] = reactExports.useState(false);
-    const vis = useAppStore((s2) => s2.featureTableVisibilities[featureTableId]);
     const featureTable = useDocumentStore((s2) => s2.featureTables.find((c2) => c2.id === featureTableId));
+    const view = featureTable ? classViewFor(waypoint, featureTable.sourceChannelId) : void 0;
+    const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const digest = featureTable == null ? void 0 : featureTable.digest;
-    const ingestEpoch2 = reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
-    const viz = useDocumentStore((s2) => {
+    const ingestEpoch2 = useFeatureTableIngestEpoch();
+    const lutEpoch2 = useFeatureTableLutEpoch();
+    const maskColor = useDocumentStore((s2) => {
       const sourceId = featureTable == null ? void 0 : featureTable.sourceChannelId;
       if (!sourceId) return void 0;
-      for (const g2 of s2.channelGroups) {
-        const row2 = g2.channels.find((gc2) => gc2.channelId === sourceId);
-        if (row2 == null ? void 0 : row2.maskVisualization) return row2.maskVisualization;
-      }
       for (const im of s2.images) {
-        for (const ch2 of im.channels) {
-          if (ch2.id === sourceId) return ch2.maskVisualization;
-        }
+        const ch2 = im.channels.find((c2) => c2.id === sourceId);
+        if (!ch2) continue;
+        return effectiveMaskVisualizationForSource({
+          ...ch2,
+          imageId: im.id
+        }, s2.channelGroups, activeChannelGroupId).color;
       }
       return void 0;
     });
-    const fadeColors = ((viz == null ? void 0 : viz.color) ?? "white") === "white";
+    const fadeColors = (maskColor ?? "white") === "white";
     const seq = reactExports.useRef(0);
     const windowRef = reactExports.useRef({
       offset: 0,
@@ -93213,21 +96358,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const source2 = names && names.length > 0 ? names.map((name2) => ({
         name: name2
       })) : raw2;
-      const colors = new Map(featureTable.nameColors.map((o2) => [
-        o2.name,
-        o2.color
-      ]));
+      const colors = classColorsFor(featureTable, view, waypoint == null ? void 0 : waypoint.id);
+      const visible = classVisibilityTest(view == null ? void 0 : view.visibility);
       return source2.map((row2) => ({
         name: row2.name,
         color: colors.get(row2.name),
-        visible: classNameVisible(vis, row2.name)
+        visible: visible(row2.name)
       }));
     }, [
       featureTable,
       featureTableId,
-      vis,
+      view,
+      waypoint == null ? void 0 : waypoint.id,
       raw2,
-      ingestEpoch2
+      ingestEpoch2,
+      lutEpoch2
     ]);
     const usingCache = raw2.length === 0 && rows2.length > 0;
     return {
@@ -93240,14 +96385,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setFilter,
       onScroll: (scrollTop, clientHeight) => {
         const first = Math.floor(scrollTop / ROW_H);
-        const view = Math.max(1, Math.ceil(clientHeight / ROW_H));
+        const view2 = Math.max(1, Math.ceil(clientHeight / ROW_H));
         const { offset, count: count2, total: n2 } = windowRef.current;
         if (count2 === 0) return;
         const loadedEnd = offset + count2;
         const nearTop = first < offset + EDGE && offset > 0;
-        const nearBottom = first + view > loadedEnd - EDGE && loadedEnd < n2;
+        const nearBottom = first + view2 > loadedEnd - EDGE && loadedEnd < n2;
         if (!nearTop && !nearBottom) return;
-        const next2 = Math.max(0, first - Math.floor((WINDOW - view) / 2));
+        const next2 = Math.max(0, first - Math.floor((WINDOW - view2) / 2));
         if (next2 === offset) return;
         fetchPage(next2, filter2);
       }
@@ -93258,7 +96403,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         label2,
         jsxRuntimeExports.jsx("select", {
-          className: styles$p.field,
+          className: styles$o.field,
           value,
           "aria-label": `${label2} column`,
           onChange: (e2) => onChange(e2.target.value),
@@ -93270,7 +96415,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.colPick,
+      className: styles$o.colPick,
       children: [
         props.id != null && props.onId ? select("ID", props.id, props.onId) : null,
         select("Name", props.name, props.onName)
@@ -93294,11 +96439,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function FeatureTableGlyph(props) {
     const { wait: wait2, folder, title: title7, ariaLabel, onClick } = props;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.attach,
+      className: styles$o.attach,
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$p.attachBtn}${wait2 ? ` ${minervaTheme.busyOverlay}` : ""}`,
+          className: `${minervaTheme.focusRing} ${styles$o.attachBtn}${wait2 ? ` ${minervaTheme.busyOverlay}` : ""}`,
           disabled: wait2 || onClick == null,
           title: title7,
           "aria-label": ariaLabel,
@@ -93311,7 +96456,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }) : jsxRuntimeExports.jsx(TableIcon, {})
         }),
         jsxRuntimeExports.jsx("span", {
-          className: styles$p.attachLabel,
+          className: styles$o.attachLabel,
           children: "Table"
         })
       ]
@@ -93319,16 +96464,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function FeatureTableMaskAction(props) {
     const { featureTableId } = props;
-    reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
-    const access = reactExports.useSyncExternalStore(subscribeFeatureTableAccess, getFeatureTableAccess, getFeatureTableAccess);
-    const handleKey = useDocumentStore((s2) => {
-      var _a2;
-      return (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.source.handleKey;
-    });
+    useFeatureTableIngestEpoch();
+    const access = useFeatureTableAccess();
     if (hasIngestedFeatureTable(featureTableId)) return null;
-    if (handleKey != null && (access.deniedHandleKeys.includes(handleKey) || access.missingHandleKeys.includes(handleKey))) {
-      return null;
-    }
+    if (access.missingTableIds.includes(featureTableId)) return null;
     return jsxRuntimeExports.jsx(FeatureTableGlyph, {
       wait: true,
       folder: true,
@@ -93403,49 +96542,60 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  function FeatureTableListBody(props) {
-    const { featureTableId } = props;
-    const list2 = useFeatureTableList(featureTableId);
-    const handleKey = useDocumentStore((s2) => {
-      var _a2;
-      return (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.source.handleKey;
-    });
-    const sourceChannelId = useDocumentStore((s2) => {
-      var _a2;
-      return (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.sourceChannelId;
-    });
-    const access = reactExports.useSyncExternalStore(subscribeFeatureTableAccess, getFeatureTableAccess, getFeatureTableAccess);
-    const needsPermission = handleKey != null && access.deniedHandleKeys.includes(handleKey);
-    const needsReselect = handleKey != null && access.missingHandleKeys.includes(handleKey);
+  function ClassViewList(props) {
+    const { featureTableId, waypoint, tools, overlay } = props;
+    const list2 = useFeatureTableList(featureTableId, waypoint);
+    const previewOwner = reactExports.useId();
     const scrollerRef = reactExports.useRef(null);
     const [picker, setPicker] = reactExports.useState(null);
-    const showBusy = list2.loading && list2.rows.length === 0;
-    const fadeColors = list2.fadeColors;
-    const showAccess = needsPermission || needsReselect;
-    const restoreFile = async () => {
-      if (needsReselect) {
-        if (!sourceChannelId) return;
-        const file = await pickFeatureCsv();
-        if (!file) return;
-        await completeFeatureTableIngest(sourceChannelId, ingestFeatureCsvFile(file));
-        return;
+    const pickerRef = reactExports.useRef(picker);
+    pickerRef.current = picker;
+    const waypointId = waypoint == null ? void 0 : waypoint.id;
+    const waypointIdRef = reactExports.useRef(waypointId);
+    const commitRef = reactExports.useRef(() => {
+    });
+    commitRef.current = () => {
+      const current = pickerRef.current;
+      if (!current) return;
+      pickerRef.current = null;
+      const ownedId = waypointIdRef.current;
+      if (current.pending && ownedId) {
+        setClassColor(ownedId, featureTableId, current.name, current.pending);
       }
-      await requestFeatureTableFileAccess();
+      clearClassColorPreview(previewOwner);
     };
     reactExports.useEffect(() => {
-      if (fadeColors) setPicker(null);
+      if (waypointIdRef.current === waypointId) return;
+      commitRef.current();
+      waypointIdRef.current = waypointId;
+      setPicker(null);
     }, [
-      fadeColors
+      waypointId
     ]);
-    if (!hasIngestedFeatureTable(featureTableId) && !showAccess) return null;
-    return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.root,
+    const showBusy = list2.loading && list2.rows.length === 0;
+    const fadeColors = list2.fadeColors;
+    const readOnly2 = props.readOnly === true || waypointId == null;
+    const toggle2 = (name2) => {
+      if (waypointId && !readOnly2) {
+        toggleClassVisible(waypointId, featureTableId, name2);
+      }
+    };
+    reactExports.useEffect(() => () => commitRef.current(), []);
+    reactExports.useEffect(() => {
+      if (!fadeColors && !readOnly2) return;
+      commitRef.current();
+      setPicker(null);
+    }, [
+      fadeColors,
+      readOnly2
+    ]);
+    return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$p.toolbar,
+          className: styles$o.toolbar,
           children: [
             jsxRuntimeExports.jsx("input", {
-              className: styles$p.field,
+              className: styles$o.field,
               type: "text",
               value: list2.filter,
               placeholder: "Filter classes\u2026",
@@ -93458,56 +96608,46 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
-              onClick: () => setAllClassesVisible(featureTableId, true),
+              className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+              disabled: readOnly2,
+              onClick: () => {
+                if (waypointId && !readOnly2) setAllClassesVisible(waypointId, featureTableId, true);
+              },
               children: "Show all"
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
-              onClick: () => setAllClassesVisible(featureTableId, false),
+              className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+              disabled: readOnly2,
+              onClick: () => {
+                if (waypointId && !readOnly2) setAllClassesVisible(waypointId, featureTableId, false);
+              },
               children: "Hide all"
             }),
-            jsxRuntimeExports.jsx(PanelIconButton, {
-              variant: "row",
-              title: "Delete table",
-              "aria-label": "Delete table",
-              onClick: () => {
-                if (sourceChannelId) void detachFeatureTable(sourceChannelId);
-              },
-              children: jsxRuntimeExports.jsx(TrashIcon, {
-                title: "Delete table",
-                size: 14
-              })
-            })
+            tools
           ]
         }),
         jsxRuntimeExports.jsxs("div", {
           ref: scrollerRef,
-          className: `${styles$p.scroller} ${panel$1.thinScrollbar}`,
+          className: `${styles$o.scroller} ${panel$1.thinScrollbar}`,
           onScroll: () => {
             const el2 = scrollerRef.current;
             if (!el2) return;
             list2.onScroll(el2.scrollTop, el2.clientHeight);
           },
           children: [
-            showAccess ? jsxRuntimeExports.jsx("div", {
-              className: styles$p.accessPrompt,
-              children: jsxRuntimeExports.jsx("button", {
-                type: "button",
-                className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
-                onClick: () => void restoreFile(),
-                children: needsReselect ? "Choose file again" : "Allow file access"
-              })
+            overlay ? jsxRuntimeExports.jsx("div", {
+              className: styles$o.accessPrompt,
+              children: overlay
             }) : null,
-            showBusy && !showAccess ? jsxRuntimeExports.jsx(TableLoading, {}) : null,
+            showBusy && !overlay ? jsxRuntimeExports.jsx(TableLoading, {}) : null,
             jsxRuntimeExports.jsx("div", {
               style: {
-                height: Math.max(list2.total, showBusy || showAccess ? 2 : 1) * ROW_H,
+                height: Math.max(list2.total, showBusy || overlay ? 2 : 1) * ROW_H,
                 position: "relative"
               },
               children: list2.rows.map((row2, i2) => jsxRuntimeExports.jsxs("div", {
-                className: styles$p.row,
+                className: styles$o.row,
                 style: {
                   top: (list2.loadedOffset + i2) * ROW_H
                 },
@@ -93516,16 +96656,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     visible: row2.visible,
                     title: row2.visible ? `Hide ${row2.name}` : `Show ${row2.name}`,
                     ariaLabel: `Toggle visibility for ${row2.name}`,
-                    onClick: () => toggleClassVisible(featureTableId, row2.name)
+                    disabled: readOnly2,
+                    onClick: () => toggle2(row2.name)
                   }),
                   row2.color ? jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$p.swatch}`,
+                    className: `${minervaTheme.focusRing} ${styles$o.swatch}`,
                     style: {
                       backgroundColor: `#${rgbToHex$1(row2.color)}`
                     },
                     "aria-label": `Color for ${row2.name}`,
-                    disabled: fadeColors,
+                    disabled: fadeColors || readOnly2,
                     onClick: (e2) => {
                       const color2 = row2.color;
                       if (!color2) return;
@@ -93538,16 +96679,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     }
                   }) : jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${styles$p.swatch} ${styles$p.swatchPending} ${minervaTheme.busyOverlay}`,
+                    className: `${styles$o.swatch} ${styles$o.swatchPending} ${minervaTheme.busyOverlay}`,
                     "aria-label": `Assigning color for ${row2.name}`,
                     disabled: true
                   }),
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$p.name}`,
+                    className: `${minervaTheme.focusRing} ${styles$o.name}`,
                     title: row2.visible ? `Hide ${row2.name}` : `Show ${row2.name}`,
                     "aria-pressed": row2.visible,
-                    onClick: () => toggleClassVisible(featureTableId, row2.name),
+                    disabled: readOnly2,
+                    onClick: () => toggle2(row2.name),
                     children: row2.name.trim() ? row2.name : "Unnamed"
                   })
                 ]
@@ -93561,10 +96703,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             left: picker.left
           },
           onClose: () => {
-            const pending2 = picker.pending;
-            const name2 = picker.name;
+            commitRef.current();
             setPicker(null);
-            if (pending2) setClassColor(featureTableId, name2, pending2);
           },
           color: `#${picker.hex}`,
           showAlpha: false,
@@ -93578,18 +96718,149 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               g2,
               b2
             ].some((n2) => Number.isNaN(n2))) return;
+            const color2 = {
+              r: r2,
+              g: g2,
+              b: b2
+            };
+            if (waypointId && !readOnly2) {
+              previewClassColor(previewOwner, waypointId, featureTableId, picker.name, color2);
+            }
             setPicker((p2) => p2 ? {
               ...p2,
               hex: raw2,
-              pending: {
-                r: r2,
-                g: g2,
-                b: b2
-              }
+              pending: color2
             } : p2);
           }
         }) : null
       ]
+    });
+  }
+  function ClassViewReset(props) {
+    const { featureTableId, waypoint } = props;
+    const hasView = useDocumentStore((s2) => {
+      const featureTable = s2.featureTables.find((c2) => c2.id === featureTableId);
+      return featureTable != null && classViewFor(waypoint, featureTable.sourceChannelId) != null;
+    });
+    return jsxRuntimeExports.jsx("button", {
+      type: "button",
+      className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+      disabled: !hasView,
+      onClick: () => resetClassView(waypoint.id, featureTableId),
+      children: "Reset"
+    });
+  }
+  function FeatureTableListBody(props) {
+    const { featureTableId } = props;
+    const waypoint = useActiveWaypoint();
+    const sourceChannelId = useDocumentStore((s2) => {
+      var _a2;
+      return (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.sourceChannelId;
+    });
+    const access = useFeatureTableAccess();
+    useFeatureTableIngestEpoch();
+    const waypointCount = useDocumentStore((s2) => s2.waypoints.length);
+    const needsReselect = access.missingTableIds.includes(featureTableId);
+    const restoreFile = async () => {
+      if (!sourceChannelId) return;
+      const file = await pickFeatureCsv("Feature table CSV or Parquet", {
+        parquet: true
+      });
+      if (!file) return;
+      await completeFeatureTableIngest(sourceChannelId, ingestFeatureCsvFile(file));
+    };
+    if (!hasIngestedFeatureTable(featureTableId) && !needsReselect) return null;
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$o.root,
+      children: [
+        jsxRuntimeExports.jsx("div", {
+          className: styles$o.toolbar,
+          children: waypoint ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+            children: [
+              jsxRuntimeExports.jsx("span", {
+                className: styles$o.viewTitle,
+                title: waypoint.title,
+                children: waypoint.title.trim() || "Untitled waypoint"
+              }),
+              jsxRuntimeExports.jsx(ClassViewReset, {
+                featureTableId,
+                waypoint
+              })
+            ]
+          }) : jsxRuntimeExports.jsx("span", {
+            className: styles$o.readOnlyNote,
+            children: waypointCount === 0 ? "Add a waypoint to customize classes" : "Select a waypoint to customize classes"
+          })
+        }),
+        jsxRuntimeExports.jsx(ClassViewList, {
+          featureTableId,
+          waypoint,
+          tools: jsxRuntimeExports.jsx(PanelIconButton, {
+            variant: "row",
+            title: "Delete table",
+            "aria-label": "Delete table",
+            onClick: () => {
+              if (sourceChannelId) void detachFeatureTable(sourceChannelId);
+            },
+            children: jsxRuntimeExports.jsx(TrashIcon, {
+              title: "Delete table",
+              size: 14
+            })
+          }),
+          overlay: needsReselect ? jsxRuntimeExports.jsx("button", {
+            type: "button",
+            className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+            onClick: () => void restoreFile(),
+            children: "Choose file again"
+          }) : null
+        })
+      ]
+    });
+  }
+  function WaypointClassViews(props) {
+    const { waypoint, featureTables, readOnly: readOnly2 } = props;
+    const images = useDocumentStore((s2) => s2.images);
+    useFeatureTableIngestEpoch();
+    const maskNames = reactExports.useMemo(() => new Map(flattenImageChannelsInDocumentOrder(images).map((sc2) => [
+      sc2.id,
+      sc2.name
+    ])), [
+      images
+    ]);
+    if (featureTables.length === 0) return null;
+    return jsxRuntimeExports.jsx("div", {
+      className: styles$o.waypointClasses,
+      children: featureTables.map((featureTable) => {
+        const label2 = maskNames.get(featureTable.sourceChannelId) ?? "Mask";
+        const loaded = hasIngestedFeatureTable(featureTable.id);
+        return jsxRuntimeExports.jsxs("div", {
+          className: styles$o.root,
+          children: [
+            jsxRuntimeExports.jsxs("div", {
+              className: styles$o.toolbar,
+              children: [
+                jsxRuntimeExports.jsx("span", {
+                  className: styles$o.viewTitle,
+                  title: label2,
+                  children: label2
+                }),
+                loaded && !readOnly2 ? jsxRuntimeExports.jsx(ClassViewReset, {
+                  featureTableId: featureTable.id,
+                  waypoint
+                }) : null
+              ]
+            }),
+            loaded ? jsxRuntimeExports.jsx(ClassViewList, {
+              featureTableId: featureTable.id,
+              waypoint,
+              readOnly: readOnly2
+            }) : jsxRuntimeExports.jsx("span", {
+              className: styles$o.readOnlyNote,
+              children: "Table not loaded. Choose the file again in the channel panel."
+            })
+          ]
+        }, featureTable.id);
+      })
     });
   }
   const AuthorChannelNavContext = reactExports.createContext(null);
@@ -94990,7 +98261,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       channelGroups,
       groupRowVisibilities,
       stackVisibilities,
-      visible: !visible
+      visible: !visible,
+      groupId: chip2.groupId ?? void 0
     }) : null;
     const nextGroupVis = gc2 ? withGroupRowVisible(groupRowVisibilities, channelGroups, gc2.id, !visible) : null;
     const nextStackVis = {
@@ -95220,7 +98492,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const chipHint = "_chipHint_j7rhr_121";
   const chipDim = "_chipDim_j7rhr_160";
   const editor = "_editor_j7rhr_164";
-  const styles$o = {
+  const styles$n = {
     root: root$9,
     groupCard,
     groupHeader,
@@ -95258,12 +98530,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showEditor = !chip2.key.endsWith(":rgb");
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$o.chipCell,
-        chip2.visible && chip2.hex && shown ? styles$o.chipOn : null,
-        chip2.hex && (!chip2.visible || !shown) ? styles$o.chipOutlined : null,
-        chip2.hex ? null : styles$o.chipUnassigned,
+        styles$n.chipCell,
+        chip2.visible && chip2.hex && shown ? styles$n.chipOn : null,
+        chip2.hex && (!chip2.visible || !shown) ? styles$n.chipOutlined : null,
+        chip2.hex ? null : styles$n.chipUnassigned,
         pending2 ? minervaTheme.busyOverlay : null,
-        dim ? styles$o.chipDim : null
+        dim ? styles$n.chipDim : null
       ].filter(Boolean).join(" "),
       style: chip2.hex ? {
         "--ch": `#${chip2.hex}`
@@ -95273,10 +98545,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         jsxRuntimeExports.jsx(CursorHint, {
           enabled: showBlocked,
           label: VIEWER_INTENSITY_LIMIT_HINT,
-          className: styles$o.chipHint,
+          className: styles$n.chipHint,
           children: jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$o.chip}`,
+            className: `${minervaTheme.focusRing} ${styles$n.chip}`,
             title: pending2 ? pendingLabel2 : void 0,
             "aria-label": pending2 ? pendingLabel2 : showBlocked ? VIEWER_INTENSITY_LIMIT_HINT : chipAriaLabel(chip2),
             "aria-pressed": chip2.visible,
@@ -95290,7 +98562,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         showEditor ? jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$o.chipMenu}`,
+          className: `${minervaTheme.focusRing} ${styles$n.chipMenu}`,
           title: `Edit ${chip2.name}`,
           "aria-label": `Edit ${chip2.name}`,
           "aria-expanded": open,
@@ -95349,7 +98621,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onDismissEditor
     ]);
     return jsxRuntimeExports.jsx("div", {
-      className: styles$o.chipWrap,
+      className: styles$n.chipWrap,
       children: chips.map((chip2, i2) => jsxRuntimeExports.jsxs(reactExports.Fragment, {
         children: [
           jsxRuntimeExports.jsx(ChipButton, {
@@ -95365,7 +98637,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           i2 === rowEnd && openChip ? jsxRuntimeExports.jsx("div", {
             ref: editorRef,
-            className: styles$o.editor,
+            className: styles$n.editor,
             children: jsxRuntimeExports.jsx(ChannelEditor, {
               chip: openChip
             })
@@ -95378,10 +98650,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const visLabel = props.allVisible ? `Hide every channel in ${props.name}` : `Show every channel in ${props.name}`;
     const filtering = props.onNameFilterChange != null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$o.groupCard,
+      className: styles$n.groupCard,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$o.groupHeader,
+          className: styles$n.groupHeader,
           children: [
             props.onToggleVisibility ? jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible: Boolean(props.allVisible),
@@ -95391,11 +98663,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: props.onToggleVisibility
             }) : null,
             jsxRuntimeExports.jsx("div", {
-              className: styles$o.groupLabel,
+              className: styles$n.groupLabel,
               children: props.name
             }),
             props.onNameFilterChange ? jsxRuntimeExports.jsx("input", {
-              className: styles$o.channelFilter,
+              className: styles$n.channelFilter,
               type: "text",
               value: props.nameFilter ?? "",
               placeholder: "Search...",
@@ -95412,7 +98684,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         filtering && props.chips.length === 0 ? jsxRuntimeExports.jsx("div", {
-          className: styles$o.filterEmpty,
+          className: styles$n.filterEmpty,
           children: "No matching channels"
         }) : jsxRuntimeExports.jsx(ChipGrid, {
           chips: props.chips,
@@ -95497,18 +98769,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       groupRowVisibilities: filledGroupVis
     };
     const shownIds = vivShownIntensitySourceIds(capVis);
+    for (const chip2 of model.allChannels) {
+      if (maskIds.has(chip2.sourceId) && chip2.visible) shownIds.add(chip2.sourceId);
+    }
     const atCap = vivIntensityLayerCount(image2.id, capVis) >= MAX_VIV_INTENSITY_CHANNELS;
     const fits = (next2) => !vivIntensityCapExceeded(image2.id, {
       ...capVis,
       ...next2
     });
-    const applyRgbUnit = (visible) => {
+    const applyRgbUnit = (visible, groupId) => {
       const next2 = visibilitiesForRgbUnit({
         rgbChannels,
         channelGroups,
         groupRowVisibilities: filledGroupVis,
         stackVisibilities: filledStackVis,
-        visible
+        visible,
+        groupId
       });
       if (visible && !fits({
         stackVisibilities: next2.channelVisibilities,
@@ -95523,7 +98799,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       var _a3;
       if (!chip2.groupRowId) return;
       if (rgbDisplay) {
-        applyRgbUnit(!chip2.visible);
+        applyRgbUnit(!chip2.visible, chip2.groupId ?? void 0);
         return;
       }
       const vis = filledGroupVis;
@@ -95602,7 +98878,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     if (image2.channels.length === 0) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$o.root,
+      className: styles$n.root,
       children: [
         model.groups.map((group2) => {
           const rgbUnit = rgbDisplay && group2.chips[0] ? [
@@ -95631,18 +98907,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             onDismissEditor: dismissEditor,
             onToggleVisibility: () => {
               if (rgbDisplay) {
-                applyRgbUnit(!group2.allVisible);
+                applyRgbUnit(!group2.allVisible, group2.id);
                 return;
               }
-              if (!docGroup || docGroup.channels.length === 0) return;
-              const allOn = docGroup.channels.every((gc2) => isGroupRowVisible(filledGroupVis, gc2.id));
               const next2 = {
                 ...filledGroupVis
               };
-              for (const gc2 of docGroup.channels) next2[gc2.id] = !allOn;
-              if (!allOn && !fits({
+              for (const chip2 of group2.chips) {
+                if (chip2.groupRowId) next2[chip2.groupRowId] = !group2.allVisible;
+              }
+              if (!group2.allVisible && !fits({
                 groupRowVisibilities: next2
-              })) return;
+              })) {
+                return;
+              }
               setChannelGroupRowVisibilities(next2);
             }
           }, group2.id);
@@ -157575,7 +160853,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, lengths) {
+        value: function writeBytes(stream, value, lengths) {
           var writeOptions = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : {
             allowInvalidVRLength: false
           };
@@ -157695,7 +160973,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           var written = _get(_getPrototypeOf(AsciiStringRepresentation2.prototype), "write", this).call(this, stream, "AsciiString", value);
           return _get(_getPrototypeOf(AsciiStringRepresentation2.prototype), "writeBytes", this).call(this, stream, value, written, writeOptions);
         }
@@ -157720,7 +160998,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           var written = _get(_getPrototypeOf(EncodedStringRepresentation2.prototype), "write", this).call(this, stream, "UTF8String", value);
           return _get(_getPrototypeOf(EncodedStringRepresentation2.prototype), "writeBytes", this).call(this, stream, value, written, writeOptions);
         }
@@ -157742,7 +161020,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     _createClass(BinaryRepresentation2, [
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, syntax, isEncapsulated) {
+        value: function writeBytes(stream, value, syntax, isEncapsulated) {
           var writeOptions = arguments.length > 4 && arguments[4] !== void 0 ? arguments[4] : {};
           var i2;
           var binaryStream;
@@ -158012,7 +161290,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(AttributeTag2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(AttributeTag2.prototype), "write", this).call(this, stream, "TwoUint16s", value), writeOptions);
         }
       }
@@ -158117,7 +161395,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           var _this8 = this;
           var val = Array.isArray(value) ? value.map(function(ds) {
             return _this8.convertToString(ds);
@@ -158186,7 +161464,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(FloatingPointSingle2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(FloatingPointSingle2.prototype), "write", this).call(this, stream, "Float", value), writeOptions);
         }
       }
@@ -158222,7 +161500,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(FloatingPointDouble2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(FloatingPointDouble2.prototype), "write", this).call(this, stream, "Double", value), writeOptions);
         }
       }
@@ -158264,7 +161542,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           var _this13 = this;
           var val = Array.isArray(value) ? value.map(function(is2) {
             return _this13.convertToString(is2);
@@ -158420,7 +161698,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(PersonName2.prototype), "writeBytes", this).call(this, stream, dicomJson.pnObjectToString(value), writeOptions);
         }
       }
@@ -158489,7 +161767,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(SignedLong2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(SignedLong2.prototype), "write", this).call(this, stream, "Int32", value), writeOptions);
         }
       }
@@ -158586,7 +161864,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, syntax, writeOptions) {
+        value: function writeBytes(stream, value, syntax, writeOptions) {
           var written = 0;
           if (value) {
             for (var i2 = 0; i2 < value.length; i2++) {
@@ -158637,7 +161915,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(SignedShort2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(SignedShort2.prototype), "write", this).call(this, stream, "Int16", value), writeOptions);
         }
       }
@@ -158791,7 +162069,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(UnsignedShort2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(UnsignedShort2.prototype), "write", this).call(this, stream, "Uint16", value), writeOptions);
         }
       }
@@ -158821,7 +162099,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(UnsignedLong2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(UnsignedLong2.prototype), "write", this).call(this, stream, "Uint32", value), writeOptions);
         }
       }
@@ -166236,18 +169514,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return brightfieldTallyMatches(rawTally);
   }
-  const TIFF_COMPRESSION_JPEG = 7;
-  function isTiffJpegCompression(compression) {
-    const code2 = Array.isArray(compression) ? compression[0] : compression;
-    return code2 === TIFF_COMPRESSION_JPEG;
-  }
-  async function omeTiffBaseIsJpeg(source2, signal) {
-    var _a2;
-    const tiff = await openOmeTiff(source2, signal);
-    const image2 = await tiff.getImage(0);
-    if (signal == null ? void 0 : signal.aborted) return false;
-    return isTiffJpegCompression((_a2 = image2.fileDirectory) == null ? void 0 : _a2.Compression);
-  }
   async function detectOmeTiffRgbLayout(source2, signal) {
     const xml2 = await getOmeTiffImageDescriptionOmeXml(source2, {}, signal);
     if (signal == null ? void 0 : signal.aborted) return null;
@@ -166260,103 +169526,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     if (await isOmeTiff(url, signal)) return "ome-tiff";
     return looksDicom ? "dicomweb" : "ome-tiff";
-  }
-  const MARKER_ALIASES = /* @__PURE__ */ new Set([
-    "markername",
-    "marker",
-    "name",
-    "channelname",
-    "target"
-  ]);
-  const META_ALIASES = /* @__PURE__ */ new Set([
-    "cyclenumber",
-    "cycle",
-    "channelnumber",
-    "channel",
-    "channelindex",
-    "index",
-    "excitationwavelength",
-    "emissionwavelength",
-    "excitation",
-    "emission",
-    "filter"
-  ]);
-  function normHeader(header) {
-    return header.trim().toLowerCase().replace(/[\s_-]+/g, "");
-  }
-  function csvRows(text2) {
-    let body2 = text2;
-    if (body2.charCodeAt(0) === 65279) body2 = body2.slice(1);
-    return body2.split(/\r?\n/).map((line) => parseCsvLine(line)).filter((cells2) => cells2.some((cell) => cell.length > 0));
-  }
-  function guessMarkerName(headers) {
-    if (headers.length === 0 || /^\d+$/.test(headers[0] ?? "")) return null;
-    const nameHit = headers.find((h2) => MARKER_ALIASES.has(normHeader(h2)));
-    if (nameHit) return nameHit;
-    return headers.find((h2) => !META_ALIASES.has(normHeader(h2))) ?? null;
-  }
-  async function peekMarkerCsv(file) {
-    const bytes = new Uint8Array(await file.slice(0, 8192).arrayBuffer());
-    const text2 = new TextDecoder().decode(bytes);
-    const headers = csvRows(text2)[0];
-    if (!headers) return null;
-    const name2 = guessMarkerName(headers);
-    if (!name2) return null;
-    return {
-      headers,
-      name: name2
-    };
-  }
-  function markerNamesByChannelIndex(text2, columns) {
-    const rows2 = csvRows(text2);
-    if (rows2.length === 0) return {
-      ok: false,
-      error: "Markers CSV is empty."
-    };
-    const header = rows2[0] ?? [];
-    const selected = (columns == null ? void 0 : columns.name) || guessMarkerName(header);
-    let data2 = rows2;
-    let nameCol = 0;
-    if (selected && header.includes(selected)) {
-      nameCol = header.indexOf(selected);
-      data2 = rows2.slice(1);
-    } else if (/^\d+$/.test(header[0] ?? "") && header.length >= 2) {
-      nameCol = header.length - 1;
-    }
-    const names = /* @__PURE__ */ new Map();
-    for (const row2 of data2) {
-      const name2 = (row2[nameCol] ?? "").trim();
-      if (!name2) continue;
-      names.set(names.size, name2);
-    }
-    if (names.size === 0) {
-      return {
-        ok: false,
-        error: "Markers CSV has no channel names."
-      };
-    }
-    return {
-      ok: true,
-      names
-    };
-  }
-  function renameChannelsFromMarkers(channels2, names) {
-    let applied = 0;
-    const next2 = channels2.map((channel) => {
-      if (!isImageChannel(channel) || channel.index == null) return channel;
-      const name2 = names.get(channel.index);
-      if (!name2) return channel;
-      applied += 1;
-      if (name2 === channel.name) return channel;
-      return {
-        ...channel,
-        name: name2
-      };
-    });
-    return {
-      channels: next2,
-      applied
-    };
   }
   const JPEG_OME_TIFF_IMAGE_SOURCE = "jpeg-ome-tiff";
   const JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE = "jpeg-ome-tiff-contrast";
@@ -166395,11 +169564,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!Number.isFinite(byte) || byte <= 0) return 0;
     return Math.min(65535, Math.max(0, Math.round((byte / 256) ** 3 * 65536)));
   }
+  const CUBE_ROOT_U8_TO_U16 = Uint16Array.from({
+    length: 256
+  }, (_2, b2) => decodeCubeRootU8ToU16(b2));
+  const CONTRAST_U8_TO_U16 = Uint16Array.from({
+    length: 256
+  }, (_2, b2) => b2 << 8);
+  function u8ToU16Lut(transfer) {
+    return transfer === "cube-root" ? CUBE_ROOT_U8_TO_U16 : CONTRAST_U8_TO_U16;
+  }
   function exportTransferForImage(image2, storyTransfer) {
     if (isRgbDisplayImage(image2)) return "contrast";
     return storyTransfer;
   }
   function hydrateJpegTransferForImage(image2, storyTransfer) {
+    var _a2;
+    if ((_a2 = image2.channels) == null ? void 0 : _a2.some((c2) => c2.samples === 3)) return null;
     if (resolveImageContentRole({
       contentRole: image2.contentRole,
       channels: [
@@ -166409,6 +169589,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return null;
     }
     return exportTransferForImage(image2, storyTransfer);
+  }
+  function expandThroughLut(data2, lut) {
+    const out = new Uint16Array(data2.length);
+    for (let i2 = 0; i2 < data2.length; i2++) {
+      out[i2] = lut[data2[i2] & 255];
+    }
+    return out;
   }
   const JPEG_PYRAMID_TILE_SIZE = 1024;
   const JPEG_BAKED_CONTRAST_LIMIT = [
@@ -166454,6 +169641,44 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       length: n2
     }, (_2, i2) => i2);
   }
+  function WorkerWrapper$2(options) {
+    return new Worker("" + new URL("decoder.worker-DskuWaKT.js", import.meta.url).href, {
+      type: "module",
+      name: options == null ? void 0 : options.name
+    });
+  }
+  const decoderTags = /* @__PURE__ */ new WeakMap();
+  function withoutBlockTables(fileDirectory) {
+    let tags = decoderTags.get(fileDirectory);
+    if (!tags) {
+      tags = {
+        ...fileDirectory,
+        TileOffsets: fileDirectory.TileOffsets && [],
+        TileByteCounts: fileDirectory.TileByteCounts && [],
+        StripOffsets: fileDirectory.StripOffsets && [],
+        StripByteCounts: fileDirectory.StripByteCounts && [],
+        ImageDescription: void 0
+      };
+      decoderTags.set(fileDirectory, tags);
+    }
+    return tags;
+  }
+  class OmeDecodePool extends Pool {
+    decode(fileDirectory, buffer2) {
+      return super.decode(withoutBlockTables(fileDirectory), buffer2);
+    }
+    decodeWidened(fileDirectory, buffer2, lut) {
+      return super.decode({
+        ...withoutBlockTables(fileDirectory),
+        MinervaWidenLut: lut
+      }, buffer2);
+    }
+  }
+  let sharedPool = null;
+  function sharedOmeDecodePool() {
+    sharedPool ?? (sharedPool = new OmeDecodePool(void 0, () => new WorkerWrapper$2()));
+    return sharedPool;
+  }
   class JpegImage {
     constructor(opts) {
       __publicField(this, "level");
@@ -166467,6 +169692,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       __publicField(this, "imageWidth");
       __publicField(this, "fetchTile");
       __publicField(this, "transfer");
+      __publicField(this, "tileDirectory");
       const tileSize = opts.tileSize ?? JPEG_PYRAMID_TILE_SIZE;
       this.level = opts.level;
       this.c = opts.c;
@@ -166478,6 +169704,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       this.imageHeight = opts.imageHeight;
       this.imageWidth = opts.imageWidth;
       this.transfer = opts.transfer ?? "contrast";
+      this.tileDirectory = {
+        Compression: 7,
+        SamplesPerPixel: 1,
+        TileWidth: tileSize,
+        TileLength: tileSize
+      };
       this.fetchTile = opts.fetchTile ?? (async (folder, filename2) => {
         const url = `${this.imagePath}/${folder}/${filename2}`;
         const response = await fetch(url);
@@ -166490,35 +169722,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     async getTileOrStrip(x2, y2, sample) {
       const fname = `${this.level}_${x2}_${y2}.jpg`;
       const blob = await this.fetchTile(this.folder, fname);
-      const decoder = new ImageDecoder({
-        data: await blob.arrayBuffer(),
-        type: "image/jpeg"
-      });
-      const { image: image2 } = await decoder.decode();
-      const { displayWidth, displayHeight } = image2;
-      const tileSize = this.tileSize;
-      const copyOptions = {
-        format: "BGRX",
-        layout: [
-          {
-            offset: 0,
-            stride: displayWidth * 4
-          }
-        ]
-      };
-      const in_data = new Uint8Array(image2.allocationSize(copyOptions));
-      const data2 = new Uint16Array(tileSize ** 2);
-      await image2.copyTo(in_data, copyOptions);
-      const rowWidth = Math.min(displayWidth, tileSize);
-      const rowCount = Math.min(displayHeight, tileSize);
-      for (let row2 = 0; row2 < rowCount; row2 += 1) {
-        for (let col = 0; col < rowWidth; col += 1) {
-          const byte = in_data[(row2 * displayWidth + col) * 4];
-          data2[row2 * tileSize + col] = this.transfer === "cube-root" ? decodeCubeRootU8ToU16(byte) : byte << 8;
-        }
-      }
-      image2.close();
-      decoder.close();
+      const bytes = new Uint8Array(await sharedOmeDecodePool().decode(this.tileDirectory, await blob.arrayBuffer()));
+      const data2 = expandThroughLut(bytes, u8ToU16Lut(this.transfer));
       return {
         x: x2,
         y: y2,
@@ -166777,6 +169982,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function jpegSourceNeedsLocalRoot(url) {
     return url === "." || url === "./" || url === "" || !/^https?:\/\//i.test(url);
   }
+  function isRelativeOmeTiffUrl(url) {
+    const u2 = url.trim();
+    if (!u2 || isAbsoluteUrl(u2)) return false;
+    return /\.tiff?$/i.test(u2);
+  }
   function channelFoldersEqual(a2, b2) {
     if (a2 === b2) return true;
     if (!a2 || !b2) return false;
@@ -166968,497 +170178,102 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return entries;
   }
-  function imageHandleStorageKey(storyId, imageId) {
-    return storyId ? `story:${storyId}:image:${imageId}` : `image:${imageId}`;
+  const MARKER_ALIASES = /* @__PURE__ */ new Set([
+    "markername",
+    "marker",
+    "name",
+    "channelname",
+    "target"
+  ]);
+  const META_ALIASES = /* @__PURE__ */ new Set([
+    "cyclenumber",
+    "cycle",
+    "channelnumber",
+    "channel",
+    "channelindex",
+    "index",
+    "excitationwavelength",
+    "emissionwavelength",
+    "excitation",
+    "emission",
+    "filter"
+  ]);
+  function normHeader(header) {
+    return header.trim().toLowerCase().replace(/[\s_-]+/g, "");
   }
-  async function persistLocalImageHandle(args) {
-    const { storyId, imageId, handle: handle2, images } = args;
-    const key2 = imageHandleStorageKey(storyId, imageId);
-    await putFileHandle(key2, handle2);
-    const next2 = setImageSource(images, imageId, {
-      kind: "local",
-      handleKey: key2
-    });
-    return next2;
+  function csvRows(text2) {
+    let body2 = text2;
+    if (body2.charCodeAt(0) === 65279) body2 = body2.slice(1);
+    return body2.split(/\r?\n/).map((line) => parseCsvLine(line)).filter((cells2) => cells2.some((cell) => cell.length > 0));
   }
-  const storySearchSchema = objectType({
-    storyid: stringType().uuid().optional()
-  });
-  function parseRootSearch(raw2) {
-    const r2 = storySearchSchema.safeParse(raw2);
-    if (!r2.success) return {};
+  function guessMarkerName(headers) {
+    if (headers.length === 0 || /^\d+$/.test(headers[0] ?? "")) return null;
+    const nameHit = headers.find((h2) => MARKER_ALIASES.has(normHeader(h2)));
+    if (nameHit) return nameHit;
+    return headers.find((h2) => !META_ALIASES.has(normHeader(h2))) ?? null;
+  }
+  async function peekMarkerCsv(file) {
+    const bytes = new Uint8Array(await file.slice(0, 8192).arrayBuffer());
+    const text2 = new TextDecoder().decode(bytes);
+    const headers = csvRows(text2)[0];
+    if (!headers) return null;
+    const name2 = guessMarkerName(headers);
+    if (!name2) return null;
     return {
-      storyid: r2.data.storyid
+      headers,
+      name: name2
     };
   }
-  const uuidParamSchema = stringType().uuid();
-  function parsePreferredStoryIdFromLocation() {
-    if (typeof window === "undefined") return null;
-    const raw2 = new URLSearchParams(window.location.search).get("storyid");
-    if (raw2 === null || raw2 === "") return null;
-    const r2 = uuidParamSchema.safeParse(raw2);
-    return r2.success ? r2.data : null;
-  }
-  const rootRouteApi = getRouteApi("__root__");
-  function StoryIdUrlSync() {
-    const search2 = rootRouteApi.useSearch();
-    const navigate = rootRouteApi.useNavigate();
-    const activeStoryId = useDocumentStore((s2) => s2.activeStoryId);
-    const switchStory = useDocumentStore((s2) => s2.switchStory);
-    reactExports.useEffect(() => {
-      const sid = search2.storyid;
-      if (sid === void 0) return;
-      if (activeStoryId === sid) return;
-      if (activeStoryId === null) {
-        navigate({
-          search: (prev) => {
-            const next2 = {
-              ...prev
-            };
-            delete next2.storyid;
-            return next2;
-          },
-          replace: true
-        });
-        return;
-      }
-      void (async () => {
-        useAppStore.getState().resetStoryViewerSession();
-        try {
-          await switchStory(sid);
-        } catch {
-          navigate({
-            search: (prev) => {
-              const next2 = {
-                ...prev
-              };
-              delete next2.storyid;
-              return next2;
-            },
-            replace: true
-          });
-        }
-      })();
-    }, [
-      search2.storyid,
-      activeStoryId,
-      switchStory,
-      navigate
-    ]);
-    reactExports.useEffect(() => {
-      if (activeStoryId === null) return;
-      if (search2.storyid === activeStoryId) return;
-      navigate({
-        search: (prev) => ({
-          ...prev,
-          storyid: activeStoryId
-        }),
-        replace: true
-      });
-    }, [
-      activeStoryId,
-      navigate,
-      search2.storyid
-    ]);
-    return null;
-  }
-  function normalizeLoadedPathname(pathname) {
-    let path2 = pathname.replace(/\/$/, "") || "/";
-    if (path2.endsWith("/index.html")) {
-      path2 = path2.slice(0, -"/index.html".length).replace(/\/$/, "") || "/";
-    }
-    return path2 === "" ? "/" : path2;
-  }
-  function deploymentBasenameFromNormalizedPath(normalizedPath) {
-    if (normalizedPath === "/") return "/";
-    const segments = normalizedPath.split("/").filter(Boolean);
-    if (segments.length === 0) return "/";
-    const prPreviewIdx = segments.indexOf("pr-preview");
-    const next2 = segments[prPreviewIdx + 1];
-    if (prPreviewIdx >= 0 && next2 !== void 0 && /^pr-\d+$/.test(next2)) {
-      return `/${segments.slice(0, prPreviewIdx + 2).join("/")}`;
-    }
-    return `/${segments[0]}`;
-  }
-  function routerBasepath() {
-    {
-      if (typeof window === "undefined") return "/";
-      const path2 = normalizeLoadedPathname(window.location.pathname);
-      return deploymentBasenameFromNormalizedPath(path2);
-    }
-  }
-  function createAppRouter(MainComponent, mainProps) {
-    const rootRoute = createRootRoute({
-      validateSearch: parseRootSearch,
-      component: function RootLayout() {
-        return jsxRuntimeExports.jsx(MainComponent, {
-          ...mainProps
-        });
-      }
-    });
-    return createRouter({
-      routeTree: rootRoute,
-      basepath: routerBasepath()
-    });
-  }
-  const version = "1.0.0-alpha.10";
-  const LOCAL_PLAYER_DIR = "bundle";
-  function hostedPlayerBaseUrl() {
-    return null;
-  }
-  function playerAssetUrls(version2) {
-    const base2 = `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version2}/bundle`;
-    return {
-      js: `${base2}/minerva.js`,
-      css: `${base2}/minerva.css`
+  function markerNamesByChannelIndex(text2, columns) {
+    const rows2 = csvRows(text2);
+    if (rows2.length === 0) return {
+      ok: false,
+      error: "Markers CSV is empty."
     };
-  }
-  function canExportWithRemoteUrls(images) {
-    const withSource = images.filter((im) => im.source);
-    if (withSource.length === 0) return false;
-    return withSource.every((im) => {
-      var _a2;
-      if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "url") return false;
-      return /^https?:\/\//i.test(im.source.url.trim());
-    });
-  }
-  function withPortableJpegSources(images) {
-    return images.map((im) => {
-      if (!im.source || im.source.kind !== "jpeg" && im.source.kind !== "local" && im.source.kind !== "url") {
-        return im;
-      }
+    const header = rows2[0] ?? [];
+    const selected = (columns == null ? void 0 : columns.name) || guessMarkerName(header);
+    let data2 = rows2;
+    let nameCol = 0;
+    if (selected && header.includes(selected)) {
+      nameCol = header.indexOf(selected);
+      data2 = rows2.slice(1);
+    } else if (/^\d+$/.test(header[0] ?? "") && header.length >= 2) {
+      nameCol = header.length - 1;
+    }
+    const names = /* @__PURE__ */ new Map();
+    for (const row2 of data2) {
+      const name2 = (row2[nameCol] ?? "").trim();
+      if (!name2) continue;
+      names.set(names.size, name2);
+    }
+    if (names.size === 0) {
       return {
-        ...im,
-        source: {
-          kind: "jpeg",
-          url: "."
-        }
+        ok: false,
+        error: "Markers CSV has no channel names."
+      };
+    }
+    return {
+      ok: true,
+      names
+    };
+  }
+  function renameChannelsFromMarkers(channels2, names) {
+    let applied = 0;
+    const next2 = channels2.map((channel) => {
+      if (!isImageChannel(channel) || channel.index == null) return channel;
+      const name2 = names.get(channel.index);
+      if (!name2) return channel;
+      applied += 1;
+      if (name2 === channel.name) return channel;
+      return {
+        ...channel,
+        name: name2
       };
     });
-  }
-  function toExportedStoryDocument(data2, mode) {
-    let images = data2.images;
-    if (mode === "jpeg-pyramid") {
-      images = withPortableJpegSources(data2.images);
-    }
-    return validateDocumentData({
-      ...data2,
-      images,
-      metadata: {
-        ...data2.metadata,
-        minervaVersion: version,
-        imageSource: imageSourceForExportMode(mode, data2.metadata.imageSource)
-      }
-    });
-  }
-  function imageSourceForExportMode(mode, current) {
-    if (mode === "remote-url") return "remote-url";
-    if (mode === "jpeg-ome-tiff") {
-      if (current && isJpegOmeTiffImageSource(current)) return current;
-      return JPEG_OME_TIFF_IMAGE_SOURCE;
-    }
-    return current ?? "jpeg-pyramid";
-  }
-  function storyIndexHtml(title7, version$12 = version) {
-    const { js, css: css2 } = playerAssetUrls(version$12);
-    const safeTitle = ((title7 == null ? void 0 : title7.trim()) || "Minerva Story").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    return `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${safeTitle}</title>
-    <link rel="stylesheet" href="${css2}" />
-    <style>
-      /* Hex literal (no custom properties yet): matches --minerva-paper before player CSS loads. */
-      html, body, #minerva-root { height: 100%; margin: 0; background: #000; }
-    </style>
-  </head>
-  <body>
-    <div id="minerva-root"></div>
-    <script src="${js}"><\/script>
-    <script>
-      MinervaStory.play({
-        documentUrl: "document.json",
-        root: document.getElementById("minerva-root"),
-      });
-    <\/script>
-  </body>
-</html>
-`;
-  }
-  async function writeTextFile(directory, name2, text2) {
-    const fh2 = await directory.getFileHandle(name2, {
-      create: true
-    });
-    const write = await fh2.createWritable();
-    await write.write(text2);
-    await write.close();
-  }
-  async function writeBytes(directory, relativePath, bytes) {
-    const parts = relativePath.split("/");
-    const fileName = parts.pop();
-    if (!fileName) throw new Error(`Invalid story player path: ${relativePath}`);
-    let dir2 = directory;
-    for (const part of parts) {
-      dir2 = await dir2.getDirectoryHandle(part, {
-        create: true
-      });
-    }
-    const fh2 = await dir2.getFileHandle(fileName, {
-      create: true
-    });
-    const write = await fh2.createWritable();
-    await write.write(bytes);
-    await write.close();
-  }
-  async function copyHostedPlayer(directory) {
-    const base2 = hostedPlayerBaseUrl();
-    if (!base2) return;
-    const manifestRes = await fetch(`${base2}/manifest.json`);
-    if (!manifestRes.ok) {
-      throw new Error(`Story player manifest missing at ${base2}/manifest.json (${manifestRes.status})`);
-    }
-    const listed = await manifestRes.json();
-    if (!Array.isArray(listed)) {
-      throw new Error("Story player manifest is invalid");
-    }
-    const files = listed.filter((name2) => typeof name2 === "string");
-    if (files.length === 0) {
-      throw new Error("Story player manifest is empty");
-    }
-    const playerDir = await directory.getDirectoryHandle(LOCAL_PLAYER_DIR, {
-      create: true
-    });
-    for (const relativePath of files) {
-      const fileRes = await fetch(`${base2}/${relativePath}`);
-      if (!fileRes.ok) {
-        throw new Error(`Failed to copy story player file ${relativePath} (${fileRes.status})`);
-      }
-      await writeBytes(playerDir, relativePath, await fileRes.arrayBuffer());
-    }
-  }
-  async function writeStoryBundleSidecars(directory, data2, opts) {
-    const mode = (opts == null ? void 0 : opts.mode) ?? "jpeg-pyramid";
-    if (mode === "remote-url" && !canExportWithRemoteUrls(data2.images)) {
-      throw new Error("Remote URL export requires all images to use OME-TIFF URLs (no local files).");
-    }
-    const exported = toExportedStoryDocument(data2, mode);
-    await writeTextFile(directory, "document.json", JSON.stringify(exported, null, 2));
-    await copyHostedPlayer(directory);
-    await writeTextFile(directory, "index.html", storyIndexHtml(exported.metadata.title, exported.metadata.minervaVersion ?? version));
-  }
-  const STORY_ROOT_HANDLE_SUFFIX = ":storyRoot";
-  function storyRootHandleKey(storyId) {
-    return `story:${storyId}${STORY_ROOT_HANDLE_SUFFIX}`;
-  }
-  function isDirectoryHandle(handle2) {
-    return !!handle2 && handle2.kind === "directory";
-  }
-  async function setStoryRootHandle(storyId, handle2) {
-    await putFileHandle(storyRootHandleKey(storyId), handle2);
-  }
-  async function ensureDirectoryPermission(handle2, opts) {
-    const mode = {
-      mode: opts.mode ?? "read"
+    return {
+      channels: next2,
+      applied
     };
-    try {
-      if (await handle2.queryPermission(mode) === "granted") return true;
-      return opts.requestPermission ? await handle2.requestPermission(mode) === "granted" : false;
-    } catch {
-      return false;
-    }
-  }
-  async function getStoryRootHandle(storyId, opts = {}) {
-    if (!storyId) return void 0;
-    const stored = await getFileHandle(storyRootHandleKey(storyId));
-    if (!isDirectoryHandle(stored)) return void 0;
-    if (!await ensureDirectoryPermission(stored, opts)) return void 0;
-    return stored;
-  }
-  function tileFetcherForDirectory(root2) {
-    return async (folder, filename2) => {
-      const dir2 = await root2.getDirectoryHandle(folder);
-      const file = await dir2.getFileHandle(filename2);
-      return file.getFile();
-    };
-  }
-  async function neededJpegPyramidFolderNames(channelGroups, images, transfer = "contrast") {
-    var _a2, _b2;
-    const names = /* @__PURE__ */ new Set();
-    await Promise.all(channelGroups.flatMap((g2) => g2.channels.map(async (ch2) => {
-      const { lowerLimit, upperLimit } = folderLimitsForTransfer(transfer, ch2.lowerLimit, ch2.upperLimit);
-      names.add(await jpegPyramidFolderName(ch2.channelId, lowerLimit, upperLimit));
-    })));
-    if (names.size === 0 && images) {
-      for (const im of images) {
-        if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "jpeg" && ((_b2 = im.source) == null ? void 0 : _b2.kind) !== "local") continue;
-        const channelIndexById = Object.fromEntries(im.channels.map((ch2) => [
-          ch2.id,
-          ch2.index
-        ]));
-        const folders = await folderByChannelIndexFromGroup({
-          channels: im.channels.map((ch2) => {
-            const { lowerLimit, upperLimit } = folderLimitsForTransfer(transfer, ch2.lowerLimit ?? JPEG_BAKED_CONTRAST_LIMIT[0], ch2.upperLimit ?? JPEG_BAKED_CONTRAST_LIMIT[1]);
-            return {
-              channelId: ch2.id,
-              lowerLimit,
-              upperLimit
-            };
-          }),
-          channelIndexById
-        });
-        for (const name2 of Object.values(folders)) names.add(name2);
-      }
-    }
-    return names;
-  }
-  async function listExistingPyramidFolders(root2) {
-    const names = /* @__PURE__ */ new Set();
-    try {
-      for await (const [name2, handle2] of root2.entries()) {
-        if (handle2.kind === "directory" && /^[0-9a-f]{64}$/i.test(name2)) {
-          names.add(name2.toLowerCase());
-        }
-      }
-    } catch (e2) {
-      if (e2 instanceof DOMException && e2.name === "NotFoundError") {
-        return names;
-      }
-      throw e2;
-    }
-    return names;
-  }
-  async function isStoryRootHandleUsable(root2) {
-    try {
-      await root2.entries().next();
-      return true;
-    } catch (e2) {
-      if (e2 instanceof DOMException && e2.name === "NotFoundError") return false;
-      throw e2;
-    }
-  }
-  async function assertPyramidFoldersExist(root2, data2) {
-    if (data2.metadata.imageSource === "remote-url") return;
-    if (isJpegOmeTiffImageSource(data2.metadata.imageSource)) return;
-    const needed = await neededJpegPyramidFolderNames(data2.channelGroups, data2.images, jpegTransferFromImageSource(data2.metadata.imageSource));
-    if (needed.size === 0) return;
-    const existing = await listExistingPyramidFolders(root2);
-    const missing = [
-      ...needed
-    ].filter((name2) => !existing.has(name2));
-    if (missing.length > 0) {
-      throw new Error("Missing JPEG pyramid folders. Pick the folder created by Export (document.json plus channel directories).");
-    }
-  }
-  function isRelativeOmeTiffUrl(url) {
-    const u2 = url.trim();
-    if (!u2 || /^https?:\/\//i.test(u2) || u2.startsWith("blob:")) return false;
-    return /\.ome\.tiff?$/i.test(u2) || /\.tiff?$/i.test(u2);
-  }
-  async function persistImportedStory(data2, titleFallback, root2) {
-    var _a2, _b2;
-    const title7 = ((_a2 = data2.metadata.title) == null ? void 0 : _a2.trim()) || titleFallback || "Imported Story";
-    const hasLocalSources = data2.images.some((im) => {
-      var _a3;
-      return ((_a3 = im.source) == null ? void 0 : _a3.kind) === "local";
-    });
-    const omeTiffBundle = isJpegOmeTiffImageSource(data2.metadata.imageSource);
-    const imagesBase = data2.metadata.imageSource === "remote-url" || hasLocalSources || omeTiffBundle ? data2.images : withPortableJpegSources(data2.images);
-    const rec = await createStoryRecord(title7);
-    let images = hasLocalSources ? imagesBase.map((im) => {
-      var _a3;
-      if (((_a3 = im.source) == null ? void 0 : _a3.kind) !== "local") return im;
-      return {
-        ...im,
-        source: {
-          kind: "local",
-          handleKey: imageHandleStorageKey(rec.id, im.id)
-        }
-      };
-    }) : imagesBase;
-    if (root2 && omeTiffBundle) {
-      const next22 = [];
-      for (const im of images) {
-        if (((_b2 = im.source) == null ? void 0 : _b2.kind) === "url" && isRelativeOmeTiffUrl(im.source.url)) {
-          const fh2 = await root2.getFileHandle(im.source.url);
-          const handleKey = imageHandleStorageKey(rec.id, im.id);
-          await putFileHandle(handleKey, fh2);
-          next22.push({
-            ...im,
-            source: {
-              kind: "local",
-              handleKey
-            }
-          });
-        } else {
-          next22.push(im);
-        }
-      }
-      images = next22;
-    }
-    const next2 = validateDocumentData({
-      ...data2,
-      metadata: {
-        ...data2.metadata,
-        id: rec.id,
-        title: title7
-      },
-      images
-    });
-    await saveStoryDocument(rec.id, next2);
-    if (root2) await setStoryRootHandle(rec.id, root2);
-    useDocumentStore.getState().hydrateFromDocument(next2, rec.id);
-    await setActiveStoryId(rec.id);
-    return rec.id;
-  }
-  async function importStoryJsonFromPicker() {
-    const file = await n$1({
-      description: "Minerva story JSON",
-      mimeTypes: [
-        "application/json"
-      ],
-      extensions: [
-        ".json"
-      ],
-      multiple: false
-    });
-    const data2 = validateDocumentData(JSON.parse(await file.text()));
-    let root2;
-    if (storyNeedsLocalJpegRoot(data2.images) || isJpegOmeTiffImageSource(data2.metadata.imageSource) && data2.images.some((im) => {
-      var _a2;
-      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "url" && isRelativeOmeTiffUrl(im.source.url);
-    })) {
-      if (!hasDirectoryPickerAccess()) {
-        throw new Error("This story uses local image files. Open it in Chrome or Edge and choose the story folder to grant access.");
-      }
-      root2 = await window.showDirectoryPicker({
-        id: "minerva-story-import",
-        mode: "read"
-      });
-      await assertPyramidFoldersExist(root2, data2);
-    }
-    const base2 = file.name.replace(/\.json$/i, "").trim();
-    const fallback = /^(document|story)$/i.test(base2) ? "Imported Story" : base2;
-    return persistImportedStory(data2, fallback, root2);
-  }
-  async function reconnectStoryRootFromPicker(storyId) {
-    if (!hasDirectoryPickerAccess()) {
-      throw new Error("Reconnecting a story folder needs the File System Access API (Chrome or Edge).");
-    }
-    const root2 = await window.showDirectoryPicker({
-      id: "minerva-story-import",
-      mode: "read"
-    });
-    await assertPyramidFoldersExist(root2, useDocumentStore.getState().toDocumentData());
-    await setStoryRootHandle(storyId, root2);
-    return root2;
-  }
-  function storyNeedsLocalJpegRoot(images) {
-    return images.some((im) => {
-      var _a2;
-      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
-    });
   }
   function BrowseIcon({ title: title7, size = 14 }) {
     const label2 = title7 ?? "Browse for image";
@@ -167493,9 +170308,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       type: "button",
       "aria-pressed": selected,
       className: [
-        selected ? styles$q.typeChipActive : null,
-        suggested ? styles$q.typeChipSuggested : null,
-        muted ? styles$q.typeChipMuted : null
+        selected ? styles$p.typeChipActive : null,
+        suggested ? styles$p.typeChipSuggested : null,
+        muted ? styles$p.typeChipMuted : null
       ].filter(Boolean).join(" "),
       onClick,
       children: label2
@@ -167509,6 +170324,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ch2
     ].filter(Boolean).join(" \xB7 ") || null;
   };
+  function sourceFileReference(im) {
+    const src = im.source;
+    if ((src == null ? void 0 : src.kind) === "url" || (src == null ? void 0 : src.kind) === "jpeg") {
+      const leaf = urlFileName(src.url);
+      if (leaf && leaf !== ".") return leaf;
+    }
+    const base2 = im.basename.trim();
+    return base2 || null;
+  }
   function imageDisplayLabel(im, index2, opts) {
     const base2 = im.basename.trim();
     if (base2) return base2;
@@ -167552,9 +170376,49 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (pending2.kind === "local") return pending2.label;
     return pending2.url;
   }
+  function pointPopupPosition(el2) {
+    const rect = el2.getBoundingClientRect();
+    const top2 = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 200));
+    return {
+      top: top2,
+      left: Math.max(8, Math.min(rect.left, window.innerWidth - 328)),
+      maxHeight: window.innerHeight - top2 - 8
+    };
+  }
+  const IDLE_STRIP = {
+    draft: "",
+    dropError: null,
+    urlError: null,
+    dragging: false
+  };
   const Upload = (props) => {
-    const { onAllow, importRevision = 0, imageLoaded = false, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, onImportDicomWeb, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], onReselectFile, needsStoryRootReconnect = false, onReconnectStoryRoot, onRemoveImage, onReplaceImage, row: row2 = false, disabled: disabled2 = false } = props;
+    const { onAllow, importRevision = 0, imageLoaded = false, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, onImportDicomWeb, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], loadedImageIds, onLocateImage, needsStoryRootReconnect = false, onReconnectStoryRoot, onRemoveImage, onReplaceImage, row: row2 = false, disabled: disabled2 = false } = props;
+    const [pointTarget, setPointTarget] = reactExports.useState(null);
+    const togglePoint = (imageId, mode, el2) => {
+      setPointTarget((pointTarget == null ? void 0 : pointTarget.imageId) === imageId && pointTarget.mode === mode ? null : {
+        imageId,
+        mode,
+        ...pointPopupPosition(el2)
+      });
+      setUrlDraft("");
+      setImportError(null);
+    };
     const images = useDocumentStore((s2) => s2.images);
+    reactExports.useEffect(() => {
+      if (!pointTarget) return;
+      if (!images.some((im) => im.id === pointTarget.imageId)) {
+        setPointTarget(null);
+        return;
+      }
+      const onKey = (e2) => {
+        if (e2.key === "Escape") setPointTarget(null);
+      };
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }, [
+      images,
+      pointTarget
+    ]);
     const arrangeImageId = useAppStore((s2) => s2.arrangeImageId);
     const setArrangeImageId = useAppStore((s2) => s2.setArrangeImageId);
     const hasImages = images.length > 0 || !!imageLoaded && loadedSource != null;
@@ -167736,6 +170600,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       abortFormatDetect,
       clearFeatureCsv
     ]);
+    const applyPointedSource = reactExports.useCallback(async (source2) => {
+      if (!pointTarget) return false;
+      setPointTarget(null);
+      const apply = pointTarget.mode === "replace" ? onReplaceImage : onLocateImage;
+      await (apply == null ? void 0 : apply(pointTarget.imageId, source2));
+      return true;
+    }, [
+      pointTarget,
+      onReplaceImage,
+      onLocateImage
+    ]);
     const acceptLocalHandles = reactExports.useCallback(async (handles) => {
       if (handles.length === 0) return;
       const handle2 = handles[0];
@@ -167751,6 +170626,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         setImportError("Could not read the selected file.");
         return;
       }
+      if (await applyPointedSource({
+        kind: "local",
+        handle: handle2
+      })) return;
       openPending({
         kind: "local",
         handles: [
@@ -167759,6 +170638,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         label: handle2.name || "image.ome.tif"
       });
     }, [
+      applyPointedSource,
       openPending
     ]);
     const browseLocal = reactExports.useCallback(async () => {
@@ -167785,13 +170665,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         setImportError("Enter a valid http(s) URL.");
         return;
       }
+      if (pointTarget) {
+        setUrlDraft("");
+        void applyPointedSource({
+          kind: "url",
+          url
+        });
+        return;
+      }
       openPending({
         kind: "url",
         url
       });
     }, [
+      applyPointedSource,
       disabled2,
       openPending,
+      pointTarget,
       urlDraft
     ]);
     const onDragEnter = (e2) => {
@@ -167920,7 +170810,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       lastOmeTiffUrl
     };
     const renderImageCard = (im, index2) => {
-      var _a2, _b2, _c2, _d, _e;
+      var _a2, _b2, _c2, _d, _e, _f;
       const title7 = imageDisplayLabel(im, index2, labelOpts);
       const role = roleBadgeLabel(resolveImageContentRole({
         contentRole: im.contentRole,
@@ -167931,32 +170821,37 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         formatDims(im.sizeX, im.sizeY, im.sizeC ?? im.channels.length)
       ].filter(Boolean);
       const localKey = ((_a2 = im.source) == null ? void 0 : _a2.kind) === "local" ? im.source.handleKey : void 0;
-      const needsReselect = !!localKey && missingHandleKeys.includes(localKey) && !!onReselectFile;
-      const needsPermission = needsFileAccess && !!onRequestFileAccess && ((_b2 = im.source) == null ? void 0 : _b2.kind) === "local" && !needsReselect;
-      const needsStoryDir = needsStoryRootReconnect && !!onReconnectStoryRoot && ((_c2 = im.source) == null ? void 0 : _c2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
-      const showAccessOverlay = needsReselect || needsPermission || needsStoryDir;
+      const needsReselect = !!localKey && missingHandleKeys.includes(localKey) && !!onLocateImage;
+      const unloaded = !(loadedImageIds == null ? void 0 : loadedImageIds.has(im.id));
+      const relativeUnloaded = ((_b2 = im.source) == null ? void 0 : _b2.kind) === "url" && isRelativeOmeTiffUrl(im.source.url) && unloaded;
+      const needsPermission = needsFileAccess && !!onRequestFileAccess && (((_c2 = im.source) == null ? void 0 : _c2.kind) === "local" ? !needsReselect && unloaded : relativeUnloaded);
+      const needsLocateFile = !!onLocateImage && relativeUnloaded && !needsPermission;
+      const needsStoryDir = needsStoryRootReconnect && !!onReconnectStoryRoot && ((_d = im.source) == null ? void 0 : _d.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
+      const showAccessOverlay = needsReselect || needsLocateFile || needsPermission || needsStoryDir;
+      const fileReference = showAccessOverlay ? sourceFileReference(im) : null;
+      const pointing = (pointTarget == null ? void 0 : pointTarget.imageId) === im.id ? pointTarget.mode : null;
       return jsxRuntimeExports.jsxs("article", {
-        className: styles$q.imageCard,
+        className: styles$p.imageCard,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$q.imageCardHeader,
+            className: styles$p.imageCardHeader,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$q.imageCardText,
+                className: styles$p.imageCardText,
                 children: [
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$q.imageCardTitle,
+                    className: styles$p.imageCardTitle,
                     title: title7,
                     children: title7
                   }),
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$q.imageCardMeta,
+                    className: styles$p.imageCardMeta,
                     children: metaParts.join(" \xB7 ")
                   })
                 ]
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$q.imageCardActions,
+                className: styles$p.imageCardActions,
                 children: [
                   jsxRuntimeExports.jsx(PanelIconButton, {
                     title: "Arrange",
@@ -167968,10 +170863,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       "aria-hidden": true
                     })
                   }),
-                  onReplaceImage && ((_d = im.source) == null ? void 0 : _d.kind) !== "jpeg" && ((_e = im.source) == null ? void 0 : _e.kind) !== "dicomWeb" ? jsxRuntimeExports.jsx(PanelIconButton, {
+                  onReplaceImage && ((_e = im.source) == null ? void 0 : _e.kind) !== "jpeg" && ((_f = im.source) == null ? void 0 : _f.kind) !== "dicomWeb" ? jsxRuntimeExports.jsx(PanelIconButton, {
                     title: `Browse for an image to replace ${title7}`,
                     "aria-label": `Browse for an image to replace ${title7}`,
-                    onClick: () => void onReplaceImage(im.id),
+                    "aria-pressed": pointing === "replace",
+                    active: pointing === "replace",
+                    onClick: (e2) => togglePoint(im.id, "replace", e2.currentTarget),
                     children: jsxRuntimeExports.jsx(BrowseIcon, {
                       title: "Browse for image",
                       size: 14
@@ -167991,7 +170888,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           }),
           jsxRuntimeExports.jsx(OpacitySlider, {
-            className: styles$q.imageOpacity,
+            className: styles$p.imageOpacity,
             value: clampImageOpacity(im.opacity),
             ariaLabel: title7,
             onPreview: (opacity) => {
@@ -168014,36 +170911,46 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           jsxRuntimeExports.jsx(ImageChannelOverviewCard, {
             image: im
           }),
-          showAccessOverlay ? jsxRuntimeExports.jsx("div", {
-            className: styles$q.fileAccessOverlay,
-            children: jsxRuntimeExports.jsx(PanelActionButton, {
-              type: "button",
-              className: styles$q.fileAccessAction,
-              onClick: () => {
-                if (needsStoryDir) void (onReconnectStoryRoot == null ? void 0 : onReconnectStoryRoot());
-                else if (needsReselect) void (onReselectFile == null ? void 0 : onReselectFile(im.id));
-                else void (onRequestFileAccess == null ? void 0 : onRequestFileAccess());
-              },
-              children: needsStoryDir ? "Choose story folder" : needsReselect ? "Choose file again" : "Allow file access"
-            })
+          showAccessOverlay ? jsxRuntimeExports.jsxs("div", {
+            className: styles$p.fileAccessOverlay,
+            children: [
+              fileReference ? jsxRuntimeExports.jsx("div", {
+                className: styles$p.fileAccessName,
+                title: fileReference,
+                children: fileReference
+              }) : null,
+              jsxRuntimeExports.jsx(PanelActionButton, {
+                type: "button",
+                className: styles$p.fileAccessAction,
+                active: pointing === "locate",
+                "aria-pressed": needsReselect || needsLocateFile ? pointing === "locate" : void 0,
+                onClick: (e2) => {
+                  if (needsStoryDir) void (onReconnectStoryRoot == null ? void 0 : onReconnectStoryRoot());
+                  else if (needsReselect || needsLocateFile) {
+                    togglePoint(im.id, "locate", e2.currentTarget);
+                  } else void (onRequestFileAccess == null ? void 0 : onRequestFileAccess());
+                },
+                children: needsStoryDir ? "Choose story folder" : needsReselect || needsLocateFile ? "Locate file" : "Allow file access"
+              })
+            ]
           }) : null
         ]
       }, im.id);
     };
     const imageCards = images.length > 0 ? images.map((im, i2) => renderImageCard(im, i2)) : imageLoaded && loadedSource ? [
       jsxRuntimeExports.jsx("article", {
-        className: styles$q.imageCard,
+        className: styles$p.imageCard,
         children: jsxRuntimeExports.jsx("div", {
-          className: styles$q.imageCardHeader,
+          className: styles$p.imageCardHeader,
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$q.imageCardText,
+            className: styles$p.imageCardText,
             children: [
               jsxRuntimeExports.jsx("div", {
-                className: styles$q.imageCardTitle,
+                className: styles$p.imageCardTitle,
                 children: loadedSource.label
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$q.imageCardMeta,
+                className: styles$p.imageCardMeta,
                 children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
               })
             ]
@@ -168058,95 +170965,124 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onDrop: (e2) => void onDrop(e2)
     };
     const stripError = importError2 && !pending2 ? importError2 : null;
-    const dropError = stripError && stripErrorAt === "drop" ? stripError : null;
-    const urlError = stripError && stripErrorAt === "url" ? stripError : null;
-    const addStrip2 = jsxRuntimeExports.jsxs("div", {
-      className: [
-        styles$q.addStrip,
-        row2 ? styles$q.addStripRow : "",
-        row2 && dragging ? styles$q.panelDropActive : ""
-      ].filter(Boolean).join(" "),
-      ...row2 ? dropHandlers : {},
-      children: [
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: [
-            styles$q.dropZone,
-            dragging ? styles$q.dropZoneActive : ""
-          ].join(" "),
-          disabled: disabled2,
-          "aria-invalid": dropError ? true : void 0,
-          onClick: () => void browseLocal(),
-          children: jsxRuntimeExports.jsx("span", {
+    const liveStrip = {
+      draft: urlDraft,
+      dropError: stripErrorAt === "drop" ? stripError : null,
+      urlError: stripErrorAt === "url" ? stripError : null,
+      dragging
+    };
+    const renderAddStrip = (popup) => {
+      const strip2 = popup || !pointTarget ? liveStrip : IDLE_STRIP;
+      return jsxRuntimeExports.jsxs("div", {
+        className: [
+          styles$p.addStrip,
+          row2 && !popup ? styles$p.addStripRow : "",
+          (row2 || popup) && strip2.dragging ? styles$p.panelDropActive : ""
+        ].filter(Boolean).join(" "),
+        ...row2 || popup ? dropHandlers : {},
+        children: [
+          jsxRuntimeExports.jsx("button", {
+            type: "button",
             className: [
-              styles$q.dropZoneTitle,
-              dropError ? styles$q.importError : ""
-            ].filter(Boolean).join(" "),
-            role: dropError ? "alert" : void 0,
-            children: dropError ?? "Drop or Browse Image File"
-          })
-        }),
-        jsxRuntimeExports.jsx("div", {
-          className: styles$q.orDivider,
-          children: jsxRuntimeExports.jsx("span", {
-            children: "or"
-          })
-        }),
-        jsxRuntimeExports.jsxs("div", {
-          className: styles$q.urlRow,
-          children: [
-            jsxRuntimeExports.jsxs("div", {
-              className: styles$q.urlField,
-              children: [
-                jsxRuntimeExports.jsx("input", {
-                  id: "upload-add-url",
-                  type: "url",
-                  className: `${minervaTheme.input} ${styles$q.urlInput}`,
-                  placeholder: "Image URL (OME-TIFF or DICOMweb)",
-                  "aria-label": "Image URL",
-                  "aria-invalid": urlError ? true : void 0,
-                  value: urlDraft,
-                  disabled: disabled2,
-                  onChange: (e2) => {
-                    setUrlDraft(e2.target.value);
-                    setImportError(null);
-                  },
-                  onKeyDown: (e2) => {
-                    if (e2.key === "Enter") {
-                      e2.preventDefault();
-                      acceptUrlDraft();
+              styles$p.dropZone,
+              strip2.dragging ? styles$p.dropZoneActive : ""
+            ].join(" "),
+            disabled: disabled2,
+            "aria-invalid": strip2.dropError ? true : void 0,
+            onClick: () => void browseLocal(),
+            children: jsxRuntimeExports.jsx("span", {
+              className: [
+                styles$p.dropZoneTitle,
+                strip2.dropError ? styles$p.importError : ""
+              ].filter(Boolean).join(" "),
+              role: strip2.dropError ? "alert" : void 0,
+              children: strip2.dropError ?? "Drop or Browse Image File"
+            })
+          }),
+          jsxRuntimeExports.jsx("div", {
+            className: styles$p.orDivider,
+            children: jsxRuntimeExports.jsx("span", {
+              children: "or"
+            })
+          }),
+          jsxRuntimeExports.jsxs("div", {
+            className: styles$p.urlRow,
+            children: [
+              jsxRuntimeExports.jsxs("div", {
+                className: styles$p.urlField,
+                children: [
+                  jsxRuntimeExports.jsx("input", {
+                    id: popup ? void 0 : "upload-add-url",
+                    type: "url",
+                    className: `${minervaTheme.input} ${styles$p.urlInput}`,
+                    placeholder: "Image URL (OME-TIFF or DICOMweb)",
+                    "aria-label": "Image URL",
+                    "aria-invalid": strip2.urlError ? true : void 0,
+                    value: strip2.draft,
+                    disabled: disabled2,
+                    onChange: (e2) => {
+                      setUrlDraft(e2.target.value);
+                      setImportError(null);
+                    },
+                    onKeyDown: (e2) => {
+                      if (e2.key === "Enter") {
+                        e2.preventDefault();
+                        acceptUrlDraft();
+                      }
                     }
-                  }
-                }),
-                urlDraft.trim() ? jsxRuntimeExports.jsx(PanelActionButton, {
-                  type: "button",
-                  className: styles$q.urlAdd,
-                  disabled: disabled2 || !urlReady,
-                  onClick: acceptUrlDraft,
-                  children: "Add"
-                }) : null
-              ]
-            }),
-            urlError ? jsxRuntimeExports.jsx("div", {
-              className: styles$q.importError,
-              role: "alert",
-              children: urlError
-            }) : null
-          ]
-        })
-      ]
-    });
+                  }),
+                  strip2.draft.trim() ? jsxRuntimeExports.jsx(PanelActionButton, {
+                    type: "button",
+                    className: styles$p.urlAdd,
+                    disabled: disabled2 || !urlReady,
+                    onClick: acceptUrlDraft,
+                    children: "Add"
+                  }) : null
+                ]
+              }),
+              strip2.urlError ? jsxRuntimeExports.jsx("div", {
+                className: styles$p.importError,
+                role: "alert",
+                children: strip2.urlError
+              }) : null
+            ]
+          })
+        ]
+      });
+    };
     let overlayBusyLabel = "Importing\u2026";
     if (detecting) overlayBusyLabel = "Detecting\u2026";
     else if (featureCsvFile && overlayRole === "segmentation") {
       overlayBusyLabel = "Loading feature table\u2026";
     }
+    const addStrip2 = renderAddStrip(false);
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
+        pointTarget ? reactDomExports.createPortal(jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+          children: [
+            jsxRuntimeExports.jsx("button", {
+              type: "button",
+              className: styles$p.pointBackdrop,
+              "aria-label": "Close",
+              onClick: () => setPointTarget(null)
+            }),
+            jsxRuntimeExports.jsx("div", {
+              className: styles$p.pointPopup,
+              style: {
+                top: pointTarget.top,
+                left: pointTarget.left,
+                maxHeight: pointTarget.maxHeight
+              },
+              role: "dialog",
+              "aria-label": pointTarget.mode === "locate" ? "Locate image file or URL" : "Replace image with a file or URL",
+              children: renderAddStrip(true)
+            })
+          ]
+        }), document.body) : null,
         row2 ? addStrip2 : jsxRuntimeExports.jsx("div", {
           className: [
             panel$1.authorPanel,
-            dragging ? styles$q.panelDropActive : ""
+            dragging ? styles$p.panelDropActive : ""
           ].join(" "),
           ...dropHandlers,
           children: jsxRuntimeExports.jsx("div", {
@@ -168155,7 +171091,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               panel$1.thinScrollbar
             ].join(" "),
             children: jsxRuntimeExports.jsxs("div", {
-              className: styles$q.stack,
+              className: styles$p.stack,
               children: [
                 imageCards,
                 addStrip2
@@ -168175,10 +171111,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           onImport: () => void runImport(),
           children: [
             jsxRuntimeExports.jsxs("div", {
-              className: styles$q.typeRow,
+              className: styles$p.typeRow,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$q.fieldLabel,
+                  className: styles$p.fieldLabel,
                   children: "Image Type"
                 }),
                 jsxRuntimeExports.jsx(FormatChip, {
@@ -168219,12 +171155,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             dicomAllowed ? jsxRuntimeExports.jsx("div", {
-              className: styles$q.typeSection,
+              className: styles$p.typeSection,
               children: jsxRuntimeExports.jsxs("div", {
-                className: styles$q.typeRow,
+                className: styles$p.typeRow,
                 children: [
                   jsxRuntimeExports.jsx("span", {
-                    className: styles$q.fieldLabel,
+                    className: styles$p.fieldLabel,
                     children: "Format"
                   }),
                   FORMAT_OPTIONS.map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
@@ -168241,10 +171177,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               })
             }) : null,
             overlayRole === "segmentation" || overlayRole === "intensity" && !overlayRgbDisplay ? jsxRuntimeExports.jsxs("div", {
-              className: styles$q.typeRow,
+              className: styles$p.typeRow,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$q.fieldLabel,
+                  className: styles$p.fieldLabel,
                   children: overlayRole === "segmentation" ? "Feature table" : "Markers"
                 }),
                 jsxRuntimeExports.jsx(PanelActionButton, {
@@ -170608,6 +173544,582 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       configWaypoints: enabled2 && !jpeg ? configWaypoints : []
     };
   }
+  function imageHandleStorageKey(storyId, imageId) {
+    return storyId ? `story:${storyId}:image:${imageId}` : `image:${imageId}`;
+  }
+  function locatedFileStorageKey(storyId, imageId, url) {
+    return `${imageHandleStorageKey(storyId, imageId)}:located:${url.trim()}`;
+  }
+  async function persistLocalImageHandle(args) {
+    const { storyId, imageId, handle: handle2, images } = args;
+    const key2 = imageHandleStorageKey(storyId, imageId);
+    await putFileHandle(key2, handle2);
+    const next2 = setImageSource(images, imageId, {
+      kind: "local",
+      handleKey: key2
+    });
+    return next2;
+  }
+  function storedTableFormat(bytes) {
+    const parquet = bytes.byteLength >= 4 && bytes[0] === 80 && bytes[1] === 65 && bytes[2] === 82 && bytes[3] === 49;
+    if (parquet) return {
+      kind: "parquet"
+    };
+    return {
+      kind: "csv"
+    };
+  }
+  async function writeDirectoryFile(directory, relativePath, data2) {
+    const parts = relativePath.split("/");
+    const fileName = parts.pop();
+    if (!fileName) throw new Error(`Invalid file path: ${relativePath}`);
+    let dir2 = directory;
+    for (const part of parts) {
+      dir2 = await dir2.getDirectoryHandle(part, {
+        create: true
+      });
+    }
+    const fh2 = await dir2.getFileHandle(fileName, {
+      create: true
+    });
+    const write = await fh2.createWritable();
+    await write.write(data2);
+    await write.close();
+  }
+  const storySearchSchema = objectType({
+    storyid: stringType().uuid().optional()
+  });
+  function parseRootSearch(raw2) {
+    const r2 = storySearchSchema.safeParse(raw2);
+    if (!r2.success) return {};
+    return {
+      storyid: r2.data.storyid
+    };
+  }
+  const uuidParamSchema = stringType().uuid();
+  function parsePreferredStoryIdFromLocation() {
+    if (typeof window === "undefined") return null;
+    const raw2 = new URLSearchParams(window.location.search).get("storyid");
+    if (raw2 === null || raw2 === "") return null;
+    const r2 = uuidParamSchema.safeParse(raw2);
+    return r2.success ? r2.data : null;
+  }
+  const rootRouteApi = getRouteApi("__root__");
+  function StoryIdUrlSync() {
+    const search2 = rootRouteApi.useSearch();
+    const navigate = rootRouteApi.useNavigate();
+    const activeStoryId = useDocumentStore((s2) => s2.activeStoryId);
+    const switchStory = useDocumentStore((s2) => s2.switchStory);
+    reactExports.useEffect(() => {
+      const sid = search2.storyid;
+      if (sid === void 0) return;
+      if (activeStoryId === sid) return;
+      if (activeStoryId === null) {
+        navigate({
+          search: (prev) => {
+            const next2 = {
+              ...prev
+            };
+            delete next2.storyid;
+            return next2;
+          },
+          replace: true
+        });
+        return;
+      }
+      void (async () => {
+        useAppStore.getState().resetStoryViewerSession();
+        try {
+          await switchStory(sid);
+        } catch {
+          navigate({
+            search: (prev) => {
+              const next2 = {
+                ...prev
+              };
+              delete next2.storyid;
+              return next2;
+            },
+            replace: true
+          });
+        }
+      })();
+    }, [
+      search2.storyid,
+      activeStoryId,
+      switchStory,
+      navigate
+    ]);
+    reactExports.useEffect(() => {
+      if (activeStoryId === null) return;
+      if (search2.storyid === activeStoryId) return;
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          storyid: activeStoryId
+        }),
+        replace: true
+      });
+    }, [
+      activeStoryId,
+      navigate,
+      search2.storyid
+    ]);
+    return null;
+  }
+  function normalizeLoadedPathname(pathname) {
+    let path2 = pathname.replace(/\/$/, "") || "/";
+    if (path2.endsWith("/index.html")) {
+      path2 = path2.slice(0, -"/index.html".length).replace(/\/$/, "") || "/";
+    }
+    return path2 === "" ? "/" : path2;
+  }
+  function deploymentBasenameFromNormalizedPath(normalizedPath) {
+    if (normalizedPath === "/") return "/";
+    const segments = normalizedPath.split("/").filter(Boolean);
+    if (segments.length === 0) return "/";
+    const prPreviewIdx = segments.indexOf("pr-preview");
+    const next2 = segments[prPreviewIdx + 1];
+    if (prPreviewIdx >= 0 && next2 !== void 0 && /^pr-\d+$/.test(next2)) {
+      return `/${segments.slice(0, prPreviewIdx + 2).join("/")}`;
+    }
+    return `/${segments[0]}`;
+  }
+  function routerBasepath() {
+    {
+      if (typeof window === "undefined") return "/";
+      const path2 = normalizeLoadedPathname(window.location.pathname);
+      return deploymentBasenameFromNormalizedPath(path2);
+    }
+  }
+  function createAppRouter(MainComponent, mainProps) {
+    const rootRoute = createRootRoute({
+      validateSearch: parseRootSearch,
+      component: function RootLayout() {
+        return jsxRuntimeExports.jsx(MainComponent, {
+          ...mainProps
+        });
+      }
+    });
+    return createRouter({
+      routeTree: rootRoute,
+      basepath: routerBasepath()
+    });
+  }
+  const version = "1.0.0-alpha.10";
+  const LOCAL_PLAYER_DIR = "bundle";
+  function hostedPlayerBaseUrl() {
+    return null;
+  }
+  function playerAssetUrls(version2) {
+    const base2 = `https://cdn.jsdelivr.net/npm/minerva-core-ui@${version2}/bundle`;
+    return {
+      js: `${base2}/minerva.js`,
+      css: `${base2}/minerva.css`
+    };
+  }
+  function canExportWithRemoteUrls(images) {
+    const withSource = images.filter((im) => im.source);
+    if (withSource.length === 0) return false;
+    return withSource.every((im) => {
+      var _a2;
+      if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "url") return false;
+      return /^https?:\/\//i.test(im.source.url.trim());
+    });
+  }
+  function withPortableJpegSources(images) {
+    return images.map((im) => {
+      if (!im.source || im.source.kind !== "jpeg" && im.source.kind !== "local" && im.source.kind !== "url") {
+        return im;
+      }
+      return {
+        ...im,
+        source: {
+          kind: "jpeg",
+          url: "."
+        }
+      };
+    });
+  }
+  function toExportedStoryDocument(data2, mode) {
+    let images = data2.images;
+    if (mode === "jpeg-pyramid") {
+      images = withPortableJpegSources(data2.images);
+    }
+    return validateDocumentData({
+      ...data2,
+      images,
+      metadata: {
+        ...data2.metadata,
+        minervaVersion: version,
+        imageSource: imageSourceForExportMode(mode, data2.metadata.imageSource)
+      }
+    });
+  }
+  function imageSourceForExportMode(mode, current) {
+    if (mode === "remote-url") return "remote-url";
+    if (mode === "jpeg-ome-tiff") {
+      if (current && isJpegOmeTiffImageSource(current)) return current;
+      return JPEG_OME_TIFF_IMAGE_SOURCE;
+    }
+    return current ?? "jpeg-pyramid";
+  }
+  function storyIndexHtml(title7, version$12 = version) {
+    const { js, css: css2 } = playerAssetUrls(version$12);
+    const safeTitle = ((title7 == null ? void 0 : title7.trim()) || "Minerva Story").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${safeTitle}</title>
+    <link rel="stylesheet" href="${css2}" />
+    <style>
+      /* Hex literal (no custom properties yet): matches --minerva-paper before player CSS loads. */
+      html, body, #minerva-root { height: 100%; margin: 0; background: #000; }
+    </style>
+  </head>
+  <body>
+    <div id="minerva-root"></div>
+    <script src="${js}"><\/script>
+    <script>
+      MinervaStory.play({
+        documentUrl: "document.json",
+        root: document.getElementById("minerva-root"),
+      });
+    <\/script>
+  </body>
+</html>
+`;
+  }
+  const FEATURE_TABLE_DIR = "feature-tables";
+  async function featureTableParquet(featureTable) {
+    const key2 = featureTableHandleKey(featureTable);
+    const stored = key2 ? await getBlob(key2) : void 0;
+    if (stored && storedTableFormat(stored).kind === "parquet") return stored;
+    if (hasIngestedFeatureTable(featureTable.id)) {
+      return exportFeatureTableParquet(featureTable.id);
+    }
+    return null;
+  }
+  async function writeFeatureTableSidecars(directory, data2) {
+    const featureTables = [];
+    const skipped = [];
+    const parquets = await Promise.all(data2.featureTables.map(featureTableParquet));
+    for (const [i2, featureTable] of data2.featureTables.entries()) {
+      const bytes = parquets[i2];
+      if (!bytes) {
+        const channel = data2.images.flatMap((im) => im.channels).find((ch2) => ch2.id === featureTable.sourceChannelId);
+        skipped.push((channel == null ? void 0 : channel.name) ?? featureTable.sourceChannelId);
+        continue;
+      }
+      const url = `${FEATURE_TABLE_DIR}/${featureTable.id}.parquet`;
+      await writeDirectoryFile(directory, url, bytes);
+      featureTables.push({
+        ...featureTable,
+        source: {
+          kind: "url",
+          url
+        }
+      });
+    }
+    return {
+      featureTables,
+      skipped
+    };
+  }
+  async function copyHostedPlayer(directory) {
+    const base2 = hostedPlayerBaseUrl();
+    if (!base2) return;
+    const manifestRes = await fetch(`${base2}/manifest.json`);
+    if (!manifestRes.ok) {
+      throw new Error(`Story player manifest missing at ${base2}/manifest.json (${manifestRes.status})`);
+    }
+    const listed = await manifestRes.json();
+    if (!Array.isArray(listed)) {
+      throw new Error("Story player manifest is invalid");
+    }
+    const files = listed.filter((name2) => typeof name2 === "string");
+    if (files.length === 0) {
+      throw new Error("Story player manifest is empty");
+    }
+    const playerDir = await directory.getDirectoryHandle(LOCAL_PLAYER_DIR, {
+      create: true
+    });
+    for (const relativePath of files) {
+      const fileRes = await fetch(`${base2}/${relativePath}`);
+      if (!fileRes.ok) {
+        throw new Error(`Failed to copy story player file ${relativePath} (${fileRes.status})`);
+      }
+      await writeDirectoryFile(playerDir, relativePath, await fileRes.arrayBuffer());
+    }
+  }
+  async function writeStoryBundleSidecars(directory, data2, opts) {
+    const mode = (opts == null ? void 0 : opts.mode) ?? "jpeg-pyramid";
+    if (mode === "remote-url" && !canExportWithRemoteUrls(data2.images)) {
+      throw new Error("Remote URL export requires all images to use OME-TIFF URLs (no local files).");
+    }
+    const { featureTables, skipped } = await writeFeatureTableSidecars(directory, data2);
+    const exported = toExportedStoryDocument({
+      ...data2,
+      featureTables
+    }, mode);
+    await writeDirectoryFile(directory, "document.json", JSON.stringify(exported, null, 2));
+    await copyHostedPlayer(directory);
+    await writeDirectoryFile(directory, "index.html", storyIndexHtml(exported.metadata.title, exported.metadata.minervaVersion ?? version));
+    return {
+      skippedFeatureTables: skipped
+    };
+  }
+  const STORY_ROOT_HANDLE_SUFFIX = ":storyRoot";
+  function storyRootHandleKey(storyId) {
+    return `story:${storyId}${STORY_ROOT_HANDLE_SUFFIX}`;
+  }
+  function isDirectoryHandle(handle2) {
+    return !!handle2 && handle2.kind === "directory";
+  }
+  async function setStoryRootHandle(storyId, handle2) {
+    await putFileHandle(storyRootHandleKey(storyId), handle2);
+  }
+  async function ensureDirectoryPermission(handle2, opts) {
+    const mode = {
+      mode: opts.mode ?? "read"
+    };
+    try {
+      if (await handle2.queryPermission(mode) === "granted") return true;
+      return opts.requestPermission ? await handle2.requestPermission(mode) === "granted" : false;
+    } catch {
+      return false;
+    }
+  }
+  async function getStoryRootHandle(storyId, opts = {}) {
+    if (!storyId) return void 0;
+    const stored = await getFileHandle(storyRootHandleKey(storyId));
+    if (!isDirectoryHandle(stored)) return void 0;
+    if (!await ensureDirectoryPermission(stored, opts)) return void 0;
+    return stored;
+  }
+  async function storyRootNeedsPermission(storyId) {
+    if (!storyId) return false;
+    const stored = await getFileHandle(storyRootHandleKey(storyId));
+    if (!isDirectoryHandle(stored)) return false;
+    return !await ensureDirectoryPermission(stored, {});
+  }
+  function tileFetcherForDirectory(root2) {
+    return async (folder, filename2) => {
+      const dir2 = await root2.getDirectoryHandle(folder);
+      const file = await dir2.getFileHandle(filename2);
+      return file.getFile();
+    };
+  }
+  async function neededJpegPyramidFolderNames(channelGroups, images, transfer = "contrast") {
+    var _a2, _b2;
+    const names = /* @__PURE__ */ new Set();
+    await Promise.all(channelGroups.flatMap((g2) => g2.channels.map(async (ch2) => {
+      const { lowerLimit, upperLimit } = folderLimitsForTransfer(transfer, ch2.lowerLimit, ch2.upperLimit);
+      names.add(await jpegPyramidFolderName(ch2.channelId, lowerLimit, upperLimit));
+    })));
+    if (names.size === 0 && images) {
+      for (const im of images) {
+        if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "jpeg" && ((_b2 = im.source) == null ? void 0 : _b2.kind) !== "local") continue;
+        const channelIndexById = Object.fromEntries(im.channels.map((ch2) => [
+          ch2.id,
+          ch2.index
+        ]));
+        const folders = await folderByChannelIndexFromGroup({
+          channels: im.channels.map((ch2) => {
+            const { lowerLimit, upperLimit } = folderLimitsForTransfer(transfer, ch2.lowerLimit ?? JPEG_BAKED_CONTRAST_LIMIT[0], ch2.upperLimit ?? JPEG_BAKED_CONTRAST_LIMIT[1]);
+            return {
+              channelId: ch2.id,
+              lowerLimit,
+              upperLimit
+            };
+          }),
+          channelIndexById
+        });
+        for (const name2 of Object.values(folders)) names.add(name2);
+      }
+    }
+    return names;
+  }
+  async function listExistingPyramidFolders(root2) {
+    const names = /* @__PURE__ */ new Set();
+    try {
+      for await (const [name2, handle2] of root2.entries()) {
+        if (handle2.kind === "directory" && /^[0-9a-f]{64}$/i.test(name2)) {
+          names.add(name2.toLowerCase());
+        }
+      }
+    } catch (e2) {
+      if (e2 instanceof DOMException && e2.name === "NotFoundError") {
+        return names;
+      }
+      throw e2;
+    }
+    return names;
+  }
+  async function isStoryRootHandleUsable(root2) {
+    try {
+      await root2.entries().next();
+      return true;
+    } catch (e2) {
+      if (e2 instanceof DOMException && e2.name === "NotFoundError") return false;
+      throw e2;
+    }
+  }
+  async function assertPyramidFoldersExist(root2, data2) {
+    if (data2.metadata.imageSource === "remote-url") return;
+    if (isJpegOmeTiffImageSource(data2.metadata.imageSource)) return;
+    const needed = await neededJpegPyramidFolderNames(data2.channelGroups, data2.images, jpegTransferFromImageSource(data2.metadata.imageSource));
+    if (needed.size === 0) return;
+    const existing = await listExistingPyramidFolders(root2);
+    const missing = [
+      ...needed
+    ].filter((name2) => !existing.has(name2));
+    if (missing.length > 0) {
+      throw new Error("Missing JPEG pyramid folders. Pick the folder created by Export (document.json plus channel directories).");
+    }
+  }
+  async function readDocumentJson(root2) {
+    let fh2;
+    try {
+      fh2 = await root2.getFileHandle("document.json");
+    } catch (e2) {
+      if (e2 instanceof DOMException && e2.name === "NotFoundError") {
+        throw new Error("Pick the export folder that contains document.json.");
+      }
+      throw e2;
+    }
+    const file = await fh2.getFile();
+    return validateDocumentData(JSON.parse(await file.text()));
+  }
+  async function persistImportedStory(data2, titleFallback, root2) {
+    var _a2, _b2;
+    const title7 = ((_a2 = data2.metadata.title) == null ? void 0 : _a2.trim()) || titleFallback || "Imported Story";
+    const hasLocalSources = data2.images.some((im) => {
+      var _a3;
+      return ((_a3 = im.source) == null ? void 0 : _a3.kind) === "local";
+    });
+    const omeTiffBundle = isJpegOmeTiffImageSource(data2.metadata.imageSource);
+    const imagesBase = data2.metadata.imageSource === "remote-url" || hasLocalSources || omeTiffBundle ? data2.images : withPortableJpegSources(data2.images);
+    const rec = await createStoryRecord(title7);
+    let images = hasLocalSources ? imagesBase.map((im) => {
+      var _a3;
+      if (((_a3 = im.source) == null ? void 0 : _a3.kind) !== "local") return im;
+      return {
+        ...im,
+        source: {
+          kind: "local",
+          handleKey: imageHandleStorageKey(rec.id, im.id)
+        }
+      };
+    }) : imagesBase;
+    let featureTables = data2.featureTables;
+    if (root2) {
+      const nextImages = [];
+      for (const im of images) {
+        if (((_b2 = im.source) == null ? void 0 : _b2.kind) === "url" && isRelativeOmeTiffUrl(im.source.url)) {
+          const fh2 = await fileInDirectory(root2, im.source.url);
+          if (fh2) {
+            const handleKey = imageHandleStorageKey(rec.id, im.id);
+            await putFileHandle(handleKey, fh2);
+            nextImages.push({
+              ...im,
+              source: {
+                kind: "local",
+                handleKey
+              }
+            });
+            continue;
+          }
+        }
+        nextImages.push(im);
+      }
+      images = nextImages;
+      const nextTables = [];
+      for (const table2 of featureTables) {
+        if (table2.source.kind === "url" && !isAbsoluteUrl(table2.source.url)) {
+          const fh2 = await fileInDirectory(root2, table2.source.url);
+          if (fh2) {
+            const handleKey = featureTableBlobKey(rec.id, table2.id);
+            const file = await fh2.getFile();
+            await putBlob(handleKey, new Uint8Array(await file.arrayBuffer()));
+            nextTables.push({
+              ...table2,
+              source: {
+                kind: "local",
+                handleKey
+              }
+            });
+            continue;
+          }
+        }
+        nextTables.push(table2);
+      }
+      featureTables = nextTables;
+    }
+    const next2 = validateDocumentData({
+      ...data2,
+      metadata: {
+        ...data2.metadata,
+        id: rec.id,
+        title: title7
+      },
+      images,
+      featureTables
+    });
+    await saveStoryDocument(rec.id, next2);
+    if (root2) await setStoryRootHandle(rec.id, root2);
+    useDocumentStore.getState().hydrateFromDocument(next2, rec.id);
+    await setActiveStoryId(rec.id);
+    return rec.id;
+  }
+  async function importStoryJsonFromPicker() {
+    const file = await n$1({
+      description: "Minerva story JSON",
+      mimeTypes: [
+        "application/json"
+      ],
+      extensions: [
+        ".json"
+      ],
+      multiple: false
+    });
+    const data2 = validateDocumentData(JSON.parse(await file.text()));
+    const base2 = file.name.replace(/\.json$/i, "").trim();
+    const fallback = /^(document|story)$/i.test(base2) ? "Imported Story" : base2;
+    return persistImportedStory(data2, fallback);
+  }
+  async function importStoryFolderFromPicker() {
+    if (!hasDirectoryPickerAccess()) {
+      throw new Error("Importing a story folder needs the File System Access API (Chrome or Edge).");
+    }
+    const root2 = await window.showDirectoryPicker({
+      id: "minerva-story-import",
+      mode: "read"
+    });
+    const data2 = await readDocumentJson(root2);
+    await assertPyramidFoldersExist(root2, data2);
+    return persistImportedStory(data2, root2.name, root2);
+  }
+  async function reconnectStoryRootFromPicker(storyId) {
+    if (!hasDirectoryPickerAccess()) {
+      throw new Error("Reconnecting a story folder needs the File System Access API (Chrome or Edge).");
+    }
+    const root2 = await window.showDirectoryPicker({
+      id: "minerva-story-import",
+      mode: "read"
+    });
+    await assertPyramidFoldersExist(root2, useDocumentStore.getState().toDocumentData());
+    await setStoryRootHandle(storyId, root2);
+    return root2;
+  }
+  function storyNeedsLocalJpegRoot(images) {
+    return images.some((im) => {
+      var _a2;
+      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
+    });
+  }
   const root$8 = "_root_la95u_6";
   const masthead = "_masthead_la95u_19";
   const addWrap = "_addWrap_la95u_30";
@@ -170634,7 +174146,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const rowTitle$1 = "_rowTitle_la95u_239";
   const rowDate = "_rowDate_la95u_249";
   const scrap = "_scrap_la95u_258";
-  const styles$n = {
+  const styles$m = {
     root: root$8,
     masthead,
     addWrap,
@@ -170708,7 +174220,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function ShelfBoard() {
     return jsxRuntimeExports.jsx("div", {
-      className: styles$n.shelfBoard,
+      className: styles$m.shelfBoard,
       "aria-hidden": true
     });
   }
@@ -170772,10 +174284,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     return jsxRuntimeExports.jsx("div", {
       ref: shelfRef,
-      className: styles$n.ghostShelf,
+      className: styles$m.ghostShelf,
       "aria-hidden": true,
       children: books.map((b2) => jsxRuntimeExports.jsx("div", {
-        className: styles$n.ghostBook,
+        className: styles$m.ghostBook,
         style: {
           width: b2.width,
           height: b2.height,
@@ -170913,13 +174425,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       goToStory,
       openNewStory
     ]);
-    const handleImport = reactExports.useCallback(async () => {
+    const handleImport = reactExports.useCallback(async (importStory) => {
       setAddOpen(false);
       setShelfBusy(true);
       setError(null);
       try {
         useAppStore.getState().resetStoryViewerSession();
-        goToStory(await importStoryJsonFromPicker());
+        goToStory(await importStory());
       } catch (e2) {
         if (!(e2 instanceof DOMException && e2.name === "AbortError")) {
           setError(e2 instanceof Error ? e2.message : "Could not import story");
@@ -170952,46 +174464,46 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       summaries
     ]);
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$n.root,
+      className: styles$m.root,
       children: [
         error2 ? jsxRuntimeExports.jsx("p", {
-          className: styles$n.error,
+          className: styles$m.error,
           children: error2
         }) : null,
         jsxRuntimeExports.jsxs("header", {
-          className: styles$n.masthead,
+          className: styles$m.masthead,
           children: [
             jsxRuntimeExports.jsx("h1", {
               className: `${minervaTheme.wordmark} ${minervaTheme.wordmarkDisplay}`,
               children: "Minerva"
             }),
             jsxRuntimeExports.jsx("p", {
-              className: styles$n.tagline,
+              className: styles$m.tagline,
               children: "a microscopy viewer for non-experts"
             })
           ]
         }),
         jsxRuntimeExports.jsx("section", {
-          className: styles$n.bookcase,
+          className: styles$m.bookcase,
           "aria-label": "Library",
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$n.bookcaseInner,
+            className: styles$m.bookcaseInner,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$n.shelfBay,
+                className: styles$m.shelfBay,
                 children: [
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$n.bayContent,
+                    className: styles$m.bayContent,
                     children: jsxRuntimeExports.jsxs("div", {
-                      className: styles$n.intakeRow,
+                      className: styles$m.intakeRow,
                       children: [
                         jsxRuntimeExports.jsxs("div", {
-                          className: styles$n.addWrap,
+                          className: styles$m.addWrap,
                           ref: addRef,
                           children: [
                             jsxRuntimeExports.jsx("button", {
                               type: "button",
-                              className: `${minervaTheme.focusRing} ${styles$n.addTrigger}`,
+                              className: `${minervaTheme.focusRing} ${styles$m.addTrigger}`,
                               disabled: shelfBusy,
                               "aria-label": "Add story",
                               title: "New or import story",
@@ -171001,7 +174513,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                               children: jsxRuntimeExports.jsx(PlusIcon, {})
                             }),
                             addOpen ? jsxRuntimeExports.jsxs("div", {
-                              className: `${minervaTheme.menu} ${styles$n.addMenu}`,
+                              className: `${minervaTheme.menu} ${styles$m.addMenu}`,
                               role: "menu",
                               children: [
                                 jsxRuntimeExports.jsx("button", {
@@ -171017,9 +174529,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                                   role: "menuitem",
                                   className: minervaTheme.menuItem,
                                   disabled: shelfBusy,
-                                  onClick: () => void handleImport(),
+                                  onClick: () => void handleImport(importStoryJsonFromPicker),
                                   children: "Import story"
-                                })
+                                }),
+                                hasDirectoryPickerAccess() ? jsxRuntimeExports.jsx("button", {
+                                  type: "button",
+                                  role: "menuitem",
+                                  className: minervaTheme.menuItem,
+                                  disabled: shelfBusy,
+                                  onClick: () => void handleImport(importStoryFolderFromPicker),
+                                  children: "Import folder"
+                                }) : null
                               ]
                             }) : null
                           ]
@@ -171046,48 +174566,48 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               bays.map((bay, index2) => {
                 const key2 = bay.kind === "story" ? bay.story.id : `bay-${index2}`;
                 return jsxRuntimeExports.jsxs("div", {
-                  className: styles$n.shelfBay,
+                  className: styles$m.shelfBay,
                   children: [
                     jsxRuntimeExports.jsxs("div", {
-                      className: bay.kind === "empty" ? `${styles$n.bayContent} ${styles$n.bayContentEmpty}` : styles$n.bayContent,
+                      className: bay.kind === "empty" ? `${styles$m.bayContent} ${styles$m.bayContentEmpty}` : styles$m.bayContent,
                       "aria-hidden": bay.kind === "empty" ? true : void 0,
                       children: [
                         bay.kind === "empty" ? jsxRuntimeExports.jsx(GhostBooks, {
                           bayIndex: index2
                         }) : null,
                         bay.kind === "loading" ? jsxRuntimeExports.jsx("p", {
-                          className: styles$n.whisper,
+                          className: styles$m.whisper,
                           children: "Opening the stacks\u2026"
                         }) : null,
                         bay.kind === "story" ? jsxRuntimeExports.jsxs("div", {
-                          className: styles$n.storyRow,
+                          className: styles$m.storyRow,
                           children: [
                             jsxRuntimeExports.jsxs("button", {
                               type: "button",
-                              className: `${minervaTheme.focusRing} ${styles$n.rowOpen}`,
+                              className: `${minervaTheme.focusRing} ${styles$m.rowOpen}`,
                               disabled: busyId === bay.story.id,
                               onClick: () => void openStory(bay.story.id),
                               children: [
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$n.rowThumb,
+                                  className: styles$m.rowThumb,
                                   "aria-hidden": true,
                                   children: bay.story.thumbnail ? jsxRuntimeExports.jsx("img", {
                                     src: bay.story.thumbnail,
                                     alt: "",
-                                    className: styles$n.rowThumbImg
+                                    className: styles$m.rowThumbImg
                                   }) : jsxRuntimeExports.jsx("span", {
-                                    className: styles$n.rowThumbBlank
+                                    className: styles$m.rowThumbBlank
                                   })
                                 }),
                                 jsxRuntimeExports.jsxs("span", {
-                                  className: styles$n.rowText,
+                                  className: styles$m.rowText,
                                   children: [
                                     jsxRuntimeExports.jsx("span", {
-                                      className: styles$n.rowTitle,
+                                      className: styles$m.rowTitle,
                                       children: bay.story.title
                                     }),
                                     jsxRuntimeExports.jsx("span", {
-                                      className: styles$n.rowDate,
+                                      className: styles$m.rowDate,
                                       children: formatShortDate(bay.story.modifiedAt)
                                     })
                                   ]
@@ -171096,7 +174616,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             }),
                             jsxRuntimeExports.jsx("button", {
                               type: "button",
-                              className: `${minervaTheme.focusRing} ${styles$n.scrap}`,
+                              className: `${minervaTheme.focusRing} ${styles$m.scrap}`,
                               disabled: busyId === bay.story.id,
                               "aria-label": `Remove ${bay.story.title}`,
                               onClick: (e2) => {
@@ -171163,7 +174683,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const headerTitle = "_headerTitle_o47qu_12";
   const headerCount = "_headerCount_o47qu_24";
   const headerActions = "_headerActions_o47qu_30";
-  const styles$m = {
+  const styles$l = {
     compactHeader,
     headerTitle,
     headerCount,
@@ -171194,7 +174714,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showTitle = title7 != null && title7 !== "";
     const slot = reactExports.useContext(SidebarStripSlotContext);
     const actionsNode = actions2 == null ? null : jsxRuntimeExports.jsx("div", {
-      className: styles$m.headerActions,
+      className: styles$l.headerActions,
       children: actions2
     });
     if (!showTitle) {
@@ -171203,18 +174723,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$m.compactHeader,
+        styles$l.compactHeader,
         className2
       ].filter(Boolean).join(" "),
       children: [
         showTitle ? jsxRuntimeExports.jsxs("div", {
-          className: styles$m.headerTitle,
+          className: styles$l.headerTitle,
           children: [
             jsxRuntimeExports.jsx("span", {
               children: title7
             }),
             count2 != null ? jsxRuntimeExports.jsx("span", {
-              className: styles$m.headerCount,
+              className: styles$l.headerCount,
               children: count2
             }) : null
           ]
@@ -171250,7 +174770,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const brushEditIcon = "_brushEditIcon_1qxur_61";
   const itemListRoot = "_itemListRoot_1qxur_66";
   const metaIcon = "_metaIcon_1qxur_70";
-  const styles$l = {
+  const styles$k = {
     layersPanel,
     layersUnifiedTop,
     layersToolbarSlot,
@@ -171282,7 +174802,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const itemRowMainStatic = "_itemRowMainStatic_1ftcd_161";
   const itemListMarkdownEditor = "_itemListMarkdownEditor_1ftcd_167";
   const itemListCompact = "_itemListCompact_1ftcd_197";
-  const styles$k = {
+  const styles$j = {
     itemList,
     headerMarkdown,
     list: list$3,
@@ -171349,7 +174869,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       return jsxRuntimeExports.jsx("button", {
         type: "button",
-        className: styles$k.button,
+        className: styles$j.button,
         onClick: (e2) => {
           e2.stopPropagation();
           onToggleVisibility(item2.id);
@@ -171379,23 +174899,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const isDragging = draggedItemId === item2.id;
       const isDropTarget = dropTargetId === item2.id;
       const itemClasses = [
-        styles$k.item,
+        styles$j.item,
         item2.isActive ? minervaTheme.selectLeft : "",
-        item2.pulse ? styles$k.itemPulse : "",
-        item2.isHidden ? styles$k.itemHidden : "",
-        isDragging ? styles$k.itemDragging : "",
-        isDropTarget ? styles$k.itemDropTarget : "",
-        isChild2 ? styles$k.itemChild : ""
+        item2.pulse ? styles$j.itemPulse : "",
+        item2.isHidden ? styles$j.itemHidden : "",
+        isDragging ? styles$j.itemDragging : "",
+        isDropTarget ? styles$j.itemDropTarget : "",
+        isChild2 ? styles$j.itemChild : ""
       ].filter(Boolean).join(" ");
       const contentBlock = jsxRuntimeExports.jsxs("span", {
-        className: styles$k.content,
+        className: styles$j.content,
         children: [
           jsxRuntimeExports.jsx("span", {
-            className: `${styles$k.title} ${item2.isActive ? styles$k.titleActive : ""}`,
+            className: `${styles$j.title} ${item2.isActive ? styles$j.titleActive : ""}`,
             children: item2.title
           }),
           item2.subtitle ? jsxRuntimeExports.jsx("span", {
-            className: styles$k.subtitle,
+            className: styles$j.subtitle,
             children: item2.subtitle
           }) : null
         ]
@@ -171410,25 +174930,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         onDrop: (e2) => handleDrop(item2.id, e2),
         children: [
           visibilityToggleLeading ? jsxRuntimeExports.jsx("span", {
-            className: styles$k.itemLeadingVisibility,
+            className: styles$j.itemLeadingVisibility,
             children: renderVisibilityToggle(item2)
           }) : null,
           item2.icon ? onItemClick ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$k.itemIconHit}`,
+            className: `${minervaTheme.focusRing} ${styles$j.itemIconHit}`,
             onClick: (e2) => onItemClick(item2, e2),
             onDoubleClick: () => onItemDoubleClick == null ? void 0 : onItemDoubleClick(item2),
             children: jsxRuntimeExports.jsx("span", {
-              className: styles$k.icon,
+              className: styles$j.icon,
               children: item2.icon
             })
           }) : jsxRuntimeExports.jsx("div", {
-            className: styles$k.icon,
+            className: styles$j.icon,
             children: item2.icon
           }) : null,
           showExpandToggle && item2.children && jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$k.button,
+            className: styles$j.button,
             onClick: (e2) => {
               e2.stopPropagation();
               onToggleExpand == null ? void 0 : onToggleExpand(item2.id);
@@ -171439,22 +174959,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           onItemClick ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$k.itemRowMain}`,
+            className: `${minervaTheme.focusRing} ${styles$j.itemRowMain}`,
             onClick: (e2) => onItemClick(item2, e2),
             onDoubleClick: () => onItemDoubleClick == null ? void 0 : onItemDoubleClick(item2),
             children: contentBlock
           }) : jsxRuntimeExports.jsx("div", {
-            className: styles$k.itemRowMainStatic,
+            className: styles$j.itemRowMainStatic,
             children: contentBlock
           }),
           jsxRuntimeExports.jsxs("div", {
-            className: styles$k.actions,
+            className: styles$j.actions,
             children: [
               !visibilityToggleLeading ? renderVisibilityToggle(item2) : null,
               itemActions == null ? void 0 : itemActions(item2),
               showDeleteButton && onDelete && jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$k.button,
+                className: styles$j.button,
                 onClick: (e2) => {
                   e2.stopPropagation();
                   onDelete(item2.id);
@@ -171474,12 +174994,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       title: title7,
       count: `(${items.length})`,
       actions: headerActions2,
-      className: variant === "markdownEditor" ? styles$k.headerMarkdown : void 0
+      className: variant === "markdownEditor" ? styles$j.headerMarkdown : void 0
     });
     const rootClass = [
-      styles$k.itemList,
-      variant === "markdownEditor" ? styles$k.itemListMarkdownEditor : "",
-      compactRows ? styles$k.itemListCompact : "",
+      styles$j.itemList,
+      variant === "markdownEditor" ? styles$j.itemListMarkdownEditor : "",
+      compactRows ? styles$j.itemListCompact : "",
       className2
     ].filter(Boolean).join(" ");
     return jsxRuntimeExports.jsxs("div", {
@@ -171491,14 +175011,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: emptyMessage2
         }) : jsxRuntimeExports.jsx("ul", {
           className: [
-            styles$k.list,
+            styles$j.list,
             panel$1.thinScrollbar
           ].join(" "),
           children: items.map((item2) => jsxRuntimeExports.jsxs(reactExports.Fragment, {
             children: [
               renderItem(item2),
               item2.isExpanded && item2.children && item2.children.map((child) => customChildRenderer ? jsxRuntimeExports.jsx("li", {
-                className: styles$k.itemChild,
+                className: styles$j.itemChild,
                 children: customChildRenderer(child, item2)
               }, `${item2.id}-child-${child.id}`) : jsxRuntimeExports.jsx(reactExports.Fragment, {
                 children: renderItem(child, true)
@@ -171637,7 +175157,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const textInput = "_textInput_ex885_42";
   const actions = "_actions_ex885_48";
   const hint = "_hint_ex885_55";
-  const styles$j = {
+  const styles$i = {
     panel,
     title,
     field: field$1,
@@ -171651,18 +175171,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const TextEditPanel = ({ title: title7, textValue, fontSize = 14, onTextChange, onFontSizeChange, onSubmit, onCancel, submitButtonText, allowEmpty = false, showFontSize = true, singleLine = false, placeholder = "Enter your text here..." }) => {
     const canSubmit = allowEmpty || !!(textValue == null ? void 0 : textValue.trim());
     return jsxRuntimeExports.jsxs("div", {
-      className: `${minervaTheme.surface} ${styles$j.panel}`,
+      className: `${minervaTheme.surface} ${styles$i.panel}`,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$j.title,
+          className: styles$i.title,
           children: title7
         }),
         showFontSize ? jsxRuntimeExports.jsxs("div", {
-          className: styles$j.field,
+          className: styles$i.field,
           children: [
             jsxRuntimeExports.jsx("label", {
               htmlFor: "fontSizeInput",
-              className: styles$j.label,
+              className: styles$i.label,
               children: "Font Size:"
             }),
             jsxRuntimeExports.jsx("input", {
@@ -171673,7 +175193,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onChange: (e2) => onFontSizeChange == null ? void 0 : onFontSizeChange(parseInt(e2.target.value, 10) || 14),
               min: "8",
               max: "72",
-              className: `${minervaTheme.input} ${styles$j.numberInput}`
+              className: `${minervaTheme.input} ${styles$i.numberInput}`
             })
           ]
         }) : null,
@@ -171682,7 +175202,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           value: textValue,
           onChange: (e2) => onTextChange(e2.target.value),
           placeholder,
-          className: `${minervaTheme.input} ${styles$j.textInput}`,
+          className: `${minervaTheme.input} ${styles$i.textInput}`,
           onKeyDown: (e2) => {
             if (e2.key === "Enter") {
               onSubmit();
@@ -171694,7 +175214,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           value: textValue,
           onChange: (e2) => onTextChange(e2.target.value),
           placeholder,
-          className: `${minervaTheme.input} ${styles$j.textarea}`,
+          className: `${minervaTheme.input} ${styles$i.textarea}`,
           onKeyDown: (e2) => {
             if (e2.key === "Enter" && e2.ctrlKey) {
               onSubmit();
@@ -171704,7 +175224,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$j.actions,
+          className: styles$i.actions,
           children: [
             jsxRuntimeExports.jsx(PanelActionButton, {
               type: "button",
@@ -171721,7 +175241,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$j.hint,
+          className: styles$i.hint,
           children: singleLine ? "Press Enter to submit, Escape to cancel" : "Press Ctrl+Enter to submit, Escape to cancel"
         })
       ]
@@ -172000,7 +175520,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         isActive: selectedGroupId === group2.id,
         pulse: flashGroupId === group2.id,
         icon: jsxRuntimeExports.jsx(SvgFolder, {
-          className: styles$l.metaIcon
+          className: styles$k.metaIcon
         }),
         children,
         metadata: {
@@ -172226,7 +175746,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const isBrushActive = isPolygon && brushEditTargetId === annotation.id && brushEditMode === "add";
         const isEraserActive = isPolygon && brushEditTargetId === annotation.id && brushEditMode === "subtract";
         return jsxRuntimeExports.jsxs("div", {
-          className: styles$l.brushEditActions,
+          className: styles$k.brushEditActions,
           children: [
             isPolygon && jsxRuntimeExports.jsx(PanelIconButton, {
               variant: "row",
@@ -172244,7 +175764,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               },
               title: "Brush add to polygon",
               children: jsxRuntimeExports.jsx(SvgAddBrush, {
-                className: styles$l.brushEditIcon
+                className: styles$k.brushEditIcon
               })
             }),
             isPolygon && jsxRuntimeExports.jsx(PanelIconButton, {
@@ -172263,7 +175783,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               },
               title: "Brush subtract from polygon",
               children: jsxRuntimeExports.jsx(SvgEraser, {
-                className: styles$l.brushEditIcon
+                className: styles$k.brushEditIcon
               })
             })
           ]
@@ -172308,24 +175828,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     const hasUnifiedToolbar = !!toolbarSlot2;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$l.layersPanel,
+      className: styles$k.layersPanel,
       children: [
         hasUnifiedToolbar ? jsxRuntimeExports.jsxs("div", {
-          className: styles$l.layersUnifiedTop,
+          className: styles$k.layersUnifiedTop,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$l.layersToolbarSlot,
+              className: styles$k.layersToolbarSlot,
               children: toolbarSlot2
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$l.layersMetaCluster,
+              className: styles$k.layersMetaCluster,
               children: layerMetaButtons
             })
           ]
         }) : null,
         jsxRuntimeExports.jsx("div", {
           ref: itemListRootRef,
-          className: styles$l.itemListRoot,
+          className: styles$k.itemListRoot,
           children: jsxRuntimeExports.jsx(ItemList, {
             className: className2,
             variant: itemListVariant,
@@ -172349,7 +175869,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             showDeleteButton: false,
             showExpandToggle: true,
             headerActions: hasUnifiedToolbar ? void 0 : jsxRuntimeExports.jsx("div", {
-              className: styles$l.layersMetaCluster,
+              className: styles$k.layersMetaCluster,
               children: layerMetaButtons
             }),
             itemActions
@@ -172386,7 +175906,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const menu = "_menu_1gwwf_36";
   const menuItem = "_menuItem_1gwwf_48";
   const menuItemLabel = "_menuItemLabel_1gwwf_54";
-  const styles$i = {
+  const styles$h = {
     container,
     toggle,
     chevron,
@@ -172424,18 +175944,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setIsOpen(false);
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$i.container,
+      className: styles$h.container,
       children: [
         jsxRuntimeExports.jsxs("button", {
           ref: toggleRef,
           type: "button",
-          className: `${styles$i.toggle} ${buttonClassName} ${isActive ? activeClassName : ""}`,
+          className: `${styles$h.toggle} ${buttonClassName} ${isActive ? activeClassName : ""}`,
           title: parentTitle,
           onClick: () => setIsOpen((prev) => !prev),
           children: [
             activeItem ? activeItem.icon : parentIcon,
             jsxRuntimeExports.jsx("span", {
-              className: styles$i.chevron,
+              className: styles$h.chevron,
               "aria-hidden": true,
               children: jsxRuntimeExports.jsxs("svg", {
                 width: "8",
@@ -172462,20 +175982,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         isOpen && reactDomExports.createPortal(jsxRuntimeExports.jsx("div", {
           ref: menuRef,
-          className: `${minervaTheme.menuFixed} ${styles$i.menu}`,
+          className: `${minervaTheme.menuFixed} ${styles$h.menu}`,
           style: {
             top: menuPos.top,
             left: menuPos.left
           },
           children: items.map((item2) => jsxRuntimeExports.jsxs("button", {
             type: "button",
-            className: `${minervaTheme.menuItem} ${styles$i.menuItem} ${activeTool === item2.id ? minervaTheme.selectLeft : ""}`,
+            className: `${minervaTheme.menuItem} ${styles$h.menuItem} ${activeTool === item2.id ? minervaTheme.selectLeft : ""}`,
             title: item2.title,
             onClick: () => handleSelect(item2.id),
             children: [
               item2.icon,
               jsxRuntimeExports.jsx("span", {
-                className: styles$i.menuItemLabel,
+                className: styles$h.menuItemLabel,
                 children: item2.title
               })
             ]
@@ -173858,7 +177378,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const debugLabel = "_debugLabel_1fd03_64";
   const debugImage = "_debugImage_1fd03_70";
   const debugWaiting = "_debugWaiting_1fd03_76";
-  const styles$h = {
+  const styles$g = {
     errorToast,
     hintBar,
     hintAdd,
@@ -175140,16 +178660,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         sam2Error && activeTool === "magic_wand" && !sam2Session && jsxRuntimeExports.jsx("div", {
-          className: styles$h.errorToast,
+          className: styles$g.errorToast,
           children: sam2Error
         }),
         sam2Session && activeTool === "magic_wand" && jsxRuntimeExports.jsxs("div", {
-          className: styles$h.hintBar,
+          className: styles$g.hintBar,
           children: [
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$h.hintAdd,
+                  className: styles$g.hintAdd,
                   children: "Click"
                 }),
                 " to add"
@@ -175158,7 +178678,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$h.hintRemove,
+                  className: styles$g.hintRemove,
                   children: "Shift+Click"
                 }),
                 " to remove"
@@ -175167,7 +178687,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$h.hintConfirm,
+                  className: styles$g.hintConfirm,
                   children: "Enter"
                 }),
                 " to confirm"
@@ -175176,14 +178696,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$h.hintCancel,
+                  className: styles$g.hintCancel,
                   children: "Esc"
                 }),
                 " to cancel"
               ]
             }),
             jsxRuntimeExports.jsxs("span", {
-              className: styles$h.hintCount,
+              className: styles$g.hintCount,
               children: [
                 "(",
                 sam2Session.points.length,
@@ -175195,18 +178715,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         sam2DebugImages && jsxRuntimeExports.jsxs("div", {
-          className: styles$h.debugOverlay,
+          className: styles$g.debugOverlay,
           children: [
             sam2DebugImages.encoded ? jsxRuntimeExports.jsxs("div", {
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$h.debugLabel,
+                  className: styles$g.debugLabel,
                   children: "Encoded (1024\xD71024)"
                 }),
                 jsxRuntimeExports.jsx("img", {
                   src: sam2DebugImages.encoded,
                   alt: "SAM2 encoded",
-                  className: styles$h.debugImage,
+                  className: styles$g.debugImage,
                   title: "Right-click \u2192 Save image as"
                 })
               ]
@@ -175214,18 +178734,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             sam2DebugImages.mask ? jsxRuntimeExports.jsxs("div", {
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$h.debugLabel,
+                  className: styles$g.debugLabel,
                   children: "Mask (256\xD7256)"
                 }),
                 jsxRuntimeExports.jsx("img", {
                   src: sam2DebugImages.mask,
                   alt: "SAM2 mask",
-                  className: styles$h.debugImage,
+                  className: styles$g.debugImage,
                   title: "Right-click \u2192 Save image as"
                 })
               ]
             }) : jsxRuntimeExports.jsx("div", {
-              className: styles$h.debugWaiting,
+              className: styles$g.debugWaiting,
               children: "Mask: waiting for decode\u2026"
             })
           ]
@@ -175310,7 +178830,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const annotationsPanelContent = "_annotationsPanelContent_fxe56_15";
   const layersContainer = "_layersContainer_fxe56_22";
   const annotationsPanelEmbedded = "_annotationsPanelEmbedded_fxe56_30";
-  const styles$g = {
+  const styles$f = {
     annotationsPanel,
     annotationsPanelContent,
     layersContainer,
@@ -175551,13 +179071,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
     return jsxRuntimeExports.jsxs("div", {
-      className: embeddedInScrollParent ? `${styles$g.annotationsPanel} ${styles$g.annotationsPanelEmbedded}` : styles$g.annotationsPanel,
+      className: embeddedInScrollParent ? `${styles$f.annotationsPanel} ${styles$f.annotationsPanelEmbedded}` : styles$f.annotationsPanel,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$g.annotationsPanelContent,
+          className: styles$f.annotationsPanelContent,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$g.layersContainer,
+              className: styles$f.layersContainer,
               children: jsxRuntimeExports.jsx(LayersPanel, {
                 itemListVariant: embeddedInScrollParent ? "markdownEditor" : "default",
                 toolbarSlot: drawingToolbar,
@@ -201572,7 +205092,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     xmlns: "http://www.w3.org/2000/xmlns/"
   };
   const own$8 = {}.hasOwnProperty;
-  const proto = Object.prototype;
+  const proto$1 = Object.prototype;
   function fromParse5(tree, options) {
     const settings = options || {};
     return one$4({
@@ -201658,7 +205178,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     while (++index2 < node2.attrs.length) {
       const attribute2 = node2.attrs[index2];
       const name2 = (attribute2.prefix ? attribute2.prefix + ":" : "") + attribute2.name;
-      if (!own$8.call(proto, name2)) {
+      if (!own$8.call(proto$1, name2)) {
         properties2[name2] = attribute2.value;
       }
     }
@@ -244919,55 +248439,56 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }, variant === "detail" ? story.id : storyIndex)
     });
   };
-  const rows = "_rows_zbb9b_1";
-  const compactRow = "_compactRow_zbb9b_10";
-  const compactRowEditable = "_compactRowEditable_zbb9b_23";
-  const rowChevronSpacer = "_rowChevronSpacer_zbb9b_27";
-  const rowThumbnail = "_rowThumbnail_zbb9b_33";
-  const dragHandle$1 = "_dragHandle_zbb9b_44";
-  const rowMainHit = "_rowMainHit_zbb9b_71";
-  const rowTextStack = "_rowTextStack_zbb9b_89";
-  const rowTitleRow = "_rowTitleRow_zbb9b_98";
-  const compactRowDragging = "_compactRowDragging_zbb9b_110";
-  const compactRowDropTarget = "_compactRowDropTarget_zbb9b_116";
-  const rowOpenDetailButton = "_rowOpenDetailButton_zbb9b_120";
-  const rowTitle = "_rowTitle_zbb9b_98";
-  const rowContent = "_rowContent_zbb9b_144";
-  const annotationBadge = "_annotationBadge_zbb9b_161";
-  const rowViewportActions = "_rowViewportActions_zbb9b_180";
-  const annotationIcon = "_annotationIcon_zbb9b_191";
-  const annotationCount = "_annotationCount_zbb9b_199";
-  const visuallyHidden = "_visuallyHidden_zbb9b_204";
-  const detailView = "_detailView_zbb9b_216";
-  const detailHeader = "_detailHeader_zbb9b_224";
-  const backButton = "_backButton_zbb9b_235";
-  const detailTitle = "_detailTitle_zbb9b_252";
-  const detailBody = "_detailBody_zbb9b_263";
-  const detailBodyInner = "_detailBodyInner_zbb9b_271";
-  const detailTitleFieldWrap = "_detailTitleFieldWrap_zbb9b_277";
-  const detailTitleLabel = "_detailTitleLabel_zbb9b_285";
-  const detailTitleInput = "_detailTitleInput_zbb9b_293";
-  const detailMarkdownSection = "_detailMarkdownSection_zbb9b_305";
-  const detailAnnotationsSection = "_detailAnnotationsSection_zbb9b_309";
-  const detailSelectionActions = "_detailSelectionActions_zbb9b_313";
-  const detailSelectionButton = "_detailSelectionButton_zbb9b_317";
-  const detailCollapsible = "_detailCollapsible_zbb9b_334";
-  const detailCollapsibleHeader = "_detailCollapsibleHeader_zbb9b_339";
-  const detailCollapsibleCollapsed = "_detailCollapsibleCollapsed_zbb9b_368";
-  const detailCollapsibleChevron = "_detailCollapsibleChevron_zbb9b_372";
-  const detailCollapsibleTitle = "_detailCollapsibleTitle_zbb9b_385";
-  const detailCollapsibleCount = "_detailCollapsibleCount_zbb9b_390";
-  const detailCollapsibleBody = "_detailCollapsibleBody_zbb9b_396";
-  const channelGroupDropdown = "_channelGroupDropdown_zbb9b_402";
-  const channelGroupDropdownTrigger = "_channelGroupDropdownTrigger_zbb9b_407";
-  const channelGroupDropdownTriggerMain = "_channelGroupDropdownTriggerMain_zbb9b_429";
-  const channelGroupDropdownTitle = "_channelGroupDropdownTitle_zbb9b_438";
-  const channelGroupDropdownChannels = "_channelGroupDropdownChannels_zbb9b_445";
-  const channelGroupDropdownChevron = "_channelGroupDropdownChevron_zbb9b_453";
-  const channelGroupDropdownMenu = "_channelGroupDropdownMenu_zbb9b_462";
-  const channelGroupDropdownItem = "_channelGroupDropdownItem_zbb9b_481";
-  const channelGroupDropdownOption = "_channelGroupDropdownOption_zbb9b_486";
-  const styles$f = {
+  const rows = "_rows_17hko_1";
+  const compactRow = "_compactRow_17hko_10";
+  const compactRowEditable = "_compactRowEditable_17hko_23";
+  const rowChevronSpacer = "_rowChevronSpacer_17hko_27";
+  const rowThumbnail = "_rowThumbnail_17hko_33";
+  const dragHandle$1 = "_dragHandle_17hko_44";
+  const rowMainHit = "_rowMainHit_17hko_71";
+  const rowTextStack = "_rowTextStack_17hko_89";
+  const rowTitleRow = "_rowTitleRow_17hko_98";
+  const compactRowDragging = "_compactRowDragging_17hko_110";
+  const compactRowDropTarget = "_compactRowDropTarget_17hko_116";
+  const rowOpenDetailButton = "_rowOpenDetailButton_17hko_120";
+  const rowTitle = "_rowTitle_17hko_98";
+  const rowContent = "_rowContent_17hko_144";
+  const annotationBadge = "_annotationBadge_17hko_161";
+  const rowViewportActions = "_rowViewportActions_17hko_180";
+  const annotationIcon = "_annotationIcon_17hko_191";
+  const annotationCount = "_annotationCount_17hko_199";
+  const visuallyHidden = "_visuallyHidden_17hko_204";
+  const detailView = "_detailView_17hko_216";
+  const detailHeader = "_detailHeader_17hko_224";
+  const backButton = "_backButton_17hko_235";
+  const detailTitle = "_detailTitle_17hko_252";
+  const detailBody = "_detailBody_17hko_263";
+  const detailBodyInner = "_detailBodyInner_17hko_271";
+  const detailTitleFieldWrap = "_detailTitleFieldWrap_17hko_277";
+  const detailTitleLabel = "_detailTitleLabel_17hko_285";
+  const detailTitleInput = "_detailTitleInput_17hko_293";
+  const detailMarkdownSection = "_detailMarkdownSection_17hko_305";
+  const detailAnnotationsSection = "_detailAnnotationsSection_17hko_309";
+  const detailClassesSection = "_detailClassesSection_17hko_313";
+  const detailSelectionActions = "_detailSelectionActions_17hko_317";
+  const detailSelectionButton = "_detailSelectionButton_17hko_321";
+  const detailCollapsible = "_detailCollapsible_17hko_338";
+  const detailCollapsibleHeader = "_detailCollapsibleHeader_17hko_343";
+  const detailCollapsibleCollapsed = "_detailCollapsibleCollapsed_17hko_372";
+  const detailCollapsibleChevron = "_detailCollapsibleChevron_17hko_376";
+  const detailCollapsibleTitle = "_detailCollapsibleTitle_17hko_389";
+  const detailCollapsibleCount = "_detailCollapsibleCount_17hko_394";
+  const detailCollapsibleBody = "_detailCollapsibleBody_17hko_400";
+  const channelGroupDropdown = "_channelGroupDropdown_17hko_406";
+  const channelGroupDropdownTrigger = "_channelGroupDropdownTrigger_17hko_411";
+  const channelGroupDropdownTriggerMain = "_channelGroupDropdownTriggerMain_17hko_433";
+  const channelGroupDropdownTitle = "_channelGroupDropdownTitle_17hko_442";
+  const channelGroupDropdownChannels = "_channelGroupDropdownChannels_17hko_449";
+  const channelGroupDropdownChevron = "_channelGroupDropdownChevron_17hko_457";
+  const channelGroupDropdownMenu = "_channelGroupDropdownMenu_17hko_466";
+  const channelGroupDropdownItem = "_channelGroupDropdownItem_17hko_485";
+  const channelGroupDropdownOption = "_channelGroupDropdownOption_17hko_490";
+  const styles$e = {
     rows,
     compactRow,
     compactRowEditable,
@@ -244998,6 +248519,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     detailTitleInput,
     detailMarkdownSection,
     detailAnnotationsSection,
+    detailClassesSection,
     detailSelectionActions,
     detailSelectionButton,
     detailCollapsible,
@@ -245026,28 +248548,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return (group2.channels ?? []).map((gc2) => findSourceChannel(sourceChannels, gc2.channelId)).filter((sc2) => sc2 != null).map((sc2) => sc2.name);
   }
   const WaypointsList = (props) => {
+    var _a2;
     const { viewOnly } = props;
     const canEdit = !viewOnly;
     const waypoints = useDocumentStore((s2) => s2.waypoints);
     const shapes = useDocumentStore((s2) => s2.shapes);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
+    const featureTables = useDocumentStore((s2) => s2.featureTables);
     const sourceChannels = reactExports.useMemo(() => flattenImageChannelsInDocumentOrder(images), [
       images
     ]);
     const docImageWidth = useDocumentStore((s2) => {
-      var _a2;
-      return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeX) ?? 0;
+      var _a3;
+      return ((_a3 = s2.images[0]) == null ? void 0 : _a3.sizeX) ?? 0;
     });
     const docImageHeight = useDocumentStore((s2) => {
-      var _a2;
-      return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
+      var _a3;
+      return ((_a3 = s2.images[0]) == null ? void 0 : _a3.sizeY) ?? 0;
     });
     const viewerWorldFrame = useAppStore((s2) => s2.viewerWorldFrame);
     const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
     const imageWidth = frame2.pixelWidth;
     const imageHeight = frame2.pixelHeight;
-    const { activeStoryIndex, setActiveStory, setActiveChannelGroup, addStory, updateStory, reorderStories, importWaypointShapes, persistImportedShapesToStory, setTargetWaypointCamera, captureSquareViewportThumbnail, removeStory, setShowSquareViewportOverlay, setAuthoringWaypointEditorOpen, setAuthoringWaypointShapesIndex, handleToolChange, setImageSelectionMaskFromWaypoint, layersPanelSelectedShapeIds } = useAppStore();
+    const { activeStoryIndex, setActiveStory, showOnlyChannelGroup, addStory, updateStory, reorderStories, importWaypointShapes, persistImportedShapesToStory, setTargetWaypointCamera, captureSquareViewportThumbnail, removeStory, setShowSquareViewportOverlay, setAuthoringWaypointEditorOpen, setAuthoringWaypointShapesIndex, handleToolChange, setImageSelectionMaskFromWaypoint, layersPanelSelectedShapeIds } = useAppStore();
     const previousDetailStoryIdRef = reactExports.useRef(null);
     const detailBodyRef = reactExports.useRef(null);
     const detailTitleFieldId = reactExports.useId();
@@ -245057,6 +248581,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [detailStoryId, setDetailStoryId] = reactExports.useState(null);
     const [detailMarkdownExpanded, setDetailMarkdownExpanded] = reactExports.useState(true);
     const [detailAnnotationsExpanded, setDetailAnnotationsExpanded] = reactExports.useState(true);
+    const [detailClassesExpanded, setDetailClassesExpanded] = reactExports.useState(true);
     reactExports.useEffect(() => {
       setAuthoringWaypointEditorOpen(detailStoryId != null);
       return () => setAuthoringWaypointEditorOpen(false);
@@ -245078,6 +248603,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (detailStoryId) {
         setDetailMarkdownExpanded(true);
         setDetailAnnotationsExpanded(true);
+        setDetailClassesExpanded(true);
       }
       setChannelGroupMenuOpen(false);
     }, [
@@ -245149,6 +248675,47 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       imageHeight,
       shapes,
       importWaypointShapes
+    ]);
+    const shownWaypoint = activeStoryIndex == null ? void 0 : waypoints[activeStoryIndex];
+    const activeWaypointId = shownWaypoint == null ? void 0 : shownWaypoint.id;
+    const activeClassViews = ((_a2 = shownWaypoint == null ? void 0 : shownWaypoint.classViews) == null ? void 0 : _a2.length) ? shownWaypoint.classViews : void 0;
+    const lastClassViewsRef = reactExports.useRef({
+      id: activeWaypointId,
+      classViews: activeClassViews
+    });
+    reactExports.useEffect(() => {
+      const last2 = lastClassViewsRef.current;
+      lastClassViewsRef.current = {
+        id: activeWaypointId,
+        classViews: activeClassViews
+      };
+      if (activeStoryIndex == null || activeWaypointId == null) return;
+      if (last2.id !== activeWaypointId || JSON.stringify(last2.classViews) === JSON.stringify(activeClassViews)) {
+        return;
+      }
+      const index2 = activeStoryIndex;
+      const timeout = window.setTimeout(() => {
+        var _a3;
+        const st = useAppStore.getState();
+        if (st.activeStoryIndex !== index2 || !st.viewerImageLayersLoaded) return;
+        if (!((_a3 = useDocumentStore.getState().waypoints[index2]) == null ? void 0 : _a3.thumbnail)) return;
+        const thumbnail = st.captureSquareViewportThumbnail();
+        if (!thumbnail) return;
+        const history = useDocumentStore.temporal.getState();
+        history.pause();
+        try {
+          st.updateStory(index2, {
+            ThumbnailDataUrl: thumbnail
+          });
+        } finally {
+          history.resume();
+        }
+      }, 600);
+      return () => window.clearTimeout(timeout);
+    }, [
+      activeStoryIndex,
+      activeWaypointId,
+      activeClassViews
     ]);
     reactExports.useEffect(() => {
       return () => {
@@ -245250,12 +248817,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const applyStoryChannelGroup = reactExports.useCallback((story) => {
       if (!story || channelGroups.length === 0) return;
       const foundGroup = story.groupId && channelGroups.find((group2) => group2.id === story.groupId) || channelGroups[0];
-      if (foundGroup) {
-        setActiveChannelGroup(foundGroup.id);
-      }
+      if (foundGroup) showOnlyChannelGroup(foundGroup.id);
     }, [
       channelGroups,
-      setActiveChannelGroup
+      showOnlyChannelGroup
     ]);
     const scheduleThumbnailCaptureForStory = (index2, overwriteView = false, thumbnailOnly = false, delayMs = 1100) => {
       if (pendingThumbnailCaptureTimeoutRef.current !== null) {
@@ -245302,8 +248867,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       activateStoryIndex(index2);
       setDetailStoryId(storyId);
       requestAnimationFrame(() => {
-        var _a2;
-        (_a2 = detailBodyRef.current) == null ? void 0 : _a2.scrollTo({
+        var _a3;
+        (_a3 = detailBodyRef.current) == null ? void 0 : _a3.scrollTo({
           top: 0,
           behavior: "auto"
         });
@@ -245322,7 +248887,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const handleAddWaypoint = () => {
       const storyIndex = waypoints.length;
-      const currentGroup = channelGroups.find((group2) => group2.id === useAppStore.getState().activeChannelGroupId) || channelGroups[0];
+      const app = useAppStore.getState();
+      const currentGroup = channelGroups.find((group2) => group2.id === app.activeChannelGroupId) || channelGroups[0];
+      const activeWaypoint = app.activeStoryIndex == null ? void 0 : waypoints[app.activeStoryIndex];
       const newWaypoint = {
         id: crypto.randomUUID(),
         State: {
@@ -245331,15 +248898,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         Name: `Waypoint ${storyIndex + 1}`,
         Content: "",
         groupId: currentGroup == null ? void 0 : currentGroup.id,
-        shapeIds: []
+        shapeIds: [],
+        classViews: structuredClone((activeWaypoint == null ? void 0 : activeWaypoint.classViews) ?? [])
       };
       addStory(newWaypoint);
       saveCurrentViewToStory(storyIndex, "handleAddWaypoint");
       activateStoryIndex(storyIndex, true);
       setDetailStoryId(newWaypoint.id);
       requestAnimationFrame(() => {
-        var _a2;
-        (_a2 = detailBodyRef.current) == null ? void 0 : _a2.scrollTo({
+        var _a3;
+        (_a3 = detailBodyRef.current) == null ? void 0 : _a3.scrollTo({
           top: 0,
           behavior: "auto"
         });
@@ -245392,7 +248960,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: "No waypoints yet"
         }) : jsxRuntimeExports.jsx("ul", {
           className: [
-            styles$f.rows,
+            styles$e.rows,
             panel$1.authorPanelBody,
             panel$1.thinScrollbar
           ].join(" "),
@@ -245405,11 +248973,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             const isDropTarget = dropTargetStoryId === storyId;
             return jsxRuntimeExports.jsxs("li", {
               className: [
-                styles$f.compactRow,
-                canEdit ? styles$f.compactRowEditable : "",
+                styles$e.compactRow,
+                canEdit ? styles$e.compactRowEditable : "",
                 isActive ? minervaTheme.selectLeft : "",
-                isDragging ? styles$f.compactRowDragging : "",
-                isDropTarget ? styles$f.compactRowDropTarget : ""
+                isDragging ? styles$e.compactRowDragging : "",
+                isDropTarget ? styles$e.compactRowDropTarget : ""
               ].filter(Boolean).join(" "),
               onDragOver: (e2) => handleDragOverRow(storyId, e2),
               onDragLeave: handleDragLeaveRow,
@@ -245420,7 +248988,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               children: [
                 canEdit ? jsxRuntimeExports.jsx("button", {
                   type: "button",
-                  className: styles$f.dragHandle,
+                  className: styles$e.dragHandle,
                   draggable: true,
                   title: `Drag ${story.title}`,
                   "aria-label": `Drag ${story.title}`,
@@ -245430,59 +248998,59 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }) : null,
                 canEdit ? jsxRuntimeExports.jsx(PanelIconButton, {
                   variant: "row",
-                  className: styles$f.rowOpenDetailButton,
+                  className: styles$e.rowOpenDetailButton,
                   title: "Open waypoint details",
                   onClick: () => openDetailForStoryId(storyId),
                   children: jsxRuntimeExports.jsx(ChevronIcon, {
                     direction: "right"
                   })
                 }) : jsxRuntimeExports.jsx("div", {
-                  className: styles$f.rowChevronSpacer,
+                  className: styles$e.rowChevronSpacer,
                   "aria-hidden": true
                 }),
                 jsxRuntimeExports.jsxs("button", {
                   type: "button",
-                  className: `${minervaTheme.focusRing} ${styles$f.rowMainHit}`,
+                  className: `${minervaTheme.focusRing} ${styles$e.rowMainHit}`,
                   "aria-label": `Select waypoint: ${story.title}`,
                   onClick: () => activateStoryIndex(index2, true),
                   onDoubleClick: () => openDetailForStoryId(storyId),
                   children: [
                     story.thumbnail ? jsxRuntimeExports.jsx("img", {
-                      className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
+                      className: `${minervaTheme.surface} ${styles$e.rowThumbnail}`,
                       src: story.thumbnail,
                       width: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
                       height: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
                       alt: "",
                       "aria-hidden": true
                     }) : jsxRuntimeExports.jsx("div", {
-                      className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
+                      className: `${minervaTheme.surface} ${styles$e.rowThumbnail}`,
                       "aria-hidden": true
                     }),
                     jsxRuntimeExports.jsxs("div", {
-                      className: styles$f.rowTextStack,
+                      className: styles$e.rowTextStack,
                       children: [
                         jsxRuntimeExports.jsxs("div", {
-                          className: styles$f.rowTitleRow,
+                          className: styles$e.rowTitleRow,
                           children: [
                             jsxRuntimeExports.jsx("span", {
-                              className: styles$f.rowTitle,
+                              className: styles$e.rowTitle,
                               title: story.title,
                               children: story.title
                             }),
                             jsxRuntimeExports.jsxs("span", {
-                              className: `${minervaTheme.surface} ${styles$f.annotationBadge}`,
+                              className: `${minervaTheme.surface} ${styles$e.annotationBadge}`,
                               title: annotationTitle,
                               children: [
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$f.visuallyHidden,
+                                  className: styles$e.visuallyHidden,
                                   children: annotationTitle
                                 }),
                                 jsxRuntimeExports.jsx(SvgShapes, {
-                                  className: styles$f.annotationIcon,
+                                  className: styles$e.annotationIcon,
                                   "aria-hidden": true
                                 }),
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$f.annotationCount,
+                                  className: styles$e.annotationCount,
                                   "aria-hidden": true,
                                   children: annotationCount2
                                 })
@@ -245491,7 +249059,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           ]
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$f.rowContent,
+                          className: styles$e.rowContent,
                           title: story.content ?? "",
                           children: story.content ?? ""
                         })
@@ -245500,7 +249068,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 jsxRuntimeExports.jsxs("div", {
-                  className: styles$f.rowViewportActions,
+                  className: styles$e.rowViewportActions,
                   children: [
                     canEdit ? jsxRuntimeExports.jsx(PanelIconButton, {
                       variant: "row",
@@ -245523,7 +249091,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           "aria-hidden": true
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$f.visuallyHidden,
+                          className: styles$e.visuallyHidden,
                           children: "Jump to waypoint view"
                         })
                       ]
@@ -245539,7 +249107,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           "aria-hidden": true
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$f.visuallyHidden,
+                          className: styles$e.visuallyHidden,
                           children: "Save waypoint view"
                         })
                       ]
@@ -245579,25 +249147,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const selectedChannelNames = channelNamesForGroup(selectedGroup, sourceChannels);
         selectedChannelsSubtitle = selectedChannelNames.join(", ");
       }
+      const classTables = featureTables.filter((table2) => selectedGroup == null ? void 0 : selectedGroup.channels.some((gc2) => gc2.channelId === table2.sourceChannelId));
       const selectChannelGroupByUuid = (nextGroupUuid) => {
         const nextGroup = channelGroups.find((group2) => group2.id === nextGroupUuid);
         if (!nextGroup) return;
         updateStory(detailStoryIndex, {
           groupId: nextGroup.id
         });
-        setActiveChannelGroup(nextGroup.id);
+        showOnlyChannelGroup(nextGroup.id);
         setChannelGroupMenuOpen(false);
         scheduleThumbnailCaptureForStory(detailStoryIndex, true, true, 1100);
       };
       return jsxRuntimeExports.jsxs("div", {
-        className: styles$f.detailView,
+        className: styles$e.detailView,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$f.detailHeader,
+            className: styles$e.detailHeader,
             children: [
               jsxRuntimeExports.jsxs("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$f.backButton}`,
+                className: `${minervaTheme.focusRing} ${styles$e.backButton}`,
                 onClick: () => setDetailStoryId(null),
                 title: "Back to waypoint list",
                 children: [
@@ -245610,7 +249179,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$f.detailTitle,
+                className: styles$e.detailTitle,
                 title: detailStory.title,
                 children: detailStory.title
               })
@@ -245618,24 +249187,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           jsxRuntimeExports.jsx("div", {
             className: [
-              styles$f.detailBody,
+              styles$e.detailBody,
               panel$1.thinScrollbar
             ].join(" "),
             ref: detailBodyRef,
             children: jsxRuntimeExports.jsxs("div", {
-              className: styles$f.detailBodyInner,
+              className: styles$e.detailBodyInner,
               children: [
                 jsxRuntimeExports.jsxs("div", {
-                  className: `${minervaTheme.surface} ${styles$f.detailTitleFieldWrap}`,
+                  className: `${minervaTheme.surface} ${styles$e.detailTitleFieldWrap}`,
                   children: [
                     jsxRuntimeExports.jsx("label", {
-                      className: styles$f.detailTitleLabel,
+                      className: styles$e.detailTitleLabel,
                       htmlFor: detailTitleFieldId,
                       children: "Title"
                     }),
                     jsxRuntimeExports.jsx("input", {
                       id: detailTitleFieldId,
-                      className: `${minervaTheme.input} ${styles$f.detailTitleInput}`,
+                      className: `${minervaTheme.input} ${styles$e.detailTitleInput}`,
                       type: "text",
                       value: detailStory.title ?? "",
                       onChange: (e2) => updateStory(detailStoryIndex, {
@@ -245651,47 +249220,47 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 channelGroups.length > 0 ? jsxRuntimeExports.jsxs("div", {
-                  className: `${minervaTheme.surface} ${styles$f.detailTitleFieldWrap}`,
+                  className: `${minervaTheme.surface} ${styles$e.detailTitleFieldWrap}`,
                   children: [
                     jsxRuntimeExports.jsx("label", {
-                      className: styles$f.detailTitleLabel,
+                      className: styles$e.detailTitleLabel,
                       htmlFor: detailGroupFieldId,
                       children: "Channel group"
                     }),
                     jsxRuntimeExports.jsxs("div", {
-                      className: styles$f.channelGroupDropdown,
+                      className: styles$e.channelGroupDropdown,
                       ref: channelGroupDropdownRef,
                       children: [
                         jsxRuntimeExports.jsxs("button", {
                           type: "button",
                           id: detailGroupFieldId,
-                          className: `${minervaTheme.input} ${minervaTheme.focusRing} ${styles$f.channelGroupDropdownTrigger}`,
+                          className: `${minervaTheme.input} ${minervaTheme.focusRing} ${styles$e.channelGroupDropdownTrigger}`,
                           "aria-haspopup": "listbox",
                           "aria-expanded": channelGroupMenuOpen,
                           disabled: !canEdit,
                           onClick: () => setChannelGroupMenuOpen((open) => !open),
                           children: [
                             jsxRuntimeExports.jsxs("span", {
-                              className: styles$f.channelGroupDropdownTriggerMain,
+                              className: styles$e.channelGroupDropdownTriggerMain,
                               children: [
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$f.channelGroupDropdownTitle,
+                                  className: styles$e.channelGroupDropdownTitle,
                                   children: selectedGroup.name
                                 }),
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$f.channelGroupDropdownChannels,
+                                  className: styles$e.channelGroupDropdownChannels,
                                   children: selectedChannelsSubtitle || "\u2014"
                                 })
                               ]
                             }),
                             jsxRuntimeExports.jsx(ChevronIcon, {
                               direction: channelGroupMenuOpen ? "up" : "down",
-                              className: styles$f.channelGroupDropdownChevron
+                              className: styles$e.channelGroupDropdownChevron
                             })
                           ]
                         }),
                         channelGroupMenuOpen ? jsxRuntimeExports.jsx("div", {
-                          className: `${minervaTheme.menu} ${styles$f.channelGroupDropdownMenu}`,
+                          className: `${minervaTheme.menu} ${styles$e.channelGroupDropdownMenu}`,
                           role: "listbox",
                           "aria-label": "Channel groups",
                           children: channelGroups.map((group2) => {
@@ -245699,24 +249268,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             const subtitle2 = names.join(", ");
                             const isSelected = group2.id === selectedGroupUuid;
                             return jsxRuntimeExports.jsx("div", {
-                              className: styles$f.channelGroupDropdownItem,
+                              className: styles$e.channelGroupDropdownItem,
                               children: jsxRuntimeExports.jsxs("button", {
                                 type: "button",
                                 role: "option",
                                 "aria-selected": isSelected,
                                 className: [
                                   minervaTheme.menuItem,
-                                  styles$f.channelGroupDropdownOption,
+                                  styles$e.channelGroupDropdownOption,
                                   isSelected ? minervaTheme.selectLeft : ""
                                 ].filter(Boolean).join(" "),
                                 onClick: () => selectChannelGroupByUuid(group2.id),
                                 children: [
                                   jsxRuntimeExports.jsx("span", {
-                                    className: styles$f.channelGroupDropdownTitle,
+                                    className: styles$e.channelGroupDropdownTitle,
                                     children: group2.name
                                   }),
                                   jsxRuntimeExports.jsx("span", {
-                                    className: styles$f.channelGroupDropdownChannels,
+                                    className: styles$e.channelGroupDropdownChannels,
                                     children: subtitle2 || "\u2014"
                                   })
                                 ]
@@ -245730,29 +249299,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }) : null,
                 jsxRuntimeExports.jsxs("div", {
                   className: [
-                    styles$f.detailCollapsible,
+                    styles$e.detailCollapsible,
                     minervaTheme.surface,
-                    styles$f.detailMarkdownSection,
-                    !detailMarkdownExpanded ? styles$f.detailCollapsibleCollapsed : ""
+                    styles$e.detailMarkdownSection,
+                    !detailMarkdownExpanded ? styles$e.detailCollapsibleCollapsed : ""
                   ].filter(Boolean).join(" "),
                   children: [
                     jsxRuntimeExports.jsxs("button", {
                       type: "button",
-                      className: `${minervaTheme.focusRing} ${styles$f.detailCollapsibleHeader}`,
+                      className: `${minervaTheme.focusRing} ${styles$e.detailCollapsibleHeader}`,
                       "aria-expanded": detailMarkdownExpanded,
                       onClick: () => setDetailMarkdownExpanded((prev) => !prev),
                       children: [
                         jsxRuntimeExports.jsx(ChevronIcon, {
-                          className: styles$f.detailCollapsibleChevron
+                          className: styles$e.detailCollapsibleChevron
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$f.detailCollapsibleTitle,
+                          className: styles$e.detailCollapsibleTitle,
                           children: "Markdown"
                         })
                       ]
                     }),
                     detailMarkdownExpanded ? jsxRuntimeExports.jsx("div", {
-                      className: styles$f.detailCollapsibleBody,
+                      className: styles$e.detailCollapsibleBody,
                       children: jsxRuntimeExports.jsx(WaypointContentEditor, {
                         variant: "detail",
                         story: detailStory,
@@ -245761,31 +249330,75 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     }) : null
                   ]
                 }),
-                jsxRuntimeExports.jsxs("div", {
+                classTables.length > 0 ? jsxRuntimeExports.jsxs("div", {
                   className: [
-                    styles$f.detailCollapsible,
+                    styles$e.detailCollapsible,
                     minervaTheme.surface,
-                    styles$f.detailAnnotationsSection,
-                    !detailAnnotationsExpanded ? styles$f.detailCollapsibleCollapsed : ""
+                    styles$e.detailClassesSection,
+                    !detailClassesExpanded ? styles$e.detailCollapsibleCollapsed : ""
                   ].filter(Boolean).join(" "),
                   children: [
                     jsxRuntimeExports.jsxs("button", {
                       type: "button",
-                      className: `${minervaTheme.focusRing} ${styles$f.detailCollapsibleHeader}`,
+                      className: `${minervaTheme.focusRing} ${styles$e.detailCollapsibleHeader}`,
+                      "aria-expanded": detailClassesExpanded,
+                      onClick: () => setDetailClassesExpanded((prev) => !prev),
+                      children: [
+                        jsxRuntimeExports.jsx(ChevronIcon, {
+                          className: styles$e.detailCollapsibleChevron
+                        }),
+                        jsxRuntimeExports.jsxs("span", {
+                          className: styles$e.detailCollapsibleTitle,
+                          children: [
+                            "Classes",
+                            " ",
+                            jsxRuntimeExports.jsxs("span", {
+                              className: styles$e.detailCollapsibleCount,
+                              children: [
+                                "(",
+                                classTables.length,
+                                ")"
+                              ]
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+                    detailClassesExpanded ? jsxRuntimeExports.jsx("div", {
+                      className: styles$e.detailCollapsibleBody,
+                      children: jsxRuntimeExports.jsx(WaypointClassViews, {
+                        waypoint: detailStory,
+                        featureTables: classTables,
+                        readOnly: !canEdit
+                      })
+                    }) : null
+                  ]
+                }) : null,
+                jsxRuntimeExports.jsxs("div", {
+                  className: [
+                    styles$e.detailCollapsible,
+                    minervaTheme.surface,
+                    styles$e.detailAnnotationsSection,
+                    !detailAnnotationsExpanded ? styles$e.detailCollapsibleCollapsed : ""
+                  ].filter(Boolean).join(" "),
+                  children: [
+                    jsxRuntimeExports.jsxs("button", {
+                      type: "button",
+                      className: `${minervaTheme.focusRing} ${styles$e.detailCollapsibleHeader}`,
                       "aria-expanded": detailAnnotationsExpanded,
                       title: detailAnnotationText,
                       onClick: () => setDetailAnnotationsExpanded((prev) => !prev),
                       children: [
                         jsxRuntimeExports.jsx(ChevronIcon, {
-                          className: styles$f.detailCollapsibleChevron
+                          className: styles$e.detailCollapsibleChevron
                         }),
                         jsxRuntimeExports.jsxs("span", {
-                          className: styles$f.detailCollapsibleTitle,
+                          className: styles$e.detailCollapsibleTitle,
                           children: [
                             "Annotations",
                             " ",
                             jsxRuntimeExports.jsxs("span", {
-                              className: styles$f.detailCollapsibleCount,
+                              className: styles$e.detailCollapsibleCount,
                               children: [
                                 "(",
                                 detailAnnotationCount,
@@ -245797,13 +249410,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       ]
                     }),
                     detailAnnotationsExpanded ? jsxRuntimeExports.jsxs("div", {
-                      className: styles$f.detailCollapsibleBody,
+                      className: styles$e.detailCollapsibleBody,
                       children: [
                         detailAnnotationCount > 0 ? jsxRuntimeExports.jsx("div", {
-                          className: styles$f.detailSelectionActions,
+                          className: styles$e.detailSelectionActions,
                           children: jsxRuntimeExports.jsx("button", {
                             type: "button",
-                            className: `${minervaTheme.focusRing} ${styles$f.detailSelectionButton}`,
+                            className: `${minervaTheme.focusRing} ${styles$e.detailSelectionButton}`,
                             title: "Use a waypoint annotation as the spatial selection mask (prefers the selected shape in the layers list)",
                             onClick: () => {
                               const shapeIds = detailStory.shapeIds ?? [];
@@ -245876,7 +249489,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const filterEmpty = "_filterEmpty_1wvsk_240";
   const rootChannelList = "_rootChannelList_1wvsk_247";
   const rootChannelBlock = "_rootChannelBlock_1wvsk_255";
-  const styles$e = {
+  const styles$d = {
     channelActionButton,
     colorLockButtonLocked,
     dropHint,
@@ -245951,11 +249564,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function previewUngroupWhileDragging(row2) {
     const onOver = (ev) => {
       const el2 = document.elementFromPoint(ev.clientX, ev.clientY);
-      const overGroup = el2 instanceof Element && el2.closest(`.${styles$e.groupFolder}`);
-      row2.classList.toggle(styles$e.ungrouping, !overGroup);
+      const overGroup = el2 instanceof Element && el2.closest(`.${styles$d.groupFolder}`);
+      row2.classList.toggle(styles$d.ungrouping, !overGroup);
     };
     const onEnd = () => {
-      row2.classList.remove(styles$e.ungrouping);
+      row2.classList.remove(styles$d.ungrouping);
       document.removeEventListener("dragover", onOver, true);
       document.removeEventListener("dragend", onEnd);
     };
@@ -245969,23 +249582,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fromRowId: props.fromRowId
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$e.channelRowWrap,
+      className: styles$d.channelRowWrap,
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$e.dragHandle,
+          className: styles$d.dragHandle,
           draggable: true,
           onDragStart: (e2) => {
             startChannelDrag(e2, payload);
             if (!props.onRemoveFromGroup) return;
-            const row2 = e2.currentTarget.closest(`.${styles$e.channelRowWrap}`);
+            const row2 = e2.currentTarget.closest(`.${styles$d.channelRowWrap}`);
             if (row2 instanceof HTMLElement) previewUngroupWhileDragging(row2);
           },
           onDragEnd: (e2) => {
             if (!props.onRemoveFromGroup) return;
             if (e2.dataTransfer.dropEffect !== "none") return;
             const el2 = document.elementFromPoint(e2.clientX, e2.clientY);
-            const folder = e2.currentTarget.closest(`.${styles$e.groupFolder}`);
+            const folder = e2.currentTarget.closest(`.${styles$d.groupFolder}`);
             if (folder && el2 && folder.contains(el2)) return;
             props.onRemoveFromGroup();
           },
@@ -246063,7 +249676,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$e.channelActionButton,
+          className: styles$d.channelActionButton,
           "aria-label": `More actions for ${channelName2}`,
           "aria-expanded": menu2.open,
           "aria-haspopup": "menu",
@@ -246211,6 +249824,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   const ChannelGroupsMasterDetail = (props) => {
     const setActiveChannelGroup = useAppStore((s2) => s2.setActiveChannelGroup);
+    const showOnlyChannelGroup = useAppStore((s2) => s2.showOnlyChannelGroup);
     const clearImageSelectionMask = useAppStore((s2) => s2.clearImageSelectionMask);
     const setImageSelectionMaskVisualization = useAppStore((s2) => s2.setImageSelectionMaskVisualization);
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
@@ -246261,13 +249875,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...capVis,
       ...next2
     });
-    const applyRgbUnit = (imageId, visible) => {
+    const applyRgbUnit = (imageId, visible, groupId) => {
       const next2 = visibilitiesForRgbUnit({
         rgbChannels: sourceChannels.filter((c2) => c2.imageId === imageId && isImageChannel(c2)),
         channelGroups,
         groupRowVisibilities: channelGroupRowVisibilities,
         stackVisibilities,
-        visible
+        visible,
+        groupId
       });
       if (visible && !fitsImage(imageId, {
         stackVisibilities: next2.channelVisibilities,
@@ -246357,16 +249972,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         id2,
         name2
       ])));
-      setChannelGroupRowVisibilities(applyGroupRowVisibilities(normalized, useAppStore.getState().channelGroupRowVisibilities, {
+      const app = useAppStore.getState();
+      setChannelGroupRowVisibilities(applyGroupRowVisibilities(normalized, app.channelGroupRowVisibilities, {
         kind: "sync"
-      }));
+      }, app.activeChannelGroupId));
     }, [
       setChannelGroups,
       setGroupNames,
       setChannelGroupRowVisibilities
     ]);
     const activateGroup = reactExports.useCallback((groupId) => {
-      setActiveChannelGroup(groupId);
+      if (useAppStore.getState().activeChannelGroupId === groupId) {
+        setActiveChannelGroup(groupId);
+      } else {
+        showOnlyChannelGroup(groupId);
+      }
       const groups = useDocumentStore.getState().channelGroups;
       syncGroupState(groups.map((g2) => ({
         ...g2,
@@ -246374,6 +249994,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })));
     }, [
       setActiveChannelGroup,
+      showOnlyChannelGroup,
       syncGroupState
     ]);
     const renameSourceChannelDisplayName = reactExports.useCallback((channelId, rawName) => {
@@ -246415,7 +250036,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         })),
         newGroup
       ]);
-      setActiveChannelGroup(newGroup.id);
+      if (seedingFirst) setActiveChannelGroup(newGroup.id);
+      else showOnlyChannelGroup(newGroup.id);
       if (seedingFirst && seededChannels.length > 0) {
         const stackOff = {
           ...stackVisibilities
@@ -246473,17 +250095,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const toggleGroupMasterVisibility = (group2, showAllNext) => {
       if (group2.channels.length === 0) return;
       const allOn = group2.channels.every((gc2) => isGroupRowVisible(channelGroupRowVisibilities, gc2.id));
-      const first = findSourceChannel(sourceChannels, group2.channels[0].channelId);
-      if (first && isRgbDisplayChannel(first, sourceChannels)) {
-        applyRgbUnit(first.imageId, !allOn);
-        return;
-      }
       if (!allOn) {
-        const imageId = first == null ? void 0 : first.imageId;
-        if (imageId && !fitsImage(imageId, {
-          groupRowVisibilities: showAllNext
-        })) {
-          return;
+        const imageIds = /* @__PURE__ */ new Set();
+        for (const gc2 of group2.channels) {
+          const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
+          if (sc2 && isImageChannel(sc2)) imageIds.add(sc2.imageId);
+        }
+        for (const imageId of imageIds) {
+          if (!fitsImage(imageId, {
+            groupRowVisibilities: showAllNext
+          })) return;
         }
         setChannelGroupRowVisibilities(showAllNext);
         return;
@@ -246809,25 +250430,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       };
       return jsxRuntimeExports.jsxs("div", {
         className: [
-          styles$e.groupFolder,
+          styles$d.groupFolder,
           isActive ? minervaTheme.selectLeft : "",
-          isDropTarget ? styles$e.dropTargetActive : ""
+          isDropTarget ? styles$d.dropTargetActive : ""
         ].join(" "),
         ...folderDropProps,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$e.groupFolderHeader,
+            className: styles$d.groupFolderHeader,
             children: [
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$e.groupFolderActivate}`,
+                className: `${minervaTheme.focusRing} ${styles$d.groupFolderActivate}`,
                 "aria-label": `Select group ${group2.name}`,
                 "aria-pressed": isActive,
                 onClick: () => activateGroup(group2.id)
               }),
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$e.groupFolderChevron,
+                className: styles$d.groupFolderChevron,
                 "aria-expanded": expanded,
                 title: expanded ? "Collapse group" : "Expand group",
                 onClick: () => toggleGroupExpanded(group2.id),
@@ -246843,7 +250464,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 onClick: () => toggleGroupMasterVisibility(group2, groupShowAllNext)
               }),
               jsxRuntimeExports.jsx("input", {
-                className: `${minervaTheme.input} ${styles$e.groupFolderName}`,
+                className: `${minervaTheme.input} ${styles$d.groupFolderName}`,
                 type: "text",
                 defaultValue: group2.name,
                 maxLength: 200,
@@ -246865,7 +250486,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$e.groupFolderTrailing,
+                className: styles$d.groupFolderTrailing,
                 children: [
                   jsxRuntimeExports.jsx(GroupFolderGearMenu, {
                     groupName: group2.name,
@@ -246893,10 +250514,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           }),
           expanded && !rgbGroup ? jsxRuntimeExports.jsxs("div", {
-            className: styles$e.groupFolderBody,
+            className: styles$d.groupFolderBody,
             children: [
               jsxRuntimeExports.jsx("ul", {
-                className: styles$e.groupChildList,
+                className: styles$d.groupChildList,
                 children: group2.channels.map((gc2) => {
                   const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
                   const name2 = (sc2 == null ? void 0 : sc2.name) ?? "Unknown";
@@ -246917,7 +250538,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   const colorLocked = lockedIds.has(gc2.id);
                   const showColorLock = !(sc2 && isMaskChannel(sc2)) && !rgbDisplay;
                   return jsxRuntimeExports.jsx("li", {
-                    className: styles$e.groupChildBlock,
+                    className: styles$d.groupChildBlock,
                     children: jsxRuntimeExports.jsx(DraggableChannelRow, {
                       label: name2,
                       sourceId: gc2.channelId,
@@ -246932,7 +250553,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                         visibilityBlocked: showBlocked,
                         onToggleVisibility: (event) => toggleWithScrollOnShow(event, !visible, () => {
                           if (rgbDisplay && sc2) {
-                            applyRgbUnit(sc2.imageId, !visible);
+                            applyRgbUnit(sc2.imageId, !visible, group2.id);
                             return;
                           }
                           setChannelGroupRowVisibilities(visible ? {
@@ -246949,7 +250570,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           mode: "label",
                           name: name2,
                           title: name2,
-                          className: styles$e.groupChildName
+                          className: styles$d.groupChildName
                         },
                         imageSubtitle,
                         contrast,
@@ -246980,8 +250601,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             showColorLock ? jsxRuntimeExports.jsx("button", {
                               type: "button",
                               className: [
-                                styles$e.channelActionButton,
-                                colorLocked ? styles$e.colorLockButtonLocked : ""
+                                styles$d.channelActionButton,
+                                colorLocked ? styles$d.colorLockButtonLocked : ""
                               ].join(" "),
                               title: colorLocked ? "Unlock color" : "Lock color",
                               "aria-label": colorLocked ? `Unlock color for ${name2}` : `Lock color for ${name2}`,
@@ -247006,7 +250627,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 })
               }),
               group2.channels.length === 0 ? jsxRuntimeExports.jsx("div", {
-                className: styles$e.dropHint,
+                className: styles$d.dropHint,
                 children: "Drag channels"
               }) : null
             ]
@@ -247105,7 +250726,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         histogramLoading: loadingHistogramSourceIds.includes(sc2.id)
       } : void 0;
       return jsxRuntimeExports.jsx("li", {
-        className: styles$e.rootChannelBlock,
+        className: styles$d.rootChannelBlock,
         children: jsxRuntimeExports.jsx(DraggableChannelRow, {
           label: sc2.name,
           sourceId: sc2.id,
@@ -247164,20 +250785,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           onDrop: handleDropRemoveFromGroup,
           children: [
             channelGroups.length > 0 ? jsxRuntimeExports.jsx("div", {
-              className: styles$e.groupFolders,
+              className: styles$d.groupFolders,
               children: channelGroups.map((group2, i2) => renderGroupFolder(group2, i2))
             }) : null,
             showAllChannelsList ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
               children: [
                 jsxRuntimeExports.jsxs("div", {
-                  className: styles$e.treeSeparator,
+                  className: styles$d.treeSeparator,
                   children: [
                     jsxRuntimeExports.jsx("span", {
-                      className: styles$e.treeSeparatorLabel,
+                      className: styles$d.treeSeparatorLabel,
                       children: "All channels"
                     }),
                     jsxRuntimeExports.jsx("input", {
-                      className: styles$e.channelFilter,
+                      className: styles$d.channelFilter,
                       type: "text",
                       value: channelNameFilter,
                       placeholder: "Search...",
@@ -247191,10 +250812,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 filteredAllChannels.length === 0 ? jsxRuntimeExports.jsx("div", {
-                  className: styles$e.filterEmpty,
+                  className: styles$d.filterEmpty,
                   children: "No matching channels"
                 }) : jsxRuntimeExports.jsx("ul", {
-                  className: styles$e.rootChannelList,
+                  className: styles$d.rootChannelList,
                   children: filteredAllChannels.map(renderAllChannelsRow)
                 })
               ]
@@ -247214,7 +250835,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               },
               name: {
                 mode: "label",
-                className: styles$e.groupChildName,
+                className: styles$d.groupChildName,
                 name: `${SELECTION_MASK_CHANNEL_KEY}${imageSelectionMask.sourceShapeLabel ? ` (${imageSelectionMask.sourceShapeLabel})` : ""}`
               },
               isMask: true,
@@ -247228,7 +250849,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               fixedColorHex: "ffcc00",
               trailing: jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$e.channelActionButton,
+                className: styles$d.channelActionButton,
                 title: "Clear selection",
                 "aria-label": "Clear selection",
                 onClick: () => clearImageSelectionMask(),
@@ -247290,7 +250911,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const previewNav = "_previewNav_1gyqk_97";
   const previewNavParked = "_previewNavParked_1gyqk_111";
   const viewerRegion = "_viewerRegion_1gyqk_115";
-  const styles$d = {
+  const styles$c = {
     sidebarHost,
     sidebarHostCollapsed,
     panelOuter,
@@ -247337,14 +250958,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: jsxRuntimeExports.jsx(SidebarStripSlotProvider, {
         children: jsxRuntimeExports.jsx("div", {
           className: [
-            styles$d.sidebarHost,
-            expanded ? null : styles$d.sidebarHostCollapsed
+            styles$c.sidebarHost,
+            expanded ? null : styles$c.sidebarHostCollapsed
           ].filter(Boolean).join(" "),
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$d.panelOuter,
+            className: styles$c.panelOuter,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: `${styles$d.tabRow} ${minervaTheme.strip}`,
+                className: `${styles$c.tabRow} ${minervaTheme.strip}`,
                 children: [
                   jsxRuntimeExports.jsx(TabBar, {
                     tabs: TAB_ITEMS,
@@ -247353,12 +250974,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     "aria-label": "Author panels"
                   }),
                   jsxRuntimeExports.jsx(SidebarStripSlot, {
-                    className: styles$d.stripActions
+                    className: styles$c.stripActions
                   })
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$d.panelContent,
+                className: styles$c.panelContent,
                 role: "tabpanel",
                 children: activePanel
               })
@@ -247372,8 +250993,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const { collapsed, children, className: className2 } = props;
     return jsxRuntimeExports.jsx("div", {
       className: [
-        styles$d.viewport,
-        collapsed ? styles$d.viewportCollapsed : null,
+        styles$c.viewport,
+        collapsed ? styles$c.viewportCollapsed : null,
         className2
       ].filter(Boolean).join(" "),
       children
@@ -247382,7 +251003,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function AuthorViewerRegion(props) {
     return jsxRuntimeExports.jsx("div", {
       className: [
-        styles$d.viewerRegion,
+        styles$c.viewerRegion,
         props.className
       ].filter(Boolean).join(" "),
       children: props.children
@@ -247394,10 +251015,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const previewing = hasPreview && !props.previewNavHidden;
     return jsxRuntimeExports.jsxs(AuthorViewport, {
       collapsed: !expanded,
-      className: previewing ? styles$d.viewportPreview : void 0,
+      className: previewing ? styles$c.viewportPreview : void 0,
       children: [
         hasPreview ? jsxRuntimeExports.jsx("div", {
-          className: previewing ? styles$d.previewNav : styles$d.previewNavParked,
+          className: previewing ? styles$c.previewNav : styles$c.previewNavParked,
           children: props.previewNav
         }) : null,
         previewing ? null : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
@@ -247411,8 +251032,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx(PanelIconButton, {
               className: [
-                styles$d.expandControl,
-                expanded ? styles$d.expandControlExpanded : null
+                styles$c.expandControl,
+                expanded ? styles$c.expandControlExpanded : null
               ].filter(Boolean).join(" "),
               title: expanded ? "Collapse panel" : "Expand panel",
               "aria-label": expanded ? "Collapse panel" : "Expand panel",
@@ -248590,6 +252211,154 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
+  const MERGE_GAP_BYTES = 256 * 1024;
+  function mergedBlockRanges(image2, [x0, y0, x1, y1]) {
+    const fd2 = image2.fileDirectory;
+    const offsets = image2.isTiled ? fd2.TileOffsets : fd2.StripOffsets;
+    const counts = image2.isTiled ? fd2.TileByteCounts : fd2.StripByteCounts;
+    const blockW = image2.getTileWidth();
+    const blockH = image2.getTileHeight();
+    const across = Math.ceil(image2.getWidth() / blockW);
+    const down = Math.ceil(image2.getHeight() / blockH);
+    const planes = image2.planarConfiguration === 2 ? image2.getSamplesPerPixel() : 1;
+    const ranges = [];
+    for (let p2 = 0; p2 < planes; p2++) {
+      for (let by = Math.floor(y0 / blockH); by < Math.ceil(y1 / blockH); by++) {
+        for (let bx = Math.floor(x0 / blockW); bx < Math.ceil(x1 / blockW); bx++) {
+          if (bx >= across || by >= down) continue;
+          const i2 = p2 * across * down + by * across + bx;
+          const length2 = Number(counts[i2]);
+          if (length2 > 0) ranges.push({
+            offset: Number(offsets[i2]),
+            length: length2
+          });
+        }
+      }
+    }
+    ranges.sort((a2, b2) => a2.offset - b2.offset);
+    const merged = [];
+    for (const r2 of ranges) {
+      const last2 = merged[merged.length - 1];
+      if (last2 && r2.offset - (last2.offset + last2.length) <= MERGE_GAP_BYTES) {
+        last2.length = Math.max(last2.length, r2.offset + r2.length - last2.offset);
+      } else {
+        merged.push({
+          ...r2
+        });
+      }
+    }
+    return merged;
+  }
+  function prefetchedSource(base2, ranges, exportSignal) {
+    const blocked = base2;
+    const bulk = blocked.blockSize && blocked.source ? blocked.source : base2;
+    const runs = ranges.map((range2) => ({
+      ...range2,
+      data: bulk.fetch([
+        range2
+      ], exportSignal).then(([result]) => {
+        const { data: data2, offset } = result instanceof ArrayBuffer ? {
+          data: result,
+          offset: range2.offset
+        } : result;
+        const whole = offset === range2.offset && data2.byteLength >= range2.length;
+        return whole ? data2 : null;
+      }, () => null)
+    }));
+    return {
+      fetch: (slices, signal) => Promise.all(slices.map(async (slice) => {
+        const run = runs.find((r2) => r2.offset <= slice.offset && slice.offset + slice.length <= r2.offset + r2.length);
+        const data2 = await (run == null ? void 0 : run.data);
+        if (exportSignal.aborted) {
+          throw new DOMException("Aborted", "AbortError");
+        }
+        if (!run || !data2) return (await base2.fetch([
+          slice
+        ], signal))[0];
+        const start = slice.offset - run.offset;
+        return data2.slice(start, start + slice.length);
+      }))
+    };
+  }
+  async function composeExportTile(plane, tileSize, selection, x2, y2, signal) {
+    const { width, height } = getImageSize(plane);
+    const src = plane.tileSize;
+    const x0 = x2 * tileSize;
+    const y0 = y2 * tileSize;
+    const w2 = Math.min(tileSize, width - x0);
+    const h2 = Math.min(tileSize, height - y0);
+    const sx0 = Math.floor(x0 / src);
+    const columns = Math.ceil((x0 + w2) / src) - sx0;
+    let out;
+    for (let sy = Math.floor(y0 / src); sy * src < y0 + h2; sy++) {
+      const top2 = sy * src;
+      const tiles = Array.from({
+        length: columns
+      }, async (_2, i2) => {
+        const sx = sx0 + i2;
+        const left = sx * src;
+        const tile = await plane.getTile({
+          selection,
+          x: sx,
+          y: sy,
+          signal
+        });
+        const samples = tile.data.length / (tile.width * tile.height);
+        out ?? (out = new tile.data.constructor(w2 * h2 * samples));
+        const from0 = Math.max(x0, left);
+        const run = (Math.min(x0 + w2, left + tile.width) - from0) * samples;
+        const rowEnd = Math.min(y0 + h2, top2 + tile.height);
+        for (let row2 = Math.max(y0, top2); row2 < rowEnd; row2++) {
+          const from = ((row2 - top2) * tile.width + (from0 - left)) * samples;
+          const to = ((row2 - y0) * w2 + (from0 - x0)) * samples;
+          out.set(tile.data.subarray(from, from + run), to);
+        }
+      });
+      await Promise.all(tiles);
+    }
+    if (!out) throw new Error(`No source tiles under export tile ${x2},${y2}`);
+    return {
+      data: out,
+      width: w2,
+      height: h2
+    };
+  }
+  async function readExportTile(plane, tileSize, selection, x2, y2, signal) {
+    const { width, height } = getImageSize(plane);
+    const window2 = [
+      x2 * tileSize,
+      y2 * tileSize,
+      Math.min(width, (x2 + 1) * tileSize),
+      Math.min(height, (y2 + 1) * tileSize)
+    ];
+    if (!(plane instanceof TiffPixelSource)) {
+      if (plane.readWindow) return plane.readWindow({
+        selection,
+        window: window2,
+        signal
+      });
+      if (plane.tileSize === tileSize) {
+        return plane.getTile({
+          selection,
+          x: x2,
+          y: y2,
+          signal
+        });
+      }
+      return composeExportTile(plane, tileSize, selection, x2, y2, signal);
+    }
+    const indexer = plane._indexer;
+    const image2 = await indexer(selection);
+    const source2 = prefetchedSource(image2.source, mergedBlockRanges(image2, window2), signal);
+    const reader = new GeoTIFFImage(image2.fileDirectory, image2.geoKeys, image2.dataView, image2.littleEndian, false, source2);
+    const atTileSize = new TiffPixelSource(async () => reader, plane.dtype, tileSize, plane.shape, plane.labels, plane.meta, plane.pool);
+    return atTileSize.getTile({
+      selection,
+      x: x2,
+      y: y2,
+      signal
+    });
+  }
   function bitsPerSampleFromDtype(dtype) {
     if (dtype === "Uint8" || dtype === "Int8") return 8;
     if (dtype === "Uint16" || dtype === "Int16") return 16;
@@ -248640,8 +252409,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return ` ${name2}="${escapeXmlAttr(value)}"`;
   }
   function buildOmeTiffXml(opts) {
-    const { imageName, channels: channels2, width, height, fileName, pixelType, significantBits, pixels } = opts;
-    const sizeC = channels2.length;
+    const { imageName, channels: channels2, width, height, fileName, pixelType, significantBits, pixels, samplesPerPixel = 1 } = opts;
+    const sizeC = channels2.length * samplesPerPixel;
     const channelXml = channels2.map((ch2, i2) => {
       var _a2;
       const id2 = escapeXmlAttr(ch2.id || `Channel:0:${i2}`);
@@ -248651,14 +252420,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         g: ch2.color.g,
         b: ch2.color.b
       })}"` : "";
-      return `<Channel ID="${id2}" Name="${chName}" SamplesPerPixel="1"${colorAttr}/>`;
+      return `<Channel ID="${id2}" Name="${chName}" SamplesPerPixel="${samplesPerPixel}"${colorAttr}/>`;
     }).join("");
     const tiffDataXml = channels2.map((_2, i2) => {
       const uuid = escapeXmlAttr(fileName);
       return `<TiffData FirstC="${i2}" FirstT="0" FirstZ="0" IFD="${i2}" PlaneCount="1"><UUID FileName="${uuid}">${uuid}</UUID></TiffData>`;
     }).join("");
     const physicalAttrs = optionalNumberAttr("PhysicalSizeX", pixels == null ? void 0 : pixels.PhysicalSizeX) + optionalNumberAttr("PhysicalSizeY", pixels == null ? void 0 : pixels.PhysicalSizeY) + optionalNumberAttr("PhysicalSizeZ", pixels == null ? void 0 : pixels.PhysicalSizeZ) + optionalStringAttr("PhysicalSizeXUnit", pixels == null ? void 0 : pixels.PhysicalSizeXUnit) + optionalStringAttr("PhysicalSizeYUnit", pixels == null ? void 0 : pixels.PhysicalSizeYUnit) + optionalStringAttr("PhysicalSizeZUnit", pixels == null ? void 0 : pixels.PhysicalSizeZUnit);
-    return `<?xml version="1.0" encoding="UTF-8"?><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"><Image ID="Image:0" Name="${escapeXmlAttr(imageName)}"><Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="${escapeXmlAttr(pixelType)}" SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1" SignificantBits="${significantBits}" Interleaved="false" BigEndian="false"${physicalAttrs}>${channelXml}${tiffDataXml}</Pixels></Image></OME>`;
+    return `<?xml version="1.0" encoding="UTF-8"?><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"><Image ID="Image:0" Name="${escapeXmlAttr(imageName)}"><Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="${escapeXmlAttr(pixelType)}" SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1" SignificantBits="${significantBits}" Interleaved="${samplesPerPixel > 1}" BigEndian="false"${physicalAttrs}>${channelXml}${tiffDataXml}</Pixels></Image></OME>`;
   }
   function omeTiffExportBaseName(image2) {
     var _a2;
@@ -248848,14 +252617,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  function planeLevels(loaderData) {
+  const EXPORT_TILE_SIZE = 1024;
+  function exportPlaneLevels(loaderData) {
     return loaderData.map((plane) => {
       const { width, height } = getImageSize(plane);
-      const tileSize = typeof plane.tileSize === "number" && plane.tileSize > 0 ? plane.tileSize : JPEG_PYRAMID_TILE_SIZE;
       return {
         width,
         height,
-        tileSize
+        tileSize: EXPORT_TILE_SIZE
       };
     });
   }
@@ -248882,13 +252651,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const out = new Ctor(data2.length);
     for (let i2 = 0; i2 < data2.length; i2++) out[i2] = data2[i2];
     return out;
-  }
-  function maskExportTileSize(width, height, planeTileSize) {
-    const maxDim = Math.max(width, height, 1);
-    const ts = planeTileSize ?? 0;
-    if (ts > 0 && ts < maxDim) return ts;
-    if (ts > 0 && ts <= JPEG_PYRAMID_TILE_SIZE) return ts;
-    return JPEG_PYRAMID_TILE_SIZE;
   }
   function maskPyramidLevelSizes(width, height, tileSize) {
     const levels = [
@@ -248980,23 +252742,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Uint8Array(await new Response(stream).arrayBuffer());
   }
   function planMaskExportLevels(loaderData) {
-    const plane0 = loaderData[0];
-    const { width, height } = getImageSize(plane0);
-    const tileSize = maskExportTileSize(width, height, plane0.tileSize);
     if (loaderData.length > 1) {
       return {
-        levels: loaderData.map((plane) => {
-          const size = getImageSize(plane);
-          return {
-            width: size.width,
-            height: size.height,
-            tileSize: maskExportTileSize(size.width, size.height, plane.tileSize)
-          };
-        }),
+        levels: exportPlaneLevels(loaderData),
         useLoaderTiles: true
       };
     }
-    const levels = maskPyramidLevelSizes(width, height, tileSize);
+    const { width, height } = getImageSize(loaderData[0]);
+    const levels = maskPyramidLevelSizes(width, height, EXPORT_TILE_SIZE);
     return {
       levels,
       useLoaderTiles: levels.length === 1
@@ -249160,16 +252913,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
           const plane = loaderData[job.levelIndex];
           const channel = channels2[job.channelIndex];
-          const tile = await plane.getTile({
-            selection: {
-              t: 0,
-              z: 0,
-              c: channel.index
-            },
-            x: job.x,
-            y: job.y,
-            signal
-          });
+          const tile = await readExportTile(plane, levels[job.levelIndex].tileSize, {
+            t: 0,
+            z: 0,
+            c: channel.index
+          }, job.x, job.y, signal);
           return {
             data: toLabelArray(tile.data, dtype),
             width: tile.width,
@@ -250690,39 +254438,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return readyPromise;
     };
   })();
-  const defaultOptions = {
-    quality: 75,
-    baseline: false,
-    arithmetic: false,
-    progressive: true,
-    optimize_coding: true,
-    smoothing: 0,
-    color_space: 3,
-    quant_table: 3,
-    trellis_multipass: false,
-    trellis_opt_zero: false,
-    trellis_opt_table: false,
-    trellis_loops: 1,
-    auto_subsample: true,
-    chroma_subsample: 2,
-    separate_chroma_quality: false,
-    chroma_quality: 75
-  };
-  function initEmscriptenModule(moduleFactory, wasmModule, moduleOptionOverrides = {}) {
-    let instantiateWasm;
-    if (wasmModule) {
-      instantiateWasm = (imports, callback) => {
-        const instance = new WebAssembly.Instance(wasmModule, imports);
-        callback(instance);
-        return instance.exports;
-      };
-    }
-    return moduleFactory({
-      noInitialRun: true,
-      instantiateWasm,
-      ...moduleOptionOverrides
-    });
-  }
   let emscriptenModule;
   async function init(module, moduleOptionOverrides) {
     let actualModule = module;
@@ -250744,6 +254459,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return resultView.buffer;
   }
   const MOZJPEG_COLORSPACE_GRAYSCALE = 1;
+  const MOZJPEG_COLORSPACE_YCBCR = 3;
   const JPEG_EXPORT_QUALITY = 0.95;
   function clampValue$1(x2, min2, max2) {
     if (max2 === min2) return 0;
@@ -250794,16 +254510,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return jsquashReady;
   }
-  async function encodeRgbaToJpeg(width, height, rgba, quality) {
+  async function encodeRgbaToJpeg(width, height, rgba, quality, colorSpace = MOZJPEG_COLORSPACE_GRAYSCALE) {
     await ensureJpegEncoderReady();
     const imageData = new ImageData(rgba, width, height);
     return encode(imageData, {
       quality: mozJpegQuality(quality),
-      color_space: MOZJPEG_COLORSPACE_GRAYSCALE,
+      color_space: colorSpace,
       baseline: true,
       progressive: false,
       arithmetic: false,
-      optimize_coding: false
+      optimize_coding: true,
+      auto_subsample: false,
+      chroma_subsample: 2
     });
   }
   async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
@@ -250819,6 +254537,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const padded = padGrayscaleRgbaToTile(rgba, width, height, padTileSize);
     return encodeRgbaToJpeg(padTileSize, padTileSize, padded, quality);
   }
+  async function encodeRgbJpeg(width, height, pixels, limits, quality, padTileSize) {
+    const outW = padTileSize ?? width;
+    const outH = padTileSize ?? height;
+    const rgba = new Uint8ClampedArray(new ArrayBuffer(outW * outH * 4)).fill(255);
+    for (let row2 = 0; row2 < height; row2++) {
+      for (let col = 0; col < width; col++) {
+        const s2 = (row2 * width + col) * 3;
+        const o2 = (row2 * outW + col) * 4;
+        for (let c2 = 0; c2 < 3; c2++) {
+          rgba[o2 + c2] = clampValue$1(pixels[s2 + c2], limits[c2][0], limits[c2][1]);
+        }
+      }
+    }
+    return encodeRgbaToJpeg(outW, outH, rgba, quality, MOZJPEG_COLORSPACE_YCBCR);
+  }
   function typedArrayCtorName(data2) {
     var _a2;
     return ((_a2 = data2.constructor) == null ? void 0 : _a2.name) ?? "";
@@ -250832,15 +254565,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     new Uint8Array(copy2).set(new Uint8Array(buffer2, byteOffset, byteLength));
     return copy2;
   }
-  function WorkerWrapper$2(options) {
-    return new Worker("" + new URL("jpegExport.worker-BUx5f-WZ.js", import.meta.url).href, {
+  function WorkerWrapper$1(options) {
+    return new Worker("" + new URL("jpegExport.worker-Dad1CIDO.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
   }
   const MAX_JPEG_EXPORT_WORKERS = 8;
   const defaultPoolSize = Math.min(MAX_JPEG_EXPORT_WORKERS, ((_i = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _i.hardwareConcurrency) ?? 4);
-  let WorkerWrapper$1 = class WorkerWrapper {
+  class WorkerWrapper {
     constructor(worker2) {
       __publicField(this, "worker");
       __publicField(this, "jobIdCounter", 0);
@@ -250886,9 +254619,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       this.rejectAllPending(new Error("JpegExportPool destroyed"));
       this.worker.terminate();
     }
-  };
+  }
   class JpegExportPool {
-    constructor(size = defaultPoolSize, createWorker = () => new WorkerWrapper$2()) {
+    constructor(size = defaultPoolSize, createWorker = () => new WorkerWrapper$1()) {
       __publicField(this, "workerWrappers", null);
       __publicField(this, "size");
       this.size = size;
@@ -250896,13 +254629,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         this.workerWrappers = (async () => {
           const wrappers = [];
           for (let i2 = 0; i2 < size; i2++) {
-            wrappers.push(new WorkerWrapper$1(createWorker()));
+            wrappers.push(new WorkerWrapper(createWorker()));
           }
           return wrappers;
         })();
       }
     }
-    async encode(width, height, buffer2, arrayCtorName, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
+    async encode(width, height, buffer2, arrayCtorName, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize, rgbLimits) {
       const workerWrappersPromise = this.workerWrappers;
       if (!workerWrappersPromise) {
         throw new Error("JpegExportPool has no workers");
@@ -250918,7 +254651,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         upperLimit,
         quality,
         transfer,
-        padTileSize
+        padTileSize,
+        rgbLimits
       }, [
         buffer2
       ]);
@@ -250945,15 +254679,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return singleton;
   }
   async function encodeTileJpeg(input2) {
-    const { width, height, data: data2, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize } = input2;
+    const { width, height, data: data2, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize, rgbLimits } = input2;
     const pool = getJpegExportPool();
     if (pool) {
       try {
         const copy2 = copyPixelBuffer(data2);
-        return await pool.encode(width, height, copy2, typedArrayCtorName(data2), lowerLimit, upperLimit, quality, transfer, padTileSize);
+        return await pool.encode(width, height, copy2, typedArrayCtorName(data2), lowerLimit, upperLimit, quality, transfer, padTileSize, rgbLimits);
       } catch (err2) {
         console.warn("[minerva] jpegExport worker failed, using main thread:", err2);
       }
+    }
+    if (rgbLimits) {
+      return encodeRgbJpeg(width, height, data2, rgbLimits, quality, padTileSize);
     }
     return encodeGrayscaleJpeg(width, height, data2, lowerLimit, upperLimit, quality, transfer, padTileSize);
   }
@@ -250962,6 +254699,49 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (pool) return pool.size;
     return defaultPoolSize;
   }
+  function tiffOffsetsJsonName(tiffFileName) {
+    return `${tiffFileName}.offsets.json`;
+  }
+  async function readTiffIfdOffsets(file) {
+    const tiff = await fromBlob(file);
+    const offsets = [];
+    for (let offset = tiff.firstIFDOffset; offset !== 0; ) {
+      offsets.push(offset);
+      offset = (await tiff.parseFileDirectoryAt(offset)).nextIFDByteOffset;
+    }
+    return offsets;
+  }
+  async function writeTiffOffsetsJson(directory, fileName) {
+    try {
+      const tiff = await (await directory.getFileHandle(fileName)).getFile();
+      const offsets = await readTiffIfdOffsets(tiff);
+      await writeDirectoryFile(directory, tiffOffsetsJsonName(fileName), JSON.stringify(offsets));
+    } catch (e2) {
+      console.warn(`[minerva] no offsets sidecar for ${fileName}`, e2);
+    }
+  }
+  const RGB_JPEG_TAGS = [
+    tiffTag("BitsPerSample", "SHORT", [
+      8,
+      8,
+      8
+    ]),
+    tiffTag("Compression", "SHORT", 7),
+    tiffTag("PhotometricInterpretation", "SHORT", 6),
+    tiffTag("SamplesPerPixel", "SHORT", 3),
+    tiffTag("PlanarConfiguration", "SHORT", 1),
+    tiffTag(530, "SHORT", [
+      2,
+      2
+    ]),
+    tiffTag("SampleFormat", "SHORT", [
+      1,
+      1,
+      1
+    ])
+  ];
+  const TILES_IN_FLIGHT = 32;
+  const MAX_PENDING_WRITE_BYTES = 64 * 1024 * 1024;
   function interleavePlanar(planes) {
     var _a2;
     const n2 = planes.reduce((min2, plane) => Math.min(min2, plane.length), ((_a2 = planes[0]) == null ? void 0 : _a2.length) ?? 0);
@@ -250973,17 +254753,76 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return out;
   }
+  const HE_COLOR = {
+    r: 204,
+    g: 0,
+    b: 255
+  };
+  function rgbExportChannels(image2, channels2) {
+    if (!isRgbDisplayImage(image2)) return null;
+    if (channels2.length === 1 && channels2[0].samples === 3) return channels2;
+    if (channels2.length !== 3 || channels2.some((c2) => c2.samples === 3)) {
+      return null;
+    }
+    const slots = channels2.map((c2) => planarRgbSlotFromName(c2.name));
+    const named = !slots.includes(null) && new Set(slots).size === 3;
+    return channels2.map((c2, i2) => ({
+      c: c2,
+      key: named ? slots[i2] : c2.index
+    })).sort((a2, b2) => a2.key - b2.key).map(({ c: c2 }) => c2);
+  }
+  function rgbFileChannel(rgb) {
+    const [first] = rgb;
+    if (rgb.length === 1) return {
+      ...first,
+      sourceDataTypeId: "Uint8"
+    };
+    return {
+      id: first.id,
+      index: 0,
+      name: "H&E",
+      kind: "channel",
+      samples: 3,
+      sourceDataTypeId: "Uint8"
+    };
+  }
+  function collapsePlanarRgbRows(groups, triplets) {
+    if (triplets.length === 0) return groups;
+    const keepOf = new Map(triplets.flatMap((rgb) => rgb.map((c2) => [
+      c2.id,
+      rgb[0].id
+    ])));
+    return groups.map((group2) => {
+      const seen2 = /* @__PURE__ */ new Set();
+      return {
+        ...group2,
+        channels: group2.channels.flatMap((row2) => {
+          const keep = keepOf.get(row2.channelId);
+          if (keep == null) return [
+            row2
+          ];
+          if (seen2.has(keep)) return [];
+          seen2.add(keep);
+          return [
+            {
+              ...row2,
+              channelId: keep,
+              color: HE_COLOR,
+              lowerLimit: 0,
+              upperLimit: 255
+            }
+          ];
+        })
+      };
+    });
+  }
   async function planesLookBrightfield(planes, channels2, signal) {
     if (channels2.length !== 1 && channels2.length < 3) return false;
     const level = planes[planes.length - 1];
     if (!(level == null ? void 0 : level.getTile)) return false;
-    const { width, height, tileSize } = planeLevels(planes).at(-1) ?? {
-      width: 0,
-      height: 0,
-      tileSize: 256
-    };
+    const { width, height } = getImageSize(level);
     if (width <= 0 || height <= 0) return false;
-    const tile = Math.max(1, tileSize);
+    const tile = level.tileSize > 0 ? level.tileSize : JPEG_PYRAMID_TILE_SIZE;
     const xs = brightfieldSampleOffsets(width, tile);
     const ys = brightfieldSampleOffsets(height, tile);
     const use = channels2.slice(0, 3);
@@ -251030,10 +254869,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   async function transferForBrightfield(image2, storyTransfer, planes, channels2, signal) {
     const transfer = exportTransferForImage(image2, storyTransfer);
-    if (transfer !== "cube-root") return {
-      transfer,
-      image: image2
-    };
+    if (transfer !== "cube-root" || image2.rgbDisplay === false) {
+      return {
+        transfer,
+        image: image2
+      };
+    }
     if (!await planesLookBrightfield(planes, channels2, signal)) {
       return {
         transfer,
@@ -251048,98 +254889,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  function absoluteSourceUrl(url) {
-    const trimmed = url.trim();
-    if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("blob:") || trimmed.startsWith("file:")) {
-      return trimmed;
-    }
-    return new URL(trimmed, window.location.href).href;
-  }
-  async function openCopySource(image2, signal) {
-    const source2 = image2.source;
-    if (!source2) return null;
-    if (source2.kind === "local") {
-      const stored = await getFileHandle(source2.handleKey);
-      if (!stored || stored.kind !== "file") return null;
-      const file = await stored.getFile();
-      return {
-        probe: file,
-        openBody: async () => ({
-          stream: file.stream(),
-          size: file.size
-        })
-      };
-    }
-    if (source2.kind === "url") {
-      const url = absoluteSourceUrl(source2.url);
-      return {
-        probe: url,
-        openBody: async () => {
-          const response = await fetch(url, {
-            signal
-          });
-          if (!response.ok || !response.body) {
-            throw new Error(`Failed to fetch ${url} (${response.status})`);
-          }
-          const length2 = Number(response.headers.get("content-length"));
-          return {
-            stream: response.body,
-            size: Number.isFinite(length2) && length2 > 0 ? length2 : 0
-          };
-        }
-      };
-    }
-    return null;
-  }
-  async function writeStream(directory, fileName, stream, size, signal, onProgress) {
-    var _a2;
-    const fh2 = await directory.getFileHandle(fileName, {
-      create: true
-    });
-    const writable = await fh2.createWritable();
-    let written = 0;
-    const reader = stream.getReader();
-    try {
-      while (true) {
-        if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-        const { done, value } = await reader.read();
-        if (done) break;
-        const bytes = value.buffer instanceof ArrayBuffer ? new Uint8Array(value.buffer, value.byteOffset, value.byteLength) : new Uint8Array(value);
-        await writable.write(bytes);
-        written += value.byteLength;
-        if (size > 0) onProgress(written, size);
-      }
-      await writable.close();
-      onProgress(Math.max(written, size), Math.max(size, 1));
-    } catch (error2) {
-      try {
-        await reader.cancel();
-      } catch {
-      }
-      try {
-        await ((_a2 = writable.abort) == null ? void 0 : _a2.call(writable));
-      } catch {
-      }
-      throw error2;
-    }
-  }
-  async function copyJpegBrightfieldSource(image2, directory, fileName, signal, onProgress) {
-    const opened = await openCopySource(image2, signal);
-    if (!opened) return null;
-    if (!await omeTiffBaseIsJpeg(opened.probe, signal)) return null;
-    const body2 = await opened.openBody();
-    await writeStream(directory, fileName, body2.stream, body2.size, signal, onProgress);
-    return {
-      ...image2,
-      source: {
-        kind: "url",
-        url: fileName
-      }
-    };
-  }
   async function exportJpegOmeTiffImage(opts) {
     var _a2, _b2;
-    const { directory, layoutPlanes, image: image2, channelSources, channelGroups, fileName, transfer, signal, onProgress } = opts;
+    const { directory, layoutPlanes, image: image2, channelSources, channelGroups, fileName, transfer, signal, onProgress, rgb, pixels } = opts;
     const channels2 = channelSources.map((s2) => s2.channel);
     if (channels2.length === 0) {
       throw new Error(`No intensity channels to export for ${image2.basename || image2.id}`);
@@ -251147,24 +254899,39 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!layoutPlanes.length) {
       throw new Error(`Loader has no pyramid levels for ${image2.basename || image2.id}`);
     }
-    const levels = planeLevels(layoutPlanes);
+    const levels = exportPlaneLevels(layoutPlanes);
+    const fileChannels = rgb ? [
+      rgbFileChannel(rgb)
+    ] : channels2;
     const channelLimits = channels2.map((ch2) => {
       const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
       return folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
     });
+    const rgbLimits = (rgb == null ? void 0 : rgb.length) === 1 ? Array(3).fill([
+      0,
+      sourceDtypeMax(layoutPlanes[0].dtype)
+    ]) : rgb == null ? void 0 : rgb.map((ch2) => {
+      const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
+      return [
+        lim.lowerLimit,
+        lim.upperLimit
+      ];
+    });
     const omeXml = buildOmeTiffXml({
       imageName: image2.basename || image2.id || "image",
-      channels: channels2,
+      channels: fileChannels,
       width: levels[0].width,
       height: levels[0].height,
       fileName,
       pixelType: "uint8",
-      significantBits: 8
+      significantBits: 8,
+      samplesPerPixel: rgb ? 3 : 1,
+      pixels
     });
     const { layouts, jobs } = planPyramid({
       levels,
-      channelCount: channels2.length,
-      baseTags: grayscaleJpegTags(),
+      channelCount: fileChannels.length,
+      baseTags: rgb ? RGB_JPEG_TAGS : grayscaleJpegTags(),
       imageDescription: omeXml
     });
     const fh2 = await directory.getFileHandle(fileName, {
@@ -251198,28 +254965,39 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       throw e2;
     }
-    const concurrency = Math.min(jpegExportConcurrency(), Math.max(1, jobs.length));
+    const concurrency = Math.min(TILES_IN_FLIGHT, Math.max(1, jobs.length));
     let next2 = 0;
+    const pendingWrites = /* @__PURE__ */ new Set();
+    let pendingWriteBytes = 0;
+    const queueWrite = async (job, bytes) => {
+      while (pendingWriteBytes >= MAX_PENDING_WRITE_BYTES) {
+        await Promise.race(pendingWrites);
+      }
+      pendingWriteBytes += bytes.byteLength;
+      const write = writer.writeSegment(job.address, bytes).then(() => onProgress == null ? void 0 : onProgress(1), failExport).finally(() => {
+        pendingWriteBytes -= bytes.byteLength;
+        pendingWrites.delete(write);
+      });
+      pendingWrites.add(write);
+    };
     const runJob2 = async (job) => {
       if (workSignal.aborted) return;
       const source2 = channelSources[job.channelIndex];
       const levelIndex = Math.min(job.levelIndex, source2.planes.length - 1);
       const plane = source2.planes[levelIndex];
       const tileSize = levels[job.levelIndex].tileSize;
-      const channel = source2.channel;
       const limits = channelLimits[job.channelIndex];
-      const tile = await plane.getTile({
-        selection: {
-          t: 0,
-          z: 0,
-          c: channel.index
-        },
-        x: job.x,
-        y: job.y,
-        signal: workSignal
-      });
+      const readTile = (channel) => readExportTile(plane, tileSize, {
+        t: 0,
+        z: 0,
+        c: channel.index
+      }, job.x, job.y, workSignal);
+      const tiles = await Promise.all((rgb ?? [
+        source2.channel
+      ]).map(readTile));
       if (workSignal.aborted) return;
-      const { width, height, data: data2 } = tile;
+      const { width, height } = tiles[0];
+      const data2 = tiles.length === 3 ? interleavePlanar(tiles.map((t2) => t2.data)) : tiles[0].data;
       const jpeg = await encodeTileJpeg({
         width,
         height,
@@ -251227,11 +255005,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         lowerLimit: limits.lowerLimit,
         upperLimit: limits.upperLimit,
         transfer,
-        padTileSize: tileSize
+        padTileSize: tileSize,
+        rgbLimits
       });
       if (workSignal.aborted) return;
-      await writer.writeSegment(job.address, new Uint8Array(jpeg));
-      onProgress == null ? void 0 : onProgress(1);
+      await queueWrite(job, new Uint8Array(jpeg));
     };
     const workerLoop = async () => {
       while (!workSignal.aborted) {
@@ -251256,6 +255034,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       await Promise.all(Array.from({
         length: concurrency
       }, () => workerLoop()));
+      await Promise.all(pendingWrites);
       if (exportFailed) throw exportFailed;
       if (signal.aborted || workSignal.aborted) {
         throw new DOMException("Aborted", "AbortError");
@@ -251274,9 +255053,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     } finally {
       signal.removeEventListener("abort", onOuterAbort);
     }
-    return remappedImageForOmeTiffExport(image2, channels2, fileName);
+    return remappedImageForOmeTiffExport(rgb ? {
+      ...image2,
+      rgbDisplay: true
+    } : image2, fileChannels, fileName);
   }
   async function exportJpegOmeTiffStory(opts) {
+    var _a2;
     const { directory, omeLoaderEntries, images, channelGroups, transfer, signal, onProgress } = opts;
     if (omeLoaderEntries.length === 0) {
       throw new Error("OME-TIFF export needs an OME or DICOM source image loaded.");
@@ -251308,9 +255091,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (intensityItems.length === 0 && maskItems.length === 0) {
       throw new Error("No channels available for OME-TIFF export.");
     }
+    const decisions = [];
     let totalTiles = 0;
     for (const item2 of intensityItems) {
-      totalTiles += tileCountForLevels(planeLevels(item2.planes), item2.intensity.length);
+      const decided = await transferForBrightfield(item2.image, transfer, item2.planes, item2.intensity, signal);
+      const rgb = rgbExportChannels(decided.image, item2.intensity);
+      decisions.push({
+        ...decided,
+        rgb
+      });
+      totalTiles += tileCountForLevels(exportPlaneLevels(item2.planes), rgb ? 1 : item2.intensity.length);
     }
     for (const item2 of maskItems) {
       totalTiles += maskExportTileCount(item2.entry, item2.masks.length);
@@ -251324,34 +255114,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const remappedById = /* @__PURE__ */ new Map();
     const insertedAfter = /* @__PURE__ */ new Map();
-    const copiedSourceIds = /* @__PURE__ */ new Set();
     for (let i2 = 0; i2 < intensityItems.length; i2++) {
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       const item2 = intensityItems[i2];
-      const decided = await transferForBrightfield(item2.image, transfer, item2.planes, item2.intensity, signal);
-      if (decided.transfer === "contrast") {
-        const imageTiles = tileCountForLevels(planeLevels(item2.planes), item2.intensity.length);
-        let credited = 0;
-        const credit = (written, total) => {
-          const next2 = total > 0 ? Math.min(imageTiles, Math.floor(written / total * imageTiles)) : 0;
-          if (next2 > credited) {
-            bump(next2 - credited);
-            credited = next2;
-          }
-        };
-        try {
-          const copied = await copyJpegBrightfieldSource(decided.image, directory, intensityFileNames[i2], signal, credit);
-          if (copied) {
-            if (credited < imageTiles) bump(imageTiles - credited);
-            copiedSourceIds.add(item2.image.id);
-            remappedById.set(item2.image.id, copied);
-            continue;
-          }
-        } catch (error2) {
-          if (signal.aborted) throw error2;
-          console.warn("[minerva] jpeg brightfield copy failed, re-encoding", error2);
-        }
-      }
+      const decided = decisions[i2];
       let jpegImage = await exportJpegOmeTiffImage({
         directory,
         layoutPlanes: item2.planes,
@@ -251364,8 +255130,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         fileName: intensityFileNames[i2],
         transfer: decided.transfer,
         signal,
-        onProgress: bump
+        onProgress: bump,
+        rgb: decided.rgb,
+        pixels: (_a2 = item2.entry.loader.metadata) == null ? void 0 : _a2.Pixels
       });
+      await writeTiffOffsetsJson(directory, intensityFileNames[i2]);
       if (item2.masks.length > 0) {
         jpegImage = {
           ...jpegImage,
@@ -251377,10 +255146,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     for (let i2 = 0; i2 < maskItems.length; i2++) {
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       const item2 = maskItems[i2];
-      if (copiedSourceIds.has(item2.image.id)) {
-        bump(maskExportTileCount(item2.entry, item2.masks.length));
-        continue;
-      }
       const splitFromIntensity = remappedById.has(item2.image.id);
       const maskSource = splitFromIntensity ? {
         ...item2.image,
@@ -251395,6 +255160,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         signal,
         onProgress: bump
       });
+      await writeTiffOffsetsJson(directory, maskFileNames[i2]);
       if (splitFromIntensity) {
         const extra = insertedAfter.get(item2.image.id) ?? [];
         extra.push(maskImage);
@@ -251403,7 +255169,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         remappedById.set(item2.image.id, maskImage);
       }
     }
-    return stitchOmeTiffExportImages(images, remappedById, insertedAfter, /* @__PURE__ */ new Set());
+    return {
+      images: stitchOmeTiffExportImages(images, remappedById, insertedAfter, /* @__PURE__ */ new Set()),
+      channelGroups: collapsePlanarRgbRows(channelGroups, decisions.flatMap((d2) => {
+        var _a3;
+        return ((_a3 = d2.rgb) == null ? void 0 : _a3.length) === 3 ? [
+          d2.rgb
+        ] : [];
+      }))
+    };
   }
   const imageExporter = "_imageExporter_s6bvo_1";
   const exportStatus = "_exportStatus_s6bvo_13";
@@ -251413,7 +255187,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const exportMessage = "_exportMessage_s6bvo_67";
   const exportHint = "_exportHint_s6bvo_75";
   const confirmActions = "_confirmActions_s6bvo_91";
-  const styles$c = {
+  const styles$b = {
     imageExporter,
     exportStatus,
     dismissButton,
@@ -251423,6 +255197,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     exportHint,
     confirmActions
   };
+  const PROGRESS_INTERVAL_MS = 250;
   const formatMinutesLeft = (ms) => {
     const mins = Math.round(ms / 6e4);
     if (mins < 1) return "<1m left";
@@ -251431,11 +255206,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const rm = mins % 60;
     return rm > 0 ? `~${h2}h ${rm}m left` : `~${h2}h left`;
   };
-  const estimateRemainingMs = (completed, total, startedAt, now) => {
-    if (startedAt === null || completed <= 0 || total <= completed) return null;
-    const elapsed = now - startedAt;
-    if (elapsed <= 0) return null;
-    return (total - completed) * elapsed / completed;
+  const RATE_WINDOW_MS = 5e3;
+  const estimateRemainingMs = (samples, total, now) => {
+    if (samples.length < 2) return null;
+    const base2 = samples[0];
+    const tip = samples[samples.length - 1];
+    const gained = tip.completed - base2.completed;
+    if (tip.at - base2.at < RATE_WINDOW_MS || gained <= 0 || total <= tip.completed) return null;
+    return (total - tip.completed) * (now - base2.at) / gained;
   };
   const toFilename = (index2) => {
     const level = -index2.z;
@@ -251469,12 +255247,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       transfer: index2.transfer
     });
     if (signal.aborted) return;
-    const fh2 = await index2.dh.getFileHandle(filename2, {
-      create: true
-    });
-    const write = await fh2.createWritable();
-    await write.write(jpeg);
-    await write.close();
+    await writeDirectoryFile(index2.dh, filename2, jpeg);
   };
   const createCRange = async (channels2, directory_handle, planesByImageId) => {
     const pending2 = channels2.map(async (ch2) => {
@@ -251484,17 +255257,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const dh2 = await directory_handle.getDirectoryHandle(folderName, {
         create: true
       });
-      const fh2 = await dh2.getFileHandle("settings.json", {
-        create: true
-      });
-      const write = await fh2.createWritable();
-      await write.write(JSON.stringify({
+      await writeDirectoryFile(dh2, "settings.json", JSON.stringify({
         channel: ch2.index,
         channelId: ch2.channelId,
         lowerLimit: ch2.lowerLimit,
         upperLimit: ch2.upperLimit
       }, null, 2));
-      await write.close();
       return {
         z: 0,
         x: 0,
@@ -251636,12 +255404,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [progress, setProgress] = reactExports.useState({
       completed: 0,
       total: 0,
-      done: false,
-      startedAt: null
+      done: false
     });
-    const [nowMs, setNowMs] = reactExports.useState(() => performance.now());
+    const rateSamplesRef = reactExports.useRef([]);
+    const [remainingMs, setRemainingMs] = reactExports.useState(null);
     const [cRange, setCRange] = reactExports.useState(null);
     const [exportError, setExportError] = reactExports.useState(null);
+    const [skippedTables, setSkippedTables] = reactExports.useState([]);
     const jpegTransfer = "cube-root";
     const [mode] = reactExports.useState(() => props.exportMode === "remote-url" ? "remote-url" : "jpeg-ome-tiff");
     const [exportArmed, setExportArmed] = reactExports.useState(false);
@@ -251714,28 +255483,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (mode !== "remote-url") return;
       if (exportError) return;
       let cancelled = false;
-      const wallStart = performance.now();
       setProgress({
         completed: 0,
         total: 1,
-        done: false,
-        startedAt: wallStart
+        done: false
       });
       void (async () => {
         try {
           const doc = useDocumentStore.getState().toDocumentData();
-          await writeStoryBundleSidecars(directory_handle, {
+          const written = await writeStoryBundleSidecars(directory_handle, {
             ...doc,
             images: await paintUngroupedExportColors(doc.images, doc.channelGroups)
           }, {
             mode: "remote-url"
           });
           if (cancelled) return;
+          setSkippedTables(written.skippedFeatureTables);
           setProgress({
             completed: 1,
             total: 1,
-            done: true,
-            startedAt: wallStart
+            done: true
           });
         } catch (e2) {
           if (cancelled) return;
@@ -251769,16 +255536,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setProgress({
         completed: 0,
         total: 1,
-        done: false,
-        startedAt: wallStart
+        done: false
       });
-      const etaInterval = window.setInterval(() => {
-        if (!cancelled) setNowMs(performance.now());
-      }, 1e3);
+      let lastProgressAt = 0;
       void (async () => {
         try {
           const imagesSnapshot = await paintUngroupedExportColors(imagesAtStart, channelGroupsSnapshot);
-          const remappedImages = await exportJpegOmeTiffStory({
+          const exported = await exportJpegOmeTiffStory({
             directory: directory_handle,
             omeLoaderEntries: loaderEntries,
             images: imagesSnapshot,
@@ -251786,12 +255550,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             transfer: jpegTransfer,
             signal: abort.signal,
             onProgress: (completed2, total2) => {
-              if (cancelled) return;
+              const now = performance.now();
+              if (cancelled || now - lastProgressAt < PROGRESS_INTERVAL_MS) {
+                return;
+              }
+              lastProgressAt = now;
               setProgress({
                 completed: completed2,
                 total: Math.max(total2, 1),
-                done: false,
-                startedAt: wallStart
+                done: false
               });
             }
           });
@@ -251801,17 +255568,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           const baseDoc = useDocumentStore.getState().toDocumentData();
           const doc = {
             ...baseDoc,
-            images: remappedImages,
+            images: exported.images,
+            channelGroups: exported.channelGroups,
             metadata: {
               ...baseDoc.metadata,
               imageSource: nextSource
             }
           };
-          await writeStoryBundleSidecars(directory_handle, doc, {
+          const written = await writeStoryBundleSidecars(directory_handle, doc, {
             mode: "jpeg-ome-tiff"
           });
+          setSkippedTables(written.skippedFeatureTables);
           const store = useDocumentStore.getState();
-          store.setImages(remappedImages);
+          await Promise.all(exported.images.flatMap((im) => {
+            var _a2;
+            return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "url" ? [
+              deleteFileHandle(locatedFileStorageKey(store.activeStoryId, im.id, im.source.url))
+            ] : [];
+          }));
+          store.setImagesAndChannelGroups(exported.images, exported.channelGroups);
           store.setMetadata({
             imageSource: nextSource
           });
@@ -251829,7 +255604,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })();
       return () => {
         cancelled = true;
-        window.clearInterval(etaInterval);
         if (!finishedOk) abort.abort();
       };
     }, [
@@ -251858,12 +255632,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setProgress({
         completed: 0,
         total: total2,
-        done: false,
-        startedAt: wallStart
+        done: false
       });
-      const etaInterval = window.setInterval(() => {
-        if (!cancelled) setNowMs(performance.now());
-      }, 1e3);
       const run = async () => {
         let nextIndex = 0;
         let completed2 = 0;
@@ -251897,8 +255667,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             setProgress({
               completed: completed2,
               total: total2,
-              done: completed2 >= total2,
-              startedAt: wallStart
+              done: completed2 >= total2
             });
           }
         };
@@ -251916,7 +255685,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         try {
           const nextSource = imageSourceFromJpegTransfer(jpegTransfer);
           const doc = useDocumentStore.getState().toDocumentData();
-          await writeStoryBundleSidecars(directory_handle, {
+          const written = await writeStoryBundleSidecars(directory_handle, {
             ...doc,
             images: await paintUngroupedExportColors(doc.images, doc.channelGroups),
             metadata: {
@@ -251926,6 +255695,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }, {
             mode: "jpeg-pyramid"
           });
+          setSkippedTables(written.skippedFeatureTables);
           useDocumentStore.getState().setMetadata({
             imageSource: nextSource
           });
@@ -251937,8 +255707,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         setProgress({
           completed: total2,
           total: total2,
-          done: true,
-          startedAt: wallStart
+          done: true
         });
       };
       void run().catch((e2) => {
@@ -251948,7 +255717,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
       return () => {
         cancelled = true;
-        window.clearInterval(etaInterval);
         if (!finishedOk) abort.abort();
       };
     }, [
@@ -251959,7 +255727,34 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       mode,
       exportArmed
     ]);
-    const { completed, total, done, startedAt } = progress;
+    const { completed, total, done } = progress;
+    reactExports.useEffect(() => {
+      var _a2;
+      const samples = rateSamplesRef.current;
+      if (done || completed <= 0) {
+        samples.length = 0;
+        setRemainingMs(null);
+        return;
+      }
+      const at = performance.now();
+      if (((_a2 = samples[samples.length - 1]) == null ? void 0 : _a2.completed) !== completed) {
+        samples.push({
+          at,
+          completed
+        });
+        while (samples.length > 2 && at - samples[1].at >= RATE_WINDOW_MS) {
+          samples.shift();
+        }
+      }
+      const update = () => setRemainingMs(estimateRemainingMs(samples, total, performance.now()));
+      update();
+      const tick = window.setInterval(update, 1e3);
+      return () => window.clearInterval(tick);
+    }, [
+      completed,
+      total,
+      done
+    ]);
     let ratio = done ? 1 : 0;
     if (!done && total > 1) {
       ratio = completed / total;
@@ -251968,24 +255763,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     } else if (!done && total === 1) {
       ratio = 0;
     }
-    const remainingMs = estimateRemainingMs(completed, total, startedAt, Math.max(nowMs, performance.now()));
     const percentLabel = `${(ratio * 100).toFixed(3)}%`;
     let etaLabel = "";
     if (done) {
-      etaLabel = "done";
+      etaLabel = "Done";
     } else if (remainingMs !== null) {
       etaLabel = formatMinutesLeft(remainingMs);
     } else if (total > 0) {
-      etaLabel = "estimating\u2026";
+      etaLabel = "Estimating\u2026";
     }
     const clampedRatio = Math.min(1, Math.max(0, ratio));
+    const skippedNote = done && skippedTables.length > 0 ? jsxRuntimeExports.jsxs("div", {
+      className: styles$b.exportMessage,
+      children: [
+        "Feature tables not loaded, left out: ",
+        skippedTables.join(", ")
+      ]
+    }) : null;
     return jsxRuntimeExports.jsx("div", {
-      className: styles$c.imageExporter,
+      className: styles$b.imageExporter,
       children: exportError ? jsxRuntimeExports.jsxs("div", {
-        className: styles$c.exportStatus,
+        className: styles$b.exportStatus,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$c.exportMessage,
+            className: styles$b.exportMessage,
             children: [
               "Export failed: ",
               exportError
@@ -251993,52 +255794,53 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$c.dismissButton,
+            className: styles$b.dismissButton,
             onClick: stopExport,
             children: "Dismiss"
           })
         ]
       }) : mode === "remote-url" ? jsxRuntimeExports.jsxs("div", {
-        className: styles$c.exportStatus,
+        className: styles$b.exportStatus,
         children: [
           jsxRuntimeExports.jsx("div", {
-            className: styles$c.exportMessage,
+            className: styles$b.exportMessage,
             children: done ? "Exported document.json + index.html (remote URLs)" : "Writing document.json + index.html\u2026"
           }),
+          skippedNote,
           done ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$c.dismissButton,
+            className: styles$b.dismissButton,
             onClick: stopExport,
             children: "Dismiss"
           }) : null
         ]
       }) : !exportArmed ? jsxRuntimeExports.jsxs("div", {
-        className: styles$c.exportStatus,
+        className: styles$b.exportStatus,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$c.exportMessage,
+            className: styles$b.exportMessage,
             children: [
               jsxRuntimeExports.jsx("div", {
                 children: "Export JPEG OME-TIFF"
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$c.exportHint,
-                children: "JPEG brightfield is copied. Other brightfield is compressed. Fluorescence is cube-root."
+                className: styles$b.exportHint,
+                children: "Brightfield: RGB. Fluorescence: cube-root."
               })
             ]
           }),
           jsxRuntimeExports.jsxs("div", {
-            className: styles$c.confirmActions,
+            className: styles$b.confirmActions,
             children: [
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$c.dismissButton,
+                className: styles$b.dismissButton,
                 onClick: armExport,
                 children: "Start export"
               }),
               canUpdateDocumentOnly ? jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$c.dismissButton,
+                className: styles$b.dismissButton,
                 onClick: () => {
                   var _a2;
                   void ((_a2 = props.onDocumentOnlyUpdate) == null ? void 0 : _a2.call(props).catch((e2) => {
@@ -252050,7 +255852,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               }) : null,
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$c.dismissButton,
+                className: styles$b.dismissButton,
                 onClick: stopExport,
                 children: "Cancel"
               })
@@ -252058,12 +255860,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           })
         ]
       }) : jsxRuntimeExports.jsxs("div", {
-        className: styles$c.exportStatus,
+        className: styles$b.exportStatus,
         children: [
           jsxRuntimeExports.jsxs("div", {
             className: [
-              styles$c.progressBar,
-              done ? styles$c.progressBarDone : null
+              styles$b.progressBar,
+              done ? styles$b.progressBarDone : null
             ].filter(Boolean).join(" "),
             style: {
               "--progress-ratio": clampedRatio
@@ -252082,12 +255884,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           }),
           etaLabel ? jsxRuntimeExports.jsx("div", {
-            className: styles$c.etaLine,
+            className: styles$b.etaLine,
             children: etaLabel
           }) : null,
+          skippedNote,
           done ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$c.dismissButton,
+            className: styles$b.dismissButton,
             onClick: stopExport,
             children: "Dismiss"
           }) : null
@@ -252297,7 +256100,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const nextLink = "_nextLink_o48fs_323";
   const tocWrapper = "_tocWrapper_o48fs_367";
   const channelName = "_channelName_o48fs_376";
-  const styles$b = {
+  const styles$a = {
     presentation,
     frame: frame$1,
     previewRibbon,
@@ -252329,7 +256132,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function PresentationFrame(props) {
     return jsxRuntimeExports.jsx("div", {
-      className: props.active ? `${styles$b.frame} ${styles$b.presentation} minerva-seal` : styles$b.frame,
+      className: props.active ? `${styles$a.frame} ${styles$a.presentation} minerva-seal` : styles$a.frame,
       children: props.children
     });
   }
@@ -252338,7 +256141,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const ribbonDocTitle = documentTitle.trim() || "Untitled story";
     const flushTitle = !props.exitPlaybackPreview;
     return jsxRuntimeExports.jsxs("div", {
-      className: `${minervaTheme.bar} ${styles$b.previewRibbon}`,
+      className: `${minervaTheme.bar} ${styles$a.previewRibbon}`,
       children: [
         props.exitPlaybackPreview ? jsxRuntimeExports.jsxs(PanelActionButton, {
           type: "button",
@@ -252347,7 +256150,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           "aria-label": "Back to editing",
           children: [
             jsxRuntimeExports.jsx(SvgChevronDown, {
-              className: styles$b.previewRibbonChevron,
+              className: styles$a.previewRibbonChevron,
               "aria-hidden": true
             }),
             jsxRuntimeExports.jsx("span", {
@@ -252359,8 +256162,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           title: ribbonDocTitle,
           className: [
             minervaTheme.title,
-            styles$b.previewRibbonDocumentTitle,
-            flushTitle ? styles$b.previewRibbonDocumentTitleFlush : null
+            styles$a.previewRibbonDocumentTitle,
+            flushTitle ? styles$a.previewRibbonDocumentTitleFlush : null
           ].filter(Boolean).join(" "),
           children: [
             jsxRuntimeExports.jsx(StorySpines, {}),
@@ -252368,7 +256171,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         props.exitPlaybackPreview ? jsxRuntimeExports.jsx("span", {
-          className: styles$b.previewRibbonPreviewBadge,
+          className: styles$a.previewRibbonPreviewBadge,
           children: "Story preview"
         }) : null
       ]
@@ -252413,7 +256216,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
     const imageWidth = frame2.pixelWidth;
     const imageHeight = frame2.pixelHeight;
-    const { activeStoryIndex, setActiveStory, activeChannelGroupId, setActiveChannelGroup, importWaypointShapes, setTargetWaypointCamera } = useAppStore();
+    const { activeStoryIndex, setActiveStory, activeChannelGroupId, showOnlyChannelGroup, importWaypointShapes, setTargetWaypointCamera } = useAppStore();
     const previousActiveStoryIndexRef = reactExports.useRef(null);
     const groupAppliedForStoryRef = reactExports.useRef(null);
     const cameraAppliedForStoryRef = reactExports.useRef(null);
@@ -252451,18 +256254,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const story2 = waypoints[activeStoryIndex];
       if (!story2) return;
       if (groupAppliedForStoryRef.current === activeStoryIndex) return;
-      const authoringMap = useAppStore.getState().waypointAuthoring;
-      const wp = waypointToConfigWaypoint(story2, authoringMap.get(story2.id));
-      const gid = wp.groupId;
-      const foundGroup = gid ? channelGroups.find((g2) => g2.id === gid) || channelGroups[0] : channelGroups[0];
+      const gid = story2.groupId;
+      const foundGroup = gid && channelGroups.find((g2) => g2.id === gid) || channelGroups[0];
       if (!foundGroup) return;
       groupAppliedForStoryRef.current = activeStoryIndex;
-      setActiveChannelGroup(foundGroup.id);
+      showOnlyChannelGroup(foundGroup.id);
     }, [
       activeStoryIndex,
       channelGroups,
       waypoints,
-      setActiveChannelGroup
+      showOnlyChannelGroup
     ]);
     reactExports.useEffect(() => {
       return () => {
@@ -252483,9 +256284,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (!story2) return;
       const gid = story2.groupId;
       const found_group = gid && channelGroups.find(({ id: id2 }) => id2 === gid) || channelGroups[0];
-      if (found_group) {
-        setActiveChannelGroup(found_group.id);
-      }
+      if (found_group) showOnlyChannelGroup(found_group.id);
     };
     const storyFirst = () => {
       setActiveStory(0);
@@ -252509,7 +256308,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const iconPx = 16;
     const toc_button = jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: styles$b.tocButton,
+      className: styles$a.tocButton,
       title: "View table of contents",
       onMouseDown: (e2) => {
         e2.preventDefault();
@@ -252557,8 +256356,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return jsxRuntimeExports.jsx("button", {
         type: "button",
         className: [
-          styles$b.navLeft,
-          props2.active ? null : styles$b.navInactive
+          styles$a.navLeft,
+          props2.active ? null : styles$a.navInactive
         ].filter(Boolean).join(" "),
         title: "View previous waypoint",
         onMouseDown: handleMouseDown,
@@ -252569,7 +256368,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     const count2 = jsxRuntimeExports.jsxs("div", {
-      className: styles$b.count,
+      className: styles$a.count,
       children: [
         jsxRuntimeExports.jsx("div", {
           title: "Current waypoint",
@@ -252592,8 +256391,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return jsxRuntimeExports.jsx("button", {
         type: "button",
         className: [
-          styles$b.navRight,
-          props2.active ? null : styles$b.navInactive
+          styles$a.navRight,
+          props2.active ? null : styles$a.navInactive
         ].filter(Boolean).join(" "),
         title: "View next waypoint",
         onMouseDown: handleMouseDown,
@@ -252604,7 +256403,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     const story_next = jsxRuntimeExports.jsx("p", {
-      className: styles$b.nextLink,
+      className: styles$a.nextLink,
       title: "View next waypoint",
       onMouseDown: (e2) => {
         e2.preventDefault();
@@ -252615,10 +256414,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const TableOfContents = (props2) => {
       const { waypoints: tocWaypoints } = props2;
       return jsxRuntimeExports.jsxs("div", {
-        className: styles$b.tocWrapper,
+        className: styles$a.tocWrapper,
         children: [
           jsxRuntimeExports.jsx("h2", {
-            className: styles$b.heading,
+            className: styles$a.heading,
             children: "Table of Contents"
           }),
           jsxRuntimeExports.jsx("ol", {
@@ -252688,16 +256487,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (hideNavPane) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$b.navPane,
-        navStoryName ? styles$b.navPaneHasStoryName : null
+        styles$a.navPane,
+        navStoryName ? styles$a.navPaneHasStoryName : null
       ].filter(Boolean).join(" "),
       children: [
         navStoryName ? jsxRuntimeExports.jsx("div", {
-          className: styles$b.storyTitle,
+          className: styles$a.storyTitle,
           children: navStoryName
         }) : null,
         jsxRuntimeExports.jsxs("div", {
-          className: styles$b.toolbar,
+          className: styles$a.toolbar,
           children: [
             toc_button,
             jsxRuntimeExports.jsx(StoryLeft, {
@@ -252711,10 +256510,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsxs("div", {
           ref: contentPaneRef,
-          className: styles$b.contentWrap,
+          className: styles$a.contentWrap,
           children: [
             jsxRuntimeExports.jsx("h2", {
-              className: styles$b.heading,
+              className: styles$a.heading,
               children: story_title
             }),
             jsxRuntimeExports.jsx(Markdown, {
@@ -252723,7 +256522,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   const text2 = String(children);
                   const color2 = channelColors.get(text2);
                   return color2 ? jsxRuntimeExports.jsx("span", {
-                    className: styles$b.channelName,
+                    className: styles$a.channelName,
                     style: {
                       "--channel-color": color2
                     },
@@ -252739,7 +256538,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               waypoints
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$b.inlineNext,
+              className: styles$a.inlineNext,
               children: last_story ? jsxRuntimeExports.jsx("p", {
                 children: "End"
               }) : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
@@ -252765,7 +256564,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const groupAltRow = "_groupAltRow_8953e_63";
   const ellipsis = "_ellipsis_8953e_81";
   const triggerLabel = "_triggerLabel_8953e_87";
-  const styles$a = {
+  const styles$9 = {
     wrapRows,
     activeHeader,
     activeGroupTrigger,
@@ -252777,23 +256576,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   };
   const GroupRow = (props) => {
     const { group: group2 } = props;
-    const { name: name2 } = group2;
-    const { setActiveChannelGroup } = useAppStore();
-    const docChannelGroups = useDocumentStore((s2) => s2.channelGroups);
-    const row_group = reactExports.useMemo(() => docChannelGroups.find((grp) => grp.name === name2) || docChannelGroups[0], [
-      docChannelGroups,
-      name2
-    ]);
-    const toGroup = () => {
-      if (row_group) {
-        setActiveChannelGroup(row_group.id);
-      }
-    };
+    const showOnlyChannelGroup = useAppStore((s2) => s2.showOnlyChannelGroup);
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: `${minervaTheme.focusRing} ${styles$a.groupAltRow}`,
-      onClick: toGroup,
-      children: name2
+      className: `${minervaTheme.focusRing} ${styles$9.groupAltRow}`,
+      onClick: () => showOnlyChannelGroup(group2.id),
+      children: group2.name
     });
   };
   const ChannelGroups = (props) => {
@@ -252815,12 +256603,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const activeGroupName = (activeGroup == null ? void 0 : activeGroup.name) || "No group";
     if (channelGroups.length <= 1) {
       return jsxRuntimeExports.jsx("div", {
-        className: styles$a.wrapRows,
+        className: styles$9.wrapRows,
         children: jsxRuntimeExports.jsx("div", {
-          className: styles$a.activeHeader,
+          className: styles$9.activeHeader,
           title: activeGroupName,
           children: jsxRuntimeExports.jsx("span", {
-            className: styles$a.ellipsis,
+            className: styles$9.ellipsis,
             children: activeGroupName
           })
         })
@@ -252828,29 +256616,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     const otherGroups = expanded ? docChannelGroups.filter((g2) => g2.id !== (activeGroup == null ? void 0 : activeGroup.id)) : [];
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$a.wrapRows,
+      className: styles$9.wrapRows,
       children: [
         jsxRuntimeExports.jsxs("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$a.activeGroupTrigger}`,
+          className: `${minervaTheme.focusRing} ${styles$9.activeGroupTrigger}`,
           "aria-expanded": expanded,
           onClick: () => setExpanded(!expanded),
           children: [
             jsxRuntimeExports.jsx("span", {
-              className: styles$a.chevronWrap,
+              className: styles$9.chevronWrap,
               "aria-hidden": true,
               children: jsxRuntimeExports.jsx(ChevronIcon, {
                 direction: expanded ? "up" : "down"
               })
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$a.triggerLabel,
+              className: styles$9.triggerLabel,
               children: activeGroupName
             })
           ]
         }),
         otherGroups.length > 0 ? jsxRuntimeExports.jsx("div", {
-          className: styles$a.alternateList,
+          className: styles$9.alternateList,
           children: otherGroups.map((group2) => jsxRuntimeExports.jsx(GroupRow, {
             group: group2
           }, group2.id))
@@ -252870,7 +256658,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }));
   const clickable = "_clickable_hg67w_9";
   const wrapColumn = "_wrapColumn_hg67w_13";
-  const styles$9 = {
+  const styles$8 = {
     "static": "_static_hg67w_1",
     clickable,
     wrapColumn
@@ -252878,7 +256666,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const IconButton = (props) => {
     const { onClick, children, "aria-label": ariaLabel } = props;
     return jsxRuntimeExports.jsx(PanelIconButton, {
-      className: onClick ? styles$9.clickable : styles$9.static,
+      className: onClick ? styles$8.clickable : styles$8.static,
       onClick,
       "aria-label": ariaLabel,
       children
@@ -252892,7 +256680,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const PopUpdate = (props) => {
     const { onPop, children } = props;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$9.wrapColumn,
+      className: styles$8.wrapColumn,
       children: [
         jsxRuntimeExports.jsx(IconButton, {
           onClick: onPop,
@@ -252905,7 +256693,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   };
   const fieldWrap = "_fieldWrap_1y8s3_1";
   const input$1 = "_input_1y8s3_8";
-  const styles$8 = {
+  const styles$7 = {
     fieldWrap,
     input: input$1
   };
@@ -252929,14 +256717,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const El = React$2.Fragment;
     const content2 = editable ? jsxRuntimeExports.jsx("input", {
-      className: styles$8.input,
+      className: styles$7.input,
       ...inputProps,
       title: text2
     }) : jsxRuntimeExports.jsx(El, {
       children: text2
     });
     return jsxRuntimeExports.jsx("div", {
-      className: styles$8.fieldWrap,
+      className: styles$7.fieldWrap,
       children: content2
     });
   };
@@ -252953,26 +256741,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...plainProps
     });
   };
-  const channelsSection = "_channelsSection_esy1z_1";
-  const channelsSectionHeader = "_channelsSectionHeader_esy1z_9";
-  const sectionLabel = "_sectionLabel_esy1z_18";
-  const collapseToggle = "_collapseToggle_esy1z_30";
-  const toolbarSlot = "_toolbarSlot_esy1z_34";
-  const legendBody = "_legendBody_esy1z_42";
-  const imageSection = "_imageSection_esy1z_49";
-  const imageSectionLabel = "_imageSectionLabel_esy1z_55";
-  const channelList = "_channelList_esy1z_67";
-  const legendRowWrap = "_legendRowWrap_esy1z_73";
-  const rowClickArea = "_rowClickArea_esy1z_88";
-  const swatchButton = "_swatchButton_esy1z_100";
-  const nameButton = "_nameButton_esy1z_101";
-  const swatch = "_swatch_esy1z_100";
-  const swatchFilled = "_swatchFilled_esy1z_135";
-  const legendDivider = "_legendDivider_esy1z_139";
-  const nameSlot = "_nameSlot_esy1z_144";
-  const sectionLabelStatic = "_sectionLabelStatic_esy1z_181";
-  const channelsCollapsed = "_channelsCollapsed_esy1z_185";
-  const styles$7 = {
+  const channelsSection = "_channelsSection_uc0r6_1";
+  const channelsSectionHeader = "_channelsSectionHeader_uc0r6_9";
+  const sectionLabel = "_sectionLabel_uc0r6_18";
+  const collapseToggle = "_collapseToggle_uc0r6_30";
+  const toolbarSlot = "_toolbarSlot_uc0r6_34";
+  const legendBody = "_legendBody_uc0r6_42";
+  const imageSection = "_imageSection_uc0r6_49";
+  const imageSectionLabel = "_imageSectionLabel_uc0r6_55";
+  const channelList = "_channelList_uc0r6_67";
+  const legendRowWrap = "_legendRowWrap_uc0r6_73";
+  const rowClickArea = "_rowClickArea_uc0r6_88";
+  const swatchButton = "_swatchButton_uc0r6_100";
+  const nameButton = "_nameButton_uc0r6_101";
+  const swatch = "_swatch_uc0r6_100";
+  const swatchFilled = "_swatchFilled_uc0r6_136";
+  const legendDivider = "_legendDivider_uc0r6_140";
+  const nameSlot = "_nameSlot_uc0r6_145";
+  const sectionLabelStatic = "_sectionLabelStatic_uc0r6_182";
+  const channelsCollapsed = "_channelsCollapsed_uc0r6_186";
+  const styles$6 = {
     channelsSection,
     channelsSectionHeader,
     sectionLabel,
@@ -253024,7 +256812,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       color: hex_color,
       group_uuid: groupId,
       source_uuid: sc2.id,
-      channel_uuid: gc2.id
+      channel_uuid: gc2.id,
+      mask: isMaskChannel(sc2)
     };
   }
   function legendChannelFromSource(sc2, allChannels = []) {
@@ -253041,7 +256830,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       color: hex ?? "",
       group_uuid: "",
       source_uuid: sc2.id,
-      channel_uuid: sc2.id
+      channel_uuid: sc2.id,
+      mask: isMaskChannel(sc2)
     };
   }
   function legendLabelForImage(basename2) {
@@ -253079,15 +256869,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const swatchLabel = colorPending ? `Optimizing color of ${channelName2}` : `Change color of ${channelName2}`;
     const coreUI = jsxRuntimeExports.jsxs("div", {
-      className: styles$7.rowClickArea,
+      className: styles$6.rowClickArea,
       style: {
         opacity: rowVisible ? 1 : 0.55
       },
       children: [
-        jsxRuntimeExports.jsx("button", {
+        channel.mask ? null : jsxRuntimeExports.jsx("button", {
           type: "button",
           className: [
-            styles$7.swatchButton,
+            styles$6.swatchButton,
             colorPending ? minervaTheme.busyOverlay : null
           ].filter(Boolean).join(" "),
           onClick: onColorClick,
@@ -253096,8 +256886,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           "aria-busy": colorPending || void 0,
           children: jsxRuntimeExports.jsx("div", {
             className: [
-              styles$7.swatch,
-              channel.color && rowVisible ? styles$7.swatchFilled : null
+              styles$6.swatch,
+              channel.color && rowVisible ? styles$6.swatchFilled : null
             ].filter(Boolean).join(" "),
             style: {
               "--swatch-color": channel.color ? `#${channel.color}` : "#fff"
@@ -253106,12 +256896,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$7.nameButton,
+          className: styles$6.nameButton,
           onClick: () => props.toggleChannel(channel),
           title: rowVisible ? `Hide ${channelName2}` : `Show ${channelName2}`,
           "aria-label": rowVisible ? `Hide ${channelName2}` : `Show ${channelName2}`,
           children: jsxRuntimeExports.jsx("span", {
-            className: styles$7.nameSlot,
+            className: styles$6.nameSlot,
             children: jsxRuntimeExports.jsx(EditableText, {
               ...statusProps,
               children: channelName2
@@ -253144,7 +256934,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     });
     return jsxRuntimeExports.jsx("div", {
-      className: styles$7.legendRowWrap,
+      className: styles$6.legendRowWrap,
       children: extraUI
     });
   };
@@ -253188,7 +256978,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       a: 1
     }));
     const [colorPickerChannel, setColorPickerChannel] = reactExports.useState(null);
-    const [legendOpen, setLegendOpen] = reactExports.useState(true);
+    const [legendOpen, setLegendOpen] = reactExports.useState(() => !isMobileDevice());
     const closeColorPicker = reactExports.useCallback(() => {
       setColorPickerChannel(null);
       setColorPickerPos(null);
@@ -253205,16 +256995,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     if (sections.length === 0) {
       return jsxRuntimeExports.jsx("div", {
-        className: styles$7.channelsSection,
+        className: styles$6.channelsSection,
         children: jsxRuntimeExports.jsxs("div", {
-          className: styles$7.channelsSectionHeader,
+          className: styles$6.channelsSectionHeader,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$7.sectionLabel,
+              className: styles$6.sectionLabel,
               children: "Channels"
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$7.toolbarSlot,
+              className: styles$6.toolbarSlot,
               children: addChannelUI
             })
           ]
@@ -253224,16 +257014,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     let rowIdx = 0;
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$7.channelsSection,
-        legendOpen ? null : styles$7.channelsCollapsed
+        styles$6.channelsSection,
+        legendOpen ? null : styles$6.channelsCollapsed
       ].filter(Boolean).join(" "),
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$7.channelsSectionHeader,
+          className: styles$6.channelsSectionHeader,
           children: [
             jsxRuntimeExports.jsxs("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$7.collapseToggle}`,
+              className: `${minervaTheme.focusRing} ${styles$6.collapseToggle}`,
               "aria-expanded": legendOpen,
               onClick: () => {
                 if (legendOpen) closeColorPicker();
@@ -253244,37 +257034,37 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   direction: legendOpen ? "up" : "down"
                 }),
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$7.sectionLabel,
+                  className: styles$6.sectionLabel,
                   children: "Channels"
                 })
               ]
             }),
             jsxRuntimeExports.jsx("div", {
-              className: `${styles$7.sectionLabel} ${styles$7.sectionLabelStatic}`,
+              className: `${styles$6.sectionLabel} ${styles$6.sectionLabelStatic}`,
               children: "Channels"
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$7.toolbarSlot,
+              className: styles$6.toolbarSlot,
               children: addChannelUI
             })
           ]
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$7.legendBody,
+          className: styles$6.legendBody,
           children: sections.map((section) => jsxRuntimeExports.jsxs("div", {
-            className: styles$7.imageSection,
+            className: styles$6.imageSection,
             children: [
               jsxRuntimeExports.jsx("div", {
-                className: styles$7.imageSectionLabel,
+                className: styles$6.imageSectionLabel,
                 title: section.label,
                 children: section.label
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$7.channelList,
+                className: styles$6.channelList,
                 children: section.entries.map((entry, entryIdx) => {
                   if (entry.type === "divider") {
                     return jsxRuntimeExports.jsx("div", {
-                      className: styles$7.legendDivider
+                      className: styles$6.legendDivider
                     }, `div-${section.imageId}-${entryIdx}`);
                   }
                   const c2 = entry.channel;
@@ -253334,13 +257124,106 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   };
+  const CLASS_LEGEND_ROWS = 12;
+  function ClassLegendList({ section, onToggle }) {
+    const [expanded, setExpanded] = reactExports.useState(false);
+    const more = section.rows.length - CLASS_LEGEND_ROWS;
+    const rows2 = expanded || more <= 0 ? section.rows : section.rows.slice(0, CLASS_LEGEND_ROWS);
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$6.imageSection,
+      children: [
+        jsxRuntimeExports.jsx("div", {
+          className: styles$6.imageSectionLabel,
+          title: section.label,
+          children: section.label
+        }),
+        jsxRuntimeExports.jsxs("div", {
+          className: styles$6.channelList,
+          children: [
+            rows2.map((row2) => {
+              const label2 = row2.name.trim() ? row2.name : "Unnamed";
+              return jsxRuntimeExports.jsx("div", {
+                className: styles$6.legendRowWrap,
+                children: jsxRuntimeExports.jsx("div", {
+                  className: styles$6.rowClickArea,
+                  style: {
+                    opacity: row2.hidden ? 0.55 : 1
+                  },
+                  children: jsxRuntimeExports.jsxs("button", {
+                    type: "button",
+                    className: `${minervaTheme.focusRing} ${styles$6.nameButton}`,
+                    onClick: () => onToggle(section.channelId, row2.name),
+                    title: row2.hidden ? `Show ${label2}` : `Hide ${label2}`,
+                    "aria-pressed": !row2.hidden,
+                    children: [
+                      section.showSwatches ? jsxRuntimeExports.jsx("div", {
+                        className: [
+                          styles$6.swatch,
+                          row2.hidden ? null : styles$6.swatchFilled
+                        ].filter(Boolean).join(" "),
+                        style: {
+                          "--swatch-color": `#${row2.color}`
+                        }
+                      }) : null,
+                      jsxRuntimeExports.jsx("span", {
+                        className: styles$6.nameSlot,
+                        children: label2
+                      })
+                    ]
+                  })
+                })
+              }, row2.name);
+            }),
+            more > 0 && !expanded ? jsxRuntimeExports.jsx("div", {
+              className: styles$6.legendRowWrap,
+              children: jsxRuntimeExports.jsx("button", {
+                type: "button",
+                className: `${minervaTheme.focusRing} ${styles$6.nameButton}`,
+                onClick: () => setExpanded(true),
+                children: jsxRuntimeExports.jsxs("span", {
+                  className: styles$6.nameSlot,
+                  children: [
+                    "+",
+                    more,
+                    " more"
+                  ]
+                })
+              })
+            }) : null
+          ]
+        })
+      ]
+    });
+  }
+  const ClassLegend = ({ sections, onToggle }) => {
+    if (sections.length === 0) return null;
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$6.channelsSection,
+      children: [
+        jsxRuntimeExports.jsx("div", {
+          className: styles$6.channelsSectionHeader,
+          children: jsxRuntimeExports.jsx("div", {
+            className: styles$6.sectionLabel,
+            children: "Classes"
+          })
+        }),
+        jsxRuntimeExports.jsx("div", {
+          className: styles$6.legendBody,
+          children: sections.map((section) => jsxRuntimeExports.jsx(ClassLegendList, {
+            section,
+            onToggle
+          }, section.channelId))
+        })
+      ]
+    });
+  };
   const textWrap = "_textWrap_dawfc_1";
   const core = "_core_dawfc_7";
   const hide = "_hide_dawfc_21";
   const wrapContent = "_wrapContent_dawfc_25";
   const wrapCore = "_wrapCore_dawfc_33";
   const overlaySectionLabel = "_overlaySectionLabel_dawfc_52";
-  const styles$6 = {
+  const styles$5 = {
     textWrap,
     core,
     hide,
@@ -253429,6 +257312,55 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       activeChannelGroupId,
       channelVisibilities
     ]);
+    const featureTables = useDocumentStore((s2) => s2.featureTables);
+    const activeWaypoint = useActiveWaypoint();
+    const hiddenLegendClasses = useAppStore((s2) => s2.hiddenLegendClasses);
+    const toggleLegendClass = useAppStore((s2) => s2.toggleLegendClass);
+    const clearLegendClasses = useAppStore((s2) => s2.clearLegendClasses);
+    reactExports.useEffect(() => {
+      if (hide2) clearLegendClasses();
+    }, [
+      hide2,
+      clearLegendClasses
+    ]);
+    const ingestEpoch2 = useFeatureTableIngestEpoch();
+    const lutEpoch2 = useFeatureTableLutEpoch();
+    const classSections = reactExports.useMemo(() => {
+      const inLegend = new Set(legendSections.flatMap((section) => section.entries.flatMap((e2) => e2.type === "channel" ? [
+        e2.channel.source_uuid
+      ] : [])));
+      const out = [];
+      for (const featureTable of featureTables) {
+        if (!inLegend.has(featureTable.sourceChannelId)) continue;
+        const sc2 = findSourceChannel(sourceChannels, featureTable.sourceChannelId);
+        if (!sc2 || !isMaskChannel(sc2)) continue;
+        const viz = effectiveMaskVisualizationForSource(sc2, docChannelGroups, activeChannelGroupId);
+        const rows2 = shownClassRows(featureTable, classViewFor(activeWaypoint, sc2.id), viz.colorSeed ?? 0, activeWaypoint == null ? void 0 : activeWaypoint.id);
+        if (!rows2) continue;
+        const hiddenNames = new Set(hiddenLegendClasses[legendClassKey(activeWaypoint == null ? void 0 : activeWaypoint.id, sc2.id)]);
+        out.push({
+          channelId: sc2.id,
+          label: sc2.name,
+          showSwatches: viz.color !== "white",
+          rows: rows2.map((row2) => ({
+            name: row2.name,
+            color: rgbToHex$1(row2.color),
+            hidden: hiddenNames.has(row2.name)
+          }))
+        });
+      }
+      return out;
+    }, [
+      legendSections,
+      featureTables,
+      sourceChannels,
+      docChannelGroups,
+      activeChannelGroupId,
+      activeWaypoint,
+      hiddenLegendClasses,
+      ingestEpoch2,
+      lutEpoch2
+    ]);
     const groups = useDocumentStore((s2) => s2.channelGroups);
     const setChannelGroups = useDocumentStore((s2) => s2.setChannelGroups);
     const setGroupNames = useAppStore((s2) => s2.setGroupNames);
@@ -253504,7 +257436,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           channelGroups: docChannelGroups,
           groupRowVisibilities: channelGroupRowVisibilities,
           stackVisibilities: channelVisibilities,
-          visible: nextVisible2
+          visible: nextVisible2,
+          groupId: c2.group_uuid
         });
         setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
         setChannelVisibilities(next2.channelVisibilities);
@@ -253522,13 +257455,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     const hideClass = [
-      hide2 ? styles$6.hide : "",
-      styles$6.core
+      hide2 ? styles$5.hide : "",
+      styles$5.core
     ].join(" ");
     const allGroups = docChannelGroups.length > 0 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$6.overlaySectionLabel,
+          className: styles$5.overlaySectionLabel,
           children: "Channel groups"
         }),
         jsxRuntimeExports.jsx(ChannelGroups, {
@@ -253542,9 +257475,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const channelMenu = jsxRuntimeExports.jsx("div", {
       className: hideClass,
       children: jsxRuntimeExports.jsx("div", {
-        className: styles$6.wrapContent,
+        className: styles$5.wrapContent,
         children: jsxRuntimeExports.jsxs("div", {
-          className: styles$6.wrapCore,
+          className: styles$5.wrapCore,
           children: [
             allGroups,
             jsxRuntimeExports.jsx(ChannelLegend, {
@@ -253553,13 +257486,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               channelGroupRowVisibilities,
               toggleChannel,
               updateChannel
+            }),
+            jsxRuntimeExports.jsx(ClassLegend, {
+              sections: classSections,
+              onToggle: (channelId, name2) => toggleLegendClass(activeWaypoint == null ? void 0 : activeWaypoint.id, channelId, name2)
             })
           ]
         })
       })
     });
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$6.textWrap,
+      className: styles$5.textWrap,
       children: [
         props.children,
         hidden ? "" : channelMenu
@@ -253575,7 +257512,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const folderPromptBody = "_folderPromptBody_1vo0y_72";
   const folderPromptActions = "_folderPromptActions_1vo0y_79";
   const folderPromptPrimary = "_folderPromptPrimary_1vo0y_105";
-  const styles$5 = {
+  const styles$4 = {
     modeViewport,
     authorViewport,
     authorViewportHidden,
@@ -253601,13 +257538,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onDocumentOnlyUpdate: props.onDocumentOnlyUpdate
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$5.modeViewport,
+      className: styles$4.modeViewport,
       "data-mode": presenting ? "presenting" : exporting ? "exporting" : folderPrompt2 ? "export-dest" : "author",
       children: [
         jsxRuntimeExports.jsx("div", {
           className: [
-            styles$5.authorViewport,
-            overlayOpen ? styles$5.authorViewportHidden : null
+            styles$4.authorViewport,
+            overlayOpen ? styles$4.authorViewportHidden : null
           ].filter(Boolean).join(" "),
           children: jsxRuntimeExports.jsxs(PresentationFrame, {
             active: presenting,
@@ -253635,18 +257572,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           })
         }),
         folderPrompt2 ? jsxRuntimeExports.jsx("div", {
-          className: styles$5.exportOverlay,
+          className: styles$4.exportOverlay,
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$5.folderPrompt,
+            className: styles$4.folderPrompt,
             role: "dialog",
             "aria-modal": "true",
             children: [
               jsxRuntimeExports.jsx("div", {
-                className: styles$5.folderPromptTitle,
+                className: styles$4.folderPromptTitle,
                 children: "Export story"
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$5.folderPromptBody,
+                className: styles$4.folderPromptBody,
                 children: [
                   "Update the existing folder \u201C",
                   folderPrompt2.folderName,
@@ -253654,11 +257591,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 ]
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$5.folderPromptActions,
+                className: styles$4.folderPromptActions,
                 children: [
                   jsxRuntimeExports.jsxs("button", {
                     type: "button",
-                    className: styles$5.folderPromptPrimary,
+                    className: styles$4.folderPromptPrimary,
                     onClick: folderPrompt2.onUpdateExisting,
                     children: [
                       "Update \u201C",
@@ -253681,34 +257618,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           })
         }) : exporting ? jsxRuntimeExports.jsx("div", {
-          className: styles$5.exportOverlay,
+          className: styles$4.exportOverlay,
           children: jsxRuntimeExports.jsx(ImageExporter, {
             ...exporterProps
           })
         }) : null
-      ]
-    });
-  };
-  const stamp = "_stamp_3x91t_1";
-  const styles$4 = {
-    stamp
-  };
-  function utcShort(iso) {
-    const t2 = Date.parse(iso);
-    if (Number.isNaN(t2)) return null;
-    return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
-  }
-  const BuildStamp = () => {
-    const label2 = utcShort("2026-10-08T15:06:12.041Z");
-    if (!label2) return null;
-    return jsxRuntimeExports.jsxs("div", {
-      className: styles$4.stamp,
-      "aria-hidden": true,
-      title: "2026-10-08T15:06:12.041Z",
-      children: [
-        "Updated ",
-        label2,
-        " UTC"
       ]
     });
   };
@@ -254830,10 +258744,11 @@ uniform classStyleUniforms {
   function styleKey(style2) {
     return style2 ? `${style2.indexRev}:${style2.rev}` : "";
   }
-  const TEX_CACHE_MAX = 4;
+  const INDEX_TEX_CACHE_MAX = 4;
+  const PALETTE_TEX_CACHE_MAX = 64;
   const indexTexCache = /* @__PURE__ */ new Map();
   const paletteTexCache = /* @__PURE__ */ new Map();
-  function rememberTex(cache2, key2, tex) {
+  function rememberTex(cache2, max2, key2, tex) {
     var _a2, _b2;
     const hit = cache2.get(key2);
     if (hit) {
@@ -254841,7 +258756,7 @@ uniform classStyleUniforms {
       cache2.set(key2, hit);
       return hit;
     }
-    while (cache2.size >= TEX_CACHE_MAX) {
+    while (cache2.size >= max2) {
       const oldest = cache2.keys().next().value;
       if (oldest == null) break;
       const evicted = cache2.get(oldest);
@@ -254966,12 +258881,12 @@ uniform classStyleUniforms {
       if (!index2) {
         index2 = style2 ? makeTexture(device, style2.index, style2.width, style2.height, "r8unorm") : makeTexture(device, DUMMY_R8, 1, 1, "r8unorm");
       }
-      this.state.classIndexTexture = rememberTex(indexTexCache, indexKey, index2);
+      this.state.classIndexTexture = rememberTex(indexTexCache, INDEX_TEX_CACHE_MAX, indexKey, index2);
       let palette = paletteTexCache.get(paletteKey);
       if (!palette) {
         palette = style2 ? makeTexture(device, style2.palette, Math.max(1, style2.palette.length / 4), 1, "rgba8unorm") : makeTexture(device, DUMMY_RGBA, 1, 1, "rgba8unorm");
       }
-      this.state.classPaletteTexture = rememberTex(paletteTexCache, paletteKey, palette);
+      this.state.classPaletteTexture = rememberTex(paletteTexCache, PALETTE_TEX_CACHE_MAX, paletteKey, palette);
       this.state.classStyleKey = key2;
     }
   }
@@ -255228,12 +259143,24 @@ uniform classStyleUniforms {
       };
     };
   }
-  const main = "_main_1boo4_1";
-  const pyramidHud = "_pyramidHud_1boo4_6";
-  const squareViewportOverlay = "_squareViewportOverlay_1boo4_27";
+  const main = "_main_1azhv_1";
+  const viewerInfo = "_viewerInfo_1azhv_6";
+  const viewerInfoButton = "_viewerInfoButton_1azhv_14";
+  const viewerInfoPanel = "_viewerInfoPanel_1azhv_15";
+  const viewerInfoPanelHead = "_viewerInfoPanelHead_1azhv_57";
+  const viewerInfoClose = "_viewerInfoClose_1azhv_67";
+  const viewerInfoList = "_viewerInfoList_1azhv_81";
+  const viewerInfoStamp = "_viewerInfoStamp_1azhv_98";
+  const squareViewportOverlay = "_squareViewportOverlay_1azhv_136";
   const styles$1 = {
     main,
-    pyramidHud,
+    viewerInfo,
+    viewerInfoButton,
+    viewerInfoPanel,
+    viewerInfoPanelHead,
+    viewerInfoClose,
+    viewerInfoList,
+    viewerInfoStamp,
     squareViewportOverlay
   };
   const ORTHO_VIEW_ID = "ortho";
@@ -255241,6 +259168,36 @@ uniform classStyleUniforms {
   const WAYPOINT_FLY_MS = 1400;
   const CAMERA_IDLE_COMMIT_MS = 160;
   const easeInOutCubic = (t2) => t2 < 0.5 ? 4 * t2 * t2 * t2 : 1 - (-2 * t2 + 2) ** 3 / 2;
+  function utcShort(iso) {
+    const t2 = Date.parse(iso);
+    if (Number.isNaN(t2)) return null;
+    return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
+  }
+  function buildStamp() {
+    const iso = "2026-10-13T15:17:11.610Z";
+    const sha = "2d6ab1f2fa4fa82f6a374d50090793d9cdd2ce96";
+    const label2 = utcShort(iso);
+    const short = sha.slice(0, 7);
+    const text2 = [
+      label2 ? `Updated ${label2} UTC` : "",
+      short
+    ].filter(Boolean).join(" \xB7 ");
+    if (!text2) return null;
+    return {
+      text: text2,
+      title: [
+        iso,
+        sha
+      ].filter(Boolean).join("\n")
+    };
+  }
+  function deviceLabel() {
+    const mb2 = TILE_CACHE_PROPS.maxCacheByteSize / 2 ** 20;
+    const cache2 = mb2 > 0 ? `${mb2} MB` : "off";
+    return `${isMobileDevice() ? "Mobile" : "Desktop"} \xB7 tile cache ${cache2}`;
+  }
+  const BUILD_STAMP = buildStamp();
+  const DEVICE_LABEL = deviceLabel();
   function planeWidth(plane) {
     const i2 = plane.labels.indexOf("x");
     return i2 >= 0 ? plane.shape[i2] ?? 0 : 0;
@@ -255286,17 +259243,21 @@ uniform classStyleUniforms {
       });
     }
     if (rows2.length === 0) return [];
-    if (rows2.every((row2) => row2.status === rows2[0].status)) {
+    if (rows2.length > 1 && rows2.every((row2) => row2.status === rows2[0].status)) {
       return [
+        ...rows2.map((row2) => ({
+          key: row2.key,
+          text: row2.label
+        })),
         {
-          key: rows2[0].key,
+          key: `${rows2[0].key}-level`,
           text: rows2[0].status
         }
       ];
     }
     return rows2.map((row2) => ({
       key: row2.key,
-      text: `${row2.label} ${row2.status}`
+      text: `${row2.label} \xB7 ${row2.status}`
     }));
   }
   const deckViewStates = (ortho2, width, height) => ({
@@ -255455,7 +259416,7 @@ uniform classStyleUniforms {
   };
   const ImageViewer = (props) => {
     const windowSize = useWindowSize();
-    const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, canArrange = false, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2 } = props;
+    const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, canArrange = false, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2, preserveDrawingBuffer = true } = props;
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const channelVisibilities = useAppStore((s2) => s2.channelVisibilities);
     const channelGroupRowVisibilities = useAppStore((s2) => s2.channelGroupRowVisibilities);
@@ -255470,12 +259431,14 @@ uniform classStyleUniforms {
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
     const featureTables = useDocumentStore((s2) => s2.featureTables);
-    const featureTableVisibilities = useAppStore((s2) => s2.featureTableVisibilities);
-    const featureTableLutEpoch = reactExports.useSyncExternalStore(subscribeFeatureTableLut, getFeatureTableLutEpoch, getFeatureTableLutEpoch);
+    const activeWaypoint = useActiveWaypoint();
+    const hiddenLegendClasses = useAppStore((s2) => s2.hiddenLegendClasses);
+    const featureTableLutEpoch = useFeatureTableLutEpoch();
     const selectionMaskActive = imageSelectionMask != null && (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
     const maskExtension = reactExports.useMemo(() => new MaskExtension(), []);
     useShapeLayers(authoringWaypointEditorOpen);
     const [viewportSize, setViewportSize] = reactExports.useState(windowSize);
+    const [viewportMeasured, setViewportMeasured] = reactExports.useState(false);
     const rootRef = reactExports.useRef(null);
     const deckRef = reactExports.useRef(null);
     const arrangeLayoutRef = reactExports.useRef(null);
@@ -255492,6 +259455,7 @@ uniform classStyleUniforms {
           width,
           height
         });
+        setViewportMeasured(true);
         useAppStore.getState().setViewerViewportSize({
           width,
           height
@@ -255511,7 +259475,21 @@ uniform classStyleUniforms {
     const firstLoader = reactExports.useMemo(() => loaderList.length > 0 ? loaderList[0] : null, [
       loaderList
     ]);
-    const [pyramidHud2, setPyramidHud] = reactExports.useState([]);
+    const [pyramidHud, setPyramidHud] = reactExports.useState([]);
+    const [pyramidInfoOpen, setPyramidInfoOpen] = reactExports.useState(false);
+    const pyramidInfoRef = reactExports.useRef(null);
+    reactExports.useEffect(() => {
+      if (!pyramidInfoOpen) return;
+      const onPointerDown = (event) => {
+        const root2 = pyramidInfoRef.current;
+        if (!root2 || root2.contains(event.target)) return;
+        setPyramidInfoOpen(false);
+      };
+      document.addEventListener("pointerdown", onPointerDown);
+      return () => document.removeEventListener("pointerdown", onPointerDown);
+    }, [
+      pyramidInfoOpen
+    ]);
     const publishPyramidHud = reactExports.useCallback((zoom) => {
       const next2 = formatPyramidHudLines(zoom, loaderList, images);
       setPyramidHud((prev) => {
@@ -255555,9 +259533,7 @@ uniform classStyleUniforms {
         if (!isMaskChannel(sc2)) continue;
         const rendered = isMaskSourceRendered({
           sc: sc2,
-          channels: channels2,
           channelGroups,
-          activeGroup: channelGroups.find((g2) => g2.id === activeChannelGroupId),
           stackVisibilities: channelVisibilities ?? {},
           groupRowVisibilities: channelGroupRowVisibilities
         });
@@ -255571,6 +259547,7 @@ uniform classStyleUniforms {
         } : visualization;
         const orientation = orientationForImage(images, sc2.imageId, imageOrientationPreview);
         const featureTable = featureTables.find((c2) => c2.sourceChannelId === sc2.id);
+        const classStyle = featureTable ? gpuStyleForFeatureTable(featureTable, withHiddenClasses(classViewFor(activeWaypoint, sc2.id), sc2.id, hiddenLegendClasses[legendClassKey(activeWaypoint == null ? void 0 : activeWaypoint.id, sc2.id)]), visualization.colorSeed ?? 0, activeWaypoint == null ? void 0 : activeWaypoint.id) : void 0;
         const layer2 = createMaskTileLayer({
           id: `mask-channel-${sc2.id}`,
           loader: entry.loader,
@@ -255578,7 +259555,7 @@ uniform classStyleUniforms {
           visualization: paintedVisualization,
           orientation,
           visible: rendered,
-          classStyle: featureTable ? gpuStyleForFeatureTable(featureTable, featureTableVisibilities[featureTable.id], visualization.colorSeed ?? 0) : void 0
+          classStyle
         });
         if (layer2) layers.push(layer2);
       }
@@ -255594,13 +259571,15 @@ uniform classStyleUniforms {
       imageOpacityPreview,
       imageOrientationPreview,
       featureTables,
-      featureTableVisibilities,
+      activeWaypoint,
+      hiddenLegendClasses,
       featureTableLutEpoch
     ]);
     const fitViewState = reactExports.useMemo(() => {
-      const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
+      const { width, height } = viewportSize;
+      const zoom = frame2 && frame2.worldWidth > 0 && frame2.worldHeight > 0 && width > 0 && height > 0 ? Math.log2(0.95 * Math.min(width / frame2.worldWidth, height / frame2.worldHeight)) : 0;
       return withOrthoZoom({
-        zoom: -n_levels,
+        zoom,
         target: frame2 ? [
           frame2.worldWidth / 2,
           frame2.worldHeight / 2,
@@ -255612,8 +259591,8 @@ uniform classStyleUniforms {
         ]
       });
     }, [
-      firstLoader,
-      frame2
+      frame2,
+      viewportSize
     ]);
     const [viewState, setViewState] = reactExports.useState(fitViewState);
     const [orthoSeed, setOrthoSeed] = reactExports.useState(fitViewState);
@@ -255679,13 +259658,14 @@ uniform classStyleUniforms {
     const refImageWidth = (frame2 == null ? void 0 : frame2.pixelWidth) ?? 0;
     const refImageHeight = (frame2 == null ? void 0 : frame2.pixelHeight) ?? 0;
     reactExports.useEffect(() => {
-      if (firstLoader !== null && !hasInitialized.current) {
+      if (firstLoader !== null && viewportMeasured && !hasInitialized.current) {
         commitIdleCamera(fitViewState, true);
         hasInitialized.current = true;
       }
     }, [
       fitViewState,
       firstLoader,
+      viewportMeasured,
       commitIdleCamera
     ]);
     reactExports.useEffect(() => {
@@ -256242,7 +260222,7 @@ uniform classStyleUniforms {
           controller: controllerConfig,
           deviceProps: {
             webgl: {
-              preserveDrawingBuffer: true
+              preserveDrawingBuffer
             }
           },
           initialViewState: deckInitialViewState,
@@ -256271,12 +260251,84 @@ uniform classStyleUniforms {
           ref: loadingWidgetRef,
           placement: "center"
         }),
-        pyramidHud2.length > 0 ? jsxRuntimeExports.jsx("output", {
-          className: styles$1.pyramidHud,
-          children: pyramidHud2.map((line) => jsxRuntimeExports.jsx("div", {
-            children: line.text
-          }, line.key))
-        }) : null,
+        jsxRuntimeExports.jsxs("div", {
+          className: styles$1.viewerInfo,
+          ref: pyramidInfoRef,
+          children: [
+            pyramidInfoOpen ? jsxRuntimeExports.jsxs("div", {
+              className: styles$1.viewerInfoPanel,
+              role: "dialog",
+              "aria-label": "Image list and resolution",
+              children: [
+                jsxRuntimeExports.jsxs("div", {
+                  className: styles$1.viewerInfoPanelHead,
+                  children: [
+                    jsxRuntimeExports.jsx("span", {
+                      children: "Images"
+                    }),
+                    jsxRuntimeExports.jsx("button", {
+                      type: "button",
+                      className: styles$1.viewerInfoClose,
+                      "aria-label": "Close image list",
+                      onClick: () => setPyramidInfoOpen(false),
+                      children: "\xD7"
+                    })
+                  ]
+                }),
+                pyramidHud.length > 0 ? jsxRuntimeExports.jsx("output", {
+                  className: styles$1.viewerInfoList,
+                  children: pyramidHud.map((line) => jsxRuntimeExports.jsx("div", {
+                    title: line.text,
+                    children: line.text
+                  }, line.key))
+                }) : null,
+                jsxRuntimeExports.jsxs("div", {
+                  className: styles$1.viewerInfoStamp,
+                  title: [
+                    BUILD_STAMP == null ? void 0 : BUILD_STAMP.title,
+                    navigator.userAgent
+                  ].filter(Boolean).join("\n"),
+                  children: [
+                    BUILD_STAMP ? jsxRuntimeExports.jsx("div", {
+                      children: BUILD_STAMP.text
+                    }) : null,
+                    jsxRuntimeExports.jsx("div", {
+                      children: DEVICE_LABEL
+                    })
+                  ]
+                })
+              ]
+            }) : null,
+            jsxRuntimeExports.jsx("button", {
+              type: "button",
+              className: styles$1.viewerInfoButton,
+              "aria-label": "Image list and resolution",
+              "aria-expanded": pyramidInfoOpen,
+              onClick: () => setPyramidInfoOpen((open) => !open),
+              children: jsxRuntimeExports.jsxs("svg", {
+                viewBox: "0 0 16 16",
+                "aria-hidden": "true",
+                children: [
+                  jsxRuntimeExports.jsx("circle", {
+                    cx: "8",
+                    cy: "8",
+                    r: "6.25",
+                    fill: "none",
+                    stroke: "currentColor",
+                    strokeWidth: "1.25"
+                  }),
+                  jsxRuntimeExports.jsx("path", {
+                    d: "M8 7.2v4.2M8 4.6v.6",
+                    fill: "none",
+                    stroke: "currentColor",
+                    strokeWidth: "1.4",
+                    strokeLinecap: "round"
+                  })
+                ]
+              })
+            })
+          ]
+        }),
         showSquareViewportOverlay && jsxRuntimeExports.jsx("div", {
           className: styles$1.squareViewportOverlay,
           style: squareViewportStyle
@@ -256285,45 +260337,67 @@ uniform classStyleUniforms {
     });
   };
   ImageViewer.displayName = "ImageViewer";
-  function WorkerWrapper(options) {
-    return new Worker("" + new URL("decoder.worker-CKbAr6AY.js", import.meta.url).href, {
-      type: "module",
-      name: options == null ? void 0 : options.name
-    });
-  }
-  function createOmeDecodePool() {
-    return new Pool(void 0, () => new WorkerWrapper());
-  }
-  function expandCubeRootTileData(data2) {
-    const out = new Uint16Array(data2.length);
-    for (let i2 = 0; i2 < data2.length; i2++) {
-      out[i2] = decodeCubeRootU8ToU16(data2[i2]);
+  function cropTile(full2, stride, width, height) {
+    if (width === stride && height === stride) return full2;
+    const out = new Uint16Array(width * height);
+    for (let row2 = 0; row2 < height; row2++) {
+      out.set(full2.subarray(row2 * stride, row2 * stride + width), row2 * width);
     }
     return out;
   }
-  function expandContrastBakedTileData(data2) {
-    const out = new Uint16Array(data2.length);
-    for (let i2 = 0; i2 < data2.length; i2++) {
-      out[i2] = (data2[i2] & 255) << 8;
+  async function readTileThroughLut(plane, args, lut) {
+    var _a2;
+    const source2 = plane;
+    const pool = source2.pool;
+    if (!source2._indexer || !source2._getTileExtent || !(pool instanceof OmeDecodePool)) {
+      return null;
     }
-    return out;
+    try {
+      const image2 = await source2._indexer(args.selection);
+      if (!image2.isTiled || image2.getTileWidth() !== source2.tileSize || image2.getTileHeight() !== source2.tileSize || image2.getSamplesPerPixel() !== 1 || image2.getBitsPerSample(0) !== 8) {
+        return null;
+      }
+      const { width, height } = source2._getTileExtent(args.x, args.y);
+      const stride = source2.tileSize;
+      const decoder = {
+        decode: (fileDirectory, buffer2) => {
+          var _a3;
+          if ((_a3 = args.signal) == null ? void 0 : _a3.aborted) throw SIGNAL_ABORTED;
+          return pool.decodeWidened(fileDirectory, buffer2, lut);
+        }
+      };
+      const tile = await image2.getTileOrStrip(args.x, args.y, 0, decoder);
+      if ((_a2 = args.signal) == null ? void 0 : _a2.aborted) throw SIGNAL_ABORTED;
+      const bytes = tile.data;
+      const full2 = bytes.byteLength === stride * stride * 2 ? new Uint16Array(bytes) : expandThroughLut(new Uint8Array(bytes), lut);
+      return {
+        data: cropTile(full2, stride, width, height),
+        width,
+        height
+      };
+    } catch (err2) {
+      if (err2 === SIGNAL_ABORTED) throw err2;
+      return null;
+    }
   }
   function wrapOmeLoaderJpegExport(loader, transfer) {
     var _a2;
-    const expand = transfer === "cube-root" ? expandCubeRootTileData : expandContrastBakedTileData;
+    const lut = u8ToU16Lut(transfer);
     const data2 = (_a2 = loader.data) == null ? void 0 : _a2.map((plane) => {
-      var _a3;
+      var _a3, _b2;
       const getTile = (_a3 = plane.getTile) == null ? void 0 : _a3.bind(plane);
       if (!getTile) return plane;
       const wrapped = {
         ...plane,
         dtype: "Uint16",
+        onTileError: (_b2 = plane.onTileError) == null ? void 0 : _b2.bind(plane),
         getTile: async (args) => {
+          const fast = await readTileThroughLut(plane, args, lut);
+          if (fast) return fast;
           const tile = await getTile(args);
-          const raw2 = tile.data;
           return {
             ...tile,
-            data: expand(raw2)
+            data: expandThroughLut(tile.data, lut)
           };
         }
       };
@@ -256339,7 +260413,8 @@ uniform classStyleUniforms {
     channels: im.channels ?? []
   }) === "segmentation" ? "segmentation" : "intensity";
   function omeLoaderForHydrate(loader, im, wrapOmeJpeg, storyTransfer) {
-    const jpegTransfer = wrapOmeJpeg ? hydrateJpegTransferForImage(im, storyTransfer) : null;
+    var _a2, _b2;
+    const jpegTransfer = wrapOmeJpeg && ((_b2 = (_a2 = loader.data) == null ? void 0 : _a2[0]) == null ? void 0 : _b2.dtype) === "Uint8" ? hydrateJpegTransferForImage(im, storyTransfer) : null;
     if (!jpegTransfer) {
       return {
         loader
@@ -256351,20 +260426,17 @@ uniform classStyleUniforms {
     };
   }
   function resolveOmeSourceUrl(documentUrl, sourceUrl) {
-    const trimmed = sourceUrl.trim();
-    if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("blob:") || trimmed.startsWith("file:")) {
-      return trimmed;
-    }
-    return new URL(trimmed, new URL(documentUrl, window.location.href)).href;
+    return new URL(sourceUrl.trim(), new URL(documentUrl, window.location.href)).href;
   }
   async function hydrateDocumentLoaders(images, opts = {}) {
+    var _a2;
     const jpegLoaderEntries = [];
     const omeLoaderEntries = [];
     const dicomIndexList = [];
     const deniedHandleKeys = [];
     const missingHandleKeys = [];
     const loaderErrors = [];
-    const pool = opts.pool === null ? void 0 : opts.pool ?? createOmeDecodePool();
+    const pool = opts.pool === null ? void 0 : opts.pool ?? sharedOmeDecodePool();
     const dicomSeriesSeen = /* @__PURE__ */ new Set();
     const requestPermission = opts.requestPermission ?? false;
     const includeLocal = opts.includeLocal ?? true;
@@ -256385,11 +260457,49 @@ uniform classStyleUniforms {
         existingPyramidFolders: opts.existingPyramidFolders
       } : {}
     }));
+    const loadLocalFile = async (im, handle2) => {
+      try {
+        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
+          kind: "local",
+          handle: handle2,
+          ...pool ? {
+            pool
+          } : {},
+          rgbDisplay: im.rgbDisplay
+        });
+        omeLoaderEntries.push({
+          ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
+          sourceImageId: im.id
+        });
+      } catch (e2) {
+        loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
+      }
+    };
     for (const im of images) {
       if (!im.source) continue;
       if (im.source.kind === "jpeg") continue;
       switch (im.source.kind) {
         case "url": {
+          if (includeLocal && isRelativeOmeTiffUrl(im.source.url)) {
+            let resolved;
+            try {
+              resolved = await ((_a2 = opts.resolveRelativeFile) == null ? void 0 : _a2.call(opts, im));
+            } catch (e2) {
+              console.warn("[minerva] could not resolve", im.source.url, e2);
+              break;
+            }
+            if (!resolved) break;
+            if (!resolved.handle || !await canAccess(resolved.handle)) {
+              deniedHandleKeys.push(resolved.key);
+              break;
+            }
+            if (await findFile({
+              handle: resolved.handle
+            })) {
+              await loadLocalFile(im, resolved.handle);
+            }
+            break;
+          }
           try {
             const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
               kind: "url",
@@ -256423,22 +260533,7 @@ uniform classStyleUniforms {
           if (!await findFile({
             handle: handle2
           })) break;
-          try {
-            const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-              kind: "local",
-              handle: handle2,
-              ...pool ? {
-                pool
-              } : {},
-              rgbDisplay: im.rgbDisplay
-            });
-            omeLoaderEntries.push({
-              ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
-              sourceImageId: im.id
-            });
-          } catch (e2) {
-            loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
-          }
+          await loadLocalFile(im, handle2);
           break;
         }
         case "dicomWeb": {
@@ -256668,9 +260763,9 @@ uniform classStyleUniforms {
     const styled = await applySharedImportPaletteToSourceChannels(flat);
     return applySourceChannelsToImages(images, styled);
   }
-  async function replaceOmeLocalImageInDocument(args) {
+  async function replaceOmeImageInDocument(args) {
     var _a2, _b2, _c2;
-    const { images, imageId, handle: handle2, pool } = args;
+    const { images, imageId, source: source2, pool } = args;
     const oldImage = images.find((im) => im.id === imageId);
     if (!oldImage) return {
       ok: false,
@@ -256683,14 +260778,13 @@ uniform classStyleUniforms {
       };
     }
     const oldLocalHandleKey = ((_c2 = oldImage.source) == null ? void 0 : _c2.kind) === "local" ? oldImage.source.handleKey : void 0;
-    const file = await handle2.getFile();
+    const basename2 = source2.kind === "local" ? (await source2.handle.getFile()).name : urlFileName(source2.url) || "remote.ome.tif";
     const role = resolveImageImportRole({
       contentRole: oldImage.contentRole,
       channels: oldImage.channels ?? []
     });
     const loader = await loadOmeLoaderForRole(role, {
-      kind: "local",
-      handle: handle2,
+      ...source2,
       pool,
       rgbDisplay: oldImage.rgbDisplay
     });
@@ -256699,7 +260793,7 @@ uniform classStyleUniforms {
     const slice = buildOmeImportSlice({
       loader,
       role,
-      basename: file.name,
+      basename: basename2,
       sourceImageId: newImageId,
       existingImages: withoutOld
     });
@@ -256724,7 +260818,7 @@ uniform classStyleUniforms {
       oldImageId: imageId,
       newImageId,
       loader,
-      basename: file.name,
+      basename: basename2,
       nextImages: replaceImageRowInDocument(images, imageId, rebound),
       oldLocalHandleKey
     };
@@ -256774,6 +260868,26 @@ uniform classStyleUniforms {
       sources,
       groups
     });
+  }
+  const proto = XRLayer.prototype;
+  for (const method of [
+    "getShaders",
+    "dataToTexture"
+  ]) {
+    const viv = proto[method];
+    proto[method] = function(...args) {
+      if (this.props.interpolation !== "linear") return viv.apply(this, args);
+      const props = Object.create(this.props, {
+        interpolation: {
+          value: "nearest"
+        }
+      });
+      return viv.apply(Object.create(this, {
+        props: {
+          value: props
+        }
+      }), args);
+    };
   }
   function applyChannelRendering(settings, live2) {
     if (!live2) return settings;
@@ -256872,6 +260986,7 @@ uniform classStyleUniforms {
       id: `${args.layerId}${remount}`,
       ...settings,
       ...TILE_CACHE_PROPS,
+      TilesetClass: PlaceholderTileset2D,
       excludeBackground: true,
       ...args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {},
       ...imageFadeParameters(Boolean(args.overlay), args.opacity),
@@ -257111,10 +261226,10 @@ uniform classStyleUniforms {
         if (state.activeStoryId !== prev.activeStoryId) {
           return;
         }
-        const docChanged = state.waypoints !== prev.waypoints || state.shapes !== prev.shapes || state.channelGroups !== prev.channelGroups || state.images !== prev.images || state.metadata !== prev.metadata;
+        const docChanged = state.waypoints !== prev.waypoints || state.shapes !== prev.shapes || state.channelGroups !== prev.channelGroups || state.images !== prev.images || state.featureTables !== prev.featureTables || state.metadata !== prev.metadata;
         if (!docChanged) return;
         if (!state.activeStoryId) return;
-        const metadataOnly = state.metadata !== prev.metadata && state.waypoints === prev.waypoints && state.shapes === prev.shapes && state.channelGroups === prev.channelGroups && state.images === prev.images;
+        const metadataOnly = state.metadata !== prev.metadata && state.waypoints === prev.waypoints && state.shapes === prev.shapes && state.channelGroups === prev.channelGroups && state.images === prev.images && state.featureTables === prev.featureTables;
         schedule(metadataOnly ? METADATA_DEBOUNCE_MS : DEBOUNCE_MS);
       });
       const onBeforeUnload = () => {
@@ -257228,14 +261343,16 @@ uniform classStyleUniforms {
         return;
     }
   }
-  const wrapper = "_wrapper_1dnlo_1";
-  const full = "_full_1dnlo_10";
-  const retrieving = "_retrieving_1dnlo_19";
-  const importLoadingOverlay = "_importLoadingOverlay_1dnlo_28";
+  const wrapper = "_wrapper_1lulm_1";
+  const full = "_full_1lulm_10";
+  const retrieving = "_retrieving_1lulm_19";
+  const viewerHost = "_viewerHost_1lulm_28";
+  const importLoadingOverlay = "_importLoadingOverlay_1lulm_34";
   const styles = {
     wrapper,
     full,
     retrieving,
+    viewerHost,
     importLoadingOverlay
   };
   function maybeDefaultStoryTitleFromFirstImage() {
@@ -257321,13 +261438,40 @@ uniform classStyleUniforms {
     const storedRoot = await getStoryRootHandle(storyId, rootOpts);
     const root2 = storedRoot && await isStoryRootHandleUsable(storedRoot) ? storedRoot : void 0;
     const missingStoryRoot = storyNeedsLocalJpegRoot(images) && !root2;
+    let rootDenied;
     const result = await hydrateDocumentLoaders(images, {
       channelGroups: (opts == null ? void 0 : opts.channelGroups) ?? [],
       documentUrl: (opts == null ? void 0 : opts.documentUrl) ?? window.location.href,
-      pool: createOmeDecodePool(),
+      pool: sharedOmeDecodePool(),
       requestPermission,
       includeLocal: true,
       imageSource: useDocumentStore.getState().metadata.imageSource,
+      resolveRelativeFile: async (im) => {
+        var _a2;
+        if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "url") return void 0;
+        const url = im.source.url;
+        const key2 = locatedFileStorageKey(storyId, im.id, url);
+        const located = await getFileHandle(key2);
+        if ((located == null ? void 0 : located.kind) === "file") {
+          return {
+            handle: located,
+            key: key2
+          };
+        }
+        if (!storyId) return void 0;
+        const rootKey = storyRootHandleKey(storyId);
+        if (root2) {
+          const handle2 = await fileInDirectory(root2, url);
+          return handle2 ? {
+            handle: handle2,
+            key: rootKey
+          } : void 0;
+        }
+        rootDenied ?? (rootDenied = storyRootNeedsPermission(storyId));
+        return await rootDenied ? {
+          key: rootKey
+        } : void 0;
+      },
       ...root2 ? {
         fetchTile: tileFetcherForDirectory(root2),
         existingPyramidFolders: await listExistingPyramidFolders(root2)
@@ -257605,29 +261749,44 @@ uniform classStyleUniforms {
       void (async () => {
         if (modeAtStop === "jpeg-pyramid") {
           try {
-            const doc = useDocumentStore.getState();
-            const storedRoot = directoryAtStop ?? (doc.activeStoryId ? await getStoryRootHandle(doc.activeStoryId, {
+            const doc2 = useDocumentStore.getState();
+            const storedRoot = directoryAtStop ?? (doc2.activeStoryId ? await getStoryRootHandle(doc2.activeStoryId, {
               requestPermission: true,
               mode: "read"
             }) : void 0);
             const root2 = storedRoot && await isStoryRootHandleUsable(storedRoot) ? storedRoot : void 0;
-            if (root2 && doc.images.some((im) => {
+            if (root2 && doc2.images.some((im) => {
               var _a2;
               return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg";
             })) {
               const entries = await jpegLoaderEntriesFromImages({
-                images: doc.images,
-                channelGroups: doc.channelGroups,
+                images: doc2.images,
+                channelGroups: doc2.channelGroups,
                 documentUrl: window.location.href,
                 activeGroupId: activeGroupIdAtStop,
                 fetchTile: tileFetcherForDirectory(root2),
                 existingPyramidFolders: await listExistingPyramidFolders(root2),
-                transfer: jpegTransferFromImageSource(doc.metadata.imageSource)
+                transfer: jpegTransferFromImageSource(doc2.metadata.imageSource)
               });
               if (entries.length > 0) setJpegLoaderEntries(entries);
             }
           } catch (e2) {
             console.warn("[minerva] post-export jpeg refresh failed", e2);
+          }
+        }
+        const doc = useDocumentStore.getState();
+        if (modeAtStop === "jpeg-ome-tiff" && doc.images.some((im) => {
+          var _a2;
+          return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "url" && isRelativeOmeTiffUrl(im.source.url);
+        })) {
+          try {
+            applyHydratedLoaders(await hydrateLoadersFromImages(doc.images, false, {
+              channelGroups: doc.channelGroups,
+              documentUrl: window.location.href
+            }));
+            syncRegistryFromDocument();
+          } catch (e2) {
+            console.warn("[minerva] post-export loader refresh failed", e2);
           }
         }
         setViewerRemountKey((k2) => k2 + 1);
@@ -257676,7 +261835,7 @@ uniform classStyleUniforms {
         ChannelGroups: nextChannelGroups
       });
       const app = useAppStore.getState();
-      const visibilities = applyVisibilityTransition(flat, nextChannelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, opts.transition);
+      const visibilities = applyVisibilityTransition(flat, nextChannelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, opts.transition, app.activeChannelGroupId);
       setChannelVisibilities(visibilities.channelVisibilities);
       setChannelGroupRowVisibilities(visibilities.channelGroupRowVisibilities);
     }, [
@@ -257776,18 +261935,16 @@ uniform classStyleUniforms {
       imageLoadEpochRef.current += 1;
       setIsLoadingImage(false);
     }, []);
-    const onReplaceImage = reactExports.useCallback(async (imageId) => {
+    const onReplaceImage = reactExports.useCallback(async (imageId, source2) => {
       var _a2;
       const loadEpoch = beginImageLoading();
       try {
-        const handle2 = await pickLocalOmeTiffHandle();
-        if (!handle2) return;
         const doc = useDocumentStore.getState();
         const replacedImage = doc.images.find((im) => im.id === imageId);
         if (!replacedImage) return;
-        const duplicate = await findDuplicateImportTarget(doc.images, {
-          kind: "local",
-          handle: handle2
+        const duplicate = await findDuplicateImportTarget(doc.images, source2.kind === "local" ? source2 : {
+          ...source2,
+          dicomWeb: false
         }, {
           excludeImageId: imageId
         });
@@ -257796,23 +261953,23 @@ uniform classStyleUniforms {
           return;
         }
         clearOmeDerivedCaches();
-        const prep = await replaceOmeLocalImageInDocument({
+        const prep = await replaceOmeImageInDocument({
           images: doc.images,
           imageId,
-          handle: handle2,
-          pool: createOmeDecodePool()
+          source: source2,
+          pool: sharedOmeDecodePool()
         });
         if (prep.ok === false) {
           if (prep.error) window.alert(prep.error);
           return;
         }
         const storyId = useDocumentStore.getState().activeStoryId;
-        const nextImagesPersisted = await persistLocalImageHandle({
+        const nextImagesPersisted = source2.kind === "local" ? await persistLocalImageHandle({
           storyId,
           imageId: prep.newImageId,
-          handle: handle2,
+          handle: source2.handle,
           images: prep.nextImages
-        });
+        }) : setImageSource(prep.nextImages, prep.newImageId, source2);
         const loaderEntry = {
           loader: prep.loader,
           sourceImageId: prep.newImageId
@@ -257838,7 +261995,7 @@ uniform classStyleUniforms {
           }
         });
         setFileName(prep.basename);
-        setLastOmeTiffUrl(null);
+        setLastOmeTiffUrl(source2.kind === "url" ? source2.url : null);
         setViewerRemountKey((k2) => k2 + 1);
         setImportRevision((r2) => r2 + 1);
       } catch (e2) {
@@ -257892,7 +262049,7 @@ uniform classStyleUniforms {
         const loader = await loadOmeLoaderForRole(role, {
           kind: "local",
           handle: handle2,
-          pool: createOmeDecodePool(),
+          pool: sharedOmeDecodePool(),
           rgbDisplay
         });
         const sourceImageId = crypto.randomUUID();
@@ -257975,7 +262132,7 @@ uniform classStyleUniforms {
         const loader = await loadOmeLoaderForRole(role, {
           kind: "local",
           handle: handle2,
-          pool: createOmeDecodePool(),
+          pool: sharedOmeDecodePool(),
           rgbDisplay
         });
         const sourceImageId = crypto.randomUUID();
@@ -258090,7 +262247,7 @@ uniform classStyleUniforms {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "url",
         url,
-        pool: createOmeDecodePool(),
+        pool: sharedOmeDecodePool(),
         rgbDisplay
       });
       if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
@@ -258152,7 +262309,7 @@ uniform classStyleUniforms {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "url",
         url,
-        pool: createOmeDecodePool(),
+        pool: sharedOmeDecodePool(),
         rgbDisplay
       });
       if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
@@ -258240,7 +262397,7 @@ uniform classStyleUniforms {
       const app = useAppStore.getState();
       const visibility = applyVisibilityTransition(flat, doc.channelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, {
         kind: "sync"
-      });
+      }, app.activeChannelGroupId);
       setChannelVisibilities(visibility.channelVisibilities);
       setChannelGroupRowVisibilities(visibility.channelGroupRowVisibilities);
     }, [
@@ -258290,7 +262447,6 @@ uniform classStyleUniforms {
           documentUrl: window.location.href
         });
         applyHydratedLoaders(result);
-        await requestFeatureTableFileAccess();
         if (result.omeLoaderEntries.length + result.jpegLoaderEntries.length + result.dicomIndexList.length > 0) {
           syncRegistryFromDocument();
           setImportRevision((r2) => r2 + 1);
@@ -258307,29 +262463,78 @@ uniform classStyleUniforms {
       endImageLoading,
       syncRegistryFromDocument
     ]);
-    const reselectLoaderFile = reactExports.useCallback(async (imageId) => {
+    const locateImage = reactExports.useCallback(async (imageId, source2) => {
       var _a2;
       const loadEpoch = beginImageLoading();
       try {
-        const handle2 = await pickLocalOmeTiffHandle();
-        if (!handle2) return;
         const doc = useDocumentStore.getState();
         const im = doc.images.find((i2) => i2.id === imageId);
-        if (!(im == null ? void 0 : im.source) || im.source.kind !== "local") return;
-        await putFileHandle(im.source.handleKey, handle2);
+        if (!(im == null ? void 0 : im.source)) return;
+        if (source2.kind === "url") {
+          if (im.source.kind === "jpeg" || im.source.kind === "dicomWeb") {
+            return;
+          }
+          const duplicate = await findDuplicateImportTarget(doc.images, {
+            ...source2,
+            dicomWeb: false
+          }, {
+            excludeImageId: imageId
+          });
+          if (duplicate) {
+            window.alert(duplicateImportError(duplicate));
+            return;
+          }
+          clearOmeDerivedCaches();
+          const result2 = await hydrateLoadersFromImages(setImageSource([
+            im
+          ], imageId, source2), false, {
+            channelGroups: doc.channelGroups,
+            documentUrl: window.location.href
+          });
+          if (result2.omeLoaderEntries.length === 0) {
+            window.alert(result2.loaderErrors.join("\n") || "Could not load image URL");
+            return;
+          }
+          const current = useDocumentStore.getState();
+          if (!current.images.some((i2) => i2.id === imageId)) return;
+          skipLoaderHydrateRef.current = true;
+          current.setImages(setImageSource(current.images, imageId, source2));
+          setOmeLoaderEntries((prev) => [
+            ...prev.filter((e2) => e2.sourceImageId !== imageId),
+            ...result2.omeLoaderEntries
+          ]);
+          if (im.source.kind === "local") {
+            const oldKey = im.source.handleKey;
+            setMissingHandleKeys((prev) => prev.filter((k2) => k2 !== oldKey));
+            setDeniedHandleKeys((prev) => prev.filter((k2) => k2 !== oldKey));
+          }
+          syncRegistryFromDocument();
+          setImportRevision((r2) => r2 + 1);
+          const leaf = urlFileName(source2.url);
+          if (leaf) setFileName(leaf);
+          setLastOmeTiffUrl(source2.url);
+          return;
+        }
+        if (im.source.kind === "local") {
+          await putFileHandle(im.source.handleKey, source2.handle);
+        } else if (im.source.kind === "url" && isRelativeOmeTiffUrl(im.source.url)) {
+          await putFileHandle(locatedFileStorageKey(doc.activeStoryId, imageId, im.source.url), source2.handle);
+        } else {
+          return;
+        }
         const result = await hydrateLoadersFromImages(doc.images, true, {
           channelGroups: doc.channelGroups,
           documentUrl: window.location.href
         });
         applyHydratedLoaders(result);
-        if (result.omeLoaderEntries.length + result.jpegLoaderEntries.length + result.dicomIndexList.length > 0) {
+        if (result.omeLoaderEntries.some((e2) => e2.sourceImageId === imageId)) {
           syncRegistryFromDocument();
           setImportRevision((r2) => r2 + 1);
-          const file = await handle2.getFile();
-          setFileName(file.name);
+          setFileName((await source2.handle.getFile()).name);
         }
       } catch (e2) {
-        console.error("[minerva] reselectLoaderFile failed", e2);
+        console.error("[minerva] locateImage failed", e2);
+        window.alert(e2 instanceof Error ? e2.message : "Could not load image");
       } finally {
         endImageLoading(loadEpoch);
         (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
@@ -258707,10 +262912,13 @@ uniform classStyleUniforms {
         if (!handle2) {
           throw new Error("No export folder selected");
         }
-        await writeStoryBundleSidecars(handle2, useDocumentStore.getState().toDocumentData(), {
+        const written = await writeStoryBundleSidecars(handle2, useDocumentStore.getState().toDocumentData(), {
           mode: "jpeg-ome-tiff"
         });
         stopExport();
+        if (written.skippedFeatureTables.length > 0) {
+          window.alert(`document.json updated. Feature tables not loaded, left out: ${written.skippedFeatureTables.join(", ")}`);
+        }
       } : void 0,
       presenting,
       stopExport,
@@ -258993,7 +263201,12 @@ uniform classStyleUniforms {
           needsFileAccess: deniedHandleKeys.length > 0,
           onRequestFileAccess: requestLoaderFileAccess,
           missingHandleKeys,
-          onReselectFile: reselectLoaderFile,
+          loadedImageIds: new Set([
+            ...omeLoaderEntries,
+            ...jpegLoaderEntries,
+            ...dicomIndexList
+          ].map((entry) => entry.sourceImageId)),
+          onLocateImage: locateImage,
           needsStoryRootReconnect: missingStoryRoot,
           onReconnectStoryRoot: reconnectStoryRoot,
           onRemoveImage,
@@ -259010,15 +263223,32 @@ uniform classStyleUniforms {
         const imagesPanel = jsxRuntimeExports.jsx(Upload, {
           ...uploadProps
         });
-        const viewer = noLoader ? null : jsxRuntimeExports.jsx(ImageViewer, {
-          ...imageProps,
-          overlayLayers,
-          activeTool,
-          isDragging: dragState.isDragging,
-          hoveredShapeId: hoverState.hoveredShapeId,
-          onOverlayInteraction: handleOverlayInteraction,
-          canArrange: !presenting
-        }, viewerRemountKey);
+        const viewer = jsxRuntimeExports.jsxs("div", {
+          className: styles.viewerHost,
+          children: [
+            noLoader ? null : jsxRuntimeExports.jsx(ImageViewer, {
+              ...imageProps,
+              overlayLayers,
+              activeTool,
+              isDragging: dragState.isDragging,
+              hoveredShapeId: hoverState.hoveredShapeId,
+              onOverlayInteraction: handleOverlayInteraction,
+              canArrange: !presenting
+            }, viewerRemountKey),
+            isLoadingImage ? jsxRuntimeExports.jsxs("output", {
+              className: styles.importLoadingOverlay,
+              "aria-busy": "true",
+              children: [
+                jsxRuntimeExports.jsx("div", {
+                  className: minervaTheme.spinner
+                }),
+                jsxRuntimeExports.jsx("span", {
+                  children: "Loading\u2026"
+                })
+              ]
+            }) : null
+          ]
+        });
         const imager = jsxRuntimeExports.jsx("div", {
           className: styles.full,
           children: jsxRuntimeExports.jsx(PlaybackModeView, {
@@ -259041,19 +263271,7 @@ uniform classStyleUniforms {
               onEnterPlaybackPreview: enterPlaybackPreview,
               playbackPreviewDisabled: _waypoints.length === 0
             }) : null,
-            imager,
-            isLoadingImage ? jsxRuntimeExports.jsxs("output", {
-              className: styles.importLoadingOverlay,
-              "aria-busy": "true",
-              children: [
-                jsxRuntimeExports.jsx("div", {
-                  className: minervaTheme.spinner
-                }),
-                jsxRuntimeExports.jsx("span", {
-                  children: "Loading\u2026"
-                })
-              ]
-            }) : null
+            imager
           ]
         });
       }
@@ -259078,28 +263296,17 @@ uniform classStyleUniforms {
       });
     }, []);
     if (props.demo_dicom_web || props.demo_url || hasAuthorShellSupport()) {
-      return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
-        children: [
-          jsxRuntimeExports.jsx(StoryPersistenceRoot, {
-            children: jsxRuntimeExports.jsx(LibraryOrAuthor, {
-              ...props
-            })
-          }),
-          jsxRuntimeExports.jsx(BuildStamp, {})
-        ]
-      });
-    } else {
-      return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
-        children: [
-          jsxRuntimeExports.jsx("div", {
-            children: jsxRuntimeExports.jsx("p", {
-              children: "Minerva needs a secure context (HTTPS or localhost). Serve this app over HTTPS and reload."
-            })
-          }),
-          jsxRuntimeExports.jsx(BuildStamp, {})
-        ]
+      return jsxRuntimeExports.jsx(StoryPersistenceRoot, {
+        children: jsxRuntimeExports.jsx(LibraryOrAuthor, {
+          ...props
+        })
       });
     }
+    return jsxRuntimeExports.jsx("div", {
+      children: jsxRuntimeExports.jsx("p", {
+        children: "Minerva needs a secure context (HTTPS or localhost). Serve this app over HTTPS and reload."
+      })
+    });
   };
   const id = "react-output";
   const rootElement = document.getElementById(id);
