@@ -167,10 +167,26 @@ describe("MinervaHandle commands", () => {
     expect(useAppStore.getState().targetWaypointCamera?.id).toBe(WP[0]);
   });
 
-  it("switches channel group by name", async () => {
+  it("switches channel group by name, showing only that group", async () => {
     const { handle } = setup();
+    await handle.setChannelVisibility("CD45", false, "Immune");
     const s = await handle.setChannelGroup("immune");
     expect(s.activeChannelGroupId).toBe(GROUP_B);
+    const visible = (g: (typeof s.channelGroups)[number]) =>
+      g.channels.map((c) => c.visible);
+    // Like the legend's group picker: the picked group's rows come back on.
+    expect(visible(s.channelGroups[1])).toEqual([true]);
+    expect(visible(s.channelGroups[0])).toEqual([false, false]);
+  });
+
+  it("goes to a waypoint showing only its channel group", async () => {
+    const { handle } = setup();
+    const s = await handle.goToWaypoint("Immune cells");
+    expect(s.channelGroups[1].channels[0].visible).toBe(true);
+    expect(s.channelGroups[0].channels.map((c) => c.visible)).toEqual([
+      false,
+      false,
+    ]);
   });
 
   it("toggles a channel in the active group by name", async () => {
@@ -179,6 +195,56 @@ describe("MinervaHandle commands", () => {
     expect(s.channelGroups[0].channels[1].visible).toBe(false);
     s = await handle.setChannelVisibility("PanCK", true);
     expect(s.channelGroups[0].channels[1].visible).toBe(true);
+  });
+
+  it("flips RGB planes together, only within the row's group", async () => {
+    const rgbRows = (prefix: string) =>
+      CH.map((channelId, i) => ({
+        id: `${prefix}${i}`,
+        channelId,
+        color,
+        lowerLimit: 0,
+        upperLimit: 1,
+      }));
+    const rowsA = rgbRows("e5f6a7b8-c9d0-4123-a456-789abcdef02");
+    const rowsB = rgbRows("e5f6a7b8-c9d0-4123-a456-789abcdef03");
+    useDocumentStore.getState().hydrateFromDocument(
+      {
+        ...DOC,
+        images: [
+          {
+            ...DOC.images[0],
+            channels: DOC.images[0].channels.map((c, i) => ({
+              ...c,
+              name: ["R", "G", "B"][i],
+            })),
+          },
+        ],
+        channelGroups: [
+          { id: GROUP_A, name: "H&E", channels: rowsA },
+          { id: GROUP_B, name: "H&E copy", channels: rowsB },
+        ],
+      },
+      crypto.randomUUID(),
+    );
+    // Both groups showing, so an unscoped flip would hide the copy too.
+    useAppStore.setState({
+      channelGroupRowVisibilities: Object.fromEntries(
+        [...rowsA, ...rowsB].map((r) => [r.id, true]),
+      ),
+    });
+    const { handle } = setup();
+    const s = await handle.setChannelVisibility("G", false);
+    expect(s.channelGroups[0].channels.map((c) => c.visible)).toEqual([
+      false,
+      false,
+      false,
+    ]);
+    expect(s.channelGroups[1].channels.map((c) => c.visible)).toEqual([
+      true,
+      true,
+      true,
+    ]);
   });
 
   it("hides one ungrouped channel without disturbing the default set", async () => {

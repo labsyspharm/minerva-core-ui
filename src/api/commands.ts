@@ -132,16 +132,17 @@ function groupForWaypoint(wp: Waypoint): ChannelGroup | undefined {
 }
 
 /**
- * Activate a waypoint the same way the playback UI does: index + its channel
- * group now; `Presentation` flies the camera when the index changes. When the
- * index is already active, re-request the camera so "go to" still recenters.
+ * Activate a waypoint the same way the playback UI does: index + only its
+ * channel group showing now; `Presentation` flies the camera when the index
+ * changes. When the index is already active, re-request the camera so "go to"
+ * still recenters.
  */
 function activateWaypoint(index: number): void {
   const app = useAppStore.getState();
   const wp = useDocumentStore.getState().waypoints[index];
   if (!wp) return;
   const group = groupForWaypoint(wp);
-  if (group) app.setActiveChannelGroup(group.id);
+  if (group) app.showOnlyChannelGroup(group.id);
   if (app.activeStoryIndex === index) {
     app.setTargetWaypointCamera(
       waypointToConfigWaypoint(wp, app.waypointAuthoring.get(wp.id)),
@@ -248,13 +249,13 @@ const previousWaypoint = defineCommand({
 const setChannelGroup = defineCommand({
   name: "setChannelGroup",
   description:
-    "Switch the displayed channel group without changing the waypoint or camera.",
+    "Switch to a channel group, like picking it in the channel legend: shows all of its channels and hides every other channel. Keeps the waypoint and camera.",
   input: z.object({
     group: z.string().min(1).describe("Channel group id or name."),
   }),
   requiresDocument: true,
   run: ({ group }) => {
-    useAppStore.getState().setActiveChannelGroup(resolveChannelGroup(group).id);
+    useAppStore.getState().showOnlyChannelGroup(resolveChannelGroup(group).id);
   },
 });
 

@@ -33,9 +33,8 @@ export type StoryPlayerAppProps = {
 };
 
 /**
- * Published-story player (CDN bundle and `<MinervaStory>`). Same Presentation
- * → StoryPlaybackView tree as authoring Story preview (preview adds only the
- * Back ribbon).
+ * Published-story player (CDN bundle and `<MinervaStory>`). Authoring preview
+ * reuses the Presentation ribbon and nav.
  */
 export function StoryPlayerApp({
   source,

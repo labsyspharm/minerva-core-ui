@@ -61,6 +61,9 @@ await ref.current.setView({ bounds: { x0: 9000, y0: 9000, x1: 13000, y1: 12000 }
   `className` / `style`).
 - A new `document` loads a new story, so keep object documents referentially
   stable.
+- The story is ready (`whenReady`, `onReady`) once its waypoints and channel
+  groups are showing; images may still be opening, and camera moves wait for
+  them.
 - `waypoint`, `channelGroup` and `view` are applied when the story is ready
   and whenever they change. Readers can still navigate in between; follow along
   with `onStateChange`.
@@ -70,8 +73,8 @@ await ref.current.setView({ bounds: { x0: 9000, y0: 9000, x1: 13000, y1: 12000 }
 - Viewer state lives in module-level stores, so use one Minerva view per page.
 - It adds the DM Sans stylesheet from Google Fonts, like the CDN player.
 - Like the CDN player, it omits authoring-only pieces (SAM2, palette
-  optimization, DuckDB feature tables). Feature tables are not part of
-  exported stories yet.
+  optimization). Stories with feature tables (waypoint cell classes) load
+  DuckDB-Wasm from jsDelivr when needed.
 
 To work on the component, run `pnpm dev` and open `/story.html` (CRC demo
 story, or `/story.html?document=<url>`). The handle is `window.minerva` in the

@@ -49,7 +49,7 @@ export type MinervaStoryProps = {
   showDocumentTitle?: boolean;
   /** Every state change: status, waypoint, channel group, visibility, camera. */
   onStateChange?: (state: MinervaState) => void;
-  /** Each time a document finishes loading. */
+  /** Each time a document is shown (its images may still be opening). */
   onReady?: (handle: MinervaHandle) => void;
   onError?: (error: string) => void;
 
