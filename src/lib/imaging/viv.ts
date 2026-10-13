@@ -73,6 +73,15 @@ class ImageTileset2D extends Tileset2D {
 /** Placeholder levels above the on-screen tiles: the coarsest, and this far up. */
 const PLACEHOLDER_LEVELS_UP = 3;
 
+/** The parts of Deck's cached tile header the placeholder pass reads. */
+type CachedTile = {
+  index: { z: number };
+  isSelected: boolean;
+  isVisible: boolean;
+  isLoaded: boolean;
+  parent: CachedTile | null;
+};
+
 /**
  * Also selects coarse ancestors of the on-screen tiles, ahead of them, so
  * Deck loads them first and draws them under the fine tiles. A tile still
@@ -107,6 +116,43 @@ export class PlaceholderTileset2D extends ImageTileset2D {
     return [...placeholders.values(), ...indices];
   }
 }
+
+/** Deck's types make it private; it runs on every tileset update. */
+type TileStateUpdate = { updateTileStates(): boolean };
+const deckUpdateTileStates = (
+  ImageTileset2D.prototype as unknown as TileStateUpdate
+).updateTileStates;
+
+/**
+ * A placeholder draws only while an on-screen tile under it is loading.
+ * Once they have all loaded it would be one more full-viewport pass per
+ * frame, hidden under them.
+ */
+(
+  PlaceholderTileset2D.prototype as unknown as TileStateUpdate
+).updateTileStates = function (this: PlaceholderTileset2D) {
+  const tiles = Array.from(
+    (this as unknown as { _cache: Map<string, CachedTile> })._cache.values(),
+  );
+  const before = tiles.map((tile) => tile.isVisible);
+  deckUpdateTileStates.call(this);
+  // Placeholders are the selected tiles above the on-screen level.
+  let fineZ = Number.NEGATIVE_INFINITY;
+  for (const tile of tiles) {
+    if (tile.isSelected) fineZ = Math.max(fineZ, tile.index.z);
+  }
+  const isPlaceholder = (tile: CachedTile) =>
+    tile.isSelected && tile.index.z < fineZ;
+  const needed = new Set<CachedTile>();
+  for (const tile of tiles) {
+    if (!tile.isSelected || tile.isLoaded || isPlaceholder(tile)) continue;
+    for (let up = tile.parent; up; up = up.parent) needed.add(up);
+  }
+  for (const tile of tiles) {
+    if (isPlaceholder(tile) && !needed.has(tile)) tile.isVisible = false;
+  }
+  return tiles.some((tile, i) => tile.isVisible !== before[i]);
+};
 
 /** Omit maxCacheSize so Deck's count cap is Infinity when a byte budget is set. */
 export const TILE_CACHE_PROPS = {

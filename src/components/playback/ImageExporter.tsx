@@ -18,6 +18,9 @@ import { jpegPyramidFolderName } from "@/lib/imaging/jpegPyramid";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import { jpegPyramidExportChannels } from "@/lib/imaging/omeTiffExport";
 import { paintUngroupedExportColors } from "@/lib/imaging/psudoPalette";
+import { writeDirectoryFile } from "@/lib/persistence/directoryFiles";
+import { deleteFileHandle } from "@/lib/persistence/fileHandles";
+import { locatedFileStorageKey } from "@/lib/persistence/imageHandles";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   type StoryExportMode,
@@ -124,10 +127,7 @@ const exportTile = async (index: Index, signal: AbortSignal) => {
     transfer: index.transfer,
   });
   if (signal.aborted) return;
-  const fh = await index.dh.getFileHandle(filename, { create: true });
-  const write = await fh.createWritable();
-  await write.write(jpeg);
-  await write.close();
+  await writeDirectoryFile(index.dh, filename, jpeg);
 };
 
 const createCRange = async (
@@ -146,11 +146,9 @@ const createCRange = async (
     const dh = await directory_handle.getDirectoryHandle(folderName, {
       create: true,
     });
-    const fh = await dh.getFileHandle("settings.json", {
-      create: true,
-    });
-    const write = await fh.createWritable();
-    await write.write(
+    await writeDirectoryFile(
+      dh,
+      "settings.json",
       JSON.stringify(
         {
           channel: ch.index,
@@ -162,7 +160,6 @@ const createCRange = async (
         2,
       ),
     );
-    await write.close();
     return {
       z: 0,
       x: 0,
@@ -519,6 +516,23 @@ export const ImageExporter = (props: ImageExporterProps) => {
         });
         setSkippedTables(written.skippedFeatureTables);
         const store = useDocumentStore.getState();
+        // The exported files now answer these paths, not a file located
+        // for an earlier source at the same path.
+        await Promise.all(
+          exported.images.flatMap((im) =>
+            im.source?.kind === "url"
+              ? [
+                  deleteFileHandle(
+                    locatedFileStorageKey(
+                      store.activeStoryId,
+                      im.id,
+                      im.source.url,
+                    ),
+                  ),
+                ]
+              : [],
+          ),
+        );
         store.setImagesAndChannelGroups(
           exported.images,
           exported.channelGroups,

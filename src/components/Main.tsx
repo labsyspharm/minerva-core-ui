@@ -101,7 +101,7 @@ import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
 import {
-  imageHandleStorageKey,
+  locatedFileStorageKey,
   persistLocalImageHandle,
 } from "@/lib/persistence/imageHandles";
 import {
@@ -141,6 +141,8 @@ import {
   reconnectStoryRootFromPicker,
   setStoryRootHandle,
   storyNeedsLocalJpegRoot,
+  storyRootHandleKey,
+  storyRootNeedsPermission,
   tileFetcherForDirectory,
 } from "@/lib/storyExport/importStoryFolder";
 import {
@@ -285,6 +287,8 @@ async function hydrateLoadersFromImages(
       ? storedRoot
       : undefined;
   const missingStoryRoot = storyNeedsLocalJpegRoot(images) && !root;
+  // Asked once, and only when a relative TIFF needs the folder.
+  let rootDenied: Promise<boolean> | undefined;
   const result = await hydrateDocumentLoaders(images, {
     channelGroups: opts?.channelGroups ?? [],
     documentUrl: opts?.documentUrl ?? window.location.href,
@@ -292,14 +296,25 @@ async function hydrateLoadersFromImages(
     requestPermission,
     includeLocal: true,
     imageSource: useDocumentStore.getState().metadata.imageSource,
-    // A relative TIFF: the file the user located for it, else the story folder's.
+    // A relative TIFF: the file the user located for this path, else the
+    // story folder's copy.
     resolveRelativeFile: async (im) => {
-      const located = await getFileHandle(
-        imageHandleStorageKey(storyId, im.id),
-      );
-      if (located?.kind === "file") return located as Handle.File;
-      if (!root || im.source?.kind !== "url") return undefined;
-      return fileInDirectory(root, im.source.url);
+      if (im.source?.kind !== "url") return undefined;
+      const url = im.source.url;
+      const key = locatedFileStorageKey(storyId, im.id, url);
+      const located = await getFileHandle(key);
+      if (located?.kind === "file") {
+        return { handle: located as Handle.File, key };
+      }
+      if (!storyId) return undefined;
+      const rootKey = storyRootHandleKey(storyId);
+      if (root) {
+        const handle = await fileInDirectory(root, url);
+        return handle ? { handle, key: rootKey } : undefined;
+      }
+      // After a reload the folder needs permission again: ask, not "Locate file".
+      rootDenied ??= storyRootNeedsPermission(storyId);
+      return (await rootDenied) ? { key: rootKey } : undefined;
     },
     ...(root
       ? {
@@ -1454,50 +1469,85 @@ const Content = (props: Props) => {
   ]);
 
   /**
-   * Firefox (and any browser without persistable handles): pick the file again after
-   * refresh, bind it to the image's handleKey (session map), then hydrate loaders.
+   * Point an image that still needs its file at one: a file chosen again (no
+   * persistable handle, or a relative TIFF to locate) or an http(s) URL. Keeps
+   * the image id, then reopens loaders the way a refresh does.
    */
-  const reselectLoaderFile = React.useCallback(
-    async (imageId: string, handle: Handle.File) => {
+  const locateImage = React.useCallback(
+    async (imageId: string, source: OmeImageSource) => {
       const loadEpoch = beginImageLoading();
       try {
         const doc = useDocumentStore.getState();
         const im = doc.images.find((i) => i.id === imageId);
         if (!im?.source) return;
-
-        if (im.source.kind === "local") {
-          await putFileHandle(im.source.handleKey, handle);
+        let images = doc.images;
+        if (source.kind === "url") {
+          if (im.source.kind === "jpeg" || im.source.kind === "dicomWeb") {
+            return;
+          }
+          const duplicate = await findDuplicateImportTarget(
+            doc.images,
+            { ...source, dicomWeb: false },
+            { excludeImageId: imageId },
+          );
+          if (duplicate) {
+            window.alert(duplicateImportError(duplicate));
+            return;
+          }
+          images = setImageSource(images, imageId, source);
+          // Same image id, different pixels: drop histograms and palettes of the old ones.
+          clearOmeDerivedCaches();
+        } else if (im.source.kind === "local") {
+          await putFileHandle(im.source.handleKey, source.handle);
         } else if (
           im.source.kind === "url" &&
           isRelativeOmeTiffUrl(im.source.url)
         ) {
           // Keep the relative path in the document; hydrate reads this file for it.
           await putFileHandle(
-            imageHandleStorageKey(doc.activeStoryId, imageId),
-            handle,
+            locatedFileStorageKey(doc.activeStoryId, imageId, im.source.url),
+            source.handle,
           );
         } else {
           return;
         }
 
-        const result = await hydrateLoadersFromImages(doc.images, true, {
+        const result = await hydrateLoadersFromImages(images, true, {
           channelGroups: doc.channelGroups,
           documentUrl: window.location.href,
         });
+        const opened = result.omeLoaderEntries.some(
+          (e) => e.sourceImageId === imageId,
+        );
+        if (source.kind === "url") {
+          // A URL that does not open leaves the document as it was.
+          if (!opened) {
+            window.alert(
+              result.loaderErrors.join("\n") || "Could not load image URL",
+            );
+            return;
+          }
+          // Edits made while the URL opened stay; only this source changes.
+          const current = useDocumentStore.getState();
+          if (!current.images.some((i) => i.id === imageId)) return;
+          skipLoaderHydrateRef.current = true;
+          current.setImages(setImageSource(current.images, imageId, source));
+        }
         applyHydratedLoaders(result);
-        if (
-          result.omeLoaderEntries.length +
-            result.jpegLoaderEntries.length +
-            result.dicomIndexList.length >
-          0
-        ) {
+        if (opened) {
           syncRegistryFromDocument();
           setImportRevision((r) => r + 1);
-          const file = await handle.getFile();
-          setFileName(file.name);
+          if (source.kind === "url") {
+            const leaf = urlFileName(source.url);
+            if (leaf) setFileName(leaf);
+            setLastOmeTiffUrl(source.url);
+          } else {
+            setFileName((await source.handle.getFile()).name);
+          }
         }
       } catch (e) {
-        console.error("[minerva] reselectLoaderFile failed", e);
+        console.error("[minerva] locateImage failed", e);
+        window.alert(e instanceof Error ? e.message : "Could not load image");
       } finally {
         endImageLoading(loadEpoch);
         document.getElementById("global-loader")?.remove();
@@ -1509,71 +1559,6 @@ const Content = (props: Props) => {
       endImageLoading,
       syncRegistryFromDocument,
     ],
-  );
-
-  /** Point an existing image at an http(s) OME-TIFF. Keeps the image id. */
-  const reselectImageUrl = React.useCallback(
-    async (imageId: string, url: string) => {
-      const loadEpoch = beginImageLoading();
-      try {
-        const doc = useDocumentStore.getState();
-        const im = doc.images.find((i) => i.id === imageId);
-        if (!im?.source) return;
-        if (im.source.kind === "jpeg" || im.source.kind === "dicomWeb") return;
-        const duplicate = await findDuplicateImportTarget(
-          doc.images,
-          { kind: "url", url, dicomWeb: false },
-          { excludeImageId: imageId },
-        );
-        if (duplicate) {
-          window.alert(duplicateImportError(duplicate));
-          return;
-        }
-        const images = setImageSource(doc.images, imageId, {
-          kind: "url",
-          url,
-        });
-        const located = images.find((i) => i.id === imageId);
-        if (!located) return;
-        // Only this image's loader changes; the others stay open.
-        const result = await hydrateLoadersFromImages([located], true, {
-          channelGroups: doc.channelGroups,
-          documentUrl: window.location.href,
-        });
-        if (result.loaderErrors.length > 0) {
-          window.alert(result.loaderErrors.join("\n"));
-          return;
-        }
-        doc.setImages(images);
-        skipLoaderHydrateRef.current = true;
-        setOmeLoaderEntries((prev) => [
-          ...prev.filter((e) => e.sourceImageId !== imageId),
-          ...result.omeLoaderEntries,
-        ]);
-        const oldKey =
-          im.source.kind === "local" ? im.source.handleKey : undefined;
-        if (oldKey) {
-          setMissingHandleKeys((prev) => prev.filter((k) => k !== oldKey));
-          setDeniedHandleKeys((prev) => prev.filter((k) => k !== oldKey));
-        }
-        if (result.omeLoaderEntries.length > 0) {
-          syncRegistryFromDocument();
-          setImportRevision((r) => r + 1);
-          const leaf = urlFileName(url);
-          if (leaf) setFileName(leaf);
-          setLastOmeTiffUrl(url);
-        }
-      } catch (e) {
-        console.error("[minerva] reselectImageUrl failed", e);
-        window.alert(
-          e instanceof Error ? e.message : "Could not load image URL",
-        );
-      } finally {
-        endImageLoading(loadEpoch);
-        document.getElementById("global-loader")?.remove();
-      }
-    },
-    [beginImageLoading, endImageLoading, syncRegistryFromDocument],
   );
 
   /** Shared by FileHandler: auto-restore on mount, “Use recent”, and PWA launch — same rules. */
@@ -2416,8 +2401,7 @@ const Content = (props: Props) => {
               (entry) => entry.sourceImageId,
             ),
           ),
-          onReselectFile: reselectLoaderFile,
-          onReselectUrl: reselectImageUrl,
+          onLocateImage: locateImage,
           needsStoryRootReconnect: missingStoryRoot,
           onReconnectStoryRoot: reconnectStoryRoot,
           onRemoveImage,

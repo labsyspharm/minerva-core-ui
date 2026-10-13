@@ -130,13 +130,11 @@ type UploadProps = {
   missingHandleKeys?: string[];
   /** Images with an open loader; a relative TIFF among them needs no locating. */
   loadedImageIds?: ReadonlySet<string>;
-  /** File chosen in the add strip for an image that still needs its file. */
-  onReselectFile?: (
+  /** File or http(s) URL chosen for an image that still needs its file. Keeps the image id. */
+  onLocateImage?: (
     imageId: string,
-    handle: Handle.File,
+    source: OmeImageSource,
   ) => void | Promise<void>;
-  /** http(s) OME-TIFF from the add strip. Keeps the image id. */
-  onReselectUrl?: (imageId: string, url: string) => void | Promise<void>;
   /** JPEG-pyramid story needs its export directory re-selected. */
   needsStoryRootReconnect?: boolean;
   onReconnectStoryRoot?: () => void | Promise<void>;
@@ -307,6 +305,14 @@ function pointPopupPosition(el: Element): {
   };
 }
 
+/** What the panel strip shows while the popup owns the shared strip state. */
+const IDLE_STRIP = {
+  draft: "",
+  dropError: null,
+  urlError: null,
+  dragging: false,
+} as const;
+
 const Upload = (props: UploadProps) => {
   const {
     onAllow,
@@ -321,8 +327,7 @@ const Upload = (props: UploadProps) => {
     onRequestFileAccess,
     missingHandleKeys = [],
     loadedImageIds,
-    onReselectFile,
-    onReselectUrl,
+    onLocateImage,
     needsStoryRootReconnect = false,
     onReconnectStoryRoot,
     onRemoveImage,
@@ -332,8 +337,6 @@ const Upload = (props: UploadProps) => {
   } = props;
 
   const [pointTarget, setPointTarget] = useState<PointTarget | null>(null);
-  const pointTargetRef = useRef(pointTarget);
-  pointTargetRef.current = pointTarget;
   const togglePoint = (
     imageId: string,
     mode: PointTarget["mode"],
@@ -577,19 +580,14 @@ const Upload = (props: UploadProps) => {
 
   const applyPointedSource = useCallback(
     async (source: OmeImageSource): Promise<boolean> => {
-      const target = pointTargetRef.current;
-      if (!target) return false;
+      if (!pointTarget) return false;
       setPointTarget(null);
-      if (target.mode === "replace") {
-        await onReplaceImage?.(target.imageId, source);
-      } else if (source.kind === "local") {
-        await onReselectFile?.(target.imageId, source.handle);
-      } else {
-        await onReselectUrl?.(target.imageId, source.url);
-      }
+      const apply =
+        pointTarget.mode === "replace" ? onReplaceImage : onLocateImage;
+      await apply?.(pointTarget.imageId, source);
       return true;
     },
-    [onReplaceImage, onReselectFile, onReselectUrl],
+    [pointTarget, onReplaceImage, onLocateImage],
   );
 
   const acceptLocalHandles = useCallback(
@@ -637,13 +635,13 @@ const Upload = (props: UploadProps) => {
       setImportError("Enter a valid http(s) URL.");
       return;
     }
-    if (pointTargetRef.current) {
+    if (pointTarget) {
       setUrlDraft("");
       void applyPointedSource({ kind: "url", url });
       return;
     }
     openPending({ kind: "url", url });
-  }, [applyPointedSource, disabled, openPending, urlDraft]);
+  }, [applyPointedSource, disabled, openPending, pointTarget, urlDraft]);
 
   const onDragEnter = (e: ReactDragEvent) => {
     e.preventDefault();
@@ -813,17 +811,19 @@ const Upload = (props: UploadProps) => {
     const localKey =
       im.source?.kind === "local" ? im.source.handleKey : undefined;
     const needsReselect =
-      !!localKey && missingHandleKeys.includes(localKey) && !!onReselectFile;
-    const needsLocateFile =
-      !!onReselectFile &&
+      !!localKey && missingHandleKeys.includes(localKey) && !!onLocateImage;
+    const relativeUnloaded =
       im.source?.kind === "url" &&
       isRelativeOmeTiffUrl(im.source.url) &&
       !loadedImageIds?.has(im.id);
+    // Files that may only need permission again (after a reload) ask for it
+    // first; a relative TIFF still unloaded after that is located.
     const needsPermission =
       needsFileAccess &&
       !!onRequestFileAccess &&
-      im.source?.kind === "local" &&
-      !needsReselect;
+      (im.source?.kind === "local" ? !needsReselect : relativeUnloaded);
+    const needsLocateFile =
+      !!onLocateImage && relativeUnloaded && !needsPermission;
     const needsStoryDir =
       needsStoryRootReconnect &&
       !!onReconnectStoryRoot &&
@@ -963,21 +963,21 @@ const Upload = (props: UploadProps) => {
     onDrop: (e: ReactDragEvent) => void onDrop(e),
   };
   const stripError = importError && !pending ? importError : null;
-  const dropError = stripError && stripErrorAt === "drop" ? stripError : null;
-  const urlError = stripError && stripErrorAt === "url" ? stripError : null;
+  const liveStrip = {
+    draft: urlDraft,
+    dropError: stripErrorAt === "drop" ? stripError : null,
+    urlError: stripErrorAt === "url" ? stripError : null,
+    dragging,
+  };
   const renderAddStrip = (popup: boolean) => {
     // While the popup is open it owns the shared draft, errors, and drag state.
-    const inUse = popup || !pointTarget;
-    const draft = inUse ? urlDraft : "";
-    const stripDropError = inUse ? dropError : null;
-    const stripUrlError = inUse ? urlError : null;
-    const stripDragging = inUse && dragging;
+    const strip = popup || !pointTarget ? liveStrip : IDLE_STRIP;
     return (
       <div
         className={[
           styles.addStrip,
           row && !popup ? styles.addStripRow : "",
-          (row || popup) && stripDragging ? styles.panelDropActive : "",
+          (row || popup) && strip.dragging ? styles.panelDropActive : "",
         ]
           .filter(Boolean)
           .join(" ")}
@@ -987,22 +987,22 @@ const Upload = (props: UploadProps) => {
           type="button"
           className={[
             styles.dropZone,
-            stripDragging ? styles.dropZoneActive : "",
+            strip.dragging ? styles.dropZoneActive : "",
           ].join(" ")}
           disabled={disabled}
-          aria-invalid={stripDropError ? true : undefined}
+          aria-invalid={strip.dropError ? true : undefined}
           onClick={() => void browseLocal()}
         >
           <span
             className={[
               styles.dropZoneTitle,
-              stripDropError ? styles.importError : "",
+              strip.dropError ? styles.importError : "",
             ]
               .filter(Boolean)
               .join(" ")}
-            role={stripDropError ? "alert" : undefined}
+            role={strip.dropError ? "alert" : undefined}
           >
-            {stripDropError ?? "Drop or Browse Image File"}
+            {strip.dropError ?? "Drop or Browse Image File"}
           </span>
         </button>
         <div className={styles.orDivider}>
@@ -1016,8 +1016,8 @@ const Upload = (props: UploadProps) => {
               className={`${minervaTheme.input} ${styles.urlInput}`}
               placeholder="Image URL (OME-TIFF or DICOMweb)"
               aria-label="Image URL"
-              aria-invalid={stripUrlError ? true : undefined}
-              value={draft}
+              aria-invalid={strip.urlError ? true : undefined}
+              value={strip.draft}
               disabled={disabled}
               onChange={(e) => {
                 setUrlDraft(e.target.value);
@@ -1030,7 +1030,7 @@ const Upload = (props: UploadProps) => {
                 }
               }}
             />
-            {draft.trim() ? (
+            {strip.draft.trim() ? (
               <PanelActionButton
                 type="button"
                 className={styles.urlAdd}
@@ -1041,9 +1041,9 @@ const Upload = (props: UploadProps) => {
               </PanelActionButton>
             ) : null}
           </div>
-          {stripUrlError ? (
+          {strip.urlError ? (
             <div className={styles.importError} role="alert">
-              {stripUrlError}
+              {strip.urlError}
             </div>
           ) : null}
         </div>

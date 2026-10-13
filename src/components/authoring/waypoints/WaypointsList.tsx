@@ -228,12 +228,14 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   // A class edit changes the picture, so retake a thumbnail that is already
   // set. The capture rides on the edit's undo step instead of adding one.
-  const activeWaypointId =
-    activeStoryIndex == null ? undefined : waypoints[activeStoryIndex]?.id;
-  const activeClassViews =
-    activeStoryIndex == null
-      ? undefined
-      : waypoints[activeStoryIndex]?.classViews;
+  const shownWaypoint =
+    activeStoryIndex == null ? undefined : waypoints[activeStoryIndex];
+  const activeWaypointId = shownWaypoint?.id;
+  // No list and an empty one draw the same (a row read before parsing has
+  // none); every class edit makes a new list.
+  const activeClassViews = shownWaypoint?.classViews?.length
+    ? shownWaypoint.classViews
+    : undefined;
   const lastClassViewsRef = React.useRef({
     id: activeWaypointId,
     classViews: activeClassViews,
@@ -245,13 +247,8 @@ const WaypointsList = (props: WaypointsListProps) => {
       classViews: activeClassViews,
     };
     if (activeStoryIndex == null || activeWaypointId == null) return;
-    if (last.id !== activeWaypointId) return;
-    // Identity also changes on a row normalized from undefined to []; only a
-    // change in the classes themselves alters the picture.
-    if (
-      JSON.stringify(last.classViews ?? []) ===
-      JSON.stringify(activeClassViews ?? [])
-    ) {
+    // Only a class edit on the same waypoint alters the picture.
+    if (last.id !== activeWaypointId || last.classViews === activeClassViews) {
       return;
     }
     const index = activeStoryIndex;

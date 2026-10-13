@@ -73,14 +73,18 @@ type FeatureTableRow = {
 
 const EDGE = 10;
 
+/** `parquet` also accepts an exported `feature-tables/<id>.parquet` sidecar. */
 export async function pickFeatureCsv(
   description = "Feature table CSV",
+  opts?: { parquet?: boolean },
 ): Promise<File | undefined> {
   try {
     return await fileOpen({
       description,
-      mimeTypes: ["text/csv"],
-      extensions: [".csv"],
+      mimeTypes: opts?.parquet
+        ? ["text/csv", "application/vnd.apache.parquet"]
+        : ["text/csv"],
+      extensions: opts?.parquet ? [".csv", ".parquet"] : [".csv"],
       multiple: false,
     });
   } catch (e) {
@@ -592,13 +596,8 @@ function ClassViewList(props: {
                 <button
                   type="button"
                   className={`${minervaTheme.focusRing} ${styles.swatch}`}
-                  style={{
-                    backgroundColor: `#${rgbToHex(
-                      picker?.name === row.name && picker.pending
-                        ? picker.pending
-                        : row.color,
-                    )}`,
-                  }}
+                  // `row.color` already carries the open picker's preview.
+                  style={{ backgroundColor: `#${rgbToHex(row.color)}` }}
                   aria-label={`Color for ${row.name}`}
                   disabled={fadeColors || readOnly}
                   onClick={(e) => {
@@ -705,7 +704,9 @@ function FeatureTableListBody(props: { featureTableId: string }) {
 
   const restoreFile = async () => {
     if (!sourceChannelId) return;
-    const file = await pickFeatureCsv();
+    const file = await pickFeatureCsv("Feature table CSV or Parquet", {
+      parquet: true,
+    });
     if (!file) return;
     await completeFeatureTableIngest(
       sourceChannelId,

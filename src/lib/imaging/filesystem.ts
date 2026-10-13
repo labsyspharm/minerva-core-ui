@@ -227,18 +227,28 @@ async function resolveMaskPyramidImages(
   return images;
 }
 
-function maskPlaneFromImage(
-  image: GeoTiffImage,
+/**
+ * One pyramid level. `images` holds the level's IFD for each channel when the
+ * channels are separate IFDs (as Minerva's mask export writes them), else just
+ * the one IFD whose samples are the channels.
+ */
+function maskPlaneFromImages(
+  images: GeoTiffImage[],
   sizeC: number,
   dtype: Dtype,
 ): LoaderPlane {
+  const [image] = images;
   const width = image.getWidth();
   const height = image.getHeight();
   const tiled = isTiffTiled(image);
   const tileSize = tiled ? vivTileSize(image) : Math.max(width, height, 1);
   const clampC = (c: number) => Math.max(0, Math.min(sizeC - 1, c));
+  const readChannel = (c: number, window?: [number, number, number, number]) =>
+    images.length > 1
+      ? readTiffSample(images[clampC(c)], 0, window)
+      : readTiffSample(image, clampC(c), window);
   const getRaster = ({ selection }: { selection: Selection }) =>
-    readTiffSample(image, clampC(selection.c));
+    readChannel(selection.c);
   return {
     dtype,
     shape: [1, sizeC, 1, height, width],
@@ -246,11 +256,12 @@ function maskPlaneFromImage(
     labels: ["t", "c", "z", "y", "x"],
     onTileError: () => undefined,
     getRaster,
+    readWindow: ({ selection, window }) => readChannel(selection.c, window),
     getTile: tiled
       ? ({ x, y, selection }) => {
           const x0 = x * tileSize;
           const y0 = y * tileSize;
-          return readTiffSample(image, clampC(selection.c), [
+          return readChannel(selection.c, [
             x0,
             y0,
             Math.min(x0 + tileSize, width),
@@ -289,10 +300,21 @@ async function maskLoader(source: Blob | string): Promise<Loader> {
       );
     }
   }
-  const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
   const dtype = dtypeFromTiffDirectory(fd);
   const ome = parseFirstOmeImagePixels(fd.ImageDescription);
   const sizeC = Math.max(1, ome?.SizeC ?? fd.SamplesPerPixel ?? 1);
+  // More channels than samples: one top-level IFD per channel, each with its
+  // own SubIFD levels.
+  const channelBases =
+    sizeC > (fd.SamplesPerPixel ?? 1) && (await tiff.getImageCount()) >= sizeC
+      ? await Promise.all(
+          Array.from({ length: sizeC }, (_, c) => tiff.getImage(c)),
+        )
+      : [baseImage];
+  const channelPyramids = await Promise.all(
+    channelBases.map((base) => resolveMaskPyramidImages(tiff, base)),
+  );
+  const levelCount = Math.min(...channelPyramids.map((p) => p.length));
   const unitlessResolution = isUnitlessPlaceholderResolution(fd);
   const channels = Array.from({ length: sizeC }, (_, i) => ({
     ID: `Channel:0:${i}`,
@@ -318,8 +340,12 @@ async function maskLoader(source: Blob | string): Promise<Loader> {
     Channels: channels,
   };
   return {
-    data: pyramidImages.map((image) =>
-      maskPlaneFromImage(image, channels.length, dtype),
+    data: Array.from({ length: levelCount }, (_, level) =>
+      maskPlaneFromImages(
+        channelPyramids.map((pyramid) => pyramid[level]),
+        channels.length,
+        dtype,
+      ),
     ),
     metadata: {
       ID: "Image:0",

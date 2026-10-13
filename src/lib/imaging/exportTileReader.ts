@@ -1,6 +1,6 @@
 import { getImageSize, TiffPixelSource } from "@hms-dbmi/viv";
 import { GeoTIFFImage } from "geotiff";
-import type { HasTile, SupportedTypedArray } from "./loaderTypes";
+import type { HasTile, LoaderPlane, SupportedTypedArray } from "./loaderTypes";
 
 type Selection = { t: number; z: number; c: number };
 /** What re-tiling reads from a plane: Viv TIFF, DICOM and wrapped planes all fit. */
@@ -163,19 +163,29 @@ async function composeExportTile(
 /**
  * Export tile (x, y), `tileSize` px. A TIFF plane reads the source blocks
  * under the tile in a few merged reads (a row of neighboring blocks is
- * usually contiguous on disk), then decodes through Viv as usual. Other
- * planes are assembled from their own tiles.
+ * usually contiguous on disk), then decodes through Viv as usual. A plane
+ * with `readWindow` (masks) reads the tile's window; other planes are
+ * assembled from their own tiles.
  */
 export async function readExportTile(
-  plane: ExportTilePlane,
+  plane: ExportTilePlane & Pick<LoaderPlane, "readWindow">,
   tileSize: number,
   selection: Selection,
   x: number,
   y: number,
   signal: AbortSignal,
 ): Promise<HasTile> {
-  // DICOM planes, and the JPEG-export hydrate wrap (a spread copy), are not instances.
+  const { width, height } = getImageSize(plane);
+  const window: [number, number, number, number] = [
+    x * tileSize,
+    y * tileSize,
+    Math.min(width, (x + 1) * tileSize),
+    Math.min(height, (y + 1) * tileSize),
+  ];
+  // DICOM planes, masks, and the JPEG-export hydrate wrap (a spread copy) are not instances.
   if (!(plane instanceof TiffPixelSource)) {
+    if (plane.readWindow)
+      return plane.readWindow({ selection, window, signal });
     if (plane.tileSize === tileSize) {
       return plane.getTile({ selection, x, y, signal });
     }
@@ -187,13 +197,6 @@ export async function readExportTile(
     }
   )._indexer;
   const image = await indexer(selection);
-  const { width, height } = getImageSize(plane);
-  const window = [
-    x * tileSize,
-    y * tileSize,
-    Math.min(width, (x + 1) * tileSize),
-    Math.min(height, (y + 1) * tileSize),
-  ];
   const source = prefetchedSource(
     image.source as unknown as Source,
     mergedBlockRanges(image, window),

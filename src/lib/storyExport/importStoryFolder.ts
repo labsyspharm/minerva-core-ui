@@ -38,7 +38,7 @@ export { jpegSourceNeedsLocalRoot };
 
 const STORY_ROOT_HANDLE_SUFFIX = ":storyRoot";
 
-function storyRootHandleKey(storyId: string): string {
+export function storyRootHandleKey(storyId: string): string {
   return `story:${storyId}${STORY_ROOT_HANDLE_SUFFIX}`;
 }
 
@@ -85,6 +85,16 @@ export async function getStoryRootHandle(
   if (!isDirectoryHandle(stored)) return undefined;
   if (!(await ensureDirectoryPermission(stored, opts))) return undefined;
   return stored;
+}
+
+/** A remembered story folder that needs permission again (as after a reload). */
+export async function storyRootNeedsPermission(
+  storyId: string | null | undefined,
+): Promise<boolean> {
+  if (!storyId) return false;
+  const stored = await getFileHandle(storyRootHandleKey(storyId));
+  if (!isDirectoryHandle(stored)) return false;
+  return !(await ensureDirectoryPermission(stored, {}));
 }
 
 export function tileFetcherForDirectory(

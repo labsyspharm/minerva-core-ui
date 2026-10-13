@@ -9,6 +9,7 @@ import {
   JPEG_OME_TIFF_IMAGE_SOURCE,
 } from "@/lib/imaging/cubeRootEncoding";
 import { getBlob } from "@/lib/persistence/db";
+import { writeDirectoryFile } from "@/lib/persistence/directoryFiles";
 import type {
   DocumentData,
   FeatureTable,
@@ -144,17 +145,6 @@ function storyIndexHtml(title?: string, version = MINERVA_VERSION): string {
 `;
 }
 
-async function writeTextFile(
-  directory: FileSystemDirectoryHandle,
-  name: string,
-  text: string,
-): Promise<void> {
-  const fh = await directory.getFileHandle(name, { create: true });
-  const write = await fh.createWritable();
-  await write.write(text);
-  await write.close();
-}
-
 const FEATURE_TABLE_DIR = "feature-tables";
 
 /**
@@ -188,7 +178,6 @@ async function writeFeatureTableSidecars(
   const parquets = await Promise.all(
     data.featureTables.map(featureTableParquet),
   );
-  let dir: FileSystemDirectoryHandle | undefined;
   for (const [i, featureTable] of data.featureTables.entries()) {
     const bytes = parquets[i];
     if (!bytes) {
@@ -198,42 +187,11 @@ async function writeFeatureTableSidecars(
       skipped.push(channel?.name ?? featureTable.sourceChannelId);
       continue;
     }
-    dir ??= await directory.getDirectoryHandle(FEATURE_TABLE_DIR, {
-      create: true,
-    });
-    const fh = await dir.getFileHandle(`${featureTable.id}.parquet`, {
-      create: true,
-    });
-    const write = await fh.createWritable();
-    await write.write(bytes as Uint8Array<ArrayBuffer>);
-    await write.close();
-    featureTables.push({
-      ...featureTable,
-      source: {
-        kind: "url",
-        url: `${FEATURE_TABLE_DIR}/${featureTable.id}.parquet`,
-      },
-    });
+    const url = `${FEATURE_TABLE_DIR}/${featureTable.id}.parquet`;
+    await writeDirectoryFile(directory, url, bytes as Uint8Array<ArrayBuffer>);
+    featureTables.push({ ...featureTable, source: { kind: "url", url } });
   }
   return { featureTables, skipped };
-}
-
-async function writeBytes(
-  directory: FileSystemDirectoryHandle,
-  relativePath: string,
-  bytes: ArrayBuffer,
-): Promise<void> {
-  const parts = relativePath.split("/");
-  const fileName = parts.pop();
-  if (!fileName) throw new Error(`Invalid story player path: ${relativePath}`);
-  let dir = directory;
-  for (const part of parts) {
-    dir = await dir.getDirectoryHandle(part, { create: true });
-  }
-  const fh = await dir.getFileHandle(fileName, { create: true });
-  const write = await fh.createWritable();
-  await write.write(bytes);
-  await write.close();
 }
 
 /** Copy the preview-hosted player into `bundle/` beside the story. */
@@ -268,7 +226,11 @@ async function copyHostedPlayer(
         `Failed to copy story player file ${relativePath} (${fileRes.status})`,
       );
     }
-    await writeBytes(playerDir, relativePath, await fileRes.arrayBuffer());
+    await writeDirectoryFile(
+      playerDir,
+      relativePath,
+      await fileRes.arrayBuffer(),
+    );
   }
 }
 
@@ -302,13 +264,13 @@ export async function writeStoryBundleSidecars(
     data,
   );
   const exported = toExportedStoryDocument({ ...data, featureTables }, mode);
-  await writeTextFile(
+  await writeDirectoryFile(
     directory,
     "document.json",
     JSON.stringify(exported, null, 2),
   );
   await copyHostedPlayer(directory);
-  await writeTextFile(
+  await writeDirectoryFile(
     directory,
     "index.html",
     storyIndexHtml(

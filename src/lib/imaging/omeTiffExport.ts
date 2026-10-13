@@ -14,7 +14,6 @@ import {
   folderLimitsForTransfer,
   type JpegExportTransfer,
 } from "./cubeRootEncoding";
-import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
 import type { OmeLoaderEntry } from "./loaderEntries";
 
 export type LoaderPlane = TiffPixelSource<string[]>;
@@ -451,17 +450,6 @@ export function remappedImageForOmeTiffExport(
     channels: exportedChannels.map((ch, i) => ({ ...ch, index: i })),
     source: { kind: "url", url: fileName },
   };
-}
-
-export function planeLevels(loaderData: LoaderPlane[]): OmeExportLevelSize[] {
-  return loaderData.map((plane) => {
-    const { width, height } = getImageSize(plane);
-    const tileSize =
-      typeof plane.tileSize === "number" && plane.tileSize > 0
-        ? plane.tileSize
-        : JPEG_PYRAMID_TILE_SIZE;
-    return { width, height, tileSize };
-  });
 }
 
 /**

@@ -7,6 +7,7 @@ import {
   optimizeDistinctPalette,
   seedRgbForGroupChannelIndex,
 } from "@/lib/imaging/psudoPalette";
+import { isAbsoluteUrl } from "@/lib/imaging/sourceUrl";
 import { deleteBlob, getBlob, putBlob } from "@/lib/persistence/db";
 import { deleteFileHandle } from "@/lib/persistence/fileHandles";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -124,13 +125,6 @@ export function classVisibilityTest(
     : (name) => names.has(name);
 }
 
-export function classNameVisible(
-  vis: ClassVisibility | undefined,
-  name: string,
-): boolean {
-  return classVisibilityTest(vis)(name);
-}
-
 function visibilityAllOn(): ClassVisibility {
   return { mode: "all" };
 }
@@ -144,7 +138,7 @@ function toggleClassName(
   name: string,
 ): ClassVisibility {
   if (name.length === 0) return vis ?? visibilityAllOn();
-  const visible = classNameVisible(vis, name);
+  const visible = classVisibilityTest(vis)(name);
   const current = vis ?? visibilityAllOn();
   if (!visible) {
     if (current.mode === "all") return current;
@@ -495,8 +489,10 @@ export async function ingestFeatureCsvFile(
   const featureTableId = crypto.randomUUID();
   try {
     const ingested = await ingestFeatureTable(featureTableId, file, columns);
-    const persist = ingested.persist;
-    if (!persist) throw new Error("Feature table CSV ingest produced no data");
+    // A chosen Parquet (an exported sidecar) is stored as is, so its digest
+    // matches the one the story recorded and the class colors carry over.
+    const persist =
+      ingested.persist ?? new Uint8Array(await file.arrayBuffer());
     return {
       ok: true,
       ingested: {
@@ -691,7 +687,10 @@ export function resetClassView(
 async function fetchTableBytes(
   url: string,
   documentUrl: string | undefined,
-): Promise<Uint8Array> {
+): Promise<Uint8Array | undefined> {
+  // A path beside document.json means nothing without it: authoring is served
+  // from the app, not the story folder. The author chooses the file instead.
+  if (!documentUrl && !isAbsoluteUrl(url)) return undefined;
   const base = new URL(
     documentUrl ?? window.location.href,
     window.location.href,

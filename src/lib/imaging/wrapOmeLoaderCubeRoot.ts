@@ -63,14 +63,13 @@ async function readTileThroughLut(
       return null;
     }
     const { width, height } = source._getTileExtent(args.x, args.y);
-    let widened = false;
+    const stride = source.tileSize;
     // geotiff fetches the bytes, then calls this. Block fetches are shared
     // between tiles, so they always finish; a tile deck has dropped by then
     // skips its decode.
     const decoder = {
       decode: (fileDirectory: unknown, buffer: ArrayBuffer) => {
         if (args.signal?.aborted) throw SIGNAL_ABORTED;
-        widened = true;
         return pool.decodeWidened(fileDirectory, buffer, lut);
       },
     };
@@ -81,12 +80,15 @@ async function readTileThroughLut(
       decoder as Parameters<GeoTIFFImage["getTileOrStrip"]>[3],
     );
     if (args.signal?.aborted) throw SIGNAL_ABORTED;
-    // Empty tiles never call the decoder; geotiff fills those itself, 8-bit.
-    const full = widened
-      ? new Uint16Array(tile.data as ArrayBuffer)
-      : expandThroughLut(new Uint8Array(tile.data), lut);
+    // The size says which it is: the worker returns 16-bit, while an empty
+    // tile (no decode) comes back as geotiff's 8-bit fill.
+    const bytes = tile.data as ArrayBuffer;
+    const full =
+      bytes.byteLength === stride * stride * 2
+        ? new Uint16Array(bytes)
+        : expandThroughLut(new Uint8Array(bytes), lut);
     return {
-      data: cropTile(full, source.tileSize, width, height),
+      data: cropTile(full, stride, width, height),
       width,
       height,
     };

@@ -52,9 +52,13 @@ export type HydrateDocumentLoadersOpts = {
   imageSource?: string;
   /**
    * Authoring: the file for a relative OME-TIFF `url` source (one the user
-   * located, or the story folder's copy). Without one the image stays unloaded.
+   * located, or the story folder's copy) and the Dexie key it is stored
+   * under; no `handle` when that key needs permission first. Without a
+   * result the image stays unloaded until located.
    */
-  resolveRelativeFile?: (image: Image) => Promise<Handle.File | undefined>;
+  resolveRelativeFile?: (
+    image: Image,
+  ) => Promise<{ handle?: Handle.File; key: string } | undefined>;
 };
 
 const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
@@ -158,13 +162,14 @@ export async function hydrateDocumentLoaders(
         // file the user located or the story folder, else it stays unloaded
         // until located. The player resolves it against document.json.
         if (includeLocal && isRelativeOmeTiffUrl(im.source.url)) {
-          const handle = await opts.resolveRelativeFile?.(im);
-          if (
-            handle &&
-            (await canAccess(handle)) &&
-            (await findFile({ handle }))
-          ) {
-            await loadLocalFile(im, handle);
+          const resolved = await opts.resolveRelativeFile?.(im);
+          if (!resolved) break;
+          if (!resolved.handle || !(await canAccess(resolved.handle))) {
+            deniedHandleKeys.push(resolved.key);
+            break;
+          }
+          if (await findFile({ handle: resolved.handle })) {
+            await loadLocalFile(im, resolved.handle);
           }
           break;
         }

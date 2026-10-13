@@ -1,3 +1,4 @@
+import { getImageSize } from "@hms-dbmi/viv";
 import {
   browserFileSink,
   createTiffWriter,
@@ -27,6 +28,7 @@ import {
   maskExportTileCount,
 } from "./exportZlibOmeTiff";
 import { encodeTileJpeg } from "./jpegExportPool";
+import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
 import type { OmeLoaderEntry } from "./loaderEntries";
 import {
   type BrightfieldTally,
@@ -45,7 +47,6 @@ import {
   type LoaderPlane,
   loaderPlanesOrUndef,
   type OmePixelsMeta,
-  planeLevels,
   remappedImageForOmeTiffExport,
   stitchOmeTiffExportImages,
   tileCountForLevels,
@@ -187,13 +188,9 @@ async function planesLookBrightfield(
   if (channels.length !== 1 && channels.length < 3) return false;
   const level = planes[planes.length - 1];
   if (!level?.getTile) return false;
-  const { width, height, tileSize } = planeLevels(planes).at(-1) ?? {
-    width: 0,
-    height: 0,
-    tileSize: 256,
-  };
+  const { width, height } = getImageSize(level);
   if (width <= 0 || height <= 0) return false;
-  const tile = Math.max(1, tileSize);
+  const tile = level.tileSize > 0 ? level.tileSize : JPEG_PYRAMID_TILE_SIZE;
   const xs = brightfieldSampleOffsets(width, tile);
   const ys = brightfieldSampleOffsets(height, tile);
   const use = channels.slice(0, 3);

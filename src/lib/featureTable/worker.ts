@@ -192,6 +192,22 @@ async function planRead(
   source: { file?: File; bytes?: Uint8Array },
   columns?: FeatureTableColumns,
 ): Promise<ReadPlan> {
+  const head = source.file
+    ? new Uint8Array(await source.file.slice(0, 4).arrayBuffer())
+    : source.bytes;
+  if (!head || head.byteLength === 0) {
+    throw new Error("Feature table is empty");
+  }
+  // A stored table, or an exported sidecar the author chose as the file.
+  if (storedTableFormat(head).kind === "parquet") {
+    const file = `${table}.parquet`;
+    return {
+      file,
+      cols: PERSISTED_COLUMNS,
+      reader: `read_parquet(${sqlString(file)})`,
+      persist: false,
+    };
+  }
   if (source.file) {
     const { cols, header } = await resolveColumns(source.file, columns);
     const file = `${table}.csv`;
@@ -200,19 +216,6 @@ async function planRead(
       cols,
       reader: `read_csv(${sqlString(file)}, header=${header ? "true" : "false"}, all_varchar=true, ${CSV_QUOTING})`,
       persist: true,
-    };
-  }
-  if (!source.bytes || source.bytes.byteLength === 0) {
-    throw new Error("Feature table is empty");
-  }
-  const format = storedTableFormat(source.bytes);
-  if (format.kind === "parquet") {
-    const file = `${table}.parquet`;
-    return {
-      file,
-      cols: PERSISTED_COLUMNS,
-      reader: `read_parquet(${sqlString(file)})`,
-      persist: false,
     };
   }
   const file = `${table}.csv`;
