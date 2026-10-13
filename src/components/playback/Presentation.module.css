@@ -80,7 +80,6 @@
   position: absolute;
   right: var(--minerva-inset);
   width: var(--ribbon-edit-width);
-  justify-content: center;
 }
 
 /* Margin, not padding: overflow clips at the padding edge, so a long title

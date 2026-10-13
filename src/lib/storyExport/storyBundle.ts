@@ -110,7 +110,7 @@ function toExportedStoryDocument(
   });
 }
 
-export function imageSourceForExportMode(
+function imageSourceForExportMode(
   mode: StoryExportMode,
   current?: string,
 ): string {
@@ -128,10 +128,7 @@ export function imageSourceForExportMode(
   return current ?? "jpeg-pyramid";
 }
 
-export function storyIndexHtml(
-  title?: string,
-  version = MINERVA_VERSION,
-): string {
+function storyIndexHtml(title?: string, version = MINERVA_VERSION): string {
   const { js, css } = playerAssetUrls(version);
   const safeTitle = (title?.trim() || "Minerva Story")
     .replace(/&/g, "&amp;")
