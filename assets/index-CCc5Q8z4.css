@@ -533,7 +533,7 @@ body {
   field-sizing: content;
   overflow-x: auto;
 }
-._wrap_sur29_1 {
+._wrap_1sovl_1 {
   --range-input-width: 3.25rem;
   display: grid;
   grid-template-columns:
@@ -545,7 +545,7 @@ body {
   width: 100%;
 }
 
-._histogramHost_sur29_13 {
+._histogramHost_1sovl_13 {
   width: 100%;
   min-width: 0;
   padding-right: 8px;
@@ -554,7 +554,7 @@ body {
   --handle-max: url("./histogram-handle-max-CwFVdUGP.svg");
 }
 
-._histogramPlot_sur29_22 {
+._histogramPlot_1sovl_22 {
   position: relative;
   box-sizing: border-box;
   width: 100%;
@@ -562,12 +562,12 @@ body {
   padding-top: 5px;
 }
 
-._histogramPlotTrimmed_sur29_30 {
+._histogramPlotTrimmed_1sovl_30 {
   width: calc(100% - 32px);
   margin-left: 32px;
 }
 
-._histogramLoading_sur29_35 {
+._histogramLoading_1sovl_35 {
   display: none;
   position: absolute;
   inset: 0;
@@ -579,11 +579,11 @@ body {
   pointer-events: none;
 }
 
-._histogramLoadingVisible_sur29_47 {
+._histogramLoadingVisible_1sovl_47 {
   display: flex;
 }
 
-._histogramSvg_sur29_51 {
+._histogramSvg_1sovl_51 {
   background: transparent;
   width: 100%;
   height: 18px;
@@ -591,7 +591,7 @@ body {
   overflow: visible;
 }
 
-._axisBreak_sur29_59 {
+._axisBreak_1sovl_59 {
   position: absolute;
   left: -32px;
   bottom: 0.5px;
@@ -609,30 +609,30 @@ body {
   cursor: pointer;
 }
 
-._axisBreak_sur29_59 svg {
+._axisBreak_1sovl_59 svg {
   display: block;
   width: 100%;
   height: 100%;
   cursor: pointer;
 }
 
-._histogramFill_sur29_84 {
+._histogramFill_1sovl_84 {
   fill: var(--histogram-color, none);
   stroke: none;
 }
 
-._histogramLine_sur29_89 {
+._histogramLine_1sovl_89 {
   fill: none;
   stroke: var(--minerva-ink);
   stroke-width: 0.7;
   stroke-linejoin: round;
 }
 
-._histogramOutOfRange_sur29_96 {
+._histogramOutOfRange_1sovl_96 {
   opacity: 0.25;
 }
 
-._sliderRow_sur29_100 {
+._sliderRow_1sovl_100 {
   position: absolute;
   right: 0;
   bottom: 5px;
@@ -641,10 +641,11 @@ body {
   height: var(--handle-width);
   padding: 0;
   box-sizing: border-box;
-  z-index: 5;
+  /* Above the axis-break control. At the trimmed edge the min thumb sits on that icon. */
+  z-index: 7;
 }
 
-._rangeInput_sur29_112 {
+._rangeInput_1sovl_113 {
   position: absolute;
   left: calc(var(--handle-width) / -2);
   top: 0;
@@ -658,7 +659,7 @@ body {
   pointer-events: none;
 }
 
-._rangeInput_sur29_112::-webkit-slider-thumb {
+._rangeInput_1sovl_113::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: var(--handle-width);
@@ -669,21 +670,21 @@ body {
   pointer-events: auto;
 }
 
-._rangeInputMin_sur29_137::-webkit-slider-thumb {
+._rangeInputMin_1sovl_138::-webkit-slider-thumb {
   margin-left: calc(var(--handle-width) / -2);
   background-color: var(--minerva-ink);
   -webkit-mask: var(--handle-min) center / 100% 100% no-repeat;
   mask: var(--handle-min) center / 100% 100% no-repeat;
 }
 
-._rangeInputMax_sur29_144::-webkit-slider-thumb {
+._rangeInputMax_1sovl_145::-webkit-slider-thumb {
   margin-left: calc(var(--handle-width) / 2);
   background-color: var(--minerva-ink);
   -webkit-mask: var(--handle-max) center / 100% 100% no-repeat;
   mask: var(--handle-max) center / 100% 100% no-repeat;
 }
 
-._rangeInput_sur29_112::-moz-range-thumb {
+._rangeInput_1sovl_113::-moz-range-thumb {
   width: var(--handle-width);
   height: var(--handle-width);
   border: none;
@@ -692,29 +693,29 @@ body {
   pointer-events: auto;
 }
 
-._rangeInputMin_sur29_137::-moz-range-thumb {
+._rangeInputMin_1sovl_138::-moz-range-thumb {
   margin-left: calc(var(--handle-width) / -2);
   background-color: var(--minerva-ink);
   mask: var(--handle-min) center / 100% 100% no-repeat;
 }
 
-._rangeInputMax_sur29_144::-moz-range-thumb {
+._rangeInputMax_1sovl_145::-moz-range-thumb {
   margin-left: calc(var(--handle-width) / 2);
   background-color: var(--minerva-ink);
   mask: var(--handle-max) center / 100% 100% no-repeat;
 }
 
-._rangeInput_sur29_112::-webkit-slider-runnable-track {
+._rangeInput_1sovl_113::-webkit-slider-runnable-track {
   height: var(--handle-width);
   background: transparent;
 }
 
-._rangeInput_sur29_112::-moz-range-track {
+._rangeInput_1sovl_113::-moz-range-track {
   height: var(--handle-width);
   background: transparent;
 }
 
-._limitInput_sur29_182 {
+._limitInput_1sovl_183 {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -725,8 +726,8 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-._limitInput_sur29_182::-webkit-outer-spin-button,
-._limitInput_sur29_182::-webkit-inner-spin-button {
+._limitInput_1sovl_183::-webkit-outer-spin-button,
+._limitInput_1sovl_183::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }

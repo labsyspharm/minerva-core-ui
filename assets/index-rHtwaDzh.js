@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DLOh0USZ.js","./pako.esm-KbdoS3Oq.js","./lerc-Bq_hwHs_.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CcDiEknz.js","./pako.esm-KbdoS3Oq.js","./lerc-C5KV5eo0.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18508,7 +18508,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "2d6ab1f2fa4fa82f6a374d50090793d9cdd2ce96"
+    "VITE_APP_GIT_SHA": "e9511a6054d17ec6fd64a16355eb9799a6295760"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79231,26 +79231,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-5sNwxZAb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CpR2oamU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DYnSA-Xo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CHSx0VW6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CaESX1n-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DWoehCM6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DLOh0USZ.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-ChS0VhgY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Bq_hwHs_.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-CcDiEknz.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BqE6grME.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-C5KV5eo0.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CtYCNYfw.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-FMbh6sxY.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BwdrA-Pg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CQPTn9Kr.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -92659,22 +92659,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  const wrap$2 = "_wrap_sur29_1";
-  const histogramHost = "_histogramHost_sur29_13";
-  const histogramPlot = "_histogramPlot_sur29_22";
-  const histogramPlotTrimmed = "_histogramPlotTrimmed_sur29_30";
-  const histogramLoading = "_histogramLoading_sur29_35";
-  const histogramLoadingVisible = "_histogramLoadingVisible_sur29_47";
-  const histogramSvg = "_histogramSvg_sur29_51";
-  const axisBreak = "_axisBreak_sur29_59";
-  const histogramFill = "_histogramFill_sur29_84";
-  const histogramLine = "_histogramLine_sur29_89";
-  const histogramOutOfRange = "_histogramOutOfRange_sur29_96";
-  const sliderRow = "_sliderRow_sur29_100";
-  const rangeInput = "_rangeInput_sur29_112";
-  const rangeInputMin = "_rangeInputMin_sur29_137";
-  const rangeInputMax = "_rangeInputMax_sur29_144";
-  const limitInput = "_limitInput_sur29_182";
+  const wrap$2 = "_wrap_1sovl_1";
+  const histogramHost = "_histogramHost_1sovl_13";
+  const histogramPlot = "_histogramPlot_1sovl_22";
+  const histogramPlotTrimmed = "_histogramPlotTrimmed_1sovl_30";
+  const histogramLoading = "_histogramLoading_1sovl_35";
+  const histogramLoadingVisible = "_histogramLoadingVisible_1sovl_47";
+  const histogramSvg = "_histogramSvg_1sovl_51";
+  const axisBreak = "_axisBreak_1sovl_59";
+  const histogramFill = "_histogramFill_1sovl_84";
+  const histogramLine = "_histogramLine_1sovl_89";
+  const histogramOutOfRange = "_histogramOutOfRange_1sovl_96";
+  const sliderRow = "_sliderRow_1sovl_100";
+  const rangeInput = "_rangeInput_1sovl_113";
+  const rangeInputMin = "_rangeInputMin_1sovl_138";
+  const rangeInputMax = "_rangeInputMax_1sovl_145";
+  const limitInput = "_limitInput_1sovl_183";
   const styles$t = {
     wrap: wrap$2,
     histogramHost,
@@ -92948,8 +92948,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       props.sourceChannelId
     ]);
     const syncFromSliders = (loStep, hiStep, commit) => {
-      const lo = snapContrastLimit(scale2.fromSlider(loStep), fractional);
-      const hi2 = snapContrastLimit(scale2.fromSlider(hiStep), fractional);
+      const active = scaleRef.current;
+      const lo = snapContrastLimit(active.fromSlider(loStep), fractional);
+      const hi2 = snapContrastLimit(active.fromSlider(hiStep), fractional);
       setMinInput(formatContrastLimit(lo, range2));
       setMaxInput(formatContrastLimit(hi2, range2));
       if (commit) {
@@ -92958,12 +92959,66 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         previewRange(lo, hi2);
       }
     };
+    const trimmedRef = reactExports.useRef(false);
+    const distRef = reactExports.useRef(dist2);
+    trimmedRef.current = chart.startBin > 0;
+    distRef.current = dist2;
     const onMinSlider = (e2) => {
       editingLimitRef.current = true;
       const v2 = Math.min(Number(e2.target.value), sliderMaxRef.current);
       sliderMinRef.current = v2;
       setSliderMin(v2);
       syncFromSliders(v2, sliderMaxRef.current, false);
+    };
+    const onMinPointerDown = (e2) => {
+      if (e2.button !== 0) return;
+      const pointerId = e2.pointerId;
+      let markX = sliderMinRef.current <= 0 ? e2.clientX : null;
+      const stop = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
+      };
+      const openPastCut = () => {
+        editingLimitRef.current = true;
+        const active = scaleRef.current;
+        const lo = active.fromSlider(sliderMinRef.current);
+        const hi2 = active.fromSlider(sliderMaxRef.current);
+        const full2 = buildContrastScale(resolveHistogramChartView(distRef.current, {
+          floatRange: range2,
+          dtypeMax,
+          expanded: true,
+          lowerLimit: lo
+        }).scaleInput);
+        const loStep = full2.toSlider(lo);
+        const hiStep = full2.toSlider(hi2);
+        scaleRef.current = full2;
+        sliderMinRef.current = loStep;
+        sliderMaxRef.current = hiStep;
+        setSliderMin(loStep);
+        setSliderMax(hiStep);
+        setMinInput(formatContrastLimit(snapContrastLimit(lo, fractional), range2));
+        setMaxInput(formatContrastLimit(snapContrastLimit(hi2, fractional), range2));
+        setExpanded(true);
+      };
+      const move = (ev) => {
+        if (ev.pointerId !== pointerId || !trimmedRef.current) return;
+        if (sliderMinRef.current > 0) {
+          markX = null;
+          return;
+        }
+        if (markX == null) markX = ev.clientX;
+        if (markX - ev.clientX < 4) return;
+        stop();
+        openPastCut();
+      };
+      const up = (ev) => {
+        if (ev.pointerId !== pointerId) return;
+        stop();
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
     };
     const onMaxSlider = (e2) => {
       editingLimitRef.current = true;
@@ -93118,6 +93173,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     max: scale2.sliderSteps,
                     value: sliderMin,
                     onChange: onMinSlider,
+                    onPointerDown: onMinPointerDown,
                     onMouseUp: onSliderCommit,
                     onTouchEnd: onSliderCommit,
                     onKeyUp: onSliderCommit,
@@ -259174,8 +259230,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-13T15:17:11.610Z";
-    const sha = "2d6ab1f2fa4fa82f6a374d50090793d9cdd2ce96";
+    const iso = "2026-10-13T21:07:02.529Z";
+    const sha = "e9511a6054d17ec6fd64a16355eb9799a6295760";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
