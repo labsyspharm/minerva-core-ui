@@ -1,4 +1,4 @@
-import { B as BaseDecoder } from './decoder.worker-CKbAr6AY.js';
+import { B as BaseDecoder } from './decoder.worker-DskuWaKT.js';
 
 /**
  * class WebImageDecoder

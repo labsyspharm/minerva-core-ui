@@ -11464,6 +11464,19 @@ async function exportParquet(duck, c, table) {
 }
 const CSV_QUOTING = `quote='"', escape='"'`;
 async function planRead(table, source, columns) {
+  const head = source.file ? new Uint8Array(await source.file.slice(0, 4).arrayBuffer()) : source.bytes;
+  if (!head || head.byteLength === 0) {
+    throw new Error("Feature table is empty");
+  }
+  if (storedTableFormat(head).kind === "parquet") {
+    const file2 = `${table}.parquet`;
+    return {
+      file: file2,
+      cols: PERSISTED_COLUMNS,
+      reader: `read_parquet(${sqlString(file2)})`,
+      persist: false
+    };
+  }
   if (source.file) {
     const { cols, header } = await resolveColumns(source.file, columns);
     const file2 = `${table}.csv`;
@@ -11472,19 +11485,6 @@ async function planRead(table, source, columns) {
       cols,
       reader: `read_csv(${sqlString(file2)}, header=${header ? "true" : "false"}, all_varchar=true, ${CSV_QUOTING})`,
       persist: true
-    };
-  }
-  if (!source.bytes || source.bytes.byteLength === 0) {
-    throw new Error("Feature table is empty");
-  }
-  const format = storedTableFormat(source.bytes);
-  if (format.kind === "parquet") {
-    const file2 = `${table}.parquet`;
-    return {
-      file: file2,
-      cols: PERSISTED_COLUMNS,
-      reader: `read_parquet(${sqlString(file2)})`,
-      persist: false
     };
   }
   const file = `${table}.csv`;

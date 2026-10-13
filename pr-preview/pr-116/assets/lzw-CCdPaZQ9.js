@@ -1,4 +1,4 @@
-import { B as BaseDecoder } from './decoder.worker-CKbAr6AY.js';
+import { B as BaseDecoder } from './decoder.worker-DskuWaKT.js';
 
 const MIN_BITS = 9;
 const CLEAR_CODE = 256; // clear code

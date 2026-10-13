@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Dyqq1XsD.js","./pako.esm-KbdoS3Oq.js","./lerc-CLVAbIUk.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CWyhqGnT.js","./pako.esm-KbdoS3Oq.js","./lerc-Dn-yBApz.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18279,6 +18279,7 @@ let __tla = (async () => {
       ...args.groupRowVisibilities
     };
     for (const group2 of args.channelGroups) {
+      if (args.groupId && group2.id !== args.groupId) continue;
       for (const gc2 of group2.channels) {
         if (ids.has(gc2.channelId)) {
           channelGroupRowVisibilities[gc2.id] = args.visible;
@@ -18288,7 +18289,9 @@ let __tla = (async () => {
     const channelVisibilities = {
       ...args.stackVisibilities
     };
-    for (const id2 of ids) channelVisibilities[id2] = args.visible;
+    if (!args.groupId) {
+      for (const id2 of ids) channelVisibilities[id2] = args.visible;
+    }
     return {
       channelGroupRowVisibilities,
       channelVisibilities
@@ -18510,6 +18513,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
+    "VITE_APP_GIT_SHA": "8954391f2884a4c248142d355f1f3095fe9d7097",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -66157,6 +66161,2773 @@ in vec2 mask_texCoords;
   }
   MaskExtension.defaultProps = defaultProps$a;
   MaskExtension.extensionName = "MaskExtension";
+  var uaParser = {
+    exports: {}
+  };
+  (function(module, exports) {
+    (function(window2, undefined$1) {
+      var LIBVERSION = "1.0.41", EMPTY2 = "", UNKNOWN = "?", FUNC_TYPE = "function", UNDEF_TYPE = "undefined", OBJ_TYPE = "object", STR_TYPE = "string", MAJOR = "major", MODEL = "model", NAME2 = "name", TYPE2 = "type", VENDOR = "vendor", VERSION2 = "version", ARCHITECTURE = "architecture", CONSOLE = "console", MOBILE = "mobile", TABLET = "tablet", SMARTTV = "smarttv", WEARABLE = "wearable", EMBEDDED = "embedded", UA_MAX_LENGTH = 500;
+      var AMAZON = "Amazon", APPLE = "Apple", ASUS = "ASUS", BLACKBERRY = "BlackBerry", BROWSER = "Browser", CHROME = "Chrome", EDGE2 = "Edge", FIREFOX = "Firefox", GOOGLE = "Google", HONOR = "Honor", HUAWEI = "Huawei", LENOVO = "Lenovo", LG = "LG", MICROSOFT = "Microsoft", MOTOROLA = "Motorola", NVIDIA = "Nvidia", ONEPLUS = "OnePlus", OPERA = "Opera", OPPO = "OPPO", SAMSUNG = "Samsung", SHARP = "Sharp", SONY = "Sony", XIAOMI = "Xiaomi", ZEBRA = "Zebra", FACEBOOK = "Facebook", CHROMIUM_OS = "Chromium OS", MAC_OS = "Mac OS", SUFFIX_BROWSER = " Browser";
+      var extend2 = function(regexes2, extensions) {
+        var mergedRegexes = {};
+        for (var i2 in regexes2) {
+          if (extensions[i2] && extensions[i2].length % 2 === 0) {
+            mergedRegexes[i2] = extensions[i2].concat(regexes2[i2]);
+          } else {
+            mergedRegexes[i2] = regexes2[i2];
+          }
+        }
+        return mergedRegexes;
+      }, enumerize = function(arr) {
+        var enums = {};
+        for (var i2 = 0; i2 < arr.length; i2++) {
+          enums[arr[i2].toUpperCase()] = arr[i2];
+        }
+        return enums;
+      }, has2 = function(str1, str2) {
+        return typeof str1 === STR_TYPE ? lowerize(str2).indexOf(lowerize(str1)) !== -1 : false;
+      }, lowerize = function(str2) {
+        return str2.toLowerCase();
+      }, majorize = function(version2) {
+        return typeof version2 === STR_TYPE ? version2.replace(/[^\d\.]/g, EMPTY2).split(".")[0] : undefined$1;
+      }, trim2 = function(str2, len2) {
+        if (typeof str2 === STR_TYPE) {
+          str2 = str2.replace(/^\s\s*/, EMPTY2);
+          return typeof len2 === UNDEF_TYPE ? str2 : str2.substring(0, UA_MAX_LENGTH);
+        }
+      };
+      var rgxMapper = function(ua2, arrays) {
+        var i2 = 0, j2, k2, p2, q2, matches2, match;
+        while (i2 < arrays.length && !matches2) {
+          var regex2 = arrays[i2], props = arrays[i2 + 1];
+          j2 = k2 = 0;
+          while (j2 < regex2.length && !matches2) {
+            if (!regex2[j2]) {
+              break;
+            }
+            matches2 = regex2[j2++].exec(ua2);
+            if (!!matches2) {
+              for (p2 = 0; p2 < props.length; p2++) {
+                match = matches2[++k2];
+                q2 = props[p2];
+                if (typeof q2 === OBJ_TYPE && q2.length > 0) {
+                  if (q2.length === 2) {
+                    if (typeof q2[1] == FUNC_TYPE) {
+                      this[q2[0]] = q2[1].call(this, match);
+                    } else {
+                      this[q2[0]] = q2[1];
+                    }
+                  } else if (q2.length === 3) {
+                    if (typeof q2[1] === FUNC_TYPE && !(q2[1].exec && q2[1].test)) {
+                      this[q2[0]] = match ? q2[1].call(this, match, q2[2]) : undefined$1;
+                    } else {
+                      this[q2[0]] = match ? match.replace(q2[1], q2[2]) : undefined$1;
+                    }
+                  } else if (q2.length === 4) {
+                    this[q2[0]] = match ? q2[3].call(this, match.replace(q2[1], q2[2])) : undefined$1;
+                  }
+                } else {
+                  this[q2] = match ? match : undefined$1;
+                }
+              }
+            }
+          }
+          i2 += 2;
+        }
+      }, strMapper = function(str2, map2) {
+        for (var i2 in map2) {
+          if (typeof map2[i2] === OBJ_TYPE && map2[i2].length > 0) {
+            for (var j2 = 0; j2 < map2[i2].length; j2++) {
+              if (has2(map2[i2][j2], str2)) {
+                return i2 === UNKNOWN ? undefined$1 : i2;
+              }
+            }
+          } else if (has2(map2[i2], str2)) {
+            return i2 === UNKNOWN ? undefined$1 : i2;
+          }
+        }
+        return map2.hasOwnProperty("*") ? map2["*"] : str2;
+      };
+      var oldSafariMap = {
+        "1.0": "/8",
+        "1.2": "/1",
+        "1.3": "/3",
+        "2.0": "/412",
+        "2.0.2": "/416",
+        "2.0.3": "/417",
+        "2.0.4": "/419",
+        "?": "/"
+      }, windowsVersionMap = {
+        "ME": "4.90",
+        "NT 3.11": "NT3.51",
+        "NT 4.0": "NT4.0",
+        "2000": "NT 5.0",
+        "XP": [
+          "NT 5.1",
+          "NT 5.2"
+        ],
+        "Vista": "NT 6.0",
+        "7": "NT 6.1",
+        "8": "NT 6.2",
+        "8.1": "NT 6.3",
+        "10": [
+          "NT 6.4",
+          "NT 10.0"
+        ],
+        "RT": "ARM"
+      };
+      var regexes = {
+        browser: [
+          [
+            /\b(?:crmo|crios)\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Chrome"
+            ]
+          ],
+          [
+            /edg(?:e|ios|a)?\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Edge"
+            ]
+          ],
+          [
+            /(opera mini)\/([-\w\.]+)/i,
+            /(opera [mobiletab]{3,6})\b.+version\/([-\w\.]+)/i,
+            /(opera)(?:.+version\/|[\/ ]+)([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /opios[\/ ]+([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              OPERA + " Mini"
+            ]
+          ],
+          [
+            /\bop(?:rg)?x\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              OPERA + " GX"
+            ]
+          ],
+          [
+            /\bopr\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              OPERA
+            ]
+          ],
+          [
+            /\bb[ai]*d(?:uhd|[ub]*[aekoprswx]{5,6})[\/ ]?([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Baidu"
+            ]
+          ],
+          [
+            /\b(?:mxbrowser|mxios|myie2)\/?([-\w\.]*)\b/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Maxthon"
+            ]
+          ],
+          [
+            /(kindle)\/([\w\.]+)/i,
+            /(lunascape|maxthon|netfront|jasmine|blazer|sleipnir)[\/ ]?([\w\.]*)/i,
+            /(avant|iemobile|slim(?:browser|boat|jet))[\/ ]?([\d\.]*)/i,
+            /(?:ms|\()(ie) ([\w\.]+)/i,
+            /(flock|rockmelt|midori|epiphany|silk|skyfire|ovibrowser|bolt|iron|vivaldi|iridium|phantomjs|bowser|qupzilla|falkon|rekonq|puffin|brave|whale(?!.+naver)|qqbrowserlite|duckduckgo|klar|helio|(?=comodo_)?dragon)\/([-\w\.]+)/i,
+            /(heytap|ovi|115)browser\/([\d\.]+)/i,
+            /(weibo)__([\d\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /quark(?:pc)?\/([-\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Quark"
+            ]
+          ],
+          [
+            /\bddg\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "DuckDuckGo"
+            ]
+          ],
+          [
+            /(?:\buc? ?browser|(?:juc.+)ucweb)[\/ ]?([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "UC" + BROWSER
+            ]
+          ],
+          [
+            /microm.+\bqbcore\/([\w\.]+)/i,
+            /\bqbcore\/([\w\.]+).+microm/i,
+            /micromessenger\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "WeChat"
+            ]
+          ],
+          [
+            /konqueror\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Konqueror"
+            ]
+          ],
+          [
+            /trident.+rv[: ]([\w\.]{1,9})\b.+like gecko/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "IE"
+            ]
+          ],
+          [
+            /ya(?:search)?browser\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Yandex"
+            ]
+          ],
+          [
+            /slbrowser\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Smart Lenovo " + BROWSER
+            ]
+          ],
+          [
+            /(avast|avg)\/([\w\.]+)/i
+          ],
+          [
+            [
+              NAME2,
+              /(.+)/,
+              "$1 Secure " + BROWSER
+            ],
+            VERSION2
+          ],
+          [
+            /\bfocus\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              FIREFOX + " Focus"
+            ]
+          ],
+          [
+            /\bopt\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              OPERA + " Touch"
+            ]
+          ],
+          [
+            /coc_coc\w+\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Coc Coc"
+            ]
+          ],
+          [
+            /dolfin\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Dolphin"
+            ]
+          ],
+          [
+            /coast\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              OPERA + " Coast"
+            ]
+          ],
+          [
+            /miuibrowser\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "MIUI" + SUFFIX_BROWSER
+            ]
+          ],
+          [
+            /fxios\/([\w\.-]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              FIREFOX
+            ]
+          ],
+          [
+            /\bqihoobrowser\/?([\w\.]*)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "360"
+            ]
+          ],
+          [
+            /\b(qq)\/([\w\.]+)/i
+          ],
+          [
+            [
+              NAME2,
+              /(.+)/,
+              "$1Browser"
+            ],
+            VERSION2
+          ],
+          [
+            /(oculus|sailfish|huawei|vivo|pico)browser\/([\w\.]+)/i
+          ],
+          [
+            [
+              NAME2,
+              /(.+)/,
+              "$1" + SUFFIX_BROWSER
+            ],
+            VERSION2
+          ],
+          [
+            /samsungbrowser\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              SAMSUNG + " Internet"
+            ]
+          ],
+          [
+            /metasr[\/ ]?([\d\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Sogou Explorer"
+            ]
+          ],
+          [
+            /(sogou)mo\w+\/([\d\.]+)/i
+          ],
+          [
+            [
+              NAME2,
+              "Sogou Mobile"
+            ],
+            VERSION2
+          ],
+          [
+            /(electron)\/([\w\.]+) safari/i,
+            /(tesla)(?: qtcarbrowser|\/(20\d\d\.[-\w\.]+))/i,
+            /m?(qqbrowser|2345(?=browser|chrome|explorer))\w*[\/ ]?v?([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /(lbbrowser|rekonq)/i,
+            /\[(linkedin)app\]/i
+          ],
+          [
+            NAME2
+          ],
+          [
+            /ome\/([\w\.]+) \w* ?(iron) saf/i,
+            /ome\/([\w\.]+).+qihu (360)[es]e/i
+          ],
+          [
+            VERSION2,
+            NAME2
+          ],
+          [
+            /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i
+          ],
+          [
+            [
+              NAME2,
+              FACEBOOK
+            ],
+            VERSION2
+          ],
+          [
+            /(Klarna)\/([\w\.]+)/i,
+            /(kakao(?:talk|story))[\/ ]([\w\.]+)/i,
+            /(naver)\(.*?(\d+\.[\w\.]+).*\)/i,
+            /(daum)apps[\/ ]([\w\.]+)/i,
+            /safari (line)\/([\w\.]+)/i,
+            /\b(line)\/([\w\.]+)\/iab/i,
+            /(alipay)client\/([\w\.]+)/i,
+            /(twitter)(?:and| f.+e\/([\w\.]+))/i,
+            /(chromium|instagram|snapchat)[\/ ]([-\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /\bgsa\/([\w\.]+) .*safari\//i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "GSA"
+            ]
+          ],
+          [
+            /musical_ly(?:.+app_?version\/|_)([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "TikTok"
+            ]
+          ],
+          [
+            /headlesschrome(?:\/([\w\.]+)| )/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              CHROME + " Headless"
+            ]
+          ],
+          [
+            / wv\).+(chrome)\/([\w\.]+)/i
+          ],
+          [
+            [
+              NAME2,
+              CHROME + " WebView"
+            ],
+            VERSION2
+          ],
+          [
+            /droid.+ version\/([\w\.]+)\b.+(?:mobile safari|safari)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Android " + BROWSER
+            ]
+          ],
+          [
+            /(chrome|omniweb|arora|[tizenoka]{5} ?browser)\/v?([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /version\/([\w\.\,]+) .*mobile\/\w+ (safari)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Mobile Safari"
+            ]
+          ],
+          [
+            /version\/([\w(\.|\,)]+) .*(mobile ?safari|safari)/i
+          ],
+          [
+            VERSION2,
+            NAME2
+          ],
+          [
+            /webkit.+?(mobile ?safari|safari)(\/[\w\.]+)/i
+          ],
+          [
+            NAME2,
+            [
+              VERSION2,
+              strMapper,
+              oldSafariMap
+            ]
+          ],
+          [
+            /(webkit|khtml)\/([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /(navigator|netscape\d?)\/([-\w\.]+)/i
+          ],
+          [
+            [
+              NAME2,
+              "Netscape"
+            ],
+            VERSION2
+          ],
+          [
+            /(wolvic|librewolf)\/([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /mobile vr; rv:([\w\.]+)\).+firefox/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              FIREFOX + " Reality"
+            ]
+          ],
+          [
+            /ekiohf.+(flow)\/([\w\.]+)/i,
+            /(swiftfox)/i,
+            /(icedragon|iceweasel|camino|chimera|fennec|maemo browser|minimo|conkeror)[\/ ]?([\w\.\+]+)/i,
+            /(seamonkey|k-meleon|icecat|iceape|firebird|phoenix|palemoon|basilisk|waterfox)\/([-\w\.]+)$/i,
+            /(firefox)\/([\w\.]+)/i,
+            /(mozilla)\/([\w\.]+) .+rv\:.+gecko\/\d+/i,
+            /(amaya|dillo|doris|icab|ladybird|lynx|mosaic|netsurf|obigo|polaris|w3m|(?:go|ice|up)[\. ]?browser)[-\/ ]?v?([\w\.]+)/i,
+            /\b(links) \(([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            [
+              VERSION2,
+              /_/g,
+              "."
+            ]
+          ],
+          [
+            /(cobalt)\/([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            [
+              VERSION2,
+              /master.|lts./,
+              ""
+            ]
+          ]
+        ],
+        cpu: [
+          [
+            /\b((amd|x|x86[-_]?|wow|win)64)\b/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              "amd64"
+            ]
+          ],
+          [
+            /(ia32(?=;))/i,
+            /\b((i[346]|x)86)(pc)?\b/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              "ia32"
+            ]
+          ],
+          [
+            /\b(aarch64|arm(v?[89]e?l?|_?64))\b/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              "arm64"
+            ]
+          ],
+          [
+            /\b(arm(v[67])?ht?n?[fl]p?)\b/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              "armhf"
+            ]
+          ],
+          [
+            /( (ce|mobile); ppc;|\/[\w\.]+arm\b)/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              "arm"
+            ]
+          ],
+          [
+            /((ppc|powerpc)(64)?)( mac|;|\))/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              /ower/,
+              EMPTY2,
+              lowerize
+            ]
+          ],
+          [
+            / sun4\w[;\)]/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              "sparc"
+            ]
+          ],
+          [
+            /\b(avr32|ia64(?=;)|68k(?=\))|\barm(?=v([1-7]|[5-7]1)l?|;|eabi)|(irix|mips|sparc)(64)?\b|pa-risc)/i
+          ],
+          [
+            [
+              ARCHITECTURE,
+              lowerize
+            ]
+          ]
+        ],
+        device: [
+          [
+            /\b(sch-i[89]0\d|shw-m380s|sm-[ptx]\w{2,4}|gt-[pn]\d{2,4}|sgh-t8[56]9|nexus 10)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SAMSUNG
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b((?:s[cgp]h|gt|sm)-(?![lr])\w+|sc[g-]?[\d]+a?|galaxy nexus)/i,
+            /samsung[- ]((?!sm-[lr])[-\w]+)/i,
+            /sec-(sgh\w+)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SAMSUNG
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(?:\/|\()(ip(?:hone|od)[\w, ]*)(?:\/|;)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              APPLE
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\((ipad);[-\w\),; ]+apple/i,
+            /applecoremedia\/[\w\.]+ \((ipad)/i,
+            /\b(ipad)\d\d?,\d\d?[;\]].+ios/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              APPLE
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(macintosh);/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              APPLE
+            ]
+          ],
+          [
+            /\b(sh-?[altvz]?\d\d[a-ekm]?)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SHARP
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b((?:brt|eln|hey2?|gdi|jdn)-a?[lnw]09|(?:ag[rm]3?|jdn2|kob2)-a?[lw]0[09]hn)(?: bui|\)|;)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              HONOR
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /honor([-\w ]+)[;\)]/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              HONOR
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b((?:ag[rs][2356]?k?|bah[234]?|bg[2o]|bt[kv]|cmr|cpn|db[ry]2?|jdn2|got|kob2?k?|mon|pce|scm|sht?|[tw]gr|vrd)-[ad]?[lw][0125][09]b?|605hw|bg2-u03|(?:gem|fdr|m2|ple|t1)-[7a]0[1-4][lu]|t1-a2[13][lw]|mediapad[\w\. ]*(?= bui|\)))\b(?!.+d\/s)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              HUAWEI
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(?:huawei)([-\w ]+)[;\)]/i,
+            /\b(nexus 6p|\w{2,4}e?-[atu]?[ln][\dx][012359c][adn]?)\b(?!.+d\/s)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              HUAWEI
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /oid[^\)]+; (2[\dbc]{4}(182|283|rp\w{2})[cgl]|m2105k81a?c)(?: bui|\))/i,
+            /\b((?:red)?mi[-_ ]?pad[\w- ]*)(?: bui|\))/i
+          ],
+          [
+            [
+              MODEL,
+              /_/g,
+              " "
+            ],
+            [
+              VENDOR,
+              XIAOMI
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(poco[\w ]+|m2\d{3}j\d\d[a-z]{2})(?: bui|\))/i,
+            /\b; (\w+) build\/hm\1/i,
+            /\b(hm[-_ ]?note?[_ ]?(?:\d\w)?) bui/i,
+            /\b(redmi[\-_ ]?(?:note|k)?[\w_ ]+)(?: bui|\))/i,
+            /oid[^\)]+; (m?[12][0-389][01]\w{3,6}[c-y])( bui|; wv|\))/i,
+            /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max|cc)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite|pro)?)(?: bui|\))/i,
+            / ([\w ]+) miui\/v?\d/i
+          ],
+          [
+            [
+              MODEL,
+              /_/g,
+              " "
+            ],
+            [
+              VENDOR,
+              XIAOMI
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /; (\w+) bui.+ oppo/i,
+            /\b(cph[12]\d{3}|p(?:af|c[al]|d\w|e[ar])[mt]\d0|x9007|a101op)\b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              OPPO
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(opd2(\d{3}a?))(?: bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              strMapper,
+              {
+                "OnePlus": [
+                  "304",
+                  "403",
+                  "203"
+                ],
+                "*": OPPO
+              }
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /vivo (\w+)(?: bui|\))/i,
+            /\b(v[12]\d{3}\w?[at])(?: bui|;)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Vivo"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(rmx[1-3]\d{3})(?: bui|;|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Realme"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(milestone|droid(?:[2-4x]| (?:bionic|x2|pro|razr))?:?( 4g)?)\b[\w ]+build\//i,
+            /\bmot(?:orola)?[- ](\w*)/i,
+            /((?:moto(?! 360)[\w\(\) ]+|xt\d{3,4}|nexus 6)(?= bui|\)))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              MOTOROLA
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(mz60\d|xoom[2 ]{0,2}) build\//i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              MOTOROLA
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /((?=lg)?[vl]k\-?\d{3}) bui| 3\.[-\w; ]{10}lg?-([06cv9]{3,4})/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              LG
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(lm(?:-?f100[nv]?|-[\w\.]+)(?= bui|\))|nexus [45])/i,
+            /\blg[-e;\/ ]+((?!browser|netcast|android tv|watch)\w+)/i,
+            /\blg-?([\d\w]+) bui/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              LG
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(ideatab[-\w ]+|602lv|d-42a|a101lv|a2109a|a3500-hv|s[56]000|pb-6505[my]|tb-?x?\d{3,4}(?:f[cu]|xu|[av])|yt\d?-[jx]?\d+[lfmx])( bui|;|\)|\/)/i,
+            /lenovo ?(b[68]0[08]0-?[hf]?|tab(?:[\w- ]+?)|tb[\w-]{6,7})( bui|;|\)|\/)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              LENOVO
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(nokia) (t[12][01])/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(?:maemo|nokia).*(n900|lumia \d+|rm-\d+)/i,
+            /nokia[-_ ]?(([-\w\. ]*))/i
+          ],
+          [
+            [
+              MODEL,
+              /_/g,
+              " "
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ],
+            [
+              VENDOR,
+              "Nokia"
+            ]
+          ],
+          [
+            /(pixel (c|tablet))\b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              GOOGLE
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /droid.+; (pixel[\daxl ]{0,6})(?: bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              GOOGLE
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /droid.+; (a?\d[0-2]{2}so|[c-g]\d{4}|so[-gl]\w+|xq-a\w[4-7][12])(?= bui|\).+chrome\/(?![1-6]{0,1}\d\.))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SONY
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /sony tablet [ps]/i,
+            /\b(?:sony)?sgp\w+(?: bui|\))/i
+          ],
+          [
+            [
+              MODEL,
+              "Xperia Tablet"
+            ],
+            [
+              VENDOR,
+              SONY
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            / (kb2005|in20[12]5|be20[12][59])\b/i,
+            /(?:one)?(?:plus)? (a\d0\d\d)(?: b|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ONEPLUS
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(alexa)webm/i,
+            /(kf[a-z]{2}wi|aeo(?!bc)\w\w)( bui|\))/i,
+            /(kf[a-z]+)( bui|\)).+silk\//i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              AMAZON
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /((?:sd|kf)[0349hijorstuw]+)( bui|\)).+silk\//i
+          ],
+          [
+            [
+              MODEL,
+              /(.+)/g,
+              "Fire Phone $1"
+            ],
+            [
+              VENDOR,
+              AMAZON
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(playbook);[-\w\),; ]+(rim)/i
+          ],
+          [
+            MODEL,
+            VENDOR,
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b((?:bb[a-f]|st[hv])100-\d)/i,
+            /\(bb10; (\w+)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              BLACKBERRY
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(?:\b|asus_)(transfo[prime ]{4,10} \w+|eeepc|slider \w+|nexus 7|padfone|p00[cj])/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ASUS
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            / (z[bes]6[027][012][km][ls]|zenfone \d\w?)\b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ASUS
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(nexus 9)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "HTC"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(htc)[-;_ ]{1,2}([\w ]+(?=\)| bui)|\w+)/i,
+            /(zte)[- ]([\w ]+?)(?: bui|\/|\))/i,
+            /(alcatel|geeksphone|nexian|panasonic(?!(?:;|\.))|sony(?!-bra))[-_ ]?([-\w]*)/i
+          ],
+          [
+            VENDOR,
+            [
+              MODEL,
+              /_/g,
+              " "
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /droid [\w\.]+; ((?:8[14]9[16]|9(?:0(?:48|60|8[01])|1(?:3[27]|66)|2(?:6[69]|9[56])|466))[gqswx])\w*(\)| bui)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "TCL"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(itel) ((\w+))/i
+          ],
+          [
+            [
+              VENDOR,
+              lowerize
+            ],
+            MODEL,
+            [
+              TYPE2,
+              strMapper,
+              {
+                "tablet": [
+                  "p10001l",
+                  "w7001"
+                ],
+                "*": "mobile"
+              }
+            ]
+          ],
+          [
+            /droid.+; ([ab][1-7]-?[0178a]\d\d?)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Acer"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /droid.+; (m[1-5] note) bui/i,
+            /\bmz-([-\w]{2,})/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Meizu"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /; ((?:power )?armor(?:[\w ]{0,8}))(?: bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Ulefone"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /; (energy ?\w+)(?: bui|\))/i,
+            /; energizer ([\w ]+)(?: bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Energizer"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /; cat (b35);/i,
+            /; (b15q?|s22 flip|s48c|s62 pro)(?: bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Cat"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /((?:new )?andromax[\w- ]+)(?: bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Smartfren"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /droid.+; (a(?:015|06[35]|142p?))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Nothing"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /; (x67 5g|tikeasy \w+|ac[1789]\d\w+)( b|\))/i,
+            /archos ?(5|gamepad2?|([\w ]*[t1789]|hello) ?\d+[\w ]*)( b|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Archos"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /archos ([\w ]+)( b|\))/i,
+            /; (ac[3-6]\d\w{2,8})( b|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Archos"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(imo) (tab \w+)/i,
+            /(infinix) (x1101b?)/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus(?! zenw)|dell|jolla|meizu|motorola|polytron|infinix|tecno|micromax|advan)[-_ ]?([-\w]*)/i,
+            /; (hmd|imo) ([\w ]+?)(?: bui|\))/i,
+            /(hp) ([\w ]+\w)/i,
+            /(microsoft); (lumia[\w ]+)/i,
+            /(lenovo)[-_ ]?([-\w ]+?)(?: bui|\)|\/)/i,
+            /(oppo) ?([\w ]+) bui/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(kobo)\s(ereader|touch)/i,
+            /(hp).+(touchpad(?!.+tablet)|tablet)/i,
+            /(kindle)\/([\w\.]+)/i,
+            /(nook)[\w ]+build\/(\w+)/i,
+            /(dell) (strea[kpr\d ]*[\dko])/i,
+            /(le[- ]+pan)[- ]+(\w{1,9}) bui/i,
+            /(trinity)[- ]*(t\d{3}) bui/i,
+            /(gigaset)[- ]+(q\w{1,9}) bui/i,
+            /(vodafone) ([\w ]+)(?:\)| bui)/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(surface duo)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              MICROSOFT
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /droid [\d\.]+; (fp\du?)(?: b|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Fairphone"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(u304aa)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "AT&T"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\bsie-(\w*)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Siemens"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(rct\w+) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "RCA"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(venue[\d ]{2,7}) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Dell"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(q(?:mv|ta)\w+) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Verizon"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(?:barnes[& ]+noble |bn[rt])([\w\+ ]*) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Barnes & Noble"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(tm\d{3}\w+) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "NuVision"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(k88) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "ZTE"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(nx\d{3}j) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "ZTE"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(gen\d{3}) b.+49h/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Swiss"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(zur\d{3}) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Swiss"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b((zeki)?tb.*\b) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Zeki"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b([yr]\d{2}) b/i,
+            /\b(dragon[- ]+touch |dt)(\w{5}) b/i
+          ],
+          [
+            [
+              VENDOR,
+              "Dragon Touch"
+            ],
+            MODEL,
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(ns-?\w{0,9}) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Insignia"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b((nxa|next)-?\w{0,9}) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "NextBook"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(xtreme\_)?(v(1[045]|2[015]|[3469]0|7[05])) b/i
+          ],
+          [
+            [
+              VENDOR,
+              "Voice"
+            ],
+            MODEL,
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(lvtel\-)?(v1[12]) b/i
+          ],
+          [
+            [
+              VENDOR,
+              "LvTel"
+            ],
+            MODEL,
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(ph-1) /i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Essential"
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /\b(v(100md|700na|7011|917g).*\b) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Envizen"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b(trio[-\w\. ]+) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "MachSpeed"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\btu_(1491) b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Rotor"
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /((?:tegranote|shield t(?!.+d tv))[\w- ]*?)(?: b|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              NVIDIA
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(sprint) (\w+)/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /(kin\.[onetw]{3})/i
+          ],
+          [
+            [
+              MODEL,
+              /\./g,
+              " "
+            ],
+            [
+              VENDOR,
+              MICROSOFT
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /droid.+; (cc6666?|et5[16]|mc[239][23]x?|vc8[03]x?)\)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ZEBRA
+            ],
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /droid.+; (ec30|ps20|tc[2-8]\d[kx])\)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ZEBRA
+            ],
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /smart-tv.+(samsung)/i
+          ],
+          [
+            VENDOR,
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /hbbtv.+maple;(\d+)/i
+          ],
+          [
+            [
+              MODEL,
+              /^/,
+              "SmartTV"
+            ],
+            [
+              VENDOR,
+              SAMSUNG
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /(nux; netcast.+smarttv|lg (netcast\.tv-201\d|android tv))/i
+          ],
+          [
+            [
+              VENDOR,
+              LG
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /(apple) ?tv/i
+          ],
+          [
+            VENDOR,
+            [
+              MODEL,
+              APPLE + " TV"
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /crkey/i
+          ],
+          [
+            [
+              MODEL,
+              CHROME + "cast"
+            ],
+            [
+              VENDOR,
+              GOOGLE
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /droid.+aft(\w+)( bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              AMAZON
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /(shield \w+ tv)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              NVIDIA
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /\(dtv[\);].+(aquos)/i,
+            /(aquos-tv[\w ]+)\)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SHARP
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /(bravia[\w ]+)( bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SONY
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /(mi(tv|box)-?\w+) bui/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              XIAOMI
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /Hbbtv.*(technisat) (.*);/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /\b(roku)[\dx]*[\)\/]((?:dvp-)?[\d\.]*)/i,
+            /hbbtv\/\d+\.\d+\.\d+ +\([\w\+ ]*; *([\w\d][^;]*);([^;]*)/i
+          ],
+          [
+            [
+              VENDOR,
+              trim2
+            ],
+            [
+              MODEL,
+              trim2
+            ],
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /droid.+; ([\w- ]+) (?:android tv|smart[- ]?tv)/i
+          ],
+          [
+            MODEL,
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /\b(android tv|smart[- ]?tv|opera tv|tv; rv:)\b/i
+          ],
+          [
+            [
+              TYPE2,
+              SMARTTV
+            ]
+          ],
+          [
+            /(ouya)/i,
+            /(nintendo) ([wids3utch]+)/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              CONSOLE
+            ]
+          ],
+          [
+            /droid.+; (shield)( bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              NVIDIA
+            ],
+            [
+              TYPE2,
+              CONSOLE
+            ]
+          ],
+          [
+            /(playstation \w+)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SONY
+            ],
+            [
+              TYPE2,
+              CONSOLE
+            ]
+          ],
+          [
+            /\b(xbox(?: one)?(?!; xbox))[\); ]/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              MICROSOFT
+            ],
+            [
+              TYPE2,
+              CONSOLE
+            ]
+          ],
+          [
+            /\b(sm-[lr]\d\d[0156][fnuw]?s?|gear live)\b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SAMSUNG
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /((pebble))app/i,
+            /(asus|google|lg|oppo) ((pixel |zen)?watch[\w ]*)( bui|\))/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(ow(?:19|20)?we?[1-3]{1,3})/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              OPPO
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(watch)(?: ?os[,\/]|\d,\d\/)[\d\.]+/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              APPLE
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(opwwe\d{3})/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ONEPLUS
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(moto 360)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              MOTOROLA
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(smartwatch 3)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              SONY
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(g watch r)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              LG
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /droid.+; (wt63?0{2,3})\)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              ZEBRA
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /droid.+; (glass) \d/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              GOOGLE
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(pico) (4|neo3(?: link|pro)?)/i
+          ],
+          [
+            VENDOR,
+            MODEL,
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /; (quest( \d| pro)?)/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              FACEBOOK
+            ],
+            [
+              TYPE2,
+              WEARABLE
+            ]
+          ],
+          [
+            /(tesla)(?: qtcarbrowser|\/[-\w\.]+)/i
+          ],
+          [
+            VENDOR,
+            [
+              TYPE2,
+              EMBEDDED
+            ]
+          ],
+          [
+            /(aeobc)\b/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              AMAZON
+            ],
+            [
+              TYPE2,
+              EMBEDDED
+            ]
+          ],
+          [
+            /(homepod).+mac os/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              APPLE
+            ],
+            [
+              TYPE2,
+              EMBEDDED
+            ]
+          ],
+          [
+            /windows iot/i
+          ],
+          [
+            [
+              TYPE2,
+              EMBEDDED
+            ]
+          ],
+          [
+            /droid .+?; ([^;]+?)(?: bui|; wv\)|\) applew).+? mobile safari/i
+          ],
+          [
+            MODEL,
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /droid .+?; ([^;]+?)(?: bui|\) applew).+?(?! mobile) safari/i
+          ],
+          [
+            MODEL,
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /\b((tablet|tab)[;\/]|focus\/\d(?!.+mobile))/i
+          ],
+          [
+            [
+              TYPE2,
+              TABLET
+            ]
+          ],
+          [
+            /(phone|mobile(?:[;\/]| [ \w\/\.]*safari)|pda(?=.+windows ce))/i
+          ],
+          [
+            [
+              TYPE2,
+              MOBILE
+            ]
+          ],
+          [
+            /droid .+?; ([\w\. -]+)( bui|\))/i
+          ],
+          [
+            MODEL,
+            [
+              VENDOR,
+              "Generic"
+            ]
+          ]
+        ],
+        engine: [
+          [
+            /windows.+ edge\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              EDGE2 + "HTML"
+            ]
+          ],
+          [
+            /(arkweb)\/([\w\.]+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /webkit\/537\.36.+chrome\/(?!27)([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Blink"
+            ]
+          ],
+          [
+            /(presto)\/([\w\.]+)/i,
+            /(webkit|trident|netfront|netsurf|amaya|lynx|w3m|goanna|servo)\/([\w\.]+)/i,
+            /ekioh(flow)\/([\w\.]+)/i,
+            /(khtml|tasman|links)[\/ ]\(?([\w\.]+)/i,
+            /(icab)[\/ ]([23]\.[\d\.]+)/i,
+            /\b(libweb)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /ladybird\//i
+          ],
+          [
+            [
+              NAME2,
+              "LibWeb"
+            ]
+          ],
+          [
+            /rv\:([\w\.]{1,9})\b.+(gecko)/i
+          ],
+          [
+            VERSION2,
+            NAME2
+          ]
+        ],
+        os: [
+          [
+            /microsoft (windows) (vista|xp)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /(windows (?:phone(?: os)?|mobile|iot))[\/ ]?([\d\.\w ]*)/i
+          ],
+          [
+            NAME2,
+            [
+              VERSION2,
+              strMapper,
+              windowsVersionMap
+            ]
+          ],
+          [
+            /windows nt 6\.2; (arm)/i,
+            /windows[\/ ]([ntce\d\. ]+\w)(?!.+xbox)/i,
+            /(?:win(?=3|9|n)|win 9x )([nt\d\.]+)/i
+          ],
+          [
+            [
+              VERSION2,
+              strMapper,
+              windowsVersionMap
+            ],
+            [
+              NAME2,
+              "Windows"
+            ]
+          ],
+          [
+            /[adehimnop]{4,7}\b(?:.*os ([\w]+) like mac|; opera)/i,
+            /(?:ios;fbsv\/|iphone.+ios[\/ ])([\d\.]+)/i,
+            /cfnetwork\/.+darwin/i
+          ],
+          [
+            [
+              VERSION2,
+              /_/g,
+              "."
+            ],
+            [
+              NAME2,
+              "iOS"
+            ]
+          ],
+          [
+            /(mac os x) ?([\w\. ]*)/i,
+            /(macintosh|mac_powerpc\b)(?!.+haiku)/i
+          ],
+          [
+            [
+              NAME2,
+              MAC_OS
+            ],
+            [
+              VERSION2,
+              /_/g,
+              "."
+            ]
+          ],
+          [
+            /droid ([\w\.]+)\b.+(android[- ]x86|harmonyos)/i
+          ],
+          [
+            VERSION2,
+            NAME2
+          ],
+          [
+            /(ubuntu) ([\w\.]+) like android/i
+          ],
+          [
+            [
+              NAME2,
+              /(.+)/,
+              "$1 Touch"
+            ],
+            VERSION2
+          ],
+          [
+            /(android|bada|blackberry|kaios|maemo|meego|openharmony|qnx|rim tablet os|sailfish|series40|symbian|tizen|webos)\w*[-\/; ]?([\d\.]*)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /\(bb(10);/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              BLACKBERRY
+            ]
+          ],
+          [
+            /(?:symbian ?os|symbos|s60(?=;)|series ?60)[-\/ ]?([\w\.]*)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "Symbian"
+            ]
+          ],
+          [
+            /mozilla\/[\d\.]+ \((?:mobile|tablet|tv|mobile; [\w ]+); rv:.+ gecko\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              FIREFOX + " OS"
+            ]
+          ],
+          [
+            /web0s;.+rt(tv)/i,
+            /\b(?:hp)?wos(?:browser)?\/([\w\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "webOS"
+            ]
+          ],
+          [
+            /watch(?: ?os[,\/]|\d,\d\/)([\d\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              "watchOS"
+            ]
+          ],
+          [
+            /crkey\/([\d\.]+)/i
+          ],
+          [
+            VERSION2,
+            [
+              NAME2,
+              CHROME + "cast"
+            ]
+          ],
+          [
+            /(cros) [\w]+(?:\)| ([\w\.]+)\b)/i
+          ],
+          [
+            [
+              NAME2,
+              CHROMIUM_OS
+            ],
+            VERSION2
+          ],
+          [
+            /panasonic;(viera)/i,
+            /(netrange)mmh/i,
+            /(nettv)\/(\d+\.[\w\.]+)/i,
+            /(nintendo|playstation) ([wids345portablevuch]+)/i,
+            /(xbox); +xbox ([^\);]+)/i,
+            /\b(joli|palm)\b ?(?:os)?\/?([\w\.]*)/i,
+            /(mint)[\/\(\) ]?(\w*)/i,
+            /(mageia|vectorlinux)[; ]/i,
+            /([kxln]?ubuntu|debian|suse|opensuse|gentoo|arch(?= linux)|slackware|fedora|mandriva|centos|pclinuxos|red ?hat|zenwalk|linpus|raspbian|plan 9|minix|risc os|contiki|deepin|manjaro|elementary os|sabayon|linspire)(?: gnu\/linux)?(?: enterprise)?(?:[- ]linux)?(?:-gnu)?[-\/ ]?(?!chrom|package)([-\w\.]*)/i,
+            /(hurd|linux)(?: arm\w*| x86\w*| ?)([\w\.]*)/i,
+            /(gnu) ?([\w\.]*)/i,
+            /\b([-frentopcghs]{0,5}bsd|dragonfly)[\/ ]?(?!amd|[ix346]{1,2}86)([\w\.]*)/i,
+            /(haiku) (\w+)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ],
+          [
+            /(sunos) ?([\w\.\d]*)/i
+          ],
+          [
+            [
+              NAME2,
+              "Solaris"
+            ],
+            VERSION2
+          ],
+          [
+            /((?:open)?solaris)[-\/ ]?([\w\.]*)/i,
+            /(aix) ((\d)(?=\.|\)| )[\w\.])*/i,
+            /\b(beos|os\/2|amigaos|morphos|openvms|fuchsia|hp-ux|serenityos)/i,
+            /(unix) ?([\w\.]*)/i
+          ],
+          [
+            NAME2,
+            VERSION2
+          ]
+        ]
+      };
+      var UAParser2 = function(ua2, extensions) {
+        if (typeof ua2 === OBJ_TYPE) {
+          extensions = ua2;
+          ua2 = undefined$1;
+        }
+        if (!(this instanceof UAParser2)) {
+          return new UAParser2(ua2, extensions).getResult();
+        }
+        var _navigator = typeof window2 !== UNDEF_TYPE && window2.navigator ? window2.navigator : undefined$1;
+        var _ua = ua2 || (_navigator && _navigator.userAgent ? _navigator.userAgent : EMPTY2);
+        var _uach = _navigator && _navigator.userAgentData ? _navigator.userAgentData : undefined$1;
+        var _rgxmap = extensions ? extend2(regexes, extensions) : regexes;
+        var _isSelfNav = _navigator && _navigator.userAgent == _ua;
+        this.getBrowser = function() {
+          var _browser = {};
+          _browser[NAME2] = undefined$1;
+          _browser[VERSION2] = undefined$1;
+          rgxMapper.call(_browser, _ua, _rgxmap.browser);
+          _browser[MAJOR] = majorize(_browser[VERSION2]);
+          if (_isSelfNav && _navigator && _navigator.brave && typeof _navigator.brave.isBrave == FUNC_TYPE) {
+            _browser[NAME2] = "Brave";
+          }
+          return _browser;
+        };
+        this.getCPU = function() {
+          var _cpu = {};
+          _cpu[ARCHITECTURE] = undefined$1;
+          rgxMapper.call(_cpu, _ua, _rgxmap.cpu);
+          return _cpu;
+        };
+        this.getDevice = function() {
+          var _device = {};
+          _device[VENDOR] = undefined$1;
+          _device[MODEL] = undefined$1;
+          _device[TYPE2] = undefined$1;
+          rgxMapper.call(_device, _ua, _rgxmap.device);
+          if (_isSelfNav && !_device[TYPE2] && _uach && _uach.mobile) {
+            _device[TYPE2] = MOBILE;
+          }
+          if (_isSelfNav && _device[MODEL] == "Macintosh" && _navigator && typeof _navigator.standalone !== UNDEF_TYPE && _navigator.maxTouchPoints && _navigator.maxTouchPoints > 2) {
+            _device[MODEL] = "iPad";
+            _device[TYPE2] = TABLET;
+          }
+          return _device;
+        };
+        this.getEngine = function() {
+          var _engine = {};
+          _engine[NAME2] = undefined$1;
+          _engine[VERSION2] = undefined$1;
+          rgxMapper.call(_engine, _ua, _rgxmap.engine);
+          return _engine;
+        };
+        this.getOS = function() {
+          var _os = {};
+          _os[NAME2] = undefined$1;
+          _os[VERSION2] = undefined$1;
+          rgxMapper.call(_os, _ua, _rgxmap.os);
+          if (_isSelfNav && !_os[NAME2] && _uach && _uach.platform && _uach.platform != "Unknown") {
+            _os[NAME2] = _uach.platform.replace(/chrome os/i, CHROMIUM_OS).replace(/macos/i, MAC_OS);
+          }
+          return _os;
+        };
+        this.getResult = function() {
+          return {
+            ua: this.getUA(),
+            browser: this.getBrowser(),
+            engine: this.getEngine(),
+            os: this.getOS(),
+            device: this.getDevice(),
+            cpu: this.getCPU()
+          };
+        };
+        this.getUA = function() {
+          return _ua;
+        };
+        this.setUA = function(ua3) {
+          _ua = typeof ua3 === STR_TYPE && ua3.length > UA_MAX_LENGTH ? trim2(ua3, UA_MAX_LENGTH) : ua3;
+          return this;
+        };
+        this.setUA(_ua);
+        return this;
+      };
+      UAParser2.VERSION = LIBVERSION;
+      UAParser2.BROWSER = enumerize([
+        NAME2,
+        VERSION2,
+        MAJOR
+      ]);
+      UAParser2.CPU = enumerize([
+        ARCHITECTURE
+      ]);
+      UAParser2.DEVICE = enumerize([
+        MODEL,
+        VENDOR,
+        TYPE2,
+        CONSOLE,
+        MOBILE,
+        SMARTTV,
+        TABLET,
+        WEARABLE,
+        EMBEDDED
+      ]);
+      UAParser2.ENGINE = UAParser2.OS = enumerize([
+        NAME2,
+        VERSION2
+      ]);
+      {
+        if (module.exports) {
+          exports = module.exports = UAParser2;
+        }
+        exports.UAParser = UAParser2;
+      }
+      var $2 = typeof window2 !== UNDEF_TYPE && (window2.jQuery || window2.Zepto);
+      if ($2 && !$2.ua) {
+        var parser2 = new UAParser2();
+        $2.ua = parser2.getResult();
+        $2.ua.get = function() {
+          return parser2.getUA();
+        };
+        $2.ua.set = function(ua2) {
+          parser2.setUA(ua2);
+          var result = parser2.getResult();
+          for (var prop in result) {
+            $2.ua[prop] = result[prop];
+          }
+        };
+      }
+    })(typeof window === "object" ? window : commonjsGlobal$1);
+  })(uaParser, uaParser.exports);
+  var uaParserExports = uaParser.exports;
+  const UAParser = getDefaultExportFromCjs$1(uaParserExports);
+  function isMobileDevice() {
+    if (typeof navigator === "undefined") return false;
+    const { device, os } = UAParser(navigator.userAgent);
+    if (device.type === "mobile" || device.type === "tablet") return true;
+    return os.name === "Mac OS" && navigator.maxTouchPoints > 1;
+  }
   const IMPORT_DEFAULT_SEED_HEX = [
     "0dabff",
     "c3ff00",
@@ -66330,7 +69101,7 @@ in vec2 mask_texCoords;
       };
     });
   }
-  const VIV_TILE_MAX_CACHE_BYTE_SIZE = 512 * 1024 * 1024;
+  const VIV_TILE_MAX_CACHE_BYTE_SIZE = isMobileDevice() ? 0 : 512 * 1024 * 1024;
   function rasterTileByteLength(data2) {
     if (data2 == null) return 0;
     if (ArrayBuffer.isView(data2)) return data2.byteLength;
@@ -66356,7 +69127,63 @@ in vec2 mask_texCoords;
         return x2 >= 0 && y2 >= 0 && x2 * size < extent[2] && y2 * size < extent[3];
       });
     }
+    reloadAll() {
+      super.reloadAll();
+      this._cacheByteSize = 0;
+    }
   }
+  const PLACEHOLDER_LEVELS_UP = 3;
+  class PlaceholderTileset2D extends ImageTileset2D {
+    getTileIndices(opts) {
+      const indices = super.getTileIndices(opts);
+      if (this.opts.refinementStrategy !== "best-available" || indices.length === 0) {
+        return indices;
+      }
+      const z2 = indices[0].z;
+      const coarsest = opts.minZoom ?? z2;
+      if (coarsest >= z2) return indices;
+      const levels = [
+        coarsest,
+        Math.max(coarsest, z2 - PLACEHOLDER_LEVELS_UP)
+      ];
+      const placeholders = /* @__PURE__ */ new Map();
+      for (const level of levels) {
+        const scale2 = 2 ** (z2 - level);
+        for (const { x: x2, y: y2 } of indices) {
+          const parent2 = {
+            x: Math.floor(x2 / scale2),
+            y: Math.floor(y2 / scale2),
+            z: level
+          };
+          placeholders.set(this.getTileId(parent2), parent2);
+        }
+      }
+      return [
+        ...placeholders.values(),
+        ...indices
+      ];
+    }
+  }
+  const deckUpdateTileStates = ImageTileset2D.prototype.updateTileStates;
+  PlaceholderTileset2D.prototype.updateTileStates = function() {
+    const tiles = Array.from(this._cache.values());
+    const before = tiles.map((tile) => tile.isVisible);
+    deckUpdateTileStates.call(this);
+    let fineZ = Number.NEGATIVE_INFINITY;
+    for (const tile of tiles) {
+      if (tile.isSelected) fineZ = Math.max(fineZ, tile.index.z);
+    }
+    const isPlaceholder = (tile) => tile.isSelected && tile.index.z < fineZ;
+    const needed = /* @__PURE__ */ new Set();
+    for (const tile of tiles) {
+      if (!tile.isSelected || tile.isLoaded || isPlaceholder(tile)) continue;
+      for (let up = tile.parent; up; up = up.parent) needed.add(up);
+    }
+    for (const tile of tiles) {
+      if (isPlaceholder(tile) && !needed.has(tile)) tile.isVisible = false;
+    }
+    return tiles.some((tile, i2) => tile.isVisible !== before[i2]);
+  };
   const TILE_CACHE_PROPS = {
     maxCacheByteSize: VIV_TILE_MAX_CACHE_BYTE_SIZE,
     onTileLoad: stampDeckTileByteLength,
@@ -76410,26 +79237,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-vpLuziSo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CGPDQ5be.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-fWG0zQnX.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CrkGprdB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BjGkB2T0.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CIGylnSb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-Dyqq1XsD.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CBXAgG3i.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CLVAbIUk.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-CWyhqGnT.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-Can8bBxX.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Dn-yBApz.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Bcvk20j0.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DXdrr0Lf.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BPqR5ERe.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DysCGCsV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -83653,6 +86480,44 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...pixels.getElementsByTagNameNS("*", "Channel")
     ].filter((el2) => el2.parentElement === pixels);
   }
+  function initEmscriptenModule(moduleFactory, wasmModule, moduleOptionOverrides = {}) {
+    let instantiateWasm;
+    if (wasmModule) {
+      instantiateWasm = (imports, callback) => {
+        const instance = new WebAssembly.Instance(wasmModule, imports);
+        callback(instance);
+        return instance.exports;
+      };
+    }
+    return moduleFactory({
+      noInitialRun: true,
+      instantiateWasm,
+      ...moduleOptionOverrides
+    });
+  }
+  const defaultOptions = {
+    quality: 75,
+    baseline: false,
+    arithmetic: false,
+    progressive: true,
+    optimize_coding: true,
+    smoothing: 0,
+    color_space: 3,
+    quant_table: 3,
+    trellis_multipass: false,
+    trellis_opt_zero: false,
+    trellis_opt_table: false,
+    trellis_loops: 1,
+    auto_subsample: true,
+    chroma_subsample: 2,
+    separate_chroma_quality: false,
+    chroma_quality: 75
+  };
+  function samplesPerTile(fileDirectory) {
+    const bits = fileDirectory.BitsPerSample;
+    const samples = fileDirectory.PlanarConfiguration === 2 ? 1 : fileDirectory.SamplesPerPixel ?? (typeof bits === "number" ? 1 : (bits == null ? void 0 : bits.length) ?? 1);
+    return Math.max(1, samples);
+  }
   class LZWDecoder extends BaseDecoder {
     constructor(fileDirectory) {
       super();
@@ -83661,14 +86526,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const height = fileDirectory.TileLength || fileDirectory.ImageLength;
       const bits = fileDirectory.BitsPerSample;
       const bits0 = typeof bits === "number" ? bits : (bits == null ? void 0 : bits[0]) ?? 8;
-      const samples = fileDirectory.PlanarConfiguration === 2 ? 1 : fileDirectory.SamplesPerPixel ?? (typeof bits === "number" ? 1 : (bits == null ? void 0 : bits.length) ?? 1);
-      this.maxUncompressedSize = Math.ceil(width * height * (bits0 / 8) * Math.max(1, samples));
+      this.maxUncompressedSize = Math.ceil(width * height * (bits0 / 8) * samplesPerTile(fileDirectory));
     }
     async decodeBlock(buffer2) {
       const bytes = new Uint8Array(buffer2);
       const decoded = await N(bytes, this.maxUncompressedSize);
       return decoded.buffer;
     }
+  }
+  if (typeof globalThis.ImageData === "undefined") {
+    globalThis.ImageData = class {
+      constructor(data2, width, height) {
+        this.data = data2;
+        this.width = width;
+        this.height = height;
+      }
+    };
   }
   function registerLzwDecoder() {
     addDecoder(5, () => Promise.resolve(LZWDecoder));
@@ -83797,19 +86670,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (typeof internals.parseFileDirectoryAt !== "function") return images;
     const source2 = baseInternals.source ?? internals.source;
     if (source2 == null) return images;
-    for (const offset of offsets) {
-      const parsed = await internals.parseFileDirectoryAt(offset);
+    const parsedLevels = await Promise.all(offsets.map((offset) => internals.parseFileDirectoryAt(offset)));
+    for (const parsed of parsedLevels) {
       images.push(new GeoTIFFImage(parsed.fileDirectory, parsed.geoKeyDirectory, baseInternals.dataView ?? internals.dataView, baseInternals.littleEndian ?? internals.littleEndian ?? true, baseInternals.cache ?? internals.cache, source2));
     }
     return images;
   }
-  function maskPlaneFromImage(image2, sizeC, dtype) {
+  function maskPlaneFromImages(images, sizeC, dtype) {
+    const [image2] = images;
     const width = image2.getWidth();
     const height = image2.getHeight();
     const tiled = isTiffTiled(image2);
     const tileSize = tiled ? vivTileSize(image2) : Math.max(width, height, 1);
     const clampC = (c2) => Math.max(0, Math.min(sizeC - 1, c2));
-    const getRaster = ({ selection }) => readTiffSample(image2, clampC(selection.c));
+    const readChannel2 = (c2, window2) => images.length > 1 ? readTiffSample(images[clampC(c2)], 0, window2) : readTiffSample(image2, clampC(c2), window2);
+    const getRaster = ({ selection }) => readChannel2(selection.c);
     return {
       dtype,
       shape: [
@@ -83829,10 +86704,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ],
       onTileError: () => void 0,
       getRaster,
+      readWindow: ({ selection, window: window2 }) => readChannel2(selection.c, window2),
       getTile: tiled ? ({ x: x2, y: y2, selection }) => {
         const x0 = x2 * tileSize;
         const y0 = y2 * tileSize;
-        return readTiffSample(image2, clampC(selection.c), [
+        return readChannel2(selection.c, [
           x0,
           y0,
           Math.min(x0 + tileSize, width),
@@ -83852,8 +86728,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  async function maskLoaderFromBlob(inFile) {
-    const tiff = await fromBlob(inFile);
+  async function maskLoader(source2) {
+    const tiff = typeof source2 === "string" ? await fromUrl(source2, {
+      cacheSize: Number.POSITIVE_INFINITY
+    }) : await fromBlob(source2);
     const baseImage = await tiff.getImage(0);
     const fd2 = baseImage.fileDirectory;
     const width = baseImage.getWidth();
@@ -83864,10 +86742,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         throw new Error(`This mask is not tiled or pyramided and is too large for the GPU (${width}\xD7${height}; max texture ${maxTextureSize}). Export it as a tiled OME-TIFF pyramid and import again.`);
       }
     }
-    const pyramidImages = await resolveMaskPyramidImages(tiff, baseImage);
     const dtype = dtypeFromTiffDirectory(fd2);
     const ome = parseFirstOmeImagePixels(fd2.ImageDescription);
     const sizeC = Math.max(1, (ome == null ? void 0 : ome.SizeC) ?? fd2.SamplesPerPixel ?? 1);
+    const channelBases = sizeC > (fd2.SamplesPerPixel ?? 1) && await tiff.getImageCount() >= sizeC ? await Promise.all(Array.from({
+      length: sizeC
+    }, (_2, c2) => tiff.getImage(c2))) : [
+      baseImage
+    ];
+    const channelPyramids = await Promise.all(channelBases.map((base2) => resolveMaskPyramidImages(tiff, base2)));
+    const levelCount = Math.min(...channelPyramids.map((p2) => p2.length));
     const unitlessResolution = isUnitlessPlaceholderResolution(fd2);
     const channels2 = Array.from({
       length: sizeC
@@ -83895,7 +86779,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       Channels: channels2
     };
     return {
-      data: pyramidImages.map((image2) => maskPlaneFromImage(image2, channels2.length, dtype)),
+      data: Array.from({
+        length: levelCount
+      }, (_2, level) => maskPlaneFromImages(channelPyramids.map((pyramid) => pyramid[level]), channels2.length, dtype)),
       metadata: {
         ID: "Image:0",
         AquisitionDate: "",
@@ -84072,21 +86958,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return loader;
   }
+  async function fileInDirectory(root2, relativePath) {
+    const parts = relativePath.trim().split(/[/\\]/).filter((part) => part && part !== ".");
+    const name2 = parts.pop();
+    if (!name2 || parts.includes("..")) return void 0;
+    let dir2 = root2;
+    try {
+      for (const part of parts) dir2 = await dir2.getDirectoryHandle(part);
+      return await dir2.getFileHandle(name2);
+    } catch (e2) {
+      if (e2 instanceof DOMException && (e2.name === "NotFoundError" || e2.name === "TypeMismatchError")) {
+        return void 0;
+      }
+      throw e2;
+    }
+  }
   async function loadOmeLoaderForRole(role, source2) {
     const packedRgb = source2.rgbDisplay === false ? "planar" : void 0;
     if (source2.kind === "local") {
       const file = await source2.handle.getFile();
       if (role === "segmentation") {
-        return maskLoaderFromBlob(file);
+        return maskLoader(file);
       }
       return finishOmeIntensityLoader(asAppLoader(await loadOmeTiff(file, vivLoadOpts(source2.pool, packedRgb))), file, source2.pool);
     }
     if (role === "segmentation") {
-      const response = await fetch(source2.url);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch mask OME-TIFF (${response.status})`);
-      }
-      return maskLoaderFromBlob(await response.blob());
+      return maskLoader(source2.url);
     }
     return finishOmeIntensityLoader(asAppLoader(await loadOmeTiff(source2.url, vivLoadOpts(source2.pool, packedRgb))), source2.url, source2.pool);
   }
@@ -86867,6 +89764,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     get2().persistImportedShapesToStory(resolved);
   }
+  function legendClassKey(waypointId, channelId) {
+    return `${waypointId ?? ""}:${channelId}`;
+  }
   const overlayInitialState = {
     overlayLayers: [],
     activeTool: "move",
@@ -86919,6 +89819,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     channelVisibilities: {},
     channelGroupRowVisibilities: {},
     groupNames: {},
+    hiddenLegendClasses: {},
     targetWaypointCamera: null,
     authoringWaypointEditorOpen: false,
     layersPanelSelectedShapeIds: [],
@@ -87164,6 +90065,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         shapes: []
       });
     },
+    toggleLegendClass: (waypointId, channelId, name2) => {
+      const key2 = legendClassKey(waypointId, channelId);
+      const prev = get2().hiddenLegendClasses;
+      const names = prev[key2] ?? [];
+      const next2 = names.includes(name2) ? names.filter((n2) => n2 !== name2) : [
+        ...names,
+        name2
+      ];
+      set2({
+        hiddenLegendClasses: {
+          ...prev,
+          [key2]: next2
+        }
+      });
+    },
+    clearLegendClasses: () => {
+      if (Object.keys(get2().hiddenLegendClasses).length === 0) return;
+      set2({
+        hiddenLegendClasses: {}
+      });
+    },
     resetStoryViewerSession: () => {
       const vis = {
         ...get2().channelVisibilities
@@ -87182,6 +90104,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         imageSelectionMask: null,
         maskVisualizationPreview: null,
         channelVisibilities: vis,
+        hiddenLegendClasses: {},
         activeStoryIndex: null,
         waypointAuthoring: /* @__PURE__ */ new Map(),
         authoringWaypointShapesIndex: null,
@@ -88374,14 +91297,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return useStore(useDocumentStore.temporal, (s2) => s2.futureStates.length > 0);
   }
   const clusterFieldset = "_clusterFieldset_18uri_1";
-  const styles$y = {
+  const styles$x = {
     clusterFieldset
   };
   function DocumentUndoControls() {
     const canUndo = useCanDocumentUndo();
     const canRedo = useCanDocumentRedo();
     return jsxRuntimeExports.jsxs("fieldset", {
-      className: styles$y.clusterFieldset,
+      className: styles$x.clusterFieldset,
       "aria-label": "Document undo and redo",
       children: [
         jsxRuntimeExports.jsx(PanelIconButton, {
@@ -89270,7 +92193,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const hiddenFileInput = "_hiddenFileInput_14ty9_14";
   const xmlFeedbackOk = "_xmlFeedbackOk_14ty9_25";
   const xmlFeedbackErr = "_xmlFeedbackErr_14ty9_26";
-  const styles$x = {
+  const styles$w = {
     menuWrap,
     menuItemGap,
     hiddenFileInput,
@@ -89330,7 +92253,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$x.menuWrap,
+      className: styles$w.menuWrap,
       ref: wrapRef,
       children: [
         jsxRuntimeExports.jsx(PanelIconButton, {
@@ -89364,7 +92287,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsx("button", {
               type: "button",
               role: "menuitem",
-              className: `${minervaTheme.menuItem} ${styles$x.menuItemGap}`,
+              className: `${minervaTheme.menuItem} ${styles$w.menuItemGap}`,
               disabled: !waypointsOk,
               onClick: (e2) => {
                 e2.stopPropagation();
@@ -89391,7 +92314,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsx("button", {
               type: "button",
               role: "menuitem",
-              className: `${minervaTheme.menuItem} ${styles$x.menuItemGap}`,
+              className: `${minervaTheme.menuItem} ${styles$w.menuItemGap}`,
               onClick: (e2) => {
                 var _a2;
                 e2.stopPropagation();
@@ -89404,14 +92327,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }) : null,
         jsxRuntimeExports.jsx("input", {
           ref: xmlInputRef,
-          className: styles$x.hiddenFileInput,
+          className: styles$w.hiddenFileInput,
           type: "file",
           accept: ".xml,application/xml,text/xml",
           "aria-label": "OME-XML annotations file",
           onChange: onAnnotationXmlSelected
         }),
         xmlFeedback ? jsxRuntimeExports.jsx("output", {
-          className: xmlFeedback.type === "ok" ? styles$x.xmlFeedbackOk : styles$x.xmlFeedbackErr,
+          className: xmlFeedback.type === "ok" ? styles$w.xmlFeedbackOk : styles$w.xmlFeedbackErr,
           children: xmlFeedback.text
         }) : null
       ]
@@ -89429,7 +92352,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }));
   const volume = "_volume_drqkm_1";
   const spine = "_spine_drqkm_9";
-  const styles$w = {
+  const styles$v = {
     volume,
     spine
   };
@@ -89445,10 +92368,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   ];
   function StorySpines() {
     return jsxRuntimeExports.jsx("span", {
-      className: styles$w.volume,
+      className: styles$v.volume,
       "aria-hidden": true,
       children: SPINE_HEIGHTS.map((frac, i2) => jsxRuntimeExports.jsx("span", {
-        className: styles$w.spine,
+        className: styles$v.spine,
         style: {
           height: `${frac * 100}%`,
           background: `var(--cloth-${SPINE_CLOTH[i2]})`
@@ -89464,7 +92387,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const titleDisplay = "_titleDisplay_1juq2_52";
   const titleInput = "_titleInput_1juq2_53";
   const titlePlaceholder = "_titlePlaceholder_1juq2_67";
-  const styles$v = {
+  const styles$u = {
     banner,
     leading,
     play,
@@ -89493,32 +92416,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       editing
     ]);
     return jsxRuntimeExports.jsxs("section", {
-      className: `${minervaTheme.bar} ${styles$v.banner}`,
+      className: `${minervaTheme.bar} ${styles$u.banner}`,
       "aria-label": "Story title",
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$v.leading,
+          className: styles$u.leading,
           children: [
             onExport ? jsxRuntimeExports.jsx(StoryAuthorOverflowMenu, {
               onReturnToLibrary,
               onExport
             }) : null,
             jsxRuntimeExports.jsx("span", {
-              className: `${minervaTheme.wordmark} ${styles$v.wordmark}`,
+              className: `${minervaTheme.wordmark} ${styles$u.wordmark}`,
               children: "Minerva"
             }),
             jsxRuntimeExports.jsx(DocumentUndoControls, {})
           ]
         }),
         jsxRuntimeExports.jsxs("label", {
-          className: styles$v.titleFieldWrap,
+          className: styles$u.titleFieldWrap,
           htmlFor: editing ? fieldId : void 0,
           children: [
             jsxRuntimeExports.jsx(StorySpines, {}),
             editing ? jsxRuntimeExports.jsx("input", {
               ref: inputRef,
               id: fieldId,
-              className: `${minervaTheme.field} ${styles$v.titleInput}`,
+              className: `${minervaTheme.field} ${styles$u.titleInput}`,
               type: "text",
               value: draftTitle,
               placeholder: "Untitled story",
@@ -89543,21 +92466,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               spellCheck: false
             }) : jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.field} ${styles$v.titleDisplay}`,
+              className: `${minervaTheme.field} ${styles$u.titleDisplay}`,
               "aria-label": "Story title",
               onClick: () => {
                 setDraftTitle(titleText);
                 setEditing(true);
               },
               children: titleText.trim() ? titleText : jsxRuntimeExports.jsx("span", {
-                className: styles$v.titlePlaceholder,
+                className: styles$u.titlePlaceholder,
                 children: "Untitled story"
               })
             })
           ]
         }),
         onEnterPlaybackPreview ? jsxRuntimeExports.jsx(PanelIconButton, {
-          className: styles$v.play,
+          className: styles$u.play,
           onClick: onEnterPlaybackPreview,
           disabled: playbackPreviewDisabled,
           title: playbackPreviewDisabled ? "Add a waypoint to preview" : "Preview playback",
@@ -89710,7 +92633,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const rangeInputMin = "_rangeInputMin_sur29_137";
   const rangeInputMax = "_rangeInputMax_sur29_144";
   const limitInput = "_limitInput_sur29_182";
-  const styles$u = {
+  const styles$t = {
     wrap: wrap$2,
     histogramHost,
     histogramPlot,
@@ -90041,11 +92964,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
     const trimmed = chart.startBin > 0;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$u.wrap,
+      className: styles$t.wrap,
       children: [
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$u.limitInput}`,
+          className: `${minervaTheme.input} ${styles$t.limitInput}`,
           value: minInput,
           "aria-label": `${props.channelLabel} contrast minimum value`,
           min: scale2.dtypeMin,
@@ -90064,23 +92987,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$u.histogramHost,
+          className: styles$t.histogramHost,
           style: props.r != null && props.g != null && props.b != null ? {
             "--histogram-color": `rgb(${props.r},${props.g},${props.b})`
           } : void 0,
           children: jsxRuntimeExports.jsxs("div", {
-            className: trimmed ? `${styles$u.histogramPlot} ${styles$u.histogramPlotTrimmed}` : styles$u.histogramPlot,
+            className: trimmed ? `${styles$t.histogramPlot} ${styles$t.histogramPlotTrimmed}` : styles$t.histogramPlot,
             children: [
               trimmed ? jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$u.axisBreak}`,
+                className: `${minervaTheme.focusRing} ${styles$t.axisBreak}`,
                 title: "Full range",
                 "aria-label": `${props.channelLabel} full histogram range`,
                 onClick: () => setExpanded(true),
                 children: jsxRuntimeExports.jsx(SvgAxisBreak, {})
               }) : null,
               jsxRuntimeExports.jsxs("svg", {
-                className: styles$u.histogramSvg,
+                className: styles$t.histogramSvg,
                 viewBox: "1.15 0 96.7 11",
                 preserveAspectRatio: "none",
                 role: "img",
@@ -90112,22 +93035,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     clipPath: `url(#${histogramClipId}-frame)`,
                     children: [
                       jsxRuntimeExports.jsx("path", {
-                        className: `${styles$u.histogramFill} ${styles$u.histogramOutOfRange}`,
+                        className: `${styles$t.histogramFill} ${styles$t.histogramOutOfRange}`,
                         d: histFillPath
                       }),
                       jsxRuntimeExports.jsx("path", {
-                        className: `${styles$u.histogramLine} ${styles$u.histogramOutOfRange}`,
+                        className: `${styles$t.histogramLine} ${styles$t.histogramOutOfRange}`,
                         d: histLinePath
                       }),
                       jsxRuntimeExports.jsxs("g", {
                         clipPath: `url(#${histogramClipId})`,
                         children: [
                           jsxRuntimeExports.jsx("path", {
-                            className: styles$u.histogramFill,
+                            className: styles$t.histogramFill,
                             d: histFillPath
                           }),
                           jsxRuntimeExports.jsx("path", {
-                            className: styles$u.histogramLine,
+                            className: styles$t.histogramLine,
                             d: histLinePath
                           })
                         ]
@@ -90137,18 +93060,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: `${styles$u.histogramLoading}${props.histogramLoading ? ` ${styles$u.histogramLoadingVisible}` : ""}`,
+                className: `${styles$t.histogramLoading}${props.histogramLoading ? ` ${styles$t.histogramLoadingVisible}` : ""}`,
                 title: "Loading histogram",
                 children: jsxRuntimeExports.jsx("div", {
                   className: minervaTheme.spinnerSm
                 })
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$u.sliderRow,
+                className: styles$t.sliderRow,
                 children: [
                   jsxRuntimeExports.jsx("input", {
                     type: "range",
-                    className: `${styles$u.rangeInput} ${styles$u.rangeInputMin}`,
+                    className: `${styles$t.rangeInput} ${styles$t.rangeInputMin}`,
                     min: 0,
                     max: scale2.sliderSteps,
                     value: sliderMin,
@@ -90162,7 +93085,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   }),
                   jsxRuntimeExports.jsx("input", {
                     type: "range",
-                    className: `${styles$u.rangeInput} ${styles$u.rangeInputMax}`,
+                    className: `${styles$t.rangeInput} ${styles$t.rangeInputMax}`,
                     min: 0,
                     max: scale2.sliderSteps,
                     value: sliderMax,
@@ -90181,7 +93104,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$u.limitInput}`,
+          className: `${minervaTheme.input} ${styles$t.limitInput}`,
           value: maxInput,
           "aria-label": `${props.channelLabel} contrast maximum value`,
           min: scale2.dtypeMin,
@@ -90235,7 +93158,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const maskVizSwatchWhite = "_maskVizSwatchWhite_1d485_355";
   const maskVizSwatchRandom = "_maskVizSwatchRandom_1d485_356";
   const channelRow = "_channelRow_1d485_12";
-  const styles$t = {
+  const styles$s = {
     channelNameInput,
     channelRowMain,
     channelRowTitle,
@@ -90335,7 +93258,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return jsxRuntimeExports.jsxs("span", {
       className: [
-        styles$t.cursorHintHost,
+        styles$s.cursorHintHost,
         props.className
       ].filter(Boolean).join(" "),
       onPointerEnter: track,
@@ -90344,7 +93267,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         props.children,
         props.enabled && pos ? reactDomExports.createPortal(jsxRuntimeExports.jsx("output", {
-          className: styles$t.cursorHint,
+          className: styles$s.cursorHint,
           style: {
             "--hint-x": `${pos.x}px`,
             "--hint-y": `${pos.y}px`
@@ -90355,7 +93278,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function ChannelVisibilitySwatch(props) {
-    const { visible, title: title7, ariaLabel, blocked, onClick } = props;
+    const { visible, title: title7, ariaLabel, blocked, disabled: disabled2, onClick } = props;
     return jsxRuntimeExports.jsx(CursorHint, {
       enabled: Boolean(blocked),
       label: VIEWER_INTENSITY_LIMIT_HINT,
@@ -90363,13 +93286,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         type: "button",
         className: [
           minervaTheme.focusRing,
-          styles$t.channelVisibilityButton,
-          visible ? "" : styles$t.channelVisibilityButtonHidden
+          styles$s.channelVisibilityButton,
+          visible ? "" : styles$s.channelVisibilityButtonHidden
         ].filter(Boolean).join(" "),
         title: blocked ? void 0 : title7,
         "aria-label": blocked ? VIEWER_INTENSITY_LIMIT_HINT : ariaLabel,
         "aria-pressed": visible,
         "aria-disabled": blocked || void 0,
+        disabled: disabled2,
         onClick: (e2) => {
           if (blocked) return;
           onClick(e2);
@@ -90385,8 +93309,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       type: "button",
       className: [
         minervaTheme.focusRing,
-        styles$t.channelColorSwatch,
-        fill ? null : styles$t.channelColorSwatchUnfilled,
+        styles$s.channelColorSwatch,
+        fill ? null : styles$s.channelColorSwatchUnfilled,
         busy ? minervaTheme.busyOverlay : null
       ].filter(Boolean).join(" "),
       style: fill ? {
@@ -90403,7 +93327,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function MaskVizButton(props) {
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: `${minervaTheme.focusRing} ${styles$t.maskVizOption}${props.active ? ` ${styles$t.maskVizOptionActive}` : ""}`,
+      className: `${minervaTheme.focusRing} ${styles$s.maskVizOption}${props.active ? ` ${styles$s.maskVizOptionActive}` : ""}`,
       "aria-pressed": props.active,
       title: props.title ?? props.label,
       "aria-label": props.label,
@@ -90447,7 +93371,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return jsxRuntimeExports.jsxs("label", {
       className: [
-        styles$t.maskOpacityControl,
+        styles$s.maskOpacityControl,
         className2
       ].filter(Boolean).join(" "),
       title: `Opacity ${pct}%`,
@@ -90456,11 +93380,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       children: [
         jsxRuntimeExports.jsxs("span", {
-          className: styles$t.maskOpacityInputRow,
+          className: styles$s.maskOpacityInputRow,
           children: [
             jsxRuntimeExports.jsx("input", {
               type: "range",
-              className: styles$t.maskOpacitySlider,
+              className: styles$s.maskOpacitySlider,
               min: 0,
               max: 100,
               step: 1,
@@ -90480,7 +93404,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onBlur: commit
             }),
             jsxRuntimeExports.jsxs("span", {
-              className: styles$t.maskOpacityValue,
+              className: styles$s.maskOpacityValue,
               children: [
                 pct,
                 "%"
@@ -90489,7 +93413,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         jsxRuntimeExports.jsx("span", {
-          className: styles$t.maskOpacityLabel,
+          className: styles$s.maskOpacityLabel,
           children: "Opacity"
         })
       ]
@@ -90508,19 +93432,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       colorTitle = "Random colors (click to re-seed)";
     }
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$t.maskModeControls,
+      className: styles$s.maskModeControls,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$t.maskModeGroup,
+          className: styles$s.maskModeGroup,
           children: [
             jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$t.maskVizToggle,
+              className: styles$s.maskVizToggle,
               "aria-label": `${ariaLabel} fill`,
               children: [
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.style === "outline",
                   label: "Outline",
-                  iconClass: styles$t.maskVizIconOutline,
+                  iconClass: styles$s.maskVizIconOutline,
                   onClick: () => onChange({
                     ...value,
                     style: "outline"
@@ -90529,7 +93453,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.style === "full",
                   label: "Full",
-                  iconClass: styles$t.maskVizIconFull,
+                  iconClass: styles$s.maskVizIconFull,
                   onClick: () => onChange({
                     ...value,
                     style: "full"
@@ -90538,22 +93462,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$t.maskModeGroupLabel,
+              className: styles$s.maskModeGroupLabel,
               children: "Fill"
             })
           ]
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$t.maskModeGroup,
+          className: styles$s.maskModeGroup,
           children: [
             jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$t.maskVizToggle,
+              className: styles$s.maskVizToggle,
               "aria-label": `${ariaLabel} color`,
               children: [
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.color === "white",
                   label: "White",
-                  iconClass: styles$t.maskVizSwatchWhite,
+                  iconClass: styles$s.maskVizSwatchWhite,
                   onClick: () => onChange({
                     ...value,
                     color: "white"
@@ -90563,7 +93487,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   active: colored,
                   label: colorLabel,
                   title: colorTitle,
-                  iconClass: styles$t.maskVizSwatchRandom,
+                  iconClass: styles$s.maskVizSwatchRandom,
                   onClick: () => onChange(classColors ? {
                     ...value,
                     color: "random"
@@ -90572,7 +93496,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$t.maskModeGroupLabel,
+              className: styles$s.maskModeGroupLabel,
               children: "Color"
             })
           ]
@@ -90603,7 +93527,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       props.onBlur(trimmed);
     };
     return jsxRuntimeExports.jsx("input", {
-      className: `${minervaTheme.field} ${styles$t.channelNameInput}`,
+      className: `${minervaTheme.field} ${styles$s.channelNameInput}`,
       type: "text",
       value: draft,
       title: props.name,
@@ -90630,15 +93554,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showColor = !isMask && onColorClick;
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$t.channelRow,
-        locked ? styles$t.detailChannelRowLocked : null,
+        styles$s.channelRow,
+        locked ? styles$s.detailChannelRowLocked : null,
         fitting ? minervaTheme.busyOverlay : null
       ].filter(Boolean).join(" "),
       "aria-busy": fitting || void 0,
       title: fitting ? "Fitting contrast\u2026" : void 0,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: `${styles$t.channelRowMain}${showMask ? ` ${styles$t.channelRowMainMask}` : ""}`,
+          className: `${styles$s.channelRowMain}${showMask ? ` ${styles$s.channelRowMainMask}` : ""}`,
           children: [
             jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible,
@@ -90648,10 +93572,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: onToggleVisibility
             }),
             jsxRuntimeExports.jsxs("div", {
-              className: styles$t.channelRowTitle,
+              className: styles$s.channelRowTitle,
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$t.channelNameSlot,
+                  className: styles$s.channelNameSlot,
                   children: name2.mode === "label" ? jsxRuntimeExports.jsx("span", {
                     className: name2.className,
                     title: name2.title ?? name2.name,
@@ -90661,14 +93585,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   })
                 }),
                 imageSubtitle ? jsxRuntimeExports.jsx("span", {
-                  className: styles$t.channelImageSubtitle,
+                  className: styles$s.channelImageSubtitle,
                   title: `From ${imageSubtitle}`,
                   children: imageSubtitle
                 }) : null
               ]
             }),
             jsxRuntimeExports.jsxs("div", {
-              className: styles$t.channelRowMid,
+              className: styles$s.channelRowMid,
               children: [
                 contrast ? jsxRuntimeExports.jsx(ChannelContrastEditor, {
                   ...contrast
@@ -90682,7 +93606,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             showMask && fixedColorHex ? jsxRuntimeExports.jsx("span", {
-              className: styles$t.channelColorSwatchStatic,
+              className: styles$s.channelColorSwatchStatic,
               style: {
                 backgroundColor: `#${fixedColorHex}`
               },
@@ -90697,7 +93621,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: onColorClick
             }) : null,
             jsxRuntimeExports.jsx("div", {
-              className: styles$t.channelRowTrailing,
+              className: styles$s.channelRowTrailing,
               children: trailing
             }),
             showMask && onMaskVisualizationChange ? jsxRuntimeExports.jsx(OpacitySlider, {
@@ -90716,7 +93640,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         showMask && maskFooter ? jsxRuntimeExports.jsx("div", {
-          className: styles$t.maskControlsPanel,
+          className: styles$s.maskControlsPanel,
           children: maskFooter
         }) : null
       ]
@@ -91480,17 +94404,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const chevronLeft = "_chevronLeft_m5cf6_2";
   const chevronDown = "_chevronDown_m5cf6_3";
   const chevronUp = "_chevronUp_m5cf6_4";
-  const styles$s = {
+  const styles$r = {
     chevronRight,
     chevronLeft,
     chevronDown,
     chevronUp
   };
   const DIRECTION_CLASS = {
-    right: styles$s.chevronRight,
-    left: styles$s.chevronLeft,
-    down: styles$s.chevronDown,
-    up: styles$s.chevronUp
+    right: styles$r.chevronRight,
+    left: styles$r.chevronLeft,
+    down: styles$r.chevronDown,
+    up: styles$r.chevronUp
   };
   function ChevronIcon({ direction: direction2 = "down", className: className2 }) {
     return jsxRuntimeExports.jsx(SvgChevronDown, {
@@ -91524,7 +94448,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const closeIcon = "_closeIcon_1v3n3_54";
   const saturation = "_saturation_1v3n3_77";
   const saturationHidden = "_saturationHidden_1v3n3_83";
-  const styles$r = {
+  const styles$q = {
     backdrop,
     panel: panel$2,
     colorGrid,
@@ -91571,7 +94495,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const saturationProps = {
       hsva: currentColor.hsva,
-      className: expanded ? styles$r.saturation : `${styles$r.saturation} ${styles$r.saturationHidden}`,
+      className: expanded ? styles$q.saturation : `${styles$q.saturation} ${styles$q.saturationHidden}`,
       style: expanded ? void 0 : {
         height: 0
       },
@@ -91589,26 +94513,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$r.backdrop,
+          className: styles$q.backdrop,
           "aria-label": "Close color picker",
           onClick: onClose
         }),
         jsxRuntimeExports.jsx("div", {
           "data-minerva-color-picker": "",
-          className: styles$r.panel,
+          className: styles$q.panel,
           style: {
             top: position2.top,
             left: position2.left
           },
           children: jsxRuntimeExports.jsxs("div", {
-            className: expanded ? `${styles$r.colorGrid} ${styles$r.colorGridExpanded}` : styles$r.colorGrid,
+            className: expanded ? `${styles$q.colorGrid} ${styles$q.colorGridExpanded}` : styles$q.colorGrid,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$r.hueRow,
+                className: styles$q.hueRow,
                 children: [
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: styles$r.iconButton,
+                    className: styles$q.iconButton,
                     "aria-expanded": expanded,
                     title: expanded ? "Fewer colors" : "More colors",
                     onClick: () => setExpanded(!expanded),
@@ -91625,7 +94549,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   }),
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: styles$r.whiteSwatch,
+                    className: styles$q.whiteSwatch,
                     "aria-pressed": isWhite,
                     "aria-label": "White",
                     title: "White",
@@ -91635,14 +94559,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     type: "button",
                     title: "Close",
                     "aria-label": "Close color picker",
-                    className: styles$r.iconButton,
+                    className: styles$q.iconButton,
                     onClick: (e2) => {
                       e2.stopPropagation();
                       onClose();
                     },
                     children: jsxRuntimeExports.jsx(SvgClose, {
                       "aria-hidden": true,
-                      className: styles$r.closeIcon
+                      className: styles$q.closeIcon
                     })
                   })
                 ]
@@ -91674,45 +94598,45 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  const stack = "_stack_g01g1_1";
-  const panelDropActive = "_panelDropActive_g01g1_11";
-  const addStrip = "_addStrip_g01g1_16";
-  const addStripRow = "_addStripRow_g01g1_27";
-  const dropZone = "_dropZone_g01g1_41";
-  const dropZoneTitle = "_dropZoneTitle_g01g1_51";
-  const orDivider = "_orDivider_g01g1_57";
-  const urlRow = "_urlRow_g01g1_68";
-  const urlField = "_urlField_g01g1_77";
-  const urlInput = "_urlInput_g01g1_83";
-  const urlAdd = "_urlAdd_g01g1_91";
-  const dropZoneActive = "_dropZoneActive_g01g1_121";
-  const importError = "_importError_g01g1_175";
-  const fieldLabel = "_fieldLabel_g01g1_188";
-  const typeOverlay = "_typeOverlay_g01g1_202";
-  const typeOverlayBackdrop = "_typeOverlayBackdrop_g01g1_214";
-  const typeOverlayCard = "_typeOverlayCard_g01g1_220";
-  const typeOverlayFields = "_typeOverlayFields_g01g1_234";
-  const typeOverlayFile = "_typeOverlayFile_g01g1_244";
-  const typeRow = "_typeRow_g01g1_253";
-  const typeChipActive = "_typeChipActive_g01g1_261";
-  const typeChipSuggested = "_typeChipSuggested_g01g1_265";
-  const typeChipMuted = "_typeChipMuted_g01g1_270";
-  const typeFooter = "_typeFooter_g01g1_284";
-  const typeImport = "_typeImport_g01g1_293";
-  const typeSection = "_typeSection_g01g1_300";
-  const imageCard = "_imageCard_g01g1_308";
-  const fileAccessOverlay = "_fileAccessOverlay_g01g1_320";
-  const fileAccessName = "_fileAccessName_g01g1_339";
-  const fileAccessAction = "_fileAccessAction_g01g1_347";
-  const pointBackdrop = "_pointBackdrop_g01g1_355";
-  const pointPopup = "_pointPopup_g01g1_366";
-  const imageCardHeader = "_imageCardHeader_g01g1_373";
-  const imageCardText = "_imageCardText_g01g1_381";
-  const imageCardTitle = "_imageCardTitle_g01g1_389";
-  const imageCardMeta = "_imageCardMeta_g01g1_397";
-  const imageCardActions = "_imageCardActions_g01g1_403";
-  const imageOpacity = "_imageOpacity_g01g1_412";
-  const styles$q = {
+  const stack = "_stack_eiqoz_1";
+  const panelDropActive = "_panelDropActive_eiqoz_11";
+  const addStrip = "_addStrip_eiqoz_16";
+  const addStripRow = "_addStripRow_eiqoz_27";
+  const dropZone = "_dropZone_eiqoz_41";
+  const dropZoneTitle = "_dropZoneTitle_eiqoz_51";
+  const orDivider = "_orDivider_eiqoz_57";
+  const urlRow = "_urlRow_eiqoz_68";
+  const urlField = "_urlField_eiqoz_77";
+  const urlInput = "_urlInput_eiqoz_83";
+  const urlAdd = "_urlAdd_eiqoz_91";
+  const dropZoneActive = "_dropZoneActive_eiqoz_121";
+  const importError = "_importError_eiqoz_175";
+  const fieldLabel = "_fieldLabel_eiqoz_188";
+  const typeOverlay = "_typeOverlay_eiqoz_202";
+  const typeOverlayBackdrop = "_typeOverlayBackdrop_eiqoz_214";
+  const typeOverlayCard = "_typeOverlayCard_eiqoz_220";
+  const typeOverlayFields = "_typeOverlayFields_eiqoz_234";
+  const typeOverlayFile = "_typeOverlayFile_eiqoz_244";
+  const typeRow = "_typeRow_eiqoz_253";
+  const typeChipActive = "_typeChipActive_eiqoz_261";
+  const typeChipSuggested = "_typeChipSuggested_eiqoz_265";
+  const typeChipMuted = "_typeChipMuted_eiqoz_270";
+  const typeFooter = "_typeFooter_eiqoz_284";
+  const typeImport = "_typeImport_eiqoz_293";
+  const typeSection = "_typeSection_eiqoz_300";
+  const imageCard = "_imageCard_eiqoz_308";
+  const fileAccessOverlay = "_fileAccessOverlay_eiqoz_320";
+  const fileAccessName = "_fileAccessName_eiqoz_339";
+  const fileAccessAction = "_fileAccessAction_eiqoz_347";
+  const pointBackdrop = "_pointBackdrop_eiqoz_355";
+  const pointPopup = "_pointPopup_eiqoz_366";
+  const imageCardHeader = "_imageCardHeader_eiqoz_374";
+  const imageCardText = "_imageCardText_eiqoz_382";
+  const imageCardTitle = "_imageCardTitle_eiqoz_390";
+  const imageCardMeta = "_imageCardMeta_eiqoz_398";
+  const imageCardActions = "_imageCardActions_eiqoz_404";
+  const imageOpacity = "_imageOpacity_eiqoz_413";
+  const styles$p = {
     stack,
     panelDropActive,
     addStrip,
@@ -91755,37 +94679,37 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function ImportOverlay(props) {
     const busy = props.busy === true;
     return reactDomExports.createPortal(jsxRuntimeExports.jsxs("div", {
-      className: styles$q.typeOverlay,
+      className: styles$p.typeOverlay,
       role: "dialog",
       "aria-modal": "true",
       "aria-busy": busy,
       "aria-labelledby": props.titleId,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$q.typeOverlayBackdrop,
+          className: styles$p.typeOverlayBackdrop,
           "aria-hidden": "true"
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: `${minervaTheme.surface} ${styles$q.typeOverlayCard}`,
+          className: `${minervaTheme.surface} ${styles$p.typeOverlayCard}`,
           children: [
             jsxRuntimeExports.jsx("div", {
               id: props.titleId,
-              className: styles$q.typeOverlayFile,
+              className: styles$p.typeOverlayFile,
               title: props.title,
               children: props.title
             }),
             props.children != null ? jsxRuntimeExports.jsx("fieldset", {
               disabled: props.importDisabled,
-              className: styles$q.typeOverlayFields,
+              className: styles$p.typeOverlayFields,
               children: props.children
             }) : null,
             props.error ? jsxRuntimeExports.jsx("div", {
-              className: styles$q.importError,
+              className: styles$p.importError,
               role: "alert",
               children: props.error
             }) : null,
             jsxRuntimeExports.jsxs("div", {
-              className: styles$q.typeFooter,
+              className: styles$p.typeFooter,
               children: [
                 jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
@@ -91795,7 +94719,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
-                  className: styles$q.typeImport,
+                  className: styles$p.typeImport,
                   disabled: props.importDisabled,
                   onClick: props.onImport,
                   children: busy ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
@@ -92438,8 +95362,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!changed) return;
     docNow.setImages(applySourceChannelsToImages(docNow.images, next2));
   }
+  function isAbsoluteUrl(url) {
+    const u2 = url.trim();
+    return /^[a-z][a-z\d+.-]*:/i.test(u2) || u2.startsWith("//");
+  }
+  function urlFileName(url) {
+    var _a2;
+    const path2 = url.trim().split(/[?#]/)[0];
+    return ((_a2 = path2.split(/[/\\]/).pop()) == null ? void 0 : _a2.trim()) ?? "";
+  }
   function WorkerWrapper$4(options) {
-    return new Worker("" + new URL("worker-C1_cI-vt.js", import.meta.url).href, {
+    return new Worker("" + new URL("worker-fsJuxFmL.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -92681,6 +95614,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const bytes = new Uint8Array(await file.slice(0, 8192).arrayBuffer());
     return peekCsvHeaders(bytes);
   }
+  function featureTableBlobKey(storyId, featureTableId) {
+    return storyId ? `story:${storyId}:featureTable:${featureTableId}` : `featureTable:${featureTableId}`;
+  }
   function featureTableHandleKey(featureTable) {
     const { source: source2 } = featureTable;
     return "handleKey" in source2 ? source2.handleKey : void 0;
@@ -92698,7 +95634,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return pendingAttachIds;
   }
   const emptyAccess = {
-    missingHandleKeys: []
+    missingTableIds: []
   };
   let featureTableAccess = emptyAccess;
   const accessListeners = /* @__PURE__ */ new Set();
@@ -92721,10 +95657,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     await deleteBlob(handleKey).catch(() => void 0);
     await deleteFileHandle(handleKey).catch(() => void 0);
   }
-  function classNameVisible(vis, name2) {
-    if (!vis || vis.mode === "all") return true;
+  function classVisibilityTest(vis) {
+    if (!vis || vis.mode === "all") return () => true;
     const names = new Set(vis.names);
-    return vis.mode === "hide" ? !names.has(name2) : names.has(name2);
+    return vis.mode === "hide" ? (name2) => !names.has(name2) : (name2) => names.has(name2);
   }
   function visibilityAllOn() {
     return {
@@ -92739,7 +95675,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function toggleClassName(vis, name2) {
     if (name2.length === 0) return vis ?? visibilityAllOn();
-    const visible = classNameVisible(vis, name2);
+    const visible = classVisibilityTest(vis)(name2);
     const current = vis ?? visibilityAllOn();
     if (!visible) {
       if (current.mode === "all") return current;
@@ -92843,12 +95779,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     for (const fn of lutListeners) fn();
   }
   let classColorPreview = null;
-  function previewClassColor(waypointId, featureTableId, name2, color2) {
+  function previewClassColor(owner, waypointId, featureTableId, name2, color2) {
     const prev = classColorPreview;
-    if ((prev == null ? void 0 : prev.waypointId) === waypointId && prev.featureTableId === featureTableId && prev.name === name2 && prev.color.r === color2.r && prev.color.g === color2.g && prev.color.b === color2.b) {
+    if ((prev == null ? void 0 : prev.owner) === owner && prev.waypointId === waypointId && prev.featureTableId === featureTableId && prev.name === name2 && prev.color.r === color2.r && prev.color.g === color2.g && prev.color.b === color2.b) {
       return;
     }
     classColorPreview = {
+      owner,
       waypointId,
       featureTableId,
       name: name2,
@@ -92856,14 +95793,35 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     noteLut();
   }
-  function clearClassColorPreview() {
-    if (!classColorPreview) return;
+  function clearClassColorPreview(owner) {
+    if ((classColorPreview == null ? void 0 : classColorPreview.owner) !== owner) return;
     classColorPreview = null;
     noteLut();
   }
   function classViewFor(waypoint, channelId) {
     var _a2;
     return (_a2 = waypoint == null ? void 0 : waypoint.classViews) == null ? void 0 : _a2.find((v2) => v2.channelId === channelId);
+  }
+  function withHiddenClasses(view, channelId, hidden) {
+    if (!(hidden == null ? void 0 : hidden.length)) return view;
+    const vis = (view == null ? void 0 : view.visibility) ?? visibilityAllOn();
+    const visibility = vis.mode === "show" ? {
+      mode: "show",
+      names: vis.names.filter((n2) => !hidden.includes(n2))
+    } : {
+      mode: "hide",
+      names: [
+        .../* @__PURE__ */ new Set([
+          ...vis.mode === "hide" ? vis.names : [],
+          ...hidden
+        ])
+      ]
+    };
+    return {
+      channelId,
+      colors: (view == null ? void 0 : view.colors) ?? [],
+      visibility
+    };
   }
   function classColorsFor(featureTable, view, waypointId) {
     const colors = new Map(featureTable.nameColors.map((c2) => [
@@ -92876,21 +95834,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return colors;
   }
+  function classSlots(names, view, seed, colors) {
+    const visible = classVisibilityTest(view == null ? void 0 : view.visibility);
+    return names.slice(0, MAX_CLASS_NAMES).map((name2, i2) => ({
+      name: name2,
+      color: colors.get(name2) ?? defaultClassColor(i2 + 1, seed),
+      visible: visible(name2)
+    }));
+  }
   function shownClassRows(featureTable, view, seed, waypointId) {
     const idx = peekClassIndex(featureTable.id);
     if (!idx) return void 0;
     const colors = classColorsFor(featureTable, view, waypointId);
-    const rows2 = [];
-    const n2 = Math.min(idx.names.length, MAX_CLASS_NAMES);
-    for (let i2 = 0; i2 < n2; i2++) {
-      const name2 = idx.names[i2];
-      if (!classNameVisible(view == null ? void 0 : view.visibility, name2)) continue;
-      rows2.push({
-        name: name2,
-        color: colors.get(name2) ?? defaultClassColor(i2 + 1, seed)
-      });
-    }
-    return rows2;
+    return classSlots(idx.names, view, seed, colors).filter((slot) => slot.visible).map(({ name: name2, color: color2 }) => ({
+      name: name2,
+      color: color2
+    }));
   }
   function paletteRev(featureTable, vis, seed, colors) {
     const visPart = !vis || vis.mode === "all" ? "all" : `${vis.mode}:${vis.names.join("\0")}`;
@@ -92918,17 +95877,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!idx) return void 0;
     const vis = view == null ? void 0 : view.visibility;
     const colors = classColorsFor(featureTable, view, waypointId);
-    const n2 = Math.min(idx.names.length, MAX_CLASS_NAMES);
-    const palette = new Uint8Array((n2 + 1) * 4);
-    for (let i2 = 0; i2 < n2; i2++) {
-      const name2 = idx.names[i2];
-      const color2 = colors.get(name2) ?? defaultClassColor(i2 + 1, seed);
+    const slots = classSlots(idx.names, view, seed, colors);
+    const palette = new Uint8Array((slots.length + 1) * 4);
+    slots.forEach(({ color: color2, visible }, i2) => {
       const o2 = (i2 + 1) * 4;
       palette[o2] = color2.r;
       palette[o2 + 1] = color2.g;
       palette[o2 + 2] = color2.b;
-      palette[o2 + 3] = classNameVisible(vis, name2) ? 255 : 0;
-    }
+      palette[o2 + 3] = visible ? 255 : 0;
+    });
     return {
       index: idx.data,
       width: idx.width,
@@ -92961,8 +95918,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const featureTableId = crypto.randomUUID();
     try {
       const ingested = await ingestFeatureTable(featureTableId, file, columns);
-      const persist = ingested.persist;
-      if (!persist) throw new Error("Feature table CSV ingest produced no data");
+      const persist = ingested.persist ?? new Uint8Array(await file.arrayBuffer());
       return {
         ok: true,
         ingested: {
@@ -92991,8 +95947,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     let nameColors = [];
     const reuse = existing && existing.digest === ingested.digest && existing.nameColors.length > 0;
     if (reuse) nameColors = existing.nameColors;
-    const storyId = useDocumentStore.getState().activeStoryId;
-    const handleKey = storyId ? `story:${storyId}:featureTable:${ingested.featureTableId}` : `featureTable:${ingested.featureTableId}`;
+    const handleKey = featureTableBlobKey(useDocumentStore.getState().activeStoryId, ingested.featureTableId);
     await putBlob(handleKey, ingested.persist);
     const featureTable = {
       id: ingested.featureTableId,
@@ -93029,6 +95984,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (doc.featureTables.some((c2) => c2.id === featureTable.id)) {
       doc.setFeatureTables(doc.featureTables.filter((c2) => c2.id !== featureTable.id));
     }
+    dropClassViews(sourceChannelId);
+  }
+  function dropClassViews(channelId) {
+    const doc = useDocumentStore.getState();
+    if (!doc.waypoints.some((w2) => classViewFor(w2, channelId))) return;
+    doc.setWaypoints(doc.waypoints.map((w2) => classViewFor(w2, channelId) ? {
+      ...w2,
+      classViews: (w2.classViews ?? []).filter((v2) => v2.channelId !== channelId)
+    } : w2));
   }
   function detachRemovedFeatureTables(previous2, remaining) {
     for (const featureTable of previous2) {
@@ -93087,56 +96051,66 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     useAppStore.getState().setWaypointClassView(waypointId, target.channelId, null);
   }
   async function fetchTableBytes(url, documentUrl) {
+    if (!isAbsoluteUrl(url)) return void 0;
     const base2 = new URL(window.location.href, window.location.href);
     const res = await fetch(new URL(url, base2));
     if (!res.ok) throw new Error(`Failed to load ${url} (${res.status})`);
     return new Uint8Array(await res.arrayBuffer());
+  }
+  async function readTableBytes(featureTable, documentUrl) {
+    const { source: source2 } = featureTable;
+    if (source2.kind === "url") return fetchTableBytes(source2.url);
+    const key2 = featureTableHandleKey(featureTable);
+    return key2 ? getBlob(key2) : void 0;
   }
   async function hydrateFeatureTables(featureTables, reset, opts) {
     if (reset) {
       lutPending.clear();
       await resetFeatureTables();
     }
-    const missingHandleKeys = [];
-    for (const featureTable of featureTables) {
-      if (!reset && hasIngestedFeatureTable(featureTable.id)) continue;
-      const { source: source2 } = featureTable;
-      if (source2.kind === "url") {
-        try {
-          const bytes2 = await fetchTableBytes(source2.url, opts == null ? void 0 : opts.documentUrl);
-          const ingested = await ingestFeatureTable(featureTable.id, bytes2);
-          noteLut();
-          if (featureTable.nameColors.length === 0) {
-            scheduleClassPalette(featureTable.id, ingested.names);
-          }
-        } catch (e2) {
-          console.error("[featureTable] hydrate failed", featureTable.id, e2);
-        }
-        continue;
-      }
-      const key2 = featureTableHandleKey(featureTable);
-      if (!key2) continue;
-      const bytes = await getBlob(key2);
+    const pending2 = featureTables.filter((featureTable) => reset || !hasIngestedFeatureTable(featureTable.id));
+    const reads = pending2.map((featureTable) => readTableBytes(featureTable).catch((e2) => {
+      console.error("[featureTable] hydrate failed", featureTable.id, e2);
+      return void 0;
+    }));
+    const missingTableIds = [];
+    for (const [i2, featureTable] of pending2.entries()) {
+      const bytes = await reads[i2];
       if (!bytes) {
-        missingHandleKeys.push(key2);
+        missingTableIds.push(featureTable.id);
         continue;
       }
       try {
         const ingested = await ingestFeatureTable(featureTable.id, bytes);
         noteLut();
-        if (ingested.persist) {
+        const key2 = featureTableHandleKey(featureTable);
+        if (ingested.persist && key2) {
           await putBlob(key2, ingested.persist);
-        } else if (featureTable.nameColors.length === 0) {
+        }
+        if (featureTable.nameColors.length === 0) {
           scheduleClassPalette(featureTable.id, ingested.names);
         }
       } catch (e2) {
         console.error("[featureTable] hydrate failed", featureTable.id, e2);
-        missingHandleKeys.push(key2);
+        missingTableIds.push(featureTable.id);
       }
     }
     noteAccess({
-      missingHandleKeys
+      missingTableIds
     });
+  }
+  function useFeatureTableIngestEpoch() {
+    return reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
+  }
+  function useFeatureTableLutEpoch() {
+    return reactExports.useSyncExternalStore(subscribeFeatureTableLut, getFeatureTableLutEpoch, getFeatureTableLutEpoch);
+  }
+  function useFeatureTableAccess() {
+    return reactExports.useSyncExternalStore(subscribeFeatureTableAccess, getFeatureTableAccess, getFeatureTableAccess);
+  }
+  function useActiveWaypoint() {
+    const activeStoryIndex = useAppStore((s2) => s2.activeStoryIndex);
+    return useDocumentStore((s2) => activeStoryIndex == null ? void 0 : s2.waypoints[activeStoryIndex]);
   }
   const attach = "_attach_mykh6_1";
   const attachBtn = "_attachBtn_mykh6_9";
@@ -93156,7 +96130,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const swatch$1 = "_swatch_mykh6_192";
   const swatchPending = "_swatchPending_mykh6_207";
   const name$3 = "_name_mykh6_212";
-  const styles$p = {
+  const styles$o = {
     attach,
     attachBtn,
     attachLabel,
@@ -93179,14 +96153,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const ROW_H = 22;
   const WINDOW = 80;
   const EDGE = 10;
-  async function pickFeatureCsv(description = "Feature table CSV") {
+  async function pickFeatureCsv(description = "Feature table CSV", opts) {
     try {
       return await n$1({
         description,
-        mimeTypes: [
+        mimeTypes: (opts == null ? void 0 : opts.parquet) ? [
+          "text/csv",
+          "application/vnd.apache.parquet"
+        ] : [
           "text/csv"
         ],
-        extensions: [
+        extensions: (opts == null ? void 0 : opts.parquet) ? [
+          ".csv",
+          ".parquet"
+        ] : [
           ".csv"
         ],
         multiple: false
@@ -93233,7 +96213,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function TableLoading() {
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.loading,
+      className: styles$o.loading,
       children: [
         jsxRuntimeExports.jsx("div", {
           className: minervaTheme.spinnerSm,
@@ -93255,8 +96235,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const view = featureTable ? classViewFor(waypoint, featureTable.sourceChannelId) : void 0;
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const digest = featureTable == null ? void 0 : featureTable.digest;
-    const ingestEpoch2 = reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
-    const lutEpoch2 = reactExports.useSyncExternalStore(subscribeFeatureTableLut, getFeatureTableLutEpoch, getFeatureTableLutEpoch);
+    const ingestEpoch2 = useFeatureTableIngestEpoch();
+    const lutEpoch2 = useFeatureTableLutEpoch();
     const maskColor = useDocumentStore((s2) => {
       const sourceId = featureTable == null ? void 0 : featureTable.sourceChannelId;
       if (!sourceId) return void 0;
@@ -93332,10 +96312,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         name: name2
       })) : raw2;
       const colors = classColorsFor(featureTable, view, waypoint == null ? void 0 : waypoint.id);
+      const visible = classVisibilityTest(view == null ? void 0 : view.visibility);
       return source2.map((row2) => ({
         name: row2.name,
         color: colors.get(row2.name),
-        visible: classNameVisible(view == null ? void 0 : view.visibility, row2.name)
+        visible: visible(row2.name)
       }));
     }, [
       featureTable,
@@ -93375,7 +96356,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         label2,
         jsxRuntimeExports.jsx("select", {
-          className: styles$p.field,
+          className: styles$o.field,
           value,
           "aria-label": `${label2} column`,
           onChange: (e2) => onChange(e2.target.value),
@@ -93387,7 +96368,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.colPick,
+      className: styles$o.colPick,
       children: [
         props.id != null && props.onId ? select("ID", props.id, props.onId) : null,
         select("Name", props.name, props.onName)
@@ -93411,11 +96392,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function FeatureTableGlyph(props) {
     const { wait: wait2, folder, title: title7, ariaLabel, onClick } = props;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.attach,
+      className: styles$o.attach,
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$p.attachBtn}${wait2 ? ` ${minervaTheme.busyOverlay}` : ""}`,
+          className: `${minervaTheme.focusRing} ${styles$o.attachBtn}${wait2 ? ` ${minervaTheme.busyOverlay}` : ""}`,
           disabled: wait2 || onClick == null,
           title: title7,
           "aria-label": ariaLabel,
@@ -93428,7 +96409,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }) : jsxRuntimeExports.jsx(TableIcon, {})
         }),
         jsxRuntimeExports.jsx("span", {
-          className: styles$p.attachLabel,
+          className: styles$o.attachLabel,
           children: "Table"
         })
       ]
@@ -93436,16 +96417,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function FeatureTableMaskAction(props) {
     const { featureTableId } = props;
-    reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
-    const access = reactExports.useSyncExternalStore(subscribeFeatureTableAccess, getFeatureTableAccess, getFeatureTableAccess);
-    const handleKey = useDocumentStore((s2) => {
-      const featureTable = s2.featureTables.find((c2) => c2.id === featureTableId);
-      return featureTable ? featureTableHandleKey(featureTable) : void 0;
-    });
+    useFeatureTableIngestEpoch();
+    const access = useFeatureTableAccess();
     if (hasIngestedFeatureTable(featureTableId)) return null;
-    if (handleKey != null && access.missingHandleKeys.includes(handleKey)) {
-      return null;
-    }
+    if (access.missingTableIds.includes(featureTableId)) return null;
     return jsxRuntimeExports.jsx(FeatureTableGlyph, {
       wait: true,
       folder: true,
@@ -93523,6 +96498,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function ClassViewList(props) {
     const { featureTableId, waypoint, tools, overlay } = props;
     const list2 = useFeatureTableList(featureTableId, waypoint);
+    const previewOwner = reactExports.useId();
     const scrollerRef = reactExports.useRef(null);
     const [picker, setPicker] = reactExports.useState(null);
     const pickerRef = reactExports.useRef(picker);
@@ -93539,23 +96515,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (current.pending && ownedId) {
         setClassColor(ownedId, featureTableId, current.name, current.pending);
       }
-      clearClassColorPreview();
+      clearClassColorPreview(previewOwner);
     };
     reactExports.useEffect(() => {
       if (waypointIdRef.current === waypointId) return;
+      commitRef.current();
       waypointIdRef.current = waypointId;
-      if (!pickerRef.current) return;
-      pickerRef.current = null;
       setPicker(null);
-      clearClassColorPreview();
     }, [
       waypointId
     ]);
     const showBusy = list2.loading && list2.rows.length === 0;
     const fadeColors = list2.fadeColors;
-    const readOnly2 = waypointId == null;
+    const readOnly2 = props.readOnly === true || waypointId == null;
     const toggle2 = (name2) => {
-      if (waypointId) toggleClassVisible(waypointId, featureTableId, name2);
+      if (waypointId && !readOnly2) {
+        toggleClassVisible(waypointId, featureTableId, name2);
+      }
     };
     reactExports.useEffect(() => () => commitRef.current(), []);
     reactExports.useEffect(() => {
@@ -93569,10 +96545,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$p.toolbar,
+          className: styles$o.toolbar,
           children: [
             jsxRuntimeExports.jsx("input", {
-              className: styles$p.field,
+              className: styles$o.field,
               type: "text",
               value: list2.filter,
               placeholder: "Filter classes\u2026",
@@ -93585,19 +96561,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
+              className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
               disabled: readOnly2,
               onClick: () => {
-                if (waypointId) setAllClassesVisible(waypointId, featureTableId, true);
+                if (waypointId && !readOnly2) setAllClassesVisible(waypointId, featureTableId, true);
               },
               children: "Show all"
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
+              className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
               disabled: readOnly2,
               onClick: () => {
-                if (waypointId) setAllClassesVisible(waypointId, featureTableId, false);
+                if (waypointId && !readOnly2) setAllClassesVisible(waypointId, featureTableId, false);
               },
               children: "Hide all"
             }),
@@ -93606,7 +96582,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsxs("div", {
           ref: scrollerRef,
-          className: `${styles$p.scroller} ${panel$1.thinScrollbar}`,
+          className: `${styles$o.scroller} ${panel$1.thinScrollbar}`,
           onScroll: () => {
             const el2 = scrollerRef.current;
             if (!el2) return;
@@ -93614,7 +96590,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           },
           children: [
             overlay ? jsxRuntimeExports.jsx("div", {
-              className: styles$p.accessPrompt,
+              className: styles$o.accessPrompt,
               children: overlay
             }) : null,
             showBusy && !overlay ? jsxRuntimeExports.jsx(TableLoading, {}) : null,
@@ -93624,7 +96600,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 position: "relative"
               },
               children: list2.rows.map((row2, i2) => jsxRuntimeExports.jsxs("div", {
-                className: styles$p.row,
+                className: styles$o.row,
                 style: {
                   top: (list2.loadedOffset + i2) * ROW_H
                 },
@@ -93633,13 +96609,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     visible: row2.visible,
                     title: row2.visible ? `Hide ${row2.name}` : `Show ${row2.name}`,
                     ariaLabel: `Toggle visibility for ${row2.name}`,
+                    disabled: readOnly2,
                     onClick: () => toggle2(row2.name)
                   }),
                   row2.color ? jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$p.swatch}`,
+                    className: `${minervaTheme.focusRing} ${styles$o.swatch}`,
                     style: {
-                      backgroundColor: `#${rgbToHex$1((picker == null ? void 0 : picker.name) === row2.name && picker.pending ? picker.pending : row2.color)}`
+                      backgroundColor: `#${rgbToHex$1(row2.color)}`
                     },
                     "aria-label": `Color for ${row2.name}`,
                     disabled: fadeColors || readOnly2,
@@ -93655,13 +96632,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     }
                   }) : jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${styles$p.swatch} ${styles$p.swatchPending} ${minervaTheme.busyOverlay}`,
+                    className: `${styles$o.swatch} ${styles$o.swatchPending} ${minervaTheme.busyOverlay}`,
                     "aria-label": `Assigning color for ${row2.name}`,
                     disabled: true
                   }),
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$p.name}`,
+                    className: `${minervaTheme.focusRing} ${styles$o.name}`,
                     title: row2.visible ? `Hide ${row2.name}` : `Show ${row2.name}`,
                     "aria-pressed": row2.visible,
                     disabled: readOnly2,
@@ -93699,8 +96676,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               g: g2,
               b: b2
             };
-            if (waypointId) {
-              previewClassColor(waypointId, featureTableId, picker.name, color2);
+            if (waypointId && !readOnly2) {
+              previewClassColor(previewOwner, waypointId, featureTableId, picker.name, color2);
             }
             setPicker((p2) => p2 ? {
               ...p2,
@@ -93720,7 +96697,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
+      className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
       disabled: !hasView,
       onClick: () => resetClassView(waypoint.id, featureTableId),
       children: "Reset"
@@ -93728,36 +96705,33 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function FeatureTableListBody(props) {
     const { featureTableId } = props;
-    const activeStoryIndex = useAppStore((s2) => s2.activeStoryIndex);
-    const waypoint = useDocumentStore((s2) => activeStoryIndex == null ? void 0 : s2.waypoints[activeStoryIndex]);
-    const handleKey = useDocumentStore((s2) => {
-      const featureTable = s2.featureTables.find((c2) => c2.id === featureTableId);
-      return featureTable ? featureTableHandleKey(featureTable) : void 0;
-    });
+    const waypoint = useActiveWaypoint();
     const sourceChannelId = useDocumentStore((s2) => {
       var _a2;
       return (_a2 = s2.featureTables.find((c2) => c2.id === featureTableId)) == null ? void 0 : _a2.sourceChannelId;
     });
-    const access = reactExports.useSyncExternalStore(subscribeFeatureTableAccess, getFeatureTableAccess, getFeatureTableAccess);
-    reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
+    const access = useFeatureTableAccess();
+    useFeatureTableIngestEpoch();
     const waypointCount = useDocumentStore((s2) => s2.waypoints.length);
-    const needsReselect = handleKey != null && access.missingHandleKeys.includes(handleKey);
+    const needsReselect = access.missingTableIds.includes(featureTableId);
     const restoreFile = async () => {
       if (!sourceChannelId) return;
-      const file = await pickFeatureCsv();
+      const file = await pickFeatureCsv("Feature table CSV or Parquet", {
+        parquet: true
+      });
       if (!file) return;
       await completeFeatureTableIngest(sourceChannelId, ingestFeatureCsvFile(file));
     };
     if (!hasIngestedFeatureTable(featureTableId) && !needsReselect) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.root,
+      className: styles$o.root,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$p.toolbar,
+          className: styles$o.toolbar,
           children: waypoint ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
             children: [
               jsxRuntimeExports.jsx("span", {
-                className: styles$p.viewTitle,
+                className: styles$o.viewTitle,
                 title: waypoint.title,
                 children: waypoint.title.trim() || "Untitled waypoint"
               }),
@@ -93767,7 +96741,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               })
             ]
           }) : jsxRuntimeExports.jsx("span", {
-            className: styles$p.readOnlyNote,
+            className: styles$o.readOnlyNote,
             children: waypointCount === 0 ? "Add a waypoint to customize classes" : "Select a waypoint to customize classes"
           })
         }),
@@ -93788,7 +96762,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           overlay: needsReselect ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
+            className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
             onClick: () => void restoreFile(),
             children: "Choose file again"
           }) : null
@@ -93799,7 +96773,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function WaypointClassViews(props) {
     const { waypoint, featureTables, readOnly: readOnly2 } = props;
     const images = useDocumentStore((s2) => s2.images);
-    reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
+    useFeatureTableIngestEpoch();
     const maskNames = reactExports.useMemo(() => new Map(flattenImageChannelsInDocumentOrder(images).map((sc2) => [
       sc2.id,
       sc2.name
@@ -93808,18 +96782,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     if (featureTables.length === 0) return null;
     return jsxRuntimeExports.jsx("div", {
-      className: styles$p.waypointClasses,
+      className: styles$o.waypointClasses,
       children: featureTables.map((featureTable) => {
         const label2 = maskNames.get(featureTable.sourceChannelId) ?? "Mask";
         const loaded = hasIngestedFeatureTable(featureTable.id);
         return jsxRuntimeExports.jsxs("div", {
-          className: styles$p.root,
+          className: styles$o.root,
           children: [
             jsxRuntimeExports.jsxs("div", {
-              className: styles$p.toolbar,
+              className: styles$o.toolbar,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$p.viewTitle,
+                  className: styles$o.viewTitle,
                   title: label2,
                   children: label2
                 }),
@@ -93831,9 +96805,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             loaded ? jsxRuntimeExports.jsx(ClassViewList, {
               featureTableId: featureTable.id,
-              waypoint: readOnly2 ? void 0 : waypoint
+              waypoint,
+              readOnly: readOnly2
             }) : jsxRuntimeExports.jsx("span", {
-              className: styles$p.readOnlyNote,
+              className: styles$o.readOnlyNote,
               children: "Table not loaded. Choose the file again in the channel panel."
             })
           ]
@@ -95239,7 +98214,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       channelGroups,
       groupRowVisibilities,
       stackVisibilities,
-      visible: !visible
+      visible: !visible,
+      groupId: chip2.groupId ?? void 0
     }) : null;
     const nextGroupVis = gc2 ? withGroupRowVisible(groupRowVisibilities, channelGroups, gc2.id, !visible) : null;
     const nextStackVis = {
@@ -95469,7 +98445,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const chipHint = "_chipHint_j7rhr_121";
   const chipDim = "_chipDim_j7rhr_160";
   const editor = "_editor_j7rhr_164";
-  const styles$o = {
+  const styles$n = {
     root: root$9,
     groupCard,
     groupHeader,
@@ -95507,12 +98483,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showEditor = !chip2.key.endsWith(":rgb");
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$o.chipCell,
-        chip2.visible && chip2.hex && shown ? styles$o.chipOn : null,
-        chip2.hex && (!chip2.visible || !shown) ? styles$o.chipOutlined : null,
-        chip2.hex ? null : styles$o.chipUnassigned,
+        styles$n.chipCell,
+        chip2.visible && chip2.hex && shown ? styles$n.chipOn : null,
+        chip2.hex && (!chip2.visible || !shown) ? styles$n.chipOutlined : null,
+        chip2.hex ? null : styles$n.chipUnassigned,
         pending2 ? minervaTheme.busyOverlay : null,
-        dim ? styles$o.chipDim : null
+        dim ? styles$n.chipDim : null
       ].filter(Boolean).join(" "),
       style: chip2.hex ? {
         "--ch": `#${chip2.hex}`
@@ -95522,10 +98498,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         jsxRuntimeExports.jsx(CursorHint, {
           enabled: showBlocked,
           label: VIEWER_INTENSITY_LIMIT_HINT,
-          className: styles$o.chipHint,
+          className: styles$n.chipHint,
           children: jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$o.chip}`,
+            className: `${minervaTheme.focusRing} ${styles$n.chip}`,
             title: pending2 ? pendingLabel2 : void 0,
             "aria-label": pending2 ? pendingLabel2 : showBlocked ? VIEWER_INTENSITY_LIMIT_HINT : chipAriaLabel(chip2),
             "aria-pressed": chip2.visible,
@@ -95539,7 +98515,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         showEditor ? jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$o.chipMenu}`,
+          className: `${minervaTheme.focusRing} ${styles$n.chipMenu}`,
           title: `Edit ${chip2.name}`,
           "aria-label": `Edit ${chip2.name}`,
           "aria-expanded": open,
@@ -95598,7 +98574,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onDismissEditor
     ]);
     return jsxRuntimeExports.jsx("div", {
-      className: styles$o.chipWrap,
+      className: styles$n.chipWrap,
       children: chips.map((chip2, i2) => jsxRuntimeExports.jsxs(reactExports.Fragment, {
         children: [
           jsxRuntimeExports.jsx(ChipButton, {
@@ -95614,7 +98590,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           i2 === rowEnd && openChip ? jsxRuntimeExports.jsx("div", {
             ref: editorRef,
-            className: styles$o.editor,
+            className: styles$n.editor,
             children: jsxRuntimeExports.jsx(ChannelEditor, {
               chip: openChip
             })
@@ -95627,10 +98603,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const visLabel = props.allVisible ? `Hide every channel in ${props.name}` : `Show every channel in ${props.name}`;
     const filtering = props.onNameFilterChange != null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$o.groupCard,
+      className: styles$n.groupCard,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$o.groupHeader,
+          className: styles$n.groupHeader,
           children: [
             props.onToggleVisibility ? jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible: Boolean(props.allVisible),
@@ -95640,11 +98616,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: props.onToggleVisibility
             }) : null,
             jsxRuntimeExports.jsx("div", {
-              className: styles$o.groupLabel,
+              className: styles$n.groupLabel,
               children: props.name
             }),
             props.onNameFilterChange ? jsxRuntimeExports.jsx("input", {
-              className: styles$o.channelFilter,
+              className: styles$n.channelFilter,
               type: "text",
               value: props.nameFilter ?? "",
               placeholder: "Search...",
@@ -95661,7 +98637,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         filtering && props.chips.length === 0 ? jsxRuntimeExports.jsx("div", {
-          className: styles$o.filterEmpty,
+          className: styles$n.filterEmpty,
           children: "No matching channels"
         }) : jsxRuntimeExports.jsx(ChipGrid, {
           chips: props.chips,
@@ -95746,18 +98722,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       groupRowVisibilities: filledGroupVis
     };
     const shownIds = vivShownIntensitySourceIds(capVis);
+    for (const chip2 of model.allChannels) {
+      if (maskIds.has(chip2.sourceId) && chip2.visible) shownIds.add(chip2.sourceId);
+    }
     const atCap = vivIntensityLayerCount(image2.id, capVis) >= MAX_VIV_INTENSITY_CHANNELS;
     const fits = (next2) => !vivIntensityCapExceeded(image2.id, {
       ...capVis,
       ...next2
     });
-    const applyRgbUnit = (visible) => {
+    const applyRgbUnit = (visible, groupId) => {
       const next2 = visibilitiesForRgbUnit({
         rgbChannels,
         channelGroups,
         groupRowVisibilities: filledGroupVis,
         stackVisibilities: filledStackVis,
-        visible
+        visible,
+        groupId
       });
       if (visible && !fits({
         stackVisibilities: next2.channelVisibilities,
@@ -95772,7 +98752,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       var _a3;
       if (!chip2.groupRowId) return;
       if (rgbDisplay) {
-        applyRgbUnit(!chip2.visible);
+        applyRgbUnit(!chip2.visible, chip2.groupId ?? void 0);
         return;
       }
       const vis = filledGroupVis;
@@ -95851,7 +98831,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     if (image2.channels.length === 0) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$o.root,
+      className: styles$n.root,
       children: [
         model.groups.map((group2) => {
           const rgbUnit = rgbDisplay && group2.chips[0] ? [
@@ -95880,18 +98860,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             onDismissEditor: dismissEditor,
             onToggleVisibility: () => {
               if (rgbDisplay) {
-                applyRgbUnit(!group2.allVisible);
+                applyRgbUnit(!group2.allVisible, group2.id);
                 return;
               }
-              if (!docGroup || docGroup.channels.length === 0) return;
-              const allOn = docGroup.channels.every((gc2) => isGroupRowVisible(filledGroupVis, gc2.id));
               const next2 = {
                 ...filledGroupVis
               };
-              for (const gc2 of docGroup.channels) next2[gc2.id] = !allOn;
-              if (!allOn && !fits({
+              for (const chip2 of group2.chips) {
+                if (chip2.groupRowId) next2[chip2.groupRowId] = !group2.allVisible;
+              }
+              if (!group2.allVisible && !fits({
                 groupRowVisibilities: next2
-              })) return;
+              })) {
+                return;
+              }
               setChannelGroupRowVisibilities(next2);
             }
           }, group2.id);
@@ -157824,7 +160806,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, lengths) {
+        value: function writeBytes(stream, value, lengths) {
           var writeOptions = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : {
             allowInvalidVRLength: false
           };
@@ -157944,7 +160926,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           var written = _get(_getPrototypeOf(AsciiStringRepresentation2.prototype), "write", this).call(this, stream, "AsciiString", value);
           return _get(_getPrototypeOf(AsciiStringRepresentation2.prototype), "writeBytes", this).call(this, stream, value, written, writeOptions);
         }
@@ -157969,7 +160951,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           var written = _get(_getPrototypeOf(EncodedStringRepresentation2.prototype), "write", this).call(this, stream, "UTF8String", value);
           return _get(_getPrototypeOf(EncodedStringRepresentation2.prototype), "writeBytes", this).call(this, stream, value, written, writeOptions);
         }
@@ -157991,7 +160973,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     _createClass(BinaryRepresentation2, [
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, syntax, isEncapsulated) {
+        value: function writeBytes(stream, value, syntax, isEncapsulated) {
           var writeOptions = arguments.length > 4 && arguments[4] !== void 0 ? arguments[4] : {};
           var i2;
           var binaryStream;
@@ -158261,7 +161243,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(AttributeTag2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(AttributeTag2.prototype), "write", this).call(this, stream, "TwoUint16s", value), writeOptions);
         }
       }
@@ -158366,7 +161348,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           var _this8 = this;
           var val = Array.isArray(value) ? value.map(function(ds) {
             return _this8.convertToString(ds);
@@ -158435,7 +161417,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(FloatingPointSingle2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(FloatingPointSingle2.prototype), "write", this).call(this, stream, "Float", value), writeOptions);
         }
       }
@@ -158471,7 +161453,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(FloatingPointDouble2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(FloatingPointDouble2.prototype), "write", this).call(this, stream, "Double", value), writeOptions);
         }
       }
@@ -158513,7 +161495,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           var _this13 = this;
           var val = Array.isArray(value) ? value.map(function(is2) {
             return _this13.convertToString(is2);
@@ -158669,7 +161651,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(PersonName2.prototype), "writeBytes", this).call(this, stream, dicomJson.pnObjectToString(value), writeOptions);
         }
       }
@@ -158738,7 +161720,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(SignedLong2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(SignedLong2.prototype), "write", this).call(this, stream, "Int32", value), writeOptions);
         }
       }
@@ -158835,7 +161817,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, syntax, writeOptions) {
+        value: function writeBytes(stream, value, syntax, writeOptions) {
           var written = 0;
           if (value) {
             for (var i2 = 0; i2 < value.length; i2++) {
@@ -158886,7 +161868,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(SignedShort2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(SignedShort2.prototype), "write", this).call(this, stream, "Int16", value), writeOptions);
         }
       }
@@ -159040,7 +162022,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(UnsignedShort2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(UnsignedShort2.prototype), "write", this).call(this, stream, "Uint16", value), writeOptions);
         }
       }
@@ -159070,7 +162052,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       {
         key: "writeBytes",
-        value: function writeBytes2(stream, value, writeOptions) {
+        value: function writeBytes(stream, value, writeOptions) {
           return _get(_getPrototypeOf(UnsignedLong2.prototype), "writeBytes", this).call(this, stream, value, _get(_getPrototypeOf(UnsignedLong2.prototype), "write", this).call(this, stream, "Uint32", value), writeOptions);
         }
       }
@@ -166535,6 +169517,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!Number.isFinite(byte) || byte <= 0) return 0;
     return Math.min(65535, Math.max(0, Math.round((byte / 256) ** 3 * 65536)));
   }
+  const CUBE_ROOT_U8_TO_U16 = Uint16Array.from({
+    length: 256
+  }, (_2, b2) => decodeCubeRootU8ToU16(b2));
+  const CONTRAST_U8_TO_U16 = Uint16Array.from({
+    length: 256
+  }, (_2, b2) => b2 << 8);
+  function u8ToU16Lut(transfer) {
+    return transfer === "cube-root" ? CUBE_ROOT_U8_TO_U16 : CONTRAST_U8_TO_U16;
+  }
   function exportTransferForImage(image2, storyTransfer) {
     if (isRgbDisplayImage(image2)) return "contrast";
     return storyTransfer;
@@ -166551,6 +169542,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return null;
     }
     return exportTransferForImage(image2, storyTransfer);
+  }
+  function expandThroughLut(data2, lut) {
+    const out = new Uint16Array(data2.length);
+    for (let i2 = 0; i2 < data2.length; i2++) {
+      out[i2] = lut[data2[i2] & 255];
+    }
+    return out;
   }
   const JPEG_PYRAMID_TILE_SIZE = 1024;
   const JPEG_BAKED_CONTRAST_LIMIT = [
@@ -166596,6 +169594,44 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       length: n2
     }, (_2, i2) => i2);
   }
+  function WorkerWrapper$2(options) {
+    return new Worker("" + new URL("decoder.worker-DskuWaKT.js", import.meta.url).href, {
+      type: "module",
+      name: options == null ? void 0 : options.name
+    });
+  }
+  const decoderTags = /* @__PURE__ */ new WeakMap();
+  function withoutBlockTables(fileDirectory) {
+    let tags = decoderTags.get(fileDirectory);
+    if (!tags) {
+      tags = {
+        ...fileDirectory,
+        TileOffsets: fileDirectory.TileOffsets && [],
+        TileByteCounts: fileDirectory.TileByteCounts && [],
+        StripOffsets: fileDirectory.StripOffsets && [],
+        StripByteCounts: fileDirectory.StripByteCounts && [],
+        ImageDescription: void 0
+      };
+      decoderTags.set(fileDirectory, tags);
+    }
+    return tags;
+  }
+  class OmeDecodePool extends Pool {
+    decode(fileDirectory, buffer2) {
+      return super.decode(withoutBlockTables(fileDirectory), buffer2);
+    }
+    decodeWidened(fileDirectory, buffer2, lut) {
+      return super.decode({
+        ...withoutBlockTables(fileDirectory),
+        MinervaWidenLut: lut
+      }, buffer2);
+    }
+  }
+  let sharedPool = null;
+  function sharedOmeDecodePool() {
+    sharedPool ?? (sharedPool = new OmeDecodePool(void 0, () => new WorkerWrapper$2()));
+    return sharedPool;
+  }
   class JpegImage {
     constructor(opts) {
       __publicField(this, "level");
@@ -166609,6 +169645,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       __publicField(this, "imageWidth");
       __publicField(this, "fetchTile");
       __publicField(this, "transfer");
+      __publicField(this, "tileDirectory");
       const tileSize = opts.tileSize ?? JPEG_PYRAMID_TILE_SIZE;
       this.level = opts.level;
       this.c = opts.c;
@@ -166620,6 +169657,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       this.imageHeight = opts.imageHeight;
       this.imageWidth = opts.imageWidth;
       this.transfer = opts.transfer ?? "contrast";
+      this.tileDirectory = {
+        Compression: 7,
+        SamplesPerPixel: 1,
+        TileWidth: tileSize,
+        TileLength: tileSize
+      };
       this.fetchTile = opts.fetchTile ?? (async (folder, filename2) => {
         const url = `${this.imagePath}/${folder}/${filename2}`;
         const response = await fetch(url);
@@ -166632,35 +169675,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     async getTileOrStrip(x2, y2, sample) {
       const fname = `${this.level}_${x2}_${y2}.jpg`;
       const blob = await this.fetchTile(this.folder, fname);
-      const decoder = new ImageDecoder({
-        data: await blob.arrayBuffer(),
-        type: "image/jpeg"
-      });
-      const { image: image2 } = await decoder.decode();
-      const { displayWidth, displayHeight } = image2;
-      const tileSize = this.tileSize;
-      const copyOptions = {
-        format: "BGRX",
-        layout: [
-          {
-            offset: 0,
-            stride: displayWidth * 4
-          }
-        ]
-      };
-      const in_data = new Uint8Array(image2.allocationSize(copyOptions));
-      const data2 = new Uint16Array(tileSize ** 2);
-      await image2.copyTo(in_data, copyOptions);
-      const rowWidth = Math.min(displayWidth, tileSize);
-      const rowCount = Math.min(displayHeight, tileSize);
-      for (let row2 = 0; row2 < rowCount; row2 += 1) {
-        for (let col = 0; col < rowWidth; col += 1) {
-          const byte = in_data[(row2 * displayWidth + col) * 4];
-          data2[row2 * tileSize + col] = this.transfer === "cube-root" ? decodeCubeRootU8ToU16(byte) : byte << 8;
-        }
-      }
-      image2.close();
-      decoder.close();
+      const bytes = new Uint8Array(await sharedOmeDecodePool().decode(this.tileDirectory, await blob.arrayBuffer()));
+      const data2 = expandThroughLut(bytes, u8ToU16Lut(this.transfer));
       return {
         x: x2,
         y: y2,
@@ -166921,7 +169937,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function isRelativeOmeTiffUrl(url) {
     const u2 = url.trim();
-    if (!u2 || /^https?:\/\//i.test(u2) || u2.startsWith("blob:")) return false;
+    if (!u2 || isAbsoluteUrl(u2)) return false;
     return /\.tiff?$/i.test(u2);
   }
   function channelFoldersEqual(a2, b2) {
@@ -167245,9 +170261,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       type: "button",
       "aria-pressed": selected,
       className: [
-        selected ? styles$q.typeChipActive : null,
-        suggested ? styles$q.typeChipSuggested : null,
-        muted ? styles$q.typeChipMuted : null
+        selected ? styles$p.typeChipActive : null,
+        suggested ? styles$p.typeChipSuggested : null,
+        muted ? styles$p.typeChipMuted : null
       ].filter(Boolean).join(" "),
       onClick,
       children: label2
@@ -167262,14 +170278,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ].filter(Boolean).join(" \xB7 ") || null;
   };
   function sourceFileReference(im) {
-    var _a2;
     const src = im.source;
     if ((src == null ? void 0 : src.kind) === "url" || (src == null ? void 0 : src.kind) === "jpeg") {
-      const url = src.url.trim();
-      if (url && url !== "." && url !== "./") {
-        const leaf = (_a2 = url.split(/[/\\]/).pop()) == null ? void 0 : _a2.trim();
-        if (leaf) return leaf;
-      }
+      const leaf = urlFileName(src.url);
+      if (leaf && leaf !== ".") return leaf;
     }
     const base2 = im.basename.trim();
     return base2 || null;
@@ -167319,22 +170331,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function pointPopupPosition(el2) {
     const rect = el2.getBoundingClientRect();
+    const top2 = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 200));
     return {
-      top: Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 200)),
-      left: Math.max(8, Math.min(rect.left, window.innerWidth - 328))
+      top: top2,
+      left: Math.max(8, Math.min(rect.left, window.innerWidth - 328)),
+      maxHeight: window.innerHeight - top2 - 8
     };
   }
+  const IDLE_STRIP = {
+    draft: "",
+    dropError: null,
+    urlError: null,
+    dragging: false
+  };
   const Upload = (props) => {
-    const { onAllow, importRevision = 0, imageLoaded = false, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, onImportDicomWeb, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], onReselectFile, onReselectUrl, needsStoryRootReconnect = false, onReconnectStoryRoot, onRemoveImage, onReplaceImage, row: row2 = false, disabled: disabled2 = false } = props;
+    const { onAllow, importRevision = 0, imageLoaded = false, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, onImportDicomWeb, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], loadedImageIds, onLocateImage, needsStoryRootReconnect = false, onReconnectStoryRoot, onRemoveImage, onReplaceImage, row: row2 = false, disabled: disabled2 = false } = props;
     const [pointTarget, setPointTarget] = reactExports.useState(null);
-    const pointTargetRef = reactExports.useRef(pointTarget);
-    pointTargetRef.current = pointTarget;
     const togglePoint = (imageId, mode, el2) => {
       setPointTarget((pointTarget == null ? void 0 : pointTarget.imageId) === imageId && pointTarget.mode === mode ? null : {
         imageId,
         mode,
         ...pointPopupPosition(el2)
       });
+      setUrlDraft("");
+      setImportError(null);
     };
     const images = useDocumentStore((s2) => s2.images);
     reactExports.useEffect(() => {
@@ -167534,21 +170554,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       clearFeatureCsv
     ]);
     const applyPointedSource = reactExports.useCallback(async (source2) => {
-      const target = pointTargetRef.current;
-      if (!target) return false;
+      if (!pointTarget) return false;
       setPointTarget(null);
-      if (target.mode === "replace") {
-        await (onReplaceImage == null ? void 0 : onReplaceImage(target.imageId, source2));
-      } else if (source2.kind === "local") {
-        await (onReselectFile == null ? void 0 : onReselectFile(target.imageId, source2.handle));
-      } else {
-        await (onReselectUrl == null ? void 0 : onReselectUrl(target.imageId, source2.url));
-      }
+      const apply = pointTarget.mode === "replace" ? onReplaceImage : onLocateImage;
+      await (apply == null ? void 0 : apply(pointTarget.imageId, source2));
       return true;
     }, [
+      pointTarget,
       onReplaceImage,
-      onReselectFile,
-      onReselectUrl
+      onLocateImage
     ]);
     const acceptLocalHandles = reactExports.useCallback(async (handles) => {
       if (handles.length === 0) return;
@@ -167604,7 +170618,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         setImportError("Enter a valid http(s) URL.");
         return;
       }
-      if (pointTargetRef.current) {
+      if (pointTarget) {
         setUrlDraft("");
         void applyPointedSource({
           kind: "url",
@@ -167620,6 +170634,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       applyPointedSource,
       disabled2,
       openPending,
+      pointTarget,
       urlDraft
     ]);
     const onDragEnter = (e2) => {
@@ -167759,35 +170774,36 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         formatDims(im.sizeX, im.sizeY, im.sizeC ?? im.channels.length)
       ].filter(Boolean);
       const localKey = ((_a2 = im.source) == null ? void 0 : _a2.kind) === "local" ? im.source.handleKey : void 0;
-      const needsReselect = !!localKey && missingHandleKeys.includes(localKey) && !!onReselectFile;
-      const needsLocateFile = !!onReselectFile && ((_b2 = im.source) == null ? void 0 : _b2.kind) === "url" && isRelativeOmeTiffUrl(im.source.url);
-      const needsPermission = needsFileAccess && !!onRequestFileAccess && ((_c2 = im.source) == null ? void 0 : _c2.kind) === "local" && !needsReselect;
+      const needsReselect = !!localKey && missingHandleKeys.includes(localKey) && !!onLocateImage;
+      const relativeUnloaded = ((_b2 = im.source) == null ? void 0 : _b2.kind) === "url" && isRelativeOmeTiffUrl(im.source.url) && !(loadedImageIds == null ? void 0 : loadedImageIds.has(im.id));
+      const needsPermission = needsFileAccess && !!onRequestFileAccess && (((_c2 = im.source) == null ? void 0 : _c2.kind) === "local" ? !needsReselect : relativeUnloaded);
+      const needsLocateFile = !!onLocateImage && relativeUnloaded && !needsPermission;
       const needsStoryDir = needsStoryRootReconnect && !!onReconnectStoryRoot && ((_d = im.source) == null ? void 0 : _d.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
       const showAccessOverlay = needsReselect || needsLocateFile || needsPermission || needsStoryDir;
       const fileReference = showAccessOverlay ? sourceFileReference(im) : null;
       const pointing = (pointTarget == null ? void 0 : pointTarget.imageId) === im.id ? pointTarget.mode : null;
       return jsxRuntimeExports.jsxs("article", {
-        className: styles$q.imageCard,
+        className: styles$p.imageCard,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$q.imageCardHeader,
+            className: styles$p.imageCardHeader,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$q.imageCardText,
+                className: styles$p.imageCardText,
                 children: [
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$q.imageCardTitle,
+                    className: styles$p.imageCardTitle,
                     title: title7,
                     children: title7
                   }),
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$q.imageCardMeta,
+                    className: styles$p.imageCardMeta,
                     children: metaParts.join(" \xB7 ")
                   })
                 ]
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$q.imageCardActions,
+                className: styles$p.imageCardActions,
                 children: [
                   jsxRuntimeExports.jsx(PanelIconButton, {
                     title: "Arrange",
@@ -167824,7 +170840,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           }),
           jsxRuntimeExports.jsx(OpacitySlider, {
-            className: styles$q.imageOpacity,
+            className: styles$p.imageOpacity,
             value: clampImageOpacity(im.opacity),
             ariaLabel: title7,
             onPreview: (opacity) => {
@@ -167848,16 +170864,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             image: im
           }),
           showAccessOverlay ? jsxRuntimeExports.jsxs("div", {
-            className: styles$q.fileAccessOverlay,
+            className: styles$p.fileAccessOverlay,
             children: [
               fileReference ? jsxRuntimeExports.jsx("div", {
-                className: styles$q.fileAccessName,
+                className: styles$p.fileAccessName,
                 title: fileReference,
                 children: fileReference
               }) : null,
               jsxRuntimeExports.jsx(PanelActionButton, {
                 type: "button",
-                className: styles$q.fileAccessAction,
+                className: styles$p.fileAccessAction,
                 active: pointing === "locate",
                 "aria-pressed": needsReselect || needsLocateFile ? pointing === "locate" : void 0,
                 onClick: (e2) => {
@@ -167875,18 +170891,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const imageCards = images.length > 0 ? images.map((im, i2) => renderImageCard(im, i2)) : imageLoaded && loadedSource ? [
       jsxRuntimeExports.jsx("article", {
-        className: styles$q.imageCard,
+        className: styles$p.imageCard,
         children: jsxRuntimeExports.jsx("div", {
-          className: styles$q.imageCardHeader,
+          className: styles$p.imageCardHeader,
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$q.imageCardText,
+            className: styles$p.imageCardText,
             children: [
               jsxRuntimeExports.jsx("div", {
-                className: styles$q.imageCardTitle,
+                className: styles$p.imageCardTitle,
                 children: loadedSource.label
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$q.imageCardMeta,
+                className: styles$p.imageCardMeta,
                 children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
               })
             ]
@@ -167901,84 +170917,91 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onDrop: (e2) => void onDrop(e2)
     };
     const stripError = importError2 && !pending2 ? importError2 : null;
-    const dropError = stripError && stripErrorAt === "drop" ? stripError : null;
-    const urlError = stripError && stripErrorAt === "url" ? stripError : null;
-    const renderAddStrip = (popup) => jsxRuntimeExports.jsxs("div", {
-      className: [
-        styles$q.addStrip,
-        row2 && !popup ? styles$q.addStripRow : "",
-        (row2 || popup) && dragging ? styles$q.panelDropActive : ""
-      ].filter(Boolean).join(" "),
-      ...row2 || popup ? dropHandlers : {},
-      children: [
-        jsxRuntimeExports.jsx("button", {
-          type: "button",
-          className: [
-            styles$q.dropZone,
-            dragging ? styles$q.dropZoneActive : ""
-          ].join(" "),
-          disabled: disabled2,
-          "aria-invalid": dropError ? true : void 0,
-          onClick: () => void browseLocal(),
-          children: jsxRuntimeExports.jsx("span", {
+    const liveStrip = {
+      draft: urlDraft,
+      dropError: stripErrorAt === "drop" ? stripError : null,
+      urlError: stripErrorAt === "url" ? stripError : null,
+      dragging
+    };
+    const renderAddStrip = (popup) => {
+      const strip2 = popup || !pointTarget ? liveStrip : IDLE_STRIP;
+      return jsxRuntimeExports.jsxs("div", {
+        className: [
+          styles$p.addStrip,
+          row2 && !popup ? styles$p.addStripRow : "",
+          (row2 || popup) && strip2.dragging ? styles$p.panelDropActive : ""
+        ].filter(Boolean).join(" "),
+        ...row2 || popup ? dropHandlers : {},
+        children: [
+          jsxRuntimeExports.jsx("button", {
+            type: "button",
             className: [
-              styles$q.dropZoneTitle,
-              dropError ? styles$q.importError : ""
-            ].filter(Boolean).join(" "),
-            role: dropError ? "alert" : void 0,
-            children: dropError ?? "Drop or Browse Image File"
-          })
-        }),
-        jsxRuntimeExports.jsx("div", {
-          className: styles$q.orDivider,
-          children: jsxRuntimeExports.jsx("span", {
-            children: "or"
-          })
-        }),
-        jsxRuntimeExports.jsxs("div", {
-          className: styles$q.urlRow,
-          children: [
-            jsxRuntimeExports.jsxs("div", {
-              className: styles$q.urlField,
-              children: [
-                jsxRuntimeExports.jsx("input", {
-                  id: popup ? void 0 : "upload-add-url",
-                  type: "url",
-                  className: `${minervaTheme.input} ${styles$q.urlInput}`,
-                  placeholder: "Image URL (OME-TIFF or DICOMweb)",
-                  "aria-label": "Image URL",
-                  "aria-invalid": urlError ? true : void 0,
-                  value: urlDraft,
-                  disabled: disabled2,
-                  onChange: (e2) => {
-                    setUrlDraft(e2.target.value);
-                    setImportError(null);
-                  },
-                  onKeyDown: (e2) => {
-                    if (e2.key === "Enter") {
-                      e2.preventDefault();
-                      acceptUrlDraft();
+              styles$p.dropZone,
+              strip2.dragging ? styles$p.dropZoneActive : ""
+            ].join(" "),
+            disabled: disabled2,
+            "aria-invalid": strip2.dropError ? true : void 0,
+            onClick: () => void browseLocal(),
+            children: jsxRuntimeExports.jsx("span", {
+              className: [
+                styles$p.dropZoneTitle,
+                strip2.dropError ? styles$p.importError : ""
+              ].filter(Boolean).join(" "),
+              role: strip2.dropError ? "alert" : void 0,
+              children: strip2.dropError ?? "Drop or Browse Image File"
+            })
+          }),
+          jsxRuntimeExports.jsx("div", {
+            className: styles$p.orDivider,
+            children: jsxRuntimeExports.jsx("span", {
+              children: "or"
+            })
+          }),
+          jsxRuntimeExports.jsxs("div", {
+            className: styles$p.urlRow,
+            children: [
+              jsxRuntimeExports.jsxs("div", {
+                className: styles$p.urlField,
+                children: [
+                  jsxRuntimeExports.jsx("input", {
+                    id: popup ? void 0 : "upload-add-url",
+                    type: "url",
+                    className: `${minervaTheme.input} ${styles$p.urlInput}`,
+                    placeholder: "Image URL (OME-TIFF or DICOMweb)",
+                    "aria-label": "Image URL",
+                    "aria-invalid": strip2.urlError ? true : void 0,
+                    value: strip2.draft,
+                    disabled: disabled2,
+                    onChange: (e2) => {
+                      setUrlDraft(e2.target.value);
+                      setImportError(null);
+                    },
+                    onKeyDown: (e2) => {
+                      if (e2.key === "Enter") {
+                        e2.preventDefault();
+                        acceptUrlDraft();
+                      }
                     }
-                  }
-                }),
-                urlDraft.trim() ? jsxRuntimeExports.jsx(PanelActionButton, {
-                  type: "button",
-                  className: styles$q.urlAdd,
-                  disabled: disabled2 || !urlReady,
-                  onClick: acceptUrlDraft,
-                  children: "Add"
-                }) : null
-              ]
-            }),
-            urlError ? jsxRuntimeExports.jsx("div", {
-              className: styles$q.importError,
-              role: "alert",
-              children: urlError
-            }) : null
-          ]
-        })
-      ]
-    });
+                  }),
+                  strip2.draft.trim() ? jsxRuntimeExports.jsx(PanelActionButton, {
+                    type: "button",
+                    className: styles$p.urlAdd,
+                    disabled: disabled2 || !urlReady,
+                    onClick: acceptUrlDraft,
+                    children: "Add"
+                  }) : null
+                ]
+              }),
+              strip2.urlError ? jsxRuntimeExports.jsx("div", {
+                className: styles$p.importError,
+                role: "alert",
+                children: strip2.urlError
+              }) : null
+            ]
+          })
+        ]
+      });
+    };
     let overlayBusyLabel = "Importing\u2026";
     if (detecting) overlayBusyLabel = "Detecting\u2026";
     else if (featureCsvFile && overlayRole === "segmentation") {
@@ -167991,15 +171014,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: [
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: styles$q.pointBackdrop,
+              className: styles$p.pointBackdrop,
               "aria-label": "Close",
               onClick: () => setPointTarget(null)
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$q.pointPopup,
+              className: styles$p.pointPopup,
               style: {
                 top: pointTarget.top,
-                left: pointTarget.left
+                left: pointTarget.left,
+                maxHeight: pointTarget.maxHeight
               },
               role: "dialog",
               "aria-label": pointTarget.mode === "locate" ? "Locate image file or URL" : "Replace image with a file or URL",
@@ -168010,7 +171034,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         row2 ? addStrip2 : jsxRuntimeExports.jsx("div", {
           className: [
             panel$1.authorPanel,
-            dragging ? styles$q.panelDropActive : ""
+            dragging ? styles$p.panelDropActive : ""
           ].join(" "),
           ...dropHandlers,
           children: jsxRuntimeExports.jsx("div", {
@@ -168019,7 +171043,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               panel$1.thinScrollbar
             ].join(" "),
             children: jsxRuntimeExports.jsxs("div", {
-              className: styles$q.stack,
+              className: styles$p.stack,
               children: [
                 imageCards,
                 addStrip2
@@ -168039,10 +171063,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           onImport: () => void runImport(),
           children: [
             jsxRuntimeExports.jsxs("div", {
-              className: styles$q.typeRow,
+              className: styles$p.typeRow,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$q.fieldLabel,
+                  className: styles$p.fieldLabel,
                   children: "Image Type"
                 }),
                 jsxRuntimeExports.jsx(FormatChip, {
@@ -168083,12 +171107,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             dicomAllowed ? jsxRuntimeExports.jsx("div", {
-              className: styles$q.typeSection,
+              className: styles$p.typeSection,
               children: jsxRuntimeExports.jsxs("div", {
-                className: styles$q.typeRow,
+                className: styles$p.typeRow,
                 children: [
                   jsxRuntimeExports.jsx("span", {
-                    className: styles$q.fieldLabel,
+                    className: styles$p.fieldLabel,
                     children: "Format"
                   }),
                   FORMAT_OPTIONS.map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
@@ -168105,10 +171129,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               })
             }) : null,
             overlayRole === "segmentation" || overlayRole === "intensity" && !overlayRgbDisplay ? jsxRuntimeExports.jsxs("div", {
-              className: styles$q.typeRow,
+              className: styles$p.typeRow,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$q.fieldLabel,
+                  className: styles$p.fieldLabel,
                   children: overlayRole === "segmentation" ? "Feature table" : "Markers"
                 }),
                 jsxRuntimeExports.jsx(PanelActionButton, {
@@ -170475,6 +173499,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function imageHandleStorageKey(storyId, imageId) {
     return storyId ? `story:${storyId}:image:${imageId}` : `image:${imageId}`;
   }
+  function locatedFileStorageKey(storyId, imageId, url) {
+    return `${imageHandleStorageKey(storyId, imageId)}:located:${url.trim()}`;
+  }
   async function persistLocalImageHandle(args) {
     const { storyId, imageId, handle: handle2, images } = args;
     const key2 = imageHandleStorageKey(storyId, imageId);
@@ -170484,6 +173511,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       handleKey: key2
     });
     return next2;
+  }
+  function storedTableFormat(bytes) {
+    const parquet = bytes.byteLength >= 4 && bytes[0] === 80 && bytes[1] === 65 && bytes[2] === 82 && bytes[3] === 49;
+    if (parquet) return {
+      kind: "parquet"
+    };
+    return {
+      kind: "csv"
+    };
+  }
+  async function writeDirectoryFile(directory, relativePath, data2) {
+    const parts = relativePath.split("/");
+    const fileName = parts.pop();
+    if (!fileName) throw new Error(`Invalid file path: ${relativePath}`);
+    let dir2 = directory;
+    for (const part of parts) {
+      dir2 = await dir2.getDirectoryHandle(part, {
+        create: true
+      });
+    }
+    const fh2 = await dir2.getFileHandle(fileName, {
+      create: true
+    });
+    const write = await fh2.createWritable();
+    await write.write(data2);
+    await write.close();
   }
   const storySearchSchema = objectType({
     storyid: stringType().uuid().optional()
@@ -170694,29 +173747,34 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
 </html>
 `;
   }
-  async function writeTextFile(directory, name2, text2) {
-    const fh2 = await directory.getFileHandle(name2, {
-      create: true
-    });
-    const write = await fh2.createWritable();
-    await write.write(text2);
-    await write.close();
-  }
   const FEATURE_TABLE_DIR = "feature-tables";
-  function planFeatureTableSidecars(data2) {
+  async function featureTableParquet(featureTable) {
+    const key2 = featureTableHandleKey(featureTable);
+    const stored = key2 ? await getBlob(key2) : void 0;
+    if (stored && storedTableFormat(stored).kind === "parquet") return stored;
+    if (hasIngestedFeatureTable(featureTable.id)) {
+      return exportFeatureTableParquet(featureTable.id);
+    }
+    return null;
+  }
+  async function writeFeatureTableSidecars(directory, data2) {
     const featureTables = [];
     const skipped = [];
-    for (const featureTable of data2.featureTables) {
-      if (!hasIngestedFeatureTable(featureTable.id)) {
+    const parquets = await Promise.all(data2.featureTables.map(featureTableParquet));
+    for (const [i2, featureTable] of data2.featureTables.entries()) {
+      const bytes = parquets[i2];
+      if (!bytes) {
         const channel = data2.images.flatMap((im) => im.channels).find((ch2) => ch2.id === featureTable.sourceChannelId);
         skipped.push((channel == null ? void 0 : channel.name) ?? featureTable.sourceChannelId);
         continue;
       }
+      const url = `${FEATURE_TABLE_DIR}/${featureTable.id}.parquet`;
+      await writeDirectoryFile(directory, url, bytes);
       featureTables.push({
         ...featureTable,
         source: {
           kind: "url",
-          url: `${FEATURE_TABLE_DIR}/${featureTable.id}.parquet`
+          url
         }
       });
     }
@@ -170724,38 +173782,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       featureTables,
       skipped
     };
-  }
-  async function writeFeatureTableFiles(directory, featureTables) {
-    if (featureTables.length === 0) return;
-    const dir2 = await directory.getDirectoryHandle(FEATURE_TABLE_DIR, {
-      create: true
-    });
-    for (const featureTable of featureTables) {
-      const bytes = await exportFeatureTableParquet(featureTable.id);
-      const fh2 = await dir2.getFileHandle(`${featureTable.id}.parquet`, {
-        create: true
-      });
-      const write = await fh2.createWritable();
-      await write.write(bytes);
-      await write.close();
-    }
-  }
-  async function writeBytes(directory, relativePath, bytes) {
-    const parts = relativePath.split("/");
-    const fileName = parts.pop();
-    if (!fileName) throw new Error(`Invalid story player path: ${relativePath}`);
-    let dir2 = directory;
-    for (const part of parts) {
-      dir2 = await dir2.getDirectoryHandle(part, {
-        create: true
-      });
-    }
-    const fh2 = await dir2.getFileHandle(fileName, {
-      create: true
-    });
-    const write = await fh2.createWritable();
-    await write.write(bytes);
-    await write.close();
   }
   async function copyHostedPlayer(directory) {
     const base2 = hostedPlayerBaseUrl();
@@ -170780,7 +173806,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (!fileRes.ok) {
         throw new Error(`Failed to copy story player file ${relativePath} (${fileRes.status})`);
       }
-      await writeBytes(playerDir, relativePath, await fileRes.arrayBuffer());
+      await writeDirectoryFile(playerDir, relativePath, await fileRes.arrayBuffer());
     }
   }
   async function writeStoryBundleSidecars(directory, data2, opts) {
@@ -170788,15 +173814,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (mode === "remote-url" && !canExportWithRemoteUrls(data2.images)) {
       throw new Error("Remote URL export requires all images to use OME-TIFF URLs (no local files).");
     }
-    const { featureTables, skipped } = planFeatureTableSidecars(data2);
-    await writeFeatureTableFiles(directory, featureTables);
+    const { featureTables, skipped } = await writeFeatureTableSidecars(directory, data2);
     const exported = toExportedStoryDocument({
       ...data2,
       featureTables
     }, mode);
-    await writeTextFile(directory, "document.json", JSON.stringify(exported, null, 2));
+    await writeDirectoryFile(directory, "document.json", JSON.stringify(exported, null, 2));
     await copyHostedPlayer(directory);
-    await writeTextFile(directory, "index.html", storyIndexHtml(exported.metadata.title, exported.metadata.minervaVersion ?? version));
+    await writeDirectoryFile(directory, "index.html", storyIndexHtml(exported.metadata.title, exported.metadata.minervaVersion ?? version));
     return {
       skippedFeatureTables: skipped
     };
@@ -170828,6 +173853,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (!isDirectoryHandle(stored)) return void 0;
     if (!await ensureDirectoryPermission(stored, opts)) return void 0;
     return stored;
+  }
+  async function storyRootNeedsPermission(storyId) {
+    if (!storyId) return false;
+    const stored = await getFileHandle(storyRootHandleKey(storyId));
+    if (!isDirectoryHandle(stored)) return false;
+    return !await ensureDirectoryPermission(stored, {});
   }
   function tileFetcherForDirectory(root2) {
     return async (folder, filename2) => {
@@ -170917,25 +173948,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const file = await fh2.getFile();
     return validateDocumentData(JSON.parse(await file.text()));
   }
-  async function fileInDirectory(root2, relativePath) {
-    const parts = relativePath.trim().split(/[/\\]/).filter((part) => part && part !== ".");
-    const name2 = parts.pop();
-    if (!name2 || parts.includes("..")) return void 0;
-    let dir2 = root2;
-    try {
-      for (const part of parts) dir2 = await dir2.getDirectoryHandle(part);
-      return await dir2.getFileHandle(name2);
-    } catch (e2) {
-      if (e2 instanceof DOMException && (e2.name === "NotFoundError" || e2.name === "TypeMismatchError")) {
-        return void 0;
-      }
-      throw e2;
-    }
-  }
-  function isRemoteOrBlobUrl(url) {
-    const u2 = url.trim();
-    return /^https?:\/\//i.test(u2) || u2.startsWith("blob:");
-  }
   async function persistImportedStory(data2, titleFallback, root2) {
     var _a2, _b2;
     const title7 = ((_a2 = data2.metadata.title) == null ? void 0 : _a2.trim()) || titleFallback || "Imported Story";
@@ -170981,10 +173993,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       images = nextImages;
       const nextTables = [];
       for (const table2 of featureTables) {
-        if (table2.source.kind === "url" && !isRemoteOrBlobUrl(table2.source.url)) {
+        if (table2.source.kind === "url" && !isAbsoluteUrl(table2.source.url)) {
           const fh2 = await fileInDirectory(root2, table2.source.url);
           if (fh2) {
-            const handleKey = `story:${rec.id}:featureTable:${table2.id}`;
+            const handleKey = featureTableBlobKey(rec.id, table2.id);
             const file = await fh2.getFile();
             await putBlob(handleKey, new Uint8Array(await file.arrayBuffer()));
             nextTables.push({
@@ -171089,7 +174101,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const rowTitle$1 = "_rowTitle_la95u_239";
   const rowDate = "_rowDate_la95u_249";
   const scrap = "_scrap_la95u_258";
-  const styles$n = {
+  const styles$m = {
     root: root$8,
     masthead,
     addWrap,
@@ -171163,7 +174175,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function ShelfBoard() {
     return jsxRuntimeExports.jsx("div", {
-      className: styles$n.shelfBoard,
+      className: styles$m.shelfBoard,
       "aria-hidden": true
     });
   }
@@ -171227,10 +174239,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     return jsxRuntimeExports.jsx("div", {
       ref: shelfRef,
-      className: styles$n.ghostShelf,
+      className: styles$m.ghostShelf,
       "aria-hidden": true,
       children: books.map((b2) => jsxRuntimeExports.jsx("div", {
-        className: styles$n.ghostBook,
+        className: styles$m.ghostBook,
         style: {
           width: b2.width,
           height: b2.height,
@@ -171407,46 +174419,46 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       summaries
     ]);
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$n.root,
+      className: styles$m.root,
       children: [
         error2 ? jsxRuntimeExports.jsx("p", {
-          className: styles$n.error,
+          className: styles$m.error,
           children: error2
         }) : null,
         jsxRuntimeExports.jsxs("header", {
-          className: styles$n.masthead,
+          className: styles$m.masthead,
           children: [
             jsxRuntimeExports.jsx("h1", {
               className: `${minervaTheme.wordmark} ${minervaTheme.wordmarkDisplay}`,
               children: "Minerva"
             }),
             jsxRuntimeExports.jsx("p", {
-              className: styles$n.tagline,
+              className: styles$m.tagline,
               children: "a microscopy viewer for non-experts"
             })
           ]
         }),
         jsxRuntimeExports.jsx("section", {
-          className: styles$n.bookcase,
+          className: styles$m.bookcase,
           "aria-label": "Library",
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$n.bookcaseInner,
+            className: styles$m.bookcaseInner,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$n.shelfBay,
+                className: styles$m.shelfBay,
                 children: [
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$n.bayContent,
+                    className: styles$m.bayContent,
                     children: jsxRuntimeExports.jsxs("div", {
-                      className: styles$n.intakeRow,
+                      className: styles$m.intakeRow,
                       children: [
                         jsxRuntimeExports.jsxs("div", {
-                          className: styles$n.addWrap,
+                          className: styles$m.addWrap,
                           ref: addRef,
                           children: [
                             jsxRuntimeExports.jsx("button", {
                               type: "button",
-                              className: `${minervaTheme.focusRing} ${styles$n.addTrigger}`,
+                              className: `${minervaTheme.focusRing} ${styles$m.addTrigger}`,
                               disabled: shelfBusy,
                               "aria-label": "Add story",
                               title: "New or import story",
@@ -171456,7 +174468,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                               children: jsxRuntimeExports.jsx(PlusIcon, {})
                             }),
                             addOpen ? jsxRuntimeExports.jsxs("div", {
-                              className: `${minervaTheme.menu} ${styles$n.addMenu}`,
+                              className: `${minervaTheme.menu} ${styles$m.addMenu}`,
                               role: "menu",
                               children: [
                                 jsxRuntimeExports.jsx("button", {
@@ -171509,48 +174521,48 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               bays.map((bay, index2) => {
                 const key2 = bay.kind === "story" ? bay.story.id : `bay-${index2}`;
                 return jsxRuntimeExports.jsxs("div", {
-                  className: styles$n.shelfBay,
+                  className: styles$m.shelfBay,
                   children: [
                     jsxRuntimeExports.jsxs("div", {
-                      className: bay.kind === "empty" ? `${styles$n.bayContent} ${styles$n.bayContentEmpty}` : styles$n.bayContent,
+                      className: bay.kind === "empty" ? `${styles$m.bayContent} ${styles$m.bayContentEmpty}` : styles$m.bayContent,
                       "aria-hidden": bay.kind === "empty" ? true : void 0,
                       children: [
                         bay.kind === "empty" ? jsxRuntimeExports.jsx(GhostBooks, {
                           bayIndex: index2
                         }) : null,
                         bay.kind === "loading" ? jsxRuntimeExports.jsx("p", {
-                          className: styles$n.whisper,
+                          className: styles$m.whisper,
                           children: "Opening the stacks\u2026"
                         }) : null,
                         bay.kind === "story" ? jsxRuntimeExports.jsxs("div", {
-                          className: styles$n.storyRow,
+                          className: styles$m.storyRow,
                           children: [
                             jsxRuntimeExports.jsxs("button", {
                               type: "button",
-                              className: `${minervaTheme.focusRing} ${styles$n.rowOpen}`,
+                              className: `${minervaTheme.focusRing} ${styles$m.rowOpen}`,
                               disabled: busyId === bay.story.id,
                               onClick: () => void openStory(bay.story.id),
                               children: [
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$n.rowThumb,
+                                  className: styles$m.rowThumb,
                                   "aria-hidden": true,
                                   children: bay.story.thumbnail ? jsxRuntimeExports.jsx("img", {
                                     src: bay.story.thumbnail,
                                     alt: "",
-                                    className: styles$n.rowThumbImg
+                                    className: styles$m.rowThumbImg
                                   }) : jsxRuntimeExports.jsx("span", {
-                                    className: styles$n.rowThumbBlank
+                                    className: styles$m.rowThumbBlank
                                   })
                                 }),
                                 jsxRuntimeExports.jsxs("span", {
-                                  className: styles$n.rowText,
+                                  className: styles$m.rowText,
                                   children: [
                                     jsxRuntimeExports.jsx("span", {
-                                      className: styles$n.rowTitle,
+                                      className: styles$m.rowTitle,
                                       children: bay.story.title
                                     }),
                                     jsxRuntimeExports.jsx("span", {
-                                      className: styles$n.rowDate,
+                                      className: styles$m.rowDate,
                                       children: formatShortDate(bay.story.modifiedAt)
                                     })
                                   ]
@@ -171559,7 +174571,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             }),
                             jsxRuntimeExports.jsx("button", {
                               type: "button",
-                              className: `${minervaTheme.focusRing} ${styles$n.scrap}`,
+                              className: `${minervaTheme.focusRing} ${styles$m.scrap}`,
                               disabled: busyId === bay.story.id,
                               "aria-label": `Remove ${bay.story.title}`,
                               onClick: (e2) => {
@@ -171626,7 +174638,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const headerTitle = "_headerTitle_o47qu_12";
   const headerCount = "_headerCount_o47qu_24";
   const headerActions = "_headerActions_o47qu_30";
-  const styles$m = {
+  const styles$l = {
     compactHeader,
     headerTitle,
     headerCount,
@@ -171657,7 +174669,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showTitle = title7 != null && title7 !== "";
     const slot = reactExports.useContext(SidebarStripSlotContext);
     const actionsNode = actions2 == null ? null : jsxRuntimeExports.jsx("div", {
-      className: styles$m.headerActions,
+      className: styles$l.headerActions,
       children: actions2
     });
     if (!showTitle) {
@@ -171666,18 +174678,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$m.compactHeader,
+        styles$l.compactHeader,
         className2
       ].filter(Boolean).join(" "),
       children: [
         showTitle ? jsxRuntimeExports.jsxs("div", {
-          className: styles$m.headerTitle,
+          className: styles$l.headerTitle,
           children: [
             jsxRuntimeExports.jsx("span", {
               children: title7
             }),
             count2 != null ? jsxRuntimeExports.jsx("span", {
-              className: styles$m.headerCount,
+              className: styles$l.headerCount,
               children: count2
             }) : null
           ]
@@ -171713,7 +174725,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const brushEditIcon = "_brushEditIcon_1qxur_61";
   const itemListRoot = "_itemListRoot_1qxur_66";
   const metaIcon = "_metaIcon_1qxur_70";
-  const styles$l = {
+  const styles$k = {
     layersPanel,
     layersUnifiedTop,
     layersToolbarSlot,
@@ -171745,7 +174757,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const itemRowMainStatic = "_itemRowMainStatic_1ftcd_161";
   const itemListMarkdownEditor = "_itemListMarkdownEditor_1ftcd_167";
   const itemListCompact = "_itemListCompact_1ftcd_197";
-  const styles$k = {
+  const styles$j = {
     itemList,
     headerMarkdown,
     list: list$3,
@@ -171812,7 +174824,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       return jsxRuntimeExports.jsx("button", {
         type: "button",
-        className: styles$k.button,
+        className: styles$j.button,
         onClick: (e2) => {
           e2.stopPropagation();
           onToggleVisibility(item2.id);
@@ -171842,23 +174854,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const isDragging = draggedItemId === item2.id;
       const isDropTarget = dropTargetId === item2.id;
       const itemClasses = [
-        styles$k.item,
+        styles$j.item,
         item2.isActive ? minervaTheme.selectLeft : "",
-        item2.pulse ? styles$k.itemPulse : "",
-        item2.isHidden ? styles$k.itemHidden : "",
-        isDragging ? styles$k.itemDragging : "",
-        isDropTarget ? styles$k.itemDropTarget : "",
-        isChild2 ? styles$k.itemChild : ""
+        item2.pulse ? styles$j.itemPulse : "",
+        item2.isHidden ? styles$j.itemHidden : "",
+        isDragging ? styles$j.itemDragging : "",
+        isDropTarget ? styles$j.itemDropTarget : "",
+        isChild2 ? styles$j.itemChild : ""
       ].filter(Boolean).join(" ");
       const contentBlock = jsxRuntimeExports.jsxs("span", {
-        className: styles$k.content,
+        className: styles$j.content,
         children: [
           jsxRuntimeExports.jsx("span", {
-            className: `${styles$k.title} ${item2.isActive ? styles$k.titleActive : ""}`,
+            className: `${styles$j.title} ${item2.isActive ? styles$j.titleActive : ""}`,
             children: item2.title
           }),
           item2.subtitle ? jsxRuntimeExports.jsx("span", {
-            className: styles$k.subtitle,
+            className: styles$j.subtitle,
             children: item2.subtitle
           }) : null
         ]
@@ -171873,25 +174885,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         onDrop: (e2) => handleDrop(item2.id, e2),
         children: [
           visibilityToggleLeading ? jsxRuntimeExports.jsx("span", {
-            className: styles$k.itemLeadingVisibility,
+            className: styles$j.itemLeadingVisibility,
             children: renderVisibilityToggle(item2)
           }) : null,
           item2.icon ? onItemClick ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$k.itemIconHit}`,
+            className: `${minervaTheme.focusRing} ${styles$j.itemIconHit}`,
             onClick: (e2) => onItemClick(item2, e2),
             onDoubleClick: () => onItemDoubleClick == null ? void 0 : onItemDoubleClick(item2),
             children: jsxRuntimeExports.jsx("span", {
-              className: styles$k.icon,
+              className: styles$j.icon,
               children: item2.icon
             })
           }) : jsxRuntimeExports.jsx("div", {
-            className: styles$k.icon,
+            className: styles$j.icon,
             children: item2.icon
           }) : null,
           showExpandToggle && item2.children && jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$k.button,
+            className: styles$j.button,
             onClick: (e2) => {
               e2.stopPropagation();
               onToggleExpand == null ? void 0 : onToggleExpand(item2.id);
@@ -171902,22 +174914,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           onItemClick ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$k.itemRowMain}`,
+            className: `${minervaTheme.focusRing} ${styles$j.itemRowMain}`,
             onClick: (e2) => onItemClick(item2, e2),
             onDoubleClick: () => onItemDoubleClick == null ? void 0 : onItemDoubleClick(item2),
             children: contentBlock
           }) : jsxRuntimeExports.jsx("div", {
-            className: styles$k.itemRowMainStatic,
+            className: styles$j.itemRowMainStatic,
             children: contentBlock
           }),
           jsxRuntimeExports.jsxs("div", {
-            className: styles$k.actions,
+            className: styles$j.actions,
             children: [
               !visibilityToggleLeading ? renderVisibilityToggle(item2) : null,
               itemActions == null ? void 0 : itemActions(item2),
               showDeleteButton && onDelete && jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$k.button,
+                className: styles$j.button,
                 onClick: (e2) => {
                   e2.stopPropagation();
                   onDelete(item2.id);
@@ -171937,12 +174949,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       title: title7,
       count: `(${items.length})`,
       actions: headerActions2,
-      className: variant === "markdownEditor" ? styles$k.headerMarkdown : void 0
+      className: variant === "markdownEditor" ? styles$j.headerMarkdown : void 0
     });
     const rootClass = [
-      styles$k.itemList,
-      variant === "markdownEditor" ? styles$k.itemListMarkdownEditor : "",
-      compactRows ? styles$k.itemListCompact : "",
+      styles$j.itemList,
+      variant === "markdownEditor" ? styles$j.itemListMarkdownEditor : "",
+      compactRows ? styles$j.itemListCompact : "",
       className2
     ].filter(Boolean).join(" ");
     return jsxRuntimeExports.jsxs("div", {
@@ -171954,14 +174966,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: emptyMessage2
         }) : jsxRuntimeExports.jsx("ul", {
           className: [
-            styles$k.list,
+            styles$j.list,
             panel$1.thinScrollbar
           ].join(" "),
           children: items.map((item2) => jsxRuntimeExports.jsxs(reactExports.Fragment, {
             children: [
               renderItem(item2),
               item2.isExpanded && item2.children && item2.children.map((child) => customChildRenderer ? jsxRuntimeExports.jsx("li", {
-                className: styles$k.itemChild,
+                className: styles$j.itemChild,
                 children: customChildRenderer(child, item2)
               }, `${item2.id}-child-${child.id}`) : jsxRuntimeExports.jsx(reactExports.Fragment, {
                 children: renderItem(child, true)
@@ -172100,7 +175112,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const textInput = "_textInput_ex885_42";
   const actions = "_actions_ex885_48";
   const hint = "_hint_ex885_55";
-  const styles$j = {
+  const styles$i = {
     panel,
     title,
     field: field$1,
@@ -172114,18 +175126,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const TextEditPanel = ({ title: title7, textValue, fontSize = 14, onTextChange, onFontSizeChange, onSubmit, onCancel, submitButtonText, allowEmpty = false, showFontSize = true, singleLine = false, placeholder = "Enter your text here..." }) => {
     const canSubmit = allowEmpty || !!(textValue == null ? void 0 : textValue.trim());
     return jsxRuntimeExports.jsxs("div", {
-      className: `${minervaTheme.surface} ${styles$j.panel}`,
+      className: `${minervaTheme.surface} ${styles$i.panel}`,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$j.title,
+          className: styles$i.title,
           children: title7
         }),
         showFontSize ? jsxRuntimeExports.jsxs("div", {
-          className: styles$j.field,
+          className: styles$i.field,
           children: [
             jsxRuntimeExports.jsx("label", {
               htmlFor: "fontSizeInput",
-              className: styles$j.label,
+              className: styles$i.label,
               children: "Font Size:"
             }),
             jsxRuntimeExports.jsx("input", {
@@ -172136,7 +175148,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onChange: (e2) => onFontSizeChange == null ? void 0 : onFontSizeChange(parseInt(e2.target.value, 10) || 14),
               min: "8",
               max: "72",
-              className: `${minervaTheme.input} ${styles$j.numberInput}`
+              className: `${minervaTheme.input} ${styles$i.numberInput}`
             })
           ]
         }) : null,
@@ -172145,7 +175157,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           value: textValue,
           onChange: (e2) => onTextChange(e2.target.value),
           placeholder,
-          className: `${minervaTheme.input} ${styles$j.textInput}`,
+          className: `${minervaTheme.input} ${styles$i.textInput}`,
           onKeyDown: (e2) => {
             if (e2.key === "Enter") {
               onSubmit();
@@ -172157,7 +175169,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           value: textValue,
           onChange: (e2) => onTextChange(e2.target.value),
           placeholder,
-          className: `${minervaTheme.input} ${styles$j.textarea}`,
+          className: `${minervaTheme.input} ${styles$i.textarea}`,
           onKeyDown: (e2) => {
             if (e2.key === "Enter" && e2.ctrlKey) {
               onSubmit();
@@ -172167,7 +175179,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$j.actions,
+          className: styles$i.actions,
           children: [
             jsxRuntimeExports.jsx(PanelActionButton, {
               type: "button",
@@ -172184,7 +175196,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$j.hint,
+          className: styles$i.hint,
           children: singleLine ? "Press Enter to submit, Escape to cancel" : "Press Ctrl+Enter to submit, Escape to cancel"
         })
       ]
@@ -172463,7 +175475,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         isActive: selectedGroupId === group2.id,
         pulse: flashGroupId === group2.id,
         icon: jsxRuntimeExports.jsx(SvgFolder, {
-          className: styles$l.metaIcon
+          className: styles$k.metaIcon
         }),
         children,
         metadata: {
@@ -172689,7 +175701,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const isBrushActive = isPolygon && brushEditTargetId === annotation.id && brushEditMode === "add";
         const isEraserActive = isPolygon && brushEditTargetId === annotation.id && brushEditMode === "subtract";
         return jsxRuntimeExports.jsxs("div", {
-          className: styles$l.brushEditActions,
+          className: styles$k.brushEditActions,
           children: [
             isPolygon && jsxRuntimeExports.jsx(PanelIconButton, {
               variant: "row",
@@ -172707,7 +175719,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               },
               title: "Brush add to polygon",
               children: jsxRuntimeExports.jsx(SvgAddBrush, {
-                className: styles$l.brushEditIcon
+                className: styles$k.brushEditIcon
               })
             }),
             isPolygon && jsxRuntimeExports.jsx(PanelIconButton, {
@@ -172726,7 +175738,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               },
               title: "Brush subtract from polygon",
               children: jsxRuntimeExports.jsx(SvgEraser, {
-                className: styles$l.brushEditIcon
+                className: styles$k.brushEditIcon
               })
             })
           ]
@@ -172771,24 +175783,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     const hasUnifiedToolbar = !!toolbarSlot2;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$l.layersPanel,
+      className: styles$k.layersPanel,
       children: [
         hasUnifiedToolbar ? jsxRuntimeExports.jsxs("div", {
-          className: styles$l.layersUnifiedTop,
+          className: styles$k.layersUnifiedTop,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$l.layersToolbarSlot,
+              className: styles$k.layersToolbarSlot,
               children: toolbarSlot2
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$l.layersMetaCluster,
+              className: styles$k.layersMetaCluster,
               children: layerMetaButtons
             })
           ]
         }) : null,
         jsxRuntimeExports.jsx("div", {
           ref: itemListRootRef,
-          className: styles$l.itemListRoot,
+          className: styles$k.itemListRoot,
           children: jsxRuntimeExports.jsx(ItemList, {
             className: className2,
             variant: itemListVariant,
@@ -172812,7 +175824,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             showDeleteButton: false,
             showExpandToggle: true,
             headerActions: hasUnifiedToolbar ? void 0 : jsxRuntimeExports.jsx("div", {
-              className: styles$l.layersMetaCluster,
+              className: styles$k.layersMetaCluster,
               children: layerMetaButtons
             }),
             itemActions
@@ -172849,7 +175861,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const menu = "_menu_1gwwf_36";
   const menuItem = "_menuItem_1gwwf_48";
   const menuItemLabel = "_menuItemLabel_1gwwf_54";
-  const styles$i = {
+  const styles$h = {
     container,
     toggle,
     chevron,
@@ -172887,18 +175899,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setIsOpen(false);
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$i.container,
+      className: styles$h.container,
       children: [
         jsxRuntimeExports.jsxs("button", {
           ref: toggleRef,
           type: "button",
-          className: `${styles$i.toggle} ${buttonClassName} ${isActive ? activeClassName : ""}`,
+          className: `${styles$h.toggle} ${buttonClassName} ${isActive ? activeClassName : ""}`,
           title: parentTitle,
           onClick: () => setIsOpen((prev) => !prev),
           children: [
             activeItem ? activeItem.icon : parentIcon,
             jsxRuntimeExports.jsx("span", {
-              className: styles$i.chevron,
+              className: styles$h.chevron,
               "aria-hidden": true,
               children: jsxRuntimeExports.jsxs("svg", {
                 width: "8",
@@ -172925,20 +175937,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         isOpen && reactDomExports.createPortal(jsxRuntimeExports.jsx("div", {
           ref: menuRef,
-          className: `${minervaTheme.menuFixed} ${styles$i.menu}`,
+          className: `${minervaTheme.menuFixed} ${styles$h.menu}`,
           style: {
             top: menuPos.top,
             left: menuPos.left
           },
           children: items.map((item2) => jsxRuntimeExports.jsxs("button", {
             type: "button",
-            className: `${minervaTheme.menuItem} ${styles$i.menuItem} ${activeTool === item2.id ? minervaTheme.selectLeft : ""}`,
+            className: `${minervaTheme.menuItem} ${styles$h.menuItem} ${activeTool === item2.id ? minervaTheme.selectLeft : ""}`,
             title: item2.title,
             onClick: () => handleSelect(item2.id),
             children: [
               item2.icon,
               jsxRuntimeExports.jsx("span", {
-                className: styles$i.menuItemLabel,
+                className: styles$h.menuItemLabel,
                 children: item2.title
               })
             ]
@@ -174321,7 +177333,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const debugLabel = "_debugLabel_1fd03_64";
   const debugImage = "_debugImage_1fd03_70";
   const debugWaiting = "_debugWaiting_1fd03_76";
-  const styles$h = {
+  const styles$g = {
     errorToast,
     hintBar,
     hintAdd,
@@ -175603,16 +178615,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         sam2Error && activeTool === "magic_wand" && !sam2Session && jsxRuntimeExports.jsx("div", {
-          className: styles$h.errorToast,
+          className: styles$g.errorToast,
           children: sam2Error
         }),
         sam2Session && activeTool === "magic_wand" && jsxRuntimeExports.jsxs("div", {
-          className: styles$h.hintBar,
+          className: styles$g.hintBar,
           children: [
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$h.hintAdd,
+                  className: styles$g.hintAdd,
                   children: "Click"
                 }),
                 " to add"
@@ -175621,7 +178633,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$h.hintRemove,
+                  className: styles$g.hintRemove,
                   children: "Shift+Click"
                 }),
                 " to remove"
@@ -175630,7 +178642,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$h.hintConfirm,
+                  className: styles$g.hintConfirm,
                   children: "Enter"
                 }),
                 " to confirm"
@@ -175639,14 +178651,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$h.hintCancel,
+                  className: styles$g.hintCancel,
                   children: "Esc"
                 }),
                 " to cancel"
               ]
             }),
             jsxRuntimeExports.jsxs("span", {
-              className: styles$h.hintCount,
+              className: styles$g.hintCount,
               children: [
                 "(",
                 sam2Session.points.length,
@@ -175658,18 +178670,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         sam2DebugImages && jsxRuntimeExports.jsxs("div", {
-          className: styles$h.debugOverlay,
+          className: styles$g.debugOverlay,
           children: [
             sam2DebugImages.encoded ? jsxRuntimeExports.jsxs("div", {
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$h.debugLabel,
+                  className: styles$g.debugLabel,
                   children: "Encoded (1024\xD71024)"
                 }),
                 jsxRuntimeExports.jsx("img", {
                   src: sam2DebugImages.encoded,
                   alt: "SAM2 encoded",
-                  className: styles$h.debugImage,
+                  className: styles$g.debugImage,
                   title: "Right-click \u2192 Save image as"
                 })
               ]
@@ -175677,18 +178689,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             sam2DebugImages.mask ? jsxRuntimeExports.jsxs("div", {
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$h.debugLabel,
+                  className: styles$g.debugLabel,
                   children: "Mask (256\xD7256)"
                 }),
                 jsxRuntimeExports.jsx("img", {
                   src: sam2DebugImages.mask,
                   alt: "SAM2 mask",
-                  className: styles$h.debugImage,
+                  className: styles$g.debugImage,
                   title: "Right-click \u2192 Save image as"
                 })
               ]
             }) : jsxRuntimeExports.jsx("div", {
-              className: styles$h.debugWaiting,
+              className: styles$g.debugWaiting,
               children: "Mask: waiting for decode\u2026"
             })
           ]
@@ -175773,7 +178785,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const annotationsPanelContent = "_annotationsPanelContent_fxe56_15";
   const layersContainer = "_layersContainer_fxe56_22";
   const annotationsPanelEmbedded = "_annotationsPanelEmbedded_fxe56_30";
-  const styles$g = {
+  const styles$f = {
     annotationsPanel,
     annotationsPanelContent,
     layersContainer,
@@ -176014,13 +179026,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
     return jsxRuntimeExports.jsxs("div", {
-      className: embeddedInScrollParent ? `${styles$g.annotationsPanel} ${styles$g.annotationsPanelEmbedded}` : styles$g.annotationsPanel,
+      className: embeddedInScrollParent ? `${styles$f.annotationsPanel} ${styles$f.annotationsPanelEmbedded}` : styles$f.annotationsPanel,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$g.annotationsPanelContent,
+          className: styles$f.annotationsPanelContent,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$g.layersContainer,
+              className: styles$f.layersContainer,
               children: jsxRuntimeExports.jsx(LayersPanel, {
                 itemListVariant: embeddedInScrollParent ? "markdownEditor" : "default",
                 toolbarSlot: drawingToolbar,
@@ -202035,7 +205047,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     xmlns: "http://www.w3.org/2000/xmlns/"
   };
   const own$8 = {}.hasOwnProperty;
-  const proto = Object.prototype;
+  const proto$1 = Object.prototype;
   function fromParse5(tree, options) {
     const settings = options || {};
     return one$4({
@@ -202121,7 +205133,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     while (++index2 < node2.attrs.length) {
       const attribute2 = node2.attrs[index2];
       const name2 = (attribute2.prefix ? attribute2.prefix + ":" : "") + attribute2.name;
-      if (!own$8.call(proto, name2)) {
+      if (!own$8.call(proto$1, name2)) {
         properties2[name2] = attribute2.value;
       }
     }
@@ -245431,7 +248443,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const channelGroupDropdownMenu = "_channelGroupDropdownMenu_17hko_466";
   const channelGroupDropdownItem = "_channelGroupDropdownItem_17hko_485";
   const channelGroupDropdownOption = "_channelGroupDropdownOption_17hko_490";
-  const styles$f = {
+  const styles$e = {
     rows,
     compactRow,
     compactRowEditable,
@@ -245491,7 +248503,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return (group2.channels ?? []).map((gc2) => findSourceChannel(sourceChannels, gc2.channelId)).filter((sc2) => sc2 != null).map((sc2) => sc2.name);
   }
   const WaypointsList = (props) => {
-    var _a2, _b2;
+    var _a2;
     const { viewOnly } = props;
     const canEdit = !viewOnly;
     const waypoints = useDocumentStore((s2) => s2.waypoints);
@@ -245619,8 +248631,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       shapes,
       importWaypointShapes
     ]);
-    const activeWaypointId = activeStoryIndex == null ? void 0 : (_a2 = waypoints[activeStoryIndex]) == null ? void 0 : _a2.id;
-    const activeClassViews = activeStoryIndex == null ? void 0 : (_b2 = waypoints[activeStoryIndex]) == null ? void 0 : _b2.classViews;
+    const shownWaypoint = activeStoryIndex == null ? void 0 : waypoints[activeStoryIndex];
+    const activeWaypointId = shownWaypoint == null ? void 0 : shownWaypoint.id;
+    const activeClassViews = ((_a2 = shownWaypoint == null ? void 0 : shownWaypoint.classViews) == null ? void 0 : _a2.length) ? shownWaypoint.classViews : void 0;
     const lastClassViewsRef = reactExports.useRef({
       id: activeWaypointId,
       classViews: activeClassViews
@@ -245632,12 +248645,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         classViews: activeClassViews
       };
       if (activeStoryIndex == null || activeWaypointId == null) return;
-      if (last2.id !== activeWaypointId) return;
-      if (last2.classViews === activeClassViews) return;
+      if (last2.id !== activeWaypointId || last2.classViews === activeClassViews) {
+        return;
+      }
       const index2 = activeStoryIndex;
       const timeout = window.setTimeout(() => {
+        var _a3;
         const st = useAppStore.getState();
         if (st.activeStoryIndex !== index2 || !st.viewerImageLayersLoaded) return;
+        if (!((_a3 = useDocumentStore.getState().waypoints[index2]) == null ? void 0 : _a3.thumbnail)) return;
         const thumbnail = st.captureSquareViewportThumbnail();
         if (!thumbnail) return;
         const history = useDocumentStore.temporal.getState();
@@ -245899,7 +248915,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: "No waypoints yet"
         }) : jsxRuntimeExports.jsx("ul", {
           className: [
-            styles$f.rows,
+            styles$e.rows,
             panel$1.authorPanelBody,
             panel$1.thinScrollbar
           ].join(" "),
@@ -245912,11 +248928,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             const isDropTarget = dropTargetStoryId === storyId;
             return jsxRuntimeExports.jsxs("li", {
               className: [
-                styles$f.compactRow,
-                canEdit ? styles$f.compactRowEditable : "",
+                styles$e.compactRow,
+                canEdit ? styles$e.compactRowEditable : "",
                 isActive ? minervaTheme.selectLeft : "",
-                isDragging ? styles$f.compactRowDragging : "",
-                isDropTarget ? styles$f.compactRowDropTarget : ""
+                isDragging ? styles$e.compactRowDragging : "",
+                isDropTarget ? styles$e.compactRowDropTarget : ""
               ].filter(Boolean).join(" "),
               onDragOver: (e2) => handleDragOverRow(storyId, e2),
               onDragLeave: handleDragLeaveRow,
@@ -245927,7 +248943,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               children: [
                 canEdit ? jsxRuntimeExports.jsx("button", {
                   type: "button",
-                  className: styles$f.dragHandle,
+                  className: styles$e.dragHandle,
                   draggable: true,
                   title: `Drag ${story.title}`,
                   "aria-label": `Drag ${story.title}`,
@@ -245937,59 +248953,59 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }) : null,
                 canEdit ? jsxRuntimeExports.jsx(PanelIconButton, {
                   variant: "row",
-                  className: styles$f.rowOpenDetailButton,
+                  className: styles$e.rowOpenDetailButton,
                   title: "Open waypoint details",
                   onClick: () => openDetailForStoryId(storyId),
                   children: jsxRuntimeExports.jsx(ChevronIcon, {
                     direction: "right"
                   })
                 }) : jsxRuntimeExports.jsx("div", {
-                  className: styles$f.rowChevronSpacer,
+                  className: styles$e.rowChevronSpacer,
                   "aria-hidden": true
                 }),
                 jsxRuntimeExports.jsxs("button", {
                   type: "button",
-                  className: `${minervaTheme.focusRing} ${styles$f.rowMainHit}`,
+                  className: `${minervaTheme.focusRing} ${styles$e.rowMainHit}`,
                   "aria-label": `Select waypoint: ${story.title}`,
                   onClick: () => activateStoryIndex(index2, true),
                   onDoubleClick: () => openDetailForStoryId(storyId),
                   children: [
                     story.thumbnail ? jsxRuntimeExports.jsx("img", {
-                      className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
+                      className: `${minervaTheme.surface} ${styles$e.rowThumbnail}`,
                       src: story.thumbnail,
                       width: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
                       height: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
                       alt: "",
                       "aria-hidden": true
                     }) : jsxRuntimeExports.jsx("div", {
-                      className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
+                      className: `${minervaTheme.surface} ${styles$e.rowThumbnail}`,
                       "aria-hidden": true
                     }),
                     jsxRuntimeExports.jsxs("div", {
-                      className: styles$f.rowTextStack,
+                      className: styles$e.rowTextStack,
                       children: [
                         jsxRuntimeExports.jsxs("div", {
-                          className: styles$f.rowTitleRow,
+                          className: styles$e.rowTitleRow,
                           children: [
                             jsxRuntimeExports.jsx("span", {
-                              className: styles$f.rowTitle,
+                              className: styles$e.rowTitle,
                               title: story.title,
                               children: story.title
                             }),
                             jsxRuntimeExports.jsxs("span", {
-                              className: `${minervaTheme.surface} ${styles$f.annotationBadge}`,
+                              className: `${minervaTheme.surface} ${styles$e.annotationBadge}`,
                               title: annotationTitle,
                               children: [
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$f.visuallyHidden,
+                                  className: styles$e.visuallyHidden,
                                   children: annotationTitle
                                 }),
                                 jsxRuntimeExports.jsx(SvgShapes, {
-                                  className: styles$f.annotationIcon,
+                                  className: styles$e.annotationIcon,
                                   "aria-hidden": true
                                 }),
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$f.annotationCount,
+                                  className: styles$e.annotationCount,
                                   "aria-hidden": true,
                                   children: annotationCount2
                                 })
@@ -245998,7 +249014,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           ]
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$f.rowContent,
+                          className: styles$e.rowContent,
                           title: story.content ?? "",
                           children: story.content ?? ""
                         })
@@ -246007,7 +249023,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 jsxRuntimeExports.jsxs("div", {
-                  className: styles$f.rowViewportActions,
+                  className: styles$e.rowViewportActions,
                   children: [
                     canEdit ? jsxRuntimeExports.jsx(PanelIconButton, {
                       variant: "row",
@@ -246030,7 +249046,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           "aria-hidden": true
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$f.visuallyHidden,
+                          className: styles$e.visuallyHidden,
                           children: "Jump to waypoint view"
                         })
                       ]
@@ -246046,7 +249062,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           "aria-hidden": true
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$f.visuallyHidden,
+                          className: styles$e.visuallyHidden,
                           children: "Save waypoint view"
                         })
                       ]
@@ -246098,14 +249114,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         scheduleThumbnailCaptureForStory(detailStoryIndex, true, true, 1100);
       };
       return jsxRuntimeExports.jsxs("div", {
-        className: styles$f.detailView,
+        className: styles$e.detailView,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$f.detailHeader,
+            className: styles$e.detailHeader,
             children: [
               jsxRuntimeExports.jsxs("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$f.backButton}`,
+                className: `${minervaTheme.focusRing} ${styles$e.backButton}`,
                 onClick: () => setDetailStoryId(null),
                 title: "Back to waypoint list",
                 children: [
@@ -246118,7 +249134,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$f.detailTitle,
+                className: styles$e.detailTitle,
                 title: detailStory.title,
                 children: detailStory.title
               })
@@ -246126,24 +249142,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           jsxRuntimeExports.jsx("div", {
             className: [
-              styles$f.detailBody,
+              styles$e.detailBody,
               panel$1.thinScrollbar
             ].join(" "),
             ref: detailBodyRef,
             children: jsxRuntimeExports.jsxs("div", {
-              className: styles$f.detailBodyInner,
+              className: styles$e.detailBodyInner,
               children: [
                 jsxRuntimeExports.jsxs("div", {
-                  className: `${minervaTheme.surface} ${styles$f.detailTitleFieldWrap}`,
+                  className: `${minervaTheme.surface} ${styles$e.detailTitleFieldWrap}`,
                   children: [
                     jsxRuntimeExports.jsx("label", {
-                      className: styles$f.detailTitleLabel,
+                      className: styles$e.detailTitleLabel,
                       htmlFor: detailTitleFieldId,
                       children: "Title"
                     }),
                     jsxRuntimeExports.jsx("input", {
                       id: detailTitleFieldId,
-                      className: `${minervaTheme.input} ${styles$f.detailTitleInput}`,
+                      className: `${minervaTheme.input} ${styles$e.detailTitleInput}`,
                       type: "text",
                       value: detailStory.title ?? "",
                       onChange: (e2) => updateStory(detailStoryIndex, {
@@ -246159,47 +249175,47 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 channelGroups.length > 0 ? jsxRuntimeExports.jsxs("div", {
-                  className: `${minervaTheme.surface} ${styles$f.detailTitleFieldWrap}`,
+                  className: `${minervaTheme.surface} ${styles$e.detailTitleFieldWrap}`,
                   children: [
                     jsxRuntimeExports.jsx("label", {
-                      className: styles$f.detailTitleLabel,
+                      className: styles$e.detailTitleLabel,
                       htmlFor: detailGroupFieldId,
                       children: "Channel group"
                     }),
                     jsxRuntimeExports.jsxs("div", {
-                      className: styles$f.channelGroupDropdown,
+                      className: styles$e.channelGroupDropdown,
                       ref: channelGroupDropdownRef,
                       children: [
                         jsxRuntimeExports.jsxs("button", {
                           type: "button",
                           id: detailGroupFieldId,
-                          className: `${minervaTheme.input} ${minervaTheme.focusRing} ${styles$f.channelGroupDropdownTrigger}`,
+                          className: `${minervaTheme.input} ${minervaTheme.focusRing} ${styles$e.channelGroupDropdownTrigger}`,
                           "aria-haspopup": "listbox",
                           "aria-expanded": channelGroupMenuOpen,
                           disabled: !canEdit,
                           onClick: () => setChannelGroupMenuOpen((open) => !open),
                           children: [
                             jsxRuntimeExports.jsxs("span", {
-                              className: styles$f.channelGroupDropdownTriggerMain,
+                              className: styles$e.channelGroupDropdownTriggerMain,
                               children: [
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$f.channelGroupDropdownTitle,
+                                  className: styles$e.channelGroupDropdownTitle,
                                   children: selectedGroup.name
                                 }),
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$f.channelGroupDropdownChannels,
+                                  className: styles$e.channelGroupDropdownChannels,
                                   children: selectedChannelsSubtitle || "\u2014"
                                 })
                               ]
                             }),
                             jsxRuntimeExports.jsx(ChevronIcon, {
                               direction: channelGroupMenuOpen ? "up" : "down",
-                              className: styles$f.channelGroupDropdownChevron
+                              className: styles$e.channelGroupDropdownChevron
                             })
                           ]
                         }),
                         channelGroupMenuOpen ? jsxRuntimeExports.jsx("div", {
-                          className: `${minervaTheme.menu} ${styles$f.channelGroupDropdownMenu}`,
+                          className: `${minervaTheme.menu} ${styles$e.channelGroupDropdownMenu}`,
                           role: "listbox",
                           "aria-label": "Channel groups",
                           children: channelGroups.map((group2) => {
@@ -246207,24 +249223,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             const subtitle2 = names.join(", ");
                             const isSelected = group2.id === selectedGroupUuid;
                             return jsxRuntimeExports.jsx("div", {
-                              className: styles$f.channelGroupDropdownItem,
+                              className: styles$e.channelGroupDropdownItem,
                               children: jsxRuntimeExports.jsxs("button", {
                                 type: "button",
                                 role: "option",
                                 "aria-selected": isSelected,
                                 className: [
                                   minervaTheme.menuItem,
-                                  styles$f.channelGroupDropdownOption,
+                                  styles$e.channelGroupDropdownOption,
                                   isSelected ? minervaTheme.selectLeft : ""
                                 ].filter(Boolean).join(" "),
                                 onClick: () => selectChannelGroupByUuid(group2.id),
                                 children: [
                                   jsxRuntimeExports.jsx("span", {
-                                    className: styles$f.channelGroupDropdownTitle,
+                                    className: styles$e.channelGroupDropdownTitle,
                                     children: group2.name
                                   }),
                                   jsxRuntimeExports.jsx("span", {
-                                    className: styles$f.channelGroupDropdownChannels,
+                                    className: styles$e.channelGroupDropdownChannels,
                                     children: subtitle2 || "\u2014"
                                   })
                                 ]
@@ -246238,29 +249254,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }) : null,
                 jsxRuntimeExports.jsxs("div", {
                   className: [
-                    styles$f.detailCollapsible,
+                    styles$e.detailCollapsible,
                     minervaTheme.surface,
-                    styles$f.detailMarkdownSection,
-                    !detailMarkdownExpanded ? styles$f.detailCollapsibleCollapsed : ""
+                    styles$e.detailMarkdownSection,
+                    !detailMarkdownExpanded ? styles$e.detailCollapsibleCollapsed : ""
                   ].filter(Boolean).join(" "),
                   children: [
                     jsxRuntimeExports.jsxs("button", {
                       type: "button",
-                      className: `${minervaTheme.focusRing} ${styles$f.detailCollapsibleHeader}`,
+                      className: `${minervaTheme.focusRing} ${styles$e.detailCollapsibleHeader}`,
                       "aria-expanded": detailMarkdownExpanded,
                       onClick: () => setDetailMarkdownExpanded((prev) => !prev),
                       children: [
                         jsxRuntimeExports.jsx(ChevronIcon, {
-                          className: styles$f.detailCollapsibleChevron
+                          className: styles$e.detailCollapsibleChevron
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$f.detailCollapsibleTitle,
+                          className: styles$e.detailCollapsibleTitle,
                           children: "Markdown"
                         })
                       ]
                     }),
                     detailMarkdownExpanded ? jsxRuntimeExports.jsx("div", {
-                      className: styles$f.detailCollapsibleBody,
+                      className: styles$e.detailCollapsibleBody,
                       children: jsxRuntimeExports.jsx(WaypointContentEditor, {
                         variant: "detail",
                         story: detailStory,
@@ -246271,28 +249287,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 classTables.length > 0 ? jsxRuntimeExports.jsxs("div", {
                   className: [
-                    styles$f.detailCollapsible,
+                    styles$e.detailCollapsible,
                     minervaTheme.surface,
-                    styles$f.detailClassesSection,
-                    !detailClassesExpanded ? styles$f.detailCollapsibleCollapsed : ""
+                    styles$e.detailClassesSection,
+                    !detailClassesExpanded ? styles$e.detailCollapsibleCollapsed : ""
                   ].filter(Boolean).join(" "),
                   children: [
                     jsxRuntimeExports.jsxs("button", {
                       type: "button",
-                      className: `${minervaTheme.focusRing} ${styles$f.detailCollapsibleHeader}`,
+                      className: `${minervaTheme.focusRing} ${styles$e.detailCollapsibleHeader}`,
                       "aria-expanded": detailClassesExpanded,
                       onClick: () => setDetailClassesExpanded((prev) => !prev),
                       children: [
                         jsxRuntimeExports.jsx(ChevronIcon, {
-                          className: styles$f.detailCollapsibleChevron
+                          className: styles$e.detailCollapsibleChevron
                         }),
                         jsxRuntimeExports.jsxs("span", {
-                          className: styles$f.detailCollapsibleTitle,
+                          className: styles$e.detailCollapsibleTitle,
                           children: [
                             "Classes",
                             " ",
                             jsxRuntimeExports.jsxs("span", {
-                              className: styles$f.detailCollapsibleCount,
+                              className: styles$e.detailCollapsibleCount,
                               children: [
                                 "(",
                                 classTables.length,
@@ -246304,7 +249320,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       ]
                     }),
                     detailClassesExpanded ? jsxRuntimeExports.jsx("div", {
-                      className: styles$f.detailCollapsibleBody,
+                      className: styles$e.detailCollapsibleBody,
                       children: jsxRuntimeExports.jsx(WaypointClassViews, {
                         waypoint: detailStory,
                         featureTables: classTables,
@@ -246315,29 +249331,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }) : null,
                 jsxRuntimeExports.jsxs("div", {
                   className: [
-                    styles$f.detailCollapsible,
+                    styles$e.detailCollapsible,
                     minervaTheme.surface,
-                    styles$f.detailAnnotationsSection,
-                    !detailAnnotationsExpanded ? styles$f.detailCollapsibleCollapsed : ""
+                    styles$e.detailAnnotationsSection,
+                    !detailAnnotationsExpanded ? styles$e.detailCollapsibleCollapsed : ""
                   ].filter(Boolean).join(" "),
                   children: [
                     jsxRuntimeExports.jsxs("button", {
                       type: "button",
-                      className: `${minervaTheme.focusRing} ${styles$f.detailCollapsibleHeader}`,
+                      className: `${minervaTheme.focusRing} ${styles$e.detailCollapsibleHeader}`,
                       "aria-expanded": detailAnnotationsExpanded,
                       title: detailAnnotationText,
                       onClick: () => setDetailAnnotationsExpanded((prev) => !prev),
                       children: [
                         jsxRuntimeExports.jsx(ChevronIcon, {
-                          className: styles$f.detailCollapsibleChevron
+                          className: styles$e.detailCollapsibleChevron
                         }),
                         jsxRuntimeExports.jsxs("span", {
-                          className: styles$f.detailCollapsibleTitle,
+                          className: styles$e.detailCollapsibleTitle,
                           children: [
                             "Annotations",
                             " ",
                             jsxRuntimeExports.jsxs("span", {
-                              className: styles$f.detailCollapsibleCount,
+                              className: styles$e.detailCollapsibleCount,
                               children: [
                                 "(",
                                 detailAnnotationCount,
@@ -246349,13 +249365,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       ]
                     }),
                     detailAnnotationsExpanded ? jsxRuntimeExports.jsxs("div", {
-                      className: styles$f.detailCollapsibleBody,
+                      className: styles$e.detailCollapsibleBody,
                       children: [
                         detailAnnotationCount > 0 ? jsxRuntimeExports.jsx("div", {
-                          className: styles$f.detailSelectionActions,
+                          className: styles$e.detailSelectionActions,
                           children: jsxRuntimeExports.jsx("button", {
                             type: "button",
-                            className: `${minervaTheme.focusRing} ${styles$f.detailSelectionButton}`,
+                            className: `${minervaTheme.focusRing} ${styles$e.detailSelectionButton}`,
                             title: "Use a waypoint annotation as the spatial selection mask (prefers the selected shape in the layers list)",
                             onClick: () => {
                               const shapeIds = detailStory.shapeIds ?? [];
@@ -246428,7 +249444,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const filterEmpty = "_filterEmpty_1wvsk_240";
   const rootChannelList = "_rootChannelList_1wvsk_247";
   const rootChannelBlock = "_rootChannelBlock_1wvsk_255";
-  const styles$e = {
+  const styles$d = {
     channelActionButton,
     colorLockButtonLocked,
     dropHint,
@@ -246503,11 +249519,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function previewUngroupWhileDragging(row2) {
     const onOver = (ev) => {
       const el2 = document.elementFromPoint(ev.clientX, ev.clientY);
-      const overGroup = el2 instanceof Element && el2.closest(`.${styles$e.groupFolder}`);
-      row2.classList.toggle(styles$e.ungrouping, !overGroup);
+      const overGroup = el2 instanceof Element && el2.closest(`.${styles$d.groupFolder}`);
+      row2.classList.toggle(styles$d.ungrouping, !overGroup);
     };
     const onEnd = () => {
-      row2.classList.remove(styles$e.ungrouping);
+      row2.classList.remove(styles$d.ungrouping);
       document.removeEventListener("dragover", onOver, true);
       document.removeEventListener("dragend", onEnd);
     };
@@ -246521,23 +249537,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fromRowId: props.fromRowId
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$e.channelRowWrap,
+      className: styles$d.channelRowWrap,
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$e.dragHandle,
+          className: styles$d.dragHandle,
           draggable: true,
           onDragStart: (e2) => {
             startChannelDrag(e2, payload);
             if (!props.onRemoveFromGroup) return;
-            const row2 = e2.currentTarget.closest(`.${styles$e.channelRowWrap}`);
+            const row2 = e2.currentTarget.closest(`.${styles$d.channelRowWrap}`);
             if (row2 instanceof HTMLElement) previewUngroupWhileDragging(row2);
           },
           onDragEnd: (e2) => {
             if (!props.onRemoveFromGroup) return;
             if (e2.dataTransfer.dropEffect !== "none") return;
             const el2 = document.elementFromPoint(e2.clientX, e2.clientY);
-            const folder = e2.currentTarget.closest(`.${styles$e.groupFolder}`);
+            const folder = e2.currentTarget.closest(`.${styles$d.groupFolder}`);
             if (folder && el2 && folder.contains(el2)) return;
             props.onRemoveFromGroup();
           },
@@ -246615,7 +249631,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$e.channelActionButton,
+          className: styles$d.channelActionButton,
           "aria-label": `More actions for ${channelName2}`,
           "aria-expanded": menu2.open,
           "aria-haspopup": "menu",
@@ -246763,6 +249779,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   const ChannelGroupsMasterDetail = (props) => {
     const setActiveChannelGroup = useAppStore((s2) => s2.setActiveChannelGroup);
+    const showOnlyChannelGroup = useAppStore((s2) => s2.showOnlyChannelGroup);
     const clearImageSelectionMask = useAppStore((s2) => s2.clearImageSelectionMask);
     const setImageSelectionMaskVisualization = useAppStore((s2) => s2.setImageSelectionMaskVisualization);
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
@@ -246813,13 +249830,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...capVis,
       ...next2
     });
-    const applyRgbUnit = (imageId, visible) => {
+    const applyRgbUnit = (imageId, visible, groupId) => {
       const next2 = visibilitiesForRgbUnit({
         rgbChannels: sourceChannels.filter((c2) => c2.imageId === imageId && isImageChannel(c2)),
         channelGroups,
         groupRowVisibilities: channelGroupRowVisibilities,
         stackVisibilities,
-        visible
+        visible,
+        groupId
       });
       if (visible && !fitsImage(imageId, {
         stackVisibilities: next2.channelVisibilities,
@@ -246918,7 +249936,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setChannelGroupRowVisibilities
     ]);
     const activateGroup = reactExports.useCallback((groupId) => {
-      setActiveChannelGroup(groupId);
+      if (useAppStore.getState().activeChannelGroupId === groupId) {
+        setActiveChannelGroup(groupId);
+      } else {
+        showOnlyChannelGroup(groupId);
+      }
       const groups = useDocumentStore.getState().channelGroups;
       syncGroupState(groups.map((g2) => ({
         ...g2,
@@ -246926,6 +249948,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })));
     }, [
       setActiveChannelGroup,
+      showOnlyChannelGroup,
       syncGroupState
     ]);
     const renameSourceChannelDisplayName = reactExports.useCallback((channelId, rawName) => {
@@ -247025,17 +250048,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const toggleGroupMasterVisibility = (group2, showAllNext) => {
       if (group2.channels.length === 0) return;
       const allOn = group2.channels.every((gc2) => isGroupRowVisible(channelGroupRowVisibilities, gc2.id));
-      const first = findSourceChannel(sourceChannels, group2.channels[0].channelId);
-      if (first && isRgbDisplayChannel(first, sourceChannels)) {
-        applyRgbUnit(first.imageId, !allOn);
-        return;
-      }
       if (!allOn) {
-        const imageId = first == null ? void 0 : first.imageId;
-        if (imageId && !fitsImage(imageId, {
-          groupRowVisibilities: showAllNext
-        })) {
-          return;
+        const imageIds = /* @__PURE__ */ new Set();
+        for (const gc2 of group2.channels) {
+          const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
+          if (sc2 && isImageChannel(sc2)) imageIds.add(sc2.imageId);
+        }
+        for (const imageId of imageIds) {
+          if (!fitsImage(imageId, {
+            groupRowVisibilities: showAllNext
+          })) return;
         }
         setChannelGroupRowVisibilities(showAllNext);
         return;
@@ -247361,25 +250383,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       };
       return jsxRuntimeExports.jsxs("div", {
         className: [
-          styles$e.groupFolder,
+          styles$d.groupFolder,
           isActive ? minervaTheme.selectLeft : "",
-          isDropTarget ? styles$e.dropTargetActive : ""
+          isDropTarget ? styles$d.dropTargetActive : ""
         ].join(" "),
         ...folderDropProps,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$e.groupFolderHeader,
+            className: styles$d.groupFolderHeader,
             children: [
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$e.groupFolderActivate}`,
+                className: `${minervaTheme.focusRing} ${styles$d.groupFolderActivate}`,
                 "aria-label": `Select group ${group2.name}`,
                 "aria-pressed": isActive,
                 onClick: () => activateGroup(group2.id)
               }),
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$e.groupFolderChevron,
+                className: styles$d.groupFolderChevron,
                 "aria-expanded": expanded,
                 title: expanded ? "Collapse group" : "Expand group",
                 onClick: () => toggleGroupExpanded(group2.id),
@@ -247395,7 +250417,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 onClick: () => toggleGroupMasterVisibility(group2, groupShowAllNext)
               }),
               jsxRuntimeExports.jsx("input", {
-                className: `${minervaTheme.input} ${styles$e.groupFolderName}`,
+                className: `${minervaTheme.input} ${styles$d.groupFolderName}`,
                 type: "text",
                 defaultValue: group2.name,
                 maxLength: 200,
@@ -247417,7 +250439,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$e.groupFolderTrailing,
+                className: styles$d.groupFolderTrailing,
                 children: [
                   jsxRuntimeExports.jsx(GroupFolderGearMenu, {
                     groupName: group2.name,
@@ -247445,10 +250467,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           }),
           expanded && !rgbGroup ? jsxRuntimeExports.jsxs("div", {
-            className: styles$e.groupFolderBody,
+            className: styles$d.groupFolderBody,
             children: [
               jsxRuntimeExports.jsx("ul", {
-                className: styles$e.groupChildList,
+                className: styles$d.groupChildList,
                 children: group2.channels.map((gc2) => {
                   const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
                   const name2 = (sc2 == null ? void 0 : sc2.name) ?? "Unknown";
@@ -247469,7 +250491,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   const colorLocked = lockedIds.has(gc2.id);
                   const showColorLock = !(sc2 && isMaskChannel(sc2)) && !rgbDisplay;
                   return jsxRuntimeExports.jsx("li", {
-                    className: styles$e.groupChildBlock,
+                    className: styles$d.groupChildBlock,
                     children: jsxRuntimeExports.jsx(DraggableChannelRow, {
                       label: name2,
                       sourceId: gc2.channelId,
@@ -247484,7 +250506,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                         visibilityBlocked: showBlocked,
                         onToggleVisibility: (event) => toggleWithScrollOnShow(event, !visible, () => {
                           if (rgbDisplay && sc2) {
-                            applyRgbUnit(sc2.imageId, !visible);
+                            applyRgbUnit(sc2.imageId, !visible, group2.id);
                             return;
                           }
                           setChannelGroupRowVisibilities(visible ? {
@@ -247501,7 +250523,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           mode: "label",
                           name: name2,
                           title: name2,
-                          className: styles$e.groupChildName
+                          className: styles$d.groupChildName
                         },
                         imageSubtitle,
                         contrast,
@@ -247532,8 +250554,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             showColorLock ? jsxRuntimeExports.jsx("button", {
                               type: "button",
                               className: [
-                                styles$e.channelActionButton,
-                                colorLocked ? styles$e.colorLockButtonLocked : ""
+                                styles$d.channelActionButton,
+                                colorLocked ? styles$d.colorLockButtonLocked : ""
                               ].join(" "),
                               title: colorLocked ? "Unlock color" : "Lock color",
                               "aria-label": colorLocked ? `Unlock color for ${name2}` : `Lock color for ${name2}`,
@@ -247558,7 +250580,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 })
               }),
               group2.channels.length === 0 ? jsxRuntimeExports.jsx("div", {
-                className: styles$e.dropHint,
+                className: styles$d.dropHint,
                 children: "Drag channels"
               }) : null
             ]
@@ -247657,7 +250679,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         histogramLoading: loadingHistogramSourceIds.includes(sc2.id)
       } : void 0;
       return jsxRuntimeExports.jsx("li", {
-        className: styles$e.rootChannelBlock,
+        className: styles$d.rootChannelBlock,
         children: jsxRuntimeExports.jsx(DraggableChannelRow, {
           label: sc2.name,
           sourceId: sc2.id,
@@ -247716,20 +250738,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           onDrop: handleDropRemoveFromGroup,
           children: [
             channelGroups.length > 0 ? jsxRuntimeExports.jsx("div", {
-              className: styles$e.groupFolders,
+              className: styles$d.groupFolders,
               children: channelGroups.map((group2, i2) => renderGroupFolder(group2, i2))
             }) : null,
             showAllChannelsList ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
               children: [
                 jsxRuntimeExports.jsxs("div", {
-                  className: styles$e.treeSeparator,
+                  className: styles$d.treeSeparator,
                   children: [
                     jsxRuntimeExports.jsx("span", {
-                      className: styles$e.treeSeparatorLabel,
+                      className: styles$d.treeSeparatorLabel,
                       children: "All channels"
                     }),
                     jsxRuntimeExports.jsx("input", {
-                      className: styles$e.channelFilter,
+                      className: styles$d.channelFilter,
                       type: "text",
                       value: channelNameFilter,
                       placeholder: "Search...",
@@ -247743,10 +250765,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 filteredAllChannels.length === 0 ? jsxRuntimeExports.jsx("div", {
-                  className: styles$e.filterEmpty,
+                  className: styles$d.filterEmpty,
                   children: "No matching channels"
                 }) : jsxRuntimeExports.jsx("ul", {
-                  className: styles$e.rootChannelList,
+                  className: styles$d.rootChannelList,
                   children: filteredAllChannels.map(renderAllChannelsRow)
                 })
               ]
@@ -247766,7 +250788,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               },
               name: {
                 mode: "label",
-                className: styles$e.groupChildName,
+                className: styles$d.groupChildName,
                 name: `${SELECTION_MASK_CHANNEL_KEY}${imageSelectionMask.sourceShapeLabel ? ` (${imageSelectionMask.sourceShapeLabel})` : ""}`
               },
               isMask: true,
@@ -247780,7 +250802,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               fixedColorHex: "ffcc00",
               trailing: jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$e.channelActionButton,
+                className: styles$d.channelActionButton,
                 title: "Clear selection",
                 "aria-label": "Clear selection",
                 onClick: () => clearImageSelectionMask(),
@@ -247842,7 +250864,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const previewNav = "_previewNav_1gyqk_97";
   const previewNavParked = "_previewNavParked_1gyqk_111";
   const viewerRegion = "_viewerRegion_1gyqk_115";
-  const styles$d = {
+  const styles$c = {
     sidebarHost,
     sidebarHostCollapsed,
     panelOuter,
@@ -247889,14 +250911,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: jsxRuntimeExports.jsx(SidebarStripSlotProvider, {
         children: jsxRuntimeExports.jsx("div", {
           className: [
-            styles$d.sidebarHost,
-            expanded ? null : styles$d.sidebarHostCollapsed
+            styles$c.sidebarHost,
+            expanded ? null : styles$c.sidebarHostCollapsed
           ].filter(Boolean).join(" "),
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$d.panelOuter,
+            className: styles$c.panelOuter,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: `${styles$d.tabRow} ${minervaTheme.strip}`,
+                className: `${styles$c.tabRow} ${minervaTheme.strip}`,
                 children: [
                   jsxRuntimeExports.jsx(TabBar, {
                     tabs: TAB_ITEMS,
@@ -247905,12 +250927,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     "aria-label": "Author panels"
                   }),
                   jsxRuntimeExports.jsx(SidebarStripSlot, {
-                    className: styles$d.stripActions
+                    className: styles$c.stripActions
                   })
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$d.panelContent,
+                className: styles$c.panelContent,
                 role: "tabpanel",
                 children: activePanel
               })
@@ -247924,8 +250946,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const { collapsed, children, className: className2 } = props;
     return jsxRuntimeExports.jsx("div", {
       className: [
-        styles$d.viewport,
-        collapsed ? styles$d.viewportCollapsed : null,
+        styles$c.viewport,
+        collapsed ? styles$c.viewportCollapsed : null,
         className2
       ].filter(Boolean).join(" "),
       children
@@ -247934,7 +250956,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function AuthorViewerRegion(props) {
     return jsxRuntimeExports.jsx("div", {
       className: [
-        styles$d.viewerRegion,
+        styles$c.viewerRegion,
         props.className
       ].filter(Boolean).join(" "),
       children: props.children
@@ -247946,10 +250968,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const previewing = hasPreview && !props.previewNavHidden;
     return jsxRuntimeExports.jsxs(AuthorViewport, {
       collapsed: !expanded,
-      className: previewing ? styles$d.viewportPreview : void 0,
+      className: previewing ? styles$c.viewportPreview : void 0,
       children: [
         hasPreview ? jsxRuntimeExports.jsx("div", {
-          className: previewing ? styles$d.previewNav : styles$d.previewNavParked,
+          className: previewing ? styles$c.previewNav : styles$c.previewNavParked,
           children: props.previewNav
         }) : null,
         previewing ? null : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
@@ -247963,8 +250985,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx(PanelIconButton, {
               className: [
-                styles$d.expandControl,
-                expanded ? styles$d.expandControlExpanded : null
+                styles$c.expandControl,
+                expanded ? styles$c.expandControlExpanded : null
               ].filter(Boolean).join(" "),
               title: expanded ? "Collapse panel" : "Expand panel",
               "aria-label": expanded ? "Collapse panel" : "Expand panel",
@@ -249180,14 +252202,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return merged;
   }
-  function prefetchedSource(base2, ranges) {
+  function prefetchedSource(base2, ranges, exportSignal) {
     const blocked = base2;
     const bulk = blocked.blockSize && blocked.source ? blocked.source : base2;
     const runs = ranges.map((range2) => ({
       ...range2,
       data: bulk.fetch([
         range2
-      ]).then(([result]) => {
+      ], exportSignal).then(([result]) => {
         const { data: data2, offset } = result instanceof ArrayBuffer ? {
           data: result,
           offset: range2.offset
@@ -249200,6 +252222,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fetch: (slices, signal) => Promise.all(slices.map(async (slice) => {
         const run = runs.find((r2) => r2.offset <= slice.offset && slice.offset + slice.length <= r2.offset + r2.length);
         const data2 = await (run == null ? void 0 : run.data);
+        if (exportSignal.aborted) {
+          throw new DOMException("Aborted", "AbortError");
+        }
         if (!run || !data2) return (await base2.fetch([
           slice
         ], signal))[0];
@@ -249208,17 +252233,50 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }))
     };
   }
-  async function readExportTile(plane, tileSize, selection, x2, y2, signal) {
-    if (!(plane instanceof TiffPixelSource)) {
-      return plane.getTile({
-        selection,
-        x: x2,
-        y: y2,
-        signal
+  async function composeExportTile(plane, tileSize, selection, x2, y2, signal) {
+    const { width, height } = getImageSize(plane);
+    const src = plane.tileSize;
+    const x0 = x2 * tileSize;
+    const y0 = y2 * tileSize;
+    const w2 = Math.min(tileSize, width - x0);
+    const h2 = Math.min(tileSize, height - y0);
+    const sx0 = Math.floor(x0 / src);
+    const columns = Math.ceil((x0 + w2) / src) - sx0;
+    let out;
+    for (let sy = Math.floor(y0 / src); sy * src < y0 + h2; sy++) {
+      const top2 = sy * src;
+      const tiles = Array.from({
+        length: columns
+      }, async (_2, i2) => {
+        const sx = sx0 + i2;
+        const left = sx * src;
+        const tile = await plane.getTile({
+          selection,
+          x: sx,
+          y: sy,
+          signal
+        });
+        const samples = tile.data.length / (tile.width * tile.height);
+        out ?? (out = new tile.data.constructor(w2 * h2 * samples));
+        const from0 = Math.max(x0, left);
+        const run = (Math.min(x0 + w2, left + tile.width) - from0) * samples;
+        const rowEnd = Math.min(y0 + h2, top2 + tile.height);
+        for (let row2 = Math.max(y0, top2); row2 < rowEnd; row2++) {
+          const from = ((row2 - top2) * tile.width + (from0 - left)) * samples;
+          const to = ((row2 - y0) * w2 + (from0 - x0)) * samples;
+          out.set(tile.data.subarray(from, from + run), to);
+        }
       });
+      await Promise.all(tiles);
     }
-    const indexer = plane._indexer;
-    const image2 = await indexer(selection);
+    if (!out) throw new Error(`No source tiles under export tile ${x2},${y2}`);
+    return {
+      data: out,
+      width: w2,
+      height: h2
+    };
+  }
+  async function readExportTile(plane, tileSize, selection, x2, y2, signal) {
     const { width, height } = getImageSize(plane);
     const window2 = [
       x2 * tileSize,
@@ -249226,7 +252284,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       Math.min(width, (x2 + 1) * tileSize),
       Math.min(height, (y2 + 1) * tileSize)
     ];
-    const source2 = prefetchedSource(image2.source, mergedBlockRanges(image2, window2));
+    if (!(plane instanceof TiffPixelSource)) {
+      if (plane.readWindow) return plane.readWindow({
+        selection,
+        window: window2,
+        signal
+      });
+      if (plane.tileSize === tileSize) {
+        return plane.getTile({
+          selection,
+          x: x2,
+          y: y2,
+          signal
+        });
+      }
+      return composeExportTile(plane, tileSize, selection, x2, y2, signal);
+    }
+    const indexer = plane._indexer;
+    const image2 = await indexer(selection);
+    const source2 = prefetchedSource(image2.source, mergedBlockRanges(image2, window2), signal);
     const reader = new GeoTIFFImage(image2.fileDirectory, image2.geoKeys, image2.dataView, image2.littleEndian, false, source2);
     const atTileSize = new TiffPixelSource(async () => reader, plane.dtype, tileSize, plane.shape, plane.labels, plane.meta, plane.pool);
     return atTileSize.getTile({
@@ -249494,23 +252570,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
-  function planeLevels(loaderData) {
+  const EXPORT_TILE_SIZE = 1024;
+  function exportPlaneLevels(loaderData) {
     return loaderData.map((plane) => {
       const { width, height } = getImageSize(plane);
-      const tileSize = typeof plane.tileSize === "number" && plane.tileSize > 0 ? plane.tileSize : JPEG_PYRAMID_TILE_SIZE;
       return {
         width,
         height,
-        tileSize
+        tileSize: EXPORT_TILE_SIZE
       };
     });
-  }
-  const EXPORT_TILE_SIZE = 512;
-  function exportPlaneLevels(loaderData) {
-    return planeLevels(loaderData).map((level, i2) => ({
-      ...level,
-      tileSize: loaderData[i2] instanceof TiffPixelSource ? Math.max(EXPORT_TILE_SIZE, level.tileSize) : level.tileSize
-    }));
   }
   function tileCountForLevels(levels, channelCount) {
     let n2 = 0;
@@ -249535,13 +252604,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const out = new Ctor(data2.length);
     for (let i2 = 0; i2 < data2.length; i2++) out[i2] = data2[i2];
     return out;
-  }
-  function maskExportTileSize(width, height, planeTileSize) {
-    const maxDim = Math.max(width, height, 1);
-    const ts = planeTileSize ?? 0;
-    if (ts > 0 && ts < maxDim) return ts;
-    if (ts > 0 && ts <= JPEG_PYRAMID_TILE_SIZE) return ts;
-    return JPEG_PYRAMID_TILE_SIZE;
   }
   function maskPyramidLevelSizes(width, height, tileSize) {
     const levels = [
@@ -249633,23 +252695,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Uint8Array(await new Response(stream).arrayBuffer());
   }
   function planMaskExportLevels(loaderData) {
-    const plane0 = loaderData[0];
-    const { width, height } = getImageSize(plane0);
-    const tileSize = maskExportTileSize(width, height, plane0.tileSize);
     if (loaderData.length > 1) {
       return {
-        levels: loaderData.map((plane) => {
-          const size = getImageSize(plane);
-          return {
-            width: size.width,
-            height: size.height,
-            tileSize: maskExportTileSize(size.width, size.height, plane.tileSize)
-          };
-        }),
+        levels: exportPlaneLevels(loaderData),
         useLoaderTiles: true
       };
     }
-    const levels = maskPyramidLevelSizes(width, height, tileSize);
+    const { width, height } = getImageSize(loaderData[0]);
+    const levels = maskPyramidLevelSizes(width, height, EXPORT_TILE_SIZE);
     return {
       levels,
       useLoaderTiles: levels.length === 1
@@ -249813,16 +252866,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
           const plane = loaderData[job.levelIndex];
           const channel = channels2[job.channelIndex];
-          const tile = await plane.getTile({
-            selection: {
-              t: 0,
-              z: 0,
-              c: channel.index
-            },
-            x: job.x,
-            y: job.y,
-            signal
-          });
+          const tile = await readExportTile(plane, levels[job.levelIndex].tileSize, {
+            t: 0,
+            z: 0,
+            c: channel.index
+          }, job.x, job.y, signal);
           return {
             data: toLabelArray(tile.data, dtype),
             width: tile.width,
@@ -251343,39 +254391,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return readyPromise;
     };
   })();
-  const defaultOptions = {
-    quality: 75,
-    baseline: false,
-    arithmetic: false,
-    progressive: true,
-    optimize_coding: true,
-    smoothing: 0,
-    color_space: 3,
-    quant_table: 3,
-    trellis_multipass: false,
-    trellis_opt_zero: false,
-    trellis_opt_table: false,
-    trellis_loops: 1,
-    auto_subsample: true,
-    chroma_subsample: 2,
-    separate_chroma_quality: false,
-    chroma_quality: 75
-  };
-  function initEmscriptenModule(moduleFactory, wasmModule, moduleOptionOverrides = {}) {
-    let instantiateWasm;
-    if (wasmModule) {
-      instantiateWasm = (imports, callback) => {
-        const instance = new WebAssembly.Instance(wasmModule, imports);
-        callback(instance);
-        return instance.exports;
-      };
-    }
-    return moduleFactory({
-      noInitialRun: true,
-      instantiateWasm,
-      ...moduleOptionOverrides
-    });
-  }
   let emscriptenModule;
   async function init(module, moduleOptionOverrides) {
     let actualModule = module;
@@ -251457,7 +254472,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       baseline: true,
       progressive: false,
       arithmetic: false,
-      optimize_coding: false,
+      optimize_coding: true,
       auto_subsample: false,
       chroma_subsample: 2
     });
@@ -251503,15 +254518,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     new Uint8Array(copy2).set(new Uint8Array(buffer2, byteOffset, byteLength));
     return copy2;
   }
-  function WorkerWrapper$2(options) {
-    return new Worker("" + new URL("jpegExport.worker-Crsdhulq.js", import.meta.url).href, {
+  function WorkerWrapper$1(options) {
+    return new Worker("" + new URL("jpegExport.worker-Dad1CIDO.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
   }
   const MAX_JPEG_EXPORT_WORKERS = 8;
   const defaultPoolSize = Math.min(MAX_JPEG_EXPORT_WORKERS, ((_i = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _i.hardwareConcurrency) ?? 4);
-  let WorkerWrapper$1 = class WorkerWrapper {
+  class WorkerWrapper {
     constructor(worker2) {
       __publicField(this, "worker");
       __publicField(this, "jobIdCounter", 0);
@@ -251557,9 +254572,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       this.rejectAllPending(new Error("JpegExportPool destroyed"));
       this.worker.terminate();
     }
-  };
+  }
   class JpegExportPool {
-    constructor(size = defaultPoolSize, createWorker = () => new WorkerWrapper$2()) {
+    constructor(size = defaultPoolSize, createWorker = () => new WorkerWrapper$1()) {
       __publicField(this, "workerWrappers", null);
       __publicField(this, "size");
       this.size = size;
@@ -251567,7 +254582,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         this.workerWrappers = (async () => {
           const wrappers = [];
           for (let i2 = 0; i2 < size; i2++) {
-            wrappers.push(new WorkerWrapper$1(createWorker()));
+            wrappers.push(new WorkerWrapper(createWorker()));
           }
           return wrappers;
         })();
@@ -251636,6 +254651,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const pool = getJpegExportPool();
     if (pool) return pool.size;
     return defaultPoolSize;
+  }
+  function tiffOffsetsJsonName(tiffFileName) {
+    return `${tiffFileName}.offsets.json`;
+  }
+  async function readTiffIfdOffsets(file) {
+    const tiff = await fromBlob(file);
+    const offsets = [];
+    for (let offset = tiff.firstIFDOffset; offset !== 0; ) {
+      offsets.push(offset);
+      offset = (await tiff.parseFileDirectoryAt(offset)).nextIFDByteOffset;
+    }
+    return offsets;
+  }
+  async function writeTiffOffsetsJson(directory, fileName) {
+    try {
+      const tiff = await (await directory.getFileHandle(fileName)).getFile();
+      const offsets = await readTiffIfdOffsets(tiff);
+      await writeDirectoryFile(directory, tiffOffsetsJsonName(fileName), JSON.stringify(offsets));
+    } catch (e2) {
+      console.warn(`[minerva] no offsets sidecar for ${fileName}`, e2);
+    }
   }
   const RGB_JPEG_TAGS = [
     tiffTag("BitsPerSample", "SHORT", [
@@ -251737,13 +254773,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (channels2.length !== 1 && channels2.length < 3) return false;
     const level = planes[planes.length - 1];
     if (!(level == null ? void 0 : level.getTile)) return false;
-    const { width, height, tileSize } = planeLevels(planes).at(-1) ?? {
-      width: 0,
-      height: 0,
-      tileSize: 256
-    };
+    const { width, height } = getImageSize(level);
     if (width <= 0 || height <= 0) return false;
-    const tile = Math.max(1, tileSize);
+    const tile = level.tileSize > 0 ? level.tileSize : JPEG_PYRAMID_TILE_SIZE;
     const xs = brightfieldSampleOffsets(width, tile);
     const ys = brightfieldSampleOffsets(height, tile);
     const use = channels2.slice(0, 3);
@@ -252055,6 +255087,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         rgb: decided.rgb,
         pixels: (_a2 = item2.entry.loader.metadata) == null ? void 0 : _a2.Pixels
       });
+      await writeTiffOffsetsJson(directory, intensityFileNames[i2]);
       if (item2.masks.length > 0) {
         jpegImage = {
           ...jpegImage,
@@ -252080,6 +255113,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         signal,
         onProgress: bump
       });
+      await writeTiffOffsetsJson(directory, maskFileNames[i2]);
       if (splitFromIntensity) {
         const extra = insertedAfter.get(item2.image.id) ?? [];
         extra.push(maskImage);
@@ -252106,7 +255140,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const exportMessage = "_exportMessage_s6bvo_67";
   const exportHint = "_exportHint_s6bvo_75";
   const confirmActions = "_confirmActions_s6bvo_91";
-  const styles$c = {
+  const styles$b = {
     imageExporter,
     exportStatus,
     dismissButton,
@@ -252126,14 +255160,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return rm > 0 ? `~${h2}h ${rm}m left` : `~${h2}h left`;
   };
   const RATE_WINDOW_MS = 5e3;
-  const estimateRemainingMs = (samples, total) => {
+  const estimateRemainingMs = (samples, total, now) => {
     if (samples.length < 2) return null;
     const base2 = samples[0];
     const tip = samples[samples.length - 1];
-    const elapsed = tip.at - base2.at;
     const gained = tip.completed - base2.completed;
-    if (elapsed < RATE_WINDOW_MS || gained <= 0 || total <= tip.completed) return null;
-    return (total - tip.completed) * elapsed / gained;
+    if (tip.at - base2.at < RATE_WINDOW_MS || gained <= 0 || total <= tip.completed) return null;
+    return (total - tip.completed) * (now - base2.at) / gained;
   };
   const toFilename = (index2) => {
     const level = -index2.z;
@@ -252167,12 +255200,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       transfer: index2.transfer
     });
     if (signal.aborted) return;
-    const fh2 = await index2.dh.getFileHandle(filename2, {
-      create: true
-    });
-    const write = await fh2.createWritable();
-    await write.write(jpeg);
-    await write.close();
+    await writeDirectoryFile(index2.dh, filename2, jpeg);
   };
   const createCRange = async (channels2, directory_handle, planesByImageId) => {
     const pending2 = channels2.map(async (ch2) => {
@@ -252182,17 +255210,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const dh2 = await directory_handle.getDirectoryHandle(folderName, {
         create: true
       });
-      const fh2 = await dh2.getFileHandle("settings.json", {
-        create: true
-      });
-      const write = await fh2.createWritable();
-      await write.write(JSON.stringify({
+      await writeDirectoryFile(dh2, "settings.json", JSON.stringify({
         channel: ch2.index,
         channelId: ch2.channelId,
         lowerLimit: ch2.lowerLimit,
         upperLimit: ch2.upperLimit
       }, null, 2));
-      await write.close();
       return {
         z: 0,
         x: 0,
@@ -252310,20 +255333,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return needs.every((x2) => x2 in o2 && o2[x2] !== null);
   }
   const ImageExporter = (props) => {
-    var _a2;
     const { omeLoaderEntries, dicomIndexList } = props;
     const { directory_handle } = props;
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
     const planesByImageId = reactExports.useMemo(() => {
-      var _a3;
+      var _a2;
       const m2 = /* @__PURE__ */ new Map();
       for (const e2 of omeLoaderEntries) {
         const data2 = e2.loader.data;
         if ((data2 == null ? void 0 : data2.length) && e2.sourceImageId) m2.set(e2.sourceImageId, data2);
       }
       for (const d2 of dicomIndexList) {
-        if (d2.sourceImageId && ((_a3 = d2.loader.data) == null ? void 0 : _a3.length) && !m2.has(d2.sourceImageId)) {
+        if (d2.sourceImageId && ((_a2 = d2.loader.data) == null ? void 0 : _a2.length) && !m2.has(d2.sourceImageId)) {
           m2.set(d2.sourceImageId, d2.loader.data);
         }
       }
@@ -252338,6 +255360,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       done: false
     });
     const rateSamplesRef = reactExports.useRef([]);
+    const [remainingMs, setRemainingMs] = reactExports.useState(null);
     const [cRange, setCRange] = reactExports.useState(null);
     const [exportError, setExportError] = reactExports.useState(null);
     const [skippedTables, setSkippedTables] = reactExports.useState([]);
@@ -252510,8 +255533,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           });
           setSkippedTables(written.skippedFeatureTables);
           const store = useDocumentStore.getState();
-          store.setImages(exported.images);
-          store.setChannelGroups(exported.channelGroups);
+          await Promise.all(exported.images.flatMap((im) => {
+            var _a2;
+            return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "url" ? [
+              deleteFileHandle(locatedFileStorageKey(store.activeStoryId, im.id, im.source.url))
+            ] : [];
+          }));
+          store.setImagesAndChannelGroups(exported.images, exported.channelGroups);
           store.setMetadata({
             imageSource: nextSource
           });
@@ -252653,19 +255681,33 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       exportArmed
     ]);
     const { completed, total, done } = progress;
-    const rateSamples = rateSamplesRef.current;
-    if (done || completed <= 0) {
-      rateSamples.length = 0;
-    } else if (((_a2 = rateSamples[rateSamples.length - 1]) == null ? void 0 : _a2.completed) !== completed) {
-      const at = performance.now();
-      rateSamples.push({
-        at,
-        completed
-      });
-      while (rateSamples.length > 2 && at - rateSamples[1].at >= RATE_WINDOW_MS) {
-        rateSamples.shift();
+    reactExports.useEffect(() => {
+      var _a2;
+      const samples = rateSamplesRef.current;
+      if (done || completed <= 0) {
+        samples.length = 0;
+        setRemainingMs(null);
+        return;
       }
-    }
+      const at = performance.now();
+      if (((_a2 = samples[samples.length - 1]) == null ? void 0 : _a2.completed) !== completed) {
+        samples.push({
+          at,
+          completed
+        });
+        while (samples.length > 2 && at - samples[1].at >= RATE_WINDOW_MS) {
+          samples.shift();
+        }
+      }
+      const update = () => setRemainingMs(estimateRemainingMs(samples, total, performance.now()));
+      update();
+      const tick = window.setInterval(update, 1e3);
+      return () => window.clearInterval(tick);
+    }, [
+      completed,
+      total,
+      done
+    ]);
     let ratio = done ? 1 : 0;
     if (!done && total > 1) {
       ratio = completed / total;
@@ -252674,7 +255716,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     } else if (!done && total === 1) {
       ratio = 0;
     }
-    const remainingMs = estimateRemainingMs(rateSamples, total);
     const percentLabel = `${(ratio * 100).toFixed(3)}%`;
     let etaLabel = "";
     if (done) {
@@ -252686,19 +255727,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     const clampedRatio = Math.min(1, Math.max(0, ratio));
     const skippedNote = done && skippedTables.length > 0 ? jsxRuntimeExports.jsxs("div", {
-      className: styles$c.exportMessage,
+      className: styles$b.exportMessage,
       children: [
         "Feature tables not loaded, left out: ",
         skippedTables.join(", ")
       ]
     }) : null;
     return jsxRuntimeExports.jsx("div", {
-      className: styles$c.imageExporter,
+      className: styles$b.imageExporter,
       children: exportError ? jsxRuntimeExports.jsxs("div", {
-        className: styles$c.exportStatus,
+        className: styles$b.exportStatus,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$c.exportMessage,
+            className: styles$b.exportMessage,
             children: [
               "Export failed: ",
               exportError
@@ -252706,56 +255747,56 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$c.dismissButton,
+            className: styles$b.dismissButton,
             onClick: stopExport,
             children: "Dismiss"
           })
         ]
       }) : mode === "remote-url" ? jsxRuntimeExports.jsxs("div", {
-        className: styles$c.exportStatus,
+        className: styles$b.exportStatus,
         children: [
           jsxRuntimeExports.jsx("div", {
-            className: styles$c.exportMessage,
+            className: styles$b.exportMessage,
             children: done ? "Exported document.json + index.html (remote URLs)" : "Writing document.json + index.html\u2026"
           }),
           skippedNote,
           done ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$c.dismissButton,
+            className: styles$b.dismissButton,
             onClick: stopExport,
             children: "Dismiss"
           }) : null
         ]
       }) : !exportArmed ? jsxRuntimeExports.jsxs("div", {
-        className: styles$c.exportStatus,
+        className: styles$b.exportStatus,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$c.exportMessage,
+            className: styles$b.exportMessage,
             children: [
               jsxRuntimeExports.jsx("div", {
                 children: "Export JPEG OME-TIFF"
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$c.exportHint,
+                className: styles$b.exportHint,
                 children: "Brightfield: RGB. Fluorescence: cube-root."
               })
             ]
           }),
           jsxRuntimeExports.jsxs("div", {
-            className: styles$c.confirmActions,
+            className: styles$b.confirmActions,
             children: [
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$c.dismissButton,
+                className: styles$b.dismissButton,
                 onClick: armExport,
                 children: "Start export"
               }),
               canUpdateDocumentOnly ? jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$c.dismissButton,
+                className: styles$b.dismissButton,
                 onClick: () => {
-                  var _a3;
-                  void ((_a3 = props.onDocumentOnlyUpdate) == null ? void 0 : _a3.call(props).catch((e2) => {
+                  var _a2;
+                  void ((_a2 = props.onDocumentOnlyUpdate) == null ? void 0 : _a2.call(props).catch((e2) => {
                     console.error("[minerva] failed to write story bundle sidecars", e2);
                     setExportError(e2 instanceof Error ? e2.message : "Failed to write document.json / index.html");
                   }));
@@ -252764,7 +255805,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               }) : null,
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$c.dismissButton,
+                className: styles$b.dismissButton,
                 onClick: stopExport,
                 children: "Cancel"
               })
@@ -252772,12 +255813,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           })
         ]
       }) : jsxRuntimeExports.jsxs("div", {
-        className: styles$c.exportStatus,
+        className: styles$b.exportStatus,
         children: [
           jsxRuntimeExports.jsxs("div", {
             className: [
-              styles$c.progressBar,
-              done ? styles$c.progressBarDone : null
+              styles$b.progressBar,
+              done ? styles$b.progressBarDone : null
             ].filter(Boolean).join(" "),
             style: {
               "--progress-ratio": clampedRatio
@@ -252796,13 +255837,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           }),
           etaLabel ? jsxRuntimeExports.jsx("div", {
-            className: styles$c.etaLine,
+            className: styles$b.etaLine,
             children: etaLabel
           }) : null,
           skippedNote,
           done ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$c.dismissButton,
+            className: styles$b.dismissButton,
             onClick: stopExport,
             children: "Dismiss"
           }) : null
@@ -253012,7 +256053,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const nextLink = "_nextLink_o48fs_323";
   const tocWrapper = "_tocWrapper_o48fs_367";
   const channelName = "_channelName_o48fs_376";
-  const styles$b = {
+  const styles$a = {
     presentation,
     frame: frame$1,
     previewRibbon,
@@ -253044,7 +256085,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function PresentationFrame(props) {
     return jsxRuntimeExports.jsx("div", {
-      className: props.active ? `${styles$b.frame} ${styles$b.presentation} minerva-seal` : styles$b.frame,
+      className: props.active ? `${styles$a.frame} ${styles$a.presentation} minerva-seal` : styles$a.frame,
       children: props.children
     });
   }
@@ -253053,7 +256094,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const ribbonDocTitle = documentTitle.trim() || "Untitled story";
     const flushTitle = !props.exitPlaybackPreview;
     return jsxRuntimeExports.jsxs("div", {
-      className: `${minervaTheme.bar} ${styles$b.previewRibbon}`,
+      className: `${minervaTheme.bar} ${styles$a.previewRibbon}`,
       children: [
         props.exitPlaybackPreview ? jsxRuntimeExports.jsxs(PanelActionButton, {
           type: "button",
@@ -253062,7 +256103,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           "aria-label": "Back to editing",
           children: [
             jsxRuntimeExports.jsx(SvgChevronDown, {
-              className: styles$b.previewRibbonChevron,
+              className: styles$a.previewRibbonChevron,
               "aria-hidden": true
             }),
             jsxRuntimeExports.jsx("span", {
@@ -253074,8 +256115,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           title: ribbonDocTitle,
           className: [
             minervaTheme.title,
-            styles$b.previewRibbonDocumentTitle,
-            flushTitle ? styles$b.previewRibbonDocumentTitleFlush : null
+            styles$a.previewRibbonDocumentTitle,
+            flushTitle ? styles$a.previewRibbonDocumentTitleFlush : null
           ].filter(Boolean).join(" "),
           children: [
             jsxRuntimeExports.jsx(StorySpines, {}),
@@ -253083,7 +256124,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         props.exitPlaybackPreview ? jsxRuntimeExports.jsx("span", {
-          className: styles$b.previewRibbonPreviewBadge,
+          className: styles$a.previewRibbonPreviewBadge,
           children: "Story preview"
         }) : null
       ]
@@ -253220,7 +256261,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const iconPx = 16;
     const toc_button = jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: styles$b.tocButton,
+      className: styles$a.tocButton,
       title: "View table of contents",
       onMouseDown: (e2) => {
         e2.preventDefault();
@@ -253268,8 +256309,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return jsxRuntimeExports.jsx("button", {
         type: "button",
         className: [
-          styles$b.navLeft,
-          props2.active ? null : styles$b.navInactive
+          styles$a.navLeft,
+          props2.active ? null : styles$a.navInactive
         ].filter(Boolean).join(" "),
         title: "View previous waypoint",
         onMouseDown: handleMouseDown,
@@ -253280,7 +256321,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     const count2 = jsxRuntimeExports.jsxs("div", {
-      className: styles$b.count,
+      className: styles$a.count,
       children: [
         jsxRuntimeExports.jsx("div", {
           title: "Current waypoint",
@@ -253303,8 +256344,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return jsxRuntimeExports.jsx("button", {
         type: "button",
         className: [
-          styles$b.navRight,
-          props2.active ? null : styles$b.navInactive
+          styles$a.navRight,
+          props2.active ? null : styles$a.navInactive
         ].filter(Boolean).join(" "),
         title: "View next waypoint",
         onMouseDown: handleMouseDown,
@@ -253315,7 +256356,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     const story_next = jsxRuntimeExports.jsx("p", {
-      className: styles$b.nextLink,
+      className: styles$a.nextLink,
       title: "View next waypoint",
       onMouseDown: (e2) => {
         e2.preventDefault();
@@ -253326,10 +256367,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const TableOfContents = (props2) => {
       const { waypoints: tocWaypoints } = props2;
       return jsxRuntimeExports.jsxs("div", {
-        className: styles$b.tocWrapper,
+        className: styles$a.tocWrapper,
         children: [
           jsxRuntimeExports.jsx("h2", {
-            className: styles$b.heading,
+            className: styles$a.heading,
             children: "Table of Contents"
           }),
           jsxRuntimeExports.jsx("ol", {
@@ -253399,16 +256440,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (hideNavPane) return null;
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$b.navPane,
-        navStoryName ? styles$b.navPaneHasStoryName : null
+        styles$a.navPane,
+        navStoryName ? styles$a.navPaneHasStoryName : null
       ].filter(Boolean).join(" "),
       children: [
         navStoryName ? jsxRuntimeExports.jsx("div", {
-          className: styles$b.storyTitle,
+          className: styles$a.storyTitle,
           children: navStoryName
         }) : null,
         jsxRuntimeExports.jsxs("div", {
-          className: styles$b.toolbar,
+          className: styles$a.toolbar,
           children: [
             toc_button,
             jsxRuntimeExports.jsx(StoryLeft, {
@@ -253422,10 +256463,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsxs("div", {
           ref: contentPaneRef,
-          className: styles$b.contentWrap,
+          className: styles$a.contentWrap,
           children: [
             jsxRuntimeExports.jsx("h2", {
-              className: styles$b.heading,
+              className: styles$a.heading,
               children: story_title
             }),
             jsxRuntimeExports.jsx(Markdown, {
@@ -253434,7 +256475,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   const text2 = String(children);
                   const color2 = channelColors.get(text2);
                   return color2 ? jsxRuntimeExports.jsx("span", {
-                    className: styles$b.channelName,
+                    className: styles$a.channelName,
                     style: {
                       "--channel-color": color2
                     },
@@ -253450,7 +256491,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               waypoints
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$b.inlineNext,
+              className: styles$a.inlineNext,
               children: last_story ? jsxRuntimeExports.jsx("p", {
                 children: "End"
               }) : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
@@ -253476,7 +256517,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const groupAltRow = "_groupAltRow_8953e_63";
   const ellipsis = "_ellipsis_8953e_81";
   const triggerLabel = "_triggerLabel_8953e_87";
-  const styles$a = {
+  const styles$9 = {
     wrapRows,
     activeHeader,
     activeGroupTrigger,
@@ -253491,7 +256532,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showOnlyChannelGroup = useAppStore((s2) => s2.showOnlyChannelGroup);
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: `${minervaTheme.focusRing} ${styles$a.groupAltRow}`,
+      className: `${minervaTheme.focusRing} ${styles$9.groupAltRow}`,
       onClick: () => showOnlyChannelGroup(group2.id),
       children: group2.name
     });
@@ -253515,12 +256556,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const activeGroupName = (activeGroup == null ? void 0 : activeGroup.name) || "No group";
     if (channelGroups.length <= 1) {
       return jsxRuntimeExports.jsx("div", {
-        className: styles$a.wrapRows,
+        className: styles$9.wrapRows,
         children: jsxRuntimeExports.jsx("div", {
-          className: styles$a.activeHeader,
+          className: styles$9.activeHeader,
           title: activeGroupName,
           children: jsxRuntimeExports.jsx("span", {
-            className: styles$a.ellipsis,
+            className: styles$9.ellipsis,
             children: activeGroupName
           })
         })
@@ -253528,29 +256569,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     const otherGroups = expanded ? docChannelGroups.filter((g2) => g2.id !== (activeGroup == null ? void 0 : activeGroup.id)) : [];
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$a.wrapRows,
+      className: styles$9.wrapRows,
       children: [
         jsxRuntimeExports.jsxs("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$a.activeGroupTrigger}`,
+          className: `${minervaTheme.focusRing} ${styles$9.activeGroupTrigger}`,
           "aria-expanded": expanded,
           onClick: () => setExpanded(!expanded),
           children: [
             jsxRuntimeExports.jsx("span", {
-              className: styles$a.chevronWrap,
+              className: styles$9.chevronWrap,
               "aria-hidden": true,
               children: jsxRuntimeExports.jsx(ChevronIcon, {
                 direction: expanded ? "up" : "down"
               })
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$a.triggerLabel,
+              className: styles$9.triggerLabel,
               children: activeGroupName
             })
           ]
         }),
         otherGroups.length > 0 ? jsxRuntimeExports.jsx("div", {
-          className: styles$a.alternateList,
+          className: styles$9.alternateList,
           children: otherGroups.map((group2) => jsxRuntimeExports.jsx(GroupRow, {
             group: group2
           }, group2.id))
@@ -253570,7 +256611,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }));
   const clickable = "_clickable_hg67w_9";
   const wrapColumn = "_wrapColumn_hg67w_13";
-  const styles$9 = {
+  const styles$8 = {
     "static": "_static_hg67w_1",
     clickable,
     wrapColumn
@@ -253578,7 +256619,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const IconButton = (props) => {
     const { onClick, children, "aria-label": ariaLabel } = props;
     return jsxRuntimeExports.jsx(PanelIconButton, {
-      className: onClick ? styles$9.clickable : styles$9.static,
+      className: onClick ? styles$8.clickable : styles$8.static,
       onClick,
       "aria-label": ariaLabel,
       children
@@ -253592,7 +256633,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const PopUpdate = (props) => {
     const { onPop, children } = props;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$9.wrapColumn,
+      className: styles$8.wrapColumn,
       children: [
         jsxRuntimeExports.jsx(IconButton, {
           onClick: onPop,
@@ -253605,7 +256646,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   };
   const fieldWrap = "_fieldWrap_1y8s3_1";
   const input$1 = "_input_1y8s3_8";
-  const styles$8 = {
+  const styles$7 = {
     fieldWrap,
     input: input$1
   };
@@ -253629,14 +256670,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const El = React$2.Fragment;
     const content2 = editable ? jsxRuntimeExports.jsx("input", {
-      className: styles$8.input,
+      className: styles$7.input,
       ...inputProps,
       title: text2
     }) : jsxRuntimeExports.jsx(El, {
       children: text2
     });
     return jsxRuntimeExports.jsx("div", {
-      className: styles$8.fieldWrap,
+      className: styles$7.fieldWrap,
       children: content2
     });
   };
@@ -253653,26 +256694,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...plainProps
     });
   };
-  const channelsSection = "_channelsSection_esy1z_1";
-  const channelsSectionHeader = "_channelsSectionHeader_esy1z_9";
-  const sectionLabel = "_sectionLabel_esy1z_18";
-  const collapseToggle = "_collapseToggle_esy1z_30";
-  const toolbarSlot = "_toolbarSlot_esy1z_34";
-  const legendBody = "_legendBody_esy1z_42";
-  const imageSection = "_imageSection_esy1z_49";
-  const imageSectionLabel = "_imageSectionLabel_esy1z_55";
-  const channelList = "_channelList_esy1z_67";
-  const legendRowWrap = "_legendRowWrap_esy1z_73";
-  const rowClickArea = "_rowClickArea_esy1z_88";
-  const swatchButton = "_swatchButton_esy1z_100";
-  const nameButton = "_nameButton_esy1z_101";
-  const swatch = "_swatch_esy1z_100";
-  const swatchFilled = "_swatchFilled_esy1z_135";
-  const legendDivider = "_legendDivider_esy1z_139";
-  const nameSlot = "_nameSlot_esy1z_144";
-  const sectionLabelStatic = "_sectionLabelStatic_esy1z_181";
-  const channelsCollapsed = "_channelsCollapsed_esy1z_185";
-  const styles$7 = {
+  const channelsSection = "_channelsSection_uc0r6_1";
+  const channelsSectionHeader = "_channelsSectionHeader_uc0r6_9";
+  const sectionLabel = "_sectionLabel_uc0r6_18";
+  const collapseToggle = "_collapseToggle_uc0r6_30";
+  const toolbarSlot = "_toolbarSlot_uc0r6_34";
+  const legendBody = "_legendBody_uc0r6_42";
+  const imageSection = "_imageSection_uc0r6_49";
+  const imageSectionLabel = "_imageSectionLabel_uc0r6_55";
+  const channelList = "_channelList_uc0r6_67";
+  const legendRowWrap = "_legendRowWrap_uc0r6_73";
+  const rowClickArea = "_rowClickArea_uc0r6_88";
+  const swatchButton = "_swatchButton_uc0r6_100";
+  const nameButton = "_nameButton_uc0r6_101";
+  const swatch = "_swatch_uc0r6_100";
+  const swatchFilled = "_swatchFilled_uc0r6_136";
+  const legendDivider = "_legendDivider_uc0r6_140";
+  const nameSlot = "_nameSlot_uc0r6_145";
+  const sectionLabelStatic = "_sectionLabelStatic_uc0r6_182";
+  const channelsCollapsed = "_channelsCollapsed_uc0r6_186";
+  const styles$6 = {
     channelsSection,
     channelsSectionHeader,
     sectionLabel,
@@ -253724,7 +256765,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       color: hex_color,
       group_uuid: groupId,
       source_uuid: sc2.id,
-      channel_uuid: gc2.id
+      channel_uuid: gc2.id,
+      mask: isMaskChannel(sc2)
     };
   }
   function legendChannelFromSource(sc2, allChannels = []) {
@@ -253741,7 +256783,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       color: hex ?? "",
       group_uuid: "",
       source_uuid: sc2.id,
-      channel_uuid: sc2.id
+      channel_uuid: sc2.id,
+      mask: isMaskChannel(sc2)
     };
   }
   function legendLabelForImage(basename2) {
@@ -253779,15 +256822,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const swatchLabel = colorPending ? `Optimizing color of ${channelName2}` : `Change color of ${channelName2}`;
     const coreUI = jsxRuntimeExports.jsxs("div", {
-      className: styles$7.rowClickArea,
+      className: styles$6.rowClickArea,
       style: {
         opacity: rowVisible ? 1 : 0.55
       },
       children: [
-        jsxRuntimeExports.jsx("button", {
+        channel.mask ? null : jsxRuntimeExports.jsx("button", {
           type: "button",
           className: [
-            styles$7.swatchButton,
+            styles$6.swatchButton,
             colorPending ? minervaTheme.busyOverlay : null
           ].filter(Boolean).join(" "),
           onClick: onColorClick,
@@ -253796,8 +256839,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           "aria-busy": colorPending || void 0,
           children: jsxRuntimeExports.jsx("div", {
             className: [
-              styles$7.swatch,
-              channel.color && rowVisible ? styles$7.swatchFilled : null
+              styles$6.swatch,
+              channel.color && rowVisible ? styles$6.swatchFilled : null
             ].filter(Boolean).join(" "),
             style: {
               "--swatch-color": channel.color ? `#${channel.color}` : "#fff"
@@ -253806,12 +256849,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$7.nameButton,
+          className: styles$6.nameButton,
           onClick: () => props.toggleChannel(channel),
           title: rowVisible ? `Hide ${channelName2}` : `Show ${channelName2}`,
           "aria-label": rowVisible ? `Hide ${channelName2}` : `Show ${channelName2}`,
           children: jsxRuntimeExports.jsx("span", {
-            className: styles$7.nameSlot,
+            className: styles$6.nameSlot,
             children: jsxRuntimeExports.jsx(EditableText, {
               ...statusProps,
               children: channelName2
@@ -253844,7 +256887,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     });
     return jsxRuntimeExports.jsx("div", {
-      className: styles$7.legendRowWrap,
+      className: styles$6.legendRowWrap,
       children: extraUI
     });
   };
@@ -253888,7 +256931,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       a: 1
     }));
     const [colorPickerChannel, setColorPickerChannel] = reactExports.useState(null);
-    const [legendOpen, setLegendOpen] = reactExports.useState(true);
+    const [legendOpen, setLegendOpen] = reactExports.useState(() => !isMobileDevice());
     const closeColorPicker = reactExports.useCallback(() => {
       setColorPickerChannel(null);
       setColorPickerPos(null);
@@ -253905,16 +256948,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     if (sections.length === 0) {
       return jsxRuntimeExports.jsx("div", {
-        className: styles$7.channelsSection,
+        className: styles$6.channelsSection,
         children: jsxRuntimeExports.jsxs("div", {
-          className: styles$7.channelsSectionHeader,
+          className: styles$6.channelsSectionHeader,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$7.sectionLabel,
+              className: styles$6.sectionLabel,
               children: "Channels"
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$7.toolbarSlot,
+              className: styles$6.toolbarSlot,
               children: addChannelUI
             })
           ]
@@ -253924,16 +256967,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     let rowIdx = 0;
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$7.channelsSection,
-        legendOpen ? null : styles$7.channelsCollapsed
+        styles$6.channelsSection,
+        legendOpen ? null : styles$6.channelsCollapsed
       ].filter(Boolean).join(" "),
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$7.channelsSectionHeader,
+          className: styles$6.channelsSectionHeader,
           children: [
             jsxRuntimeExports.jsxs("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$7.collapseToggle}`,
+              className: `${minervaTheme.focusRing} ${styles$6.collapseToggle}`,
               "aria-expanded": legendOpen,
               onClick: () => {
                 if (legendOpen) closeColorPicker();
@@ -253944,37 +256987,37 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   direction: legendOpen ? "up" : "down"
                 }),
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$7.sectionLabel,
+                  className: styles$6.sectionLabel,
                   children: "Channels"
                 })
               ]
             }),
             jsxRuntimeExports.jsx("div", {
-              className: `${styles$7.sectionLabel} ${styles$7.sectionLabelStatic}`,
+              className: `${styles$6.sectionLabel} ${styles$6.sectionLabelStatic}`,
               children: "Channels"
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$7.toolbarSlot,
+              className: styles$6.toolbarSlot,
               children: addChannelUI
             })
           ]
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$7.legendBody,
+          className: styles$6.legendBody,
           children: sections.map((section) => jsxRuntimeExports.jsxs("div", {
-            className: styles$7.imageSection,
+            className: styles$6.imageSection,
             children: [
               jsxRuntimeExports.jsx("div", {
-                className: styles$7.imageSectionLabel,
+                className: styles$6.imageSectionLabel,
                 title: section.label,
                 children: section.label
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$7.channelList,
+                className: styles$6.channelList,
                 children: section.entries.map((entry, entryIdx) => {
                   if (entry.type === "divider") {
                     return jsxRuntimeExports.jsx("div", {
-                      className: styles$7.legendDivider
+                      className: styles$6.legendDivider
                     }, `div-${section.imageId}-${entryIdx}`);
                   }
                   const c2 = entry.channel;
@@ -254035,47 +257078,63 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   };
   const CLASS_LEGEND_ROWS = 12;
-  function ClassLegendList({ section }) {
+  function ClassLegendList({ section, onToggle }) {
     const [expanded, setExpanded] = reactExports.useState(false);
     const more = section.rows.length - CLASS_LEGEND_ROWS;
     const rows2 = expanded || more <= 0 ? section.rows : section.rows.slice(0, CLASS_LEGEND_ROWS);
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$7.imageSection,
+      className: styles$6.imageSection,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$7.imageSectionLabel,
+          className: styles$6.imageSectionLabel,
           title: section.label,
           children: section.label
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$7.channelList,
+          className: styles$6.channelList,
           children: [
-            rows2.map((row2) => jsxRuntimeExports.jsx("div", {
-              className: styles$7.legendRowWrap,
-              children: jsxRuntimeExports.jsxs("div", {
-                className: styles$7.rowClickArea,
-                children: [
-                  section.showSwatches ? jsxRuntimeExports.jsx("div", {
-                    className: `${styles$7.swatch} ${styles$7.swatchFilled}`,
-                    style: {
-                      "--swatch-color": `#${row2.color}`
-                    }
-                  }) : null,
-                  jsxRuntimeExports.jsx("span", {
-                    className: styles$7.nameSlot,
-                    children: row2.name.trim() ? row2.name : "Unnamed"
+            rows2.map((row2) => {
+              const label2 = row2.name.trim() ? row2.name : "Unnamed";
+              return jsxRuntimeExports.jsx("div", {
+                className: styles$6.legendRowWrap,
+                children: jsxRuntimeExports.jsx("div", {
+                  className: styles$6.rowClickArea,
+                  style: {
+                    opacity: row2.hidden ? 0.55 : 1
+                  },
+                  children: jsxRuntimeExports.jsxs("button", {
+                    type: "button",
+                    className: `${minervaTheme.focusRing} ${styles$6.nameButton}`,
+                    onClick: () => onToggle(section.channelId, row2.name),
+                    title: row2.hidden ? `Show ${label2}` : `Hide ${label2}`,
+                    "aria-pressed": !row2.hidden,
+                    children: [
+                      section.showSwatches ? jsxRuntimeExports.jsx("div", {
+                        className: [
+                          styles$6.swatch,
+                          row2.hidden ? null : styles$6.swatchFilled
+                        ].filter(Boolean).join(" "),
+                        style: {
+                          "--swatch-color": `#${row2.color}`
+                        }
+                      }) : null,
+                      jsxRuntimeExports.jsx("span", {
+                        className: styles$6.nameSlot,
+                        children: label2
+                      })
+                    ]
                   })
-                ]
-              })
-            }, row2.name)),
+                })
+              }, row2.name);
+            }),
             more > 0 && !expanded ? jsxRuntimeExports.jsx("div", {
-              className: styles$7.legendRowWrap,
+              className: styles$6.legendRowWrap,
               children: jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$7.nameButton}`,
+                className: `${minervaTheme.focusRing} ${styles$6.nameButton}`,
                 onClick: () => setExpanded(true),
                 children: jsxRuntimeExports.jsxs("span", {
-                  className: styles$7.nameSlot,
+                  className: styles$6.nameSlot,
                   children: [
                     "+",
                     more,
@@ -254089,22 +257148,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  const ClassLegend = ({ sections }) => {
+  const ClassLegend = ({ sections, onToggle }) => {
     if (sections.length === 0) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$7.channelsSection,
+      className: styles$6.channelsSection,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$7.channelsSectionHeader,
+          className: styles$6.channelsSectionHeader,
           children: jsxRuntimeExports.jsx("div", {
-            className: styles$7.sectionLabel,
+            className: styles$6.sectionLabel,
             children: "Classes"
           })
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$7.legendBody,
+          className: styles$6.legendBody,
           children: sections.map((section) => jsxRuntimeExports.jsx(ClassLegendList, {
-            section
+            section,
+            onToggle
           }, section.channelId))
         })
       ]
@@ -254116,7 +257176,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const wrapContent = "_wrapContent_dawfc_25";
   const wrapCore = "_wrapCore_dawfc_33";
   const overlaySectionLabel = "_overlaySectionLabel_dawfc_52";
-  const styles$6 = {
+  const styles$5 = {
     textWrap,
     core,
     hide,
@@ -254206,10 +257266,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       channelVisibilities
     ]);
     const featureTables = useDocumentStore((s2) => s2.featureTables);
-    const activeStoryIndex = useAppStore((s2) => s2.activeStoryIndex);
-    const activeWaypoint = useDocumentStore((s2) => activeStoryIndex == null ? void 0 : s2.waypoints[activeStoryIndex]);
-    const ingestEpoch2 = reactExports.useSyncExternalStore(subscribeFeatureTableIngest, getFeatureTableIngestEpoch, getFeatureTableIngestEpoch);
-    const lutEpoch2 = reactExports.useSyncExternalStore(subscribeFeatureTableLut, getFeatureTableLutEpoch, getFeatureTableLutEpoch);
+    const activeWaypoint = useActiveWaypoint();
+    const hiddenLegendClasses = useAppStore((s2) => s2.hiddenLegendClasses);
+    const toggleLegendClass = useAppStore((s2) => s2.toggleLegendClass);
+    const clearLegendClasses = useAppStore((s2) => s2.clearLegendClasses);
+    reactExports.useEffect(() => {
+      if (hide2) clearLegendClasses();
+    }, [
+      hide2,
+      clearLegendClasses
+    ]);
+    const ingestEpoch2 = useFeatureTableIngestEpoch();
+    const lutEpoch2 = useFeatureTableLutEpoch();
     const classSections = reactExports.useMemo(() => {
       const inLegend = new Set(legendSections.flatMap((section) => section.entries.flatMap((e2) => e2.type === "channel" ? [
         e2.channel.source_uuid
@@ -254222,13 +257290,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const viz = effectiveMaskVisualizationForSource(sc2, docChannelGroups, activeChannelGroupId);
         const rows2 = shownClassRows(featureTable, classViewFor(activeWaypoint, sc2.id), viz.colorSeed ?? 0, activeWaypoint == null ? void 0 : activeWaypoint.id);
         if (!rows2) continue;
+        const hiddenNames = new Set(hiddenLegendClasses[legendClassKey(activeWaypoint == null ? void 0 : activeWaypoint.id, sc2.id)]);
         out.push({
           channelId: sc2.id,
           label: sc2.name,
           showSwatches: viz.color !== "white",
           rows: rows2.map((row2) => ({
             name: row2.name,
-            color: rgbToHex$1(row2.color)
+            color: rgbToHex$1(row2.color),
+            hidden: hiddenNames.has(row2.name)
           }))
         });
       }
@@ -254240,6 +257310,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       docChannelGroups,
       activeChannelGroupId,
       activeWaypoint,
+      hiddenLegendClasses,
       ingestEpoch2,
       lutEpoch2
     ]);
@@ -254318,7 +257389,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           channelGroups: docChannelGroups,
           groupRowVisibilities: channelGroupRowVisibilities,
           stackVisibilities: channelVisibilities,
-          visible: nextVisible2
+          visible: nextVisible2,
+          groupId: c2.group_uuid
         });
         setChannelGroupRowVisibilities(next2.channelGroupRowVisibilities);
         setChannelVisibilities(next2.channelVisibilities);
@@ -254336,13 +257408,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     const hideClass = [
-      hide2 ? styles$6.hide : "",
-      styles$6.core
+      hide2 ? styles$5.hide : "",
+      styles$5.core
     ].join(" ");
     const allGroups = docChannelGroups.length > 0 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$6.overlaySectionLabel,
+          className: styles$5.overlaySectionLabel,
           children: "Channel groups"
         }),
         jsxRuntimeExports.jsx(ChannelGroups, {
@@ -254356,9 +257428,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const channelMenu = jsxRuntimeExports.jsx("div", {
       className: hideClass,
       children: jsxRuntimeExports.jsx("div", {
-        className: styles$6.wrapContent,
+        className: styles$5.wrapContent,
         children: jsxRuntimeExports.jsxs("div", {
-          className: styles$6.wrapCore,
+          className: styles$5.wrapCore,
           children: [
             allGroups,
             jsxRuntimeExports.jsx(ChannelLegend, {
@@ -254369,14 +257441,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               updateChannel
             }),
             jsxRuntimeExports.jsx(ClassLegend, {
-              sections: classSections
+              sections: classSections,
+              onToggle: (channelId, name2) => toggleLegendClass(activeWaypoint == null ? void 0 : activeWaypoint.id, channelId, name2)
             })
           ]
         })
       })
     });
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$6.textWrap,
+      className: styles$5.textWrap,
       children: [
         props.children,
         hidden ? "" : channelMenu
@@ -254392,7 +257465,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const folderPromptBody = "_folderPromptBody_1vo0y_72";
   const folderPromptActions = "_folderPromptActions_1vo0y_79";
   const folderPromptPrimary = "_folderPromptPrimary_1vo0y_105";
-  const styles$5 = {
+  const styles$4 = {
     modeViewport,
     authorViewport,
     authorViewportHidden,
@@ -254418,13 +257491,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onDocumentOnlyUpdate: props.onDocumentOnlyUpdate
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$5.modeViewport,
+      className: styles$4.modeViewport,
       "data-mode": presenting ? "presenting" : exporting ? "exporting" : folderPrompt2 ? "export-dest" : "author",
       children: [
         jsxRuntimeExports.jsx("div", {
           className: [
-            styles$5.authorViewport,
-            overlayOpen ? styles$5.authorViewportHidden : null
+            styles$4.authorViewport,
+            overlayOpen ? styles$4.authorViewportHidden : null
           ].filter(Boolean).join(" "),
           children: jsxRuntimeExports.jsxs(PresentationFrame, {
             active: presenting,
@@ -254452,18 +257525,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           })
         }),
         folderPrompt2 ? jsxRuntimeExports.jsx("div", {
-          className: styles$5.exportOverlay,
+          className: styles$4.exportOverlay,
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$5.folderPrompt,
+            className: styles$4.folderPrompt,
             role: "dialog",
             "aria-modal": "true",
             children: [
               jsxRuntimeExports.jsx("div", {
-                className: styles$5.folderPromptTitle,
+                className: styles$4.folderPromptTitle,
                 children: "Export story"
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$5.folderPromptBody,
+                className: styles$4.folderPromptBody,
                 children: [
                   "Update the existing folder \u201C",
                   folderPrompt2.folderName,
@@ -254471,11 +257544,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 ]
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$5.folderPromptActions,
+                className: styles$4.folderPromptActions,
                 children: [
                   jsxRuntimeExports.jsxs("button", {
                     type: "button",
-                    className: styles$5.folderPromptPrimary,
+                    className: styles$4.folderPromptPrimary,
                     onClick: folderPrompt2.onUpdateExisting,
                     children: [
                       "Update \u201C",
@@ -254498,34 +257571,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           })
         }) : exporting ? jsxRuntimeExports.jsx("div", {
-          className: styles$5.exportOverlay,
+          className: styles$4.exportOverlay,
           children: jsxRuntimeExports.jsx(ImageExporter, {
             ...exporterProps
           })
         }) : null
-      ]
-    });
-  };
-  const stamp = "_stamp_3x91t_1";
-  const styles$4 = {
-    stamp
-  };
-  function utcShort(iso) {
-    const t2 = Date.parse(iso);
-    if (Number.isNaN(t2)) return null;
-    return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
-  }
-  const BuildStamp = () => {
-    const label2 = utcShort("2026-10-08T18:31:36.008Z");
-    if (!label2) return null;
-    return jsxRuntimeExports.jsxs("div", {
-      className: styles$4.stamp,
-      "aria-hidden": true,
-      title: "2026-10-08T18:31:36.008Z",
-      children: [
-        "Updated ",
-        label2,
-        " UTC"
       ]
     });
   };
@@ -256046,12 +259096,24 @@ uniform classStyleUniforms {
       };
     };
   }
-  const main = "_main_1boo4_1";
-  const pyramidHud = "_pyramidHud_1boo4_6";
-  const squareViewportOverlay = "_squareViewportOverlay_1boo4_27";
+  const main = "_main_1azhv_1";
+  const viewerInfo = "_viewerInfo_1azhv_6";
+  const viewerInfoButton = "_viewerInfoButton_1azhv_14";
+  const viewerInfoPanel = "_viewerInfoPanel_1azhv_15";
+  const viewerInfoPanelHead = "_viewerInfoPanelHead_1azhv_57";
+  const viewerInfoClose = "_viewerInfoClose_1azhv_67";
+  const viewerInfoList = "_viewerInfoList_1azhv_81";
+  const viewerInfoStamp = "_viewerInfoStamp_1azhv_98";
+  const squareViewportOverlay = "_squareViewportOverlay_1azhv_136";
   const styles$1 = {
     main,
-    pyramidHud,
+    viewerInfo,
+    viewerInfoButton,
+    viewerInfoPanel,
+    viewerInfoPanelHead,
+    viewerInfoClose,
+    viewerInfoList,
+    viewerInfoStamp,
     squareViewportOverlay
   };
   const ORTHO_VIEW_ID = "ortho";
@@ -256059,6 +259121,36 @@ uniform classStyleUniforms {
   const WAYPOINT_FLY_MS = 1400;
   const CAMERA_IDLE_COMMIT_MS = 160;
   const easeInOutCubic = (t2) => t2 < 0.5 ? 4 * t2 * t2 * t2 : 1 - (-2 * t2 + 2) ** 3 / 2;
+  function utcShort(iso) {
+    const t2 = Date.parse(iso);
+    if (Number.isNaN(t2)) return null;
+    return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
+  }
+  function buildStamp() {
+    const iso = "2026-10-13T14:03:29.190Z";
+    const sha = "8954391f2884a4c248142d355f1f3095fe9d7097";
+    const label2 = utcShort(iso);
+    const short = sha.slice(0, 7);
+    const text2 = [
+      label2 ? `Updated ${label2} UTC` : "",
+      short
+    ].filter(Boolean).join(" \xB7 ");
+    if (!text2) return null;
+    return {
+      text: text2,
+      title: [
+        iso,
+        sha
+      ].filter(Boolean).join("\n")
+    };
+  }
+  function deviceLabel() {
+    const mb2 = TILE_CACHE_PROPS.maxCacheByteSize / 2 ** 20;
+    const cache2 = mb2 > 0 ? `${mb2} MB` : "off";
+    return `${isMobileDevice() ? "Mobile" : "Desktop"} \xB7 tile cache ${cache2}`;
+  }
+  const BUILD_STAMP = buildStamp();
+  const DEVICE_LABEL = deviceLabel();
   function planeWidth(plane) {
     const i2 = plane.labels.indexOf("x");
     return i2 >= 0 ? plane.shape[i2] ?? 0 : 0;
@@ -256104,17 +259196,21 @@ uniform classStyleUniforms {
       });
     }
     if (rows2.length === 0) return [];
-    if (rows2.every((row2) => row2.status === rows2[0].status)) {
+    if (rows2.length > 1 && rows2.every((row2) => row2.status === rows2[0].status)) {
       return [
+        ...rows2.map((row2) => ({
+          key: row2.key,
+          text: row2.label
+        })),
         {
-          key: rows2[0].key,
+          key: `${rows2[0].key}-level`,
           text: rows2[0].status
         }
       ];
     }
     return rows2.map((row2) => ({
       key: row2.key,
-      text: `${row2.label} ${row2.status}`
+      text: `${row2.label} \xB7 ${row2.status}`
     }));
   }
   const deckViewStates = (ortho2, width, height) => ({
@@ -256273,7 +259369,7 @@ uniform classStyleUniforms {
   };
   const ImageViewer = (props) => {
     const windowSize = useWindowSize();
-    const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, canArrange = false, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2 } = props;
+    const { loaderList, mainSettingsList, imageLayers, omeLoaderEntries, overlayLayers = [], activeTool, isDragging = false, hoveredShapeId = null, onOverlayInteraction, canArrange = false, showSquareViewportOverlay = false, squareViewportScale = 0.9, squareViewportColor = "rgba(255, 255, 255, 0.9)", squareViewportBorderWidth = 2, preserveDrawingBuffer = true } = props;
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
     const channelVisibilities = useAppStore((s2) => s2.channelVisibilities);
     const channelGroupRowVisibilities = useAppStore((s2) => s2.channelGroupRowVisibilities);
@@ -256288,13 +259384,14 @@ uniform classStyleUniforms {
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
     const featureTables = useDocumentStore((s2) => s2.featureTables);
-    const activeStoryIndex = useAppStore((s2) => s2.activeStoryIndex);
-    const activeWaypoint = useDocumentStore((s2) => activeStoryIndex == null ? void 0 : s2.waypoints[activeStoryIndex]);
-    const featureTableLutEpoch = reactExports.useSyncExternalStore(subscribeFeatureTableLut, getFeatureTableLutEpoch, getFeatureTableLutEpoch);
+    const activeWaypoint = useActiveWaypoint();
+    const hiddenLegendClasses = useAppStore((s2) => s2.hiddenLegendClasses);
+    const featureTableLutEpoch = useFeatureTableLutEpoch();
     const selectionMaskActive = imageSelectionMask != null && (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
     const maskExtension = reactExports.useMemo(() => new MaskExtension(), []);
     useShapeLayers(authoringWaypointEditorOpen);
     const [viewportSize, setViewportSize] = reactExports.useState(windowSize);
+    const [viewportMeasured, setViewportMeasured] = reactExports.useState(false);
     const rootRef = reactExports.useRef(null);
     const deckRef = reactExports.useRef(null);
     const arrangeLayoutRef = reactExports.useRef(null);
@@ -256311,6 +259408,7 @@ uniform classStyleUniforms {
           width,
           height
         });
+        setViewportMeasured(true);
         useAppStore.getState().setViewerViewportSize({
           width,
           height
@@ -256330,7 +259428,21 @@ uniform classStyleUniforms {
     const firstLoader = reactExports.useMemo(() => loaderList.length > 0 ? loaderList[0] : null, [
       loaderList
     ]);
-    const [pyramidHud2, setPyramidHud] = reactExports.useState([]);
+    const [pyramidHud, setPyramidHud] = reactExports.useState([]);
+    const [pyramidInfoOpen, setPyramidInfoOpen] = reactExports.useState(false);
+    const pyramidInfoRef = reactExports.useRef(null);
+    reactExports.useEffect(() => {
+      if (!pyramidInfoOpen) return;
+      const onPointerDown = (event) => {
+        const root2 = pyramidInfoRef.current;
+        if (!root2 || root2.contains(event.target)) return;
+        setPyramidInfoOpen(false);
+      };
+      document.addEventListener("pointerdown", onPointerDown);
+      return () => document.removeEventListener("pointerdown", onPointerDown);
+    }, [
+      pyramidInfoOpen
+    ]);
     const publishPyramidHud = reactExports.useCallback((zoom) => {
       const next2 = formatPyramidHudLines(zoom, loaderList, images);
       setPyramidHud((prev) => {
@@ -256388,7 +259500,7 @@ uniform classStyleUniforms {
         } : visualization;
         const orientation = orientationForImage(images, sc2.imageId, imageOrientationPreview);
         const featureTable = featureTables.find((c2) => c2.sourceChannelId === sc2.id);
-        const classStyle = featureTable ? gpuStyleForFeatureTable(featureTable, classViewFor(activeWaypoint, featureTable.sourceChannelId), visualization.colorSeed ?? 0, activeWaypoint == null ? void 0 : activeWaypoint.id) : void 0;
+        const classStyle = featureTable ? gpuStyleForFeatureTable(featureTable, withHiddenClasses(classViewFor(activeWaypoint, sc2.id), sc2.id, hiddenLegendClasses[legendClassKey(activeWaypoint == null ? void 0 : activeWaypoint.id, sc2.id)]), visualization.colorSeed ?? 0, activeWaypoint == null ? void 0 : activeWaypoint.id) : void 0;
         const layer2 = createMaskTileLayer({
           id: `mask-channel-${sc2.id}`,
           loader: entry.loader,
@@ -256413,11 +259525,12 @@ uniform classStyleUniforms {
       imageOrientationPreview,
       featureTables,
       activeWaypoint,
+      hiddenLegendClasses,
       featureTableLutEpoch
     ]);
     const fitViewState = reactExports.useMemo(() => {
       const { width, height } = viewportSize;
-      const zoom = frame2 && frame2.worldWidth > 0 && frame2.worldHeight > 0 && width > 0 ? Math.log2(0.95 * Math.min(width / frame2.worldWidth, height / frame2.worldHeight)) : 0;
+      const zoom = frame2 && frame2.worldWidth > 0 && frame2.worldHeight > 0 && width > 0 && height > 0 ? Math.log2(0.95 * Math.min(width / frame2.worldWidth, height / frame2.worldHeight)) : 0;
       return withOrthoZoom({
         zoom,
         target: frame2 ? [
@@ -256498,13 +259611,14 @@ uniform classStyleUniforms {
     const refImageWidth = (frame2 == null ? void 0 : frame2.pixelWidth) ?? 0;
     const refImageHeight = (frame2 == null ? void 0 : frame2.pixelHeight) ?? 0;
     reactExports.useEffect(() => {
-      if (firstLoader !== null && !hasInitialized.current) {
+      if (firstLoader !== null && viewportMeasured && !hasInitialized.current) {
         commitIdleCamera(fitViewState, true);
         hasInitialized.current = true;
       }
     }, [
       fitViewState,
       firstLoader,
+      viewportMeasured,
       commitIdleCamera
     ]);
     reactExports.useEffect(() => {
@@ -257061,7 +260175,7 @@ uniform classStyleUniforms {
           controller: controllerConfig,
           deviceProps: {
             webgl: {
-              preserveDrawingBuffer: true
+              preserveDrawingBuffer
             }
           },
           initialViewState: deckInitialViewState,
@@ -257090,12 +260204,84 @@ uniform classStyleUniforms {
           ref: loadingWidgetRef,
           placement: "center"
         }),
-        pyramidHud2.length > 0 ? jsxRuntimeExports.jsx("output", {
-          className: styles$1.pyramidHud,
-          children: pyramidHud2.map((line) => jsxRuntimeExports.jsx("div", {
-            children: line.text
-          }, line.key))
-        }) : null,
+        jsxRuntimeExports.jsxs("div", {
+          className: styles$1.viewerInfo,
+          ref: pyramidInfoRef,
+          children: [
+            pyramidInfoOpen ? jsxRuntimeExports.jsxs("div", {
+              className: styles$1.viewerInfoPanel,
+              role: "dialog",
+              "aria-label": "Image list and resolution",
+              children: [
+                jsxRuntimeExports.jsxs("div", {
+                  className: styles$1.viewerInfoPanelHead,
+                  children: [
+                    jsxRuntimeExports.jsx("span", {
+                      children: "Images"
+                    }),
+                    jsxRuntimeExports.jsx("button", {
+                      type: "button",
+                      className: styles$1.viewerInfoClose,
+                      "aria-label": "Close image list",
+                      onClick: () => setPyramidInfoOpen(false),
+                      children: "\xD7"
+                    })
+                  ]
+                }),
+                pyramidHud.length > 0 ? jsxRuntimeExports.jsx("output", {
+                  className: styles$1.viewerInfoList,
+                  children: pyramidHud.map((line) => jsxRuntimeExports.jsx("div", {
+                    title: line.text,
+                    children: line.text
+                  }, line.key))
+                }) : null,
+                jsxRuntimeExports.jsxs("div", {
+                  className: styles$1.viewerInfoStamp,
+                  title: [
+                    BUILD_STAMP == null ? void 0 : BUILD_STAMP.title,
+                    navigator.userAgent
+                  ].filter(Boolean).join("\n"),
+                  children: [
+                    BUILD_STAMP ? jsxRuntimeExports.jsx("div", {
+                      children: BUILD_STAMP.text
+                    }) : null,
+                    jsxRuntimeExports.jsx("div", {
+                      children: DEVICE_LABEL
+                    })
+                  ]
+                })
+              ]
+            }) : null,
+            jsxRuntimeExports.jsx("button", {
+              type: "button",
+              className: styles$1.viewerInfoButton,
+              "aria-label": "Image list and resolution",
+              "aria-expanded": pyramidInfoOpen,
+              onClick: () => setPyramidInfoOpen((open) => !open),
+              children: jsxRuntimeExports.jsxs("svg", {
+                viewBox: "0 0 16 16",
+                "aria-hidden": "true",
+                children: [
+                  jsxRuntimeExports.jsx("circle", {
+                    cx: "8",
+                    cy: "8",
+                    r: "6.25",
+                    fill: "none",
+                    stroke: "currentColor",
+                    strokeWidth: "1.25"
+                  }),
+                  jsxRuntimeExports.jsx("path", {
+                    d: "M8 7.2v4.2M8 4.6v.6",
+                    fill: "none",
+                    stroke: "currentColor",
+                    strokeWidth: "1.4",
+                    strokeLinecap: "round"
+                  })
+                ]
+              })
+            })
+          ]
+        }),
         showSquareViewportOverlay && jsxRuntimeExports.jsx("div", {
           className: styles$1.squareViewportOverlay,
           style: squareViewportStyle
@@ -257104,73 +260290,41 @@ uniform classStyleUniforms {
     });
   };
   ImageViewer.displayName = "ImageViewer";
-  function WorkerWrapper(options) {
-    return new Worker("" + new URL("decoder.worker-CKbAr6AY.js", import.meta.url).href, {
-      type: "module",
-      name: options == null ? void 0 : options.name
-    });
-  }
-  const decoderTags = /* @__PURE__ */ new WeakMap();
-  function withoutBlockTables(fileDirectory) {
-    let tags = decoderTags.get(fileDirectory);
-    if (!tags) {
-      tags = {
-        ...fileDirectory,
-        TileOffsets: fileDirectory.TileOffsets && [],
-        TileByteCounts: fileDirectory.TileByteCounts && [],
-        StripOffsets: fileDirectory.StripOffsets && [],
-        StripByteCounts: fileDirectory.StripByteCounts && [],
-        ImageDescription: void 0
-      };
-      decoderTags.set(fileDirectory, tags);
-    }
-    return tags;
-  }
-  class OmeDecodePool extends Pool {
-    decode(fileDirectory, buffer2) {
-      return super.decode(withoutBlockTables(fileDirectory), buffer2);
-    }
-  }
-  function createOmeDecodePool() {
-    return new OmeDecodePool(void 0, () => new WorkerWrapper());
-  }
-  const CUBE_ROOT_U8_TO_U16 = Uint16Array.from({
-    length: 256
-  }, (_2, b2) => decodeCubeRootU8ToU16(b2));
-  const CONTRAST_U8_TO_U16 = Uint16Array.from({
-    length: 256
-  }, (_2, b2) => b2 << 8);
-  function expandThroughLut(data2, lut) {
-    const out = new Uint16Array(data2.length);
-    for (let i2 = 0; i2 < data2.length; i2++) {
-      out[i2] = lut[data2[i2] & 255];
+  function cropTile(full2, stride, width, height) {
+    if (width === stride && height === stride) return full2;
+    const out = new Uint16Array(width * height);
+    for (let row2 = 0; row2 < height; row2++) {
+      out.set(full2.subarray(row2 * stride, row2 * stride + width), row2 * width);
     }
     return out;
   }
   async function readTileThroughLut(plane, args, lut) {
     var _a2;
     const source2 = plane;
-    if (!source2._indexer || !source2._getTileExtent || !source2.pool) return null;
+    const pool = source2.pool;
+    if (!source2._indexer || !source2._getTileExtent || !(pool instanceof OmeDecodePool)) {
+      return null;
+    }
     try {
       const image2 = await source2._indexer(args.selection);
       if (!image2.isTiled || image2.getTileWidth() !== source2.tileSize || image2.getTileHeight() !== source2.tileSize || image2.getSamplesPerPixel() !== 1 || image2.getBitsPerSample(0) !== 8) {
         return null;
       }
       const { width, height } = source2._getTileExtent(args.x, args.y);
-      const tile = await image2.getTileOrStrip(args.x, args.y, 0, source2.pool);
-      if ((_a2 = args.signal) == null ? void 0 : _a2.aborted) throw SIGNAL_ABORTED;
-      const src = new Uint8Array(tile.data);
       const stride = source2.tileSize;
-      const out = new Uint16Array(width * height);
-      for (let row2 = 0; row2 < height; row2++) {
-        const from = row2 * stride;
-        const to = row2 * width;
-        for (let col = 0; col < width; col++) {
-          out[to + col] = lut[src[from + col]];
+      const decoder = {
+        decode: (fileDirectory, buffer2) => {
+          var _a3;
+          if ((_a3 = args.signal) == null ? void 0 : _a3.aborted) throw SIGNAL_ABORTED;
+          return pool.decodeWidened(fileDirectory, buffer2, lut);
         }
-      }
+      };
+      const tile = await image2.getTileOrStrip(args.x, args.y, 0, decoder);
+      if ((_a2 = args.signal) == null ? void 0 : _a2.aborted) throw SIGNAL_ABORTED;
+      const bytes = tile.data;
+      const full2 = bytes.byteLength === stride * stride * 2 ? new Uint16Array(bytes) : expandThroughLut(new Uint8Array(bytes), lut);
       return {
-        data: out,
+        data: cropTile(full2, stride, width, height),
         width,
         height
       };
@@ -257181,14 +260335,15 @@ uniform classStyleUniforms {
   }
   function wrapOmeLoaderJpegExport(loader, transfer) {
     var _a2;
-    const lut = transfer === "cube-root" ? CUBE_ROOT_U8_TO_U16 : CONTRAST_U8_TO_U16;
+    const lut = u8ToU16Lut(transfer);
     const data2 = (_a2 = loader.data) == null ? void 0 : _a2.map((plane) => {
-      var _a3;
+      var _a3, _b2;
       const getTile = (_a3 = plane.getTile) == null ? void 0 : _a3.bind(plane);
       if (!getTile) return plane;
       const wrapped = {
         ...plane,
         dtype: "Uint16",
+        onTileError: (_b2 = plane.onTileError) == null ? void 0 : _b2.bind(plane),
         getTile: async (args) => {
           const fast = await readTileThroughLut(plane, args, lut);
           if (fast) return fast;
@@ -257223,20 +260378,17 @@ uniform classStyleUniforms {
     };
   }
   function resolveOmeSourceUrl(documentUrl, sourceUrl) {
-    const trimmed = sourceUrl.trim();
-    if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("blob:") || trimmed.startsWith("file:")) {
-      return trimmed;
-    }
-    return new URL(trimmed, new URL(documentUrl, window.location.href)).href;
+    return new URL(sourceUrl.trim(), new URL(documentUrl, window.location.href)).href;
   }
   async function hydrateDocumentLoaders(images, opts = {}) {
+    var _a2;
     const jpegLoaderEntries = [];
     const omeLoaderEntries = [];
     const dicomIndexList = [];
     const deniedHandleKeys = [];
     const missingHandleKeys = [];
     const loaderErrors = [];
-    const pool = opts.pool === null ? void 0 : opts.pool ?? createOmeDecodePool();
+    const pool = opts.pool === null ? void 0 : opts.pool ?? sharedOmeDecodePool();
     const dicomSeriesSeen = /* @__PURE__ */ new Set();
     const requestPermission = opts.requestPermission ?? false;
     const includeLocal = opts.includeLocal ?? true;
@@ -257257,12 +260409,43 @@ uniform classStyleUniforms {
         existingPyramidFolders: opts.existingPyramidFolders
       } : {}
     }));
+    const loadLocalFile = async (im, handle2) => {
+      try {
+        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
+          kind: "local",
+          handle: handle2,
+          ...pool ? {
+            pool
+          } : {},
+          rgbDisplay: im.rgbDisplay
+        });
+        omeLoaderEntries.push({
+          ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
+          sourceImageId: im.id
+        });
+      } catch (e2) {
+        loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
+      }
+    };
     for (const im of images) {
       if (!im.source) continue;
       if (im.source.kind === "jpeg") continue;
       switch (im.source.kind) {
         case "url": {
-          if (includeLocal && isRelativeOmeTiffUrl(im.source.url)) break;
+          if (includeLocal && isRelativeOmeTiffUrl(im.source.url)) {
+            const resolved = await ((_a2 = opts.resolveRelativeFile) == null ? void 0 : _a2.call(opts, im));
+            if (!resolved) break;
+            if (!resolved.handle || !await canAccess(resolved.handle)) {
+              deniedHandleKeys.push(resolved.key);
+              break;
+            }
+            if (await findFile({
+              handle: resolved.handle
+            })) {
+              await loadLocalFile(im, resolved.handle);
+            }
+            break;
+          }
           try {
             const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
               kind: "url",
@@ -257296,22 +260479,7 @@ uniform classStyleUniforms {
           if (!await findFile({
             handle: handle2
           })) break;
-          try {
-            const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-              kind: "local",
-              handle: handle2,
-              ...pool ? {
-                pool
-              } : {},
-              rgbDisplay: im.rgbDisplay
-            });
-            omeLoaderEntries.push({
-              ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
-              sourceImageId: im.id
-            });
-          } catch (e2) {
-            loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
-          }
+          await loadLocalFile(im, handle2);
           break;
         }
         case "dicomWeb": {
@@ -257541,12 +260709,6 @@ uniform classStyleUniforms {
     const styled = await applySharedImportPaletteToSourceChannels(flat);
     return applySourceChannelsToImages(images, styled);
   }
-  function urlLeaf(url) {
-    var _a2;
-    const path2 = url.trim().split(/[?#]/)[0];
-    const leaf = (_a2 = path2.split("/").pop()) == null ? void 0 : _a2.trim();
-    return leaf || "remote.ome.tif";
-  }
   async function replaceOmeImageInDocument(args) {
     var _a2, _b2, _c2;
     const { images, imageId, source: source2, pool } = args;
@@ -257562,7 +260724,7 @@ uniform classStyleUniforms {
       };
     }
     const oldLocalHandleKey = ((_c2 = oldImage.source) == null ? void 0 : _c2.kind) === "local" ? oldImage.source.handleKey : void 0;
-    const basename2 = source2.kind === "local" ? (await source2.handle.getFile()).name : urlLeaf(source2.url);
+    const basename2 = source2.kind === "local" ? (await source2.handle.getFile()).name : urlFileName(source2.url) || "remote.ome.tif";
     const role = resolveImageImportRole({
       contentRole: oldImage.contentRole,
       channels: oldImage.channels ?? []
@@ -257652,6 +260814,26 @@ uniform classStyleUniforms {
       sources,
       groups
     });
+  }
+  const proto = XRLayer.prototype;
+  for (const method of [
+    "getShaders",
+    "dataToTexture"
+  ]) {
+    const viv = proto[method];
+    proto[method] = function(...args) {
+      if (this.props.interpolation !== "linear") return viv.apply(this, args);
+      const props = Object.create(this.props, {
+        interpolation: {
+          value: "nearest"
+        }
+      });
+      return viv.apply(Object.create(this, {
+        props: {
+          value: props
+        }
+      }), args);
+    };
   }
   function applyChannelRendering(settings, live2) {
     if (!live2) return settings;
@@ -257750,6 +260932,7 @@ uniform classStyleUniforms {
       id: `${args.layerId}${remount}`,
       ...settings,
       ...TILE_CACHE_PROPS,
+      TilesetClass: PlaceholderTileset2D,
       excludeBackground: true,
       ...args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {},
       ...imageFadeParameters(Boolean(args.overlay), args.opacity),
@@ -258106,14 +261289,16 @@ uniform classStyleUniforms {
         return;
     }
   }
-  const wrapper = "_wrapper_1dnlo_1";
-  const full = "_full_1dnlo_10";
-  const retrieving = "_retrieving_1dnlo_19";
-  const importLoadingOverlay = "_importLoadingOverlay_1dnlo_28";
+  const wrapper = "_wrapper_1lulm_1";
+  const full = "_full_1lulm_10";
+  const retrieving = "_retrieving_1lulm_19";
+  const viewerHost = "_viewerHost_1lulm_28";
+  const importLoadingOverlay = "_importLoadingOverlay_1lulm_34";
   const styles = {
     wrapper,
     full,
     retrieving,
+    viewerHost,
     importLoadingOverlay
   };
   function maybeDefaultStoryTitleFromFirstImage() {
@@ -258199,13 +261384,40 @@ uniform classStyleUniforms {
     const storedRoot = await getStoryRootHandle(storyId, rootOpts);
     const root2 = storedRoot && await isStoryRootHandleUsable(storedRoot) ? storedRoot : void 0;
     const missingStoryRoot = storyNeedsLocalJpegRoot(images) && !root2;
+    let rootDenied;
     const result = await hydrateDocumentLoaders(images, {
       channelGroups: (opts == null ? void 0 : opts.channelGroups) ?? [],
       documentUrl: (opts == null ? void 0 : opts.documentUrl) ?? window.location.href,
-      pool: createOmeDecodePool(),
+      pool: sharedOmeDecodePool(),
       requestPermission,
       includeLocal: true,
       imageSource: useDocumentStore.getState().metadata.imageSource,
+      resolveRelativeFile: async (im) => {
+        var _a2;
+        if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "url") return void 0;
+        const url = im.source.url;
+        const key2 = locatedFileStorageKey(storyId, im.id, url);
+        const located = await getFileHandle(key2);
+        if ((located == null ? void 0 : located.kind) === "file") {
+          return {
+            handle: located,
+            key: key2
+          };
+        }
+        if (!storyId) return void 0;
+        const rootKey = storyRootHandleKey(storyId);
+        if (root2) {
+          const handle2 = await fileInDirectory(root2, url);
+          return handle2 ? {
+            handle: handle2,
+            key: rootKey
+          } : void 0;
+        }
+        rootDenied ?? (rootDenied = storyRootNeedsPermission(storyId));
+        return await rootDenied ? {
+          key: rootKey
+        } : void 0;
+      },
       ...root2 ? {
         fetchTile: tileFetcherForDirectory(root2),
         existingPyramidFolders: await listExistingPyramidFolders(root2)
@@ -258483,29 +261695,44 @@ uniform classStyleUniforms {
       void (async () => {
         if (modeAtStop === "jpeg-pyramid") {
           try {
-            const doc = useDocumentStore.getState();
-            const storedRoot = directoryAtStop ?? (doc.activeStoryId ? await getStoryRootHandle(doc.activeStoryId, {
+            const doc2 = useDocumentStore.getState();
+            const storedRoot = directoryAtStop ?? (doc2.activeStoryId ? await getStoryRootHandle(doc2.activeStoryId, {
               requestPermission: true,
               mode: "read"
             }) : void 0);
             const root2 = storedRoot && await isStoryRootHandleUsable(storedRoot) ? storedRoot : void 0;
-            if (root2 && doc.images.some((im) => {
+            if (root2 && doc2.images.some((im) => {
               var _a2;
               return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg";
             })) {
               const entries = await jpegLoaderEntriesFromImages({
-                images: doc.images,
-                channelGroups: doc.channelGroups,
+                images: doc2.images,
+                channelGroups: doc2.channelGroups,
                 documentUrl: window.location.href,
                 activeGroupId: activeGroupIdAtStop,
                 fetchTile: tileFetcherForDirectory(root2),
                 existingPyramidFolders: await listExistingPyramidFolders(root2),
-                transfer: jpegTransferFromImageSource(doc.metadata.imageSource)
+                transfer: jpegTransferFromImageSource(doc2.metadata.imageSource)
               });
               if (entries.length > 0) setJpegLoaderEntries(entries);
             }
           } catch (e2) {
             console.warn("[minerva] post-export jpeg refresh failed", e2);
+          }
+        }
+        const doc = useDocumentStore.getState();
+        if (modeAtStop === "jpeg-ome-tiff" && doc.images.some((im) => {
+          var _a2;
+          return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "url" && isRelativeOmeTiffUrl(im.source.url);
+        })) {
+          try {
+            applyHydratedLoaders(await hydrateLoadersFromImages(doc.images, false, {
+              channelGroups: doc.channelGroups,
+              documentUrl: window.location.href
+            }));
+            syncRegistryFromDocument();
+          } catch (e2) {
+            console.warn("[minerva] post-export loader refresh failed", e2);
           }
         }
         setViewerRemountKey((k2) => k2 + 1);
@@ -258676,7 +261903,7 @@ uniform classStyleUniforms {
           images: doc.images,
           imageId,
           source: source2,
-          pool: createOmeDecodePool()
+          pool: sharedOmeDecodePool()
         });
         if (prep.ok === false) {
           if (prep.error) window.alert(prep.error);
@@ -258768,7 +261995,7 @@ uniform classStyleUniforms {
         const loader = await loadOmeLoaderForRole(role, {
           kind: "local",
           handle: handle2,
-          pool: createOmeDecodePool(),
+          pool: sharedOmeDecodePool(),
           rgbDisplay
         });
         const sourceImageId = crypto.randomUUID();
@@ -258851,7 +262078,7 @@ uniform classStyleUniforms {
         const loader = await loadOmeLoaderForRole(role, {
           kind: "local",
           handle: handle2,
-          pool: createOmeDecodePool(),
+          pool: sharedOmeDecodePool(),
           rgbDisplay
         });
         const sourceImageId = crypto.randomUUID();
@@ -258966,7 +262193,7 @@ uniform classStyleUniforms {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "url",
         url,
-        pool: createOmeDecodePool(),
+        pool: sharedOmeDecodePool(),
         rgbDisplay
       });
       if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
@@ -259028,7 +262255,7 @@ uniform classStyleUniforms {
       const loader = await loadOmeLoaderForRole(role, {
         kind: "url",
         url,
-        pool: createOmeDecodePool(),
+        pool: sharedOmeDecodePool(),
         rgbDisplay
       });
       if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
@@ -259182,7 +262409,7 @@ uniform classStyleUniforms {
       endImageLoading,
       syncRegistryFromDocument
     ]);
-    const reselectLoaderFile = reactExports.useCallback(async (imageId, handle2) => {
+    const locateImage = reactExports.useCallback(async (imageId, source2) => {
       var _a2;
       const loadEpoch = beginImageLoading();
       try {
@@ -259190,85 +262417,59 @@ uniform classStyleUniforms {
         const im = doc.images.find((i2) => i2.id === imageId);
         if (!(im == null ? void 0 : im.source)) return;
         let images2 = doc.images;
-        if (im.source.kind === "local") {
-          await putFileHandle(im.source.handleKey, handle2);
-        } else if (im.source.kind === "url" && isRelativeOmeTiffUrl(im.source.url)) {
-          images2 = await persistLocalImageHandle({
-            storyId: doc.activeStoryId,
-            imageId,
-            handle: handle2,
-            images: images2
+        if (source2.kind === "url") {
+          if (im.source.kind === "jpeg" || im.source.kind === "dicomWeb") {
+            return;
+          }
+          const duplicate = await findDuplicateImportTarget(doc.images, {
+            ...source2,
+            dicomWeb: false
+          }, {
+            excludeImageId: imageId
           });
-          doc.setImages(images2);
+          if (duplicate) {
+            window.alert(duplicateImportError(duplicate));
+            return;
+          }
+          images2 = setImageSource(images2, imageId, source2);
+          clearOmeDerivedCaches();
+        } else if (im.source.kind === "local") {
+          await putFileHandle(im.source.handleKey, source2.handle);
+        } else if (im.source.kind === "url" && isRelativeOmeTiffUrl(im.source.url)) {
+          await putFileHandle(locatedFileStorageKey(doc.activeStoryId, imageId, im.source.url), source2.handle);
         } else {
           return;
         }
-        const result = await hydrateLoadersFromImages(useDocumentStore.getState().images, true, {
-          channelGroups: doc.channelGroups,
-          documentUrl: window.location.href
-        });
-        applyHydratedLoaders(result);
-        if (result.omeLoaderEntries.length + result.jpegLoaderEntries.length + result.dicomIndexList.length > 0) {
-          syncRegistryFromDocument();
-          setImportRevision((r2) => r2 + 1);
-          const file = await handle2.getFile();
-          setFileName(file.name);
-        }
-      } catch (e2) {
-        console.error("[minerva] reselectLoaderFile failed", e2);
-      } finally {
-        endImageLoading(loadEpoch);
-        (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
-      }
-    }, [
-      applyHydratedLoaders,
-      beginImageLoading,
-      endImageLoading,
-      syncRegistryFromDocument
-    ]);
-    const reselectImageUrl = reactExports.useCallback(async (imageId, url) => {
-      var _a2;
-      const loadEpoch = beginImageLoading();
-      try {
-        const doc = useDocumentStore.getState();
-        const im = doc.images.find((i2) => i2.id === imageId);
-        if (!(im == null ? void 0 : im.source)) return;
-        if (im.source.kind === "jpeg" || im.source.kind === "dicomWeb") return;
-        const duplicate = await findDuplicateImportTarget(doc.images, {
-          kind: "url",
-          url,
-          dicomWeb: false
-        }, {
-          excludeImageId: imageId
-        });
-        if (duplicate) {
-          window.alert(duplicateImportError(duplicate));
-          return;
-        }
-        const images2 = setImageSource(doc.images, imageId, {
-          kind: "url",
-          url
-        });
         const result = await hydrateLoadersFromImages(images2, true, {
           channelGroups: doc.channelGroups,
           documentUrl: window.location.href
         });
-        if (result.loaderErrors.length > 0) {
-          window.alert(result.loaderErrors.join("\n"));
-          return;
+        const opened = result.omeLoaderEntries.some((e2) => e2.sourceImageId === imageId);
+        if (source2.kind === "url") {
+          if (!opened) {
+            window.alert(result.loaderErrors.join("\n") || "Could not load image URL");
+            return;
+          }
+          const current = useDocumentStore.getState();
+          if (!current.images.some((i2) => i2.id === imageId)) return;
+          skipLoaderHydrateRef.current = true;
+          current.setImages(setImageSource(current.images, imageId, source2));
         }
-        doc.setImages(images2);
         applyHydratedLoaders(result);
-        if (result.omeLoaderEntries.length + result.jpegLoaderEntries.length + result.dicomIndexList.length > 0) {
+        if (opened) {
           syncRegistryFromDocument();
           setImportRevision((r2) => r2 + 1);
-          const leaf = url.trim().split(/[?#]/)[0].split("/").pop();
-          if (leaf) setFileName(leaf);
-          setLastOmeTiffUrl(url);
+          if (source2.kind === "url") {
+            const leaf = urlFileName(source2.url);
+            if (leaf) setFileName(leaf);
+            setLastOmeTiffUrl(source2.url);
+          } else {
+            setFileName((await source2.handle.getFile()).name);
+          }
         }
       } catch (e2) {
-        console.error("[minerva] reselectImageUrl failed", e2);
-        window.alert(e2 instanceof Error ? e2.message : "Could not load image URL");
+        console.error("[minerva] locateImage failed", e2);
+        window.alert(e2 instanceof Error ? e2.message : "Could not load image");
       } finally {
         endImageLoading(loadEpoch);
         (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
@@ -259935,8 +263136,12 @@ uniform classStyleUniforms {
           needsFileAccess: deniedHandleKeys.length > 0,
           onRequestFileAccess: requestLoaderFileAccess,
           missingHandleKeys,
-          onReselectFile: reselectLoaderFile,
-          onReselectUrl: reselectImageUrl,
+          loadedImageIds: new Set([
+            ...omeLoaderEntries,
+            ...jpegLoaderEntries,
+            ...dicomIndexList
+          ].map((entry) => entry.sourceImageId)),
+          onLocateImage: locateImage,
           needsStoryRootReconnect: missingStoryRoot,
           onReconnectStoryRoot: reconnectStoryRoot,
           onRemoveImage,
@@ -259953,15 +263158,32 @@ uniform classStyleUniforms {
         const imagesPanel = jsxRuntimeExports.jsx(Upload, {
           ...uploadProps
         });
-        const viewer = noLoader ? null : jsxRuntimeExports.jsx(ImageViewer, {
-          ...imageProps,
-          overlayLayers,
-          activeTool,
-          isDragging: dragState.isDragging,
-          hoveredShapeId: hoverState.hoveredShapeId,
-          onOverlayInteraction: handleOverlayInteraction,
-          canArrange: !presenting
-        }, viewerRemountKey);
+        const viewer = jsxRuntimeExports.jsxs("div", {
+          className: styles.viewerHost,
+          children: [
+            noLoader ? null : jsxRuntimeExports.jsx(ImageViewer, {
+              ...imageProps,
+              overlayLayers,
+              activeTool,
+              isDragging: dragState.isDragging,
+              hoveredShapeId: hoverState.hoveredShapeId,
+              onOverlayInteraction: handleOverlayInteraction,
+              canArrange: !presenting
+            }, viewerRemountKey),
+            isLoadingImage ? jsxRuntimeExports.jsxs("output", {
+              className: styles.importLoadingOverlay,
+              "aria-busy": "true",
+              children: [
+                jsxRuntimeExports.jsx("div", {
+                  className: minervaTheme.spinner
+                }),
+                jsxRuntimeExports.jsx("span", {
+                  children: "Loading\u2026"
+                })
+              ]
+            }) : null
+          ]
+        });
         const imager = jsxRuntimeExports.jsx("div", {
           className: styles.full,
           children: jsxRuntimeExports.jsx(PlaybackModeView, {
@@ -259984,19 +263206,7 @@ uniform classStyleUniforms {
               onEnterPlaybackPreview: enterPlaybackPreview,
               playbackPreviewDisabled: _waypoints.length === 0
             }) : null,
-            imager,
-            isLoadingImage ? jsxRuntimeExports.jsxs("output", {
-              className: styles.importLoadingOverlay,
-              "aria-busy": "true",
-              children: [
-                jsxRuntimeExports.jsx("div", {
-                  className: minervaTheme.spinner
-                }),
-                jsxRuntimeExports.jsx("span", {
-                  children: "Loading\u2026"
-                })
-              ]
-            }) : null
+            imager
           ]
         });
       }
@@ -260021,28 +263231,17 @@ uniform classStyleUniforms {
       });
     }, []);
     if (props.demo_dicom_web || props.demo_url || hasAuthorShellSupport()) {
-      return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
-        children: [
-          jsxRuntimeExports.jsx(StoryPersistenceRoot, {
-            children: jsxRuntimeExports.jsx(LibraryOrAuthor, {
-              ...props
-            })
-          }),
-          jsxRuntimeExports.jsx(BuildStamp, {})
-        ]
-      });
-    } else {
-      return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
-        children: [
-          jsxRuntimeExports.jsx("div", {
-            children: jsxRuntimeExports.jsx("p", {
-              children: "Minerva needs a secure context (HTTPS or localhost). Serve this app over HTTPS and reload."
-            })
-          }),
-          jsxRuntimeExports.jsx(BuildStamp, {})
-        ]
+      return jsxRuntimeExports.jsx(StoryPersistenceRoot, {
+        children: jsxRuntimeExports.jsx(LibraryOrAuthor, {
+          ...props
+        })
       });
     }
+    return jsxRuntimeExports.jsx("div", {
+      children: jsxRuntimeExports.jsx("p", {
+        children: "Minerva needs a secure context (HTTPS or localhost). Serve this app over HTTPS and reload."
+      })
+    });
   };
   const id = "react-output";
   const rootElement = document.getElementById(id);

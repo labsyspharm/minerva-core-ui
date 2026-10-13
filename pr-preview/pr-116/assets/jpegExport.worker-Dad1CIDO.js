@@ -4446,6 +4446,15 @@ function encodeCubeRootU16ToU8(pixel) {
     Math.max(0, Math.round((pixel / 65536) ** (1 / 3) * 256))
   );
 }
+function decodeCubeRootU8ToU16(byte) {
+  if (!Number.isFinite(byte) || byte <= 0) return 0;
+  return Math.min(65535, Math.max(0, Math.round((byte / 256) ** 3 * 65536)));
+}
+Uint16Array.from(
+  { length: 256 },
+  (_, b) => decodeCubeRootU8ToU16(b)
+);
+Uint16Array.from({ length: 256 }, (_, b) => b << 8);
 
 const JPEG_PYRAMID_TILE_SIZE = 1024;
 
@@ -4523,7 +4532,10 @@ async function encodeRgbaToJpeg(width, height, rgba, quality, colorSpace = MOZJP
     baseline: true,
     progressive: false,
     arithmetic: false,
-    optimize_coding: false,
+    // Per-tile Huffman tables, still baseline. With the standard tables
+    // (`false`), @jsquash/jpeg 1.6.0 writes a corrupt scan for ~12% of 4:2:0
+    // YCbCr tiles; optimized ones are also smaller and faster to encode.
+    optimize_coding: true,
     // 4:2:0. Packed RGB TIFF tags declare YCbCrSubSampling [2, 2].
     auto_subsample: false,
     chroma_subsample: 2
