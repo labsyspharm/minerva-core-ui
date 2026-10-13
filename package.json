@@ -121,6 +121,7 @@
     "eslint": "^9.7.0",
     "eslint-plugin-react": "^7.34.4",
     "http-server": "^14.1.1",
+    "jsdom": "^26.1.0",
     "prettier": "^3.3.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

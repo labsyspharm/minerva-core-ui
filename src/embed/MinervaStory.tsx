@@ -19,6 +19,7 @@ import {
 } from "@/api/controller";
 import type { MinervaState } from "@/api/state";
 import {
+  type StoryLoadRequest,
   StoryPlayerApp,
   type StoryPlayerStatus,
 } from "@/components/playback/StoryPlayerApp";
@@ -27,8 +28,9 @@ import styles from "./MinervaStory.module.css";
 
 export type MinervaStoryProps = {
   /**
-   * URL of a `document.json`, or its parsed contents. A new value loads a new
-   * story, so keep object references stable (`useMemo` / module scope).
+   * URL of a `document.json`, or its parsed contents. A different URL or
+   * document loads a new story; objects are compared by content, so a fresh
+   * object with the same JSON keeps the story (a stable reference is cheaper).
    */
   document: string | object;
   /** Resolves relative image paths when `document` is an object (default: page URL). */
@@ -86,6 +88,34 @@ const toInput = (
 ): StoryDocumentInput =>
   typeof document === "string" ? document : { document, baseUrl };
 
+const documentJson = new WeakMap<object, string | null>();
+const jsonOf = (document: object) => {
+  let json = documentJson.get(document);
+  if (json === undefined) {
+    try {
+      json = JSON.stringify(document);
+    } catch {
+      json = null; // not JSON (cycles): fall back to identity
+    }
+    documentJson.set(document, json);
+  }
+  return json;
+};
+
+/**
+ * Same story? URLs by value, objects by content, so a host that rebuilds an
+ * equal document object every render does not reload (and loop) the story.
+ */
+export function sameStoryDocument(
+  a: MinervaStoryProps["document"],
+  b: MinervaStoryProps["document"],
+): boolean {
+  if (a === b) return true;
+  if (typeof a === "string" || typeof b === "string") return false;
+  const json = jsonOf(a);
+  return json !== null && json === jsonOf(b);
+}
+
 const nextFrame = () =>
   new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
@@ -120,20 +150,24 @@ export function MinervaStoryView(
   });
 
   // The story to show: set from props, or by the `loadDocument` command.
-  const [source, setSource] = useState(() => toInput(document, baseUrl));
+  const [request, setRequest] = useState<StoryLoadRequest>(() => ({
+    input: toInput(document, baseUrl),
+  }));
   const [documentProps, setDocumentProps] = useState({ document, baseUrl });
   if (
-    documentProps.document !== document ||
-    documentProps.baseUrl !== baseUrl
+    documentProps.baseUrl !== baseUrl ||
+    !sameStoryDocument(documentProps.document, document)
   ) {
     setDocumentProps({ document, baseUrl });
-    setSource(toInput(document, baseUrl));
+    setRequest({ input: toInput(document, baseUrl) });
   }
 
   useEffect(() => {
     controller.host.loadDocument = async (next) => {
       controller.setStatus("loading");
-      setSource(next);
+      // Always a new request: reloading the story already shown must load
+      // again (and report "ready"), not be skipped as an unchanged value.
+      setRequest({ input: next });
       await handle.whenReady();
     };
     return () => {
@@ -216,7 +250,7 @@ export function MinervaStoryView(
       style={props.style}
     >
       <StoryPlayerApp
-        source={source}
+        request={request}
         showDocumentTitle={props.showDocumentTitle}
         onStatusChange={onStatusChange}
       />

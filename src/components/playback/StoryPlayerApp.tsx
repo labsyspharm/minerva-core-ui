@@ -20,9 +20,12 @@ export type StoryPlayerStatus =
   | { status: "ready" }
   | { status: "error"; error: string };
 
+/** One load of a story. A new object loads again, even for the same input. */
+export type StoryLoadRequest = { readonly input: StoryDocumentInput };
+
 export type StoryPlayerAppProps = {
-  /** `document.json` URL, or its contents. Keep the reference stable. */
-  source: StoryDocumentInput;
+  /** The story to show; keep the object stable until the next load. */
+  request: StoryLoadRequest;
   /** Show the document title ribbon (default true). */
   showDocumentTitle?: boolean;
   /**
@@ -37,17 +40,17 @@ export type StoryPlayerAppProps = {
  * reuses the Presentation ribbon and nav.
  */
 export function StoryPlayerApp({
-  source,
+  request,
   showDocumentTitle = true,
   onStatusChange,
 }: StoryPlayerAppProps) {
-  // The source whose document is in the stores. Compared by identity rather
+  // The request whose document is in the stores. Compared by identity rather
   // than a boolean so a reload whose `onDocument` lands in the same render
   // batch as the reset still reads as a change.
-  const [shownSource, setShownSource] = useState<StoryDocumentInput | null>(
+  const [shownRequest, setShownRequest] = useState<StoryLoadRequest | null>(
     null,
   );
-  const documentReady = shownSource === source;
+  const documentReady = shownRequest === request;
   const [imagesReady, setImagesReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jpegLoaderEntries, setJpegLoaderEntries] = useState<JpegLoaderEntry[]>(
@@ -63,7 +66,10 @@ export function StoryPlayerApp({
   });
 
   useEffect(() => {
-    let cancelled = false;
+    // Aborted by the next request or unmount: the stale load stops before it
+    // writes the shared stores, so it cannot replace the newer story.
+    const load = new AbortController();
+    const { signal } = load;
     const report = (status: StoryPlayerStatus) =>
       onStatusChangeRef.current?.(status);
     // The new story renders while its images open; never under the old ones.
@@ -73,28 +79,27 @@ export function StoryPlayerApp({
     setImagesReady(false);
     setError(null);
     report({ status: "loading" });
-    void loadStoryDocument(source, {
+    void loadStoryDocument(request.input, {
+      signal,
       onDocument: () => {
-        if (!cancelled) setShownSource(source);
+        if (!signal.aborted) setShownRequest(request);
       },
     })
       .then((result) => {
-        if (cancelled) return;
+        if (signal.aborted) return;
         setJpegLoaderEntries(result.jpegLoaderEntries);
         setOmeLoaderEntries(result.omeLoaderEntries);
         setDicomIndexList(result.dicomIndexList);
         setImagesReady(true);
       })
       .catch((e) => {
-        if (cancelled) return;
+        if (signal.aborted) return;
         const message = e instanceof Error ? e.message : String(e);
         setError(message);
         report({ status: "error", error: message });
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [source]);
+    return () => load.abort();
+  }, [request]);
 
   const sourceCount =
     jpegLoaderEntries.length + omeLoaderEntries.length + dicomIndexList.length;

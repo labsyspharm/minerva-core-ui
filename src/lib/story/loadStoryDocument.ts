@@ -43,6 +43,7 @@ export type StoryDocumentInput =
 
 async function readStoryDocument(
   input: StoryDocumentInput,
+  signal?: AbortSignal,
 ): Promise<{ data: DocumentData; documentUrl: string }> {
   if (typeof input !== "string") {
     return {
@@ -50,19 +51,25 @@ async function readStoryDocument(
       documentUrl: new URL(input.baseUrl ?? "", window.location.href).href,
     };
   }
-  const res = await fetch(input);
+  const res = await fetch(input, { signal });
   if (!res.ok) {
     throw new Error(`Failed to load ${input} (${res.status})`);
   }
   return { data: validateDocumentData(await res.json()), documentUrl: input };
 }
 
-/** Fetch (or accept), hydrate stores, and build CDN-safe loaders for a published story. */
+/**
+ * Fetch (or accept), hydrate stores, and build CDN-safe loaders for a published story.
+ * After `signal` aborts the stores are left alone and the promise rejects with
+ * its reason, so a newer story (or an unmount) cannot be overwritten by this one.
+ */
 export async function loadStoryDocument(
   input: StoryDocumentInput,
-  opts?: { onDocument?: () => void },
+  opts?: { onDocument?: () => void; signal?: AbortSignal },
 ): Promise<LoadStoryDocumentResult> {
-  const { data, documentUrl } = await readStoryDocument(input);
+  const signal = opts?.signal;
+  const { data, documentUrl } = await readStoryDocument(input, signal);
+  signal?.throwIfAborted();
   useDocumentStore
     .getState()
     .hydrateFromDocument(data, data.metadata.id ?? crypto.randomUUID());
@@ -88,5 +95,6 @@ export async function loadStoryDocument(
       imageSource: data.metadata.imageSource,
     });
 
+  signal?.throwIfAborted();
   return { jpegLoaderEntries, omeLoaderEntries, dicomIndexList };
 }

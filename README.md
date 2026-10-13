@@ -59,8 +59,10 @@ await ref.current.setView({ bounds: { x0: 9000, y0: 9000, x1: 13000, y1: 12000 }
 
 - The component fills its parent, so give the parent a height (or pass a
   `className` / `style`).
-- A new `document` loads a new story, so keep object documents referentially
-  stable.
+- A different `document` loads a new story. Object documents are compared by
+  content, so rebuilding an equal object each render keeps the story (a stable
+  reference skips the comparison). `loadDocument` always loads, even the
+  story already shown.
 - The story is ready (`whenReady`, `onReady`) once its waypoints and channel
   groups are showing; images may still be opening, and camera moves wait for
   them.
