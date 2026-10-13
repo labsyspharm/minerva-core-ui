@@ -19,8 +19,8 @@ const OME_TIFF_HANDLE_KEYS = ["img-1"];
  * `?storyid=`, so the editor opens it and a reload keeps editing it.
  */
 export async function beginEditing(documentUrl: string): Promise<void> {
-  useAppStore.getState().resetStoryViewerSession();
   const storyId = await importStoryFromUrl(documentUrl);
+  useAppStore.getState().resetStoryViewerSession();
   const url = new URL(window.location.href);
   url.searchParams.set("storyid", storyId);
   window.history.replaceState(window.history.state, "", url);
