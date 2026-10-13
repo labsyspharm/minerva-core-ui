@@ -75,9 +75,12 @@ function omeLoaderForHydrate(
   wrapOmeJpeg: boolean,
   storyTransfer: JpegExportTransfer,
 ): Pick<OmeLoaderEntry, "loader" | "transfer"> {
-  const jpegTransfer = wrapOmeJpeg
-    ? hydrateJpegTransferForImage(im, storyTransfer)
-    : null;
+  // Only the export's own 8-bit files: a 16-bit source located or imported
+  // into an exported story must not be widened through the 8-bit table.
+  const jpegTransfer =
+    wrapOmeJpeg && loader.data?.[0]?.dtype === "Uint8"
+      ? hydrateJpegTransferForImage(im, storyTransfer)
+      : null;
   if (!jpegTransfer) {
     return { loader };
   }
@@ -162,7 +165,16 @@ export async function hydrateDocumentLoaders(
         // file the user located or the story folder, else it stays unloaded
         // until located. The player resolves it against document.json.
         if (includeLocal && isRelativeOmeTiffUrl(im.source.url)) {
-          const resolved = await opts.resolveRelativeFile?.(im);
+          let resolved: Awaited<
+            ReturnType<NonNullable<typeof opts.resolveRelativeFile>>
+          >;
+          try {
+            resolved = await opts.resolveRelativeFile?.(im);
+          } catch (e) {
+            // One unreadable path leaves this image to be located, not the rest.
+            console.warn("[minerva] could not resolve", im.source.url, e);
+            break;
+          }
           if (!resolved) break;
           if (!resolved.handle || !(await canAccess(resolved.handle))) {
             deniedHandleKeys.push(resolved.key);

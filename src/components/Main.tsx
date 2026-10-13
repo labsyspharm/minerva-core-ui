@@ -1469,9 +1469,10 @@ const Content = (props: Props) => {
   ]);
 
   /**
-   * Point an image that still needs its file at one: a file chosen again (no
-   * persistable handle, or a relative TIFF to locate) or an http(s) URL. Keeps
-   * the image id, then reopens loaders the way a refresh does.
+   * Point an image that still needs its file at one, keeping the image id: a
+   * file chosen again (no persistable handle, or a relative TIFF to locate),
+   * which reopens loaders the way a refresh does, or an http(s) URL, which
+   * opens only this image.
    */
   const locateImage = React.useCallback(
     async (imageId: string, source: OmeImageSource) => {
@@ -1480,7 +1481,6 @@ const Content = (props: Props) => {
         const doc = useDocumentStore.getState();
         const im = doc.images.find((i) => i.id === imageId);
         if (!im?.source) return;
-        let images = doc.images;
         if (source.kind === "url") {
           if (im.source.kind === "jpeg" || im.source.kind === "dicomWeb") {
             return;
@@ -1494,10 +1494,47 @@ const Content = (props: Props) => {
             window.alert(duplicateImportError(duplicate));
             return;
           }
-          images = setImageSource(images, imageId, source);
           // Same image id, different pixels: drop histograms and palettes of the old ones.
           clearOmeDerivedCaches();
-        } else if (im.source.kind === "local") {
+          // Only this image's loader changes; the others stay open, unprompted.
+          const result = await hydrateLoadersFromImages(
+            setImageSource([im], imageId, source),
+            false,
+            {
+              channelGroups: doc.channelGroups,
+              documentUrl: window.location.href,
+            },
+          );
+          // A URL that does not open leaves the document as it was.
+          if (result.omeLoaderEntries.length === 0) {
+            window.alert(
+              result.loaderErrors.join("\n") || "Could not load image URL",
+            );
+            return;
+          }
+          // Edits made while the URL opened stay; only this source changes.
+          const current = useDocumentStore.getState();
+          if (!current.images.some((i) => i.id === imageId)) return;
+          skipLoaderHydrateRef.current = true;
+          current.setImages(setImageSource(current.images, imageId, source));
+          setOmeLoaderEntries((prev) => [
+            ...prev.filter((e) => e.sourceImageId !== imageId),
+            ...result.omeLoaderEntries,
+          ]);
+          if (im.source.kind === "local") {
+            const oldKey = im.source.handleKey;
+            setMissingHandleKeys((prev) => prev.filter((k) => k !== oldKey));
+            setDeniedHandleKeys((prev) => prev.filter((k) => k !== oldKey));
+          }
+          syncRegistryFromDocument();
+          setImportRevision((r) => r + 1);
+          const leaf = urlFileName(source.url);
+          if (leaf) setFileName(leaf);
+          setLastOmeTiffUrl(source.url);
+          return;
+        }
+
+        if (im.source.kind === "local") {
           await putFileHandle(im.source.handleKey, source.handle);
         } else if (
           im.source.kind === "url" &&
@@ -1511,39 +1548,16 @@ const Content = (props: Props) => {
         } else {
           return;
         }
-
-        const result = await hydrateLoadersFromImages(images, true, {
+        // Reopen as a refresh does: the click also grants the other files.
+        const result = await hydrateLoadersFromImages(doc.images, true, {
           channelGroups: doc.channelGroups,
           documentUrl: window.location.href,
         });
-        const opened = result.omeLoaderEntries.some(
-          (e) => e.sourceImageId === imageId,
-        );
-        if (source.kind === "url") {
-          // A URL that does not open leaves the document as it was.
-          if (!opened) {
-            window.alert(
-              result.loaderErrors.join("\n") || "Could not load image URL",
-            );
-            return;
-          }
-          // Edits made while the URL opened stay; only this source changes.
-          const current = useDocumentStore.getState();
-          if (!current.images.some((i) => i.id === imageId)) return;
-          skipLoaderHydrateRef.current = true;
-          current.setImages(setImageSource(current.images, imageId, source));
-        }
         applyHydratedLoaders(result);
-        if (opened) {
+        if (result.omeLoaderEntries.some((e) => e.sourceImageId === imageId)) {
           syncRegistryFromDocument();
           setImportRevision((r) => r + 1);
-          if (source.kind === "url") {
-            const leaf = urlFileName(source.url);
-            if (leaf) setFileName(leaf);
-            setLastOmeTiffUrl(source.url);
-          } else {
-            setFileName((await source.handle.getFile()).name);
-          }
+          setFileName((await source.handle.getFile()).name);
         }
       } catch (e) {
         console.error("[minerva] locateImage failed", e);

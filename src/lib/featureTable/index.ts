@@ -711,6 +711,8 @@ async function readTableBytes(
   return key ? getBlob(key) : undefined;
 }
 
+let hydrateGeneration = 0;
+
 /**
  * Ingest every table into the worker. A `local` source reads its Dexie blob;
  * a `url` source is fetched relative to `documentUrl` (the page by default).
@@ -721,9 +723,13 @@ export async function hydrateFeatureTables(
   reset: boolean,
   opts?: { documentUrl?: string },
 ): Promise<void> {
+  // A later run (another story, or new tables) redoes what this one has left.
+  const generation = ++hydrateGeneration;
+  const superseded = () => generation !== hydrateGeneration;
   if (reset) {
     lutPending.clear();
     await resetFeatureTables();
+    if (superseded()) return;
   }
   const pending = featureTables.filter(
     (featureTable) => reset || !hasIngestedFeatureTable(featureTable.id),
@@ -738,6 +744,7 @@ export async function hydrateFeatureTables(
   const missingTableIds: string[] = [];
   for (const [i, featureTable] of pending.entries()) {
     const bytes = await reads[i];
+    if (superseded()) return;
     if (!bytes) {
       missingTableIds.push(featureTable.id);
       continue;
@@ -758,5 +765,5 @@ export async function hydrateFeatureTables(
       missingTableIds.push(featureTable.id);
     }
   }
-  noteAccess({ missingTableIds });
+  if (!superseded()) noteAccess({ missingTableIds });
 }

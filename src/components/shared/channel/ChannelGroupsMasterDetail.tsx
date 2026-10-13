@@ -703,11 +703,14 @@ export const ChannelGroupsMasterDetail = (
       setGroupNames(
         Object.fromEntries(normalized.map(({ name, id }) => [id, name])),
       );
+      const app = useAppStore.getState();
+      // A channel added to the group being edited shows at once.
       setChannelGroupRowVisibilities(
         applyGroupRowVisibilities(
           normalized,
-          useAppStore.getState().channelGroupRowVisibilities,
+          app.channelGroupRowVisibilities,
           { kind: "sync" },
+          app.activeChannelGroupId,
         ),
       );
     },
@@ -779,7 +782,10 @@ export const ChannelGroupsMasterDetail = (
       ...channelGroups.map((g) => ({ ...g, expanded: false })),
       newGroup,
     ]);
-    setActiveChannelGroup(newGroup.id);
+    // Every visible group paints: a new group starts as the only one shown.
+    // The first group takes over what the stack showed (below).
+    if (seedingFirst) setActiveChannelGroup(newGroup.id);
+    else showOnlyChannelGroup(newGroup.id);
     if (seedingFirst && seededChannels.length > 0) {
       const stackOff = { ...stackVisibilities };
       for (const gc of seededChannels) {

@@ -443,11 +443,16 @@ export function applyStackVisibilities(
   }
 }
 
-/** Apply explicit group-row visibility for import / remove / sync. */
+/**
+ * Apply explicit group-row visibility for import / remove / sync. Every group
+ * with a visible row paints, so a row new to a known map shows only in a
+ * group already showing one, or in `activeGroupId` (the group being edited).
+ */
 export function applyGroupRowVisibilities(
   channelGroups: ChannelGroup[],
   prev: Record<string, boolean>,
   transition: VisibilityTransition,
+  activeGroupId?: string | null,
 ): Record<string, boolean> {
   const rowIds = new Set(
     channelGroups.flatMap((g) => g.channels.map((gc) => gc.id)),
@@ -463,17 +468,23 @@ export function applyGroupRowVisibilities(
     transition.kind === "appendIntensity"
       ? new Set(transition.newGroupRowIds)
       : null;
-  const defaultGroupId = channelGroups[0]?.id;
   const inherited = Object.keys(out).length > 0;
+  // A fresh map shows the first group only.
+  const showing = new Set(
+    inherited
+      ? channelGroups
+          .filter(
+            (g) =>
+              g.id === activeGroupId || g.channels.some((gc) => out[gc.id]),
+          )
+          .map((g) => g.id)
+      : channelGroups.slice(0, 1).map((g) => g.id),
+  );
 
   for (const group of channelGroups) {
     for (const gc of group.channels) {
       if (out[gc.id] !== undefined) continue;
-      if (newRowIds?.has(gc.id)) {
-        out[gc.id] = false;
-      } else {
-        out[gc.id] = inherited || group.id === defaultGroupId;
-      }
+      out[gc.id] = !newRowIds?.has(gc.id) && showing.has(group.id);
     }
   }
   return out;

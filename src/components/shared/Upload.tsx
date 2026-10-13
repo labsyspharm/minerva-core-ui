@@ -812,16 +812,20 @@ const Upload = (props: UploadProps) => {
       im.source?.kind === "local" ? im.source.handleKey : undefined;
     const needsReselect =
       !!localKey && missingHandleKeys.includes(localKey) && !!onLocateImage;
+    const unloaded = !loadedImageIds?.has(im.id);
     const relativeUnloaded =
       im.source?.kind === "url" &&
       isRelativeOmeTiffUrl(im.source.url) &&
-      !loadedImageIds?.has(im.id);
+      unloaded;
     // Files that may only need permission again (after a reload) ask for it
-    // first; a relative TIFF still unloaded after that is located.
+    // first; a relative TIFF still unloaded after that is located. An open
+    // image needs nothing, whatever other files are waiting on.
     const needsPermission =
       needsFileAccess &&
       !!onRequestFileAccess &&
-      (im.source?.kind === "local" ? !needsReselect : relativeUnloaded);
+      (im.source?.kind === "local"
+        ? !needsReselect && unloaded
+        : relativeUnloaded);
     const needsLocateFile =
       !!onLocateImage && relativeUnloaded && !needsPermission;
     const needsStoryDir =

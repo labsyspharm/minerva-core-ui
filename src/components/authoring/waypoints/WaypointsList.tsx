@@ -231,8 +231,7 @@ const WaypointsList = (props: WaypointsListProps) => {
   const shownWaypoint =
     activeStoryIndex == null ? undefined : waypoints[activeStoryIndex];
   const activeWaypointId = shownWaypoint?.id;
-  // No list and an empty one draw the same (a row read before parsing has
-  // none); every class edit makes a new list.
+  // No list and an empty one draw the same (a row read before parsing has none).
   const activeClassViews = shownWaypoint?.classViews?.length
     ? shownWaypoint.classViews
     : undefined;
@@ -247,8 +246,12 @@ const WaypointsList = (props: WaypointsListProps) => {
       classViews: activeClassViews,
     };
     if (activeStoryIndex == null || activeWaypointId == null) return;
-    // Only a class edit on the same waypoint alters the picture.
-    if (last.id !== activeWaypointId || last.classViews === activeClassViews) {
+    // Only a class edit on the same waypoint alters the picture. Undo, redo
+    // and a reload hand back equal lists under a new identity.
+    if (
+      last.id !== activeWaypointId ||
+      JSON.stringify(last.classViews) === JSON.stringify(activeClassViews)
+    ) {
       return;
     }
     const index = activeStoryIndex;
