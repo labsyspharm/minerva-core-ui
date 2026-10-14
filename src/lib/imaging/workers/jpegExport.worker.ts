@@ -4,6 +4,7 @@ import {
   encodeRgbJpeg,
   ensureJpegEncoderReady,
   JPEG_EXPORT_QUALITY,
+  mozJpegTiming,
   PIXEL_CTORS,
   type RgbLimits,
 } from "../jpegExportEncode";
@@ -48,6 +49,8 @@ worker.addEventListener("message", async (e: Message) => {
     rgbLimits,
   } = e.data;
   try {
+    const start = performance.now();
+    const mozJpegBefore = mozJpegTiming.ms;
     const Ctor = PIXEL_CTORS[arrayCtorName];
     if (!Ctor) {
       throw new Error(`unsupported pixel array ${arrayCtorName}`);
@@ -65,7 +68,16 @@ worker.addEventListener("message", async (e: Message) => {
           transfer,
           padTileSize,
         ));
-    worker.postMessage({ jpeg, jobId }, [jpeg]);
+    // Busy time for the export log: all of it, and the part inside MozJPEG.
+    worker.postMessage(
+      {
+        jpeg,
+        jobId,
+        ms: performance.now() - start,
+        mozJpegMs: mozJpegTiming.ms - mozJpegBefore,
+      },
+      [jpeg],
+    );
   } catch (err) {
     worker.postMessage({
       jobId,

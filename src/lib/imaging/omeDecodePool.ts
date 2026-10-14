@@ -1,4 +1,5 @@
 import { type DecodePool, Pool } from "@hms-dbmi/viv";
+import { exportSpan } from "./exportProfile";
 import DecoderWorker from "./workers/decoder.worker?worker";
 
 export type { DecodePool };
@@ -31,10 +32,10 @@ function withoutBlockTables(fileDirectory: FileDirectory): FileDirectory {
 
 export class OmeDecodePool extends Pool {
   decode(fileDirectory: unknown, buffer: ArrayBuffer): Promise<ArrayBuffer> {
-    return super.decode(
-      withoutBlockTables(fileDirectory as FileDirectory),
-      buffer,
-    );
+    const done = exportSpan("decode");
+    return super
+      .decode(withoutBlockTables(fileDirectory as FileDirectory), buffer)
+      .finally(() => done());
   }
 
   /** Decode, then widen the uint8 samples to uint16 through `lut` in the worker. */
@@ -43,14 +44,17 @@ export class OmeDecodePool extends Pool {
     buffer: ArrayBuffer,
     lut: Uint16Array,
   ): Promise<ArrayBuffer> {
+    const done = exportSpan("decode");
     // `decoder.worker.ts` widens through the table in this extra tag.
-    return super.decode(
-      {
-        ...withoutBlockTables(fileDirectory as FileDirectory),
-        MinervaWidenLut: lut,
-      },
-      buffer,
-    );
+    return super
+      .decode(
+        {
+          ...withoutBlockTables(fileDirectory as FileDirectory),
+          MinervaWidenLut: lut,
+        },
+        buffer,
+      )
+      .finally(() => done());
   }
 }
 

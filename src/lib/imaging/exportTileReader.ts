@@ -1,5 +1,6 @@
 import { getImageSize, TiffPixelSource } from "@hms-dbmi/viv";
 import { GeoTIFFImage } from "geotiff";
+import { exportSpan } from "./exportProfile";
 import type { HasTile, LoaderPlane, SupportedTypedArray } from "./loaderTypes";
 
 type Selection = { t: number; z: number; c: number };
@@ -20,11 +21,8 @@ type RangeSource = {
 /** Merge block reads closer than this: reading a small gap beats another request. */
 const MERGE_GAP_BYTES = 256 * 1024;
 
-/** Byte ranges of the tiles (or strips) under a window, merged where close. */
-function mergedBlockRanges(
-  image: GeoTIFFImage,
-  [x0, y0, x1, y1]: number[],
-): Slice[] {
+/** Byte ranges of the tiles (or strips) under a window. */
+function blockRanges(image: GeoTIFFImage, [x0, y0, x1, y1]: number[]): Slice[] {
   const fd = image.fileDirectory;
   const offsets = image.isTiled ? fd.TileOffsets : fd.StripOffsets;
   const counts = image.isTiled ? fd.TileByteCounts : fd.StripByteCounts;
@@ -49,6 +47,12 @@ function mergedBlockRanges(
       }
     }
   }
+  return ranges;
+}
+
+/** Byte ranges of the tiles (or strips) under a window, merged where close. */
+function mergedBlockRanges(image: GeoTIFFImage, window: number[]): Slice[] {
+  const ranges = blockRanges(image, window);
   ranges.sort((a, b) => a.offset - b.offset);
   const merged: Slice[] = [];
   for (const r of ranges) {
@@ -62,6 +66,57 @@ function mergedBlockRanges(
   return merged;
 }
 
+/** Compressed source bytes under a window, for the export log. */
+function windowSourceBytes(image: GeoTIFFImage, window: number[]): number {
+  let bytes = 0;
+  for (const range of blockRanges(image, window)) bytes += range.length;
+  return bytes;
+}
+
+const COMPRESSION: Record<number, string> = {
+  1: "uncompressed",
+  5: "LZW",
+  6: "old JPEG",
+  7: "JPEG",
+  8: "deflate",
+  32946: "deflate",
+  33003: "JPEG 2000",
+  33005: "JPEG 2000",
+  34712: "JPEG 2000",
+  34887: "LERC",
+  50000: "zstd",
+  50001: "WebP",
+};
+
+/** How a plane's source is stored (blocks, compression, samples), for the export log. */
+export async function describeExportSource(
+  plane: ExportTilePlane,
+  selection: Selection,
+): Promise<string> {
+  const indexer = (plane as { _indexer?: (s: Selection) => unknown })._indexer;
+  if (typeof indexer !== "function") return "layout not exposed";
+  try {
+    const image = await indexer(selection);
+    if (!(image instanceof GeoTIFFImage)) return "not a TIFF";
+    const code = Number(image.fileDirectory.Compression ?? 1);
+    const format = ["", "uint", "int", "float"][image.getSampleFormat(0)];
+    const samples = image.getSamplesPerPixel();
+    return [
+      image.isTiled
+        ? `${image.getTileWidth()}x${image.getTileHeight()} tiles`
+        : `strips of ${image.getTileHeight()} rows`,
+      COMPRESSION[code] ?? `compression ${code}`,
+      `${format ?? "?"}${image.getBitsPerSample(0)}`,
+      ...(samples > 1
+        ? [`${samples} samples, planar config ${image.planarConfiguration}`]
+        : []),
+      ...(image.littleEndian ? [] : ["big-endian"]),
+    ].join(", ");
+  } catch (e) {
+    return `unreadable (${e instanceof Error ? e.message : e})`;
+  }
+}
+
 /** Starts the merged reads; geotiff's per-block fetches are then served from them. */
 function prefetchedSource(
   base: Source,
@@ -73,21 +128,28 @@ function prefetchedSource(
   const blocked = base as Source & { blockSize?: number; source?: RangeSource };
   const bulk: RangeSource =
     blocked.blockSize && blocked.source ? blocked.source : base;
-  const runs = ranges.map((range) => ({
-    ...range,
-    data: bulk.fetch([range], exportSignal).then(
-      ([result]) => {
-        const { data, offset } =
-          result instanceof ArrayBuffer
-            ? { data: result, offset: range.offset }
-            : result;
-        const whole =
-          offset === range.offset && data.byteLength >= range.length;
-        return whole ? data : null;
-      },
-      () => null,
-    ),
-  }));
+  const runs = ranges.map((range) => {
+    const fetched = exportSpan("fetch");
+    return {
+      ...range,
+      data: bulk.fetch([range], exportSignal).then(
+        ([result]) => {
+          fetched(range.length);
+          const { data, offset } =
+            result instanceof ArrayBuffer
+              ? { data: result, offset: range.offset }
+              : result;
+          const whole =
+            offset === range.offset && data.byteLength >= range.length;
+          return whole ? data : null;
+        },
+        () => {
+          fetched();
+          return null;
+        },
+      ),
+    };
+  });
   return {
     fetch: (slices, signal) =>
       Promise.all(
@@ -175,49 +237,56 @@ export async function readExportTile(
   y: number,
   signal: AbortSignal,
 ): Promise<HasTile> {
-  const { width, height } = getImageSize(plane);
-  const window: [number, number, number, number] = [
-    x * tileSize,
-    y * tileSize,
-    Math.min(width, (x + 1) * tileSize),
-    Math.min(height, (y + 1) * tileSize),
-  ];
-  // DICOM planes, masks, and the JPEG-export hydrate wrap (a spread copy) are not instances.
-  if (!(plane instanceof TiffPixelSource)) {
-    if (plane.readWindow)
-      return plane.readWindow({ selection, window, signal });
-    if (plane.tileSize === tileSize) {
-      return plane.getTile({ selection, x, y, signal });
+  const done = exportSpan("read");
+  let sourceBytes = 0;
+  try {
+    const { width, height } = getImageSize(plane);
+    const window: [number, number, number, number] = [
+      x * tileSize,
+      y * tileSize,
+      Math.min(width, (x + 1) * tileSize),
+      Math.min(height, (y + 1) * tileSize),
+    ];
+    // DICOM planes, masks, and the JPEG-export hydrate wrap (a spread copy) are not instances.
+    if (!(plane instanceof TiffPixelSource)) {
+      if (plane.readWindow)
+        return await plane.readWindow({ selection, window, signal });
+      if (plane.tileSize === tileSize) {
+        return await plane.getTile({ selection, x, y, signal });
+      }
+      return await composeExportTile(plane, tileSize, selection, x, y, signal);
     }
-    return composeExportTile(plane, tileSize, selection, x, y, signal);
+    const indexer = (
+      plane as unknown as {
+        _indexer: (s: Selection) => Promise<GeoTIFFImage>;
+      }
+    )._indexer;
+    const image = await indexer(selection);
+    sourceBytes = windowSourceBytes(image, window);
+    const source = prefetchedSource(
+      image.source as unknown as Source,
+      mergedBlockRanges(image, window),
+      signal,
+    );
+    const reader = new GeoTIFFImage(
+      image.fileDirectory,
+      image.geoKeys,
+      image.dataView,
+      image.littleEndian,
+      false,
+      source as unknown as GeoTIFFImage["source"],
+    );
+    const atTileSize = new TiffPixelSource(
+      async () => reader,
+      plane.dtype,
+      tileSize,
+      plane.shape,
+      plane.labels,
+      plane.meta,
+      plane.pool,
+    );
+    return await atTileSize.getTile({ selection, x, y, signal });
+  } finally {
+    done(sourceBytes);
   }
-  const indexer = (
-    plane as unknown as {
-      _indexer: (s: Selection) => Promise<GeoTIFFImage>;
-    }
-  )._indexer;
-  const image = await indexer(selection);
-  const source = prefetchedSource(
-    image.source as unknown as Source,
-    mergedBlockRanges(image, window),
-    signal,
-  );
-  const reader = new GeoTIFFImage(
-    image.fileDirectory,
-    image.geoKeys,
-    image.dataView,
-    image.littleEndian,
-    false,
-    source as unknown as GeoTIFFImage["source"],
-  );
-  const atTileSize = new TiffPixelSource(
-    async () => reader,
-    plane.dtype,
-    tileSize,
-    plane.shape,
-    plane.labels,
-    plane.meta,
-    plane.pool,
-  );
-  return atTileSize.getTile({ selection, x, y, signal });
 }

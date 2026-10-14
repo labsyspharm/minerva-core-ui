@@ -108,6 +108,13 @@ export function ensureJpegEncoderReady(): Promise<void> {
   return jsquashReady;
 }
 
+/**
+ * Milliseconds spent inside MozJPEG so far in this thread. The export worker
+ * reads it around each tile to split its time between MozJPEG and pixel
+ * conversion, for the export log.
+ */
+export const mozJpegTiming = { ms: 0 };
+
 async function encodeRgbaToJpeg(
   width: number,
   height: number,
@@ -117,20 +124,25 @@ async function encodeRgbaToJpeg(
 ): Promise<ArrayBuffer> {
   await ensureJpegEncoderReady();
   const imageData = new ImageData(rgba, width, height);
-  return encodeJpeg(imageData, {
-    quality: mozJpegQuality(quality),
-    color_space: colorSpace,
-    baseline: true,
-    progressive: false,
-    arithmetic: false,
-    // Per-tile Huffman tables, still baseline. With the standard tables
-    // (`false`), @jsquash/jpeg 1.6.0 writes a corrupt scan for ~12% of 4:2:0
-    // YCbCr tiles; optimized ones are also smaller and faster to encode.
-    optimize_coding: true,
-    // 4:2:0. Packed RGB TIFF tags declare YCbCrSubSampling [2, 2].
-    auto_subsample: false,
-    chroma_subsample: 2,
-  });
+  const start = performance.now();
+  try {
+    return await encodeJpeg(imageData, {
+      quality: mozJpegQuality(quality),
+      color_space: colorSpace,
+      baseline: true,
+      progressive: false,
+      arithmetic: false,
+      // Per-tile Huffman tables, still baseline. With the standard tables
+      // (`false`), @jsquash/jpeg 1.6.0 writes a corrupt scan for ~12% of 4:2:0
+      // YCbCr tiles; optimized ones are also smaller and faster to encode.
+      optimize_coding: true,
+      // 4:2:0. Packed RGB TIFF tags declare YCbCrSubSampling [2, 2].
+      auto_subsample: false,
+      chroma_subsample: 2,
+    });
+  } finally {
+    mozJpegTiming.ms += performance.now() - start;
+  }
 }
 
 /** Encode grayscale pixels to JPEG (contrast-windowed or cube-root transfer). */

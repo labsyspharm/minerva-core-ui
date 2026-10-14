@@ -1,4 +1,5 @@
 import type { JpegExportTransfer } from "./cubeRootEncoding";
+import { exportSpan, exportWork } from "./exportProfile";
 import {
   copyPixelBuffer,
   encodeGrayscaleJpeg,
@@ -16,6 +17,9 @@ const defaultPoolSize = Math.min(
   globalThis?.navigator?.hardwareConcurrency ?? 4,
 );
 
+/** A worker's JPEG, its busy time for it, and the part of that inside MozJPEG. */
+type EncodeResult = { jpeg: ArrayBuffer; ms?: number; mozJpegMs?: number };
+
 /**
  * Same job protocol as the decoder {@link Pool} (`submitJob` / `jobId`).
  */
@@ -25,7 +29,7 @@ class WorkerWrapper {
   private jobs = new Map<
     number,
     {
-      resolve: (v: { jpeg: ArrayBuffer }) => void;
+      resolve: (v: EncodeResult) => void;
       reject: (e: unknown) => void;
     }
   >();
@@ -44,19 +48,21 @@ class WorkerWrapper {
       jobId: number;
       error?: string;
       jpeg?: ArrayBuffer;
+      ms?: number;
+      mozJpegMs?: number;
     };
     const job = this.jobs.get(jobId);
     this.jobs.delete(jobId);
     if (!job) return;
 
     if (error) job.reject(new Error(error));
-    else if (result.jpeg) job.resolve({ jpeg: result.jpeg });
+    else if (result.jpeg) job.resolve(result as EncodeResult);
     else job.reject(new Error("jpegExport worker returned empty result"));
   }
 
   submitJob(message: object, transferables?: Transferable[]) {
     const jobId = this.jobIdCounter++;
-    const promise = new Promise<{ jpeg: ArrayBuffer }>((resolve, reject) => {
+    const promise = new Promise<EncodeResult>((resolve, reject) => {
       this.jobs.set(jobId, { resolve, reject });
     });
     this.worker.postMessage({ ...message, jobId }, transferables);
@@ -120,7 +126,7 @@ export class JpegExportPool {
     const workerWrapper = wrappers.reduce((a, b) =>
       a.getJobCount() < b.getJobCount() ? a : b,
     );
-    const { jpeg } = await workerWrapper.submitJob(
+    const { jpeg, ms, mozJpegMs } = await workerWrapper.submitJob(
       {
         width,
         height,
@@ -135,6 +141,8 @@ export class JpegExportPool {
       },
       [buffer],
     );
+    if (ms !== undefined) exportWork("encode", ms);
+    if (mozJpegMs !== undefined) exportWork("mozjpeg", mozJpegMs);
     return jpeg;
   }
 
@@ -186,6 +194,15 @@ export type EncodeTilePixelsIn = {
 export async function encodeTileJpeg(
   input: EncodeTilePixelsIn,
 ): Promise<ArrayBuffer> {
+  const done = exportSpan("encode");
+  try {
+    return await encodeTile(input);
+  } finally {
+    done();
+  }
+}
+
+async function encodeTile(input: EncodeTilePixelsIn): Promise<ArrayBuffer> {
   const {
     width,
     height,
