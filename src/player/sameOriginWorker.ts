@@ -11,17 +11,20 @@ export class SameOriginWorker extends Worker {
       super(url, options);
       return;
     }
+    // Revoke from inside the worker. Revoking here races WebKit's blob fetch.
+    const revoke = "URL.revokeObjectURL(self.location.href);";
     const source =
       options?.type === "module"
-        ? `import ${JSON.stringify(url.href)};`
-        : `importScripts(${JSON.stringify(url.href)});`;
+        ? `${revoke}import ${JSON.stringify(url.href)};`
+        : `${revoke}importScripts(${JSON.stringify(url.href)});`;
     const blob = URL.createObjectURL(
       new Blob([source], { type: "text/javascript" }),
     );
     try {
       super(blob, options);
-    } finally {
+    } catch (e) {
       URL.revokeObjectURL(blob);
+      throw e;
     }
   }
 }
