@@ -62,11 +62,14 @@ function mergedBlockRanges(
   return merged;
 }
 
-/** Starts the merged reads; geotiff's per-block fetches are then served from them. */
+/**
+ * Starts the merged reads; geotiff's per-block fetches are then served from
+ * them. `readSignal` is this tile's own (see {@link withReadSignal}).
+ */
 function prefetchedSource(
   base: Source,
   ranges: Slice[],
-  exportSignal: AbortSignal,
+  readSignal: AbortSignal,
 ): Source {
   // geotiff's BlockedSource (URLs) shares its eviction map across fetches,
   // so large reads go to the range source underneath it.
@@ -75,7 +78,7 @@ function prefetchedSource(
     blocked.blockSize && blocked.source ? blocked.source : base;
   const runs = ranges.map((range) => ({
     ...range,
-    data: bulk.fetch([range], exportSignal).then(
+    data: bulk.fetch([range], readSignal).then(
       ([result]) => {
         const { data, offset } =
           result instanceof ArrayBuffer
@@ -99,7 +102,7 @@ function prefetchedSource(
           );
           const data = await run?.data;
           // A cancelled export does not fall back to fetching the slice again.
-          if (exportSignal.aborted) {
+          if (readSignal.aborted) {
             throw new DOMException("Aborted", "AbortError");
           }
           if (!run || !data) return (await base.fetch([slice], signal))[0];
@@ -161,13 +164,47 @@ async function composeExportTile(
 }
 
 /**
+ * Run `read` on a signal of its own that follows `signal`. geotiff's file
+ * source adds an abort listener for every read and never removes it; on the
+ * export's long-lived signal, those listeners kept every buffer read alive
+ * until the file was done, and a large export ran out of memory.
+ */
+async function withReadSignal<T>(
+  signal: AbortSignal,
+  read: (readSignal: AbortSignal) => Promise<T>,
+): Promise<T> {
+  const local = new AbortController();
+  const abort = () => local.abort(signal.reason);
+  if (signal.aborted) abort();
+  else signal.addEventListener("abort", abort, { once: true });
+  try {
+    return await read(local.signal);
+  } finally {
+    signal.removeEventListener("abort", abort);
+  }
+}
+
+/**
  * Export tile (x, y), `tileSize` px. A TIFF plane reads the source blocks
  * under the tile in a few merged reads (a row of neighboring blocks is
  * usually contiguous on disk), then decodes through Viv as usual. A plane
- * with `readWindow` (masks) reads the tile's window; other planes are
- * assembled from their own tiles.
+ * with `readWindow` (masks, JPEG-export wraps) reads the tile's window;
+ * other planes are assembled from their own tiles.
  */
-export async function readExportTile(
+export function readExportTile(
+  plane: ExportTilePlane & Pick<LoaderPlane, "readWindow">,
+  tileSize: number,
+  selection: Selection,
+  x: number,
+  y: number,
+  signal: AbortSignal,
+): Promise<HasTile> {
+  return withReadSignal(signal, (readSignal) =>
+    readTile(plane, tileSize, selection, x, y, readSignal),
+  );
+}
+
+async function readTile(
   plane: ExportTilePlane & Pick<LoaderPlane, "readWindow">,
   tileSize: number,
   selection: Selection,

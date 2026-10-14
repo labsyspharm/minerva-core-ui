@@ -31,17 +31,23 @@ function seedPlaybackSession(data: DocumentData) {
   );
 }
 
+/** Fetch and validate a story's `document.json`. */
+export async function fetchStoryDocument(
+  documentUrl: string,
+): Promise<DocumentData> {
+  const res = await fetch(documentUrl);
+  if (!res.ok) {
+    throw new Error(`Failed to load ${documentUrl} (${res.status})`);
+  }
+  return validateDocumentData(await res.json());
+}
+
 /** Fetch, hydrate stores, and build CDN-safe loaders for a published story. */
 export async function loadStoryDocument(
   documentUrl: string,
   opts?: { onDocument?: () => void },
 ): Promise<LoadStoryDocumentResult> {
-  const res = await fetch(documentUrl);
-  if (!res.ok) {
-    throw new Error(`Failed to load ${documentUrl} (${res.status})`);
-  }
-
-  const data = validateDocumentData(await res.json());
+  const data = await fetchStoryDocument(documentUrl);
   useDocumentStore
     .getState()
     .hydrateFromDocument(data, data.metadata.id ?? crypto.randomUUID());
@@ -54,7 +60,7 @@ export async function loadStoryDocument(
     (e) => console.error("[featureTable] player hydrate failed", e),
   );
 
-  // CDN IIFE build inlines decoder workers as blob URLs (vite.bundle.config).
+  // The CDN bundle inlines decoder workers as blob URLs (vite.bundle.config).
   const omePool = data.images.some((im) => im.source?.kind === "url")
     ? sharedOmeDecodePool()
     : null;

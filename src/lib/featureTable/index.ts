@@ -336,8 +336,10 @@ export function classColorsFor(
 ): Map<string, Color> {
   const colors = new Map(featureTable.nameColors.map((c) => [c.name, c.color]));
   for (const c of view?.colors ?? []) colors.set(c.name, c.color);
+  // No preview, or no waypoint: `undefined === undefined` must not match.
   if (
-    classColorPreview?.waypointId === waypointId &&
+    classColorPreview &&
+    classColorPreview.waypointId === waypointId &&
     classColorPreview.featureTableId === featureTable.id
   ) {
     colors.set(classColorPreview.name, classColorPreview.color);

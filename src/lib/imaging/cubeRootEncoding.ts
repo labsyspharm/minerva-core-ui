@@ -23,6 +23,17 @@ export function isJpegOmeTiffImageSource(
   );
 }
 
+/** 8-bit JPEG pixels (pyramid or OME-TIFF) the player decodes by transfer. */
+export function isJpegEncodedImageSource(
+  imageSource: string | undefined,
+): boolean {
+  return (
+    imageSource === "jpeg-pyramid" ||
+    imageSource === "jpeg-pyramid-cube-root" ||
+    isJpegOmeTiffImageSource(imageSource)
+  );
+}
+
 export function jpegTransferFromImageSource(
   imageSource: string | undefined,
 ): JpegExportTransfer {

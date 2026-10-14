@@ -3,6 +3,8 @@ import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 import svgr from "vite-plugin-svgr";
+import topLevelAwait from "vite-plugin-top-level-await";
+import wasm from "vite-plugin-wasm";
 import { gitSha } from "./vite.gitSha.js";
 
 /**
@@ -37,16 +39,38 @@ function inlineWorkersForCdn(): Plugin {
 }
 
 /**
- * Single browser build of the app for CDN import (unpkg / jsDelivr).
- * Output: bundle/minerva.js → global `MinervaStory` with `.play(...)`.
+ * Browsers refuse a cross-origin worker URL, and from a CDN every
+ * `new Worker(new URL(..., import.meta.url))` is one (psudo's pool, geotiff's
+ * decoder pool). Shadow `Worker` in those modules with SameOriginWorker; Vite
+ * still bundles each worker from the unchanged call.
+ */
+function sameOriginWorkers(): Plugin {
+  const shim = path.resolve(__dirname, "src/player/sameOriginWorker.ts");
+  const workerFromUrl = /\bnew\s+Worker\s*\(\s*new\s+URL\s*\(/;
+  return {
+    name: "minerva-same-origin-workers",
+    enforce: "pre",
+    transform(code, id) {
+      if (id === shim || !workerFromUrl.test(code)) return null;
+      return {
+        code: `import { SameOriginWorker as Worker } from ${JSON.stringify(shim)};\n${code}`,
+        map: null,
+      };
+    },
+  };
+}
+
+/**
+ * Single browser build of the player and the author app for CDN import
+ * (unpkg / jsDelivr), so a published story can switch to editing in place.
+ * Output: bundle/minerva.js, an ES module exporting `play(...)`.
  *
- * Omits wasm/top-level-await plugins (incompatible with lib IIFE).
- * psudo (authoring-only GMM/palette) is external — never bundled into the
- * player; SAM2/ONNX stays stubbed.
+ * ES, not IIFE: authoring needs top-level await (wasm) and `import.meta.url`.
+ * DuckDB loads from jsDelivr; SAM2/ONNX stays stubbed.
  */
 export default defineConfig({
   define: {
-    // Lib IIFE does not auto-inject this; React / deps still reference it.
+    // Lib builds do not auto-inject this; React / deps still reference it.
     "process.env.NODE_ENV": JSON.stringify("production"),
     __BUILD_TIME_ISO__: JSON.stringify(
       process.env.VITE_APP_BUILD_TIME ?? new Date().toISOString(),
@@ -56,6 +80,9 @@ export default defineConfig({
   plugins: [
     writeBundleManifest(),
     inlineWorkersForCdn(),
+    sameOriginWorkers(),
+    wasm(),
+    topLevelAwait(),
     react(),
     svgr({
       svgrOptions: {
@@ -89,8 +116,15 @@ export default defineConfig({
   },
   // Do not copy `public/` (demo tiles, wasm, etc.) into the CDN artifact.
   publicDir: false,
+  // Worker and asset URLs resolve beside minerva.js (a CDN folder or the
+  // story's `bundle/`), not the site root. `base` stays default: the author
+  // app reads BASE_URL for its router.
+  experimental: {
+    renderBuiltUrl: () => ({ relative: true }),
+  },
   worker: {
     format: "es",
+    plugins: () => [wasm(), topLevelAwait()],
     rollupOptions: {
       output: {
         inlineDynamicImports: true,
@@ -102,14 +136,10 @@ export default defineConfig({
     outDir: "bundle",
     lib: {
       entry: path.resolve(__dirname, "src/player/entry.tsx"),
-      name: "MinervaStory",
-      formats: ["iife"],
+      formats: ["es"],
       fileName: () => "minerva.js",
     },
     rollupOptions: {
-      // Authoring-only psudo (dynamic import, never hit in the player) stays out
-      // of the player bundle instead of inlining ~3.4MB of WASM.
-      external: ["psudo"],
       output: {
         exports: "named",
         inlineDynamicImports: true,

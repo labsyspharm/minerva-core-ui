@@ -1,7 +1,14 @@
 import { OrthographicView, type OrthographicViewState } from "@deck.gl/core";
 import Deck, { type DeckGLRef } from "@deck.gl/react";
 import { ScaleBarLayer } from "@hms-dbmi/viv";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import "@deck.gl/widgets/stylesheet.css";
 
@@ -439,6 +446,8 @@ export type ImageViewerProps = {
    * extra full-canvas copy each frame on mobile GPUs.
    */
   preserveDrawingBuffer?: boolean;
+  /** Last row of the info panel (the published player's Edit link). */
+  infoFooter?: ReactNode;
 };
 
 const _isElement = (x = {}): x is HTMLElement => {
@@ -1478,6 +1487,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
               {BUILD_STAMP ? <div>{BUILD_STAMP.text}</div> : null}
               <div>{DEVICE_LABEL}</div>
             </div>
+            {props.infoFooter ? (
+              <div className={styles.viewerInfoFooter}>{props.infoFooter}</div>
+            ) : null}
           </div>
         ) : null}
         <button
@@ -1487,22 +1499,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
           aria-expanded={pyramidInfoOpen}
           onClick={() => setPyramidInfoOpen((open) => !open)}
         >
+          {/* A dark disc just past the ring, drawn here so the global button
+              radius cannot square it: reads on light and dark images. */}
           <svg viewBox="0 0 16 16" aria-hidden="true">
-            <circle
-              cx="8"
-              cy="8"
-              r="6.25"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.25"
-            />
-            <path
-              d="M8 7.2v4.2M8 4.6v.6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-            />
+            <circle cx="8" cy="8" r="8" fill="#000" fillOpacity="0.55" />
+            <g fill="none" stroke="#fff" strokeLinecap="round">
+              <circle cx="8" cy="8" r="6.25" strokeWidth="1.25" />
+              <path d="M8 7.2v4.2M8 4.6v.6" strokeWidth="1.4" />
+            </g>
           </svg>
         </button>
       </div>

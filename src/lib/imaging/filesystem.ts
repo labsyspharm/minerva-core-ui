@@ -4,6 +4,7 @@ import { fromBlob, fromUrl, GeoTIFFImage } from "geotiff";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
 import type { DecodePool } from "./omeDecodePool";
 import { omeChannelElements, omePixelsElement, parseOmeXml } from "./omeXml";
+import { uncachedTiffImage } from "./uncachedTiff";
 import type { Loader } from "./viv";
 import { registerLzwDecoder } from "./workers/decoders";
 
@@ -309,10 +310,17 @@ function maskPlaneFromImages(
     c: number,
     window?: [number, number, number, number],
     signal?: AbortSignal,
-  ) =>
-    images.length > 1
-      ? readTiffSample(images[clampC(c)], 0, window, signal)
-      : readTiffSample(image, clampC(c), window, signal);
+    uncached = false,
+  ) => {
+    const ifd = images.length > 1 ? images[clampC(c)] : image;
+    const sample = images.length > 1 ? 0 : clampC(c);
+    return readTiffSample(
+      uncached ? uncachedTiffImage(ifd) : ifd,
+      sample,
+      window,
+      signal,
+    );
+  };
   const getRaster = ({ selection }: { selection: Selection }) =>
     readChannel(selection.c);
   return {
@@ -322,8 +330,10 @@ function maskPlaneFromImages(
     labels: ["t", "c", "z", "y", "x"],
     onTileError: () => undefined,
     getRaster,
+    // Only the export reads windows. It reads every one once, so around the
+    // block cache, which for a hosted mask would end up holding all of it.
     readWindow: ({ selection, window, signal }) =>
-      readChannel(selection.c, window, signal),
+      readChannel(selection.c, window, signal, true),
     getTile: tiled
       ? ({ x, y, selection }) => {
           const x0 = x * tileSize;

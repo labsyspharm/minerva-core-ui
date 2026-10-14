@@ -10,7 +10,14 @@ import { loadStoryDocument } from "@/lib/story/loadStoryDocument";
 import styles from "./StoryPlayerApp.module.css";
 
 /** CDN story player. Authoring preview reuses the Presentation ribbon and nav. */
-export function StoryPlayerApp({ documentUrl }: { documentUrl: string }) {
+export function StoryPlayerApp({
+  documentUrl,
+  onEdit,
+}: {
+  documentUrl: string;
+  /** Info-panel "Edit this story": switch this page to the author app. */
+  onEdit?: () => Promise<void>;
+}) {
   const [documentReady, setDocumentReady] = useState(false);
   const [imagesReady, setImagesReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +79,7 @@ export function StoryPlayerApp({ documentUrl }: { documentUrl: string }) {
         omeLoaderEntries={omeLoaderEntries}
         dicomIndexList={dicomIndexList}
         imagesLoading={!imagesReady}
+        onEdit={onEdit}
       />
     </Presentation>
   );
