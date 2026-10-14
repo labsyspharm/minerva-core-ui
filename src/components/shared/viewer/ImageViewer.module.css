@@ -23,9 +23,7 @@
   height: 18px;
   padding: 0;
   border: none;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.72);
-  color: #fff;
+  background: none;
   cursor: pointer;
 }
 

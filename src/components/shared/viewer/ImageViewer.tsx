@@ -1499,22 +1499,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
           aria-expanded={pyramidInfoOpen}
           onClick={() => setPyramidInfoOpen((open) => !open)}
         >
+          {/* A dark disc just past the ring, drawn here so the global button
+              radius cannot square it: reads on light and dark images. */}
           <svg viewBox="0 0 16 16" aria-hidden="true">
-            <circle
-              cx="8"
-              cy="8"
-              r="6.25"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.25"
-            />
-            <path
-              d="M8 7.2v4.2M8 4.6v.6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-            />
+            <circle cx="8" cy="8" r="8" fill="#000" fillOpacity="0.55" />
+            <g fill="none" stroke="#fff" strokeLinecap="round">
+              <circle cx="8" cy="8" r="6.25" strokeWidth="1.25" />
+              <path d="M8 7.2v4.2M8 4.6v.6" strokeWidth="1.4" />
+            </g>
           </svg>
         </button>
       </div>
