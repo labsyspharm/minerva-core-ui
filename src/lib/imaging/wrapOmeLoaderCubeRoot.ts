@@ -4,9 +4,11 @@ import { type JpegExportTransfer, u8ToU16Lut } from "./cubeRootEncoding";
 import { expandThroughLut } from "./expandThroughLut";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
 import { OmeDecodePool } from "./omeDecodePool";
+import { uncachedTiffImage } from "./uncachedTiff";
 import type { Loader } from "./viv";
 
 type TileArgs = Parameters<LoaderPlane["getTile"]>[0];
+type WindowArgs = Parameters<NonNullable<LoaderPlane["readWindow"]>>[0];
 
 /** Viv `TiffPixelSource` internals read by the fast path; absent on other planes. */
 type TiffPlaneInternals = {
@@ -35,12 +37,14 @@ function cropTile(
  * Read one decoded 8-bit tile and widen it through `lut`. Skips geotiff's
  * `readRasters`, which copies every pixel through a DataView on the main
  * thread. `null` means use Viv's path (other plane types, no pool, or a
- * probe that throws — missing `BitsPerSample` is one of those).
+ * probe that throws — missing `BitsPerSample` is one of those). `uncached`
+ * reads around the source's block cache (see `uncachedTiffImage`).
  */
 async function readTileThroughLut(
   plane: LoaderPlane,
   args: TileArgs,
   lut: Uint16Array,
+  uncached = false,
 ): Promise<HasTile | null> {
   const source = plane as unknown as TiffPlaneInternals;
   const pool = source.pool;
@@ -52,7 +56,8 @@ async function readTileThroughLut(
     return null;
   }
   try {
-    const image = await source._indexer(args.selection);
+    const indexed = await source._indexer(args.selection);
+    const image = uncached ? uncachedTiffImage(indexed) : indexed;
     if (
       !image.isTiled ||
       image.getTileWidth() !== source.tileSize ||
@@ -99,6 +104,37 @@ async function readTileThroughLut(
 }
 
 /**
+ * An export's window, read around the source's block cache: a hosted file
+ * read tile by tile through Viv's unlimited cache ends up held whole. A
+ * window that is one tile goes through the widening decoder; any other is
+ * read and widened here.
+ */
+async function readWindowThroughLut(
+  plane: LoaderPlane,
+  { selection, window, signal }: WindowArgs,
+  lut: Uint16Array,
+): Promise<HasTile> {
+  const [x0, y0, x1, y1] = window;
+  const width = x1 - x0;
+  const height = y1 - y0;
+  const size = plane.tileSize;
+  if (x0 % size === 0 && y0 % size === 0 && width <= size && height <= size) {
+    const args = { selection, x: x0 / size, y: y0 / size, signal };
+    const tile = await readTileThroughLut(plane, args, lut, true);
+    if (tile?.width === width && tile.height === height) return tile;
+  }
+  const source = plane as unknown as Required<TiffPlaneInternals>;
+  const image = uncachedTiffImage(await source._indexer(selection));
+  const options = { window, width, height, pool: source.pool };
+  const raster = await image.readRasters(
+    options as Parameters<GeoTIFFImage["readRasters"]>[0],
+  );
+  if (signal?.aborted) throw SIGNAL_ABORTED;
+  const [samples] = raster as unknown as ArrayLike<number>[];
+  return { data: expandThroughLut(samples, lut), width, height };
+}
+
+/**
  * Wrap Viv OME planes so JPEG-decoded uint8 tiles become uint16 for display.
  * Cube-root: inverse transfer. Contrast: `byte << 8` (baked window already applied).
  */
@@ -124,6 +160,13 @@ export function wrapOmeLoaderJpegExport(
           data: expandThroughLut(tile.data as ArrayLike<number>, lut),
         };
       },
+      // Export reads, so a re-export of a hosted story does not fill the cache.
+      ...((plane as unknown as TiffPlaneInternals)._indexer
+        ? {
+            readWindow: (args: WindowArgs) =>
+              readWindowThroughLut(plane, args, lut),
+          }
+        : {}),
     };
     return wrapped;
   });
