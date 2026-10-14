@@ -1,7 +1,14 @@
 import { OrthographicView, type OrthographicViewState } from "@deck.gl/core";
 import Deck, { type DeckGLRef } from "@deck.gl/react";
 import { ScaleBarLayer } from "@hms-dbmi/viv";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import "@deck.gl/widgets/stylesheet.css";
 
@@ -439,6 +446,8 @@ export type ImageViewerProps = {
    * extra full-canvas copy each frame on mobile GPUs.
    */
   preserveDrawingBuffer?: boolean;
+  /** Last row of the info panel (the published player's Edit link). */
+  infoFooter?: ReactNode;
 };
 
 const _isElement = (x = {}): x is HTMLElement => {
@@ -1478,6 +1487,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
               {BUILD_STAMP ? <div>{BUILD_STAMP.text}</div> : null}
               <div>{DEVICE_LABEL}</div>
             </div>
+            {props.infoFooter ? (
+              <div className={styles.viewerInfoFooter}>{props.infoFooter}</div>
+            ) : null}
           </div>
         ) : null}
         <button

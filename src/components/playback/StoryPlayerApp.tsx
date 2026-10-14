@@ -15,7 +15,7 @@ export function StoryPlayerApp({
   onEdit,
 }: {
   documentUrl: string;
-  /** Ribbon Edit button: switch this page to the author app. */
+  /** Info-panel "Edit this story": switch this page to the author app. */
   onEdit?: () => Promise<void>;
 }) {
   const [documentReady, setDocumentReady] = useState(false);
@@ -72,13 +72,14 @@ export function StoryPlayerApp({
   }
 
   return (
-    <Presentation showDocumentTitle onEdit={onEdit}>
+    <Presentation showDocumentTitle>
       <StoryPlaybackView
         jpegLoaderEntries={jpegLoaderEntries}
         setJpegLoaderEntries={setJpegLoaderEntries}
         omeLoaderEntries={omeLoaderEntries}
         dicomIndexList={dicomIndexList}
         imagesLoading={!imagesReady}
+        onEdit={onEdit}
       />
     </Presentation>
   );

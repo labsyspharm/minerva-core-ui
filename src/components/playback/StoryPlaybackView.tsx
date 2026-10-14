@@ -71,8 +71,36 @@ function useStoryPlaybackLayers(
   });
 }
 
+/** Info-panel row; quiet so readers pass over it. Disabled while the story is copied. */
+function EditStoryButton(props: { onEdit: () => Promise<void> }) {
+  const [opening, setOpening] = useState(false);
+  return (
+    <button
+      type="button"
+      disabled={opening}
+      onClick={() => {
+        setOpening(true);
+        props.onEdit().catch((e: unknown) => {
+          console.error("[minerva] could not open the editor", e);
+          window.alert(
+            e instanceof Error ? e.message : "Could not open the editor",
+          );
+          setOpening(false);
+        });
+      }}
+    >
+      {opening ? "Opening editor…" : "Edit this story"}
+    </button>
+  );
+}
+
 /** CDN player's ChannelPanel + ImageViewer under Presentation. */
-export function StoryPlaybackView(props: StoryPlaybackLoaders) {
+export function StoryPlaybackView(
+  props: StoryPlaybackLoaders & {
+    /** Adds "Edit this story" to the viewer's info panel. */
+    onEdit?: () => Promise<void>;
+  },
+) {
   const { omeLoaderEntries } = props;
   const storeImages = useDocumentStore((s) => s.images);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
@@ -113,6 +141,9 @@ export function StoryPlaybackView(props: StoryPlaybackLoaders) {
         hoveredShapeId={hoverState.hoveredShapeId}
         onOverlayInteraction={handleOverlayInteraction}
         preserveDrawingBuffer={false}
+        infoFooter={
+          props.onEdit ? <EditStoryButton onEdit={props.onEdit} /> : undefined
+        }
       />
       {props.imagesLoading ? (
         <output className={styles.imageLoading} aria-busy="true">

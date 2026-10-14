@@ -104,6 +104,31 @@
   white-space: nowrap;
 }
 
+/* Styled like the stamp: a colophon line, not a call to action. */
+.viewerInfoFooter {
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.viewerInfoFooter button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.viewerInfoFooter button:is(:hover, :focus-visible):not(:disabled) {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.viewerInfoFooter button:disabled {
+  cursor: progress;
+}
+
 @media (max-width: 720px) {
   .viewerInfo {
     right: 4px;

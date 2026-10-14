@@ -33,7 +33,6 @@
 }
 
 .previewRibbon {
-  --ribbon-edit-width: 3.5rem;
   position: relative;
   z-index: 2;
   justify-content: flex-start;
@@ -72,20 +71,6 @@
 .previewRibbonDocumentTitleFlush {
   justify-content: center;
   text-align: center;
-}
-
-/* CDN Edit button: pinned right; the title keeps clear of its width on both
-   sides so it stays centered and never runs under the button. */
-.previewRibbonEdit {
-  position: absolute;
-  right: var(--minerva-inset);
-  width: var(--ribbon-edit-width);
-}
-
-/* Margin, not padding: overflow clips at the padding edge, so a long title
-   would still paint under the button. */
-.previewRibbonDocumentTitleBesideEdit {
-  margin-inline: calc(var(--ribbon-edit-width) + var(--minerva-gap));
 }
 
 .previewRibbonPreviewBadge {

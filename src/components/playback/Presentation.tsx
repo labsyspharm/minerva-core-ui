@@ -1,5 +1,5 @@
 import type { CSSProperties, MouseEvent, ReactElement, ReactNode } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
@@ -21,8 +21,6 @@ export type PresentationProps = {
   children: ReactElement;
   /** Show the document title in the top ribbon. */
   showDocumentTitle?: boolean;
-  /** Ribbon Edit button: switch this page to the author app. */
-  onEdit?: () => Promise<void>;
 };
 
 /** One waypoint and no markdown: the nav has nothing to show. */
@@ -53,7 +51,6 @@ export function PresentationFrame(props: {
 /** Top ribbon; `exitPlaybackPreview` adds the authoring “Back / Story preview” controls. */
 export function PresentationRibbon(props: {
   exitPlaybackPreview?: () => void;
-  onEdit?: () => Promise<void>;
 }) {
   const documentTitle = useDocumentStore((s) => s.metadata.title ?? "");
   const ribbonDocTitle = documentTitle.trim() || "Untitled story";
@@ -80,7 +77,6 @@ export function PresentationRibbon(props: {
           minervaTheme.title,
           styles.previewRibbonDocumentTitle,
           flushTitle ? styles.previewRibbonDocumentTitleFlush : null,
-          props.onEdit ? styles.previewRibbonDocumentTitleBesideEdit : null,
         ]
           .filter(Boolean)
           .join(" ")}
@@ -91,33 +87,7 @@ export function PresentationRibbon(props: {
       {props.exitPlaybackPreview ? (
         <span className={styles.previewRibbonPreviewBadge}>Story preview</span>
       ) : null}
-      {props.onEdit ? <RibbonEditButton onEdit={props.onEdit} /> : null}
     </div>
-  );
-}
-
-/** Disabled while the story is copied into this site's library. */
-function RibbonEditButton(props: { onEdit: () => Promise<void> }) {
-  const [opening, setOpening] = useState(false);
-  return (
-    <PanelActionButton
-      className={styles.previewRibbonEdit}
-      title="Edit this story"
-      disabled={opening}
-      aria-busy={opening}
-      onClick={() => {
-        setOpening(true);
-        props.onEdit().catch((e: unknown) => {
-          console.error("[minerva] could not open the editor", e);
-          window.alert(
-            e instanceof Error ? e.message : "Could not open the editor",
-          );
-          setOpening(false);
-        });
-      }}
-    >
-      Edit
-    </PanelActionButton>
   );
 }
 
@@ -125,9 +95,7 @@ export const Presentation = (props: PresentationProps) => {
   const hideNavPane = usePresentationNavHidden();
   return (
     <PresentationFrame active>
-      {props.showDocumentTitle ? (
-        <PresentationRibbon onEdit={props.onEdit} />
-      ) : null}
+      {props.showDocumentTitle ? <PresentationRibbon /> : null}
       <div
         className={[
           styles.splitGrid,
