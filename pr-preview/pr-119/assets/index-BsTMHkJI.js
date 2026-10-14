@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Bk2bg1VV.js","./pako.esm-KbdoS3Oq.js","./lerc-VBHAQjax.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DJkHJGI8.js","./pako.esm-KbdoS3Oq.js","./lerc-DAVRCN7G.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18508,7 +18508,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "b55c5af90f7147c2e7fe3ee9c403283d34ed96a6",
+    "VITE_APP_GIT_SHA": "d1d4605b77add2b6b8dab184bd96defe3331c143",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -79232,26 +79232,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CThramp8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CoqR1QHI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Xa3RvS5q.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CVizZyKB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DMc9jCtD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CCTxdsAV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-Bk2bg1VV.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DGZxSIs_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-VBHAQjax.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DJkHJGI8.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BoV1RnLI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DAVRCN7G.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BRH86NGv.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-LysGNl6e.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CwbVfgfJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DxAsCGsC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -256384,30 +256384,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return "";
   }
-  const presentation = "_presentation_1da39_6";
-  const frame$1 = "_frame_1da39_14";
-  const previewRibbon = "_previewRibbon_1da39_35";
-  const previewRibbonChevron = "_previewRibbonChevron_1da39_43";
-  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_1da39_55";
-  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_1da39_72";
-  const previewRibbonEdit = "_previewRibbonEdit_1da39_79";
-  const previewRibbonDocumentTitleBesideEdit = "_previewRibbonDocumentTitleBesideEdit_1da39_87";
-  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_1da39_91";
-  const navPane = "_navPane_1da39_143";
-  const navPaneHasStoryName = "_navPaneHasStoryName_1da39_156";
-  const storyTitle = "_storyTitle_1da39_160";
-  const toolbar$1 = "_toolbar_1da39_167";
-  const contentWrap = "_contentWrap_1da39_179";
-  const navInactive = "_navInactive_1da39_216";
-  const heading = "_heading_1da39_228";
-  const tocButton = "_tocButton_1da39_244";
-  const navLeft = "_navLeft_1da39_249";
-  const count = "_count_1da39_253";
-  const navRight = "_navRight_1da39_257";
-  const inlineNext = "_inlineNext_1da39_320";
-  const nextLink = "_nextLink_1da39_338";
-  const tocWrapper = "_tocWrapper_1da39_382";
-  const channelName = "_channelName_1da39_391";
+  const presentation = "_presentation_o48fs_6";
+  const frame$1 = "_frame_o48fs_14";
+  const previewRibbon = "_previewRibbon_o48fs_35";
+  const previewRibbonChevron = "_previewRibbonChevron_o48fs_42";
+  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_o48fs_54";
+  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_o48fs_71";
+  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_o48fs_76";
+  const navPane = "_navPane_o48fs_128";
+  const navPaneHasStoryName = "_navPaneHasStoryName_o48fs_141";
+  const storyTitle = "_storyTitle_o48fs_145";
+  const toolbar$1 = "_toolbar_o48fs_152";
+  const contentWrap = "_contentWrap_o48fs_164";
+  const navInactive = "_navInactive_o48fs_201";
+  const heading = "_heading_o48fs_213";
+  const tocButton = "_tocButton_o48fs_229";
+  const navLeft = "_navLeft_o48fs_234";
+  const count = "_count_o48fs_238";
+  const navRight = "_navRight_o48fs_242";
+  const inlineNext = "_inlineNext_o48fs_305";
+  const nextLink = "_nextLink_o48fs_323";
+  const tocWrapper = "_tocWrapper_o48fs_367";
+  const channelName = "_channelName_o48fs_376";
   const styles$a = {
     presentation,
     frame: frame$1,
@@ -256415,8 +256413,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     previewRibbonChevron,
     previewRibbonDocumentTitle,
     previewRibbonDocumentTitleFlush,
-    previewRibbonEdit,
-    previewRibbonDocumentTitleBesideEdit,
     previewRibbonPreviewBadge,
     navPane,
     navPaneHasStoryName,
@@ -256473,8 +256469,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           className: [
             minervaTheme.title,
             styles$a.previewRibbonDocumentTitle,
-            flushTitle ? styles$a.previewRibbonDocumentTitleFlush : null,
-            props.onEdit ? styles$a.previewRibbonDocumentTitleBesideEdit : null
+            flushTitle ? styles$a.previewRibbonDocumentTitleFlush : null
           ].filter(Boolean).join(" "),
           children: [
             jsxRuntimeExports.jsx(StorySpines, {}),
@@ -256484,29 +256479,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         props.exitPlaybackPreview ? jsxRuntimeExports.jsx("span", {
           className: styles$a.previewRibbonPreviewBadge,
           children: "Story preview"
-        }) : null,
-        props.onEdit ? jsxRuntimeExports.jsx(RibbonEditButton, {
-          onEdit: props.onEdit
         }) : null
       ]
-    });
-  }
-  function RibbonEditButton(props) {
-    const [opening2, setOpening] = reactExports.useState(false);
-    return jsxRuntimeExports.jsx(PanelActionButton, {
-      className: styles$a.previewRibbonEdit,
-      title: "Edit this story",
-      disabled: opening2,
-      "aria-busy": opening2,
-      onClick: () => {
-        setOpening(true);
-        props.onEdit().catch((e2) => {
-          console.error("[minerva] could not open the editor", e2);
-          window.alert(e2 instanceof Error ? e2.message : "Could not open the editor");
-          setOpening(false);
-        });
-      },
-      children: "Edit"
     });
   }
   const NavChevron = (props) => {
@@ -259475,15 +259449,16 @@ uniform classStyleUniforms {
       };
     };
   }
-  const main = "_main_1azhv_1";
-  const viewerInfo = "_viewerInfo_1azhv_6";
-  const viewerInfoButton = "_viewerInfoButton_1azhv_14";
-  const viewerInfoPanel = "_viewerInfoPanel_1azhv_15";
-  const viewerInfoPanelHead = "_viewerInfoPanelHead_1azhv_57";
-  const viewerInfoClose = "_viewerInfoClose_1azhv_67";
-  const viewerInfoList = "_viewerInfoList_1azhv_81";
-  const viewerInfoStamp = "_viewerInfoStamp_1azhv_98";
-  const squareViewportOverlay = "_squareViewportOverlay_1azhv_136";
+  const main = "_main_1rfoq_1";
+  const viewerInfo = "_viewerInfo_1rfoq_6";
+  const viewerInfoButton = "_viewerInfoButton_1rfoq_14";
+  const viewerInfoPanel = "_viewerInfoPanel_1rfoq_15";
+  const viewerInfoPanelHead = "_viewerInfoPanelHead_1rfoq_55";
+  const viewerInfoClose = "_viewerInfoClose_1rfoq_65";
+  const viewerInfoList = "_viewerInfoList_1rfoq_79";
+  const viewerInfoStamp = "_viewerInfoStamp_1rfoq_96";
+  const viewerInfoFooter = "_viewerInfoFooter_1rfoq_106";
+  const squareViewportOverlay = "_squareViewportOverlay_1rfoq_159";
   const styles$1 = {
     main,
     viewerInfo,
@@ -259493,6 +259468,7 @@ uniform classStyleUniforms {
     viewerInfoClose,
     viewerInfoList,
     viewerInfoStamp,
+    viewerInfoFooter,
     squareViewportOverlay
   };
   const ORTHO_VIEW_ID = "ortho";
@@ -259506,8 +259482,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-13T22:05:15.635Z";
-    const sha = "b55c5af90f7147c2e7fe3ee9c403283d34ed96a6";
+    const iso = "2026-10-14T14:43:16.374Z";
+    const sha = "d1d4605b77add2b6b8dab184bd96defe3331c143";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -260628,7 +260604,11 @@ uniform classStyleUniforms {
                       children: DEVICE_LABEL
                     })
                   ]
-                })
+                }),
+                props.infoFooter ? jsxRuntimeExports.jsx("div", {
+                  className: styles$1.viewerInfoFooter,
+                  children: props.infoFooter
+                }) : null
               ]
             }) : null,
             jsxRuntimeExports.jsx("button", {
@@ -260644,17 +260624,26 @@ uniform classStyleUniforms {
                   jsxRuntimeExports.jsx("circle", {
                     cx: "8",
                     cy: "8",
-                    r: "6.25",
-                    fill: "none",
-                    stroke: "currentColor",
-                    strokeWidth: "1.25"
+                    r: "8",
+                    fill: "#000",
+                    fillOpacity: "0.55"
                   }),
-                  jsxRuntimeExports.jsx("path", {
-                    d: "M8 7.2v4.2M8 4.6v.6",
+                  jsxRuntimeExports.jsxs("g", {
                     fill: "none",
-                    stroke: "currentColor",
-                    strokeWidth: "1.4",
-                    strokeLinecap: "round"
+                    stroke: "#fff",
+                    strokeLinecap: "round",
+                    children: [
+                      jsxRuntimeExports.jsx("circle", {
+                        cx: "8",
+                        cy: "8",
+                        r: "6.25",
+                        strokeWidth: "1.25"
+                      }),
+                      jsxRuntimeExports.jsx("path", {
+                        d: "M8 7.2v4.2M8 4.6v.6",
+                        strokeWidth: "1.4"
+                      })
+                    ]
                   })
                 ]
               })

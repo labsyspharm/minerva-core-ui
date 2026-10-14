@@ -5827,22 +5827,22 @@ body[data-color-mode*='light'] {
  * Tokens are sealed via the global `.minerva-seal` class on the root.
  */
 
-._presentation_1da39_6,
-._presentation_1da39_6 *,
-._presentation_1da39_6 *::before,
-._presentation_1da39_6 *::after {
+._presentation_o48fs_6,
+._presentation_o48fs_6 *,
+._presentation_o48fs_6 *::before,
+._presentation_o48fs_6 *::after {
   box-sizing: border-box;
 }
 
 /** `PresentationFrame` layout; `.presentation` adds tokens when active. */
-._frame_1da39_14 {
+._frame_o48fs_14 {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
 }
 
-._presentation_1da39_6 {
+._presentation_o48fs_6 {
   /* Query its own width, not the viewport's: the player may be embedded. */
   container-type: inline-size;
   overflow: hidden;
@@ -5856,15 +5856,14 @@ body[data-color-mode*='light'] {
   -moz-osx-font-smoothing: grayscale;
 }
 
-._previewRibbon_1da39_35 {
-  --ribbon-edit-width: 3.5rem;
+._previewRibbon_o48fs_35 {
   position: relative;
   z-index: 2;
   justify-content: flex-start;
 }
 
 /** Left-pointing chevron (down icon rotated). */
-._previewRibbonChevron_1da39_43 {
+._previewRibbonChevron_o48fs_42 {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
@@ -5876,7 +5875,7 @@ body[data-color-mode*='light'] {
 }
 
 /** Document title — shares the ribbon with the “Story preview” badge. */
-._previewRibbonDocumentTitle_1da39_55 {
+._previewRibbonDocumentTitle_o48fs_54 {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -5893,26 +5892,12 @@ body[data-color-mode*='light'] {
 }
 
 /* CDN title-only: center like StoryTitleBar. Preview mode: sit after Back. */
-._previewRibbonDocumentTitleFlush_1da39_72 {
+._previewRibbonDocumentTitleFlush_o48fs_71 {
   justify-content: center;
   text-align: center;
 }
 
-/* CDN Edit button: pinned right; the title keeps clear of its width on both
-   sides so it stays centered and never runs under the button. */
-._previewRibbonEdit_1da39_79 {
-  position: absolute;
-  right: var(--minerva-inset);
-  width: var(--ribbon-edit-width);
-}
-
-/* Margin, not padding: overflow clips at the padding edge, so a long title
-   would still paint under the button. */
-._previewRibbonDocumentTitleBesideEdit_1da39_87 {
-  margin-inline: calc(var(--ribbon-edit-width) + var(--minerva-gap));
-}
-
-._previewRibbonPreviewBadge_1da39_91 {
+._previewRibbonPreviewBadge_o48fs_76 {
   flex-shrink: 0;
   font-size: var(--minerva-size-note);
   font-style: italic;
@@ -5921,7 +5906,7 @@ body[data-color-mode*='light'] {
   color: var(--minerva-quiet);
 }
 
-._splitGrid_1da39_100 {
+._splitGrid_o48fs_85 {
   flex: 1;
   min-height: 0;
   position: relative;
@@ -5932,13 +5917,13 @@ body[data-color-mode*='light'] {
   grid-template-rows: 1fr;
 }
 
-._splitGrid_1da39_100 > :nth-child(1) {
+._splitGrid_o48fs_85 > :nth-child(1) {
   grid-column: 1;
   grid-row: 1;
   min-height: 0;
 }
 
-._splitGrid_1da39_100 > :nth-child(2) {
+._splitGrid_o48fs_85 > :nth-child(2) {
   grid-column: 2;
   grid-row: 1;
   min-height: 0;
@@ -5947,16 +5932,16 @@ body[data-color-mode*='light'] {
 }
 
 /** Single empty waypoint: no nav column, viewer fills the row. */
-._splitGridViewerOnly_1da39_126 {
+._splitGridViewerOnly_o48fs_111 {
   grid-template-columns: 1fr;
 }
 
-._splitGridViewerOnly_1da39_126 > ._presentationViewerRegion_1da39_130 {
+._splitGridViewerOnly_o48fs_111 > ._presentationViewerRegion_o48fs_115 {
   max-height: 100%;
 }
 
 /** Positioned containing block so author .root.grid (absolute + inset 0) fills viewer area only */
-._presentationViewerRegion_1da39_130 {
+._presentationViewerRegion_o48fs_115 {
   position: relative;
   min-height: 0;
   height: 100%;
@@ -5964,7 +5949,7 @@ body[data-color-mode*='light'] {
 }
 
 /** TOC / chevron SVGs are 16px; row must clear icons with equal vertical padding. */
-._navPane_1da39_143 {
+._navPane_o48fs_128 {
   border-right: 1px solid var(--minerva-edge);
   background: var(--minerva-paper);
   display: grid;
@@ -5977,18 +5962,18 @@ body[data-color-mode*='light'] {
 }
 
 /* Title row only when not already shown in the top ribbon (preview / CDN). */
-._navPaneHasStoryName_1da39_156 {
+._navPaneHasStoryName_o48fs_141 {
   grid-template-rows: auto 36px 1fr;
 }
 
-._navPane_1da39_143 > ._storyTitle_1da39_160 {
+._navPane_o48fs_128 > ._storyTitle_o48fs_145 {
   grid-column: 1;
   grid-row: 1;
   padding: 8px 8px 4px;
   margin: 0;
 }
 
-._navPane_1da39_143 > ._toolbar_1da39_167 {
+._navPane_o48fs_128 > ._toolbar_o48fs_152 {
   grid-column: 1;
   grid-row: 1;
   /* Symmetric padding — previous `8px 8px 0` in a 24px row clipped the icons. */
@@ -5996,11 +5981,11 @@ body[data-color-mode*='light'] {
   margin: 0;
 }
 
-._navPaneHasStoryName_1da39_156 > ._toolbar_1da39_167 {
+._navPaneHasStoryName_o48fs_141 > ._toolbar_o48fs_152 {
   grid-row: 2;
 }
 
-._navPane_1da39_143 > ._contentWrap_1da39_179 {
+._navPane_o48fs_128 > ._contentWrap_o48fs_164 {
   overflow-y: auto;
   grid-column: 1;
   grid-row: 2;
@@ -6010,12 +5995,12 @@ body[data-color-mode*='light'] {
   margin: 0;
 }
 
-._navPaneHasStoryName_1da39_156 > ._contentWrap_1da39_179 {
+._navPaneHasStoryName_o48fs_141 > ._contentWrap_o48fs_164 {
   grid-row: 3;
 }
 
 /* Same button reset in preview (Bootstrap) and CDN (native). */
-._navPane_1da39_143 button {
+._navPane_o48fs_128 button {
   all: unset;
   box-sizing: border-box;
   color: inherit;
@@ -6027,21 +6012,21 @@ body[data-color-mode*='light'] {
 }
 
 /* Inline SVG baseline gap otherwise lifts glyphs toward the top of the row. */
-._navPane_1da39_143 button svg {
+._navPane_o48fs_128 button svg {
   display: block;
   flex-shrink: 0;
 }
 
-._navPane_1da39_143 button:focus-visible {
+._navPane_o48fs_128 button:focus-visible {
   outline: var(--minerva-focus-width) solid var(--minerva-ink);
   outline-offset: var(--minerva-focus-offset);
 }
 
-._navInactive_1da39_216 {
+._navInactive_o48fs_201 {
   color: var(--minerva-quiet);
 }
 
-._storyTitle_1da39_160 {
+._storyTitle_o48fs_145 {
   font-size: var(--minerva-title-size);
   font-style: italic;
   font-weight: 400;
@@ -6049,14 +6034,14 @@ body[data-color-mode*='light'] {
   min-width: 0;
 }
 
-._heading_1da39_228 {
+._heading_o48fs_213 {
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.2;
   margin: 0 0 0.5em;
 }
 
-._toolbar_1da39_167 {
+._toolbar_o48fs_152 {
   display: grid;
   height: 100%;
   overflow: hidden;
@@ -6065,24 +6050,24 @@ body[data-color-mode*='light'] {
   grid-template-columns: 30px 1fr 30px 50px 30px;
 }
 
-._toolbar_1da39_167 > ._tocButton_1da39_244 {
+._toolbar_o48fs_152 > ._tocButton_o48fs_229 {
   grid-column: 1;
   text-align: left;
 }
 
-._toolbar_1da39_167 > ._navLeft_1da39_249 {
+._toolbar_o48fs_152 > ._navLeft_o48fs_234 {
   grid-column: 3;
 }
 
-._toolbar_1da39_167 > ._count_1da39_253 {
+._toolbar_o48fs_152 > ._count_o48fs_238 {
   grid-column: 4;
 }
 
-._toolbar_1da39_167 > ._navRight_1da39_257 {
+._toolbar_o48fs_152 > ._navRight_o48fs_242 {
   grid-column: 5;
 }
 
-._toolbar_1da39_167 > button {
+._toolbar_o48fs_152 > button {
   all: unset;
   box-sizing: border-box;
   display: inline-flex;
@@ -6094,12 +6079,12 @@ body[data-color-mode*='light'] {
   cursor: pointer;
 }
 
-._toolbar_1da39_167 > button:focus-visible {
+._toolbar_o48fs_152 > button:focus-visible {
   outline: var(--minerva-focus-width) solid var(--minerva-ink);
   outline-offset: var(--minerva-focus-offset);
 }
 
-._toolbar_1da39_167 > button._navInactive_1da39_216 {
+._toolbar_o48fs_152 > button._navInactive_o48fs_201 {
   cursor: default;
   pointer-events: none;
 }
@@ -6108,66 +6093,66 @@ body[data-color-mode*='light'] {
  * Prose only in the waypoint pane — never the channel legend / viewer overlays
  * (those use their own 11–12px metrics; a root line-height: 1.5 bloated them).
  */
-._contentWrap_1da39_179 {
+._contentWrap_o48fs_164 {
   scrollbar-color: var(--minerva-quiet) var(--minerva-paper);
   font-size: 1rem;
   line-height: 1.5;
   font-weight: 400;
 }
 
-._contentWrap_1da39_179 p {
+._contentWrap_o48fs_164 p {
   margin-top: 0;
   margin-bottom: 1rem;
 }
 
-._contentWrap_1da39_179 ul,
-._contentWrap_1da39_179 ol {
+._contentWrap_o48fs_164 ul,
+._contentWrap_o48fs_164 ol {
   margin-top: 0;
   margin-bottom: 1rem;
   padding-left: 2rem;
 }
 
-._contentWrap_1da39_179 a {
+._contentWrap_o48fs_164 a {
   color: var(--minerva-ink);
   text-decoration: underline;
 }
 
-._contentWrap_1da39_179 a:hover {
+._contentWrap_o48fs_164 a:hover {
   color: var(--minerva-ink);
   opacity: 0.85;
 }
 
-._contentWrap_1da39_179 strong {
+._contentWrap_o48fs_164 strong {
   font-weight: bold;
 }
 
-._inlineNext_1da39_320 {
+._inlineNext_o48fs_305 {
   display: grid;
   grid-template-columns: 1fr 30px;
   align-items: center;
   margin-bottom: 1em;
 }
 
-._inlineNext_1da39_320 > :nth-child(1) {
+._inlineNext_o48fs_305 > :nth-child(1) {
   grid-column: 1;
   text-align: right;
   font-style: italic;
   margin: 0;
 }
 
-._inlineNext_1da39_320 > :nth-child(2) {
+._inlineNext_o48fs_305 > :nth-child(2) {
   grid-column: 2;
 }
 
-._inlineNext_1da39_320 ._nextLink_1da39_338 {
+._inlineNext_o48fs_305 ._nextLink_o48fs_323 {
   cursor: pointer;
 }
 
-._inlineNext_1da39_320 ._nextLink_1da39_338:hover {
+._inlineNext_o48fs_305 ._nextLink_o48fs_323:hover {
   text-decoration: underline;
 }
 
-._inlineNext_1da39_320 > button {
+._inlineNext_o48fs_305 > button {
   all: unset;
   box-sizing: border-box;
   display: inline-flex;
@@ -6177,12 +6162,12 @@ body[data-color-mode*='light'] {
   cursor: pointer;
 }
 
-._inlineNext_1da39_320 > button._navInactive_1da39_216 {
+._inlineNext_o48fs_305 > button._navInactive_o48fs_201 {
   cursor: default;
   pointer-events: none;
 }
 
-._count_1da39_253 {
+._count_o48fs_238 {
   text-align: center;
   display: grid;
   align-items: center;
@@ -6191,28 +6176,28 @@ body[data-color-mode*='light'] {
   grid-template-columns: 2fr 1fr 2fr;
 }
 
-._count_1da39_253 > :nth-child(1) {
+._count_o48fs_238 > :nth-child(1) {
   grid-column: 1;
 }
 
-._count_1da39_253 > :nth-child(2) {
+._count_o48fs_238 > :nth-child(2) {
   grid-column: 2;
 }
 
-._count_1da39_253 > :nth-child(3) {
+._count_o48fs_238 > :nth-child(3) {
   grid-column: 3;
 }
 
-._tocWrapper_1da39_382 li {
+._tocWrapper_o48fs_367 li {
   color: var(--minerva-ink);
   cursor: pointer;
 }
 
-._tocWrapper_1da39_382 li:hover {
+._tocWrapper_o48fs_367 li:hover {
   text-decoration: underline;
 }
 
-._channelName_1da39_391 {
+._channelName_o48fs_376 {
   text-decoration: underline;
   text-decoration-color: var(--channel-color);
   text-decoration-thickness: 2px;
@@ -6221,26 +6206,26 @@ body[data-color-mode*='light'] {
 
 /** Narrow (phones, small embeds): viewer on top, nav pane below. */
 @container (width < 768px) {
-  ._splitGrid_1da39_100 {
+  ._splitGrid_o48fs_85 {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
   }
 
-  ._splitGrid_1da39_100 > ._presentationViewerRegion_1da39_130 {
+  ._splitGrid_o48fs_85 > ._presentationViewerRegion_o48fs_115 {
     grid-column: 1;
     grid-row: 1;
   }
 
-  ._splitGrid_1da39_100 > ._navPane_1da39_143 {
+  ._splitGrid_o48fs_85 > ._navPane_o48fs_128 {
     grid-column: 1;
     grid-row: 2;
   }
 
-  ._splitGridViewerOnly_1da39_126 {
+  ._splitGridViewerOnly_o48fs_111 {
     grid-template-rows: minmax(0, 1fr);
   }
 
-  ._navPane_1da39_143 {
+  ._navPane_o48fs_128 {
     border-right: none;
     border-top: 1px solid var(--minerva-edge);
   }
@@ -7560,12 +7545,12 @@ body[data-color-mode*='light'] {
 ._knob_y32ny_33:active {
   cursor: grabbing;
 }
-._main_1azhv_1 {
+._main_1rfoq_1 {
   position: relative;
   height: 100%;
 }
 
-._viewerInfo_1azhv_6 {
+._viewerInfo_1rfoq_6 {
   position: absolute;
   right: 8px;
   bottom: 8px;
@@ -7573,31 +7558,29 @@ body[data-color-mode*='light'] {
   pointer-events: none;
 }
 
-._viewerInfoButton_1azhv_14,
-._viewerInfoPanel_1azhv_15 {
+._viewerInfoButton_1rfoq_14,
+._viewerInfoPanel_1rfoq_15 {
   pointer-events: auto;
 }
 
-._viewerInfoButton_1azhv_14 {
+._viewerInfoButton_1rfoq_14 {
   display: grid;
   place-items: center;
   width: 18px;
   height: 18px;
   padding: 0;
   border: none;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.72);
-  color: #fff;
+  background: none;
   cursor: pointer;
 }
 
-._viewerInfoButton_1azhv_14 svg {
+._viewerInfoButton_1rfoq_14 svg {
   width: 16px;
   height: 16px;
   display: block;
 }
 
-._viewerInfoPanel_1azhv_15 {
+._viewerInfoPanel_1rfoq_15 {
   position: absolute;
   right: 0;
   bottom: calc(100% + 6px);
@@ -7616,7 +7599,7 @@ body[data-color-mode*='light'] {
   font-variant-numeric: tabular-nums;
 }
 
-._viewerInfoPanelHead_1azhv_57 {
+._viewerInfoPanelHead_1rfoq_55 {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -7626,7 +7609,7 @@ body[data-color-mode*='light'] {
   color: rgba(255, 255, 255, 0.72);
 }
 
-._viewerInfoClose_1azhv_67 {
+._viewerInfoClose_1rfoq_65 {
   width: 22px;
   height: 22px;
   margin: -4px -4px -4px 0;
@@ -7640,7 +7623,7 @@ body[data-color-mode*='light'] {
   cursor: pointer;
 }
 
-._viewerInfoList_1azhv_81 {
+._viewerInfoList_1rfoq_79 {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -7650,14 +7633,14 @@ body[data-color-mode*='light'] {
   border: none;
 }
 
-._viewerInfoList_1azhv_81 div {
+._viewerInfoList_1rfoq_79 div {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-._viewerInfoStamp_1azhv_98 {
+._viewerInfoStamp_1rfoq_96 {
   margin-top: 2px;
   padding-top: 4px;
   border-top: 1px solid rgba(255, 255, 255, 0.18);
@@ -7666,36 +7649,61 @@ body[data-color-mode*='light'] {
   white-space: nowrap;
 }
 
+/* Styled like the stamp: a colophon line, not a call to action. */
+._viewerInfoFooter_1rfoq_106 {
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+._viewerInfoFooter_1rfoq_106 button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+._viewerInfoFooter_1rfoq_106 button:is(:hover, :focus-visible):not(:disabled) {
+  color: #fff;
+  text-decoration: underline;
+}
+
+._viewerInfoFooter_1rfoq_106 button:disabled {
+  cursor: progress;
+}
+
 @media (max-width: 720px) {
-  ._viewerInfo_1azhv_6 {
+  ._viewerInfo_1rfoq_6 {
     right: 4px;
     bottom: 4px;
   }
 
-  ._viewerInfoButton_1azhv_14 {
+  ._viewerInfoButton_1rfoq_14 {
     width: 14px;
     height: 14px;
   }
 
-  ._viewerInfoButton_1azhv_14 svg {
+  ._viewerInfoButton_1rfoq_14 svg {
     width: 12px;
     height: 12px;
   }
 
-  ._viewerInfoPanel_1azhv_15 {
+  ._viewerInfoPanel_1rfoq_15 {
     max-width: min(240px, 70vw);
     padding: 4px 6px 6px;
     font-size: 11px;
   }
 
-  ._viewerInfoClose_1azhv_67 {
+  ._viewerInfoClose_1rfoq_65 {
     width: 20px;
     height: 20px;
     font-size: 15px;
   }
 }
 
-._squareViewportOverlay_1azhv_136 {
+._squareViewportOverlay_1rfoq_159 {
   position: absolute;
   pointer-events: none;
   left: 50%;
