@@ -29,6 +29,7 @@ import {
   noteExportProgress,
   timedSink,
 } from "./exportProfile";
+import { bufferedSink } from "./exportSink";
 import { describeExportSource, readExportTile } from "./exportTileReader";
 import {
   exportZlibOmeTiffImage,
@@ -92,12 +93,37 @@ const RGB_JPEG_TAGS = [
 ];
 
 /**
- * Tiles in flight. Reads dominate (a network share takes ~20 ms each), so this
- * is well above the encoder pool size.
+ * Tiles in flight: being read, encoded, or waiting for the write queue. Well
+ * above the encoder pool size, so encoders always have work; reads have their
+ * own, lower limit.
  */
 const TILES_IN_FLIGHT = 32;
+/**
+ * Tiles being read at once, started in job order (channel, level, row by
+ * row). More only queue on slow storage: 32 at once on one export took ~5 s
+ * each and starved the file writes sharing the disk.
+ */
+const READS_IN_FLIGHT = 8;
 /** Encoded bytes queued for the (serial) TIFF writer before tiles wait on it. */
 const MAX_PENDING_WRITE_BYTES = 64 * 1024 * 1024;
+
+/** Runs at most `size` tasks at once, starting them in call order. */
+function limiter(size: number) {
+  let running = 0;
+  const waiting: (() => void)[] = [];
+  return async <T>(task: () => Promise<T>): Promise<T> => {
+    if (running < size) running += 1;
+    else await new Promise<void>((resolve) => waiting.push(resolve));
+    try {
+      return await task();
+    } finally {
+      // Hand the slot straight to the next task, or give it back.
+      const next = waiting.shift();
+      if (next) next();
+      else running -= 1;
+    }
+  };
+}
 
 function interleavePlanar(planes: ArrayLike<number>[]): Float64Array {
   const n = planes.reduce(
@@ -358,7 +384,7 @@ async function exportJpegOmeTiffImage(
   let writer: Awaited<ReturnType<typeof createTiffWriter>>;
   try {
     writer = await createTiffWriter({
-      sink: timedSink(browserFileSink(writable)),
+      sink: bufferedSink(timedSink(browserFileSink(writable))),
       signal: workSignal,
       images: layouts,
     });
@@ -374,6 +400,7 @@ async function exportJpegOmeTiffImage(
 
   const started = performance.now();
   const concurrency = Math.min(TILES_IN_FLIGHT, Math.max(1, jobs.length));
+  const readSlot = limiter(READS_IN_FLIGHT);
   let next = 0;
 
   // The writer appends one tile at a time; tiles queue their bytes and move on.
@@ -422,7 +449,9 @@ async function exportJpegOmeTiffImage(
         job.y,
         workSignal,
       );
-    const tiles = await Promise.all((rgb ?? [source.channel]).map(readTile));
+    const tiles = await readSlot(() =>
+      Promise.all((rgb ?? [source.channel]).map(readTile)),
+    );
     if (workSignal.aborted) return;
     const { width, height } = tiles[0];
     const data =
@@ -566,7 +595,7 @@ export async function exportJpegOmeTiffStory(
     throw new Error("No channels available for OME-TIFF export.");
   }
   exportEvent(
-    `settings: ${TILES_IN_FLIGHT} tiles in flight, write queue ${MAX_PENDING_WRITE_BYTES / 2 ** 20} MB`,
+    `settings: ${TILES_IN_FLIGHT} tiles in flight, ${READS_IN_FLIGHT} reads at once, write queue ${MAX_PENDING_WRITE_BYTES / 2 ** 20} MB, batched writes`,
   );
 
   const decisions: {

@@ -77,27 +77,47 @@ const formatMinutesLeft = (ms: number): string => {
   return rm > 0 ? `~${h}h ${rm}m left` : `~${h}h left`;
 };
 
-/** Recent completions only. Startup and the first tiles are slower than the run. */
-const RATE_WINDOW_MS = 5_000;
+/** No estimate until this long after the first tile... */
+const MIN_ESTIMATE_MS = 30_000;
+/** ...and this share of the tiles, at least {@link MIN_ESTIMATE_TILES}. */
+const MIN_ESTIMATE_SHARE = 0.01;
+const MIN_ESTIMATE_TILES = 20;
+/** The rate is over a third of the time since the first tile, within these. */
+const MIN_RATE_WINDOW_MS = 60_000;
+const MAX_RATE_WINDOW_MS = 300_000;
 
 type RateSample = { at: number; completed: number };
 
-/** Rate over the window up to `now`, so time since the last tile slows it. */
+/**
+ * Remaining time from the tile rate over the last few minutes, once there is
+ * real progress: one export ran at 0.5 tiles/s for three minutes and then at
+ * ~7/s, and its first estimates read 41 hours. A 5 s window swung by tens of
+ * seconds as busy and empty tiles came and went. The rate runs up to `now`,
+ * so a stall lengthens the estimate. `samples[0]` is the first tile.
+ */
 const estimateRemainingMs = (
   samples: readonly RateSample[],
   total: number,
   now: number,
 ): number | null => {
-  if (samples.length < 2) return null;
-  const base = samples[0];
+  const first = samples[0];
   const tip = samples[samples.length - 1];
+  if (!first || total <= tip.completed) return null;
+  const running = now - first.at;
+  const enough = Math.max(MIN_ESTIMATE_TILES, total * MIN_ESTIMATE_SHARE);
+  if (running < MIN_ESTIMATE_MS || tip.completed < enough) return null;
+  const window = Math.min(
+    MAX_RATE_WINDOW_MS,
+    Math.max(MIN_RATE_WINDOW_MS, running / 3),
+  );
+  // The last sample at least `window` old, else the first.
+  let base = first;
+  for (const sample of samples) {
+    if (sample.at > now - window) break;
+    base = sample;
+  }
   const gained = tip.completed - base.completed;
-  if (
-    tip.at - base.at < RATE_WINDOW_MS ||
-    gained <= 0 ||
-    total <= tip.completed
-  )
-    return null;
+  if (gained <= 0) return null;
   return ((total - tip.completed) * (now - base.at)) / gained;
 };
 
@@ -482,7 +502,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
       encodeWorkers: jpegExportConcurrency(),
       transfer: jpegTransfer,
       progressEveryMs: PROGRESS_INTERVAL_MS,
-      etaWindowMs: RATE_WINDOW_MS,
+      etaWindowMs: `${MIN_RATE_WINDOW_MS}-${MAX_RATE_WINDOW_MS}`,
     });
 
     let lastProgressAt = 0;
@@ -725,8 +745,9 @@ export const ImageExporter = (props: ImageExporterProps) => {
     const at = performance.now();
     if (samples[samples.length - 1]?.completed !== completed) {
       samples.push({ at, completed });
-      while (samples.length > 2 && at - samples[1].at >= RATE_WINDOW_MS) {
-        samples.shift();
+      // Keep the first sample, and one at least the longest window old.
+      while (samples.length > 3 && at - samples[2].at >= MAX_RATE_WINDOW_MS) {
+        samples.splice(1, 1);
       }
     }
     const update = () => {
