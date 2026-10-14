@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BOHeiq95.js","./pako.esm-KbdoS3Oq.js","./lerc-CbsYWeuf.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Cd4AECOe.js","./pako.esm-KbdoS3Oq.js","./lerc-KyOYJaZu.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18508,7 +18508,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "18273620757e3845dc4d89f4b211d62b67361b2a",
+    "VITE_APP_GIT_SHA": "b4ef0b0a329baeb6497f6e7b342c46334d558d12",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -79232,26 +79232,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-NpnkBvrK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BxQmI80n.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BNiklz8u.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BhNv66x3.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BFQBLefH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-B0G9Wcca.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BOHeiq95.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-C0JkLB8s.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CbsYWeuf.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-Cd4AECOe.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-Bsl1R-ub.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-KyOYJaZu.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-D2bPN032.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Z7ZtIV1y.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-xht1UHDf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-aoFhJH6N.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -86475,6 +86475,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...pixels.getElementsByTagNameNS("*", "Channel")
     ].filter((el2) => el2.parentElement === pixels);
   }
+  function uncachedTiffImage(image2) {
+    const cached = image2.source;
+    const ranges = cached.blockSize ? cached.source : void 0;
+    if (!ranges) return image2;
+    const source2 = {
+      fetch: (slices, signal) => Promise.all(slices.map(async (slice) => {
+        const [result] = await ranges.fetch([
+          slice
+        ], signal);
+        const { data: data2, offset } = result instanceof ArrayBuffer ? {
+          data: result,
+          offset: slice.offset
+        } : result;
+        const start = slice.offset - offset;
+        if (start < 0 || start + slice.length > data2.byteLength) {
+          return (await cached.fetch([
+            slice
+          ], signal))[0];
+        }
+        return data2.slice(start, start + slice.length);
+      }))
+    };
+    return new GeoTIFFImage(image2.fileDirectory, image2.geoKeys, image2.dataView, image2.littleEndian, false, source2);
+  }
   function initEmscriptenModule(moduleFactory, wasmModule, moduleOptionOverrides = {}) {
     let instantiateWasm;
     if (wasmModule) {
@@ -86727,7 +86751,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const tiled = isTiffTiled(image2);
     const tileSize = tiled ? vivTileSize(image2) : Math.max(width, height, 1);
     const clampC = (c2) => Math.max(0, Math.min(sizeC - 1, c2));
-    const readChannel2 = (c2, window2, signal) => images.length > 1 ? readTiffSample(images[clampC(c2)], 0, window2, signal) : readTiffSample(image2, clampC(c2), window2, signal);
+    const readChannel2 = (c2, window2, signal, uncached = false) => {
+      const ifd = images.length > 1 ? images[clampC(c2)] : image2;
+      const sample = images.length > 1 ? 0 : clampC(c2);
+      return readTiffSample(uncached ? uncachedTiffImage(ifd) : ifd, sample, window2, signal);
+    };
     const getRaster = ({ selection }) => readChannel2(selection.c);
     return {
       dtype,
@@ -86748,7 +86776,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ],
       onTileError: () => void 0,
       getRaster,
-      readWindow: ({ selection, window: window2, signal }) => readChannel2(selection.c, window2, signal),
+      readWindow: ({ selection, window: window2, signal }) => readChannel2(selection.c, window2, signal, true),
       getTile: tiled ? ({ x: x2, y: y2, selection }) => {
         const x0 = x2 * tileSize;
         const y0 = y2 * tileSize;
@@ -173628,7 +173656,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return out;
   }
-  async function readTileThroughLut(plane, args, lut) {
+  async function readTileThroughLut(plane, args, lut, uncached = false) {
     var _a2;
     const source2 = plane;
     const pool = source2.pool;
@@ -173636,7 +173664,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return null;
     }
     try {
-      const image2 = await source2._indexer(args.selection);
+      const indexed = await source2._indexer(args.selection);
+      const image2 = uncached ? uncachedTiffImage(indexed) : indexed;
       if (!image2.isTiled || image2.getTileWidth() !== source2.tileSize || image2.getTileHeight() !== source2.tileSize || image2.getSamplesPerPixel() !== 1 || image2.getBitsPerSample(0) !== 8) {
         return null;
       }
@@ -173663,6 +173692,38 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return null;
     }
   }
+  async function readWindowThroughLut(plane, { selection, window: window2, signal }, lut) {
+    const [x0, y0, x1, y1] = window2;
+    const width = x1 - x0;
+    const height = y1 - y0;
+    const size = plane.tileSize;
+    if (x0 % size === 0 && y0 % size === 0 && width <= size && height <= size) {
+      const args = {
+        selection,
+        x: x0 / size,
+        y: y0 / size,
+        signal
+      };
+      const tile = await readTileThroughLut(plane, args, lut, true);
+      if ((tile == null ? void 0 : tile.width) === width && tile.height === height) return tile;
+    }
+    const source2 = plane;
+    const image2 = uncachedTiffImage(await source2._indexer(selection));
+    const options = {
+      window: window2,
+      width,
+      height,
+      pool: source2.pool
+    };
+    const raster = await image2.readRasters(options);
+    if (signal == null ? void 0 : signal.aborted) throw SIGNAL_ABORTED;
+    const [samples] = raster;
+    return {
+      data: expandThroughLut(samples, lut),
+      width,
+      height
+    };
+  }
   function wrapOmeLoaderJpegExport(loader, transfer) {
     var _a2;
     const lut = u8ToU16Lut(transfer);
@@ -173682,7 +173743,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ...tile,
             data: expandThroughLut(tile.data, lut)
           };
-        }
+        },
+        ...plane._indexer ? {
+          readWindow: (args) => readWindowThroughLut(plane, args, lut)
+        } : {}
       };
       return wrapped;
     });
@@ -252555,14 +252619,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return merged;
   }
-  function prefetchedSource(base2, ranges, exportSignal) {
+  function prefetchedSource(base2, ranges, readSignal) {
     const blocked = base2;
     const bulk = blocked.blockSize && blocked.source ? blocked.source : base2;
     const runs = ranges.map((range2) => ({
       ...range2,
       data: bulk.fetch([
         range2
-      ], exportSignal).then(([result]) => {
+      ], readSignal).then(([result]) => {
         const { data: data2, offset } = result instanceof ArrayBuffer ? {
           data: result,
           offset: range2.offset
@@ -252575,7 +252639,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fetch: (slices, signal) => Promise.all(slices.map(async (slice) => {
         const run = runs.find((r2) => r2.offset <= slice.offset && slice.offset + slice.length <= r2.offset + r2.length);
         const data2 = await (run == null ? void 0 : run.data);
-        if (exportSignal.aborted) {
+        if (readSignal.aborted) {
           throw new DOMException("Aborted", "AbortError");
         }
         if (!run || !data2) return (await base2.fetch([
@@ -252629,7 +252693,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       height: h2
     };
   }
-  async function readExportTile(plane, tileSize, selection, x2, y2, signal) {
+  async function withReadSignal(signal, read) {
+    const local = new AbortController();
+    const abort = () => local.abort(signal.reason);
+    if (signal.aborted) abort();
+    else signal.addEventListener("abort", abort, {
+      once: true
+    });
+    try {
+      return await read(local.signal);
+    } finally {
+      signal.removeEventListener("abort", abort);
+    }
+  }
+  function readExportTile(plane, tileSize, selection, x2, y2, signal) {
+    return withReadSignal(signal, (readSignal) => readTile(plane, tileSize, selection, x2, y2, readSignal));
+  }
+  async function readTile(plane, tileSize, selection, x2, y2, signal) {
     const { width, height } = getImageSize(plane);
     const window2 = [
       x2 * tileSize,
@@ -253062,7 +253142,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   }
   async function writeZlibOmeTiff(opts) {
-    const { sink, closeSink, image: image2, channels: channels2, fileName, pixels, dtype, levels, readTile, signal, onProgress } = opts;
+    const { sink, closeSink, image: image2, channels: channels2, fileName, pixels, dtype, levels, readTile: readTile2, signal, onProgress } = opts;
     if (channels2.length === 0) {
       throw new Error(`No mask channels to export for ${image2.basename || image2.id}`);
     }
@@ -253113,7 +253193,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     let next2 = 0;
     const runJob2 = async (job) => {
       if (workSignal.aborted) return;
-      const tile = await readTile(job);
+      const tile = await readTile2(job);
       if (workSignal.aborted) return;
       const tileSize = levels[job.levelIndex].tileSize;
       const padded = padLabelTile(tile.data, tile.width, tile.height, tileSize, tileSize);
@@ -254984,6 +255064,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return singleton;
   }
+  function isOutOfMemory(err2) {
+    const message2 = err2 instanceof Error ? err2.message : String(err2);
+    return /allocation failed|out of memory|cannot enlarge memory|\bOOM\b/i.test(message2);
+  }
   async function encodeTileJpeg(input2) {
     const { width, height, data: data2, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize, rgbLimits } = input2;
     const pool = getJpegExportPool();
@@ -254992,6 +255076,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const copy2 = copyPixelBuffer(data2);
         return await pool.encode(width, height, copy2, typedArrayCtorName(data2), lowerLimit, upperLimit, quality, transfer, padTileSize, rgbLimits);
       } catch (err2) {
+        if (isOutOfMemory(err2)) throw err2;
         console.warn("[minerva] jpegExport worker failed, using main thread:", err2);
       }
     }
@@ -255293,14 +255378,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const plane = source2.planes[levelIndex];
       const tileSize = levels[job.levelIndex].tileSize;
       const limits = channelLimits[job.channelIndex];
-      const readTile = (channel) => readExportTile(plane, tileSize, {
+      const readTile2 = (channel) => readExportTile(plane, tileSize, {
         t: 0,
         z: 0,
         c: channel.index
       }, job.x, job.y, workSignal);
       const tiles = await Promise.all((rgb ?? [
         source2.channel
-      ]).map(readTile));
+      ]).map(readTile2));
       if (workSignal.aborted) return;
       const { width, height } = tiles[0];
       const data2 = tiles.length === 3 ? interleavePlanar(tiles.map((t2) => t2.data)) : tiles[0].data;
@@ -259482,8 +259567,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-14T15:53:45.364Z";
-    const sha = "18273620757e3845dc4d89f4b211d62b67361b2a";
+    const iso = "2026-10-14T19:48:12.094Z";
+    const sha = "b4ef0b0a329baeb6497f6e7b342c46334d558d12";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
