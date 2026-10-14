@@ -7545,12 +7545,12 @@ body[data-color-mode*='light'] {
 ._knob_y32ny_33:active {
   cursor: grabbing;
 }
-._main_1azhv_1 {
+._main_1rfoq_1 {
   position: relative;
   height: 100%;
 }
 
-._viewerInfo_1azhv_6 {
+._viewerInfo_1rfoq_6 {
   position: absolute;
   right: 8px;
   bottom: 8px;
@@ -7558,31 +7558,29 @@ body[data-color-mode*='light'] {
   pointer-events: none;
 }
 
-._viewerInfoButton_1azhv_14,
-._viewerInfoPanel_1azhv_15 {
+._viewerInfoButton_1rfoq_14,
+._viewerInfoPanel_1rfoq_15 {
   pointer-events: auto;
 }
 
-._viewerInfoButton_1azhv_14 {
+._viewerInfoButton_1rfoq_14 {
   display: grid;
   place-items: center;
   width: 18px;
   height: 18px;
   padding: 0;
   border: none;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.72);
-  color: #fff;
+  background: none;
   cursor: pointer;
 }
 
-._viewerInfoButton_1azhv_14 svg {
+._viewerInfoButton_1rfoq_14 svg {
   width: 16px;
   height: 16px;
   display: block;
 }
 
-._viewerInfoPanel_1azhv_15 {
+._viewerInfoPanel_1rfoq_15 {
   position: absolute;
   right: 0;
   bottom: calc(100% + 6px);
@@ -7601,7 +7599,7 @@ body[data-color-mode*='light'] {
   font-variant-numeric: tabular-nums;
 }
 
-._viewerInfoPanelHead_1azhv_57 {
+._viewerInfoPanelHead_1rfoq_55 {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -7611,7 +7609,7 @@ body[data-color-mode*='light'] {
   color: rgba(255, 255, 255, 0.72);
 }
 
-._viewerInfoClose_1azhv_67 {
+._viewerInfoClose_1rfoq_65 {
   width: 22px;
   height: 22px;
   margin: -4px -4px -4px 0;
@@ -7625,7 +7623,7 @@ body[data-color-mode*='light'] {
   cursor: pointer;
 }
 
-._viewerInfoList_1azhv_81 {
+._viewerInfoList_1rfoq_79 {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -7635,14 +7633,14 @@ body[data-color-mode*='light'] {
   border: none;
 }
 
-._viewerInfoList_1azhv_81 div {
+._viewerInfoList_1rfoq_79 div {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-._viewerInfoStamp_1azhv_98 {
+._viewerInfoStamp_1rfoq_96 {
   margin-top: 2px;
   padding-top: 4px;
   border-top: 1px solid rgba(255, 255, 255, 0.18);
@@ -7651,36 +7649,61 @@ body[data-color-mode*='light'] {
   white-space: nowrap;
 }
 
+/* Styled like the stamp: a colophon line, not a call to action. */
+._viewerInfoFooter_1rfoq_106 {
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+._viewerInfoFooter_1rfoq_106 button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+._viewerInfoFooter_1rfoq_106 button:is(:hover, :focus-visible):not(:disabled) {
+  color: #fff;
+  text-decoration: underline;
+}
+
+._viewerInfoFooter_1rfoq_106 button:disabled {
+  cursor: progress;
+}
+
 @media (max-width: 720px) {
-  ._viewerInfo_1azhv_6 {
+  ._viewerInfo_1rfoq_6 {
     right: 4px;
     bottom: 4px;
   }
 
-  ._viewerInfoButton_1azhv_14 {
+  ._viewerInfoButton_1rfoq_14 {
     width: 14px;
     height: 14px;
   }
 
-  ._viewerInfoButton_1azhv_14 svg {
+  ._viewerInfoButton_1rfoq_14 svg {
     width: 12px;
     height: 12px;
   }
 
-  ._viewerInfoPanel_1azhv_15 {
+  ._viewerInfoPanel_1rfoq_15 {
     max-width: min(240px, 70vw);
     padding: 4px 6px 6px;
     font-size: 11px;
   }
 
-  ._viewerInfoClose_1azhv_67 {
+  ._viewerInfoClose_1rfoq_65 {
     width: 20px;
     height: 20px;
     font-size: 15px;
   }
 }
 
-._squareViewportOverlay_1azhv_136 {
+._squareViewportOverlay_1rfoq_159 {
   position: absolute;
   pointer-events: none;
   left: 50%;

@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CcDiEknz.js","./pako.esm-KbdoS3Oq.js","./lerc-C5KV5eo0.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-UI8t_S1x.js","./pako.esm-KbdoS3Oq.js","./lerc-D9YZbvxf.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18508,7 +18508,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "e9511a6054d17ec6fd64a16355eb9799a6295760"
+    "VITE_APP_GIT_SHA": "4421cfdf36f73913ef8f45bbea703440a5e4a8d8"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79231,26 +79231,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DYnSA-Xo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CHSx0VW6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DYkI8etV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-G31x62Qr.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DWoehCM6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-B_3LzVIw.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CcDiEknz.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BqE6grME.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-C5KV5eo0.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-UI8t_S1x.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-GOrbYa8t.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-D9YZbvxf.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-FMbh6sxY.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DMWC8TM5.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CQPTn9Kr.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-3PowXT54.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -86474,6 +86474,30 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...pixels.getElementsByTagNameNS("*", "Channel")
     ].filter((el2) => el2.parentElement === pixels);
   }
+  function uncachedTiffImage(image2) {
+    const cached = image2.source;
+    const ranges = cached.blockSize ? cached.source : void 0;
+    if (!ranges) return image2;
+    const source2 = {
+      fetch: (slices, signal) => Promise.all(slices.map(async (slice) => {
+        const [result] = await ranges.fetch([
+          slice
+        ], signal);
+        const { data: data2, offset } = result instanceof ArrayBuffer ? {
+          data: result,
+          offset: slice.offset
+        } : result;
+        const start = slice.offset - offset;
+        if (start < 0 || start + slice.length > data2.byteLength) {
+          return (await cached.fetch([
+            slice
+          ], signal))[0];
+        }
+        return data2.slice(start, start + slice.length);
+      }))
+    };
+    return new GeoTIFFImage(image2.fileDirectory, image2.geoKeys, image2.dataView, image2.littleEndian, false, source2);
+  }
   function initEmscriptenModule(moduleFactory, wasmModule, moduleOptionOverrides = {}) {
     let instantiateWasm;
     if (wasmModule) {
@@ -86726,7 +86750,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const tiled = isTiffTiled(image2);
     const tileSize = tiled ? vivTileSize(image2) : Math.max(width, height, 1);
     const clampC = (c2) => Math.max(0, Math.min(sizeC - 1, c2));
-    const readChannel2 = (c2, window2, signal) => images.length > 1 ? readTiffSample(images[clampC(c2)], 0, window2, signal) : readTiffSample(image2, clampC(c2), window2, signal);
+    const readChannel2 = (c2, window2, signal, uncached = false) => {
+      const ifd = images.length > 1 ? images[clampC(c2)] : image2;
+      const sample = images.length > 1 ? 0 : clampC(c2);
+      return readTiffSample(uncached ? uncachedTiffImage(ifd) : ifd, sample, window2, signal);
+    };
     const getRaster = ({ selection }) => readChannel2(selection.c);
     return {
       dtype,
@@ -86747,7 +86775,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ],
       onTileError: () => void 0,
       getRaster,
-      readWindow: ({ selection, window: window2, signal }) => readChannel2(selection.c, window2, signal),
+      readWindow: ({ selection, window: window2, signal }) => readChannel2(selection.c, window2, signal, true),
       getTile: tiled ? ({ x: x2, y: y2, selection }) => {
         const x0 = x2 * tileSize;
         const y0 = y2 * tileSize;
@@ -95927,7 +95955,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       c2.color
     ]));
     for (const c2 of (view == null ? void 0 : view.colors) ?? []) colors.set(c2.name, c2.color);
-    if ((classColorPreview == null ? void 0 : classColorPreview.waypointId) === waypointId && classColorPreview.featureTableId === featureTable.id) {
+    if (classColorPreview && classColorPreview.waypointId === waypointId && classColorPreview.featureTableId === featureTable.id) {
       colors.set(classColorPreview.name, classColorPreview.color);
     }
     return colors;
@@ -169588,6 +169616,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function isJpegOmeTiffImageSource(imageSource) {
     return imageSource === JPEG_OME_TIFF_IMAGE_SOURCE || imageSource === JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE;
   }
+  function isJpegEncodedImageSource(imageSource) {
+    return imageSource === "jpeg-pyramid" || imageSource === "jpeg-pyramid-cube-root" || isJpegOmeTiffImageSource(imageSource);
+  }
   function jpegTransferFromImageSource(imageSource) {
     if (imageSource === "jpeg-pyramid-cube-root" || imageSource === JPEG_OME_TIFF_IMAGE_SOURCE) {
       return "cube-root";
@@ -173616,6 +173647,271 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     return next2;
   }
+  function cropTile(full2, stride, width, height) {
+    if (width === stride && height === stride) return full2;
+    const out = new Uint16Array(width * height);
+    for (let row2 = 0; row2 < height; row2++) {
+      out.set(full2.subarray(row2 * stride, row2 * stride + width), row2 * width);
+    }
+    return out;
+  }
+  async function readTileThroughLut(plane, args, lut, uncached = false) {
+    var _a2;
+    const source2 = plane;
+    const pool = source2.pool;
+    if (!source2._indexer || !source2._getTileExtent || !(pool instanceof OmeDecodePool)) {
+      return null;
+    }
+    try {
+      const indexed = await source2._indexer(args.selection);
+      const image2 = uncached ? uncachedTiffImage(indexed) : indexed;
+      if (!image2.isTiled || image2.getTileWidth() !== source2.tileSize || image2.getTileHeight() !== source2.tileSize || image2.getSamplesPerPixel() !== 1 || image2.getBitsPerSample(0) !== 8) {
+        return null;
+      }
+      const { width, height } = source2._getTileExtent(args.x, args.y);
+      const stride = source2.tileSize;
+      const decoder = {
+        decode: (fileDirectory, buffer2) => {
+          var _a3;
+          if ((_a3 = args.signal) == null ? void 0 : _a3.aborted) throw SIGNAL_ABORTED;
+          return pool.decodeWidened(fileDirectory, buffer2, lut);
+        }
+      };
+      const tile = await image2.getTileOrStrip(args.x, args.y, 0, decoder);
+      if ((_a2 = args.signal) == null ? void 0 : _a2.aborted) throw SIGNAL_ABORTED;
+      const bytes = tile.data;
+      const full2 = bytes.byteLength === stride * stride * 2 ? new Uint16Array(bytes) : expandThroughLut(new Uint8Array(bytes), lut);
+      return {
+        data: cropTile(full2, stride, width, height),
+        width,
+        height
+      };
+    } catch (err2) {
+      if (err2 === SIGNAL_ABORTED) throw err2;
+      return null;
+    }
+  }
+  async function readWindowThroughLut(plane, { selection, window: window2, signal }, lut) {
+    const [x0, y0, x1, y1] = window2;
+    const width = x1 - x0;
+    const height = y1 - y0;
+    const size = plane.tileSize;
+    if (x0 % size === 0 && y0 % size === 0 && width <= size && height <= size) {
+      const args = {
+        selection,
+        x: x0 / size,
+        y: y0 / size,
+        signal
+      };
+      const tile = await readTileThroughLut(plane, args, lut, true);
+      if ((tile == null ? void 0 : tile.width) === width && tile.height === height) return tile;
+    }
+    const source2 = plane;
+    const image2 = uncachedTiffImage(await source2._indexer(selection));
+    const options = {
+      window: window2,
+      width,
+      height,
+      pool: source2.pool
+    };
+    const raster = await image2.readRasters(options);
+    if (signal == null ? void 0 : signal.aborted) throw SIGNAL_ABORTED;
+    const [samples] = raster;
+    return {
+      data: expandThroughLut(samples, lut),
+      width,
+      height
+    };
+  }
+  function wrapOmeLoaderJpegExport(loader, transfer) {
+    var _a2;
+    const lut = u8ToU16Lut(transfer);
+    const data2 = (_a2 = loader.data) == null ? void 0 : _a2.map((plane) => {
+      var _a3, _b2;
+      const getTile = (_a3 = plane.getTile) == null ? void 0 : _a3.bind(plane);
+      if (!getTile) return plane;
+      const wrapped = {
+        ...plane,
+        dtype: "Uint16",
+        onTileError: (_b2 = plane.onTileError) == null ? void 0 : _b2.bind(plane),
+        getTile: async (args) => {
+          const fast = await readTileThroughLut(plane, args, lut);
+          if (fast) return fast;
+          const tile = await getTile(args);
+          return {
+            ...tile,
+            data: expandThroughLut(tile.data, lut)
+          };
+        },
+        ...plane._indexer ? {
+          readWindow: (args) => readWindowThroughLut(plane, args, lut)
+        } : {}
+      };
+      return wrapped;
+    });
+    return data2 ? {
+      ...loader,
+      data: data2
+    } : loader;
+  }
+  const omeLoaderRole = (im) => resolveImageContentRole({
+    contentRole: im.contentRole,
+    channels: im.channels ?? []
+  }) === "segmentation" ? "segmentation" : "intensity";
+  function omeLoaderForHydrate(loader, im, wrapOmeJpeg, storyTransfer) {
+    var _a2, _b2;
+    const jpegTransfer = wrapOmeJpeg && ((_b2 = (_a2 = loader.data) == null ? void 0 : _a2[0]) == null ? void 0 : _b2.dtype) === "Uint8" ? hydrateJpegTransferForImage(im, storyTransfer) : null;
+    if (!jpegTransfer) {
+      return {
+        loader
+      };
+    }
+    return {
+      loader: wrapOmeLoaderJpegExport(loader, jpegTransfer),
+      transfer: jpegTransfer
+    };
+  }
+  function resolveOmeSourceUrl(documentUrl, sourceUrl) {
+    return new URL(sourceUrl.trim(), new URL(documentUrl, window.location.href)).href;
+  }
+  async function hydrateDocumentLoaders(images, opts = {}) {
+    var _a2;
+    const jpegLoaderEntries = [];
+    const omeLoaderEntries = [];
+    const dicomIndexList = [];
+    const deniedHandleKeys = [];
+    const missingHandleKeys = [];
+    const loaderErrors = [];
+    const pool = opts.pool === null ? void 0 : opts.pool ?? sharedOmeDecodePool();
+    const dicomSeriesSeen = /* @__PURE__ */ new Set();
+    const requestPermission = opts.requestPermission ?? false;
+    const includeLocal = opts.includeLocal ?? true;
+    const canAccess = requestPermission ? ensureFileHandlePermission : hasFileHandlePermission;
+    const channelGroups = opts.channelGroups ?? [];
+    const documentUrl = opts.documentUrl ?? window.location.href;
+    const transfer = jpegTransferFromImageSource(opts.imageSource);
+    const wrapOmeJpeg = isJpegOmeTiffImageSource(opts.imageSource);
+    jpegLoaderEntries.push(...await jpegLoaderEntriesFromImages({
+      images,
+      channelGroups,
+      documentUrl,
+      transfer,
+      ...opts.fetchTile ? {
+        fetchTile: opts.fetchTile
+      } : {},
+      ...opts.existingPyramidFolders ? {
+        existingPyramidFolders: opts.existingPyramidFolders
+      } : {}
+    }));
+    const loadLocalFile = async (im, handle2) => {
+      try {
+        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
+          kind: "local",
+          handle: handle2,
+          ...pool ? {
+            pool
+          } : {},
+          rgbDisplay: im.rgbDisplay
+        });
+        omeLoaderEntries.push({
+          ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
+          sourceImageId: im.id
+        });
+      } catch (e2) {
+        loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
+      }
+    };
+    for (const im of images) {
+      if (!im.source) continue;
+      if (im.source.kind === "jpeg") continue;
+      switch (im.source.kind) {
+        case "url": {
+          if (includeLocal && isRelativeOmeTiffUrl(im.source.url)) {
+            let resolved;
+            try {
+              resolved = await ((_a2 = opts.resolveRelativeFile) == null ? void 0 : _a2.call(opts, im));
+            } catch (e2) {
+              console.warn("[minerva] could not resolve", im.source.url, e2);
+              break;
+            }
+            if (!resolved) break;
+            if (!resolved.handle || !await canAccess(resolved.handle)) {
+              deniedHandleKeys.push(resolved.key);
+              break;
+            }
+            if (await findFile({
+              handle: resolved.handle
+            })) {
+              await loadLocalFile(im, resolved.handle);
+            }
+            break;
+          }
+          try {
+            const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
+              kind: "url",
+              url: resolveOmeSourceUrl(documentUrl, im.source.url),
+              ...pool ? {
+                pool
+              } : {},
+              rgbDisplay: im.rgbDisplay
+            });
+            omeLoaderEntries.push({
+              ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
+              sourceImageId: im.id
+            });
+          } catch (e2) {
+            loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
+          }
+          break;
+        }
+        case "local": {
+          if (!includeLocal) break;
+          const stored = await getFileHandle(im.source.handleKey);
+          if (!stored || stored.kind !== "file") {
+            missingHandleKeys.push(im.source.handleKey);
+            break;
+          }
+          const handle2 = stored;
+          if (!await canAccess(handle2)) {
+            deniedHandleKeys.push(im.source.handleKey);
+            break;
+          }
+          if (!await findFile({
+            handle: handle2
+          })) break;
+          await loadLocalFile(im, handle2);
+          break;
+        }
+        case "dicomWeb": {
+          const { series, modality } = im.source;
+          if (dicomSeriesSeen.has(series)) break;
+          dicomSeriesSeen.add(series);
+          const { pyramids } = await loadDicomWeb(series);
+          const loader = parseDicomWeb({
+            pyramids,
+            series,
+            little_endian: true
+          });
+          dicomIndexList.push({
+            series,
+            pyramids,
+            modality,
+            loader,
+            sourceImageId: im.id
+          });
+          break;
+        }
+      }
+    }
+    return {
+      jpegLoaderEntries,
+      omeLoaderEntries,
+      dicomIndexList,
+      deniedHandleKeys,
+      missingHandleKeys,
+      loaderErrors
+    };
+  }
   function storedTableFormat(bytes) {
     const parquet = bytes.byteLength >= 4 && bytes[0] === 80 && bytes[1] === 65 && bytes[2] === 82 && bytes[3] === 49;
     if (parquet) return {
@@ -173778,14 +174074,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const withSource = images.filter((im) => im.source);
     if (withSource.length === 0) return false;
     return withSource.every((im) => {
-      var _a2;
-      if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "url") return false;
+      var _a2, _b2;
+      if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "url" && ((_b2 = im.source) == null ? void 0 : _b2.kind) !== "jpeg") return false;
       return /^https?:\/\//i.test(im.source.url.trim());
     });
   }
   function withPortableJpegSources(images) {
     return images.map((im) => {
-      if (!im.source || im.source.kind !== "jpeg" && im.source.kind !== "local" && im.source.kind !== "url") {
+      if (!im.source || im.source.kind !== "jpeg" && im.source.kind !== "local" && im.source.kind !== "url" || im.source.kind === "jpeg" && !jpegSourceNeedsLocalRoot(im.source.url)) {
         return im;
       }
       return {
@@ -173813,7 +174109,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
   }
   function imageSourceForExportMode(mode, current) {
-    if (mode === "remote-url") return "remote-url";
+    if (mode === "remote-url") {
+      return current && isJpegEncodedImageSource(current) ? current : "remote-url";
+    }
     if (mode === "jpeg-ome-tiff") {
       if (current && isJpegOmeTiffImageSource(current)) return current;
       return JPEG_OME_TIFF_IMAGE_SOURCE;
@@ -173837,10 +174135,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   </head>
   <body>
     <div id="minerva-root"></div>
-    <script src="${js}"><\/script>
-    <script>
-      MinervaStory.play({
+    <script type="module">
+      import { play } from "${js}";
+      play({
         documentUrl: "document.json",
+        editable: true,
         root: document.getElementById("minerva-root"),
       });
     <\/script>
@@ -173861,8 +174160,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   async function writeFeatureTableSidecars(directory, data2) {
     const featureTables = [];
     const skipped = [];
-    const parquets = await Promise.all(data2.featureTables.map(featureTableParquet));
+    const isHosted = (t2) => t2.source.kind === "url" && isAbsoluteUrl(t2.source.url);
+    const parquets = await Promise.all(data2.featureTables.map((t2) => isHosted(t2) ? null : featureTableParquet(t2)));
     for (const [i2, featureTable] of data2.featureTables.entries()) {
+      if (isHosted(featureTable)) {
+        featureTables.push(featureTable);
+        continue;
+      }
       const bytes = parquets[i2];
       if (!bytes) {
         const channel = data2.images.flatMap((im) => im.channels).find((ch2) => ch2.id === featureTable.sourceChannelId);
@@ -174049,6 +174353,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const file = await fh2.getFile();
     return validateDocumentData(JSON.parse(await file.text()));
   }
+  function portableImportImages(data2) {
+    const keep = data2.metadata.imageSource === "remote-url" || data2.images.some((im) => {
+      var _a2;
+      return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "local";
+    }) || isJpegOmeTiffImageSource(data2.metadata.imageSource);
+    return keep ? data2.images : withPortableJpegSources(data2.images);
+  }
   async function persistImportedStory(data2, titleFallback, root2) {
     var _a2, _b2;
     const title7 = ((_a2 = data2.metadata.title) == null ? void 0 : _a2.trim()) || titleFallback || "Imported Story";
@@ -174056,8 +174367,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       var _a3;
       return ((_a3 = im.source) == null ? void 0 : _a3.kind) === "local";
     });
-    const omeTiffBundle = isJpegOmeTiffImageSource(data2.metadata.imageSource);
-    const imagesBase = data2.metadata.imageSource === "remote-url" || hasLocalSources || omeTiffBundle ? data2.images : withPortableJpegSources(data2.images);
+    const imagesBase = portableImportImages(data2);
     const rec = await createStoryRecord(title7);
     let images = hasLocalSources ? imagesBase.map((im) => {
       var _a3;
@@ -252305,14 +252615,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return merged;
   }
-  function prefetchedSource(base2, ranges, exportSignal) {
+  function prefetchedSource(base2, ranges, readSignal) {
     const blocked = base2;
     const bulk = blocked.blockSize && blocked.source ? blocked.source : base2;
     const runs = ranges.map((range2) => ({
       ...range2,
       data: bulk.fetch([
         range2
-      ], exportSignal).then(([result]) => {
+      ], readSignal).then(([result]) => {
         const { data: data2, offset } = result instanceof ArrayBuffer ? {
           data: result,
           offset: range2.offset
@@ -252325,7 +252635,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fetch: (slices, signal) => Promise.all(slices.map(async (slice) => {
         const run = runs.find((r2) => r2.offset <= slice.offset && slice.offset + slice.length <= r2.offset + r2.length);
         const data2 = await (run == null ? void 0 : run.data);
-        if (exportSignal.aborted) {
+        if (readSignal.aborted) {
           throw new DOMException("Aborted", "AbortError");
         }
         if (!run || !data2) return (await base2.fetch([
@@ -252379,7 +252689,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       height: h2
     };
   }
-  async function readExportTile(plane, tileSize, selection, x2, y2, signal) {
+  async function withReadSignal(signal, read) {
+    const local = new AbortController();
+    const abort = () => local.abort(signal.reason);
+    if (signal.aborted) abort();
+    else signal.addEventListener("abort", abort, {
+      once: true
+    });
+    try {
+      return await read(local.signal);
+    } finally {
+      signal.removeEventListener("abort", abort);
+    }
+  }
+  function readExportTile(plane, tileSize, selection, x2, y2, signal) {
+    return withReadSignal(signal, (readSignal) => readTile(plane, tileSize, selection, x2, y2, readSignal));
+  }
+  async function readTile(plane, tileSize, selection, x2, y2, signal) {
     const { width, height } = getImageSize(plane);
     const window2 = [
       x2 * tileSize,
@@ -252812,7 +253138,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   }
   async function writeZlibOmeTiff(opts) {
-    const { sink, closeSink, image: image2, channels: channels2, fileName, pixels, dtype, levels, readTile, signal, onProgress } = opts;
+    const { sink, closeSink, image: image2, channels: channels2, fileName, pixels, dtype, levels, readTile: readTile2, signal, onProgress } = opts;
     if (channels2.length === 0) {
       throw new Error(`No mask channels to export for ${image2.basename || image2.id}`);
     }
@@ -252863,7 +253189,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     let next2 = 0;
     const runJob2 = async (job) => {
       if (workSignal.aborted) return;
-      const tile = await readTile(job);
+      const tile = await readTile2(job);
       if (workSignal.aborted) return;
       const tileSize = levels[job.levelIndex].tileSize;
       const padded = padLabelTile(tile.data, tile.width, tile.height, tileSize, tileSize);
@@ -254734,6 +255060,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return singleton;
   }
+  function isOutOfMemory(err2) {
+    const message2 = err2 instanceof Error ? err2.message : String(err2);
+    return /allocation failed|out of memory|cannot enlarge memory|\bOOM\b/i.test(message2);
+  }
   async function encodeTileJpeg(input2) {
     const { width, height, data: data2, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize, rgbLimits } = input2;
     const pool = getJpegExportPool();
@@ -254742,6 +255072,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const copy2 = copyPixelBuffer(data2);
         return await pool.encode(width, height, copy2, typedArrayCtorName(data2), lowerLimit, upperLimit, quality, transfer, padTileSize, rgbLimits);
       } catch (err2) {
+        if (isOutOfMemory(err2)) throw err2;
         console.warn("[minerva] jpegExport worker failed, using main thread:", err2);
       }
     }
@@ -255043,14 +255374,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const plane = source2.planes[levelIndex];
       const tileSize = levels[job.levelIndex].tileSize;
       const limits = channelLimits[job.channelIndex];
-      const readTile = (channel) => readExportTile(plane, tileSize, {
+      const readTile2 = (channel) => readExportTile(plane, tileSize, {
         t: 0,
         z: 0,
         c: channel.index
       }, job.x, job.y, workSignal);
       const tiles = await Promise.all((rgb ?? [
         source2.channel
-      ]).map(readTile));
+      ]).map(readTile2));
       if (workSignal.aborted) return;
       const { width, height } = tiles[0];
       const data2 = tiles.length === 3 ? interleavePlanar(tiles.map((t2) => t2.data)) : tiles[0].data;
@@ -259199,15 +259530,16 @@ uniform classStyleUniforms {
       };
     };
   }
-  const main = "_main_1azhv_1";
-  const viewerInfo = "_viewerInfo_1azhv_6";
-  const viewerInfoButton = "_viewerInfoButton_1azhv_14";
-  const viewerInfoPanel = "_viewerInfoPanel_1azhv_15";
-  const viewerInfoPanelHead = "_viewerInfoPanelHead_1azhv_57";
-  const viewerInfoClose = "_viewerInfoClose_1azhv_67";
-  const viewerInfoList = "_viewerInfoList_1azhv_81";
-  const viewerInfoStamp = "_viewerInfoStamp_1azhv_98";
-  const squareViewportOverlay = "_squareViewportOverlay_1azhv_136";
+  const main = "_main_1rfoq_1";
+  const viewerInfo = "_viewerInfo_1rfoq_6";
+  const viewerInfoButton = "_viewerInfoButton_1rfoq_14";
+  const viewerInfoPanel = "_viewerInfoPanel_1rfoq_15";
+  const viewerInfoPanelHead = "_viewerInfoPanelHead_1rfoq_55";
+  const viewerInfoClose = "_viewerInfoClose_1rfoq_65";
+  const viewerInfoList = "_viewerInfoList_1rfoq_79";
+  const viewerInfoStamp = "_viewerInfoStamp_1rfoq_96";
+  const viewerInfoFooter = "_viewerInfoFooter_1rfoq_106";
+  const squareViewportOverlay = "_squareViewportOverlay_1rfoq_159";
   const styles$1 = {
     main,
     viewerInfo,
@@ -259217,6 +259549,7 @@ uniform classStyleUniforms {
     viewerInfoClose,
     viewerInfoList,
     viewerInfoStamp,
+    viewerInfoFooter,
     squareViewportOverlay
   };
   const ORTHO_VIEW_ID = "ortho";
@@ -259230,8 +259563,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-13T21:07:02.529Z";
-    const sha = "e9511a6054d17ec6fd64a16355eb9799a6295760";
+    const iso = "2026-10-14T19:48:31.421Z";
+    const sha = "4421cfdf36f73913ef8f45bbea703440a5e4a8d8";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -260352,7 +260685,11 @@ uniform classStyleUniforms {
                       children: DEVICE_LABEL
                     })
                   ]
-                })
+                }),
+                props.infoFooter ? jsxRuntimeExports.jsx("div", {
+                  className: styles$1.viewerInfoFooter,
+                  children: props.infoFooter
+                }) : null
               ]
             }) : null,
             jsxRuntimeExports.jsx("button", {
@@ -260368,17 +260705,26 @@ uniform classStyleUniforms {
                   jsxRuntimeExports.jsx("circle", {
                     cx: "8",
                     cy: "8",
-                    r: "6.25",
-                    fill: "none",
-                    stroke: "currentColor",
-                    strokeWidth: "1.25"
+                    r: "8",
+                    fill: "#000",
+                    fillOpacity: "0.55"
                   }),
-                  jsxRuntimeExports.jsx("path", {
-                    d: "M8 7.2v4.2M8 4.6v.6",
+                  jsxRuntimeExports.jsxs("g", {
                     fill: "none",
-                    stroke: "currentColor",
-                    strokeWidth: "1.4",
-                    strokeLinecap: "round"
+                    stroke: "#fff",
+                    strokeLinecap: "round",
+                    children: [
+                      jsxRuntimeExports.jsx("circle", {
+                        cx: "8",
+                        cy: "8",
+                        r: "6.25",
+                        strokeWidth: "1.25"
+                      }),
+                      jsxRuntimeExports.jsx("path", {
+                        d: "M8 7.2v4.2M8 4.6v.6",
+                        strokeWidth: "1.4"
+                      })
+                    ]
                   })
                 ]
               })
@@ -260393,235 +260739,6 @@ uniform classStyleUniforms {
     });
   };
   ImageViewer.displayName = "ImageViewer";
-  function cropTile(full2, stride, width, height) {
-    if (width === stride && height === stride) return full2;
-    const out = new Uint16Array(width * height);
-    for (let row2 = 0; row2 < height; row2++) {
-      out.set(full2.subarray(row2 * stride, row2 * stride + width), row2 * width);
-    }
-    return out;
-  }
-  async function readTileThroughLut(plane, args, lut) {
-    var _a2;
-    const source2 = plane;
-    const pool = source2.pool;
-    if (!source2._indexer || !source2._getTileExtent || !(pool instanceof OmeDecodePool)) {
-      return null;
-    }
-    try {
-      const image2 = await source2._indexer(args.selection);
-      if (!image2.isTiled || image2.getTileWidth() !== source2.tileSize || image2.getTileHeight() !== source2.tileSize || image2.getSamplesPerPixel() !== 1 || image2.getBitsPerSample(0) !== 8) {
-        return null;
-      }
-      const { width, height } = source2._getTileExtent(args.x, args.y);
-      const stride = source2.tileSize;
-      const decoder = {
-        decode: (fileDirectory, buffer2) => {
-          var _a3;
-          if ((_a3 = args.signal) == null ? void 0 : _a3.aborted) throw SIGNAL_ABORTED;
-          return pool.decodeWidened(fileDirectory, buffer2, lut);
-        }
-      };
-      const tile = await image2.getTileOrStrip(args.x, args.y, 0, decoder);
-      if ((_a2 = args.signal) == null ? void 0 : _a2.aborted) throw SIGNAL_ABORTED;
-      const bytes = tile.data;
-      const full2 = bytes.byteLength === stride * stride * 2 ? new Uint16Array(bytes) : expandThroughLut(new Uint8Array(bytes), lut);
-      return {
-        data: cropTile(full2, stride, width, height),
-        width,
-        height
-      };
-    } catch (err2) {
-      if (err2 === SIGNAL_ABORTED) throw err2;
-      return null;
-    }
-  }
-  function wrapOmeLoaderJpegExport(loader, transfer) {
-    var _a2;
-    const lut = u8ToU16Lut(transfer);
-    const data2 = (_a2 = loader.data) == null ? void 0 : _a2.map((plane) => {
-      var _a3, _b2;
-      const getTile = (_a3 = plane.getTile) == null ? void 0 : _a3.bind(plane);
-      if (!getTile) return plane;
-      const wrapped = {
-        ...plane,
-        dtype: "Uint16",
-        onTileError: (_b2 = plane.onTileError) == null ? void 0 : _b2.bind(plane),
-        getTile: async (args) => {
-          const fast = await readTileThroughLut(plane, args, lut);
-          if (fast) return fast;
-          const tile = await getTile(args);
-          return {
-            ...tile,
-            data: expandThroughLut(tile.data, lut)
-          };
-        }
-      };
-      return wrapped;
-    });
-    return data2 ? {
-      ...loader,
-      data: data2
-    } : loader;
-  }
-  const omeLoaderRole = (im) => resolveImageContentRole({
-    contentRole: im.contentRole,
-    channels: im.channels ?? []
-  }) === "segmentation" ? "segmentation" : "intensity";
-  function omeLoaderForHydrate(loader, im, wrapOmeJpeg, storyTransfer) {
-    var _a2, _b2;
-    const jpegTransfer = wrapOmeJpeg && ((_b2 = (_a2 = loader.data) == null ? void 0 : _a2[0]) == null ? void 0 : _b2.dtype) === "Uint8" ? hydrateJpegTransferForImage(im, storyTransfer) : null;
-    if (!jpegTransfer) {
-      return {
-        loader
-      };
-    }
-    return {
-      loader: wrapOmeLoaderJpegExport(loader, jpegTransfer),
-      transfer: jpegTransfer
-    };
-  }
-  function resolveOmeSourceUrl(documentUrl, sourceUrl) {
-    return new URL(sourceUrl.trim(), new URL(documentUrl, window.location.href)).href;
-  }
-  async function hydrateDocumentLoaders(images, opts = {}) {
-    var _a2;
-    const jpegLoaderEntries = [];
-    const omeLoaderEntries = [];
-    const dicomIndexList = [];
-    const deniedHandleKeys = [];
-    const missingHandleKeys = [];
-    const loaderErrors = [];
-    const pool = opts.pool === null ? void 0 : opts.pool ?? sharedOmeDecodePool();
-    const dicomSeriesSeen = /* @__PURE__ */ new Set();
-    const requestPermission = opts.requestPermission ?? false;
-    const includeLocal = opts.includeLocal ?? true;
-    const canAccess = requestPermission ? ensureFileHandlePermission : hasFileHandlePermission;
-    const channelGroups = opts.channelGroups ?? [];
-    const documentUrl = opts.documentUrl ?? window.location.href;
-    const transfer = jpegTransferFromImageSource(opts.imageSource);
-    const wrapOmeJpeg = isJpegOmeTiffImageSource(opts.imageSource);
-    jpegLoaderEntries.push(...await jpegLoaderEntriesFromImages({
-      images,
-      channelGroups,
-      documentUrl,
-      transfer,
-      ...opts.fetchTile ? {
-        fetchTile: opts.fetchTile
-      } : {},
-      ...opts.existingPyramidFolders ? {
-        existingPyramidFolders: opts.existingPyramidFolders
-      } : {}
-    }));
-    const loadLocalFile = async (im, handle2) => {
-      try {
-        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-          kind: "local",
-          handle: handle2,
-          ...pool ? {
-            pool
-          } : {},
-          rgbDisplay: im.rgbDisplay
-        });
-        omeLoaderEntries.push({
-          ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
-          sourceImageId: im.id
-        });
-      } catch (e2) {
-        loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
-      }
-    };
-    for (const im of images) {
-      if (!im.source) continue;
-      if (im.source.kind === "jpeg") continue;
-      switch (im.source.kind) {
-        case "url": {
-          if (includeLocal && isRelativeOmeTiffUrl(im.source.url)) {
-            let resolved;
-            try {
-              resolved = await ((_a2 = opts.resolveRelativeFile) == null ? void 0 : _a2.call(opts, im));
-            } catch (e2) {
-              console.warn("[minerva] could not resolve", im.source.url, e2);
-              break;
-            }
-            if (!resolved) break;
-            if (!resolved.handle || !await canAccess(resolved.handle)) {
-              deniedHandleKeys.push(resolved.key);
-              break;
-            }
-            if (await findFile({
-              handle: resolved.handle
-            })) {
-              await loadLocalFile(im, resolved.handle);
-            }
-            break;
-          }
-          try {
-            const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-              kind: "url",
-              url: resolveOmeSourceUrl(documentUrl, im.source.url),
-              ...pool ? {
-                pool
-              } : {},
-              rgbDisplay: im.rgbDisplay
-            });
-            omeLoaderEntries.push({
-              ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
-              sourceImageId: im.id
-            });
-          } catch (e2) {
-            loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
-          }
-          break;
-        }
-        case "local": {
-          if (!includeLocal) break;
-          const stored = await getFileHandle(im.source.handleKey);
-          if (!stored || stored.kind !== "file") {
-            missingHandleKeys.push(im.source.handleKey);
-            break;
-          }
-          const handle2 = stored;
-          if (!await canAccess(handle2)) {
-            deniedHandleKeys.push(im.source.handleKey);
-            break;
-          }
-          if (!await findFile({
-            handle: handle2
-          })) break;
-          await loadLocalFile(im, handle2);
-          break;
-        }
-        case "dicomWeb": {
-          const { series, modality } = im.source;
-          if (dicomSeriesSeen.has(series)) break;
-          dicomSeriesSeen.add(series);
-          const { pyramids } = await loadDicomWeb(series);
-          const loader = parseDicomWeb({
-            pyramids,
-            series,
-            little_endian: true
-          });
-          dicomIndexList.push({
-            series,
-            pyramids,
-            modality,
-            loader,
-            sourceImageId: im.id
-          });
-          break;
-        }
-      }
-    }
-    return {
-      jpegLoaderEntries,
-      omeLoaderEntries,
-      dicomIndexList,
-      deniedHandleKeys,
-      missingHandleKeys,
-      loaderErrors
-    };
-  }
   function normalizeImportUrl(url) {
     const trimmed = url.trim();
     try {
