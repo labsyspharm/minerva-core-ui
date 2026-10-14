@@ -188,8 +188,19 @@ export type EncodeTilePixelsIn = {
 };
 
 /**
+ * Out of memory, in V8's or Emscripten's words. Workers share the tab's
+ * process, so the main thread is no better off.
+ */
+function isOutOfMemory(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return /allocation failed|out of memory|cannot enlarge memory|\bOOM\b/i.test(
+    message,
+  );
+}
+
+/**
  * Prefer workers; fall back to main-thread @jsquash/jpeg encode if workers
- * are unavailable or fail.
+ * are unavailable or fail, unless they ran out of memory.
  */
 export async function encodeTileJpeg(
   input: EncodeTilePixelsIn,
@@ -231,6 +242,7 @@ async function encodeTile(input: EncodeTilePixelsIn): Promise<ArrayBuffer> {
         rgbLimits,
       );
     } catch (err) {
+      if (isOutOfMemory(err)) throw err;
       console.warn(
         "[minerva] jpegExport worker failed, using main thread:",
         err,

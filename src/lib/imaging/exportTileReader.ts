@@ -117,11 +117,14 @@ export async function describeExportSource(
   }
 }
 
-/** Starts the merged reads; geotiff's per-block fetches are then served from them. */
+/**
+ * Starts the merged reads; geotiff's per-block fetches are then served from
+ * them. `readSignal` is this tile's own (see {@link withReadSignal}).
+ */
 function prefetchedSource(
   base: Source,
   ranges: Slice[],
-  exportSignal: AbortSignal,
+  readSignal: AbortSignal,
 ): Source {
   // geotiff's BlockedSource (URLs) shares its eviction map across fetches,
   // so large reads go to the range source underneath it.
@@ -132,7 +135,7 @@ function prefetchedSource(
     const fetched = exportSpan("fetch");
     return {
       ...range,
-      data: bulk.fetch([range], exportSignal).then(
+      data: bulk.fetch([range], readSignal).then(
         ([result]) => {
           fetched(range.length);
           const { data, offset } =
@@ -161,7 +164,7 @@ function prefetchedSource(
           );
           const data = await run?.data;
           // A cancelled export does not fall back to fetching the slice again.
-          if (exportSignal.aborted) {
+          if (readSignal.aborted) {
             throw new DOMException("Aborted", "AbortError");
           }
           if (!run || !data) return (await base.fetch([slice], signal))[0];
@@ -223,11 +226,32 @@ async function composeExportTile(
 }
 
 /**
+ * Run `read` on a signal of its own that follows `signal`. geotiff's file
+ * source adds an abort listener for every read and never removes it; on the
+ * export's long-lived signal, those listeners kept every buffer read alive
+ * until the file was done, and a large export ran out of memory.
+ */
+async function withReadSignal<T>(
+  signal: AbortSignal,
+  read: (readSignal: AbortSignal) => Promise<T>,
+): Promise<T> {
+  const local = new AbortController();
+  const abort = () => local.abort(signal.reason);
+  if (signal.aborted) abort();
+  else signal.addEventListener("abort", abort, { once: true });
+  try {
+    return await read(local.signal);
+  } finally {
+    signal.removeEventListener("abort", abort);
+  }
+}
+
+/**
  * Export tile (x, y), `tileSize` px. A TIFF plane reads the source blocks
  * under the tile in a few merged reads (a row of neighboring blocks is
  * usually contiguous on disk), then decodes through Viv as usual. A plane
- * with `readWindow` (masks) reads the tile's window; other planes are
- * assembled from their own tiles.
+ * with `readWindow` (masks, JPEG-export wraps) reads the tile's window;
+ * other planes are assembled from their own tiles.
  */
 export async function readExportTile(
   plane: ExportTilePlane & Pick<LoaderPlane, "readWindow">,
@@ -240,53 +264,71 @@ export async function readExportTile(
   const done = exportSpan("read");
   let sourceBytes = 0;
   try {
-    const { width, height } = getImageSize(plane);
-    const window: [number, number, number, number] = [
-      x * tileSize,
-      y * tileSize,
-      Math.min(width, (x + 1) * tileSize),
-      Math.min(height, (y + 1) * tileSize),
-    ];
-    // DICOM planes, masks, and the JPEG-export hydrate wrap (a spread copy) are not instances.
-    if (!(plane instanceof TiffPixelSource)) {
-      if (plane.readWindow)
-        return await plane.readWindow({ selection, window, signal });
-      if (plane.tileSize === tileSize) {
-        return await plane.getTile({ selection, x, y, signal });
-      }
-      return await composeExportTile(plane, tileSize, selection, x, y, signal);
-    }
-    const indexer = (
-      plane as unknown as {
-        _indexer: (s: Selection) => Promise<GeoTIFFImage>;
-      }
-    )._indexer;
-    const image = await indexer(selection);
-    sourceBytes = windowSourceBytes(image, window);
-    const source = prefetchedSource(
-      image.source as unknown as Source,
-      mergedBlockRanges(image, window),
-      signal,
+    const read = await withReadSignal(signal, (readSignal) =>
+      readTile(plane, tileSize, selection, x, y, readSignal),
     );
-    const reader = new GeoTIFFImage(
-      image.fileDirectory,
-      image.geoKeys,
-      image.dataView,
-      image.littleEndian,
-      false,
-      source as unknown as GeoTIFFImage["source"],
-    );
-    const atTileSize = new TiffPixelSource(
-      async () => reader,
-      plane.dtype,
-      tileSize,
-      plane.shape,
-      plane.labels,
-      plane.meta,
-      plane.pool,
-    );
-    return await atTileSize.getTile({ selection, x, y, signal });
+    sourceBytes = read.sourceBytes;
+    return read.tile;
   } finally {
     done(sourceBytes);
   }
+}
+
+/** The tile, and the compressed source bytes under it when the plane is a TIFF. */
+async function readTile(
+  plane: ExportTilePlane & Pick<LoaderPlane, "readWindow">,
+  tileSize: number,
+  selection: Selection,
+  x: number,
+  y: number,
+  signal: AbortSignal,
+): Promise<{ tile: HasTile; sourceBytes: number }> {
+  const { width, height } = getImageSize(plane);
+  const window: [number, number, number, number] = [
+    x * tileSize,
+    y * tileSize,
+    Math.min(width, (x + 1) * tileSize),
+    Math.min(height, (y + 1) * tileSize),
+  ];
+  // DICOM planes, masks, and the JPEG-export hydrate wrap (a spread copy) are not instances.
+  if (!(plane instanceof TiffPixelSource)) {
+    const tile = plane.readWindow
+      ? await plane.readWindow({ selection, window, signal })
+      : plane.tileSize === tileSize
+        ? await plane.getTile({ selection, x, y, signal })
+        : await composeExportTile(plane, tileSize, selection, x, y, signal);
+    return { tile, sourceBytes: 0 };
+  }
+  const indexer = (
+    plane as unknown as {
+      _indexer: (s: Selection) => Promise<GeoTIFFImage>;
+    }
+  )._indexer;
+  const image = await indexer(selection);
+  const source = prefetchedSource(
+    image.source as unknown as Source,
+    mergedBlockRanges(image, window),
+    signal,
+  );
+  const reader = new GeoTIFFImage(
+    image.fileDirectory,
+    image.geoKeys,
+    image.dataView,
+    image.littleEndian,
+    false,
+    source as unknown as GeoTIFFImage["source"],
+  );
+  const atTileSize = new TiffPixelSource(
+    async () => reader,
+    plane.dtype,
+    tileSize,
+    plane.shape,
+    plane.labels,
+    plane.meta,
+    plane.pool,
+  );
+  return {
+    tile: await atTileSize.getTile({ selection, x, y, signal }),
+    sourceBytes: windowSourceBytes(image, window),
+  };
 }
