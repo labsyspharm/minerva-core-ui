@@ -79,9 +79,8 @@ const formatMinutesLeft = (ms: number): string => {
 
 /** No estimate until this long after the first tile... */
 const MIN_ESTIMATE_MS = 30_000;
-/** ...and this share of the tiles, at least {@link MIN_ESTIMATE_TILES}. */
+/** ...and this share of the tiles. */
 const MIN_ESTIMATE_SHARE = 0.01;
-const MIN_ESTIMATE_TILES = 20;
 /** The rate is over a third of the time since the first tile, within these. */
 const MIN_RATE_WINDOW_MS = 60_000;
 const MAX_RATE_WINDOW_MS = 300_000;
@@ -104,8 +103,9 @@ const estimateRemainingMs = (
   const tip = samples[samples.length - 1];
   if (!first || total <= tip.completed) return null;
   const running = now - first.at;
-  const enough = Math.max(MIN_ESTIMATE_TILES, total * MIN_ESTIMATE_SHARE);
-  if (running < MIN_ESTIMATE_MS || tip.completed < enough) return null;
+  if (running < MIN_ESTIMATE_MS || tip.completed < total * MIN_ESTIMATE_SHARE) {
+    return null;
+  }
   const window = Math.min(
     MAX_RATE_WINDOW_MS,
     Math.max(MIN_RATE_WINDOW_MS, running / 3),
