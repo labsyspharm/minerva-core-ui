@@ -29,7 +29,6 @@ import {
   noteExportProgress,
   timedSink,
 } from "./exportProfile";
-import { bufferedSink } from "./exportSink";
 import { describeExportSource, readExportTile } from "./exportTileReader";
 import {
   exportZlibOmeTiffImage,
@@ -359,7 +358,7 @@ async function exportJpegOmeTiffImage(
   let writer: Awaited<ReturnType<typeof createTiffWriter>>;
   try {
     writer = await createTiffWriter({
-      sink: bufferedSink(timedSink(browserFileSink(writable))),
+      sink: timedSink(browserFileSink(writable)),
       signal: workSignal,
       images: layouts,
     });
@@ -567,7 +566,7 @@ export async function exportJpegOmeTiffStory(
     throw new Error("No channels available for OME-TIFF export.");
   }
   exportEvent(
-    `settings: ${TILES_IN_FLIGHT} tiles in flight, write queue ${MAX_PENDING_WRITE_BYTES / 2 ** 20} MB, batched writes`,
+    `settings: ${TILES_IN_FLIGHT} tiles in flight, write queue ${MAX_PENDING_WRITE_BYTES / 2 ** 20} MB`,
   );
 
   const decisions: {

@@ -9,7 +9,6 @@ import {
 } from "tiffwriter";
 import type { Image, ImageChannel } from "@/lib/stores/documentSchema";
 import { exportEvent, formatSpan, timed, timedSink } from "./exportProfile";
-import { bufferedSink } from "./exportSink";
 import { describeExportSource, readExportTile } from "./exportTileReader";
 import type { OmeLoaderEntry } from "./loaderEntries";
 import type { LoaderPlane } from "./loaderTypes";
@@ -432,7 +431,7 @@ export async function exportZlibOmeTiffImage(
 
   try {
     await writeZlibOmeTiff({
-      sink: bufferedSink(timedSink(browserFileSink(writable))),
+      sink: timedSink(browserFileSink(writable)),
       image,
       channels,
       fileName,
