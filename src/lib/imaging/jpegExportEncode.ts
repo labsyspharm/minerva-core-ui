@@ -50,12 +50,31 @@ function clampPixelsToRgba(
   }
 }
 
+let cubeRootLut: Uint8Array | null = null;
+
+/** {@link encodeCubeRootU16ToU8} for every uint16, built on first use. */
+function cubeRootU16ToU8Lut(): Uint8Array {
+  if (!cubeRootLut) {
+    cubeRootLut = Uint8Array.from({ length: 65536 }, (_, v) =>
+      encodeCubeRootU16ToU8(v),
+    );
+  }
+  return cubeRootLut;
+}
+
 function cubeRootPixelsToRgba(
   out: Uint8ClampedArray,
   pixels: ArrayLike<number>,
 ): void {
+  // Integer pixels index the table, about 10x faster than a cube root each.
+  const lut =
+    pixels instanceof Uint16Array ||
+    pixels instanceof Uint8Array ||
+    pixels instanceof Uint8ClampedArray
+      ? cubeRootU16ToU8Lut()
+      : null;
   for (let i = 0; i < pixels.length; i++) {
-    const v = encodeCubeRootU16ToU8(pixels[i]);
+    const v = lut ? lut[pixels[i]] : encodeCubeRootU16ToU8(pixels[i]);
     const o = i * 4;
     out[o] = v;
     out[o + 1] = v;
