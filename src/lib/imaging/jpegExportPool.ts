@@ -2,7 +2,9 @@ import type { JpegExportTransfer } from "./cubeRootEncoding";
 import {
   copyPixelBuffer,
   encodeGrayscaleJpeg,
+  encodeRgbJpeg,
   JPEG_EXPORT_QUALITY,
+  type RgbLimits,
   typedArrayCtorName,
 } from "./jpegExportEncode";
 import JpegExportWorker from "./workers/jpegExport.worker?worker";
@@ -108,6 +110,7 @@ export class JpegExportPool {
     quality = JPEG_EXPORT_QUALITY,
     transfer: JpegExportTransfer = "contrast",
     padTileSize?: number,
+    rgbLimits?: RgbLimits,
   ): Promise<ArrayBuffer> {
     const workerWrappersPromise = this.workerWrappers;
     if (!workerWrappersPromise) {
@@ -128,6 +131,7 @@ export class JpegExportPool {
         quality,
         transfer,
         padTileSize,
+        rgbLimits,
       },
       [buffer],
     );
@@ -171,11 +175,24 @@ export type EncodeTilePixelsIn = {
   quality?: number;
   transfer?: JpegExportTransfer;
   padTileSize?: number;
+  /** Set for an interleaved RGB tile; `lowerLimit`/`upperLimit`/`transfer` are ignored. */
+  rgbLimits?: RgbLimits;
 };
 
 /**
+ * Out of memory, in V8's or Emscripten's words. Workers share the tab's
+ * process, so the main thread is no better off.
+ */
+function isOutOfMemory(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return /allocation failed|out of memory|cannot enlarge memory|\bOOM\b/i.test(
+    message,
+  );
+}
+
+/**
  * Prefer workers; fall back to main-thread @jsquash/jpeg encode if workers
- * are unavailable or fail.
+ * are unavailable or fail, unless they ran out of memory.
  */
 export async function encodeTileJpeg(
   input: EncodeTilePixelsIn,
@@ -189,6 +206,7 @@ export async function encodeTileJpeg(
     quality = JPEG_EXPORT_QUALITY,
     transfer = "contrast",
     padTileSize,
+    rgbLimits,
   } = input;
   const pool = getJpegExportPool();
   if (pool) {
@@ -204,13 +222,18 @@ export async function encodeTileJpeg(
         quality,
         transfer,
         padTileSize,
+        rgbLimits,
       );
     } catch (err) {
+      if (isOutOfMemory(err)) throw err;
       console.warn(
         "[minerva] jpegExport worker failed, using main thread:",
         err,
       );
     }
+  }
+  if (rgbLimits) {
+    return encodeRgbJpeg(width, height, data, rgbLimits, quality, padTileSize);
   }
   return encodeGrayscaleJpeg(
     width,

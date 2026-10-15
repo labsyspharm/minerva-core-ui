@@ -1,7 +1,8 @@
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import "@deck.gl/widgets/stylesheet.css";
 import "@/components/shared/minervaTheme.global.css";
 import { StoryPlayerApp } from "@/components/playback/StoryPlayerApp";
+import { beginEditing, isEditingOnThisPage, mountEditor } from "./storyEditor";
 
 const DM_SANS_HREF =
   "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap";
@@ -24,6 +25,8 @@ function ensureDmSans() {
 export type MinervaStoryPlayOptions = {
   /** URL to document.json (relative or absolute). */
   documentUrl?: string;
+  /** Show an Edit button that switches this page to the author app. */
+  editable?: boolean;
   root: HTMLElement;
 };
 
@@ -32,27 +35,61 @@ export type MinervaStoryHandle = {
 };
 
 /**
- * CDN entry (`bundle/minerva.js` → `MinervaStory`).
+ * CDN entry (`bundle/minerva.js`, an ES module).
  *
  * ```js
- * MinervaStory.play({ documentUrl: "document.json", root });
+ * import { play } from "./bundle/minerva.js";
+ * play({ documentUrl: "document.json", editable: true, root });
  * ```
  */
 export function play(opts: MinervaStoryPlayOptions): MinervaStoryHandle {
   const { root } = opts;
-  if (!root) throw new Error("MinervaStory.play: root element is required");
+  if (!root) throw new Error("play: root element is required");
   ensureDmSans();
 
   const documentUrl = new URL(
     opts.documentUrl ?? "document.json",
     window.location.href,
   ).href;
-  const reactRoot = createRoot(root);
-  reactRoot.render(<StoryPlayerApp documentUrl={documentUrl} />);
+  let reactRoot: Root | null = null;
+  let destroyed = false;
+
+  const showEditor = () => {
+    reactRoot?.unmount();
+    reactRoot = mountEditor(root);
+  };
+  const showPlayer = () => {
+    reactRoot = createRoot(root);
+    reactRoot.render(
+      <StoryPlayerApp
+        documentUrl={documentUrl}
+        onEdit={
+          opts.editable
+            ? async () => {
+                await beginEditing(documentUrl);
+                if (!destroyed) showEditor();
+              }
+            : undefined
+        }
+      />,
+    );
+  };
+
+  if (opts.editable) {
+    // A reload while editing reopens the editor on this site's copy.
+    void isEditingOnThisPage().then((editing) => {
+      if (destroyed) return;
+      if (editing) showEditor();
+      else showPlayer();
+    });
+  } else {
+    showPlayer();
+  }
 
   return {
     destroy: () => {
-      reactRoot.unmount();
+      destroyed = true;
+      reactRoot?.unmount();
       root.replaceChildren();
     },
   };

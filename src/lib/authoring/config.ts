@@ -16,6 +16,7 @@ import type { ConfigGroup as LegacyConfigGroup } from "../legacy/exhibit";
 import type {
   Channel,
   ChannelGroup,
+  ClassView,
   StoryShape,
 } from "../stores/documentSchema";
 
@@ -124,6 +125,10 @@ export type ConfigWaypoint = WaypointProperties & {
   shapeIds?: string[];
   /** References {@link ChannelGroup.id}. */
   groupId?: string;
+  /** Story `waypoints[].name`; distinct from the `Name` title. */
+  name?: string;
+  /** Story `waypoints[].classViews`. */
+  classViews?: ClassView[];
 };
 
 type ExtractDistributions = (

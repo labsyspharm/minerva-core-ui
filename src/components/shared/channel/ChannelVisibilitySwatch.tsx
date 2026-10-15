@@ -53,6 +53,8 @@ type VisibilityProps = {
   title: string;
   ariaLabel: string;
   blocked?: boolean;
+  /** Read-only: shows the state without toggling it. */
+  disabled?: boolean;
   onClick: MouseEventHandler<HTMLButtonElement>;
 };
 
@@ -98,7 +100,7 @@ export function CursorHint(props: {
 
 /** Eye toggle for channel / group visibility (Photoshop-style). */
 export function ChannelVisibilitySwatch(props: VisibilityProps) {
-  const { visible, title, ariaLabel, blocked, onClick } = props;
+  const { visible, title, ariaLabel, blocked, disabled, onClick } = props;
   return (
     <CursorHint enabled={Boolean(blocked)} label={VIEWER_INTENSITY_LIMIT_HINT}>
       <button
@@ -114,6 +116,7 @@ export function ChannelVisibilitySwatch(props: VisibilityProps) {
         aria-label={blocked ? VIEWER_INTENSITY_LIMIT_HINT : ariaLabel}
         aria-pressed={visible}
         aria-disabled={blocked || undefined}
+        disabled={disabled}
         onClick={(e) => {
           if (blocked) return;
           onClick(e);

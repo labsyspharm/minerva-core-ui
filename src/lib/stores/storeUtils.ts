@@ -15,6 +15,7 @@
  */
 
 import type { ConfigWaypoint } from "../authoring/config";
+import { clampImageOpacity } from "../imaging/imageOpacity";
 import { effectiveOrientation } from "../imaging/imageOrientation";
 import { type Loader, loaderPixelSizeXY } from "../imaging/viv";
 import {
@@ -240,7 +241,25 @@ export function setImageOrientation(
   const idx = images.findIndex((im) => im.id === imageId);
   if (idx < 0) return images;
   const next = [...images];
-  next[idx] = { ...next[idx], ...effectiveOrientation(orientation) };
+  const placed = effectiveOrientation(orientation);
+  const row = { ...next[idx], ...placed };
+  if (placed.umPerPixel == null) delete row.umPerPixel;
+  next[idx] = row;
+  return next;
+}
+
+/** Set whole-image alpha (`0…1`) on one image row. */
+export function setImageOpacity(
+  images: Image[],
+  imageId: string,
+  opacity: number,
+): Image[] {
+  const idx = images.findIndex((im) => im.id === imageId);
+  if (idx < 0) return images;
+  const nextOpacity = clampImageOpacity(opacity);
+  if (clampImageOpacity(images[idx].opacity) === nextOpacity) return images;
+  const next = [...images];
+  next[idx] = { ...next[idx], opacity: nextOpacity };
   return next;
 }
 
@@ -280,6 +299,7 @@ export function rebindReplacementImageChannels(
     channels,
     contentRole: previous.contentRole ?? incoming.contentRole,
     rgbDisplay: previous.rgbDisplay ?? incoming.rgbDisplay,
+    opacity: clampImageOpacity(previous.opacity),
   };
 }
 
@@ -563,6 +583,8 @@ function exportViewportToBounds(v: Viewport): WaypointBounds {
   return { x0, x1, y0, y1 };
 }
 
+// Every waypoint field must be copied here and in `waypointToConfigWaypoint`;
+// `updateStory` round-trips through both and drops anything else.
 function configWaypointToExportWaypoint(
   wp: ConfigWaypoint,
   imageWidth: number,
@@ -600,9 +622,13 @@ function configWaypointToExportWaypoint(
     content: wp.Content ?? "",
     viewport: boundsToExportViewport(bounds),
     shapeIds: [...(wp.shapeIds ?? [])],
+    classViews: wp.classViews ?? [],
   };
   if (wp.groupId) {
     out.groupId = wp.groupId;
+  }
+  if (wp.name !== undefined) {
+    out.name = wp.name;
   }
   if (wp.ThumbnailDataUrl) {
     out.thumbnail = wp.ThumbnailDataUrl;
@@ -652,9 +678,13 @@ export function waypointToConfigWaypoint(
     ViewState: authoring?.ViewState,
     Pan: authoring?.Pan,
     Zoom: authoring?.Zoom,
+    classViews: wp.classViews ?? [],
   };
   if (wp.groupId !== undefined) {
     out.groupId = wp.groupId;
+  }
+  if (wp.name !== undefined) {
+    out.name = wp.name;
   }
   if (wp.thumbnail !== undefined) {
     out.ThumbnailDataUrl = wp.thumbnail;

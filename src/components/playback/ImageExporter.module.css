@@ -72,6 +72,12 @@
   text-align: center;
 }
 
+.exportHint {
+  margin-top: 0.35em;
+  font-size: 0.9em;
+  color: var(--minerva-quiet);
+}
+
 .transferToggle {
   display: flex;
   gap: 0.5em;

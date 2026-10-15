@@ -19,7 +19,6 @@ import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
   applyGroupRowVisibilities,
   applyStackVisibilities,
-  isGroupRowVisible,
   isRgbDisplayFullyGrouped,
   isStackVisible,
   type VivIntensityCapVis,
@@ -335,6 +334,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     (s) => s.setChannelGroupRowVisibilities,
   );
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
+  const channelRendering = useAppStore((s) => s.channelRendering);
   const nav = useAuthorChannelNav();
   const [openKey, setOpenKey] = useState<string | null | undefined>(undefined);
   const [channelNameFilter, setChannelNameFilter] = useState("");
@@ -370,6 +370,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
         stackVisibilities: filledStackVis,
         groupRowVisibilities: filledGroupVis,
         activeChannelGroupId,
+        channelRendering,
       }),
     [
       image,
@@ -378,6 +379,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
       filledStackVis,
       filledGroupVis,
       activeChannelGroupId,
+      channelRendering,
     ],
   );
 
@@ -423,6 +425,9 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     groupRowVisibilities: filledGroupVis,
   };
   const shownIds = vivShownIntensitySourceIds(capVis);
+  for (const chip of model.allChannels) {
+    if (maskIds.has(chip.sourceId) && chip.visible) shownIds.add(chip.sourceId);
+  }
   const atCap =
     vivIntensityLayerCount(image.id, capVis) >= MAX_VIV_INTENSITY_CHANNELS;
   const fits = (
@@ -431,13 +436,14 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     >,
   ) => !vivIntensityCapExceeded(image.id, { ...capVis, ...next });
 
-  const applyRgbUnit = (visible: boolean) => {
+  const applyRgbUnit = (visible: boolean, groupId?: string) => {
     const next = visibilitiesForRgbUnit({
       rgbChannels,
       channelGroups,
       groupRowVisibilities: filledGroupVis,
       stackVisibilities: filledStackVis,
       visible,
+      groupId,
     });
     if (
       visible &&
@@ -455,7 +461,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
   const onGroupChip = (chip: ImageChannelChip) => {
     if (!chip.groupRowId) return;
     if (rgbDisplay) {
-      applyRgbUnit(!chip.visible);
+      applyRgbUnit(!chip.visible, chip.groupId ?? undefined);
       return;
     }
     const vis = filledGroupVis;
@@ -561,16 +567,16 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
             onDismissEditor={dismissEditor}
             onToggleVisibility={() => {
               if (rgbDisplay) {
-                applyRgbUnit(!group.allVisible);
+                applyRgbUnit(!group.allVisible, group.id);
                 return;
               }
-              if (!docGroup || docGroup.channels.length === 0) return;
-              const allOn = docGroup.channels.every((gc) =>
-                isGroupRowVisible(filledGroupVis, gc.id),
-              );
               const next = { ...filledGroupVis };
-              for (const gc of docGroup.channels) next[gc.id] = !allOn;
-              if (!allOn && !fits({ groupRowVisibilities: next })) return;
+              for (const chip of group.chips) {
+                if (chip.groupRowId) next[chip.groupRowId] = !group.allVisible;
+              }
+              if (!group.allVisible && !fits({ groupRowVisibilities: next })) {
+                return;
+              }
               setChannelGroupRowVisibilities(next);
             }}
           />

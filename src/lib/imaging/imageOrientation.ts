@@ -1,7 +1,7 @@
 import type { Image, ImageOrientation } from "@/lib/stores/documentSchema";
 
 /** Wrap degrees into (−180, 180]. */
-function wrapDisplayDeg(deg: number): number {
+export function wrapDisplayDeg(deg: number): number {
   if (!Number.isFinite(deg)) return 0;
   const d = ((((deg + 180) % 360) + 360) % 360) - 180;
   if (Math.abs(d) < 1e-9) return 0;
@@ -24,8 +24,13 @@ function finiteOffset(n: number | undefined): number {
   return typeof n === "number" && Number.isFinite(n) ? n : 0;
 }
 
+function finiteUm(n: number | undefined): number | undefined {
+  return typeof n === "number" && Number.isFinite(n) && n > 0 ? n : undefined;
+}
+
 /** Normalize placement. */
 export function effectiveOrientation(o: PlacementInput): ImageOrientation {
+  const umPerPixel = finiteUm(o?.umPerPixel);
   return {
     rotationDegrees: wrapDisplayDeg(o?.rotationDegrees ?? 0),
     flipHorizontal: o?.flipHorizontal ?? false,
@@ -33,6 +38,7 @@ export function effectiveOrientation(o: PlacementInput): ImageOrientation {
     translateX: finiteOffset(o?.translateX),
     translateY: finiteOffset(o?.translateY),
     displayScale: finiteScale(o?.displayScale),
+    ...(umPerPixel != null ? { umPerPixel } : {}),
   };
 }
 
@@ -70,7 +76,8 @@ export function isIdentityOrientation(o: PlacementInput): boolean {
     !c.flipVertical &&
     c.translateX === 0 &&
     c.translateY === 0 &&
-    c.displayScale === 1
+    c.displayScale === 1 &&
+    c.umPerPixel == null
   );
 }
 

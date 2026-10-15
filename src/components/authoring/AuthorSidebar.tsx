@@ -135,34 +135,57 @@ export type AuthorViewProps = {
   noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
   contrastEditable?: boolean;
+  /** Story preview pane shown instead of the sidebar; the viewer stays mounted. */
+  previewNav?: ReactNode;
+  /**
+   * Keep `previewNav` mounted (playback effects) but show the sidebar.
+   * Used when the pane renders nothing, e.g. one waypoint and no content.
+   */
+  previewNavHidden?: boolean;
 };
 
 export function AuthorView(props: AuthorViewProps) {
   const [expanded, setExpanded] = useState(true);
+  const hasPreview = props.previewNav != null;
+  const previewing = hasPreview && !props.previewNavHidden;
 
   return (
-    <AuthorViewport collapsed={!expanded}>
-      <AuthorSidebar
-        imagesPanel={props.imagesPanel}
-        noLoader={props.noLoader}
-        ensureChannelHistograms={props.ensureChannelHistograms}
-        contrastEditable={props.contrastEditable}
-        expanded={expanded}
-      />
-      <PanelIconButton
-        className={[
-          styles.expandControl,
-          expanded ? styles.expandControlExpanded : null,
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        title={expanded ? "Collapse panel" : "Expand panel"}
-        aria-label={expanded ? "Collapse panel" : "Expand panel"}
-        aria-expanded={expanded}
-        onClick={() => setExpanded((open) => !open)}
-      >
-        <ChevronIcon direction={expanded ? "left" : "right"} />
-      </PanelIconButton>
+    <AuthorViewport
+      collapsed={!expanded}
+      className={previewing ? styles.viewportPreview : undefined}
+    >
+      {hasPreview ? (
+        <div
+          className={previewing ? styles.previewNav : styles.previewNavParked}
+        >
+          {props.previewNav}
+        </div>
+      ) : null}
+      {previewing ? null : (
+        <>
+          <AuthorSidebar
+            imagesPanel={props.imagesPanel}
+            noLoader={props.noLoader}
+            ensureChannelHistograms={props.ensureChannelHistograms}
+            contrastEditable={props.contrastEditable}
+            expanded={expanded}
+          />
+          <PanelIconButton
+            className={[
+              styles.expandControl,
+              expanded ? styles.expandControlExpanded : null,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            title={expanded ? "Collapse panel" : "Expand panel"}
+            aria-label={expanded ? "Collapse panel" : "Expand panel"}
+            aria-expanded={expanded}
+            onClick={() => setExpanded((open) => !open)}
+          >
+            <ChevronIcon direction={expanded ? "left" : "right"} />
+          </PanelIconButton>
+        </>
+      )}
       <AuthorViewerRegion>{props.viewer}</AuthorViewerRegion>
     </AuthorViewport>
   );

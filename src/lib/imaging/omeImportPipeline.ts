@@ -16,6 +16,7 @@ import {
   rebindReplacementImageChannels,
   replaceImageRowInDocument,
 } from "@/lib/stores/storeUtils";
+import { renameChannelsFromMarkers } from "./markerCsv";
 import {
   mergeExtractedChannelsIntoImages,
   type OmeImageImportRole,
@@ -26,6 +27,7 @@ import {
   applySharedImportPaletteToSourceChannels,
 } from "./psudoPalette";
 import { seedMaskSourceChannelStyles } from "./sourceChannelStyle";
+import { urlFileName } from "./sourceUrl";
 
 const PACKED_RGB_IF_NAMES = new Set(["r", "g", "b"]);
 
@@ -72,6 +74,8 @@ export function buildOmeImportSlice(args: {
   relevantGroups?: ConfigGroup[];
   /** Persist when import dialog asked RGB vs separate channels. */
   rgbDisplay?: boolean;
+  /** 0-based channel index → marker name from an optional markers.csv. */
+  channelNames?: ReadonlyMap<number, string>;
 }): BuiltOmeImportSlice {
   const {
     loader,
@@ -81,6 +85,7 @@ export function buildOmeImportSlice(args: {
     existingImages,
     relevantGroups = [],
     rgbDisplay,
+    channelNames,
   } = args;
   const defaultKind = role === "segmentation" ? "mask" : "channel";
   const extracted = extractChannels(
@@ -106,6 +111,13 @@ export function buildOmeImportSlice(args: {
   }
   if (role === "segmentation") {
     sourceChannels = seedMaskSourceChannelStyles(sourceChannels);
+  }
+  if (role === "intensity" && channelNames && channelNames.size > 0) {
+    const renamed = renameChannelsFromMarkers(sourceChannels, channelNames);
+    if (renamed.applied === 0) {
+      throw new Error("Markers CSV did not match any channel.");
+    }
+    sourceChannels = renamed.channels;
   }
   const taggedForRgb =
     rgbDisplay == null
@@ -177,7 +189,11 @@ export async function applyPaletteToFlatImportImages(
   return applySourceChannelsToImages(images, styled);
 }
 
-export type ReplaceOmeLocalImageResult =
+export type OmeImageSource =
+  | { kind: "local"; handle: Handle.File }
+  | { kind: "url"; url: string };
+
+export type ReplaceOmeImageResult =
   | {
       ok: true;
       oldImageId: string;
@@ -190,17 +206,17 @@ export type ReplaceOmeLocalImageResult =
   | { ok: false; reason: "missing" | "unsupported" | "error"; error?: string };
 
 /**
- * Load a local OME-TIFF as a replacement for `imageId`: new image id, same
- * channel ids (by index). Caller persists the file handle and updates React
- * loader entries / channel store.
+ * Load an OME-TIFF file or URL as a replacement for `imageId`: new image id,
+ * same channel ids (by index). Caller persists a local handle or URL source
+ * and updates React loader entries / channel store.
  */
-export async function replaceOmeLocalImageInDocument(args: {
+export async function replaceOmeImageInDocument(args: {
   images: Image[];
   imageId: string;
-  handle: Handle.File;
+  source: OmeImageSource;
   pool?: DecodePool;
-}): Promise<ReplaceOmeLocalImageResult> {
-  const { images, imageId, handle, pool } = args;
+}): Promise<ReplaceOmeImageResult> {
+  const { images, imageId, source, pool } = args;
   const oldImage = images.find((im) => im.id === imageId);
   if (!oldImage) return { ok: false, reason: "missing" };
   if (
@@ -212,14 +228,16 @@ export async function replaceOmeLocalImageInDocument(args: {
 
   const oldLocalHandleKey =
     oldImage.source?.kind === "local" ? oldImage.source.handleKey : undefined;
-  const file = await handle.getFile();
+  const basename =
+    source.kind === "local"
+      ? (await source.handle.getFile()).name
+      : urlFileName(source.url) || "remote.ome.tif";
   const role = resolveImageImportRole({
     contentRole: oldImage.contentRole,
     channels: oldImage.channels ?? [],
   });
   const loader = await loadOmeLoaderForRole(role, {
-    kind: "local",
-    handle,
+    ...source,
     pool,
     rgbDisplay: oldImage.rgbDisplay,
   });
@@ -228,7 +246,7 @@ export async function replaceOmeLocalImageInDocument(args: {
   const slice = buildOmeImportSlice({
     loader,
     role,
-    basename: file.name,
+    basename,
     sourceImageId: newImageId,
     existingImages: withoutOld,
   });
@@ -251,7 +269,7 @@ export async function replaceOmeLocalImageInDocument(args: {
     oldImageId: imageId,
     newImageId,
     loader,
-    basename: file.name,
+    basename,
     nextImages: replaceImageRowInDocument(images, imageId, rebound),
     oldLocalHandleKey,
   };

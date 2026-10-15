@@ -2,11 +2,14 @@ import type { OrthographicViewState } from "@deck.gl/core";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import type { ConfigWaypoint } from "../authoring/config";
-import { applyStackVisibilities } from "../imaging/channelCompositor";
+import {
+  applyStackVisibilities,
+  visibilitiesShowingOnlyGroup,
+} from "../imaging/channelCompositor";
 import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
+import type { ImageOpacityPreview } from "../imaging/imageOpacity";
 import {
-  type ClassVisibility,
   type ImageSelectionMask,
   polygonRingFromShape,
   rasterizePolygonToImageMask,
@@ -34,7 +37,7 @@ import {
 } from "../shapes/shapeModel";
 import { mergeShapesAfterWaypointImport } from "../shapes/shapeWaypointImport";
 import type { ViewportSize, ViewRect } from "../viewer/samViewport";
-import type { ImageOrientation, Waypoint } from "./documentSchema";
+import type { ClassView, ImageOrientation, Waypoint } from "./documentSchema";
 import {
   documentShapes,
   documentWaypoints,
@@ -731,6 +734,12 @@ export interface AppStore {
   updateStory: (index: number, updates: Partial<ConfigWaypoint>) => void;
   removeStory: (index: number) => void;
   reorderStories: (fromIndex: number, toIndex: number) => void;
+  /** Replace one mask's class view on a waypoint; `null` removes it. */
+  setWaypointClassView: (
+    waypointId: string,
+    channelId: string,
+    next: Omit<ClassView, "channelId"> | null,
+  ) => void;
 
   // SAM2 magic wand: image fetcher for visible viewport region (set by ImageViewer)
   sam2ImageFetcher:
@@ -763,8 +772,6 @@ export interface AppStore {
   setViewerViewportSize: (size: ViewportSize) => void;
   viewerWorldFrame: WorldFrame | null;
   setViewerWorldFrame: (frame: WorldFrame | null) => void;
-  /** Pixel → µm frame of every image in the viewer (each with `sourceImageId`). */
-  viewerImageFrames: WorldFrame[];
   /** True when OME-TIFF / DICOM tile stack layers all report `isLoaded` (see ImageViewer). */
   viewerImageLayersLoaded: boolean;
   setViewerImageLayersLoaded: (loaded: boolean) => void;
@@ -780,6 +787,8 @@ export interface AppStore {
 
   // Channel group and channel actions
   setActiveChannelGroup: (channelGroupId: string) => void;
+  /** Select a group and show only its channels. */
+  showOnlyChannelGroup: (channelGroupId: string) => void;
   setChannelVisibilities: (vis: Record<string, boolean>) => void;
   /** Per group-row uuid; independent of stack visibility in All Channels. */
   channelGroupRowVisibilities: Record<string, boolean>;
@@ -797,15 +806,25 @@ export interface AppStore {
   /** In-flight move / resize / rotate; committed on pointerup. */
   imageOrientationPreview: ImageOrientationPreview | null;
   setImageOrientationPreview: (preview: ImageOrientationPreview | null) => void;
+  /** In-flight image opacity while the Images-tab slider is down. */
+  imageOpacityPreview: ImageOpacityPreview | null;
+  setImageOpacityPreview: (preview: ImageOpacityPreview | null) => void;
   /** Image selected for arranging on the canvas. Authoring only. */
   arrangeImageId: string | null;
   setArrangeImageId: (imageId: string | null) => void;
   channelVisibilities: Record<string, boolean>;
-  /**
-   * Session-only per-feature-table class visibility. Missing key ≡ all visible.
-   */
-  featureTableVisibilities: Record<string, ClassVisibility>;
   groupNames: Record<string, string>;
+  /**
+   * Classes turned off from the playback legend, by `legendClassKey`.
+   * Session only: the waypoint's class view is not changed.
+   */
+  hiddenLegendClasses: Record<string, string[]>;
+  toggleLegendClass: (
+    waypointId: string | undefined,
+    channelId: string,
+    name: string,
+  ) => void;
+  clearLegendClasses: () => void;
 
   finalizeEllipse: () => void;
   finalizeLasso: (points: [number, number][]) => void;
@@ -903,6 +922,14 @@ function maybePersistShapesAfterMutation(get: () => AppStore) {
   get().persistImportedShapesToStory(resolved);
 }
 
+/** `hiddenLegendClasses` key: one list per waypoint and mask channel. */
+export function legendClassKey(
+  waypointId: string | undefined,
+  channelId: string,
+): string {
+  return `${waypointId ?? ""}:${channelId}`;
+}
+
 // Initial state for overlay store
 const overlayInitialState = {
   overlayLayers: [],
@@ -946,11 +973,12 @@ const overlayInitialState = {
   channelRendering: null,
   maskVisualizationPreview: null,
   imageOrientationPreview: null,
+  imageOpacityPreview: null,
   arrangeImageId: null,
   channelVisibilities: {},
-  featureTableVisibilities: {},
   channelGroupRowVisibilities: {},
   groupNames: {},
+  hiddenLegendClasses: {} as Record<string, string[]>,
   targetWaypointCamera: null,
   authoringWaypointEditorOpen: false,
   layersPanelSelectedShapeIds: [] as string[],
@@ -965,7 +993,6 @@ const overlayInitialState = {
   viewerViewState: null,
   viewerViewportSize: null,
   viewerWorldFrame: null,
-  viewerImageFrames: [],
   viewerImageLayersLoaded: false,
   squareViewportThumbnailCapture: null,
   editingViewstateWaypointIndex: null,
@@ -1206,6 +1233,21 @@ export const useAppStore = create<AppStore>()(
         set({ shapes: [] });
       },
 
+      toggleLegendClass: (waypointId, channelId, name) => {
+        const key = legendClassKey(waypointId, channelId);
+        const prev = get().hiddenLegendClasses;
+        const names = prev[key] ?? [];
+        const next = names.includes(name)
+          ? names.filter((n) => n !== name)
+          : [...names, name];
+        set({ hiddenLegendClasses: { ...prev, [key]: next } });
+      },
+
+      clearLegendClasses: () => {
+        if (Object.keys(get().hiddenLegendClasses).length === 0) return;
+        set({ hiddenLegendClasses: {} });
+      },
+
       resetStoryViewerSession: () => {
         const vis = { ...get().channelVisibilities };
         delete vis[SELECTION_MASK_CHANNEL_KEY];
@@ -1222,7 +1264,7 @@ export const useAppStore = create<AppStore>()(
           imageSelectionMask: null,
           maskVisualizationPreview: null,
           channelVisibilities: vis,
-          featureTableVisibilities: {},
+          hiddenLegendClasses: {},
           activeStoryIndex: null,
           waypointAuthoring: new Map(),
           authoringWaypointShapesIndex: null,
@@ -2151,6 +2193,20 @@ export const useAppStore = create<AppStore>()(
         });
       },
 
+      setWaypointClassView: (waypointId, channelId, next) => {
+        const doc = useDocumentStore.getState();
+        const index = doc.waypoints.findIndex((w) => w.id === waypointId);
+        const wp = doc.waypoints[index];
+        if (!wp) return;
+        const rest = (wp.classViews ?? []).filter(
+          (v) => v.channelId !== channelId,
+        );
+        const classViews = next ? [...rest, { channelId, ...next }] : rest;
+        const waypoints = [...doc.waypoints];
+        waypoints[index] = { ...wp, classViews };
+        doc.setWaypoints(waypoints);
+      },
+
       reorderStories: (fromIndex: number, toIndex: number) => {
         const doc = useDocumentStore.getState();
         const next = [...doc.waypoints];
@@ -2259,6 +2315,10 @@ export const useAppStore = create<AppStore>()(
 
       setImageOrientationPreview: (preview) => {
         set({ imageOrientationPreview: preview });
+      },
+
+      setImageOpacityPreview: (preview) => {
+        set({ imageOpacityPreview: preview });
       },
 
       setArrangeImageId: (imageId) => {
@@ -2390,6 +2450,24 @@ export const useAppStore = create<AppStore>()(
 
       setActiveChannelGroup: (channelGroupId: string) => {
         set({ activeChannelGroupId: channelGroupId });
+      },
+
+      showOnlyChannelGroup: (channelGroupId: string) => {
+        const doc = useDocumentStore.getState();
+        const group = doc.channelGroups.find((g) => g.id === channelGroupId);
+        if (!group) return;
+        const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+        const next = visibilitiesShowingOnlyGroup({
+          group,
+          channelGroups: doc.channelGroups,
+          sourceChannels,
+          stackVisibilities: get().channelVisibilities,
+        });
+        set({
+          activeChannelGroupId: group.id,
+          channelVisibilities: next.channelVisibilities,
+          channelGroupRowVisibilities: next.channelGroupRowVisibilities,
+        });
       },
 
       setTargetWaypointCamera: (waypoint) => {

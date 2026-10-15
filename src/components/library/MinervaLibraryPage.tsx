@@ -7,13 +7,14 @@ import type {
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
 import { useClickOutside } from "@/components/shared/useClickOutside";
-import { isAbortError, toFile } from "@/lib/imaging/filesystem";
+import { hasDirectoryPickerAccess, toFile } from "@/lib/imaging/filesystem";
 import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
+  importStoryFolderFromPicker,
   importStoryJsonFile,
   importStoryJsonFromPicker,
 } from "@/lib/storyExport/importStoryFolder";
@@ -62,6 +63,7 @@ export function ConsumePendingLibraryImport({
             role: pending.role,
             append: false,
             rgbDisplay: pending.rgbDisplay,
+            channelNames: pending.channelNames,
             source: pending.source,
           });
     // Always settle — Strict Mode remounts this effect after pending is already
@@ -316,18 +318,17 @@ export function MinervaLibraryPage() {
     [goToStory, openNewStory],
   );
 
-  /** Picked or dropped story JSON → new story; picker cancel is not an error. */
-  const runStoryImport = React.useCallback(
-    async (load: () => Promise<string | undefined>) => {
+  const handleImport = React.useCallback(
+    async (importStory: () => Promise<string>) => {
       setAddOpen(false);
       setShelfBusy(true);
       setError(null);
       try {
         useAppStore.getState().resetStoryViewerSession();
-        const id = await load();
-        if (id) goToStory(id);
+        goToStory(await importStory());
       } catch (e: unknown) {
-        if (!isAbortError(e)) {
+        // AbortError = user cancelled the picker; finally still clears busy.
+        if (!(e instanceof DOMException && e.name === "AbortError")) {
           setError(e instanceof Error ? e.message : "Could not import story");
         }
       } finally {
@@ -409,11 +410,24 @@ export function MinervaLibraryPage() {
                         className={minervaTheme.menuItem}
                         disabled={shelfBusy}
                         onClick={() =>
-                          void runStoryImport(importStoryJsonFromPicker)
+                          void handleImport(importStoryJsonFromPicker)
                         }
                       >
                         Import story
                       </button>
+                      {hasDirectoryPickerAccess() ? (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={minervaTheme.menuItem}
+                          disabled={shelfBusy}
+                          onClick={() =>
+                            void handleImport(importStoryFolderFromPicker)
+                          }
+                        >
+                          Import folder
+                        </button>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -422,7 +436,7 @@ export function MinervaLibraryPage() {
                   onAllow={toFile}
                   disabled={shelfBusy}
                   onImportStory={(file) =>
-                    runStoryImport(() => importStoryJsonFile(file))
+                    handleImport(() => importStoryJsonFile(file))
                   }
                   onImportOme={(req) =>
                     startStoryWithPendingImport({ ...req, kind: "ome" })

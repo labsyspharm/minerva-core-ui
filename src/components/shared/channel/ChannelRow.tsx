@@ -75,42 +75,50 @@ function MaskVizButton(props: {
   );
 }
 
-function MaskOpacityControl(props: {
-  value: MaskVisualization;
-  onChange: (viz: MaskVisualization) => void;
-  onPreview?: (viz: MaskVisualization | null) => void;
+/** 0–100% slider over a `0…1` opacity; previews while dragging, commits on release. */
+export function OpacitySlider(props: {
+  value: number;
+  onCommit: (opacity: number) => void;
+  onPreview?: (opacity: number | null) => void;
   ariaLabel: string;
+  className?: string;
 }) {
-  const { value, onChange, onPreview, ariaLabel } = props;
-  const committedPct = Math.round(value.opacity * 100);
+  const { value, onCommit, onPreview, ariaLabel, className } = props;
+  const committedPct = Math.round(value * 100);
   const [pct, setPct] = useState(committedPct);
+  // Release can land in the same render as the last change; commit from the ref.
+  const pctRef = useRef(committedPct);
   const lastCommittedPct = useRef(committedPct);
 
   const onPreviewRef = useRef(onPreview);
   onPreviewRef.current = onPreview;
 
   useEffect(() => {
+    pctRef.current = committedPct;
     setPct(committedPct);
     lastCommittedPct.current = committedPct;
   }, [committedPct]);
 
   useEffect(() => () => onPreviewRef.current?.(null), []);
 
-  const visualizationAt = (nextPct: number): MaskVisualization => ({
-    ...value,
-    opacity: nextPct / 100,
-  });
+  const show = (nextPct: number) => {
+    pctRef.current = nextPct;
+    setPct(nextPct);
+  };
   const commit = () => {
-    if (pct !== lastCommittedPct.current) {
-      lastCommittedPct.current = pct;
-      onChange(visualizationAt(pct));
+    const nextPct = pctRef.current;
+    if (nextPct !== lastCommittedPct.current) {
+      lastCommittedPct.current = nextPct;
+      onCommit(nextPct / 100);
     }
     onPreview?.(null);
   };
 
   return (
     <label
-      className={styles.maskOpacityControl}
+      className={[styles.maskOpacityControl, className]
+        .filter(Boolean)
+        .join(" ")}
       title={`Opacity ${pct}%`}
       style={{ ["--mask-opacity-pct" as string]: `${pct}%` }}
     >
@@ -125,12 +133,12 @@ function MaskOpacityControl(props: {
           aria-label={`${ariaLabel} opacity`}
           onChange={(e) => {
             const nextPct = Number(e.target.value);
-            setPct(nextPct);
-            onPreview?.(visualizationAt(nextPct));
+            show(nextPct);
+            onPreview?.(nextPct / 100);
           }}
           onPointerUp={commit}
           onPointerCancel={() => {
-            setPct(committedPct);
+            show(committedPct);
             onPreview?.(null);
           }}
           onKeyUp={commit}
@@ -408,10 +416,16 @@ export function ChannelRow(props: ChannelRowProps) {
         ) : null}
         <div className={styles.channelRowTrailing}>{trailing}</div>
         {showMask && onMaskVisualizationChange ? (
-          <MaskOpacityControl
-            value={maskVisualization}
-            onChange={onMaskVisualizationChange}
-            onPreview={onMaskVisualizationPreview}
+          <OpacitySlider
+            value={maskVisualization.opacity}
+            onCommit={(opacity) =>
+              onMaskVisualizationChange({ ...maskVisualization, opacity })
+            }
+            onPreview={(opacity) =>
+              onMaskVisualizationPreview?.(
+                opacity === null ? null : { ...maskVisualization, opacity },
+              )
+            }
             ariaLabel={maskAriaLabel ?? name.name}
           />
         ) : null}

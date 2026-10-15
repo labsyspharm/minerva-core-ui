@@ -10,11 +10,17 @@
   box-sizing: border-box;
 }
 
-.presentation {
+/** `PresentationFrame` layout; `.presentation` adds tokens when active. */
+.frame {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
+}
+
+.presentation {
+  /* Query its own width, not the viewport's: the player may be embedded. */
+  container-type: inline-size;
   overflow: hidden;
   color: var(--minerva-ink);
   font-family: var(--minerva-font);
@@ -98,6 +104,15 @@
   grid-row: 1;
   min-height: 0;
   /* Bound to grid cell — not 100vh, so story preview ribbon frees space below */
+  max-height: 100%;
+}
+
+/** Single empty waypoint: no nav column, viewer fills the row. */
+.splitGridViewerOnly {
+  grid-template-columns: 1fr;
+}
+
+.splitGridViewerOnly > .presentationViewerRegion {
   max-height: 100%;
 }
 
@@ -363,4 +378,31 @@
   text-decoration-color: var(--channel-color);
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
+}
+
+/** Narrow (phones, small embeds): viewer on top, nav pane below. */
+@container (width < 768px) {
+  .splitGrid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+  }
+
+  .splitGrid > .presentationViewerRegion {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .splitGrid > .navPane {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .splitGridViewerOnly {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .navPane {
+    border-right: none;
+    border-top: 1px solid var(--minerva-edge);
+  }
 }

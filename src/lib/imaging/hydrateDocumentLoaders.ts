@@ -10,6 +10,7 @@ import {
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import {
   type GroupLike,
+  isRelativeOmeTiffUrl,
   jpegLoaderEntriesFromImages,
 } from "@/lib/imaging/loadJpegFromDocument";
 import { getFileHandle } from "@/lib/persistence/fileHandles";
@@ -21,7 +22,7 @@ import {
   jpegTransferFromImageSource,
 } from "./cubeRootEncoding";
 import type { JpegLoaderEntry, OmeLoaderEntry } from "./loaderEntries";
-import { createOmeDecodePool, type DecodePool } from "./omeDecodePool";
+import { type DecodePool, sharedOmeDecodePool } from "./omeDecodePool";
 import type { Loader } from "./viv";
 import { wrapOmeLoaderJpegExport } from "./wrapOmeLoaderCubeRoot";
 
@@ -49,6 +50,15 @@ export type HydrateDocumentLoadersOpts = {
   existingPyramidFolders?: ReadonlySet<string>;
   /** When set, wrap OME loaders for cube-root JPEG OME-TIFF decode. */
   imageSource?: string;
+  /**
+   * Authoring: the file for a relative OME-TIFF `url` source (one the user
+   * located, or the story folder's copy) and the Dexie key it is stored
+   * under; no `handle` when that key needs permission first. Without a
+   * result the image stays unloaded until located.
+   */
+  resolveRelativeFile?: (
+    image: Image,
+  ) => Promise<{ handle?: Handle.File; key: string } | undefined>;
 };
 
 const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
@@ -65,9 +75,12 @@ function omeLoaderForHydrate(
   wrapOmeJpeg: boolean,
   storyTransfer: JpegExportTransfer,
 ): Pick<OmeLoaderEntry, "loader" | "transfer"> {
-  const jpegTransfer = wrapOmeJpeg
-    ? hydrateJpegTransferForImage(im, storyTransfer)
-    : null;
+  // Only the export's own 8-bit files: a 16-bit source located or imported
+  // into an exported story must not be widened through the 8-bit table.
+  const jpegTransfer =
+    wrapOmeJpeg && loader.data?.[0]?.dtype === "Uint8"
+      ? hydrateJpegTransferForImage(im, storyTransfer)
+      : null;
   if (!jpegTransfer) {
     return { loader };
   }
@@ -82,15 +95,9 @@ function omeLoaderForHydrate(
  * export paths (`foo.ome.tif`) must be resolved against document.json.
  */
 function resolveOmeSourceUrl(documentUrl: string, sourceUrl: string): string {
-  const trimmed = sourceUrl.trim();
-  if (
-    /^https?:\/\//i.test(trimmed) ||
-    trimmed.startsWith("blob:") ||
-    trimmed.startsWith("file:")
-  ) {
-    return trimmed;
-  }
-  return new URL(trimmed, new URL(documentUrl, window.location.href)).href;
+  // An absolute URL (any scheme) ignores the base; `//host` takes its scheme.
+  return new URL(sourceUrl.trim(), new URL(documentUrl, window.location.href))
+    .href;
 }
 
 /** Rebuild Viv / DICOM loaders from persisted document image rows. */
@@ -105,7 +112,7 @@ export async function hydrateDocumentLoaders(
   const missingHandleKeys: string[] = [];
   const loaderErrors: string[] = [];
   const pool =
-    opts.pool === null ? undefined : (opts.pool ?? createOmeDecodePool());
+    opts.pool === null ? undefined : (opts.pool ?? sharedOmeDecodePool());
   const dicomSeriesSeen = new Set<string>();
   const requestPermission = opts.requestPermission ?? false;
   const includeLocal = opts.includeLocal ?? true;
@@ -130,11 +137,54 @@ export async function hydrateDocumentLoaders(
     })),
   );
 
+  const loadLocalFile = async (im: Image, handle: Handle.File) => {
+    try {
+      const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
+        kind: "local",
+        handle,
+        ...(pool ? { pool } : {}),
+        rgbDisplay: im.rgbDisplay,
+      });
+      omeLoaderEntries.push({
+        ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
+        sourceImageId: im.id,
+      });
+    } catch (e) {
+      loaderErrors.push(
+        e instanceof Error ? e.message : `Could not load ${im.basename}`,
+      );
+    }
+  };
+
   for (const im of images) {
     if (!im.source) continue;
     if (im.source.kind === "jpeg") continue;
     switch (im.source.kind) {
       case "url": {
+        // Authoring has no served story root: a relative TIFF is read from a
+        // file the user located or the story folder, else it stays unloaded
+        // until located. The player resolves it against document.json.
+        if (includeLocal && isRelativeOmeTiffUrl(im.source.url)) {
+          let resolved: Awaited<
+            ReturnType<NonNullable<typeof opts.resolveRelativeFile>>
+          >;
+          try {
+            resolved = await opts.resolveRelativeFile?.(im);
+          } catch (e) {
+            // One unreadable path leaves this image to be located, not the rest.
+            console.warn("[minerva] could not resolve", im.source.url, e);
+            break;
+          }
+          if (!resolved) break;
+          if (!resolved.handle || !(await canAccess(resolved.handle))) {
+            deniedHandleKeys.push(resolved.key);
+            break;
+          }
+          if (await findFile({ handle: resolved.handle })) {
+            await loadLocalFile(im, resolved.handle);
+          }
+          break;
+        }
         try {
           const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
             kind: "url",
@@ -166,22 +216,7 @@ export async function hydrateDocumentLoaders(
           break;
         }
         if (!(await findFile({ handle }))) break;
-        try {
-          const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-            kind: "local",
-            handle,
-            ...(pool ? { pool } : {}),
-            rgbDisplay: im.rgbDisplay,
-          });
-          omeLoaderEntries.push({
-            ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
-            sourceImageId: im.id,
-          });
-        } catch (e) {
-          loaderErrors.push(
-            e instanceof Error ? e.message : `Could not load ${im.basename}`,
-          );
-        }
+        await loadLocalFile(im, handle);
         break;
       }
       case "dicomWeb": {
