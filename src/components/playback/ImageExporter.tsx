@@ -11,13 +11,6 @@ import {
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import { exportJpegOmeTiffStory } from "@/lib/imaging/exportJpegOmeTiff";
 import {
-  endExportProfile,
-  exportEvent,
-  formatSpan,
-  noteExportEta,
-  startExportProfile,
-} from "@/lib/imaging/exportProfile";
-import {
   encodeTileJpeg,
   jpegExportConcurrency,
 } from "@/lib/imaging/jpegExportPool";
@@ -487,24 +480,13 @@ export const ImageExporter = (props: ImageExporterProps) => {
     const imagesAtStart = docAtStart.images;
 
     setProgress({ completed: 0, total: 1, done: false });
-    startExportProfile("jpeg-ome-tiff", {
-      decodeWorkers: navigator.hardwareConcurrency ?? 4,
-      encodeWorkers: jpegExportConcurrency(),
-      transfer: jpegTransfer,
-      progressEveryMs: PROGRESS_INTERVAL_MS,
-      etaWindowMs: RATE_WINDOW_MS,
-    });
 
     let lastProgressAt = 0;
     void (async () => {
       try {
-        const painting = performance.now();
         const imagesSnapshot = await paintUngroupedExportColors(
           imagesAtStart,
           channelGroupsSnapshot,
-        );
-        exportEvent(
-          `export colors in ${formatSpan(performance.now() - painting)}`,
         );
         const exported = await exportJpegOmeTiffStory({
           directory: directory_handle,
@@ -539,13 +521,9 @@ export const ImageExporter = (props: ImageExporterProps) => {
             imageSource: nextSource,
           },
         };
-        const sidecars = performance.now();
         const written = await writeStoryBundleSidecars(directory_handle, doc, {
           mode: "jpeg-ome-tiff",
         });
-        exportEvent(
-          `document.json, index.html, player and feature tables in ${formatSpan(performance.now() - sidecars)}`,
-        );
         setSkippedTables(written.skippedFeatureTables);
         const store = useDocumentStore.getState();
         // The exported files now answer these paths, not a file located
@@ -575,16 +553,12 @@ export const ImageExporter = (props: ImageExporterProps) => {
         console.log(
           `[minerva] jpeg-ome-tiff export took ${((performance.now() - wallStart) / 1000).toFixed(1)}s (transfer=${jpegTransfer})`,
         );
-        endExportProfile("done");
         setProgress((p) => ({
           ...p,
           done: true,
           completed: p.total,
         }));
       } catch (e) {
-        endExportProfile(
-          cancelled || abort.signal.aborted ? "cancelled" : "failed",
-        );
         if (cancelled || abort.signal.aborted) return;
         console.error("[minerva] jpeg-ome-tiff export failed", e);
         setExportError(
@@ -596,8 +570,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
     return () => {
       cancelled = true;
       if (!finishedOk) abort.abort();
-      // A no-op once the export has ended on its own.
-      endExportProfile("cancelled");
     };
   }, [mode, exportArmed, exportError, directory_handle]);
 
@@ -739,11 +711,8 @@ export const ImageExporter = (props: ImageExporterProps) => {
         samples.shift();
       }
     }
-    const update = () => {
-      const remaining = estimateRemainingMs(samples, total, performance.now());
-      noteExportEta(remaining);
-      setRemainingMs(remaining);
-    };
+    const update = () =>
+      setRemainingMs(estimateRemainingMs(samples, total, performance.now()));
     update();
     // Re-estimate while waiting on the next tile, so a stall lengthens the ETA.
     const tick = window.setInterval(update, 1000);

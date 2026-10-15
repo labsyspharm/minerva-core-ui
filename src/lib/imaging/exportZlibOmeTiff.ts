@@ -8,9 +8,8 @@ import {
   type RandomAccessSink,
 } from "tiffwriter";
 import type { Image, ImageChannel } from "@/lib/stores/documentSchema";
-import { exportEvent, formatSpan, timed, timedSink } from "./exportProfile";
 import { bufferedSink } from "./exportSink";
-import { describeExportSource, readExportTile } from "./exportTileReader";
+import { readExportTile } from "./exportTileReader";
 import type { OmeLoaderEntry } from "./loaderEntries";
 import type { LoaderPlane } from "./loaderTypes";
 import {
@@ -299,17 +298,9 @@ export async function writeZlibOmeTiff(
       tileSize,
       tileSize,
     );
-    const deflated = await timed(
-      "deflate",
-      () => zlibDeflateBytes(labelTileBytesLE(padded)),
-      (bytes) => bytes.byteLength,
-    );
+    const deflated = await zlibDeflateBytes(labelTileBytesLE(padded));
     if (workSignal.aborted) return;
-    await timed(
-      "write",
-      () => writer.writeSegment(job.address, deflated),
-      () => deflated.byteLength,
-    );
+    await writer.writeSegment(job.address, deflated);
     onProgress?.(1);
   };
 
@@ -404,16 +395,9 @@ export async function exportZlibOmeTiffImage(
   const loaderData = loaderPlanes(entry);
   const dtype = assertUnsignedLabelDtype(loaderData[0].dtype);
   const { levels, useLoaderTiles } = planMaskExportLevels(loaderData);
-  exportEvent(
-    `${fileName}: ${channels.length} mask channels (${dtype}), ${levels.length} levels from ` +
-      `${levels[0].width}x${levels[0].height} px, ${tileCountForLevels(levels, channels.length)} tiles, ` +
-      `${useLoaderTiles ? "levels read from the source" : "levels built from whole rasters"}; ` +
-      `source ${await describeExportSource(loaderData[0], { t: 0, z: 0, c: channels[0].index })}`,
-  );
 
   let generated: LabelArray[][] | null = null;
   if (!useLoaderTiles) {
-    const reading = performance.now();
     generated = await rastersForGeneratedPyramid(
       loaderData[0],
       channels,
@@ -421,18 +405,14 @@ export async function exportZlibOmeTiffImage(
       dtype,
       signal,
     );
-    exportEvent(
-      `${fileName}: whole rasters read and downsampled in ${formatSpan(performance.now() - reading)}`,
-    );
   }
 
   const fh = await directory.getFileHandle(fileName, { create: true });
   const writable = await fh.createWritable();
-  const started = performance.now();
 
   try {
     await writeZlibOmeTiff({
-      sink: bufferedSink(timedSink(browserFileSink(writable))),
+      sink: bufferedSink(browserFileSink(writable)),
       image,
       channels,
       fileName,
@@ -478,9 +458,6 @@ export async function exportZlibOmeTiffImage(
     }
     throw e;
   }
-  exportEvent(
-    `${fileName}: tiles written and file closed in ${formatSpan(performance.now() - started)}`,
-  );
 
   return remappedImageForOmeTiffExport(
     { ...image, contentRole: "segmentation" },

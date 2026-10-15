@@ -22,15 +22,8 @@ import {
   folderLimitsForTransfer,
   type JpegExportTransfer,
 } from "./cubeRootEncoding";
-import {
-  exportEvent,
-  exportSpan,
-  formatSpan,
-  noteExportProgress,
-  timedSink,
-} from "./exportProfile";
 import { bufferedSink } from "./exportSink";
-import { describeExportSource, readExportTile } from "./exportTileReader";
+import { readExportTile } from "./exportTileReader";
 import {
   exportZlibOmeTiffImage,
   maskExportTileCount,
@@ -329,12 +322,6 @@ async function exportJpegOmeTiffImage(
     baseTags: rgb ? RGB_JPEG_TAGS : grayscaleJpegTags(),
     imageDescription: omeXml,
   });
-  const firstRead = (rgb ?? channels)[0];
-  exportEvent(
-    `${fileName}: ${rgb ? `RGB from ${rgb.length} source channel(s)` : `${fileChannels.length} channels`} (${transfer}), ` +
-      `${levels.length} levels from ${levels[0].width}x${levels[0].height} px, ${jobs.length} tiles; ` +
-      `source ${await describeExportSource(layoutPlanes[0], { t: 0, z: 0, c: firstRead.index })}`,
-  );
 
   const fh = await directory.getFileHandle(fileName, { create: true });
   const writable = await fh.createWritable();
@@ -359,7 +346,7 @@ async function exportJpegOmeTiffImage(
   let writer: Awaited<ReturnType<typeof createTiffWriter>>;
   try {
     writer = await createTiffWriter({
-      sink: bufferedSink(timedSink(browserFileSink(writable))),
+      sink: bufferedSink(browserFileSink(writable)),
       signal: workSignal,
       images: layouts,
     });
@@ -373,7 +360,6 @@ async function exportJpegOmeTiffImage(
     throw e;
   }
 
-  const started = performance.now();
   const concurrency = Math.min(TILES_IN_FLIGHT, Math.max(1, jobs.length));
   let next = 0;
 
@@ -381,25 +367,13 @@ async function exportJpegOmeTiffImage(
   const pendingWrites = new Set<Promise<void>>();
   let pendingWriteBytes = 0;
   const queueWrite = async (job: PlanPyramidJob, bytes: Uint8Array) => {
-    const waited = exportSpan("queue");
     while (pendingWriteBytes >= MAX_PENDING_WRITE_BYTES) {
       await Promise.race(pendingWrites);
     }
-    waited();
     pendingWriteBytes += bytes.byteLength;
-    const written = exportSpan("write");
     const write = writer
       .writeSegment(job.address, bytes)
-      .then(
-        () => {
-          written(bytes.byteLength);
-          onProgress?.(1);
-        },
-        (e) => {
-          written();
-          failExport(e);
-        },
-      )
+      .then(() => onProgress?.(1), failExport)
       .finally(() => {
         pendingWriteBytes -= bytes.byteLength;
         pendingWrites.delete(write);
@@ -475,14 +449,7 @@ async function exportJpegOmeTiffImage(
     if (signal.aborted || workSignal.aborted) {
       throw new DOMException("Aborted", "AbortError");
     }
-    const finishing = performance.now();
-    exportEvent(
-      `${fileName}: ${jobs.length} tiles written in ${formatSpan(finishing - started)}`,
-    );
     await writer.finish();
-    exportEvent(
-      `${fileName}: offset tables written and file closed in ${formatSpan(performance.now() - finishing)}`,
-    );
   } catch (e) {
     try {
       await writer.abort(e);
@@ -566,9 +533,6 @@ export async function exportJpegOmeTiffStory(
   if (intensityItems.length === 0 && maskItems.length === 0) {
     throw new Error("No channels available for OME-TIFF export.");
   }
-  exportEvent(
-    `settings: ${TILES_IN_FLIGHT} tiles in flight, write queue ${MAX_PENDING_WRITE_BYTES / 2 ** 20} MB, batched writes`,
-  );
 
   const decisions: {
     transfer: JpegExportTransfer;
@@ -577,7 +541,6 @@ export async function exportJpegOmeTiffStory(
   }[] = [];
   let totalTiles = 0;
   for (const item of intensityItems) {
-    const checking = performance.now();
     const decided = await transferForBrightfield(
       item.image,
       transfer,
@@ -586,10 +549,6 @@ export async function exportJpegOmeTiffStory(
       signal,
     );
     const rgb = rgbExportChannels(decided.image, item.intensity);
-    exportEvent(
-      `${item.image.basename || item.image.id}: brightfield check in ${formatSpan(performance.now() - checking)}, ` +
-        `exporting ${rgb ? "RGB" : decided.transfer}`,
-    );
     decisions.push({ ...decided, rgb });
     totalTiles += tileCountForLevels(
       exportPlaneLevels(item.planes),
@@ -607,14 +566,9 @@ export async function exportJpegOmeTiffStory(
 
   let completed = 0;
   onProgress?.(0, totalTiles);
-  noteExportProgress(0, totalTiles);
-  exportEvent(
-    `${intensityItems.length + maskItems.length} files, ${totalTiles} tiles`,
-  );
   const bump = (delta: number) => {
     completed += delta;
     onProgress?.(completed, totalTiles);
-    noteExportProgress(completed, totalTiles);
   };
 
   const remappedById = new Map<string, Image>();
@@ -640,11 +594,7 @@ export async function exportJpegOmeTiffStory(
       rgb: decided.rgb,
       pixels: item.entry.loader.metadata?.Pixels,
     });
-    const offsets = performance.now();
     await writeTiffOffsetsJson(directory, intensityFileNames[i]);
-    exportEvent(
-      `${intensityFileNames[i]}: offsets.json in ${formatSpan(performance.now() - offsets)}`,
-    );
     if (item.masks.length > 0) {
       jpegImage = { ...jpegImage, contentRole: "intensity" };
     }
@@ -667,11 +617,7 @@ export async function exportJpegOmeTiffStory(
       signal,
       onProgress: bump,
     });
-    const offsets = performance.now();
     await writeTiffOffsetsJson(directory, maskFileNames[i]);
-    exportEvent(
-      `${maskFileNames[i]}: offsets.json in ${formatSpan(performance.now() - offsets)}`,
-    );
     if (splitFromIntensity) {
       const extra = insertedAfter.get(item.image.id) ?? [];
       extra.push(maskImage);
