@@ -4486,9 +4486,20 @@ function clampPixelsToRgba(out, pixels, min, max) {
     out[o + 3] = 255;
   }
 }
+let cubeRootLut = null;
+function cubeRootU16ToU8Lut() {
+  if (!cubeRootLut) {
+    cubeRootLut = Uint8Array.from(
+      { length: 65536 },
+      (_, v) => encodeCubeRootU16ToU8(v)
+    );
+  }
+  return cubeRootLut;
+}
 function cubeRootPixelsToRgba(out, pixels) {
+  const lut = pixels instanceof Uint16Array || pixels instanceof Uint8Array || pixels instanceof Uint8ClampedArray ? cubeRootU16ToU8Lut() : null;
   for (let i = 0; i < pixels.length; i++) {
-    const v = encodeCubeRootU16ToU8(pixels[i]);
+    const v = lut ? lut[pixels[i]] : encodeCubeRootU16ToU8(pixels[i]);
     const o = i * 4;
     out[o] = v;
     out[o + 1] = v;
@@ -4523,29 +4534,23 @@ function ensureJpegEncoderReady() {
   }
   return jsquashReady;
 }
-const mozJpegTiming = { ms: 0 };
 async function encodeRgbaToJpeg(width, height, rgba, quality, colorSpace = MOZJPEG_COLORSPACE_GRAYSCALE) {
   await ensureJpegEncoderReady();
   const imageData = new ImageData(rgba, width, height);
-  const start = performance.now();
-  try {
-    return await encode(imageData, {
-      quality: mozJpegQuality(quality),
-      color_space: colorSpace,
-      baseline: true,
-      progressive: false,
-      arithmetic: false,
-      // Per-tile Huffman tables, still baseline. With the standard tables
-      // (`false`), @jsquash/jpeg 1.6.0 writes a corrupt scan for ~12% of 4:2:0
-      // YCbCr tiles; optimized ones are also smaller and faster to encode.
-      optimize_coding: true,
-      // 4:2:0. Packed RGB TIFF tags declare YCbCrSubSampling [2, 2].
-      auto_subsample: false,
-      chroma_subsample: 2
-    });
-  } finally {
-    mozJpegTiming.ms += performance.now() - start;
-  }
+  return encode(imageData, {
+    quality: mozJpegQuality(quality),
+    color_space: colorSpace,
+    baseline: true,
+    progressive: false,
+    arithmetic: false,
+    // Per-tile Huffman tables, still baseline. With the standard tables
+    // (`false`), @jsquash/jpeg 1.6.0 writes a corrupt scan for ~12% of 4:2:0
+    // YCbCr tiles; optimized ones are also smaller and faster to encode.
+    optimize_coding: true,
+    // 4:2:0. Packed RGB TIFF tags declare YCbCrSubSampling [2, 2].
+    auto_subsample: false,
+    chroma_subsample: 2
+  });
 }
 async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
   const rgba = new Uint8ClampedArray(
@@ -4599,8 +4604,6 @@ worker.addEventListener("message", async (e) => {
     rgbLimits
   } = e.data;
   try {
-    const start = performance.now();
-    const mozJpegBefore = mozJpegTiming.ms;
     const Ctor = PIXEL_CTORS[arrayCtorName];
     if (!Ctor) {
       throw new Error(`unsupported pixel array ${arrayCtorName}`);
@@ -4616,15 +4619,7 @@ worker.addEventListener("message", async (e) => {
       transfer,
       padTileSize
     ));
-    worker.postMessage(
-      {
-        jpeg,
-        jobId,
-        ms: performance.now() - start,
-        mozJpegMs: mozJpegTiming.ms - mozJpegBefore
-      },
-      [jpeg]
-    );
+    worker.postMessage({ jpeg, jobId }, [jpeg]);
   } catch (err) {
     worker.postMessage({
       jobId,

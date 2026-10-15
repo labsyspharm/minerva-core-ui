@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BsQU3FTA.js","./pako.esm-KbdoS3Oq.js","./lerc-KPHjyNiw.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-SGMgHzmm.js","./pako.esm-KbdoS3Oq.js","./lerc-Ve7U07kn.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -13279,27 +13279,27 @@ let __tla = (async () => {
     spinnerSm,
     busyOverlay
   };
-  function PanelIconButton({ children, variant = "header", active: active2, className: className2, type = "button", ...rest2 }) {
+  function PanelIconButton({ children, variant = "header", active, className: className2, type = "button", ...rest2 }) {
     const base2 = variant === "row" ? minervaTheme.controlRow : minervaTheme.control;
     return jsxRuntimeExports.jsx("button", {
       type,
       "data-icon-button": "",
       className: [
         base2,
-        active2 ? minervaTheme.controlActive : null,
+        active ? minervaTheme.controlActive : null,
         className2
       ].filter(Boolean).join(" "),
       ...rest2,
       children
     });
   }
-  function PanelActionButton({ children, active: active2, className: className2, type = "button", ...rest2 }) {
+  function PanelActionButton({ children, active, className: className2, type = "button", ...rest2 }) {
     return jsxRuntimeExports.jsx("button", {
       type,
       className: [
         minervaTheme.control,
         minervaTheme.controlText,
-        active2 ? minervaTheme.controlActive : null,
+        active ? minervaTheme.controlActive : null,
         className2
       ].filter(Boolean).join(" "),
       ...rest2,
@@ -18508,7 +18508,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "cc166962c9718d967f91652a32cd2d7c5be66b0a",
+    "VITE_APP_GIT_SHA": "10a3fa6eaf4dd9a4ba481c4fcd5e6847032c53d8",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -18747,7 +18747,7 @@ let __tla = (async () => {
   };
   const config = globalThis.mathgl.config;
   function formatValue(value, { precision = config.precision } = {}) {
-    value = round$2(value);
+    value = round$1(value);
     return `${parseFloat(value.toPrecision(precision))}`;
   }
   function isArray$4(value) {
@@ -18793,7 +18793,7 @@ let __tla = (async () => {
       config.EPSILON = oldEpsilon;
     }
   }
-  function round$2(value) {
+  function round$1(value) {
     return Math.round(value / config.EPSILON) * config.EPSILON;
   }
   function duplicateArray(array) {
@@ -21938,7 +21938,7 @@ let __tla = (async () => {
       args
     }, opts.opts);
   }
-  const noop$4 = () => {
+  const noop$3 = () => {
   };
   class BaseLog {
     constructor({ level = 0 } = {}) {
@@ -21996,12 +21996,12 @@ let __tla = (async () => {
     }
     _createLogFunction(type, normalized, options) {
       if (!this._shouldLog(normalized.logLevel)) {
-        return noop$4;
+        return noop$3;
       }
       const tag = this._getOnceTag(options.tag ?? normalized.tag ?? normalized.message);
       if ((options.once || normalized.once) && tag !== void 0) {
         if (this._onceCache.has(tag)) {
-          return noop$4;
+          return noop$3;
         }
         this._onceCache.add(tag);
       }
@@ -22274,11 +22274,11 @@ let __tla = (async () => {
         return this._log("table", logLevel, table2, columns && [
           columns
         ] || [], {
-          method: console.table || noop$4,
+          method: console.table || noop$3,
           tag: getTableHeader(table2)
         });
       }
-      return noop$4;
+      return noop$3;
     }
     time(logLevel, message2) {
       return this._log("time", logLevel, message2, [], {
@@ -22292,7 +22292,7 @@ let __tla = (async () => {
     }
     timeStamp(logLevel, message2) {
       return this._log("time", logLevel, message2, [], {
-        method: console.timeStamp || noop$4
+        method: console.timeStamp || noop$3
       });
     }
     group(logLevel, message2, opts = {
@@ -22310,7 +22310,7 @@ let __tla = (async () => {
     }
     groupEnd(logLevel) {
       return this._log("groupEnd", logLevel, "", [], {
-        method: console.groupEnd || noop$4
+        method: console.groupEnd || noop$3
       });
     }
     withGroup(logLevel, message2, func) {
@@ -26383,13 +26383,13 @@ ${getApplicationDefines(allDefines)}
         const defineName = (_a2 = matchIf || matchIfNot) == null ? void 0 : _a2[1];
         const defineValue = Boolean((_b2 = options == null ? void 0 : options.defines) == null ? void 0 : _b2[defineName]);
         const branchTaken = matchIf ? defineValue : !defineValue;
-        const active2 = conditional && branchTaken;
+        const active = conditional && branchTaken;
         conditionalStack.push({
           parentActive: conditional,
           branchTaken,
-          active: active2
+          active
         });
-        conditional = active2;
+        conditional = active;
       } else if (matchElse) {
         const currentConditional = conditionalStack[conditionalStack.length - 1];
         if (!currentConditional) {
@@ -41374,7 +41374,7 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     _onUpdate() {
     }
   }
-  const noop$3 = () => {
+  const noop$2 = () => {
   };
   const TRANSITION_EVENTS = {
     BREAK: 1,
@@ -41401,8 +41401,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       this.getControllerState = opts.getControllerState;
       this.propsInTransition = null;
       this.transition = new Transition(opts.timeline);
-      this.onViewStateChange = opts.onViewStateChange || noop$3;
-      this.onStateChange = opts.onStateChange || noop$3;
+      this.onViewStateChange = opts.onViewStateChange || noop$2;
+      this.onStateChange = opts.onStateChange || noop$2;
     }
     finalize() {
       this.transition.cancel();
@@ -50882,7 +50882,7 @@ ${source2}`;
   }, Symbol.toStringTag, {
     value: "Module"
   }));
-  function noop$2() {
+  function noop$1() {
   }
   const getCursor = ({ isDragging }) => isDragging ? "grabbing" : "grab";
   const defaultProps$o = {
@@ -50914,14 +50914,14 @@ ${source2}`;
     _typedArrayManagerProps: {},
     _customRender: null,
     widgets: [],
-    onDeviceInitialized: noop$2,
-    onWebGLInitialized: noop$2,
-    onResize: noop$2,
-    onViewStateChange: noop$2,
-    onInteractionStateChange: noop$2,
-    onBeforeRender: noop$2,
-    onAfterRender: noop$2,
-    onLoad: noop$2,
+    onDeviceInitialized: noop$1,
+    onWebGLInitialized: noop$1,
+    onResize: noop$1,
+    onViewStateChange: noop$1,
+    onInteractionStateChange: noop$1,
+    onBeforeRender: noop$1,
+    onAfterRender: noop$1,
+    onLoad: noop$1,
     onError: (error2) => defaultLogger.error(error2.message, error2.cause)(),
     onHover: null,
     onClick: null,
@@ -57179,7 +57179,7 @@ fn fragmentMain(inp: Varyings) -> @location(0) vec4<f32> {
 `;
   const DEFAULT_CANVAS_WIDTH = 1024;
   const DEFAULT_BUFFER$1 = 4;
-  const noop$1 = () => {
+  const noop = () => {
   };
   const DEFAULT_SAMPLER_PARAMETERS = {
     minFilter: "linear",
@@ -57324,7 +57324,7 @@ fn fragmentMain(inp: Varyings) -> @location(0) vec4<f32> {
     return icons;
   }
   class IconManager {
-    constructor(device, { onUpdate = noop$1, onError = noop$1 }) {
+    constructor(device, { onUpdate = noop, onError = noop }) {
       this._loadOptions = null;
       this._texture = null;
       this._externalTexture = null;
@@ -79232,26 +79232,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-o4NY7nYp.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DTVxxSOb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-Bze6VnRs.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-xCCnRB9A.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BLQzAxEy.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BfQFd60T.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BsQU3FTA.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BijdqKSS.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-KPHjyNiw.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-SGMgHzmm.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CFd6qBJd.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Ve7U07kn.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DLDk-ENG.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DpdjAgjo.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-Dk5snzgk.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CS4x0KYL.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -89825,8 +89825,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     const state = get2();
     const authoring = state.authoringWaypointShapesIndex;
-    const active2 = state.activeStoryIndex;
-    const resolved = authoring !== null ? authoring : active2 !== null ? active2 : null;
+    const active = state.activeStoryIndex;
+    const resolved = authoring !== null ? authoring : active !== null ? active : null;
     if (resolved === null) {
       return;
     }
@@ -91290,17 +91290,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       name2
     ]));
     const app = useAppStore.getState();
-    const visibility2 = applyVisibilityTransition(sourceChannels, groups, app.channelVisibilities, app.channelGroupRowVisibilities, {
+    const visibility = applyVisibilityTransition(sourceChannels, groups, app.channelVisibilities, app.channelGroupRowVisibilities, {
       kind: "sync"
     }, app.activeChannelGroupId);
-    const { channelVisibilities } = visibility2;
+    const { channelVisibilities } = visibility;
     delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
     const activeId = app.activeChannelGroupId;
     const nextActiveId = activeId && groups.some((g2) => g2.id === activeId) ? activeId : ((_a2 = groups[0]) == null ? void 0 : _a2.id) ?? null;
     useAppStore.setState({
       groupNames,
       channelVisibilities,
-      channelGroupRowVisibilities: visibility2.channelGroupRowVisibilities,
+      channelGroupRowVisibilities: visibility.channelGroupRowVisibilities,
       activeChannelGroupId: nextActiveId
     });
   }
@@ -92977,9 +92977,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       props.sourceChannelId
     ]);
     const syncFromSliders = (loStep, hiStep, commit) => {
-      const active2 = scaleRef.current;
-      const lo = snapContrastLimit(active2.fromSlider(loStep), fractional);
-      const hi2 = snapContrastLimit(active2.fromSlider(hiStep), fractional);
+      const active = scaleRef.current;
+      const lo = snapContrastLimit(active.fromSlider(loStep), fractional);
+      const hi2 = snapContrastLimit(active.fromSlider(hiStep), fractional);
       setMinInput(formatContrastLimit(lo, range2));
       setMaxInput(formatContrastLimit(hi2, range2));
       if (commit) {
@@ -93010,9 +93010,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       };
       const openPastCut = () => {
         editingLimitRef.current = true;
-        const active2 = scaleRef.current;
-        const lo = active2.fromSlider(sliderMinRef.current);
-        const hi2 = active2.fromSlider(sliderMaxRef.current);
+        const active = scaleRef.current;
+        const lo = active.fromSlider(sliderMinRef.current);
+        const hi2 = active.fromSlider(sliderMaxRef.current);
         const full2 = buildContrastScale(resolveHistogramChartView(distRef.current, {
           floatRange: range2,
           dtypeMax,
@@ -95418,7 +95418,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (shown.color && !isStackSeedColor(shown.color)) return;
     const groups = doc.channelGroups;
     const app = useAppStore.getState();
-    const visibility2 = applyVisibilityTransition(sourceChannels, groups, app.channelVisibilities, app.channelGroupRowVisibilities, {
+    const visibility = applyVisibilityTransition(sourceChannels, groups, app.channelVisibilities, app.channelGroupRowVisibilities, {
       kind: "sync"
     });
     const lockedSlots = [];
@@ -95429,8 +95429,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onLoader: sourceChannels.filter(isImageChannel),
       activeGroup: groups.find((g2) => g2.id === app.activeChannelGroupId),
       channelGroups: groups,
-      stackVisibilities: visibility2.channelVisibilities,
-      groupRowVisibilities: visibility2.channelGroupRowVisibilities,
+      stackVisibilities: visibility.channelVisibilities,
+      groupRowVisibilities: visibility.channelGroupRowVisibilities,
       hasVisibilityMap: true
     })) {
       if (seen2.has(sc2.id)) continue;
@@ -95932,7 +95932,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function withHiddenClasses(view, channelId, hidden) {
     if (!(hidden == null ? void 0 : hidden.length)) return view;
     const vis = (view == null ? void 0 : view.visibility) ?? visibilityAllOn();
-    const visibility2 = vis.mode === "show" ? {
+    const visibility = vis.mode === "show" ? {
       mode: "show",
       names: vis.names.filter((n2) => !hidden.includes(n2))
     } : {
@@ -95947,7 +95947,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return {
       channelId,
       colors: (view == null ? void 0 : view.colors) ?? [],
-      visibility: visibility2
+      visibility
     };
   }
   function classColorsFor(featureTable, view, waypointId) {
@@ -166892,7 +166892,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     out[2] = Math.max(a2[2], b2[2]);
     return out;
   }
-  function round$1(out, a2) {
+  function round(out, a2) {
     out[0] = Math.round(a2[0]);
     out[1] = Math.round(a2[1]);
     out[2] = Math.round(a2[2]);
@@ -167169,7 +167169,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     rotateX,
     rotateY,
     rotateZ,
-    round: round$1,
+    round,
     scale,
     scaleAndAdd,
     set,
@@ -169729,377 +169729,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       length: n2
     }, (_2, i2) => i2);
   }
-  const STAGES = [
-    "read",
-    "fetch",
-    "decode",
-    "encode",
-    "mozjpeg",
-    "deflate",
-    "queue",
-    "write",
-    "disk"
-  ];
-  const REPORT_MS = 1e4;
-  const SAMPLE_MS = 1e3;
-  const HEARTBEAT_MS = 100;
-  const LOG = "[minerva export]";
-  const noTotals = () => ({
-    count: 0,
-    ms: 0,
-    maxMs: 0,
-    bytes: 0,
-    workMs: 0
-  });
-  function addTo(t2, ms, bytes) {
-    t2.count += 1;
-    t2.ms += ms;
-    t2.maxMs = Math.max(t2.maxMs, ms);
-    t2.bytes += bytes;
-  }
-  class StageMeter {
-    constructor(now) {
-      __publicField(this, "interval", noTotals());
-      __publicField(this, "total", noTotals());
-      __publicField(this, "open", 0);
-      __publicField(this, "openMs", 0);
-      __publicField(this, "openSince");
-      this.openSince = now;
-    }
-    settle(now) {
-      this.openMs += this.open * (now - this.openSince);
-      this.openSince = now;
-    }
-    begin(now) {
-      this.settle(now);
-      this.open += 1;
-    }
-    end(now, ms, bytes) {
-      this.settle(now);
-      this.open -= 1;
-      addTo(this.interval, ms, bytes);
-      addTo(this.total, ms, bytes);
-    }
-    work(ms) {
-      this.interval.workMs += ms;
-      this.total.workMs += ms;
-    }
-    takeOpen(now, spanMs) {
-      this.settle(now);
-      const mean = spanMs > 0 ? this.openMs / spanMs : 0;
-      this.openMs = 0;
-      return mean;
-    }
-    takeInterval() {
-      const t2 = this.interval;
-      this.interval = noTotals();
-      return t2;
-    }
-  }
-  function formatSpan(ms) {
-    if (!Number.isFinite(ms)) return "?";
-    const s2 = Math.max(0, ms) / 1e3;
-    if (s2 < 60) return `${s2.toFixed(s2 < 10 ? 1 : 0)}s`;
-    const m2 = Math.floor(s2 / 60);
-    if (m2 < 60) return `${m2}m${String(Math.floor(s2 % 60)).padStart(2, "0")}s`;
-    return `${Math.floor(m2 / 60)}h${String(m2 % 60).padStart(2, "0")}m`;
-  }
-  function formatBytes(n2) {
-    if (n2 >= 1e9) return `${(n2 / 1e9).toFixed(2)} GB`;
-    if (n2 >= 1e6) return `${(n2 / 1e6).toFixed(1)} MB`;
-    return `${(n2 / 1e3).toFixed(0)} KB`;
-  }
-  const round = (n2, digits = 1) => Number(n2.toFixed(digits));
-  const average = (t2, of2) => t2.count ? of2 / t2.count : 0;
-  function percentile(values, p2) {
-    if (values.length === 0) return Number.NaN;
-    const sorted = [
-      ...values
-    ].sort((a2, b2) => a2 - b2);
-    return sorted[Math.min(sorted.length - 1, Math.floor(p2 * sorted.length))];
-  }
-  function heapBytes() {
-    const memory = performance.memory;
-    return (memory == null ? void 0 : memory.usedJSHeapSize) ?? null;
-  }
-  function visibility() {
-    return typeof document === "undefined" ? "n/a" : document.visibilityState;
-  }
-  class Profile {
-    constructor(label2, env2) {
-      __publicField(this, "t0", performance.now());
-      __publicField(this, "meters", /* @__PURE__ */ new Map());
-      __publicField(this, "tilesDone", 0);
-      __publicField(this, "tilesTotal", 0);
-      __publicField(this, "shownMs", null);
-      __publicField(this, "firstTileAt", null);
-      __publicField(this, "lastReportAt", this.t0);
-      __publicField(this, "lastReportTiles", 0);
-      __publicField(this, "lagSum", 0);
-      __publicField(this, "lagCount", 0);
-      __publicField(this, "lagMax", 0);
-      __publicField(this, "longTaskMs", 0);
-      __publicField(this, "timers", []);
-      __publicField(this, "heartbeat", 0);
-      __publicField(this, "longTasks", null);
-      __publicField(this, "onVisibility", () => this.event(`tab ${visibility()} (Chrome deprioritizes hidden tabs)`));
-      __publicField(this, "trace");
-      var _a2;
-      for (const stage of STAGES) this.meters.set(stage, new StageMeter(this.t0));
-      this.trace = {
-        startedAt: (/* @__PURE__ */ new Date()).toISOString(),
-        env: {
-          label: label2,
-          ...env2
-        },
-        events: [],
-        samples: [],
-        reports: []
-      };
-      this.timers.push(window.setInterval(() => this.report(), REPORT_MS), window.setInterval(() => this.sample(), SAMPLE_MS));
-      let expected = this.t0 + HEARTBEAT_MS;
-      const beat = () => {
-        const now = performance.now();
-        const lag = Math.max(0, now - expected);
-        this.lagSum += lag;
-        this.lagCount += 1;
-        this.lagMax = Math.max(this.lagMax, lag);
-        expected = now + HEARTBEAT_MS;
-        this.heartbeat = window.setTimeout(beat, HEARTBEAT_MS);
-      };
-      this.heartbeat = window.setTimeout(beat, HEARTBEAT_MS);
-      if ((_a2 = PerformanceObserver.supportedEntryTypes) == null ? void 0 : _a2.includes("longtask")) {
-        this.longTasks = new PerformanceObserver((list2) => {
-          for (const entry of list2.getEntries()) this.longTaskMs += entry.duration;
-        });
-        this.longTasks.observe({
-          type: "longtask"
-        });
-      }
-      document.addEventListener("visibilitychange", this.onVisibility);
-      console.log(`${LOG} start ${label2} \xB7 ${Object.entries(env2).map(([k2, v2]) => `${k2} ${v2}`).join(" \xB7 ")}`);
-    }
-    meter(stage) {
-      return this.meters.get(stage);
-    }
-    event(text2) {
-      const now = performance.now();
-      this.trace.events.push([
-        round((now - this.t0) / 1e3),
-        text2
-      ]);
-      console.log(`${LOG} +${formatSpan(now - this.t0)} ${text2}`);
-    }
-    noteProgress(tilesDone, tilesTotal) {
-      if (tilesDone > 0 && this.firstTileAt === null) {
-        this.firstTileAt = performance.now();
-      }
-      this.tilesDone = tilesDone;
-      this.tilesTotal = tilesTotal;
-    }
-    noteEta(shownMs) {
-      this.shownMs = shownMs;
-    }
-    sample() {
-      const now = performance.now();
-      const read = this.meter("read").total;
-      this.trace.samples.push([
-        round((now - this.t0) / 1e3),
-        this.tilesDone,
-        read.count,
-        read.bytes,
-        this.meter("write").total.bytes,
-        this.shownMs === null ? null : round(this.shownMs / 1e3, 0)
-      ]);
-    }
-    report() {
-      const now = performance.now();
-      const span = now - this.lastReportAt;
-      if (span <= 0) return;
-      const perSec = (n2) => n2 / (span / 1e3);
-      const stages = new Map(STAGES.map((stage) => {
-        const meter = this.meter(stage);
-        return [
-          stage,
-          {
-            ...meter.takeInterval(),
-            open: meter.takeOpen(now, span)
-          }
-        ];
-      }));
-      const s2 = (stage) => stages.get(stage);
-      const runMs = this.firstTileAt === null ? 0 : now - this.firstTileAt;
-      const tileRate = perSec(this.tilesDone - this.lastReportTiles);
-      const avgRate = runMs > 0 ? this.tilesDone / (runMs / 1e3) : 0;
-      const percent = this.tilesTotal > 0 ? 100 * this.tilesDone / this.tilesTotal : 0;
-      const encode2 = s2("encode");
-      const encodeWorkers = Number(this.trace.env.encodeWorkers) || 1;
-      const heap = heapBytes();
-      const latency = STAGES.flatMap((stage) => {
-        const t2 = s2(stage);
-        if (!t2.count) return [];
-        const mean = t2.ms / t2.count;
-        return [
-          `${stage} ${mean.toFixed(mean < 10 ? 1 : 0)}/${t2.maxMs.toFixed(0)}`
-        ];
-      });
-      const lines = [
-        `${LOG} +${formatSpan(now - this.t0)} \xB7 tiles ${this.tilesDone}/${this.tilesTotal} (${percent.toFixed(1)}%) \xB7 ${tileRate.toFixed(1)}/s now, ${avgRate.toFixed(1)}/s avg \xB7 remaining shown ${this.shownMs === null ? "-" : formatSpan(this.shownMs)}`,
-        `  per tile: source ${formatBytes(average(s2("read"), s2("read").bytes))} \xB7 jpeg ${formatBytes(average(s2("write"), s2("write").bytes))} \xB7 encode work ${average(encode2, encode2.workMs).toFixed(0)} ms (MozJPEG ${average(encode2, s2("mozjpeg").workMs).toFixed(0)}, pixel conversion ${average(encode2, encode2.workMs - s2("mozjpeg").workMs).toFixed(0)})`,
-        `  stage ms avg/max: ${latency.join(" \xB7 ") || "-"}`,
-        `  load: ${s2("read").open.toFixed(1)} tiles reading \xB7 decode ${s2("decode").open.toFixed(1)} open of ${this.trace.env.decodeWorkers} workers \xB7 encode ${encode2.open.toFixed(1)} open of ${encodeWorkers} workers, ${(100 * encode2.workMs / (span * encodeWorkers)).toFixed(0)}% busy \xB7 disk ${(100 * s2("disk").ms / span).toFixed(0)}% busy (${s2("disk").count} writes) \xB7 reads ${formatBytes(perSec(s2("fetch").bytes))}/s`,
-        `  main: lag avg ${(this.lagCount ? this.lagSum / this.lagCount : 0).toFixed(0)} ms, max ${this.lagMax.toFixed(0)} ms \xB7 long tasks ${(this.longTaskMs / 1e3).toFixed(1)}s \xB7 heap ${heap === null ? "n/a" : formatBytes(heap)} \xB7 tab ${visibility()}`
-      ];
-      console.log(lines.join("\n"));
-      this.trace.reports.push({
-        s: round((now - this.t0) / 1e3),
-        tiles: this.tilesDone,
-        tileRate: round(tileRate),
-        stages: Object.fromEntries(STAGES.map((stage) => {
-          const t2 = s2(stage);
-          return [
-            stage,
-            {
-              n: t2.count,
-              ms: round(t2.ms),
-              max: round(t2.maxMs),
-              bytes: t2.bytes,
-              work: round(t2.workMs),
-              open: round(t2.open, 2)
-            }
-          ];
-        })),
-        lagMax: round(this.lagMax),
-        longTaskMs: round(this.longTaskMs),
-        heap,
-        visible: visibility()
-      });
-      this.lastReportAt = now;
-      this.lastReportTiles = this.tilesDone;
-      this.lagSum = 0;
-      this.lagCount = 0;
-      this.lagMax = 0;
-      this.longTaskMs = 0;
-    }
-    etaByTenth(endS) {
-      const { samples } = this.trace;
-      if (this.tilesTotal <= 0) return "-";
-      const checks2 = [];
-      for (let tenth = 1; tenth <= 9; tenth++) {
-        const row2 = samples.find((r2) => r2[1] >= this.tilesTotal * tenth / 10);
-        if (!row2) break;
-        const actual = endS - row2[0];
-        const shown = row2[5];
-        const off = shown === null || actual <= 0 ? "" : ` (${shown >= actual ? "+" : ""}${Math.round(100 * (shown - actual) / actual)}%)`;
-        checks2.push(`${tenth * 10}% ${shown === null ? "-" : formatSpan(shown * 1e3)} vs ${formatSpan(actual * 1e3)}${off}`);
-      }
-      return checks2.join(" \xB7 ") || "-";
-    }
-    etaJitter() {
-      const shown = this.trace.samples.filter((r2) => r2[5] !== null);
-      const misses = [];
-      for (let i2 = 0; i2 + 10 < shown.length; i2 += 10) {
-        const [t0, , , , , eta0] = shown[i2];
-        const [t1, , , , , eta1] = shown[i2 + 10];
-        misses.push(Math.abs(eta1 - eta0 + (t1 - t0)));
-      }
-      if (misses.length === 0) return "-";
-      return `median ${formatSpan(1e3 * percentile(misses, 0.5))}, 90th percentile ${formatSpan(1e3 * percentile(misses, 0.9))} per 10 s (a steady countdown misses by 0)`;
-    }
-    finish(outcome) {
-      var _a2;
-      this.report();
-      this.sample();
-      for (const id2 of this.timers) window.clearInterval(id2);
-      window.clearTimeout(this.heartbeat);
-      (_a2 = this.longTasks) == null ? void 0 : _a2.disconnect();
-      document.removeEventListener("visibilitychange", this.onVisibility);
-      const now = performance.now();
-      const total = (stage) => this.meter(stage).total;
-      const runS = this.firstTileAt === null ? 0 : (now - this.firstTileAt) / 1e3;
-      const means = STAGES.flatMap((stage) => {
-        const t2 = total(stage);
-        if (!t2.count) return [];
-        const mozJpeg = stage === "encode" ? `, ${(total("mozjpeg").workMs / t2.count).toFixed(0)} in MozJPEG` : "";
-        const work = t2.workMs ? ` (${(t2.workMs / t2.count).toFixed(0)} work${mozJpeg})` : "";
-        return [
-          `${stage} ${(t2.ms / t2.count).toFixed(1)}${work}`
-        ];
-      });
-      console.log([
-        `${LOG} ${outcome} after ${formatSpan(now - this.t0)} (first tile at ${this.firstTileAt === null ? "-" : formatSpan(this.firstTileAt - this.t0)}) \xB7 ${this.tilesDone} tiles \xB7 ${runS > 0 ? (this.tilesDone / runS).toFixed(1) : "-"}/s \xB7 source read ${formatBytes(total("fetch").bytes)} in ${total("fetch").count} reads \xB7 jpeg ${formatBytes(total("write").bytes)}`,
-        `  mean ms: ${means.join(" \xB7 ") || "-"}`,
-        `  remaining shown vs actual, at each tenth of the tiles: ${this.etaByTenth((now - this.t0) / 1e3)}`,
-        `  remaining-time jitter: ${this.etaJitter()}`,
-        `  per-second samples: copy(JSON.stringify(__minervaExportTrace))`
-      ].join("\n"));
-    }
-  }
-  let active = null;
-  const noop = () => {
-  };
-  function startExportProfile(label2, env2) {
-    active == null ? void 0 : active.finish("replaced");
-    active = new Profile(label2, {
-      cores: navigator.hardwareConcurrency,
-      memoryGB: navigator.deviceMemory ?? "n/a",
-      ...env2
-    });
-    globalThis.__minervaExportTrace = active.trace;
-  }
-  function endExportProfile(outcome) {
-    active == null ? void 0 : active.finish(outcome);
-    active = null;
-  }
-  function exportSpan(stage) {
-    const profile = active;
-    if (!profile) return noop;
-    const meter = profile.meter(stage);
-    const start = performance.now();
-    meter.begin(start);
-    return (bytes = 0) => {
-      const now = performance.now();
-      meter.end(now, now - start, bytes);
-    };
-  }
-  async function timed(stage, work, bytes) {
-    const done = exportSpan(stage);
-    let size = 0;
-    try {
-      const result = await work();
-      size = (bytes == null ? void 0 : bytes(result)) ?? 0;
-      return result;
-    } finally {
-      done(size);
-    }
-  }
-  function exportWork(stage, ms) {
-    active == null ? void 0 : active.meter(stage).work(ms);
-  }
-  function exportEvent(text2) {
-    active == null ? void 0 : active.event(text2);
-  }
-  function noteExportProgress(tilesDone, tilesTotal) {
-    active == null ? void 0 : active.noteProgress(tilesDone, tilesTotal);
-  }
-  function noteExportEta(shownMs) {
-    active == null ? void 0 : active.noteEta(shownMs);
-  }
-  function timedSink(sink) {
-    return {
-      async writeAt(offset, data2) {
-        const done = exportSpan("disk");
-        try {
-          await sink.writeAt(offset, data2);
-        } finally {
-          done(data2.byteLength);
-        }
-      },
-      truncate: sink.truncate ? (size) => sink.truncate(size) : void 0,
-      close: sink.close ? () => sink.close() : void 0,
-      abort: sink.abort ? (reason2) => sink.abort(reason2) : void 0
-    };
-  }
   function WorkerWrapper$2(options) {
     return new Worker("" + new URL("decoder.worker-DskuWaKT.js", import.meta.url).href, {
       type: "module",
@@ -170124,15 +169753,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   class OmeDecodePool extends Pool {
     decode(fileDirectory, buffer2) {
-      const done = exportSpan("decode");
-      return super.decode(withoutBlockTables(fileDirectory), buffer2).finally(() => done());
+      return super.decode(withoutBlockTables(fileDirectory), buffer2);
     }
     decodeWidened(fileDirectory, buffer2, lut) {
-      const done = exportSpan("decode");
       return super.decode({
         ...withoutBlockTables(fileDirectory),
         MinervaWidenLut: lut
-      }, buffer2).finally(() => done());
+      }, buffer2);
     }
   }
   let sharedPool = null;
@@ -174432,7 +174059,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       basepath: routerBasepath()
     });
   }
-  const version = "1.0.0-alpha.10";
+  const version = "1.0.0-alpha.11";
   const LOCAL_PLAYER_DIR = "bundle";
   function hostedPlayerBaseUrl() {
     const selfHosted = "bundle/";
@@ -248968,16 +248595,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       props.extraCommands
     ]);
     var textareaDomRef = reactExports.useRef();
-    var active2 = reactExports.useRef("preview");
+    var active = reactExports.useRef("preview");
     var initScroll = reactExports.useRef(false);
     reactExports.useMemo(() => {
       textareaDomRef.current = state.textareaWarp;
       if (state.textareaWarp) {
         state.textareaWarp.addEventListener("mouseover", () => {
-          active2.current = "text";
+          active.current = "text";
         });
         state.textareaWarp.addEventListener("mouseleave", () => {
-          active2.current = "preview";
+          active.current = "preview";
         });
       }
     }, [
@@ -248988,21 +248615,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       var textareaDom = textareaDomRef.current;
       var previewDom = previewRef.current ? previewRef.current : void 0;
       if (!initScroll.current) {
-        active2.current = type;
+        active.current = type;
         initScroll.current = true;
       }
       if (textareaDom && previewDom) {
         var scale2 = (textareaDom.scrollHeight - textareaDom.offsetHeight) / (previewDom.scrollHeight - previewDom.offsetHeight);
-        if (e2.target === textareaDom && active2.current === "text") {
+        if (e2.target === textareaDom && active.current === "text") {
           previewDom.scrollTop = textareaDom.scrollTop / scale2;
         }
-        if (e2.target === previewDom && active2.current === "preview") {
+        if (e2.target === previewDom && active.current === "preview") {
           textareaDom.scrollTop = previewDom.scrollTop * scale2;
         }
         var scrollTop = 0;
-        if (active2.current === "text") {
+        if (active.current === "text") {
           scrollTop = textareaDom.scrollTop || 0;
-        } else if (active2.current === "preview") {
+        } else if (active.current === "preview") {
           scrollTop = previewDom.scrollTop || 0;
         }
         dispatch({
@@ -251625,14 +251252,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         className2
       ].filter(Boolean).join(" "),
       children: tabs.map((tab2) => {
-        const active2 = tab2.id === value;
+        const active = tab2.id === value;
         return jsxRuntimeExports.jsx("button", {
           type: "button",
           role: "tab",
-          "aria-selected": active2,
+          "aria-selected": active,
           className: [
             minervaTheme.tab,
-            active2 ? minervaTheme.tabActive : null
+            active ? minervaTheme.tabActive : null
           ].filter(Boolean).join(" "),
           onClick: () => onChange(tab2.id),
           children: tab2.label
@@ -252954,8 +252581,52 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
+  const WRITE_CHUNK_BYTES = 8 * 1024 * 1024;
+  function bufferedSink(sink) {
+    const buffer2 = new Uint8Array(WRITE_CHUNK_BYTES);
+    let start = 0n;
+    let length2 = 0;
+    const flush2 = async () => {
+      if (length2 === 0) return;
+      await sink.writeAt(start, buffer2.subarray(0, length2));
+      length2 = 0;
+    };
+    return {
+      async writeAt(offset, data2) {
+        const follows = length2 > 0 && offset === start + BigInt(length2);
+        if (follows && length2 + data2.byteLength <= buffer2.byteLength) {
+          buffer2.set(data2, length2);
+          length2 += data2.byteLength;
+          return;
+        }
+        await flush2();
+        if (data2.byteLength >= buffer2.byteLength) {
+          await sink.writeAt(offset, data2);
+          return;
+        }
+        buffer2.set(data2);
+        start = offset;
+        length2 = data2.byteLength;
+      },
+      async truncate(size) {
+        var _a2;
+        await flush2();
+        await ((_a2 = sink.truncate) == null ? void 0 : _a2.call(sink, size));
+      },
+      async close() {
+        var _a2;
+        await flush2();
+        await ((_a2 = sink.close) == null ? void 0 : _a2.call(sink));
+      },
+      async abort(reason2) {
+        var _a2;
+        length2 = 0;
+        await ((_a2 = sink.abort) == null ? void 0 : _a2.call(sink, reason2));
+      }
+    };
+  }
   const MERGE_GAP_BYTES = 256 * 1024;
-  function blockRanges(image2, [x0, y0, x1, y1]) {
+  function mergedBlockRanges(image2, [x0, y0, x1, y1]) {
     const fd2 = image2.fileDirectory;
     const offsets = image2.isTiled ? fd2.TileOffsets : fd2.StripOffsets;
     const counts = image2.isTiled ? fd2.TileByteCounts : fd2.StripByteCounts;
@@ -252978,10 +252649,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }
       }
     }
-    return ranges;
-  }
-  function mergedBlockRanges(image2, window2) {
-    const ranges = blockRanges(image2, window2);
     ranges.sort((a2, b2) => a2.offset - b2.offset);
     const merged = [];
     for (const r2 of ranges) {
@@ -252996,77 +252663,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return merged;
   }
-  function windowSourceBytes(image2, window2) {
-    let bytes = 0;
-    for (const range2 of blockRanges(image2, window2)) bytes += range2.length;
-    return bytes;
-  }
-  const COMPRESSION = {
-    1: "uncompressed",
-    5: "LZW",
-    6: "old JPEG",
-    7: "JPEG",
-    8: "deflate",
-    32946: "deflate",
-    33003: "JPEG 2000",
-    33005: "JPEG 2000",
-    34712: "JPEG 2000",
-    34887: "LERC",
-    5e4: "zstd",
-    50001: "WebP"
-  };
-  async function describeExportSource(plane, selection) {
-    const indexer = plane._indexer;
-    if (typeof indexer !== "function") return "layout not exposed";
-    try {
-      const image2 = await indexer(selection);
-      if (!(image2 instanceof GeoTIFFImage)) return "not a TIFF";
-      const code2 = Number(image2.fileDirectory.Compression ?? 1);
-      const format = [
-        "",
-        "uint",
-        "int",
-        "float"
-      ][image2.getSampleFormat(0)];
-      const samples = image2.getSamplesPerPixel();
-      return [
-        image2.isTiled ? `${image2.getTileWidth()}x${image2.getTileHeight()} tiles` : `strips of ${image2.getTileHeight()} rows`,
-        COMPRESSION[code2] ?? `compression ${code2}`,
-        `${format ?? "?"}${image2.getBitsPerSample(0)}`,
-        ...samples > 1 ? [
-          `${samples} samples, planar config ${image2.planarConfiguration}`
-        ] : [],
-        ...image2.littleEndian ? [] : [
-          "big-endian"
-        ]
-      ].join(", ");
-    } catch (e2) {
-      return `unreadable (${e2 instanceof Error ? e2.message : e2})`;
-    }
-  }
   function prefetchedSource(base2, ranges, readSignal) {
     const blocked = base2;
     const bulk = blocked.blockSize && blocked.source ? blocked.source : base2;
-    const runs = ranges.map((range2) => {
-      const fetched = exportSpan("fetch");
-      return {
-        ...range2,
-        data: bulk.fetch([
-          range2
-        ], readSignal).then(([result]) => {
-          fetched(range2.length);
-          const { data: data2, offset } = result instanceof ArrayBuffer ? {
-            data: result,
-            offset: range2.offset
-          } : result;
-          const whole = offset === range2.offset && data2.byteLength >= range2.length;
-          return whole ? data2 : null;
-        }, () => {
-          fetched();
-          return null;
-        })
-      };
-    });
+    const runs = ranges.map((range2) => ({
+      ...range2,
+      data: bulk.fetch([
+        range2
+      ], readSignal).then(([result]) => {
+        const { data: data2, offset } = result instanceof ArrayBuffer ? {
+          data: result,
+          offset: range2.offset
+        } : result;
+        const whole = offset === range2.offset && data2.byteLength >= range2.length;
+        return whole ? data2 : null;
+      }, () => null)
+    }));
     return {
       fetch: (slices, signal) => Promise.all(slices.map(async (slice) => {
         const run = runs.find((r2) => r2.offset <= slice.offset && slice.offset + slice.length <= r2.offset + r2.length);
@@ -253138,16 +252750,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       signal.removeEventListener("abort", abort);
     }
   }
-  async function readExportTile(plane, tileSize, selection, x2, y2, signal) {
-    const done = exportSpan("read");
-    let sourceBytes = 0;
-    try {
-      const read = await withReadSignal(signal, (readSignal) => readTile(plane, tileSize, selection, x2, y2, readSignal));
-      sourceBytes = read.sourceBytes;
-      return read.tile;
-    } finally {
-      done(sourceBytes);
-    }
+  function readExportTile(plane, tileSize, selection, x2, y2, signal) {
+    return withReadSignal(signal, (readSignal) => readTile(plane, tileSize, selection, x2, y2, readSignal));
   }
   async function readTile(plane, tileSize, selection, x2, y2, signal) {
     const { width, height } = getImageSize(plane);
@@ -253158,35 +252762,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       Math.min(height, (y2 + 1) * tileSize)
     ];
     if (!(plane instanceof TiffPixelSource)) {
-      const tile = plane.readWindow ? await plane.readWindow({
+      if (plane.readWindow) return plane.readWindow({
         selection,
         window: window2,
         signal
-      }) : plane.tileSize === tileSize ? await plane.getTile({
-        selection,
-        x: x2,
-        y: y2,
-        signal
-      }) : await composeExportTile(plane, tileSize, selection, x2, y2, signal);
-      return {
-        tile,
-        sourceBytes: 0
-      };
+      });
+      if (plane.tileSize === tileSize) {
+        return plane.getTile({
+          selection,
+          x: x2,
+          y: y2,
+          signal
+        });
+      }
+      return composeExportTile(plane, tileSize, selection, x2, y2, signal);
     }
     const indexer = plane._indexer;
     const image2 = await indexer(selection);
     const source2 = prefetchedSource(image2.source, mergedBlockRanges(image2, window2), signal);
     const reader = new GeoTIFFImage(image2.fileDirectory, image2.geoKeys, image2.dataView, image2.littleEndian, false, source2);
     const atTileSize = new TiffPixelSource(async () => reader, plane.dtype, tileSize, plane.shape, plane.labels, plane.meta, plane.pool);
-    return {
-      tile: await atTileSize.getTile({
-        selection,
-        x: x2,
-        y: y2,
-        signal
-      }),
-      sourceBytes: windowSourceBytes(image2, window2)
-    };
+    return atTileSize.getTile({
+      selection,
+      x: x2,
+      y: y2,
+      signal
+    });
   }
   function bitsPerSampleFromDtype(dtype) {
     if (dtype === "Uint8" || dtype === "Int8") return 8;
@@ -253640,9 +253241,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (workSignal.aborted) return;
       const tileSize = levels[job.levelIndex].tileSize;
       const padded = padLabelTile(tile.data, tile.width, tile.height, tileSize, tileSize);
-      const deflated = await timed("deflate", () => zlibDeflateBytes(labelTileBytesLE(padded)), (bytes) => bytes.byteLength);
+      const deflated = await zlibDeflateBytes(labelTileBytesLE(padded));
       if (workSignal.aborted) return;
-      await timed("write", () => writer.writeSegment(job.address, deflated), () => deflated.byteLength);
+      await writer.writeSegment(job.address, deflated);
       onProgress == null ? void 0 : onProgress(1);
     };
     const workerLoop = async () => {
@@ -253716,25 +253317,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const loaderData = loaderPlanes(entry);
     const dtype = assertUnsignedLabelDtype(loaderData[0].dtype);
     const { levels, useLoaderTiles } = planMaskExportLevels(loaderData);
-    exportEvent(`${fileName}: ${channels2.length} mask channels (${dtype}), ${levels.length} levels from ${levels[0].width}x${levels[0].height} px, ${tileCountForLevels(levels, channels2.length)} tiles, ${useLoaderTiles ? "levels read from the source" : "levels built from whole rasters"}; source ${await describeExportSource(loaderData[0], {
-      t: 0,
-      z: 0,
-      c: channels2[0].index
-    })}`);
     let generated = null;
     if (!useLoaderTiles) {
-      const reading = performance.now();
       generated = await rastersForGeneratedPyramid(loaderData[0], channels2, levels, dtype, signal);
-      exportEvent(`${fileName}: whole rasters read and downsampled in ${formatSpan(performance.now() - reading)}`);
     }
     const fh2 = await directory.getFileHandle(fileName, {
       create: true
     });
     const writable = await fh2.createWritable();
-    const started = performance.now();
     try {
       await writeZlibOmeTiff({
-        sink: timedSink(browserFileSink(writable)),
+        sink: bufferedSink(browserFileSink(writable)),
         image: image2,
         channels: channels2,
         fileName,
@@ -253769,7 +253362,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       throw e2;
     }
-    exportEvent(`${fileName}: tiles written and file closed in ${formatSpan(performance.now() - started)}`);
     return remappedImageForOmeTiffExport({
       ...image2,
       contentRole: "segmentation"
@@ -255313,9 +254905,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       out[o2 + 3] = 255;
     }
   }
+  let cubeRootLut = null;
+  function cubeRootU16ToU8Lut() {
+    if (!cubeRootLut) {
+      cubeRootLut = Uint8Array.from({
+        length: 65536
+      }, (_2, v2) => encodeCubeRootU16ToU8(v2));
+    }
+    return cubeRootLut;
+  }
   function cubeRootPixelsToRgba(out, pixels) {
+    const lut = pixels instanceof Uint16Array || pixels instanceof Uint8Array || pixels instanceof Uint8ClampedArray ? cubeRootU16ToU8Lut() : null;
     for (let i2 = 0; i2 < pixels.length; i2++) {
-      const v2 = encodeCubeRootU16ToU8(pixels[i2]);
+      const v2 = lut ? lut[pixels[i2]] : encodeCubeRootU16ToU8(pixels[i2]);
       const o2 = i2 * 4;
       out[o2] = v2;
       out[o2 + 1] = v2;
@@ -255348,27 +254950,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return jsquashReady;
   }
-  const mozJpegTiming = {
-    ms: 0
-  };
   async function encodeRgbaToJpeg(width, height, rgba, quality, colorSpace = MOZJPEG_COLORSPACE_GRAYSCALE) {
     await ensureJpegEncoderReady();
     const imageData = new ImageData(rgba, width, height);
-    const start = performance.now();
-    try {
-      return await encode(imageData, {
-        quality: mozJpegQuality(quality),
-        color_space: colorSpace,
-        baseline: true,
-        progressive: false,
-        arithmetic: false,
-        optimize_coding: true,
-        auto_subsample: false,
-        chroma_subsample: 2
-      });
-    } finally {
-      mozJpegTiming.ms += performance.now() - start;
-    }
+    return encode(imageData, {
+      quality: mozJpegQuality(quality),
+      color_space: colorSpace,
+      baseline: true,
+      progressive: false,
+      arithmetic: false,
+      optimize_coding: true,
+      auto_subsample: false,
+      chroma_subsample: 2
+    });
   }
   async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
     const rgba = new Uint8ClampedArray(new ArrayBuffer(width * height * 4));
@@ -255412,7 +255006,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return copy2;
   }
   function WorkerWrapper$1(options) {
-    return new Worker("" + new URL("jpegExport.worker-jz0PdEuP.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-B-2xWe-c.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -255436,7 +255030,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       this.jobs.delete(jobId);
       if (!job) return;
       if (error2) job.reject(new Error(error2));
-      else if (result.jpeg) job.resolve(result);
+      else if (result.jpeg) job.resolve({
+        jpeg: result.jpeg
+      });
       else job.reject(new Error("jpegExport worker returned empty result"));
     }
     submitJob(message2, transferables) {
@@ -255486,7 +255082,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       const wrappers = await workerWrappersPromise;
       const workerWrapper = wrappers.reduce((a2, b2) => a2.getJobCount() < b2.getJobCount() ? a2 : b2);
-      const { jpeg, ms, mozJpegMs } = await workerWrapper.submitJob({
+      const { jpeg } = await workerWrapper.submitJob({
         width,
         height,
         buffer: buffer2,
@@ -255500,8 +255096,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }, [
         buffer2
       ]);
-      if (ms !== void 0) exportWork("encode", ms);
-      if (mozJpegMs !== void 0) exportWork("mozjpeg", mozJpegMs);
       return jpeg;
     }
     async destroy() {
@@ -255529,14 +255123,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return /allocation failed|out of memory|cannot enlarge memory|\bOOM\b/i.test(message2);
   }
   async function encodeTileJpeg(input2) {
-    const done = exportSpan("encode");
-    try {
-      return await encodeTile(input2);
-    } finally {
-      done();
-    }
-  }
-  async function encodeTile(input2) {
     const { width, height, data: data2, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize, rgbLimits } = input2;
     const pool = getJpegExportPool();
     if (pool) {
@@ -255793,12 +255379,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       baseTags: rgb ? RGB_JPEG_TAGS : grayscaleJpegTags(),
       imageDescription: omeXml
     });
-    const firstRead = (rgb ?? channels2)[0];
-    exportEvent(`${fileName}: ${rgb ? `RGB from ${rgb.length} source channel(s)` : `${fileChannels.length} channels`} (${transfer}), ${levels.length} levels from ${levels[0].width}x${levels[0].height} px, ${jobs.length} tiles; source ${await describeExportSource(layoutPlanes[0], {
-      t: 0,
-      z: 0,
-      c: firstRead.index
-    })}`);
     const fh2 = await directory.getFileHandle(fileName, {
       create: true
     });
@@ -255818,7 +255398,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     let writer;
     try {
       writer = await createTiffWriter({
-        sink: timedSink(browserFileSink(writable)),
+        sink: bufferedSink(browserFileSink(writable)),
         signal: workSignal,
         images: layouts
       });
@@ -255830,26 +255410,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       throw e2;
     }
-    const started = performance.now();
     const concurrency = Math.min(TILES_IN_FLIGHT, Math.max(1, jobs.length));
     let next2 = 0;
     const pendingWrites = /* @__PURE__ */ new Set();
     let pendingWriteBytes = 0;
     const queueWrite = async (job, bytes) => {
-      const waited = exportSpan("queue");
       while (pendingWriteBytes >= MAX_PENDING_WRITE_BYTES) {
         await Promise.race(pendingWrites);
       }
-      waited();
       pendingWriteBytes += bytes.byteLength;
-      const written = exportSpan("write");
-      const write = writer.writeSegment(job.address, bytes).then(() => {
-        written(bytes.byteLength);
-        onProgress == null ? void 0 : onProgress(1);
-      }, (e2) => {
-        written();
-        failExport(e2);
-      }).finally(() => {
+      const write = writer.writeSegment(job.address, bytes).then(() => onProgress == null ? void 0 : onProgress(1), failExport).finally(() => {
         pendingWriteBytes -= bytes.byteLength;
         pendingWrites.delete(write);
       });
@@ -255914,10 +255484,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (signal.aborted || workSignal.aborted) {
         throw new DOMException("Aborted", "AbortError");
       }
-      const finishing = performance.now();
-      exportEvent(`${fileName}: ${jobs.length} tiles written in ${formatSpan(finishing - started)}`);
       await writer.finish();
-      exportEvent(`${fileName}: offset tables written and file closed in ${formatSpan(performance.now() - finishing)}`);
     } catch (e2) {
       try {
         await writer.abort(e2);
@@ -255969,14 +255536,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (intensityItems.length === 0 && maskItems.length === 0) {
       throw new Error("No channels available for OME-TIFF export.");
     }
-    exportEvent(`settings: ${TILES_IN_FLIGHT} tiles in flight, write queue ${MAX_PENDING_WRITE_BYTES / 2 ** 20} MB`);
     const decisions = [];
     let totalTiles = 0;
     for (const item2 of intensityItems) {
-      const checking = performance.now();
       const decided = await transferForBrightfield(item2.image, transfer, item2.planes, item2.intensity, signal);
       const rgb = rgbExportChannels(decided.image, item2.intensity);
-      exportEvent(`${item2.image.basename || item2.image.id}: brightfield check in ${formatSpan(performance.now() - checking)}, exporting ${rgb ? "RGB" : decided.transfer}`);
       decisions.push({
         ...decided,
         rgb
@@ -255989,12 +255553,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const { intensityFileNames, maskFileNames } = allocateOmeTiffExportFileNames(intensityItems.map((item2) => item2.image), maskItems.map((item2) => item2.image));
     let completed = 0;
     onProgress == null ? void 0 : onProgress(0, totalTiles);
-    noteExportProgress(0, totalTiles);
-    exportEvent(`${intensityItems.length + maskItems.length} files, ${totalTiles} tiles`);
     const bump = (delta) => {
       completed += delta;
       onProgress == null ? void 0 : onProgress(completed, totalTiles);
-      noteExportProgress(completed, totalTiles);
     };
     const remappedById = /* @__PURE__ */ new Map();
     const insertedAfter = /* @__PURE__ */ new Map();
@@ -256018,9 +255579,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         rgb: decided.rgb,
         pixels: (_a2 = item2.entry.loader.metadata) == null ? void 0 : _a2.Pixels
       });
-      const offsets = performance.now();
       await writeTiffOffsetsJson(directory, intensityFileNames[i2]);
-      exportEvent(`${intensityFileNames[i2]}: offsets.json in ${formatSpan(performance.now() - offsets)}`);
       if (item2.masks.length > 0) {
         jpegImage = {
           ...jpegImage,
@@ -256046,9 +255605,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         signal,
         onProgress: bump
       });
-      const offsets = performance.now();
       await writeTiffOffsetsJson(directory, maskFileNames[i2]);
-      exportEvent(`${maskFileNames[i2]}: offsets.json in ${formatSpan(performance.now() - offsets)}`);
       if (splitFromIntensity) {
         const extra = insertedAfter.get(item2.image.id) ?? [];
         extra.push(maskImage);
@@ -256094,13 +255651,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const rm = mins % 60;
     return rm > 0 ? `~${h2}h ${rm}m left` : `~${h2}h left`;
   };
-  const RATE_WINDOW_MS = 5e3;
+  const RATE_WINDOW_MS = 6e4;
+  const MIN_ESTIMATE_SHARE = 0.01;
   const estimateRemainingMs = (samples, total, now) => {
     if (samples.length < 2) return null;
     const base2 = samples[0];
     const tip = samples[samples.length - 1];
     const gained = tip.completed - base2.completed;
-    if (tip.at - base2.at < RATE_WINDOW_MS || gained <= 0 || total <= tip.completed) return null;
+    if (tip.at - base2.at < RATE_WINDOW_MS || tip.completed < total * MIN_ESTIMATE_SHARE || gained <= 0 || total <= tip.completed) return null;
     return (total - tip.completed) * (now - base2.at) / gained;
   };
   const toFilename = (index2) => {
@@ -256426,19 +255984,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         total: 1,
         done: false
       });
-      startExportProfile("jpeg-ome-tiff", {
-        decodeWorkers: navigator.hardwareConcurrency ?? 4,
-        encodeWorkers: jpegExportConcurrency(),
-        transfer: jpegTransfer,
-        progressEveryMs: PROGRESS_INTERVAL_MS,
-        etaWindowMs: RATE_WINDOW_MS
-      });
       let lastProgressAt = 0;
       void (async () => {
         try {
-          const painting = performance.now();
           const imagesSnapshot = await paintUngroupedExportColors(imagesAtStart, channelGroupsSnapshot);
-          exportEvent(`export colors in ${formatSpan(performance.now() - painting)}`);
           const exported = await exportJpegOmeTiffStory({
             directory: directory_handle,
             omeLoaderEntries: loaderEntries,
@@ -256472,11 +256021,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               imageSource: nextSource
             }
           };
-          const sidecars = performance.now();
           const written = await writeStoryBundleSidecars(directory_handle, doc, {
             mode: "jpeg-ome-tiff"
           });
-          exportEvent(`document.json, index.html, player and feature tables in ${formatSpan(performance.now() - sidecars)}`);
           setSkippedTables(written.skippedFeatureTables);
           const store = useDocumentStore.getState();
           await Promise.all(exported.images.flatMap((im) => {
@@ -256490,14 +256037,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             imageSource: nextSource
           });
           console.log(`[minerva] jpeg-ome-tiff export took ${((performance.now() - wallStart) / 1e3).toFixed(1)}s (transfer=${jpegTransfer})`);
-          endExportProfile("done");
           setProgress((p2) => ({
             ...p2,
             done: true,
             completed: p2.total
           }));
         } catch (e2) {
-          endExportProfile(cancelled || abort.signal.aborted ? "cancelled" : "failed");
           if (cancelled || abort.signal.aborted) return;
           console.error("[minerva] jpeg-ome-tiff export failed", e2);
           setExportError(e2 instanceof Error ? e2.message : "Failed to export OME-TIFF");
@@ -256506,7 +256051,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       return () => {
         cancelled = true;
         if (!finishedOk) abort.abort();
-        endExportProfile("cancelled");
       };
     }, [
       mode,
@@ -256648,11 +256192,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           samples.shift();
         }
       }
-      const update = () => {
-        const remaining = estimateRemainingMs(samples, total, performance.now());
-        noteExportEta(remaining);
-        setRemainingMs(remaining);
-      };
+      const update = () => setRemainingMs(estimateRemainingMs(samples, total, performance.now()));
       update();
       const tick = window.setInterval(update, 1e3);
       return () => window.clearInterval(tick);
@@ -260082,8 +259622,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-14T16:42:17.973Z";
-    const sha = "cc166962c9718d967f91652a32cd2d7c5be66b0a";
+    const iso = "2026-10-15T14:34:15.960Z";
+    const sha = "10a3fa6eaf4dd9a4ba481c4fcd5e6847032c53d8";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -262183,7 +261723,7 @@ uniform classStyleUniforms {
     const channels2 = flattenImageChannelsInDocumentOrder(images);
     const { channelGroups } = useDocumentStore.getState();
     const app = useAppStore.getState();
-    const visibility2 = applyVisibilityTransition(channels2, channelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, Object.keys(app.channelVisibilities).length === 0 ? {
+    const visibility = applyVisibilityTransition(channels2, channelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, Object.keys(app.channelVisibilities).length === 0 ? {
       kind: "fresh"
     } : {
       kind: "sync"
@@ -262192,8 +261732,8 @@ uniform classStyleUniforms {
       onLoader: channels2.filter(isImageChannel),
       activeGroup: channelGroups.length === 0 ? void 0 : channelGroups.find((g2) => g2.id === app.activeChannelGroupId),
       channelGroups,
-      stackVisibilities: visibility2.channelVisibilities,
-      groupRowVisibilities: visibility2.channelGroupRowVisibilities,
+      stackVisibilities: visibility.channelVisibilities,
+      groupRowVisibilities: visibility.channelGroupRowVisibilities,
       hasVisibilityMap: true,
       requireColor: false
     });
@@ -262494,8 +262034,8 @@ uniform classStyleUniforms {
     ]);
     reactExports.useEffect(() => {
       if (channelGroups.length === 0 || sourceChannels.length === 0) return;
-      const active2 = useAppStore.getState().activeChannelGroupId;
-      if (active2 != null && channelGroups.some((g2) => g2.id === active2)) return;
+      const active = useAppStore.getState().activeChannelGroupId;
+      if (active != null && channelGroups.some((g2) => g2.id === active)) return;
       updateGroupChannelLists({
         ChannelGroups: channelGroups
       });
@@ -263087,11 +262627,11 @@ uniform classStyleUniforms {
         ChannelGroups: doc.channelGroups
       });
       const app = useAppStore.getState();
-      const visibility2 = applyVisibilityTransition(flat, doc.channelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, {
+      const visibility = applyVisibilityTransition(flat, doc.channelGroups, app.channelVisibilities, app.channelGroupRowVisibilities, {
         kind: "sync"
       }, app.activeChannelGroupId);
-      setChannelVisibilities(visibility2.channelVisibilities);
-      setChannelGroupRowVisibilities(visibility2.channelGroupRowVisibilities);
+      setChannelVisibilities(visibility.channelVisibilities);
+      setChannelGroupRowVisibilities(visibility.channelGroupRowVisibilities);
     }, [
       updateGroupChannelLists,
       setChannelVisibilities,
