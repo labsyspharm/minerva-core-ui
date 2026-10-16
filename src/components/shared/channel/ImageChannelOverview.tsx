@@ -1,13 +1,5 @@
 import type { CSSProperties } from "react";
-import {
-  Fragment,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { Fragment, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuthorChannelNav } from "@/components/shared/channel/AuthorChannelNav";
 import { ChannelEditor } from "@/components/shared/channel/ChannelEditorPopover";
 import {
@@ -162,19 +154,30 @@ function ChipButton(props: {
 /** Keep in sync with `repeat(5, …)` on `.chipWrap`. */
 const CHIP_COLS = 5;
 
-function pointerInEditor(e: MouseEvent, root: HTMLElement): boolean {
-  const t = e.target;
-  if (t instanceof Node && root.contains(t)) return true;
-  if (t instanceof Element && t.closest("[data-minerva-color-picker]")) {
-    return true;
-  }
-  const r = root.getBoundingClientRect();
-  return (
-    e.clientX >= r.left &&
-    e.clientX <= r.right &&
-    e.clientY >= r.top &&
-    e.clientY <= r.bottom
-  );
+/** One open channel editor across image cards. Unset keeps each card's default. */
+type EditorSelection =
+  | { kind: "unset" }
+  | { kind: "closed" }
+  | { kind: "open"; imageId: string; key: string };
+
+let editorSelection: EditorSelection = { kind: "unset" };
+const editorListeners = new Set<() => void>();
+
+function subscribeEditorSelection(onStoreChange: () => void) {
+  editorListeners.add(onStoreChange);
+  return () => {
+    editorListeners.delete(onStoreChange);
+    if (editorListeners.size === 0) editorSelection = { kind: "unset" };
+  };
+}
+
+function getEditorSelection() {
+  return editorSelection;
+}
+
+function setEditorSelection(next: EditorSelection) {
+  editorSelection = next;
+  for (const listener of editorListeners) listener();
 }
 
 function ChipGrid(props: {
@@ -184,10 +187,8 @@ function ChipGrid(props: {
   blockedIds: ReadonlySet<string>;
   onChip: (chip: ImageChannelChip) => void;
   onOpenEditor: (chip: ImageChannelChip) => void;
-  onDismissEditor: () => void;
 }) {
-  const { chips, openChip, shownIds, blockedIds, onDismissEditor } = props;
-  const editorRef = useRef<HTMLDivElement>(null);
+  const { chips, openChip, shownIds, blockedIds } = props;
   const pendingIds = useSyncExternalStore(
     subscribeStackPalettePending,
     getStackPalettePendingIds,
@@ -208,29 +209,6 @@ function ChipGrid(props: {
           chips.length - 1,
           openIndex - (openIndex % CHIP_COLS) + CHIP_COLS - 1,
         );
-  useEffect(() => {
-    if (openIndex < 0) return;
-    let downInside = false;
-    const onDown = (e: MouseEvent) => {
-      const root = editorRef.current;
-      downInside = root != null && pointerInEditor(e, root);
-    };
-    const onDoc = (e: MouseEvent) => {
-      if (downInside) {
-        downInside = false;
-        return;
-      }
-      const root = editorRef.current;
-      if (!root || pointerInEditor(e, root)) return;
-      onDismissEditor();
-    };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("click", onDoc);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("click", onDoc);
-    };
-  }, [openIndex, onDismissEditor]);
   return (
     <div className={styles.chipWrap}>
       {chips.map((chip, i) => (
@@ -247,7 +225,7 @@ function ChipGrid(props: {
             onOpenEditor={props.onOpenEditor}
           />
           {i === rowEnd && openChip ? (
-            <div ref={editorRef} className={styles.editor}>
+            <div className={styles.editor}>
               <ChannelEditor chip={openChip} />
             </div>
           ) : null}
@@ -265,7 +243,6 @@ function GroupStrip(props: {
   blockedIds: ReadonlySet<string>;
   onChip: (chip: ImageChannelChip) => void;
   onOpenEditor: (chip: ImageChannelChip) => void;
-  onDismissEditor: () => void;
   allVisible?: boolean;
   showAllBlocked?: boolean;
   onToggleVisibility?: () => void;
@@ -314,7 +291,6 @@ function GroupStrip(props: {
           blockedIds={props.blockedIds}
           onChip={props.onChip}
           onOpenEditor={props.onOpenEditor}
-          onDismissEditor={props.onDismissEditor}
         />
       )}
     </div>
@@ -336,8 +312,12 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelRendering = useAppStore((s) => s.channelRendering);
   const nav = useAuthorChannelNav();
-  const [openKey, setOpenKey] = useState<string | null | undefined>(undefined);
   const [channelNameFilter, setChannelNameFilter] = useState("");
+  const editorSelection = useSyncExternalStore(
+    subscribeEditorSelection,
+    getEditorSelection,
+    getEditorSelection,
+  );
 
   const allSourceChannels = useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
@@ -405,7 +385,12 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
   );
   const defaultMaskKey =
     overviewChips.find((c) => maskIds.has(c.sourceId))?.key ?? null;
-  const resolvedOpenKey = openKey === undefined ? defaultMaskKey : openKey;
+  const resolvedOpenKey =
+    editorSelection.kind === "unset"
+      ? defaultMaskKey
+      : editorSelection.kind === "open" && editorSelection.imageId === image.id
+        ? editorSelection.key
+        : null;
 
   const openChip =
     resolvedOpenKey == null
@@ -413,9 +398,12 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
       : (overviewChips.find((c) => c.key === resolvedOpenKey) ?? null);
 
   const onOpenEditor = (chip: ImageChannelChip) => {
-    setOpenKey(resolvedOpenKey === chip.key ? null : chip.key);
+    setEditorSelection(
+      resolvedOpenKey === chip.key
+        ? { kind: "closed" }
+        : { kind: "open", imageId: image.id, key: chip.key },
+    );
   };
-  const dismissEditor = useCallback(() => setOpenKey(null), []);
 
   const capVis: VivIntensityCapVis = {
     channels: allSourceChannels,
@@ -564,7 +552,6 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
             showAllBlocked={showAllBlocked}
             onChip={onGroupChip}
             onOpenEditor={onOpenEditor}
-            onDismissEditor={dismissEditor}
             onToggleVisibility={() => {
               if (rgbDisplay) {
                 applyRgbUnit(!group.allVisible, group.id);
@@ -601,7 +588,6 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
           blockedIds={blockedIds}
           onChip={onAllChannelsChip}
           onOpenEditor={onOpenEditor}
-          onDismissEditor={dismissEditor}
           nameFilter={channelNameFilter}
           onNameFilterChange={setChannelNameFilter}
         />

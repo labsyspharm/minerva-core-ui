@@ -1,4 +1,3 @@
-import type { DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { OpacitySlider } from "@/components/shared/channel/ChannelRow";
@@ -40,7 +39,6 @@ import { clampImageOpacity } from "@/lib/imaging/imageOpacity";
 import {
   type ImportFileKind,
   importFileKind,
-  importFilePickerOptions,
 } from "@/lib/imaging/importFileKind";
 import {
   isRelativeOmeTiffUrl,
@@ -161,7 +159,6 @@ type UploadProps = {
     imageId: string,
     source: OmeImageSource,
   ) => void | Promise<void>;
-  /** Library strip (horizontal); default is the Images panel stack. */
   row?: boolean;
   disabled?: boolean;
 };
@@ -292,6 +289,11 @@ function pendingLabel(pending: PendingSource): string {
   return pending.url;
 }
 
+function dragHasFiles(e: DragEvent): boolean {
+  const types = e.dataTransfer?.types;
+  return types != null && Array.from(types).includes("Files");
+}
+
 type PointTarget = {
   imageId: string;
   mode: "locate" | "replace";
@@ -323,7 +325,6 @@ const IDLE_STRIP = {
   draft: "",
   dropError: null,
   urlError: null,
-  dragging: false,
 } as const;
 
 const Upload = (props: UploadProps) => {
@@ -448,8 +449,64 @@ const Upload = (props: UploadProps) => {
     return () => window.clearTimeout(t);
   }, [notice]);
   const [dragging, setDragging] = useState(false);
-  const dragDepthRef = useRef(0);
+  const acceptDroppedFilesRef = useRef<(dt: DataTransfer) => Promise<void>>(
+    async () => {},
+  );
   const localPickInFlightRef = useRef(false);
+
+  useEffect(() => {
+    let depth = 0;
+    let hideTimer = 0;
+    const end = () => {
+      window.clearTimeout(hideTimer);
+      depth = 0;
+      setDragging(false);
+    };
+    const onDragEnter = (e: DragEvent) => {
+      if (!dragHasFiles(e) || disabled) return;
+      e.preventDefault();
+      depth += 1;
+      setDragging(true);
+    };
+    const onDragLeave = (e: DragEvent) => {
+      if (!dragHasFiles(e) || disabled) return;
+      depth = Math.max(0, depth - 1);
+      if (depth === 0) setDragging(false);
+    };
+    const onDragOver = (e: DragEvent) => {
+      if (!dragHasFiles(e)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = disabled ? "none" : "copy";
+      }
+      if (disabled) return;
+      window.clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(end, 1000);
+      setDragging(true);
+    };
+    const onDrop = (e: DragEvent) => {
+      if (!dragHasFiles(e)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      end();
+      if (disabled || !e.dataTransfer) return;
+      void acceptDroppedFilesRef.current(e.dataTransfer);
+    };
+    window.addEventListener("dragenter", onDragEnter, true);
+    window.addEventListener("dragleave", onDragLeave, true);
+    window.addEventListener("dragover", onDragOver, true);
+    window.addEventListener("drop", onDrop, true);
+    window.addEventListener("dragend", end, true);
+    return () => {
+      end();
+      window.removeEventListener("dragenter", onDragEnter, true);
+      window.removeEventListener("dragleave", onDragLeave, true);
+      window.removeEventListener("dragover", onDragOver, true);
+      window.removeEventListener("drop", onDrop, true);
+      window.removeEventListener("dragend", end, true);
+    };
+  }, [disabled]);
   const prevImportRev = useRef(importRevision);
   const formatDetectAbortRef = useRef<AbortController | null>(null);
   const formatChosenByUserRef = useRef(false);
@@ -615,7 +672,6 @@ const Upload = (props: UploadProps) => {
     [pointTarget, onReplaceImage, onLocateImage],
   );
 
-  // Locate / replace take an image; otherwise any file this page can use.
   const acceptedKinds: ImportFileKind[] = pointTarget
     ? ["image"]
     : onImportStory
@@ -627,7 +683,6 @@ const Upload = (props: UploadProps) => {
     setImportError(message);
   };
 
-  /** A file that is not an image: a story, OME-XML ROIs, or a feature table. */
   const importOtherFile = async (kind: ImportFileKind, file: File) => {
     if (kind === "story") {
       await onImportStory?.(file);
@@ -681,11 +736,7 @@ const Upload = (props: UploadProps) => {
     }
     if (kind !== "image") {
       try {
-        // Keep the handle so an attached feature table can persist it.
-        await importOtherFile(
-          kind,
-          Object.assign(await handle.getFile(), { handle }),
-        );
+        await importOtherFile(kind, await handle.getFile());
       } catch (e: unknown) {
         failDrop(
           e instanceof Error ? e.message : "Could not read the selected file.",
@@ -729,35 +780,9 @@ const Upload = (props: UploadProps) => {
     openPending({ kind: "url", url });
   }, [applyPointedSource, disabled, openPending, pointTarget, urlDraft]);
 
-  const onDragEnter = (e: ReactDragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragDepthRef.current += 1;
-    if (e.dataTransfer.types.includes("Files")) setDragging(true);
-  };
-
-  const onDragLeave = (e: ReactDragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
-    if (dragDepthRef.current === 0) setDragging(false);
-  };
-
-  const onDragOver = (e: ReactDragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer.types.includes("Files")) {
-      e.dataTransfer.dropEffect = "copy";
-    }
-  };
-
-  const onDrop = async (e: ReactDragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragDepthRef.current = 0;
-    setDragging(false);
+  acceptDroppedFilesRef.current = async (dt) => {
     if (disabled) return;
-    const items = [...e.dataTransfer.items].filter((i) => i.kind === "file");
+    const items = [...dt.items].filter((i) => i.kind === "file");
     if (items.length === 0) {
       failDrop("Drop a file to add it.");
       return;
@@ -1044,39 +1069,24 @@ const Upload = (props: UploadProps) => {
           ]
         : [];
 
-  const dropHandlers = {
-    onDragEnter,
-    onDragLeave,
-    onDragOver,
-    onDrop: (e: ReactDragEvent) => void onDrop(e),
-  };
   const stripError = importError && !pending ? importError : null;
   const liveStrip = {
     draft: urlDraft,
     dropError: stripErrorAt === "drop" ? stripError : null,
     urlError: stripErrorAt === "url" ? stripError : null,
-    dragging,
   };
   const renderAddStrip = (popup: boolean) => {
-    // While the popup is open it owns the shared draft, errors, and drag state.
+    // While the popup is open it owns the shared draft and errors.
     const strip = popup || !pointTarget ? liveStrip : IDLE_STRIP;
     return (
       <div
-        className={[
-          styles.addStrip,
-          row && !popup ? styles.addStripRow : "",
-          (row || popup) && strip.dragging ? styles.panelDropActive : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        {...(row || popup ? dropHandlers : {})}
+        className={
+          popup ? styles.addStrip : `${styles.addStrip} ${styles.addStripRow}`
+        }
       >
         <button
           type="button"
-          className={[
-            styles.dropZone,
-            strip.dragging ? styles.dropZoneActive : "",
-          ].join(" ")}
+          className={styles.dropZone}
           disabled={disabled}
           aria-invalid={strip.dropError ? true : undefined}
           onClick={() => void browseLocal()}
@@ -1095,11 +1105,6 @@ const Upload = (props: UploadProps) => {
                 ? "Drop or Browse Image File"
                 : (notice ?? "Drop or Browse File"))}
           </span>
-          {!row && !popup && !strip.dropError && !notice ? (
-            <span className={styles.dropZoneHint}>
-              {importFilePickerOptions(acceptedKinds).description}
-            </span>
-          ) : null}
         </button>
         <div className={styles.orDivider}>
           <span>or</span>
@@ -1110,7 +1115,7 @@ const Upload = (props: UploadProps) => {
               id={popup ? undefined : "upload-add-url"}
               type="url"
               className={`${minervaTheme.input} ${styles.urlInput}`}
-              placeholder="Image URL (OME-TIFF or DICOMweb)"
+              placeholder="Image URL"
               aria-label="Image URL"
               aria-invalid={strip.urlError ? true : undefined}
               value={strip.draft}
@@ -1157,6 +1162,14 @@ const Upload = (props: UploadProps) => {
 
   return (
     <>
+      {dragging
+        ? createPortal(
+            <output className={styles.windowDrop}>
+              {pointTarget ? "Drop image file" : "Drop file"}
+            </output>,
+            document.body,
+          )
+        : null}
       {pointTarget
         ? createPortal(
             <>
@@ -1189,20 +1202,14 @@ const Upload = (props: UploadProps) => {
       {row ? (
         addStrip
       ) : (
-        <div
-          className={[
-            panel.authorPanel,
-            dragging ? styles.panelDropActive : "",
-          ].join(" ")}
-          {...dropHandlers}
-        >
+        <div className={panel.authorPanel}>
+          <div className={styles.panelDock}>{addStrip}</div>
           <div
             className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}
           >
-            <div className={styles.stack}>
-              {imageCards}
-              {addStrip}
-            </div>
+            {imageCards.length > 0 ? (
+              <div className={styles.stack}>{imageCards}</div>
+            ) : null}
           </div>
         </div>
       )}

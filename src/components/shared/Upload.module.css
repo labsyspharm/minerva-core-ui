@@ -8,9 +8,11 @@
   box-sizing: border-box;
 }
 
-.panelDropActive {
-  outline: 2px dashed var(--minerva-ink);
-  outline-offset: -2px;
+.panelDock {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 10px var(--minerva-inset) 8px;
+  border-bottom: 1px solid var(--minerva-edge);
 }
 
 .addStrip {
@@ -117,26 +119,30 @@
   justify-content: center;
 }
 
-.dropZone:hover,
-.dropZoneActive {
+.dropZone:hover {
   border-width: 2px;
   border-color: var(--minerva-ink);
 }
 
-.panelDropActive .dropZone,
-.panelDropActive .dropZone:hover,
-.panelDropActive .dropZoneActive {
-  border-width: 1px;
+.windowDrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border: 2px dashed var(--minerva-ink);
+  color: var(--minerva-ink);
+  font-family: var(--minerva-font);
+  background: color-mix(in srgb, var(--minerva-paper, #000) 72%, transparent);
 }
 
 .dropZoneTitle {
   font-size: var(--minerva-size);
   color: var(--minerva-ink);
-}
-
-.dropZoneHint {
-  font-size: var(--minerva-size-note);
-  color: var(--minerva-quiet);
 }
 
 .orDivider {
