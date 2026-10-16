@@ -396,7 +396,7 @@ body {
   margin: 0;
   padding: 0;
 }
-._menuWrap_fzwzu_1 {
+._menuWrap_doy1a_1 {
   position: relative;
   display: flex;
   align-items: center;
@@ -404,9 +404,8 @@ body {
   height: var(--minerva-control);
 }
 
-._menuItemGap_fzwzu_9 {
-  margin-top: 0.25em;
-  padding-top: 0.7em;
+button._exportChoice_doy1a_9 {
+  padding-left: 1.7em;
 }
 ._volume_drqkm_1 {
   display: inline-flex;

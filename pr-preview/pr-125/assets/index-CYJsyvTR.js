@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CYy6wimq.js","./pako.esm-KbdoS3Oq.js","./lerc-DUTP2UuK.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-B4PQgij3.js","./pako.esm-KbdoS3Oq.js","./lerc-Cgw0Q1zH.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18508,7 +18508,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "d547ca66f3710b093e00ab75b22898e225ca4899",
+    "VITE_APP_GIT_SHA": "39fa8db33cf3664034a57b3610113b05d8932aa7",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -79232,26 +79232,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DwnQhwSC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DRMHRXdi.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CHXw2xwh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-LSNA1ETH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BkhuyAy3.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-RrmFCTs9.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CYy6wimq.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DRrJKhza.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-DUTP2UuK.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-B4PQgij3.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-ors9u_hG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Cgw0Q1zH.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BC6Lf03o.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-D6rhhqEi.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-Cu3ksan8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BnMX6JGK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -91462,11 +91462,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       armed
     ]);
   }
-  const menuWrap = "_menuWrap_fzwzu_1";
-  const menuItemGap = "_menuItemGap_fzwzu_9";
+  const menuWrap = "_menuWrap_doy1a_1";
+  const exportChoice = "_exportChoice_doy1a_9";
   const styles$w = {
     menuWrap,
-    menuItemGap
+    exportChoice
   };
   function downloadStoryJsonExport(data2, filename2 = "document.json") {
     const clone2 = JSON.parse(JSON.stringify(data2));
@@ -91486,9 +91486,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function StoryAuthorOverflowMenu(props) {
     const { onReturnToLibrary, onExport } = props;
     const [open, setOpen] = reactExports.useState(false);
+    const [exportChoice2, setExportChoice] = reactExports.useState(false);
     const wrapRef = reactExports.useRef(null);
     const waypointsOk = useDocumentStore((s2) => s2.waypoints.length > 0);
-    const close = () => setOpen(false);
+    const close = () => {
+      setOpen(false);
+      setExportChoice(false);
+    };
     useClickOutside(open, close, [
       wrapRef
     ]);
@@ -91503,6 +91507,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           "aria-haspopup": "menu",
           onClick: (e2) => {
             e2.stopPropagation();
+            setExportChoice(false);
             setOpen((v2) => !v2);
           },
           children: jsxRuntimeExports.jsx(SvgMenu, {
@@ -91527,30 +91532,42 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsx("button", {
               type: "button",
               role: "menuitem",
-              className: `${minervaTheme.menuItem} ${styles$w.menuItemGap}`,
-              disabled: !waypointsOk,
-              onClick: (e2) => {
-                e2.stopPropagation();
-                if (!waypointsOk) return;
-                close();
-                downloadStoryJsonExport(useDocumentStore.getState().toDocumentData());
-              },
-              children: "Save Config"
-            }),
-            jsxRuntimeExports.jsx("button", {
-              type: "button",
-              role: "menuitem",
               className: minervaTheme.menuItem,
               disabled: !waypointsOk,
-              title: waypointsOk ? "Save a playable story folder (index.html + images)" : "Add a waypoint before exporting",
+              "aria-expanded": exportChoice2,
               onClick: (e2) => {
                 e2.stopPropagation();
                 if (!waypointsOk) return;
-                close();
-                onExport();
+                setExportChoice((v2) => !v2);
               },
               children: "Export Story"
-            })
+            }),
+            exportChoice2 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+              children: [
+                jsxRuntimeExports.jsx("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: `${minervaTheme.menuItem} ${styles$w.exportChoice}`,
+                  onClick: (e2) => {
+                    e2.stopPropagation();
+                    close();
+                    onExport();
+                  },
+                  children: "Full Export"
+                }),
+                jsxRuntimeExports.jsx("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: `${minervaTheme.menuItem} ${styles$w.exportChoice}`,
+                  onClick: (e2) => {
+                    e2.stopPropagation();
+                    close();
+                    downloadStoryJsonExport(useDocumentStore.getState().toDocumentData());
+                  },
+                  children: "Save Config JSON"
+                })
+              ]
+            }) : null
           ]
         }) : null
       ]
@@ -259613,8 +259630,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-16T18:27:43.947Z";
-    const sha = "d547ca66f3710b093e00ab75b22898e225ca4899";
+    const iso = "2026-10-16T19:22:55.307Z";
+    const sha = "39fa8db33cf3664034a57b3610113b05d8932aa7";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
