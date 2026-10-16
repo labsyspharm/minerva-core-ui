@@ -329,6 +329,11 @@ export async function importStoryJsonFromPicker(): Promise<string> {
     extensions: [".json"],
     multiple: false,
   });
+  return importStoryJsonFile(file);
+}
+
+/** Open a story JSON (picked or dropped) and return the new story id. */
+export async function importStoryJsonFile(file: File): Promise<string> {
   const data = validateDocumentData(JSON.parse(await file.text()) as unknown);
   const base = file.name.replace(/\.json$/i, "").trim();
   const fallback = /^(document|story)$/i.test(base) ? "Imported Story" : base;
