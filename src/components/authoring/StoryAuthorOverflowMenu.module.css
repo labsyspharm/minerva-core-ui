@@ -6,7 +6,6 @@
   height: var(--minerva-control);
 }
 
-.menuItemGap {
-  margin-top: 0.25em;
-  padding-top: 0.7em;
+button.exportChoice {
+  padding-left: 1.7em;
 }
