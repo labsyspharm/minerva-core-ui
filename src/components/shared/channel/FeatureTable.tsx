@@ -96,7 +96,7 @@ export async function pickFeatureCsv(
 function TableIcon() {
   return (
     <svg width={12} height={12} viewBox="0 0 12 12" aria-hidden>
-      <title>Table</title>
+      <title>Class Table</title>
       <rect
         x="1"
         y="1"
@@ -347,7 +347,7 @@ function FeatureTableGlyph(props: {
           <TableIcon />
         )}
       </button>
-      <span className={styles.attachLabel}>Table</span>
+      <span className={styles.attachLabel}>Class Table</span>
     </div>
   );
 }
