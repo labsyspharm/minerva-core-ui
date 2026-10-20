@@ -8,7 +8,11 @@ import {
 } from "../imaging/channelCompositor";
 import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
-import { CONTOUR_LEVELS_DEFAULT } from "../imaging/contourExtension";
+import {
+  CONTOUR_LEVELS_DEFAULT,
+  CONTOUR_LEVELS_MAX,
+  CONTOUR_SMOOTHING_DEFAULT,
+} from "../imaging/contourExtension";
 import type { ImageOpacityPreview } from "../imaging/imageOpacity";
 import {
   type ImageSelectionMask,
@@ -820,6 +824,9 @@ export interface AppStore {
   /** Isolines across each contoured channel's contrast window. */
   contourLevels: number;
   setContourLevels: (levels: number) => void;
+  /** Contour smoothing radius in full-resolution image pixels. */
+  contourSmoothing: number;
+  setContourSmoothing: (radius: number) => void;
   groupNames: Record<string, string>;
   /**
    * Classes turned off from the playback legend, by `legendClassKey`.
@@ -985,6 +992,7 @@ const overlayInitialState = {
   channelVisibilities: {},
   contourChannelIds: {},
   contourLevels: CONTOUR_LEVELS_DEFAULT,
+  contourSmoothing: CONTOUR_SMOOTHING_DEFAULT,
   channelGroupRowVisibilities: {},
   groupNames: {},
   hiddenLegendClasses: {} as Record<string, string[]>,
@@ -2307,8 +2315,17 @@ export const useAppStore = create<AppStore>()(
         });
       },
 
-      setContourLevels: (contourLevels) => {
-        set({ contourLevels });
+      setContourLevels: (levels) => {
+        set({
+          contourLevels: Math.min(
+            CONTOUR_LEVELS_MAX,
+            Math.max(1, Math.round(levels)),
+          ),
+        });
+      },
+
+      setContourSmoothing: (contourSmoothing) => {
+        set({ contourSmoothing });
       },
 
       setChannelVisibilities: (vis: Record<string, boolean>) => {

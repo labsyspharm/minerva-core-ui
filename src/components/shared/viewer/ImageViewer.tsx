@@ -28,7 +28,7 @@ import {
   DEFAULT_MASK_VISUALIZATION,
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
-import { contourExtension } from "@/lib/imaging/contourExtension";
+import { withContourLayers } from "@/lib/imaging/contourTiles";
 import { opacityForImage } from "@/lib/imaging/imageOpacity";
 import { orientationForImage } from "@/lib/imaging/imageOrientation";
 import type { LoaderList } from "@/lib/imaging/loaderEntries";
@@ -507,6 +507,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const maskExtension = useMemo(() => new MaskExtension(), []);
   const contourChannelIds = useAppStore((s) => s.contourChannelIds);
   const contourLevels = useAppStore((s) => s.contourLevels);
+  const contourSmoothing = useAppStore((s) => s.contourSmoothing);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   /** False until the viewer element reports its size; the window size is only a guess. */
@@ -1061,26 +1062,23 @@ export const ImageViewer = (props: ImageViewerProps) => {
   ]);
 
   const clippedImageLayers = useMemo(() => {
-    const masked = selectionMaskActive && imageSelectionMask != null;
-    return imageLayers.map((layer) => {
-      const ids = (layer.props as { sourceChannelIds?: readonly string[] })
-        .sourceChannelIds;
-      const contourEnabled = ids?.map((id) => (contourChannelIds[id] ? 1 : 0));
-      const contoured = Boolean(contourEnabled?.some((on) => on > 0));
-      if (!contoured && !masked) return layer;
-      return layer.clone({
-        extensions: [
-          ...(contoured ? [contourExtension] : []),
-          ...(masked ? [maskExtension] : []),
-        ],
-        ...(contoured ? { contourEnabled, contourLevels } : {}),
-        ...(masked ? { maskId: IMAGE_SELECTION_MASK_LAYER_ID } : {}),
-      } as Parameters<typeof layer.clone>[0]);
-    });
+    const mask =
+      selectionMaskActive && imageSelectionMask != null
+        ? { extension: maskExtension, maskId: IMAGE_SELECTION_MASK_LAYER_ID }
+        : undefined;
+    return imageLayers.flatMap((layer) =>
+      withContourLayers(layer, {
+        contourChannelIds,
+        levels: contourLevels,
+        smoothing: contourSmoothing,
+        mask,
+      }),
+    );
   }, [
     imageLayers,
     contourChannelIds,
     contourLevels,
+    contourSmoothing,
     selectionMaskActive,
     imageSelectionMask,
     maskExtension,

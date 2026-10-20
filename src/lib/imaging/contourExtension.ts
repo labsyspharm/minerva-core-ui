@@ -1,169 +1,149 @@
-import {
-  getDefaultPalette,
-  padColorsForUBO,
-  VivLayerExtension,
-} from "@hms-dbmi/viv";
+import { padColorsForUBO, VivLayerExtension } from "@hms-dbmi/viv";
 
 /** Expanded per channel by Viv (`VIV_CHANNEL_INDEX`). */
 const CHANNEL = "VIV_CHANNEL_INDEX";
 
-/** Default isolines across the contrast window. The shader loops up to the max. */
+/** Default isolines across the contrast window. */
 export const CONTOUR_LEVELS_DEFAULT = 8;
 export const CONTOUR_LEVELS_MAX = 16;
 
 /**
- * Isolines through bilinear cell crossings, so neighboring pixels share endpoints.
- *
- * ponytail: the cell on a tile boundary has no neighbor texel, so a line can
- * still break on the tile grid. A 1-texel tile edge buffer would close it.
+ * Smoothing radius steps, in full-resolution image pixels. Powers of two, so
+ * each step lands on a pyramid level (see `contourTiles`).
+ */
+export const CONTOUR_SMOOTHING_STEPS = [2, 4, 8, 16, 32, 64, 128];
+export const CONTOUR_SMOOTHING_DEFAULT = 16;
+
+/**
+ * Edge buffer stitched around each contour tile, in texels of the sampled
+ * level. It is also the kernel's largest radius: the kernel reads this far
+ * past the tile edge, so a bigger kernel needs a bigger buffer.
+ */
+export const CONTOUR_APRON = 4;
+/** Smallest kernel radius in sampled texels; below it lines follow single texels. */
+export const CONTOUR_MIN_RADIUS = 1.5;
+
+/**
+ * KDE-style isolines. Each fragment evaluates a smoothed field (a compact
+ * `(1 - r²/R²)³` kernel, normalized) and its analytic gradient, then draws
+ * the nearest level by distance `|s - t| / |∇s|`. The field is smooth, so the
+ * lines are curves, and tiles agree at their seams because each texture
+ * carries `CONTOUR_APRON` texels from its neighbors.
  */
 const contourModule = {
   name: "contourModule",
   uniformTypes: {
     opacity: "f32",
     levels: "f32",
-    [`contour${CHANNEL}`]: "f32",
-    [`contrastLimits${CHANNEL}`]: "vec2<f32>",
+    radius: "f32",
+    tileWindow: "vec4<f32>",
     [`color${CHANNEL}`]: "vec3<f32>",
   },
   fs: `uniform contourModuleUniforms {
   float opacity;
   float levels;
-  float contour${CHANNEL};
-  vec2 contrastLimits${CHANNEL};
+  float radius;
+  vec4 tileWindow;
   vec3 color${CHANNEL};
 } contourModule;
 
-float norm_raw(float raw, vec2 limits) {
-  return clamp((raw - limits.x) / max(0.0005, limits.y - limits.x), 0.0, 1.0);
-}
-
-float norm_texel(highp SAMPLER_TYPE chan, vec2 limits, ivec2 coord, ivec2 size) {
-  ivec2 c = clamp(coord, ivec2(0), size - ivec2(1));
-  return norm_raw(float(texelFetch(chan, c, 0).r), limits);
-}
-
-float segment_dist(vec2 p, vec2 a, vec2 b) {
-  vec2 ab = b - a;
-  float denom = dot(ab, ab);
-  float h = denom > 0.0 ? clamp(dot(p - a, ab) / denom, 0.0, 1.0) : 0.0;
-  return length(p - (a + ab * h));
-}
-
-bool edge_crosses(float a, float b, float t) {
-  return (a < t && b >= t) || (b < t && a >= t);
-}
-
-float level_dist(vec2 f, float t, float v00, float v10, float v01, float v11) {
-  bool cb = edge_crosses(v00, v10, t);
-  bool cr = edge_crosses(v10, v11, t);
-  bool ct = edge_crosses(v01, v11, t);
-  bool cl = edge_crosses(v00, v01, t);
-  vec2 pb = vec2(cb ? (t - v00) / (v10 - v00) : 0.0, 0.0);
-  vec2 pr = vec2(1.0, cr ? (t - v10) / (v11 - v10) : 0.0);
-  vec2 pt = vec2(ct ? (t - v01) / (v11 - v01) : 0.0, 1.0);
-  vec2 pl = vec2(0.0, cl ? (t - v00) / (v01 - v00) : 0.0);
-  int n = int(cb) + int(cr) + int(ct) + int(cl);
-  if (n < 2) return 1e3;
-  if (n == 4) {
-    float mid = 0.25 * (v00 + v10 + v01 + v11);
-    if ((mid >= t) == (v00 >= t)) {
-      return min(segment_dist(f, pb, pl), segment_dist(f, pr, pt));
-    }
-    return min(segment_dist(f, pb, pr), segment_dist(f, pl, pt));
-  }
-  float dist = 1e3;
-  if (cb && cr) dist = min(dist, segment_dist(f, pb, pr));
-  if (cb && ct) dist = min(dist, segment_dist(f, pb, pt));
-  if (cb && cl) dist = min(dist, segment_dist(f, pb, pl));
-  if (cr && ct) dist = min(dist, segment_dist(f, pr, pt));
-  if (cr && cl) dist = min(dist, segment_dist(f, pr, pl));
-  if (ct && cl) dist = min(dist, segment_dist(f, pt, pl));
-  return dist;
-}
-
-float contour_channel(highp SAMPLER_TYPE chan, vec2 limits, vec2 uv, float texelsPerPx) {
-  ivec2 size = textureSize(chan, 0);
-  vec2 p = uv * vec2(size) - 0.5;
-  ivec2 i0 = ivec2(floor(p));
-  vec2 f = p - vec2(i0);
-  float v00 = norm_texel(chan, limits, i0, size);
-  float v10 = norm_texel(chan, limits, i0 + ivec2(1, 0), size);
-  float v01 = norm_texel(chan, limits, i0 + ivec2(0, 1), size);
-  float v11 = norm_texel(chan, limits, i0 + ivec2(1, 1), size);
-  float n = contourModule.levels;
-  float best = 1e3;
+// Coverage of the isoline nearest to s (0..1 across the contrast window),
+// given its gradient per texel.
+float contour_line(float s, vec2 grad, float texelsPerPx) {
   // n lines split the contrast window into n + 1 equal bands.
-  for (int k = 1; k <= ${CONTOUR_LEVELS_MAX}; k++) {
-    if (float(k) > n) break;
-    best = min(best, level_dist(f, float(k) / (n + 1.0), v00, v10, v01, v11));
-  }
-  return 1.0 - smoothstep(1.25, 2.25, best / texelsPerPx);
-}
-
-void accum_channel(
-  inout vec3 rgb,
-  highp SAMPLER_TYPE chan,
-  vec2 limits,
-  vec3 color,
-  vec2 uv,
-  float texelsPerPx,
-  float contour
-) {
-  if (contour > 0.5) {
-    rgb += contour_channel(chan, limits, uv, texelsPerPx) * color;
-  } else {
-    rgb += norm_raw(float(texture(chan, uv).r), limits) * color;
-  }
+  float bands = contourModule.levels + 1.0;
+  float u = s * bands;
+  float k = clamp(floor(u + 0.5), 1.0, contourModule.levels);
+  float distPx = abs(u - k) / max(length(grad) * bands, 1e-6) / texelsPerPx;
+  return 1.0 - smoothstep(0.75, 1.75, distPx);
 }
 `,
 };
 
+/** Every field is set: the contour layer passes colors and visibility, `defaultProps` the rest. */
 type ContourHost = {
-  props: {
-    colors?: [number, number, number][] | null;
-    channelsVisible?: boolean[] | null;
-    contrastLimits?: [number, number][] | null;
-    contourEnabled?: number[] | null;
-    contourLevels?: number;
-    opacity?: number;
-    selections?: unknown[] | null;
-  };
+  props: Partial<{
+    colors: [number, number, number][];
+    channelsVisible: boolean[];
+    contourLevels: number;
+    contourRadius: number;
+    contourWindow: [number, number, number, number];
+    opacity: number;
+  }>;
   getModels(): {
     shaderInputs: { setProps(props: Record<string, unknown>): void };
   }[];
 };
 
-function mainStart(numChannels: number): string {
-  const calls = Array.from(
-    { length: numChannels },
-    (_, i) =>
-      `accum_channel(contourRgb, channel${i}, contourModule.contrastLimits${i}, contourModule.color${i}, vTexCoord, contourPx, contourModule.contour${i});`,
-  ).join("\n");
-  return `float contourPx = max(
-  length(vec2(dFdx(vTexCoord.x), dFdy(vTexCoord.x))) * float(textureSize(channel0, 0).x),
-  length(vec2(dFdx(vTexCoord.y), dFdy(vTexCoord.y))) * float(textureSize(channel0, 0).y)
-);
-contourPx = max(contourPx, 1e-4);
+const perChannel = (n: number, line: (i: number) => string) =>
+  Array.from({ length: n }, (_, i) => line(i)).join("\n");
+
+/**
+ * One kernel pass for all channels: the weights depend only on position, so
+ * each tap computes them once and accumulates every channel's sample.
+ * Contrast limits are XRLayer's own `channelIntensity` uniforms.
+ */
+function mainStart(n: number): string {
+  // tileWindow.xy: tile origin inside the buffered texture; .zw: tile extent.
+  return `vec2 contourC = contourModule.tileWindow.xy + vTexCoord * contourModule.tileWindow.zw - 0.5;
+float contourPx = max(0.5 * (length(dFdx(contourC)) + length(dFdy(contourC))), 1e-4);
+ivec2 contourI = ivec2(floor(contourC));
+int contourReach = int(ceil(contourModule.radius));
+float contourInv = 1.0 / (contourModule.radius * contourModule.radius);
+float contourSw = 0.0;
+vec2 contourSgw = vec2(0.0);
+${perChannel(n, (i) => `float contourSv${i} = 0.0;\nvec2 contourSgv${i} = vec2(0.0);`)}
+for (int dy = 1 - contourReach; dy <= contourReach; dy++) {
+  for (int dx = 1 - contourReach; dx <= contourReach; dx++) {
+    ivec2 q = contourI + ivec2(dx, dy);
+    vec2 r = vec2(q) - contourC;
+    float x = dot(r, r) * contourInv;
+    if (x >= 1.0) continue;
+    float m = 1.0 - x;
+    float w = m * m * m;
+    vec2 gw = 6.0 * m * m * contourInv * r;
+    contourSw += w;
+    contourSgw += gw;
+${perChannel(
+  n,
+  (i) => `    float v${i} = float(texelFetch(channel${i}, q, 0).r);
+    contourSv${i} += w * v${i};
+    contourSgv${i} += gw * v${i};`,
+)}
+  }
+}
 vec3 contourRgb = vec3(0.0);
-${calls}
+${perChannel(
+  n,
+  (i) => `{
+  vec2 lim = channelIntensity.contrastLimits${i};
+  float span = 1.0 / max(0.0005, lim.y - lim.x);
+  float raw = contourSv${i} / contourSw;
+  vec2 grad = (contourSgv${i} - raw * contourSgw) / contourSw * span;
+  contourRgb += contour_line((raw - lim.x) * span, grad, contourPx) * contourModule.color${i};
+}`,
+)}
 fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
 `;
 }
 
-/** Replaces `ColorPaletteExtension` while any channel on the layer uses contours. */
+/**
+ * Replaces `ColorPaletteExtension` on a contour layer from
+ * `withContourLayers`: every channel on it is drawn as isolines.
+ */
 class ContourExtension extends VivLayerExtension {
   static extensionName = "ContourExtension";
   static defaultProps = {
-    contourEnabled: { type: "array", value: [] as number[], compare: true },
     contourLevels: {
       type: "number",
       value: CONTOUR_LEVELS_DEFAULT,
       compare: true,
     },
+    contourRadius: { type: "number", value: CONTOUR_MIN_RADIUS, compare: true },
+    contourWindow: { type: "array", value: [0, 0, 1, 1], compare: true },
   };
 
-  // Sampler uniforms live on the layer shader, so the per-channel calls are
+  // Sampler uniforms live on the layer shader, so the per-channel code is
   // injected into main rather than into the module preamble.
   getVivShaderTemplates(this: { getNumChannels?: () => number }) {
     const n = this.getNumChannels?.() ?? 0;
@@ -179,31 +159,19 @@ class ContourExtension extends VivLayerExtension {
   }
 
   updateState(this: ContourHost) {
-    const selections = this.props.selections ?? [];
-    const numChannels = selections.length;
-    if (numChannels < 1) return;
-    const colors =
-      this.props.colors ??
-      (getDefaultPalette(numChannels) as unknown as [number, number, number][]);
-    const channelsVisible =
-      this.props.channelsVisible ?? colors.map(() => true);
+    const { colors, channelsVisible, opacity } = this.props;
+    if (!colors?.length) return;
     const padded = padColorsForUBO({
       colors: colors as never,
       channelsVisible,
     }) as unknown as [number, number, number][];
-    const limits = this.props.contrastLimits ?? [];
-    const enabled = this.props.contourEnabled ?? [];
-    const requested = this.props.contourLevels ?? CONTOUR_LEVELS_DEFAULT;
     const contour: Record<string, unknown> = {
-      opacity: this.props.opacity ?? 1,
-      levels: Math.min(CONTOUR_LEVELS_MAX, Math.max(1, Math.round(requested))),
+      opacity,
+      levels: this.props.contourLevels,
+      radius: this.props.contourRadius,
+      tileWindow: this.props.contourWindow,
     };
-    for (let i = 0; i < numChannels; i++) {
-      const pair = limits[i];
-      contour[`contrastLimits${i}`] = pair ? [pair[0], pair[1]] : [0, 1];
-      contour[`color${i}`] = padded[i];
-      contour[`contour${i}`] = enabled[i] ? 1 : 0;
-    }
+    for (let i = 0; i < colors.length; i++) contour[`color${i}`] = padded[i];
     for (const model of this.getModels()) {
       model.shaderInputs.setProps({ contourModule: contour });
     }

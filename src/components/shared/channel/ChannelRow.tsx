@@ -13,9 +13,13 @@ import {
 } from "@/components/shared/channel/ChannelContrastEditor";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { useClickOutside } from "@/components/shared/useClickOutside";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import { withReseededRandomColors } from "@/lib/imaging/channelKind";
-import { CONTOUR_LEVELS_MAX } from "@/lib/imaging/contourExtension";
+import {
+  CONTOUR_LEVELS_MAX,
+  CONTOUR_SMOOTHING_STEPS,
+} from "@/lib/imaging/contourExtension";
 import { refitGmm } from "@/lib/imaging/gmmScheduler";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Channel } from "@/lib/stores/documentStore";
@@ -303,22 +307,14 @@ export function useAnchoredMenu(opts: {
     );
     setOpen(true);
   };
+  useClickOutside(open, close, [wrapRef, menuRef]);
   useEffect(() => {
     if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (wrapRef.current?.contains(t) || menuRef.current?.contains(t)) return;
-      setOpen(false);
-    };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
-    document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [open]);
   return { open, wrapRef, menuRef, menuStyle, toggleFromButton, close };
 }
@@ -423,7 +419,7 @@ function RowMoreMenu(props: {
                   </span>
                 </button>
               ) : null}
-              {contourOn ? <ContourLevelControl /> : null}
+              {contourOn ? <ContourControls /> : null}
               {onRemoveFromGroup ? (
                 <button
                   type="button"
@@ -446,34 +442,74 @@ function RowMoreMenu(props: {
   );
 }
 
-/** ⋮ menu row for the contour line count, shown while contours are on. */
-function ContourLevelControl() {
+const CONTOUR_LEVEL_STEPS = Array.from(
+  { length: CONTOUR_LEVELS_MAX },
+  (_, i) => i + 1,
+);
+
+/** ⋮ menu rows for contour settings, shown while contours are on. */
+function ContourControls() {
   const levels = useAppStore((s) => s.contourLevels);
   const setContourLevels = useAppStore((s) => s.setContourLevels);
-  const step = (delta: number) =>
-    setContourLevels(Math.min(CONTOUR_LEVELS_MAX, Math.max(1, levels + delta)));
+  const smoothing = useAppStore((s) => s.contourSmoothing);
+  const setContourSmoothing = useAppStore((s) => s.setContourSmoothing);
   return (
-    <div
-      className={styles.contourLevel}
-      title="Lines across the contrast range (shared by all contoured channels)"
-    >
-      <span>Lines</span>
+    <>
+      <MenuStepper
+        label="Lines"
+        title="Lines across the contrast range (shared by all contoured channels)"
+        decrease="Fewer contour lines"
+        increase="More contour lines"
+        steps={CONTOUR_LEVEL_STEPS}
+        value={levels}
+        onChange={setContourLevels}
+      />
+      <MenuStepper
+        label="Smoothing"
+        title="Smoothing radius in full-resolution pixels (shared by all contoured channels)"
+        decrease="Less contour smoothing"
+        increase="More contour smoothing"
+        steps={CONTOUR_SMOOTHING_STEPS}
+        value={smoothing}
+        onChange={setContourSmoothing}
+      />
+    </>
+  );
+}
+
+/** − value + row that steps through `steps`. */
+function MenuStepper(props: {
+  label: string;
+  title: string;
+  decrease: string;
+  increase: string;
+  steps: readonly number[];
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const { steps } = props;
+  const at = Math.max(0, steps.indexOf(props.value));
+  const step = (delta: number) =>
+    props.onChange(steps[Math.min(steps.length - 1, Math.max(0, at + delta))]);
+  return (
+    <div className={styles.contourLevel} title={props.title}>
+      <span>{props.label}</span>
       <span className={styles.contourStepper}>
         <button
           type="button"
           className={minervaTheme.focusRing}
-          aria-label="Fewer contour lines"
-          disabled={levels <= 1}
+          aria-label={props.decrease}
+          disabled={at <= 0}
           onClick={() => step(-1)}
         >
           −
         </button>
-        <output aria-live="polite">{levels}</output>
+        <output aria-live="polite">{props.value}</output>
         <button
           type="button"
           className={minervaTheme.focusRing}
-          aria-label="More contour lines"
-          disabled={levels >= CONTOUR_LEVELS_MAX}
+          aria-label={props.increase}
+          disabled={at >= steps.length - 1}
           onClick={() => step(1)}
         >
           +

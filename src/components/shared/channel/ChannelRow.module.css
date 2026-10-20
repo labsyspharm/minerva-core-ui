@@ -64,7 +64,7 @@
 }
 
 .contourStepper output {
-  min-width: 2.5ch;
+  min-width: 3ch;
   align-self: center;
   color: var(--minerva-ink);
   text-align: center;
