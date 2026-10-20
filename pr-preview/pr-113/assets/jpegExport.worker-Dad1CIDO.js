@@ -4040,6 +4040,14 @@ function normalizeWaypointRecord(raw) {
   }
   return w;
 }
+function normalizeFeatureTableSource(raw) {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    return raw;
+  }
+  const s = raw;
+  if ("kind" in s || typeof s.handleKey !== "string") return s;
+  return { kind: "local", handleKey: s.handleKey };
+}
 function normalizeRawShape(shape) {
   if (shape === null || typeof shape !== "object" || Array.isArray(shape)) {
     return shape;
@@ -4265,6 +4273,10 @@ const ImageSchema = objectType({
   translateY: numberType().default(0),
   /** Resize around the image center. 1 keeps the file's physical size. */
   displayScale: numberType().positive().default(1),
+  /** Whole-image alpha (`0…1`). Omitted input parses as 1. */
+  opacity: numberType().min(0).max(1).default(1),
+  /** µm per pixel on both axes. Omitted uses the file's PhysicalSize. */
+  umPerPixel: numberType().positive().optional(),
   channels: arrayType(ImageChannelSchema),
   source: ImageSourceSchema.optional()
 });
@@ -4284,10 +4296,17 @@ const ChannelGroupSchema = objectType({
   channels: arrayType(ChannelGroupChannelSchema)
 });
 const ClassIdSchema = numberType().int().positive().max(4294967295);
+const FeatureTableSourceSchema = preprocessType(
+  normalizeFeatureTableSource,
+  discriminatedUnionType("kind", [
+    objectType({ kind: literalType("local"), handleKey: stringType().min(1) }),
+    objectType({ kind: literalType("url"), url: stringType().min(1) })
+  ])
+);
 const FeatureTableSchema = objectType({
   id: IdSchema,
   sourceChannelId: IdSchema,
-  source: objectType({ handleKey: stringType().min(1) }),
+  source: FeatureTableSourceSchema,
   maxClassId: ClassIdSchema,
   nameColors: arrayType(
     objectType({
@@ -4295,11 +4314,18 @@ const FeatureTableSchema = objectType({
       color: ColorSchema
     })
   ),
-  /** SHA-256 of the attached CSV bytes. */
-  digest: stringType().min(1),
-  columns: objectType({ id: stringType().min(1), name: stringType().min(1) }),
-  /** False when the CSV has no header row (`column0`,`column1`). */
-  header: booleanType()
+  /** SHA-256 of the bytes stored at attach. Older stories hashed the CSV. */
+  digest: stringType().min(1)
+});
+const ClassVisibilitySchema = discriminatedUnionType("mode", [
+  objectType({ mode: literalType("all") }),
+  objectType({ mode: literalType("hide"), names: arrayType(stringType()) }),
+  objectType({ mode: literalType("show"), names: arrayType(stringType()) })
+]);
+const ClassViewSchema = objectType({
+  channelId: IdSchema,
+  visibility: ClassVisibilitySchema,
+  colors: arrayType(objectType({ name: stringType(), color: ColorSchema })).default([])
 });
 const waypointObjectZ = objectType({
   id: IdSchema,
@@ -4309,7 +4335,9 @@ const waypointObjectZ = objectType({
   name: stringType().optional(),
   content: stringType(),
   viewport: ViewportSchema,
-  shapeIds: arrayType(IdSchema)
+  shapeIds: arrayType(IdSchema),
+  /** No entry for a mask means every class in the table palette. */
+  classViews: arrayType(ClassViewSchema).default([])
 });
 const WaypointSchema = preprocessType((raw) => {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
@@ -4418,10 +4446,20 @@ function encodeCubeRootU16ToU8(pixel) {
     Math.max(0, Math.round((pixel / 65536) ** (1 / 3) * 256))
   );
 }
+function decodeCubeRootU8ToU16(byte) {
+  if (!Number.isFinite(byte) || byte <= 0) return 0;
+  return Math.min(65535, Math.max(0, Math.round((byte / 256) ** 3 * 65536)));
+}
+Uint16Array.from(
+  { length: 256 },
+  (_, b) => decodeCubeRootU8ToU16(b)
+);
+Uint16Array.from({ length: 256 }, (_, b) => b << 8);
 
 const JPEG_PYRAMID_TILE_SIZE = 1024;
 
 const MOZJPEG_COLORSPACE_GRAYSCALE = 1;
+const MOZJPEG_COLORSPACE_YCBCR = 3;
 const JPEG_EXPORT_QUALITY = 0.95;
 const PIXEL_CTORS = {
   Uint8Array,
@@ -4485,16 +4523,22 @@ function ensureJpegEncoderReady() {
   }
   return jsquashReady;
 }
-async function encodeRgbaToJpeg(width, height, rgba, quality) {
+async function encodeRgbaToJpeg(width, height, rgba, quality, colorSpace = MOZJPEG_COLORSPACE_GRAYSCALE) {
   await ensureJpegEncoderReady();
   const imageData = new ImageData(rgba, width, height);
   return encode(imageData, {
     quality: mozJpegQuality(quality),
-    color_space: MOZJPEG_COLORSPACE_GRAYSCALE,
+    color_space: colorSpace,
     baseline: true,
     progressive: false,
     arithmetic: false,
-    optimize_coding: false
+    // Per-tile Huffman tables, still baseline. With the standard tables
+    // (`false`), @jsquash/jpeg 1.6.0 writes a corrupt scan for ~12% of 4:2:0
+    // YCbCr tiles; optimized ones are also smaller and faster to encode.
+    optimize_coding: true,
+    // 4:2:0. Packed RGB TIFF tags declare YCbCrSubSampling [2, 2].
+    auto_subsample: false,
+    chroma_subsample: 2
   });
 }
 async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
@@ -4512,6 +4556,23 @@ async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit
   const padded = padGrayscaleRgbaToTile(rgba, width, height, padTileSize);
   return encodeRgbaToJpeg(padTileSize, padTileSize, padded, quality);
 }
+async function encodeRgbJpeg(width, height, pixels, limits, quality, padTileSize) {
+  const outW = padTileSize ?? width;
+  const outH = padTileSize ?? height;
+  const rgba = new Uint8ClampedArray(new ArrayBuffer(outW * outH * 4)).fill(
+    255
+  );
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const s = (row * width + col) * 3;
+      const o = (row * outW + col) * 4;
+      for (let c = 0; c < 3; c++) {
+        rgba[o + c] = clampValue(pixels[s + c], limits[c][0], limits[c][1]);
+      }
+    }
+  }
+  return encodeRgbaToJpeg(outW, outH, rgba, quality, MOZJPEG_COLORSPACE_YCBCR);
+}
 
 const worker = self;
 void ensureJpegEncoderReady().catch((err) => {
@@ -4528,7 +4589,8 @@ worker.addEventListener("message", async (e) => {
     upperLimit,
     quality = JPEG_EXPORT_QUALITY,
     transfer = "contrast",
-    padTileSize
+    padTileSize,
+    rgbLimits
   } = e.data;
   try {
     const Ctor = PIXEL_CTORS[arrayCtorName];
@@ -4536,7 +4598,7 @@ worker.addEventListener("message", async (e) => {
       throw new Error(`unsupported pixel array ${arrayCtorName}`);
     }
     const pixels = new Ctor(buffer);
-    const jpeg = await encodeGrayscaleJpeg(
+    const jpeg = await (rgbLimits ? encodeRgbJpeg(width, height, pixels, rgbLimits, quality, padTileSize) : encodeGrayscaleJpeg(
       width,
       height,
       pixels,
@@ -4545,7 +4607,7 @@ worker.addEventListener("message", async (e) => {
       quality,
       transfer,
       padTileSize
-    );
+    ));
     worker.postMessage({ jpeg, jobId }, [jpeg]);
   } catch (err) {
     worker.postMessage({

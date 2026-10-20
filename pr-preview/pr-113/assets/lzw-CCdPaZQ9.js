@@ -1,41 +1,45 @@
-import { B as BaseDecoder } from "./index-ChpTFZOe.js";
+import { B as BaseDecoder } from './decoder.worker-DskuWaKT.js';
+
 const MIN_BITS = 9;
-const CLEAR_CODE = 256;
-const EOI_CODE = 257;
+const CLEAR_CODE = 256; // clear code
+const EOI_CODE = 257; // end of information
 const MAX_BYTELENGTH = 12;
+
 function getByte(array, position, length) {
   const d = position % 8;
   const a = Math.floor(position / 8);
   const de = 8 - d;
-  const ef = position + length - (a + 1) * 8;
-  let fg = 8 * (a + 2) - (position + length);
-  const dg = (a + 2) * 8 - position;
+  const ef = (position + length) - ((a + 1) * 8);
+  let fg = (8 * (a + 2)) - (position + length);
+  const dg = ((a + 2) * 8) - position;
   fg = Math.max(0, fg);
   if (a >= array.length) {
-    console.warn("ran off the end of the buffer before finding EOI_CODE (end on input code)");
+    console.warn('ran off the end of the buffer before finding EOI_CODE (end on input code)');
     return EOI_CODE;
   }
-  let chunk1 = array[a] & 2 ** (8 - d) - 1;
-  chunk1 <<= length - de;
+  let chunk1 = array[a] & ((2 ** (8 - d)) - 1);
+  chunk1 <<= (length - de);
   let chunks = chunk1;
   if (a + 1 < array.length) {
     let chunk2 = array[a + 1] >>> fg;
-    chunk2 <<= Math.max(0, length - dg);
+    chunk2 <<= Math.max(0, (length - dg));
     chunks += chunk2;
   }
   if (ef > 8 && a + 2 < array.length) {
-    const hi = (a + 3) * 8 - (position + length);
+    const hi = ((a + 3) * 8) - (position + length);
     const chunk3 = array[a + 2] >>> hi;
     chunks += chunk3;
   }
   return chunks;
 }
+
 function appendReversed(dest, source) {
   for (let i = source.length - 1; i >= 0; i--) {
     dest.push(source[i]);
   }
   return dest;
 }
+
 function decompress(input) {
   const dictionaryIndex = new Uint16Array(4093);
   const dictionaryChar = new Uint8Array(4093);
@@ -46,12 +50,13 @@ function decompress(input) {
   let dictionaryLength = 258;
   let byteLength = MIN_BITS;
   let position = 0;
+
   function initDictionary() {
     dictionaryLength = 258;
     byteLength = MIN_BITS;
   }
-  function getNext(array2) {
-    const byte = getByte(array2, position, byteLength);
+  function getNext(array) {
+    const byte = getByte(array, position, byteLength);
     position += byteLength;
     return byte;
   }
@@ -68,6 +73,7 @@ function decompress(input) {
     }
     return rev;
   }
+
   const result = [];
   initDictionary();
   const array = new Uint8Array(input);
@@ -80,6 +86,7 @@ function decompress(input) {
       while (code === CLEAR_CODE) {
         code = getNext(array);
       }
+
       if (code === EOI_CODE) {
         break;
       } else if (code > CLEAR_CODE) {
@@ -104,9 +111,10 @@ function decompress(input) {
       addToDictionary(oldCode, oldVal[oldVal.length - 1]);
       oldCode = code;
     }
-    if (dictionaryLength + 1 >= 2 ** byteLength) {
+
+    if (dictionaryLength + 1 >= (2 ** byteLength)) {
       if (byteLength === MAX_BYTELENGTH) {
-        oldCode = void 0;
+        oldCode = undefined;
       } else {
         byteLength++;
       }
@@ -115,11 +123,11 @@ function decompress(input) {
   }
   return new Uint8Array(result);
 }
+
 class LZWDecoder extends BaseDecoder {
   decodeBlock(buffer) {
     return decompress(buffer).buffer;
   }
 }
-export {
-  LZWDecoder as default
-};
+
+export { LZWDecoder as default };
