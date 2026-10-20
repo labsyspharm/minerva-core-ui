@@ -12,6 +12,7 @@ import {
   CONTOUR_LEVELS_DEFAULT,
   CONTOUR_LEVELS_MAX,
   CONTOUR_SMOOTHING_DEFAULT,
+  CONTOUR_SMOOTHING_STEPS,
 } from "../imaging/contourExtension";
 import type { ImageOpacityPreview } from "../imaging/imageOpacity";
 import {
@@ -827,6 +828,9 @@ export interface AppStore {
   /** Contour smoothing radius in full-resolution image pixels. */
   contourSmoothing: number;
   setContourSmoothing: (radius: number) => void;
+  /** Smoothing steps that still change the open contoured pyramids. */
+  contourSmoothingSteps: readonly number[];
+  setContourSmoothingSteps: (steps: readonly number[]) => void;
   groupNames: Record<string, string>;
   /**
    * Classes turned off from the playback legend, by `legendClassKey`.
@@ -993,6 +997,7 @@ const overlayInitialState = {
   contourChannelIds: {},
   contourLevels: CONTOUR_LEVELS_DEFAULT,
   contourSmoothing: CONTOUR_SMOOTHING_DEFAULT,
+  contourSmoothingSteps: CONTOUR_SMOOTHING_STEPS,
   channelGroupRowVisibilities: {},
   groupNames: {},
   hiddenLegendClasses: {} as Record<string, string[]>,
@@ -2326,6 +2331,24 @@ export const useAppStore = create<AppStore>()(
 
       setContourSmoothing: (contourSmoothing) => {
         set({ contourSmoothing });
+      },
+
+      setContourSmoothingSteps: (steps) => {
+        const usable = steps.length > 0 ? steps : CONTOUR_SMOOTHING_STEPS;
+        const current = get().contourSmoothing;
+        let contourSmoothing = usable[0];
+        for (const step of usable) {
+          if (step <= current) contourSmoothing = step;
+        }
+        const prev = get().contourSmoothingSteps;
+        if (
+          contourSmoothing === current &&
+          prev.length === usable.length &&
+          prev.every((step, i) => step === usable[i])
+        ) {
+          return;
+        }
+        set({ contourSmoothingSteps: usable, contourSmoothing });
       },
 
       setChannelVisibilities: (vis: Record<string, boolean>) => {

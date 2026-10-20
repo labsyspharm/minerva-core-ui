@@ -10,6 +10,7 @@ import { isMobileDevice } from "../viewer/isMobileDevice";
 import {
   CONTOUR_APRON,
   CONTOUR_MIN_RADIUS,
+  CONTOUR_SMOOTHING_STEPS,
   contourExtension,
 } from "./contourExtension";
 import {
@@ -229,6 +230,39 @@ async function readWindow(
     }
   }
   return { data: out, width: win.width, height: win.height };
+}
+
+/**
+ * Smoothing steps that still change the lines on these pyramids, viewed at
+ * full resolution. A larger step that lands on the same level with the same
+ * capped radius is dropped.
+ */
+export function contourSmoothingStepsFor(
+  planeSets: readonly LoaderPlane[][],
+): readonly number[] {
+  const pyramids: Pyramid[] = [];
+  for (const planes of planeSets) {
+    if (planes.length === 0) continue;
+    const pyramid = pyramidOf(planes);
+    if (pyramid.sizes.some((size) => size.width <= 0 || size.height <= 0)) {
+      continue;
+    }
+    pyramids.push(pyramid);
+  }
+  if (pyramids.length === 0) return CONTOUR_SMOOTHING_STEPS;
+  const prev = pyramids.map(() => "");
+  const steps: number[] = [];
+  for (const smoothing of CONTOUR_SMOOTHING_STEPS) {
+    let changed = steps.length === 0;
+    for (let i = 0; i < pyramids.length; i++) {
+      const win = contourWindow(pyramids[i], 0, 0, 0, smoothing);
+      const key = `${win.level}:${win.radius.toFixed(3)}`;
+      if (key !== prev[i]) changed = true;
+      prev[i] = key;
+    }
+    if (changed) steps.push(smoothing);
+  }
+  return steps;
 }
 
 /** The window each stitched texture was cut for; Viv passes the arrays through. */

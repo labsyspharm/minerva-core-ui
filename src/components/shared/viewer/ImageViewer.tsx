@@ -28,7 +28,11 @@ import {
   DEFAULT_MASK_VISUALIZATION,
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
-import { withContourLayers } from "@/lib/imaging/contourTiles";
+import { CONTOUR_SMOOTHING_STEPS } from "@/lib/imaging/contourExtension";
+import {
+  contourSmoothingStepsFor,
+  withContourLayers,
+} from "@/lib/imaging/contourTiles";
 import { opacityForImage } from "@/lib/imaging/imageOpacity";
 import { orientationForImage } from "@/lib/imaging/imageOrientation";
 import type { LoaderList } from "@/lib/imaging/loaderEntries";
@@ -508,6 +512,25 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const contourChannelIds = useAppStore((s) => s.contourChannelIds);
   const contourLevels = useAppStore((s) => s.contourLevels);
   const contourSmoothing = useAppStore((s) => s.contourSmoothing);
+  const setContourSmoothingSteps = useAppStore(
+    (s) => s.setContourSmoothingSteps,
+  );
+  useEffect(() => {
+    const imageIds = new Set<string>();
+    for (const image of images) {
+      for (const channel of image.channels) {
+        if (contourChannelIds[channel.id]) imageIds.add(image.id);
+      }
+    }
+    const planeSets = loaderList
+      .filter((item) => item.sourceImageId && imageIds.has(item.sourceImageId))
+      .map((item) => item.loader.data);
+    setContourSmoothingSteps(
+      planeSets.length > 0
+        ? contourSmoothingStepsFor(planeSets)
+        : CONTOUR_SMOOTHING_STEPS,
+    );
+  }, [contourChannelIds, images, loaderList, setContourSmoothingSteps]);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   /** False until the viewer element reports its size; the window size is only a guess. */

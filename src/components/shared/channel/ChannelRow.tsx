@@ -16,10 +16,7 @@ import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { useClickOutside } from "@/components/shared/useClickOutside";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import { withReseededRandomColors } from "@/lib/imaging/channelKind";
-import {
-  CONTOUR_LEVELS_MAX,
-  CONTOUR_SMOOTHING_STEPS,
-} from "@/lib/imaging/contourExtension";
+import { CONTOUR_LEVELS_MAX } from "@/lib/imaging/contourExtension";
 import { refitGmm } from "@/lib/imaging/gmmScheduler";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Channel } from "@/lib/stores/documentStore";
@@ -453,6 +450,10 @@ function ContourControls() {
   const setContourLevels = useAppStore((s) => s.setContourLevels);
   const smoothing = useAppStore((s) => s.contourSmoothing);
   const setContourSmoothing = useAppStore((s) => s.setContourSmoothing);
+  const smoothingSteps = useAppStore((s) => s.contourSmoothingSteps);
+  const smoothingValue = smoothingSteps.includes(smoothing)
+    ? smoothing
+    : (smoothingSteps[smoothingSteps.length - 1] ?? smoothing);
   return (
     <>
       <MenuStepper
@@ -469,8 +470,8 @@ function ContourControls() {
         title="Smoothing radius in full-resolution pixels (shared by all contoured channels)"
         decrease="Less contour smoothing"
         increase="More contour smoothing"
-        steps={CONTOUR_SMOOTHING_STEPS}
-        value={smoothing}
+        steps={smoothingSteps}
+        value={smoothingValue}
         onChange={setContourSmoothing}
       />
     </>
