@@ -3,25 +3,157 @@
   height: 100%;
 }
 
-.pyramidHud {
+.viewerInfo {
   position: absolute;
-  left: 8px;
+  right: 8px;
   bottom: 8px;
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
+}
+
+.viewerInfoButton,
+.viewerInfoPanel {
+  pointer-events: auto;
+}
+
+.viewerInfoButton {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.viewerInfoButton svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.viewerInfoPanel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: max-content;
+  max-width: min(320px, 80vw);
+  padding: 6px 8px 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.88);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+.viewerInfoPanelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.viewerInfoClose {
+  width: 22px;
+  height: 22px;
+  margin: -4px -4px -4px 0;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: transparent;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.viewerInfoList {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 1px;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
   border: none;
-  padding: 2px 8px;
-  border-radius: 2px;
-  background: rgba(0, 0, 0, 0.75);
-  color: #fff;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  font-variant-numeric: tabular-nums;
+}
+
+.viewerInfoList div {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.viewerInfoStamp {
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* Styled like the stamp: a colophon line, not a call to action. */
+.viewerInfoFooter {
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.viewerInfoFooter button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.viewerInfoFooter button:is(:hover, :focus-visible):not(:disabled) {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.viewerInfoFooter button:disabled {
+  cursor: progress;
+}
+
+@media (max-width: 720px) {
+  .viewerInfo {
+    right: 4px;
+    bottom: 4px;
+  }
+
+  .viewerInfoButton {
+    width: 14px;
+    height: 14px;
+  }
+
+  .viewerInfoButton svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .viewerInfoPanel {
+    max-width: min(240px, 70vw);
+    padding: 4px 6px 6px;
+    font-size: 11px;
+  }
+
+  .viewerInfoClose {
+    width: 20px;
+    height: 20px;
+    font-size: 15px;
+  }
 }
 
 .squareViewportOverlay {

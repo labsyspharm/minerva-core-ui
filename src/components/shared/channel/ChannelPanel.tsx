@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
 import * as React from "react";
+import { classViewFor, shownClassRows } from "@/lib/featureTable";
+import {
+  useFeatureTableIngestEpoch,
+  useFeatureTableLutEpoch,
+} from "@/lib/featureTable/hooks";
 import {
   applyStackVisibilities,
   isStackVisible,
@@ -13,16 +18,23 @@ import {
   isMaskChannel,
   isRgbDisplayChannel,
 } from "@/lib/imaging/channelKind";
-import { useAppStore } from "@/lib/stores/appStore";
+import {
+  effectiveMaskVisualizationForSource,
+  rgbToHex,
+} from "@/lib/imaging/sourceChannelStyle";
+import { legendClassKey, useAppStore } from "@/lib/stores/appStore";
 import type { ChannelGroup, Image } from "@/lib/stores/documentStore";
 import {
   findSourceChannel,
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
+import { useActiveWaypoint } from "@/lib/stores/useActiveWaypoint";
 import { ChannelGroups } from "./ChannelGroups";
 import {
   ChannelLegend,
+  ClassLegend,
+  type ClassLegendSection,
   type LegendChannel,
   type LegendEntry,
   type LegendSection,
@@ -132,6 +144,74 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
     channelVisibilities,
   ]);
 
+  const featureTables = useDocumentStore((s) => s.featureTables);
+  const activeWaypoint = useActiveWaypoint();
+  const hiddenLegendClasses = useAppStore((s) => s.hiddenLegendClasses);
+  const toggleLegendClass = useAppStore((s) => s.toggleLegendClass);
+  const clearLegendClasses = useAppStore((s) => s.clearLegendClasses);
+  // Legend toggles are for the playback session; authoring hides the legend.
+  React.useEffect(() => {
+    if (hide) clearLegendClasses();
+  }, [hide, clearLegendClasses]);
+  const ingestEpoch = useFeatureTableIngestEpoch();
+  const lutEpoch = useFeatureTableLutEpoch();
+  const classSections = React.useMemo((): ClassLegendSection[] => {
+    void ingestEpoch;
+    void lutEpoch;
+    const inLegend = new Set(
+      legendSections.flatMap((section) =>
+        section.entries.flatMap((e) =>
+          e.type === "channel" ? [e.channel.source_uuid] : [],
+        ),
+      ),
+    );
+    const out: ClassLegendSection[] = [];
+    for (const featureTable of featureTables) {
+      if (!inLegend.has(featureTable.sourceChannelId)) continue;
+      const sc = findSourceChannel(
+        sourceChannels,
+        featureTable.sourceChannelId,
+      );
+      if (!sc || !isMaskChannel(sc)) continue;
+      const viz = effectiveMaskVisualizationForSource(
+        sc,
+        docChannelGroups,
+        activeChannelGroupId,
+      );
+      const rows = shownClassRows(
+        featureTable,
+        classViewFor(activeWaypoint, sc.id),
+        viz.colorSeed ?? 0,
+        activeWaypoint?.id,
+      );
+      if (!rows) continue;
+      const hiddenNames = new Set(
+        hiddenLegendClasses[legendClassKey(activeWaypoint?.id, sc.id)],
+      );
+      out.push({
+        channelId: sc.id,
+        label: sc.name,
+        showSwatches: viz.color !== "white",
+        rows: rows.map((row) => ({
+          name: row.name,
+          color: rgbToHex(row.color),
+          hidden: hiddenNames.has(row.name),
+        })),
+      });
+    }
+    return out;
+  }, [
+    legendSections,
+    featureTables,
+    sourceChannels,
+    docChannelGroups,
+    activeChannelGroupId,
+    activeWaypoint,
+    hiddenLegendClasses,
+    ingestEpoch,
+    lutEpoch,
+  ]);
+
   const groups = useDocumentStore((s) => s.channelGroups);
   const setChannelGroups = useDocumentStore((s) => s.setChannelGroups);
   const setGroupNames = useAppStore((s) => s.setGroupNames);
@@ -219,6 +299,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
         groupRowVisibilities: channelGroupRowVisibilities,
         stackVisibilities: channelVisibilities,
         visible: nextVisible,
+        groupId: c.group_uuid,
       });
       setChannelGroupRowVisibilities(next.channelGroupRowVisibilities);
       setChannelVisibilities(next.channelVisibilities);
@@ -271,6 +352,12 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
             channelGroupRowVisibilities={channelGroupRowVisibilities}
             toggleChannel={toggleChannel}
             updateChannel={updateChannel}
+          />
+          <ClassLegend
+            sections={classSections}
+            onToggle={(channelId, name) =>
+              toggleLegendClass(activeWaypoint?.id, channelId, name)
+            }
           />
         </div>
       </div>

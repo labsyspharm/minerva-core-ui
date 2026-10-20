@@ -6,86 +6,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import CloseIcon from "@/components/shared/icons/close.svg?react";
-
-const BACKDROP_Z = 9998;
-const PANEL_Z = 9999;
-
-const backdropButtonStyle: React.CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  zIndex: BACKDROP_Z,
-  margin: 0,
-  padding: 0,
-  border: "none",
-  background: "transparent",
-  cursor: "default",
-};
-
-const panelFrameStyle: React.CSSProperties = {
-  padding: "3px 8px 8px",
-  background: "var(--minerva-paper)",
-  border: "1px solid var(--minerva-edge)",
-  borderRadius: 0,
-};
-
-const closeRowStyle: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "flex-end",
-  alignItems: "center",
-  flexShrink: 0,
-  marginBottom: 0,
-};
-
-const colorGridStyle: React.CSSProperties = {
-  display: "grid",
-  gap: "0.5em",
-};
-
-const colorShownStyle: React.CSSProperties = {
-  transition: "height 0.33s ease-out, opacity 0.33s ease-out",
-};
-
-const colorHiddenStyle: React.CSSProperties = {
-  height: 0,
-  opacity: 0,
-  pointerEvents: "none",
-  transition: "height 0.33s ease-out, opacity 0.33s ease-out",
-};
-
-const hueRowStyle: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "1.5em 1fr",
-};
-
-const groupFolderChevron: React.CSSProperties = {
-  all: "unset",
-  display: "grid",
-  gridTemplateColumns: "1fr auto 1fr",
-  cursor: "pointer",
-  color: "#8b949e",
-  lineHeight: 0,
-};
-
-const closeButtonStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: 22,
-  height: 22,
-  margin: 0,
-  padding: 0,
-  border: "none",
-  borderRadius: 0,
-  background: "transparent",
-  cursor: "pointer",
-  color: "var(--minerva-quiet)",
-};
-
-const closeIconStyle: React.CSSProperties = {
-  width: "12px",
-  height: "12px",
-  display: "block",
-};
+import styles from "./ColorPickerPopover.module.css";
 
 /** Clamp popover so it stays on-screen (channel + annotation pickers). */
 export function colorPickerAnchorPosition(rect: DOMRect): {
@@ -103,10 +24,7 @@ type ColorPickerPopoverProps = {
   onClose: () => void;
 } & Omit<React.ComponentProps<typeof Chrome>, "ref">;
 
-/**
- * Fixed popover + transparent backdrop; close control in a row above the picker.
- * Popover triangle is off so the panel is a simple rectangle.
- */
+/** Fixed popover. Chevron, hue, white, and close share one row. */
 export function ColorPickerPopover({
   position,
   onClose,
@@ -124,19 +42,26 @@ export function ColorPickerPopover({
   const currentColor = color(pickerProps.color);
   const [expanded, setExpanded] = React.useState(false);
 
-  const hueProps = {
-    hue: currentColor.hsva.h,
-    onChange: ({ h }: { h: number }) => {
-      const { v, s } = currentColor.hsva;
-      pickerProps.onChange(color({ h, v, s, a: 1 }));
-    },
+  const { h, s, v } = currentColor.hsva;
+  const isWhite = s < 1 && v > 99;
+  // White is stored as RGB, which reads back as hue 0. Remember the last real hue.
+  const hue = React.useRef(h);
+  if (s >= 1) hue.current = h;
+
+  const paint = (nextH: number, nextS: number, nextV: number) => {
+    hue.current = nextH;
+    pickerProps.onChange(color({ h: nextH, s: nextS, v: nextV, a: 1 }));
   };
   const saturationProps = {
     hsva: currentColor.hsva,
+    className: expanded
+      ? styles.saturation
+      : `${styles.saturation} ${styles.saturationHidden}`,
+    /* Library sets height inline; only an inline 0 collapses it. */
+    style: expanded ? undefined : { height: 0 },
     onChange: ({ h, v, s, a }) => {
       pickerProps.onChange(color({ h, v, s, a }));
     },
-    style: expanded ? colorShownStyle : colorHiddenStyle,
   };
 
   if (!position || typeof document === "undefined") return null;
@@ -145,51 +70,59 @@ export function ColorPickerPopover({
     <>
       <button
         type="button"
+        className={styles.backdrop}
         aria-label="Close color picker"
-        style={backdropButtonStyle}
         onClick={onClose}
       />
       <div
         data-minerva-color-picker=""
-        style={{
-          position: "fixed",
-          top: position.top,
-          left: position.left,
-          zIndex: PANEL_Z,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "stretch",
-          ...panelFrameStyle,
-        }}
+        className={styles.panel}
+        style={{ top: position.top, left: position.left }}
       >
-        <div style={closeRowStyle}>
-          <button
-            type="button"
-            title="Close"
-            aria-label="Close color picker"
-            style={closeButtonStyle}
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-          >
-            <CloseIcon aria-hidden style={closeIconStyle} />
-          </button>
-        </div>
-        <div style={colorGridStyle}>
-          <div style={hueRowStyle}>
+        <div
+          className={
+            expanded
+              ? `${styles.colorGrid} ${styles.colorGridExpanded}`
+              : styles.colorGrid
+          }
+        >
+          <div className={styles.hueRow}>
             <button
               type="button"
-              style={groupFolderChevron}
+              className={styles.iconButton}
               aria-expanded={expanded}
               title={expanded ? "Fewer colors" : "More colors"}
               onClick={() => setExpanded(!expanded)}
             >
-              <div></div>
               <ChevronIcon direction={expanded ? "down" : "right"} />
-              <div></div>
             </button>
-            <Hue {...hueProps} />
+            <Hue
+              hue={hue.current}
+              onChange={({ h: nextH }) => {
+                const vivid = !expanded && s < 1;
+                paint(nextH, vivid ? 100 : s, vivid ? 100 : v);
+              }}
+            />
+            <button
+              type="button"
+              className={styles.whiteSwatch}
+              aria-pressed={isWhite}
+              aria-label="White"
+              title="White"
+              onClick={() => paint(hue.current, 0, 100)}
+            />
+            <button
+              type="button"
+              title="Close"
+              aria-label="Close color picker"
+              className={styles.iconButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+            >
+              <CloseIcon aria-hidden className={styles.closeIcon} />
+            </button>
           </div>
           <Saturation {...saturationProps} />
         </div>

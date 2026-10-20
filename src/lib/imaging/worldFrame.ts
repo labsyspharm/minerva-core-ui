@@ -56,6 +56,15 @@ type PhysicalScale = {
 
 function metresPerUnit(unit: string): number | null {
   const u = unit.trim();
+  const word = u.toLowerCase();
+  if (
+    word === "micron" ||
+    word === "microns" ||
+    word === "micrometer" ||
+    word === "micrometers"
+  ) {
+    return 1e-6;
+  }
   if (u === "m") return 1;
   if (!u.endsWith("m")) return null;
   const prefix = u.slice(0, -1);
@@ -118,27 +127,61 @@ export function worldFrameFromLoader(loader: Loader): WorldFrame {
   );
 }
 
+function planeAxis(
+  plane: Loader["data"][number] | undefined,
+  axis: "x" | "y",
+): number | null {
+  if (!plane?.labels || !plane.shape) return null;
+  const i = plane.labels.indexOf(axis);
+  if (i < 0) return null;
+  const n = Number(plane.shape[i]);
+  if (!Number.isFinite(n) || n <= 1) return null;
+  return Math.round(n);
+}
+
+/** Largest pyramid level. */
+function fullResPixelSize(
+  loader: Loader,
+): { sizeX: number; sizeY: number } | null {
+  let best: { sizeX: number; sizeY: number } | null = null;
+  let bestArea = 0;
+  for (const plane of loader.data ?? []) {
+    const sizeX = planeAxis(plane, "x");
+    const sizeY = planeAxis(plane, "y");
+    if (sizeX == null || sizeY == null) continue;
+    const area = sizeX * sizeY;
+    if (area > bestArea) {
+      best = { sizeX, sizeY };
+      bestArea = area;
+    }
+  }
+  return best;
+}
+
+function comparablePixelSize(
+  loader: Loader,
+): { sizeX: number; sizeY: number } | null {
+  return fullResPixelSize(loader) ?? loaderPixelSizeXY(loader);
+}
+
 /**
- * Unitless 1,1 / identity µm/px copies µm/px from *any* other open image
- * with the same pixel size and a real physical scale.
+ * A file with no physical scale copies it from another open image of the
+ * same pixel size. A file that already has a PhysicalSize keeps its own.
  */
 export function inheritUnitlessPhysicalSize(loaders: readonly Loader[]): void {
   for (const loader of loaders) {
-    if (isCalibratedScale(loader)) continue;
-    const dims = loaderPixelSizeXY(loader);
-    if (!dims) continue;
-    const donor = loaders.find(
-      (peer) =>
-        peer !== loader &&
-        isCalibratedScale(peer) &&
-        loaderPixelSizeXY(peer)?.sizeX === dims.sizeX &&
-        loaderPixelSizeXY(peer)?.sizeY === dims.sizeY,
-    );
+    const pixels = loader.metadata?.Pixels;
+    const dims = comparablePixelSize(loader);
+    if (!dims || !pixels || isCalibratedScale(loader)) continue;
+    const donor = loaders.find((peer) => {
+      if (peer === loader || !isCalibratedScale(peer)) return false;
+      const peerDims = comparablePixelSize(peer);
+      return peerDims?.sizeX === dims.sizeX && peerDims?.sizeY === dims.sizeY;
+    });
     if (!donor) continue;
-    const { umPerPixelX, umPerPixelY } = worldFrameFromLoader(donor);
-    const pixels = loader.metadata.Pixels;
-    pixels.PhysicalSizeX = umPerPixelX;
-    pixels.PhysicalSizeY = umPerPixelY;
+    const scale = parsePhysicalScale(donor.metadata?.Pixels);
+    pixels.PhysicalSizeX = scale.umPerPixelX;
+    pixels.PhysicalSizeY = scale.umPerPixelY;
     pixels.PhysicalSizeXUnit = WORLD_MICRON;
     pixels.PhysicalSizeYUnit = WORLD_MICRON;
   }
@@ -168,16 +211,18 @@ export function effectiveWorldFrame(
 /**
  * Deck model matrix.
  * `T(µm) · T(center) · S(display) · T(−center) · scale(µm/px) · T(center) · R · S(flip) · T(−center)`.
- * µm/px is the loader's OME PhysicalSize. Display scale and translation are
- * the user resize and move, in world µm.
+ * µm/px is the loader's OME PhysicalSize, unless the image stores an override.
+ * Display scale and translation are the user resize and move, in world µm.
  */
 export function layerModelMatrix(
   loader: Loader,
   orientation?: Partial<ImageOrientation> | null,
 ): Matrix4 {
-  const { pixelWidth, pixelHeight, umPerPixelX, umPerPixelY } =
-    worldFrameFromLoader(loader);
+  const frame = worldFrameFromLoader(loader);
   const o = effectiveOrientation(orientation);
+  const { pixelWidth, pixelHeight } = frame;
+  const umPerPixelX = o.umPerPixel ?? frame.umPerPixelX;
+  const umPerPixelY = o.umPerPixel ?? frame.umPerPixelY;
   const cx = pixelWidth / 2;
   const cy = pixelHeight / 2;
   const ux = cx * umPerPixelX;

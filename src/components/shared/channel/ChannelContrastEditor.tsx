@@ -352,8 +352,9 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   }, [props.sourceChannelId]);
 
   const syncFromSliders = (loStep: number, hiStep: number, commit: boolean) => {
-    const lo = snapContrastLimit(scale.fromSlider(loStep), fractional);
-    const hi = snapContrastLimit(scale.fromSlider(hiStep), fractional);
+    const active = scaleRef.current;
+    const lo = snapContrastLimit(active.fromSlider(loStep), fractional);
+    const hi = snapContrastLimit(active.fromSlider(hiStep), fractional);
     setMinInput(formatContrastLimit(lo, range));
     setMaxInput(formatContrastLimit(hi, range));
     if (commit) {
@@ -363,12 +364,75 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     }
   };
 
+  const trimmedRef = React.useRef(false);
+  const distRef = React.useRef(dist);
+  trimmedRef.current = chart.startBin > 0;
+  distRef.current = dist;
+
   const onMinSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
     editingLimitRef.current = true;
     const v = Math.min(Number(e.target.value), sliderMaxRef.current);
     sliderMinRef.current = v;
     setSliderMin(v);
     syncFromSliders(v, sliderMaxRef.current, false);
+  };
+
+  const onMinPointerDown = (e: React.PointerEvent<HTMLInputElement>) => {
+    if (e.button !== 0) return;
+    const pointerId = e.pointerId;
+    // Already on the cut: only a further leftward drag opens it. A click does not.
+    let markX: number | null = sliderMinRef.current <= 0 ? e.clientX : null;
+    const stop = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+    };
+    const openPastCut = () => {
+      editingLimitRef.current = true;
+      const active = scaleRef.current;
+      const lo = active.fromSlider(sliderMinRef.current);
+      const hi = active.fromSlider(sliderMaxRef.current);
+      const full = buildContrastScale(
+        resolveHistogramChartView(distRef.current, {
+          floatRange: range,
+          dtypeMax,
+          expanded: true,
+          lowerLimit: lo,
+        }).scaleInput,
+      );
+      const loStep = full.toSlider(lo);
+      const hiStep = full.toSlider(hi);
+      scaleRef.current = full;
+      sliderMinRef.current = loStep;
+      sliderMaxRef.current = hiStep;
+      setSliderMin(loStep);
+      setSliderMax(hiStep);
+      setMinInput(
+        formatContrastLimit(snapContrastLimit(lo, fractional), range),
+      );
+      setMaxInput(
+        formatContrastLimit(snapContrastLimit(hi, fractional), range),
+      );
+      setExpanded(true);
+    };
+    const move = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId || !trimmedRef.current) return;
+      if (sliderMinRef.current > 0) {
+        markX = null;
+        return;
+      }
+      if (markX == null) markX = ev.clientX;
+      if (markX - ev.clientX < 4) return;
+      stop();
+      openPastCut();
+    };
+    const up = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      stop();
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
   };
 
   const onMaxSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -541,6 +605,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
               max={scale.sliderSteps}
               value={sliderMin}
               onChange={onMinSlider}
+              onPointerDown={onMinPointerDown}
               onMouseUp={onSliderCommit}
               onTouchEnd={onSliderCommit}
               onKeyUp={onSliderCommit}

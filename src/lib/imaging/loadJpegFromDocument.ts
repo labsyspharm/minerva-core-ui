@@ -3,6 +3,7 @@ import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import type { JpegLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Image } from "@/lib/stores/documentSchema";
 import {
+  exportTransferForImage,
   folderLimitsForTransfer,
   type JpegExportTransfer,
 } from "./cubeRootEncoding";
@@ -12,6 +13,7 @@ import {
   folderByChannelIndexFromImageChannels,
   JPEG_BAKED_CONTRAST_LIMIT,
 } from "./jpegPyramid";
+import { isAbsoluteUrl } from "./sourceUrl";
 
 type GroupChannelRow = {
   channelId: string;
@@ -70,6 +72,13 @@ export function jpegSourceNeedsLocalRoot(url: string): boolean {
   return (
     url === "." || url === "./" || url === "" || !/^https?:\/\//i.test(url)
   );
+}
+
+/** OME-TIFF path beside the story JSON. The browser cannot read it until the user picks the file. */
+export function isRelativeOmeTiffUrl(url: string): boolean {
+  const u = url.trim();
+  if (!u || isAbsoluteUrl(u)) return false;
+  return /\.tiff?$/i.test(u);
 }
 
 function channelFoldersEqual(
@@ -306,6 +315,7 @@ export async function jpegLoaderEntriesFromImages(opts: {
       const path = new URL(opts.documentUrl, window.location.href).pathname;
       if (!/\/document\.json$/i.test(path)) continue;
     }
+    const imageTransfer = exportTransferForImage(im, transfer);
     const storyRootUrl = resolveJpegStoryRoot(opts.documentUrl, im.source.url);
     const groupChannelFolders: Record<string, Record<number, string>> = {};
     for (const group of opts.channelGroups) {
@@ -315,7 +325,7 @@ export async function jpegLoaderEntriesFromImages(opts: {
       groupChannelFolders[group.id] = await resolveChannelFolders({
         groupChannels: rows,
         image: im,
-        transfer,
+        transfer: imageTransfer,
       });
     }
     const availablePyramidFolders = new Set<string>();
@@ -333,7 +343,7 @@ export async function jpegLoaderEntriesFromImages(opts: {
     const desired = await resolveChannelFolders({
       groupChannels,
       image: im,
-      transfer,
+      transfer: imageTransfer,
     });
     const channelFolders =
       pickAvailableChannelFolders({
@@ -353,14 +363,14 @@ export async function jpegLoaderEntriesFromImages(opts: {
       })),
       channelFolders,
       fetchTile: opts.fetchTile,
-      transfer,
+      transfer: imageTransfer,
     });
     entries.push({
       loader,
       sourceImageId: im.id,
       channelFolders,
       imagePath: storyRootUrl,
-      transfer,
+      transfer: imageTransfer,
       availablePyramidFolders,
       groupChannelFolders,
     });

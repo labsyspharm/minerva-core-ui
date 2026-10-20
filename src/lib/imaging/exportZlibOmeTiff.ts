@@ -8,13 +8,15 @@ import {
   type RandomAccessSink,
 } from "tiffwriter";
 import type { Image, ImageChannel } from "@/lib/stores/documentSchema";
-import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
+import { readExportTile } from "./exportTileReader";
 import type { OmeLoaderEntry } from "./loaderEntries";
 import type { LoaderPlane } from "./loaderTypes";
 import {
   assertUnsignedLabelDtype,
   bitsPerSampleFromDtype,
   buildOmeTiffXml,
+  EXPORT_TILE_SIZE,
+  exportPlaneLevels,
   type LabelDtype,
   type OmeExportLevelSize,
   type OmePixelsMeta,
@@ -48,19 +50,6 @@ export function toLabelArray(
   const out = new Ctor(data.length);
   for (let i = 0; i < data.length; i++) out[i] = data[i];
   return out;
-}
-
-/** Tile size: native if the source is tiled; otherwise 1024. */
-export function maskExportTileSize(
-  width: number,
-  height: number,
-  planeTileSize: number | undefined,
-): number {
-  const maxDim = Math.max(width, height, 1);
-  const ts = planeTileSize ?? 0;
-  if (ts > 0 && ts < maxDim) return ts;
-  if (ts > 0 && ts <= JPEG_PYRAMID_TILE_SIZE) return ts;
-  return JPEG_PYRAMID_TILE_SIZE;
 }
 
 /** Dyadic reductions down to one tile (same stop as {@link jpegPyramidLevels}). */
@@ -194,23 +183,14 @@ function planMaskExportLevels(loaderData: LoaderPlane[]): {
   levels: OmeExportLevelSize[];
   useLoaderTiles: boolean;
 } {
-  const plane0 = loaderData[0];
-  const { width, height } = getImageSize(plane0);
-  const tileSize = maskExportTileSize(width, height, plane0.tileSize);
   if (loaderData.length > 1) {
     return {
-      levels: loaderData.map((plane) => {
-        const size = getImageSize(plane);
-        return {
-          width: size.width,
-          height: size.height,
-          tileSize: maskExportTileSize(size.width, size.height, plane.tileSize),
-        };
-      }),
+      levels: exportPlaneLevels(loaderData),
       useLoaderTiles: true,
     };
   }
-  const levels = maskPyramidLevelSizes(width, height, tileSize);
+  const { width, height } = getImageSize(loaderData[0]);
+  const levels = maskPyramidLevelSizes(width, height, EXPORT_TILE_SIZE);
   return { levels, useLoaderTiles: levels.length === 1 };
 }
 
@@ -454,12 +434,14 @@ export async function exportZlibOmeTiffImage(
         }
         const plane = loaderData[job.levelIndex];
         const channel = channels[job.channelIndex];
-        const tile = await plane.getTile({
-          selection: { t: 0, z: 0, c: channel.index },
-          x: job.x,
-          y: job.y,
+        const tile = await readExportTile(
+          plane,
+          levels[job.levelIndex].tileSize,
+          { t: 0, z: 0, c: channel.index },
+          job.x,
+          job.y,
           signal,
-        });
+        );
         return {
           data: toLabelArray(tile.data as ArrayLike<number>, dtype),
           width: tile.width,

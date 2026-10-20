@@ -20,8 +20,6 @@ type Outbound =
       maxClassId: number;
       names: string[];
       persist?: Uint8Array;
-      columns: { id: string; name: string };
-      header: boolean;
       index?: Uint8Array;
       indexWidth?: number;
       indexHeight?: number;
@@ -34,6 +32,7 @@ type Outbound =
       indexWidth?: number;
       indexHeight?: number;
     }
+  | { id: number; type: "parquet"; bytes: Uint8Array<ArrayBuffer> }
   | { id: number; type: "ok" }
   | { id: number; type: "error"; message: string };
 
@@ -41,7 +40,8 @@ let worker: Worker | null = null;
 let nextId = 1;
 let ingestEpoch = 0;
 const ingestListeners = new Set<() => void>();
-const classIndexCache = new Map<string, ClassIndexMap>();
+/** `null` is a settled miss: the worker had no index, so do not ask again. */
+const classIndexCache = new Map<string, ClassIndexMap | null>();
 const ingestedIds = new Set<string>();
 const pending = new Map<
   number,
@@ -74,7 +74,7 @@ function stashClassIndex(
   height?: number,
 ) {
   if (!index || !width || !height) {
-    classIndexCache.delete(featureTableId);
+    classIndexCache.set(featureTableId, null);
     return;
   }
   classIndexCache.set(featureTableId, { data: index, width, height, names });
@@ -82,7 +82,7 @@ function stashClassIndex(
 
 export function peekClassIndex(
   featureTableId: string,
-): ClassIndexMap | undefined {
+): ClassIndexMap | null | undefined {
   return classIndexCache.get(featureTableId);
 }
 
@@ -122,35 +122,34 @@ function request(
   });
 }
 
+/**
+ * A `File` is a CSV the author picked. Bytes are a stored table: Parquet, or
+ * normalized CSV from an older story. `persist` is the Parquet to store, and
+ * is absent when the bytes already are.
+ */
 export async function ingestFeatureTable(
   featureTableId: string,
   source: File | Uint8Array,
-  columns?: { id: string; name: string; header?: boolean },
+  columns?: { id: string; name: string },
 ): Promise<{
   maxClassId: number;
   names: string[];
   persist?: Uint8Array;
-  columns: { id: string; name: string };
-  header: boolean;
 }> {
-  const cols = columns ? { id: columns.id, name: columns.name } : undefined;
-  const header = columns?.header;
   let msg: Outbound;
   if (source instanceof File) {
     msg = await request({
       type: "ingest",
       featureTableId,
       file: source,
-      columns: cols,
-      header,
+      columns,
     });
   } else {
     const copy = new Uint8Array(source.byteLength);
     copy.set(source);
-    msg = await request(
-      { type: "ingest", featureTableId, bytes: copy, columns: cols, header },
-      [copy.buffer],
-    );
+    msg = await request({ type: "ingest", featureTableId, bytes: copy }, [
+      copy.buffer,
+    ]);
   }
   if (msg.type === "error") throw new Error(msg.message);
   if (msg.type !== "ingested") throw new Error("unexpected ingest reply");
@@ -167,8 +166,6 @@ export async function ingestFeatureTable(
     maxClassId: msg.maxClassId,
     names: msg.names,
     persist: msg.persist,
-    columns: msg.columns,
-    header: msg.header,
   };
 }
 
@@ -194,7 +191,7 @@ export async function fetchClassIndex(
   featureTableId: string,
 ): Promise<ClassIndexMap | undefined> {
   const hit = classIndexCache.get(featureTableId);
-  if (hit) return hit;
+  if (hit !== undefined) return hit ?? undefined;
   const msg = await request({ type: "classIndex", featureTableId });
   if (msg.type === "error") throw new Error(msg.message);
   if (msg.type !== "classIndex") throw new Error("unexpected classIndex reply");
@@ -205,7 +202,16 @@ export async function fetchClassIndex(
     msg.indexWidth,
     msg.indexHeight,
   );
-  return classIndexCache.get(featureTableId);
+  return classIndexCache.get(featureTableId) ?? undefined;
+}
+
+export async function exportFeatureTableParquet(
+  featureTableId: string,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const msg = await request({ type: "exportParquet", featureTableId });
+  if (msg.type === "error") throw new Error(msg.message);
+  if (msg.type !== "parquet") throw new Error("unexpected export reply");
+  return msg.bytes;
 }
 
 export async function dropFeatureTable(featureTableId: string): Promise<void> {

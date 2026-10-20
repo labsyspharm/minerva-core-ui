@@ -47,11 +47,36 @@
   font-size: var(--minerva-size-note);
 }
 
+.waypointClasses {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 10px;
+  font-size: var(--minerva-size-note);
+}
+
 .toolbar {
   display: flex;
   align-items: center;
   gap: 2px;
   min-width: 0;
+}
+
+.viewTitle,
+.readOnlyNote {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewTitle {
+  color: var(--minerva-ink);
+}
+
+.readOnlyNote {
+  color: var(--minerva-quiet);
 }
 
 .field {
@@ -88,8 +113,13 @@
   cursor: pointer;
 }
 
-.textBtn:hover {
+.textBtn:hover:not(:disabled) {
   background: var(--minerva-wash);
+}
+
+.textBtn:disabled {
+  color: var(--minerva-quiet);
+  cursor: default;
 }
 
 .colPick {
@@ -192,4 +222,8 @@
   color: inherit;
   font: inherit;
   cursor: pointer;
+}
+
+.name:disabled {
+  cursor: default;
 }

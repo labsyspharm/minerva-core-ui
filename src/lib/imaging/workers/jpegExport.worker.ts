@@ -1,9 +1,11 @@
 import type { JpegExportTransfer } from "../cubeRootEncoding";
 import {
   encodeGrayscaleJpeg,
+  encodeRgbJpeg,
   ensureJpegEncoderReady,
   JPEG_EXPORT_QUALITY,
   PIXEL_CTORS,
+  type RgbLimits,
 } from "../jpegExportEncode";
 
 type MessageData = {
@@ -17,6 +19,7 @@ type MessageData = {
   quality?: number;
   transfer?: JpegExportTransfer;
   padTileSize?: number;
+  rgbLimits?: RgbLimits;
 };
 
 type Message = MessageEvent & {
@@ -42,6 +45,7 @@ worker.addEventListener("message", async (e: Message) => {
     quality = JPEG_EXPORT_QUALITY,
     transfer = "contrast",
     padTileSize,
+    rgbLimits,
   } = e.data;
   try {
     const Ctor = PIXEL_CTORS[arrayCtorName];
@@ -49,16 +53,18 @@ worker.addEventListener("message", async (e: Message) => {
       throw new Error(`unsupported pixel array ${arrayCtorName}`);
     }
     const pixels = new Ctor(buffer);
-    const jpeg = await encodeGrayscaleJpeg(
-      width,
-      height,
-      pixels,
-      lowerLimit,
-      upperLimit,
-      quality,
-      transfer,
-      padTileSize,
-    );
+    const jpeg = await (rgbLimits
+      ? encodeRgbJpeg(width, height, pixels, rgbLimits, quality, padTileSize)
+      : encodeGrayscaleJpeg(
+          width,
+          height,
+          pixels,
+          lowerLimit,
+          upperLimit,
+          quality,
+          transfer,
+          padTileSize,
+        ));
     worker.postMessage({ jpeg, jobId }, [jpeg]);
   } catch (err) {
     worker.postMessage({

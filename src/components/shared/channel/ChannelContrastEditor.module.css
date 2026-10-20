@@ -106,7 +106,8 @@
   height: var(--handle-width);
   padding: 0;
   box-sizing: border-box;
-  z-index: 5;
+  /* Above the axis-break control. At the trimmed edge the min thumb sits on that icon. */
+  z-index: 7;
 }
 
 .rangeInput {

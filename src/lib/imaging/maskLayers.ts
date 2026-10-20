@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "@/lib/imaging/channelKind";
 import type { Shape } from "@/lib/shapes/shapeModel";
@@ -6,6 +7,7 @@ import {
   lineToPolygon,
   textToPolygon,
 } from "@/lib/shapes/shapeModel";
+import type { ClassVisibilitySchema } from "@/lib/stores/documentSchema";
 
 /** Channel-list visibility key for the virtual selection / mask row. */
 export const SELECTION_MASK_CHANNEL_KEY = "Selection";
@@ -33,10 +35,7 @@ export function defaultClassColor(
   return { r, g, b };
 }
 
-export type ClassVisibility =
-  | { mode: "all" }
-  | { mode: "hide"; names: readonly string[] }
-  | { mode: "show"; names: readonly string[] };
+export type ClassVisibility = z.infer<typeof ClassVisibilitySchema>;
 
 export type MaskGpuStyle = {
   /** R8, class index per cell id. 0 = unnamed. */

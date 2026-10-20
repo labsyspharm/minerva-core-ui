@@ -24,15 +24,10 @@ export function syncAppStoreChannelMirrorsFromDocument(): void {
     app.channelVisibilities,
     app.channelGroupRowVisibilities,
     { kind: "sync" },
+    app.activeChannelGroupId,
   );
   const { channelVisibilities } = visibility;
   delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
-
-  const featureTableIds = new Set(doc.featureTables.map((c) => c.id));
-  const featureTableVisibilities = { ...app.featureTableVisibilities };
-  for (const id of Object.keys(featureTableVisibilities)) {
-    if (!featureTableIds.has(id)) delete featureTableVisibilities[id];
-  }
 
   const activeId = app.activeChannelGroupId;
   const nextActiveId =
@@ -43,7 +38,6 @@ export function syncAppStoreChannelMirrorsFromDocument(): void {
   useAppStore.setState({
     groupNames,
     channelVisibilities,
-    featureTableVisibilities,
     channelGroupRowVisibilities: visibility.channelGroupRowVisibilities,
     activeChannelGroupId: nextActiveId,
   });
@@ -102,6 +96,7 @@ export function syncAppStoreFromDocument(): void {
   useAppStore.setState({
     maskVisualizationPreview: null,
     imageOrientationPreview: null,
+    imageOpacityPreview: null,
   });
   syncAppStoreChannelMirrorsFromDocument();
   syncAppStoreWaypointsFromDocument();

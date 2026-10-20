@@ -4,6 +4,7 @@ import type {
   Channel as SourceChannel,
 } from "@/lib/stores/documentStore";
 import type { Roi } from "../shapes/roiParser";
+import { isMobileDevice } from "../viewer/isMobileDevice";
 import {
   applyVisibilityTransition,
   buildCompositedIntensityLayers,
@@ -16,8 +17,12 @@ import {
   effectiveSourceLimits,
 } from "./sourceChannelStyle";
 
-/** CPU raster bytes Deck may keep per layer (not GPU textures). */
-const VIV_TILE_MAX_CACHE_BYTE_SIZE = 512 * 1024 * 1024;
+/**
+ * CPU raster bytes Deck may keep per layer; each cached tile also holds its
+ * GPU textures. Phones and tablets keep only the tiles on screen: iOS kills a
+ * tab long before desktop memory runs out.
+ */
+const VIV_TILE_MAX_CACHE_BYTE_SIZE = isMobileDevice() ? 0 : 512 * 1024 * 1024;
 
 function rasterTileByteLength(data: unknown): number {
   if (data == null) return 0;
@@ -39,9 +44,11 @@ function stampDeckTileByteLength(tile: {
   c.byteLength = rasterTileByteLength(c.data);
 }
 
+type TileIndicesOpts = Parameters<Tileset2D["getTileIndices"]>[0];
+
 /** Deck's tile list overhangs a rotated image; viv draws blank tiles there. */
 class ImageTileset2D extends Tileset2D {
-  getTileIndices(opts: Parameters<Tileset2D["getTileIndices"]>[0]) {
+  getTileIndices(opts: TileIndicesOpts) {
     const indices = super.getTileIndices(opts);
     const { extent, tileSize } = this.opts;
     if (!extent) return indices;
@@ -50,7 +57,102 @@ class ImageTileset2D extends Tileset2D {
       return x >= 0 && y >= 0 && x * size < extent[2] && y * size < extent[3];
     });
   }
+
+  /**
+   * Deck 9.3.3 drops unselected tiles here without subtracting their bytes,
+   * then counts each reloaded tile again in `onTileLoad`. A few channel-group
+   * changes made the 512 MB budget read full while ~50 MB was held, and the
+   * cache shrank to the tiles on screen.
+   */
+  reloadAll() {
+    super.reloadAll();
+    (this as unknown as { _cacheByteSize: number })._cacheByteSize = 0;
+  }
 }
+
+/** Placeholder levels above the on-screen tiles: the coarsest, and this far up. */
+const PLACEHOLDER_LEVELS_UP = 3;
+
+/** The parts of Deck's cached tile header the placeholder pass reads. */
+type CachedTile = {
+  index: { z: number };
+  isSelected: boolean;
+  isVisible: boolean;
+  isLoaded: boolean;
+  parent: CachedTile | null;
+};
+
+/**
+ * Also selects coarse ancestors of the on-screen tiles, ahead of them, so
+ * Deck loads them first and draws them under the fine tiles. A tile still
+ * loading shows blur instead of black. Only for opaque layers (Deck's
+ * `best-available`): a faded or additive layer would show both levels.
+ */
+export class PlaceholderTileset2D extends ImageTileset2D {
+  getTileIndices(opts: TileIndicesOpts) {
+    const indices = super.getTileIndices(opts);
+    if (
+      this.opts.refinementStrategy !== "best-available" ||
+      indices.length === 0
+    ) {
+      return indices;
+    }
+    const z = indices[0].z;
+    const coarsest = opts.minZoom ?? z;
+    if (coarsest >= z) return indices;
+    const levels = [coarsest, Math.max(coarsest, z - PLACEHOLDER_LEVELS_UP)];
+    const placeholders = new Map<string, (typeof indices)[number]>();
+    for (const level of levels) {
+      const scale = 2 ** (z - level);
+      for (const { x, y } of indices) {
+        const parent = {
+          x: Math.floor(x / scale),
+          y: Math.floor(y / scale),
+          z: level,
+        };
+        placeholders.set(this.getTileId(parent), parent);
+      }
+    }
+    return [...placeholders.values(), ...indices];
+  }
+}
+
+/** Deck's types make it private; it runs on every tileset update. */
+type TileStateUpdate = { updateTileStates(): boolean };
+const deckUpdateTileStates = (
+  ImageTileset2D.prototype as unknown as TileStateUpdate
+).updateTileStates;
+
+/**
+ * A placeholder draws only while an on-screen tile under it is loading.
+ * Once they have all loaded it would be one more full-viewport pass per
+ * frame, hidden under them.
+ */
+(
+  PlaceholderTileset2D.prototype as unknown as TileStateUpdate
+).updateTileStates = function (this: PlaceholderTileset2D) {
+  const tiles = Array.from(
+    (this as unknown as { _cache: Map<string, CachedTile> })._cache.values(),
+  );
+  const before = tiles.map((tile) => tile.isVisible);
+  deckUpdateTileStates.call(this);
+  // Placeholders are the selected tiles above the on-screen level.
+  let fineZ = Number.NEGATIVE_INFINITY;
+  for (const tile of tiles) {
+    if (tile.isSelected) fineZ = Math.max(fineZ, tile.index.z);
+  }
+  const isPlaceholder = (tile: CachedTile) =>
+    tile.isSelected && tile.index.z < fineZ;
+  const needed = new Set<CachedTile>();
+  for (const tile of tiles) {
+    if (!tile.isSelected || tile.isLoaded || isPlaceholder(tile)) continue;
+    for (let up = tile.parent; up; up = up.parent) needed.add(up);
+  }
+  for (const tile of tiles) {
+    if (isPlaceholder(tile) && !needed.has(tile)) tile.isVisible = false;
+  }
+  return tiles.some((tile, i) => tile.isVisible !== before[i]);
+};
 
 /** Omit maxCacheSize so Deck's count cap is Infinity when a byte budget is set. */
 export const TILE_CACHE_PROPS = {

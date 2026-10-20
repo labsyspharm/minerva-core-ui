@@ -7,6 +7,7 @@ import {
   normalizeMaskVisualization,
   planarRgbDisplayColor,
 } from "@/lib/imaging/channelKind";
+import type { ChannelRendering } from "@/lib/stores/appStore";
 import type { ChannelGroup, Color } from "@/lib/stores/documentSchema";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
 
@@ -109,7 +110,11 @@ export function assignedDisplayHex(
   channel: Channel,
   allChannels: readonly Channel[],
   groupRow?: ChannelGroupChannel | null,
+  rendering?: ChannelRendering | null,
 ): string | undefined {
+  if (rendering?.kind === "color" && rendering.sourceChannelId === channel.id) {
+    return rgbToHex(rendering);
+  }
   if (
     !channel.color &&
     !groupRow?.color &&

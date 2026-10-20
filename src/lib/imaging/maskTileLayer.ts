@@ -191,12 +191,16 @@ type GpuTexture = {
 };
 
 // Index texture is stable per CSV; palette is tiny and changes with vis/color.
-const TEX_CACHE_MAX = 4;
+const INDEX_TEX_CACHE_MAX = 4;
+// Eviction destroys a texture a live layer may still bind. A story with more
+// than 64 live palette keys evicts the oldest key.
+const PALETTE_TEX_CACHE_MAX = 64;
 const indexTexCache = new Map<string, GpuTexture>();
 const paletteTexCache = new Map<string, GpuTexture>();
 
 function rememberTex(
   cache: Map<string, GpuTexture>,
+  max: number,
   key: string,
   tex: GpuTexture,
 ): GpuTexture {
@@ -206,7 +210,7 @@ function rememberTex(
     cache.set(key, hit);
     return hit;
   }
-  while (cache.size >= TEX_CACHE_MAX) {
+  while (cache.size >= max) {
     const oldest = cache.keys().next().value;
     if (oldest == null) break;
     const evicted = cache.get(oldest);
@@ -373,7 +377,12 @@ class MaskBitmaskLayer extends XRLayerBase {
         ? makeTexture(device, style.index, style.width, style.height, "r8unorm")
         : makeTexture(device, DUMMY_R8, 1, 1, "r8unorm");
     }
-    this.state.classIndexTexture = rememberTex(indexTexCache, indexKey, index);
+    this.state.classIndexTexture = rememberTex(
+      indexTexCache,
+      INDEX_TEX_CACHE_MAX,
+      indexKey,
+      index,
+    );
     let palette = paletteTexCache.get(paletteKey);
     if (!palette) {
       palette = style
@@ -388,6 +397,7 @@ class MaskBitmaskLayer extends XRLayerBase {
     }
     this.state.classPaletteTexture = rememberTex(
       paletteTexCache,
+      PALETTE_TEX_CACHE_MAX,
       paletteKey,
       palette,
     );

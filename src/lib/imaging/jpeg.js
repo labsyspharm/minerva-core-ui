@@ -1,4 +1,5 @@
 import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+import { imageFadeParameters } from "./imageOpacity";
 import { JpegImage } from "./jpegImage";
 import { JpegPixelSource } from "./jpegPixelSource";
 import {
@@ -27,6 +28,8 @@ function createJpegLayers(meta) {
     contrastLimits,
     selections,
     modelMatrix: meta.modelMatrix,
+    ...imageFadeParameters(false, meta.opacity),
+    opacity: meta.opacity,
   });
 }
 

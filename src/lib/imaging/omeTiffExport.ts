@@ -1,5 +1,4 @@
-import type { TiffPixelSource } from "@hms-dbmi/viv";
-import { getImageSize } from "@hms-dbmi/viv";
+import { getImageSize, type TiffPixelSource } from "@hms-dbmi/viv";
 import {
   effectiveChannelKind,
   isRgbDisplayImage,
@@ -15,7 +14,6 @@ import {
   folderLimitsForTransfer,
   type JpegExportTransfer,
 } from "./cubeRootEncoding";
-import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
 import type { OmeLoaderEntry } from "./loaderEntries";
 
 export type LoaderPlane = TiffPixelSource<string[]>;
@@ -110,6 +108,8 @@ export type BuildOmeTiffXmlOpts = {
   pixelType: string;
   significantBits: number;
   pixels?: OmePixelsMeta | null;
+  /** 3 for packed (interleaved) RGB in one IFD. */
+  samplesPerPixel?: 1 | 3;
 };
 
 /**
@@ -126,8 +126,9 @@ export function buildOmeTiffXml(opts: BuildOmeTiffXmlOpts): string {
     pixelType,
     significantBits,
     pixels,
+    samplesPerPixel = 1,
   } = opts;
-  const sizeC = channels.length;
+  const sizeC = channels.length * samplesPerPixel;
 
   const channelXml = channels
     .map((ch, i) => {
@@ -140,7 +141,7 @@ export function buildOmeTiffXml(opts: BuildOmeTiffXmlOpts): string {
         typeof ch.color.b === "number"
           ? ` Color="${omeColorInt({ r: ch.color.r, g: ch.color.g, b: ch.color.b })}"`
           : "";
-      return `<Channel ID="${id}" Name="${chName}" SamplesPerPixel="1"${colorAttr}/>`;
+      return `<Channel ID="${id}" Name="${chName}" SamplesPerPixel="${samplesPerPixel}"${colorAttr}/>`;
     })
     .join("");
 
@@ -171,7 +172,7 @@ export function buildOmeTiffXml(opts: BuildOmeTiffXmlOpts): string {
     `<Image ID="Image:0" Name="${escapeXmlAttr(imageName)}">` +
     `<Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="${escapeXmlAttr(pixelType)}"` +
     ` SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1"` +
-    ` SignificantBits="${significantBits}" Interleaved="false" BigEndian="false"${physicalAttrs}>` +
+    ` SignificantBits="${significantBits}" Interleaved="${samplesPerPixel > 1}" BigEndian="false"${physicalAttrs}>` +
     `${channelXml}${tiffDataXml}` +
     `</Pixels></Image></OME>`
   );
@@ -451,14 +452,19 @@ export function remappedImageForOmeTiffExport(
   };
 }
 
-export function planeLevels(loaderData: LoaderPlane[]): OmeExportLevelSize[] {
+/**
+ * Exported TIFF tile edge, whatever the source's tiles are (see
+ * `readExportTile`). Every tile costs a read, decode, encode and write.
+ */
+export const EXPORT_TILE_SIZE = 1024;
+
+/** Pyramid level sizes written by the export, in {@link EXPORT_TILE_SIZE} tiles. */
+export function exportPlaneLevels(
+  loaderData: Parameters<typeof getImageSize>[0][],
+): OmeExportLevelSize[] {
   return loaderData.map((plane) => {
     const { width, height } = getImageSize(plane);
-    const tileSize =
-      typeof plane.tileSize === "number" && plane.tileSize > 0
-        ? plane.tileSize
-        : JPEG_PYRAMID_TILE_SIZE;
-    return { width, height, tileSize };
+    return { width, height, tileSize: EXPORT_TILE_SIZE };
   });
 }
 
