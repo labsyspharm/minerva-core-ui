@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AuthorView } from "@/components/authoring/AuthorSidebar";
 import { ImageExporter } from "@/components/playback/ImageExporter";
+import { MadeWithMinerva } from "@/components/playback/MadeWithMinerva";
 import {
   PresentationFrame,
   PresentationNav,
@@ -111,6 +112,7 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
                 images={props.viewerImages}
               >
                 {props.viewer}
+                {presenting ? <MadeWithMinerva /> : null}
               </ChannelPanel>
             }
           />
