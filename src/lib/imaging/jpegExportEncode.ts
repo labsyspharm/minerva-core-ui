@@ -50,10 +50,43 @@ function clampPixelsToRgba(
   }
 }
 
+const HOST_LITTLE_ENDIAN = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1;
+
+let cubeRootRgbaLut: Uint32Array | null = null;
+
+/**
+ * Every uint16's RGBA as one word: (v, v, v, 255) with v its
+ * {@link encodeCubeRootU16ToU8} byte, in little-endian order. Built on first use.
+ */
+function cubeRootRgbaWords(): Uint32Array {
+  if (!cubeRootRgbaLut) {
+    cubeRootRgbaLut = new Uint32Array(65536);
+    for (let p = 0; p < 65536; p++) {
+      const v = encodeCubeRootU16ToU8(p);
+      cubeRootRgbaLut[p] = (0xff000000 | (v * 0x010101)) >>> 0;
+    }
+  }
+  return cubeRootRgbaLut;
+}
+
 function cubeRootPixelsToRgba(
   out: Uint8ClampedArray,
   pixels: ArrayLike<number>,
 ): void {
+  // Integer pixels look up their RGBA word: one read and one 32-bit write a
+  // pixel, instead of a cube root and four byte writes.
+  if (
+    HOST_LITTLE_ENDIAN &&
+    out.byteOffset % 4 === 0 &&
+    (pixels instanceof Uint16Array ||
+      pixels instanceof Uint8Array ||
+      pixels instanceof Uint8ClampedArray)
+  ) {
+    const words = cubeRootRgbaWords();
+    const out32 = new Uint32Array(out.buffer, out.byteOffset, pixels.length);
+    for (let i = 0; i < pixels.length; i++) out32[i] = words[pixels[i]];
+    return;
+  }
   for (let i = 0; i < pixels.length; i++) {
     const v = encodeCubeRootU16ToU8(pixels[i]);
     const o = i * 4;
@@ -133,6 +166,24 @@ async function encodeRgbaToJpeg(
   });
 }
 
+/**
+ * JPEGs of single-value tiles, by everything that decides their bytes. Blank
+ * slide outside the tissue is one value; on one 20-channel export a quarter
+ * of the tiles were the same JPEG.
+ */
+const constantTileJpegs = new Map<string, ArrayBuffer>();
+const MAX_CONSTANT_TILE_JPEGS = 64;
+
+/** The value every pixel holds, or null. */
+function constantPixel(pixels: ArrayLike<number>): number | null {
+  if (pixels.length === 0) return null;
+  const v = pixels[0];
+  for (let i = 1; i < pixels.length; i++) {
+    if (pixels[i] !== v) return null;
+  }
+  return v;
+}
+
 /** Encode grayscale pixels to JPEG (contrast-windowed or cube-root transfer). */
 export async function encodeGrayscaleJpeg(
   width: number,
@@ -142,6 +193,52 @@ export async function encodeGrayscaleJpeg(
   upperLimit: number,
   quality = JPEG_EXPORT_QUALITY,
   transfer: JpegExportTransfer = "contrast",
+  padTileSize?: number,
+): Promise<ArrayBuffer> {
+  const encode = () =>
+    encodeGrayscalePixels(
+      width,
+      height,
+      pixels,
+      lowerLimit,
+      upperLimit,
+      quality,
+      transfer,
+      padTileSize,
+    );
+  const value = constantPixel(pixels);
+  if (value === null) return encode();
+  const key = [
+    transfer,
+    lowerLimit,
+    upperLimit,
+    quality,
+    width,
+    height,
+    padTileSize,
+    value,
+  ].join();
+  let jpeg = constantTileJpegs.get(key);
+  if (!jpeg) {
+    jpeg = await encode();
+    if (constantTileJpegs.size >= MAX_CONSTANT_TILE_JPEGS) {
+      const oldest = constantTileJpegs.keys().next().value;
+      if (oldest !== undefined) constantTileJpegs.delete(oldest);
+    }
+    constantTileJpegs.set(key, jpeg);
+  }
+  // Callers transfer what they get, so each gets its own copy.
+  return jpeg.slice(0);
+}
+
+async function encodeGrayscalePixels(
+  width: number,
+  height: number,
+  pixels: ArrayLike<number>,
+  lowerLimit: number,
+  upperLimit: number,
+  quality: number,
+  transfer: JpegExportTransfer,
   padTileSize?: number,
 ): Promise<ArrayBuffer> {
   const rgba = new Uint8ClampedArray(
