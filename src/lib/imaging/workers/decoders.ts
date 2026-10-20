@@ -156,21 +156,12 @@ class MozJpegDecoder extends BaseDecoder {
   }
 }
 
-/**
- * geotiff's own deflate decoder (pako), for streams the platform's zlib
- * refuses. Set by `registerDeflateDecoder` before the native one can be picked.
- */
 let pakoDeflateDecoder!: Promise<
   new (
     fileDirectory: FileDirectory,
   ) => { decodeBlock(buffer: ArrayBuffer): ArrayBuffer }
 >;
 
-/**
- * TIFF deflate tiles through the platform's zlib (`DecompressionStream`)
- * instead of pako: ~5 ms instead of ~17 ms for a 1024² 16-bit tile. geotiff
- * applies the predictor afterwards, as with any decoder.
- */
 class NativeDeflateDecoder extends BaseDecoder {
   fileDirectory: FileDirectory;
 
@@ -186,7 +177,6 @@ class NativeDeflateDecoder extends BaseDecoder {
         .pipeThrough(new DecompressionStream("deflate"));
       return await new Response(inflated).arrayBuffer();
     } catch {
-      // Whatever zlib rejects gets pako's answer, as before this decoder.
       const Fallback = await pakoDeflateDecoder;
       return new Fallback(this.fileDirectory).decodeBlock(buffer);
     }

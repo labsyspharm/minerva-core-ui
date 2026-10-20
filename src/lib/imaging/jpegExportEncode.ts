@@ -54,10 +54,6 @@ const HOST_LITTLE_ENDIAN = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1;
 
 let cubeRootRgbaLut: Uint32Array | null = null;
 
-/**
- * Every uint16's RGBA as one word: (v, v, v, 255) with v its
- * {@link encodeCubeRootU16ToU8} byte, in little-endian order. Built on first use.
- */
 function cubeRootRgbaWords(): Uint32Array {
   if (!cubeRootRgbaLut) {
     cubeRootRgbaLut = new Uint32Array(65536);
@@ -73,8 +69,6 @@ function cubeRootPixelsToRgba(
   out: Uint8ClampedArray,
   pixels: ArrayLike<number>,
 ): void {
-  // Integer pixels look up their RGBA word: one read and one 32-bit write a
-  // pixel, instead of a cube root and four byte writes.
   if (
     HOST_LITTLE_ENDIAN &&
     out.byteOffset % 4 === 0 &&
@@ -166,15 +160,9 @@ async function encodeRgbaToJpeg(
   });
 }
 
-/**
- * JPEGs of single-value tiles, by everything that decides their bytes. Blank
- * slide outside the tissue is one value; on one 20-channel export a quarter
- * of the tiles were the same JPEG.
- */
 const constantTileJpegs = new Map<string, ArrayBuffer>();
 const MAX_CONSTANT_TILE_JPEGS = 64;
 
-/** The value every pixel holds, or null. */
 function constantPixel(pixels: ArrayLike<number>): number | null {
   if (pixels.length === 0) return null;
   const v = pixels[0];
@@ -227,7 +215,7 @@ export async function encodeGrayscaleJpeg(
     }
     constantTileJpegs.set(key, jpeg);
   }
-  // Callers transfer what they get, so each gets its own copy.
+  // Callers transfer the buffer they receive.
   return jpeg.slice(0);
 }
 

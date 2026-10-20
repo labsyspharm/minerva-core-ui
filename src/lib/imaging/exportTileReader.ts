@@ -186,14 +186,7 @@ async function withReadSignal<T>(
 
 const HOST_LITTLE_ENDIAN = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1;
 
-/**
- * The decoded block as the tile, when one block is exactly the tile: tiled at
- * `tileSize`, one sample per pixel, byte-sized samples in host byte order.
- * geotiff's `readRasters` copies every pixel through a DataView call on the
- * main thread, ~10 ms a 1024² tile and most of an export's main thread; this
- * hands back the decoded buffer instead, cropped at the edges. `null` means
- * read through Viv.
- */
+/** Decoded block when it is this tile, or null to read through Viv. */
 async function decodedBlockTile(
   reader: GeoTIFFImage,
   pool: unknown,
@@ -218,11 +211,9 @@ async function decodedBlockTile(
     bits = reader.getBitsPerSample(0);
     bytesPerElement = reader.getArrayForSample(0, 0).BYTES_PER_ELEMENT;
   } catch {
-    // Missing sample tags: Viv fills them in before reading.
     return null;
   }
-  // Float16 widens to Float32 and odd bit depths are repacked, so neither
-  // is the decoded buffer as is.
+  // Widened or packed samples are not the decoded buffer.
   if (bits !== bytesPerElement * 8) return null;
   if (bytesPerElement > 1 && reader.littleEndian !== HOST_LITTLE_ENDIAN) {
     return null;
@@ -241,9 +232,8 @@ async function decodedBlockTile(
   if (width === tileSize && height === tileSize) {
     return { data: full, width, height };
   }
-  const data = new (full.constructor as new (n: number) => SupportedTypedArray)(
-    width * height,
-  );
+  const Typed = full.constructor as new (n: number) => SupportedTypedArray;
+  const data = new Typed(width * height);
   for (let row = 0; row < height; row++) {
     const from = row * tileSize;
     data.set(full.subarray(from, from + width), row * width);
@@ -254,9 +244,8 @@ async function decodedBlockTile(
 /**
  * Export tile (x, y), `tileSize` px. A TIFF plane reads the source blocks
  * under the tile in a few merged reads (a row of neighboring blocks is
- * usually contiguous on disk), then decodes them: the decoded block itself
- * when it is the tile (see {@link decodedBlockTile}), else through Viv. A
- * plane with `readWindow` (masks, JPEG-export wraps) reads the tile's window;
+ * usually contiguous on disk), then decodes. A plane
+ * with `readWindow` (masks, JPEG-export wraps) reads the tile's window;
  * other planes are assembled from their own tiles.
  */
 export function readExportTile(
