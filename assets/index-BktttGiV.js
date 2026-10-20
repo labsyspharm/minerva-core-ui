@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-C_zMoo3T.js","./pako.esm-KbdoS3Oq.js","./lerc-Bm1YgWo0.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BbAIooqc.js","./pako.esm-KbdoS3Oq.js","./lerc-utaGHK1l.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18508,7 +18508,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "dc1ddbee3556c38766f8195cc15f5dcb83018bfe"
+    "VITE_APP_GIT_SHA": "5af23f53fc7915269729bf0451042163075b5139"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79231,26 +79231,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DuJrH2rU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Bi2-W9mz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-_-cOqhps.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BSanrA3-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-B1nDJr6c.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BIQYf1Zt.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-C_zMoo3T.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CKSbmofD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Bm1YgWo0.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BbAIooqc.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-C_Zw1VI9.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-utaGHK1l.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-mVD-vT50.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-vZMBVmKj.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DFs3VqDn.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-4DM99-jd.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -91367,14 +91367,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return useStore(useDocumentStore.temporal, (s2) => s2.futureStates.length > 0);
   }
   const clusterFieldset = "_clusterFieldset_18uri_1";
-  const styles$x = {
+  const styles$y = {
     clusterFieldset
   };
   function DocumentUndoControls() {
     const canUndo = useCanDocumentUndo();
     const canRedo = useCanDocumentRedo();
     return jsxRuntimeExports.jsxs("fieldset", {
-      className: styles$x.clusterFieldset,
+      className: styles$y.clusterFieldset,
       "aria-label": "Document undo and redo",
       children: [
         jsxRuntimeExports.jsx(PanelIconButton, {
@@ -92263,7 +92263,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const hiddenFileInput = "_hiddenFileInput_14ty9_14";
   const xmlFeedbackOk = "_xmlFeedbackOk_14ty9_25";
   const xmlFeedbackErr = "_xmlFeedbackErr_14ty9_26";
-  const styles$w = {
+  const styles$x = {
     menuWrap,
     menuItemGap,
     hiddenFileInput,
@@ -92323,7 +92323,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$w.menuWrap,
+      className: styles$x.menuWrap,
       ref: wrapRef,
       children: [
         jsxRuntimeExports.jsx(PanelIconButton, {
@@ -92357,7 +92357,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsx("button", {
               type: "button",
               role: "menuitem",
-              className: `${minervaTheme.menuItem} ${styles$w.menuItemGap}`,
+              className: `${minervaTheme.menuItem} ${styles$x.menuItemGap}`,
               disabled: !waypointsOk,
               onClick: (e2) => {
                 e2.stopPropagation();
@@ -92384,7 +92384,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsx("button", {
               type: "button",
               role: "menuitem",
-              className: `${minervaTheme.menuItem} ${styles$w.menuItemGap}`,
+              className: `${minervaTheme.menuItem} ${styles$x.menuItemGap}`,
               onClick: (e2) => {
                 var _a2;
                 e2.stopPropagation();
@@ -92397,14 +92397,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }) : null,
         jsxRuntimeExports.jsx("input", {
           ref: xmlInputRef,
-          className: styles$w.hiddenFileInput,
+          className: styles$x.hiddenFileInput,
           type: "file",
           accept: ".xml,application/xml,text/xml",
           "aria-label": "OME-XML annotations file",
           onChange: onAnnotationXmlSelected
         }),
         xmlFeedback ? jsxRuntimeExports.jsx("output", {
-          className: xmlFeedback.type === "ok" ? styles$w.xmlFeedbackOk : styles$w.xmlFeedbackErr,
+          className: xmlFeedback.type === "ok" ? styles$x.xmlFeedbackOk : styles$x.xmlFeedbackErr,
           children: xmlFeedback.text
         }) : null
       ]
@@ -92422,7 +92422,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }));
   const volume = "_volume_drqkm_1";
   const spine = "_spine_drqkm_9";
-  const styles$v = {
+  const styles$w = {
     volume,
     spine
   };
@@ -92438,10 +92438,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   ];
   function StorySpines() {
     return jsxRuntimeExports.jsx("span", {
-      className: styles$v.volume,
+      className: styles$w.volume,
       "aria-hidden": true,
       children: SPINE_HEIGHTS.map((frac, i2) => jsxRuntimeExports.jsx("span", {
-        className: styles$v.spine,
+        className: styles$w.spine,
         style: {
           height: `${frac * 100}%`,
           background: `var(--cloth-${SPINE_CLOTH[i2]})`
@@ -92457,7 +92457,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const titleDisplay = "_titleDisplay_1juq2_52";
   const titleInput = "_titleInput_1juq2_53";
   const titlePlaceholder = "_titlePlaceholder_1juq2_67";
-  const styles$u = {
+  const styles$v = {
     banner,
     leading,
     play,
@@ -92486,32 +92486,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       editing
     ]);
     return jsxRuntimeExports.jsxs("section", {
-      className: `${minervaTheme.bar} ${styles$u.banner}`,
+      className: `${minervaTheme.bar} ${styles$v.banner}`,
       "aria-label": "Story title",
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$u.leading,
+          className: styles$v.leading,
           children: [
             onExport ? jsxRuntimeExports.jsx(StoryAuthorOverflowMenu, {
               onReturnToLibrary,
               onExport
             }) : null,
             jsxRuntimeExports.jsx("span", {
-              className: `${minervaTheme.wordmark} ${styles$u.wordmark}`,
+              className: `${minervaTheme.wordmark} ${styles$v.wordmark}`,
               children: "Minerva"
             }),
             jsxRuntimeExports.jsx(DocumentUndoControls, {})
           ]
         }),
         jsxRuntimeExports.jsxs("label", {
-          className: styles$u.titleFieldWrap,
+          className: styles$v.titleFieldWrap,
           htmlFor: editing ? fieldId : void 0,
           children: [
             jsxRuntimeExports.jsx(StorySpines, {}),
             editing ? jsxRuntimeExports.jsx("input", {
               ref: inputRef,
               id: fieldId,
-              className: `${minervaTheme.field} ${styles$u.titleInput}`,
+              className: `${minervaTheme.field} ${styles$v.titleInput}`,
               type: "text",
               value: draftTitle,
               placeholder: "Untitled story",
@@ -92536,21 +92536,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               spellCheck: false
             }) : jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.field} ${styles$u.titleDisplay}`,
+              className: `${minervaTheme.field} ${styles$v.titleDisplay}`,
               "aria-label": "Story title",
               onClick: () => {
                 setDraftTitle(titleText);
                 setEditing(true);
               },
               children: titleText.trim() ? titleText : jsxRuntimeExports.jsx("span", {
-                className: styles$u.titlePlaceholder,
+                className: styles$v.titlePlaceholder,
                 children: "Untitled story"
               })
             })
           ]
         }),
         onEnterPlaybackPreview ? jsxRuntimeExports.jsx(PanelIconButton, {
-          className: styles$u.play,
+          className: styles$v.play,
           onClick: onEnterPlaybackPreview,
           disabled: playbackPreviewDisabled,
           title: playbackPreviewDisabled ? "Add a waypoint to preview" : "Preview playback",
@@ -92703,7 +92703,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const rangeInputMin = "_rangeInputMin_1sovl_138";
   const rangeInputMax = "_rangeInputMax_1sovl_145";
   const limitInput = "_limitInput_1sovl_183";
-  const styles$t = {
+  const styles$u = {
     wrap: wrap$2,
     histogramHost,
     histogramPlot,
@@ -93089,11 +93089,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
     const trimmed = chart.startBin > 0;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$t.wrap,
+      className: styles$u.wrap,
       children: [
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$t.limitInput}`,
+          className: `${minervaTheme.input} ${styles$u.limitInput}`,
           value: minInput,
           "aria-label": `${props.channelLabel} contrast minimum value`,
           min: scale2.dtypeMin,
@@ -93112,23 +93112,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$t.histogramHost,
+          className: styles$u.histogramHost,
           style: props.r != null && props.g != null && props.b != null ? {
             "--histogram-color": `rgb(${props.r},${props.g},${props.b})`
           } : void 0,
           children: jsxRuntimeExports.jsxs("div", {
-            className: trimmed ? `${styles$t.histogramPlot} ${styles$t.histogramPlotTrimmed}` : styles$t.histogramPlot,
+            className: trimmed ? `${styles$u.histogramPlot} ${styles$u.histogramPlotTrimmed}` : styles$u.histogramPlot,
             children: [
               trimmed ? jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$t.axisBreak}`,
+                className: `${minervaTheme.focusRing} ${styles$u.axisBreak}`,
                 title: "Full range",
                 "aria-label": `${props.channelLabel} full histogram range`,
                 onClick: () => setExpanded(true),
                 children: jsxRuntimeExports.jsx(SvgAxisBreak, {})
               }) : null,
               jsxRuntimeExports.jsxs("svg", {
-                className: styles$t.histogramSvg,
+                className: styles$u.histogramSvg,
                 viewBox: "1.15 0 96.7 11",
                 preserveAspectRatio: "none",
                 role: "img",
@@ -93160,22 +93160,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     clipPath: `url(#${histogramClipId}-frame)`,
                     children: [
                       jsxRuntimeExports.jsx("path", {
-                        className: `${styles$t.histogramFill} ${styles$t.histogramOutOfRange}`,
+                        className: `${styles$u.histogramFill} ${styles$u.histogramOutOfRange}`,
                         d: histFillPath
                       }),
                       jsxRuntimeExports.jsx("path", {
-                        className: `${styles$t.histogramLine} ${styles$t.histogramOutOfRange}`,
+                        className: `${styles$u.histogramLine} ${styles$u.histogramOutOfRange}`,
                         d: histLinePath
                       }),
                       jsxRuntimeExports.jsxs("g", {
                         clipPath: `url(#${histogramClipId})`,
                         children: [
                           jsxRuntimeExports.jsx("path", {
-                            className: styles$t.histogramFill,
+                            className: styles$u.histogramFill,
                             d: histFillPath
                           }),
                           jsxRuntimeExports.jsx("path", {
-                            className: styles$t.histogramLine,
+                            className: styles$u.histogramLine,
                             d: histLinePath
                           })
                         ]
@@ -93185,18 +93185,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: `${styles$t.histogramLoading}${props.histogramLoading ? ` ${styles$t.histogramLoadingVisible}` : ""}`,
+                className: `${styles$u.histogramLoading}${props.histogramLoading ? ` ${styles$u.histogramLoadingVisible}` : ""}`,
                 title: "Loading histogram",
                 children: jsxRuntimeExports.jsx("div", {
                   className: minervaTheme.spinnerSm
                 })
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$t.sliderRow,
+                className: styles$u.sliderRow,
                 children: [
                   jsxRuntimeExports.jsx("input", {
                     type: "range",
-                    className: `${styles$t.rangeInput} ${styles$t.rangeInputMin}`,
+                    className: `${styles$u.rangeInput} ${styles$u.rangeInputMin}`,
                     min: 0,
                     max: scale2.sliderSteps,
                     value: sliderMin,
@@ -93211,7 +93211,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   }),
                   jsxRuntimeExports.jsx("input", {
                     type: "range",
-                    className: `${styles$t.rangeInput} ${styles$t.rangeInputMax}`,
+                    className: `${styles$u.rangeInput} ${styles$u.rangeInputMax}`,
                     min: 0,
                     max: scale2.sliderSteps,
                     value: sliderMax,
@@ -93230,7 +93230,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$t.limitInput}`,
+          className: `${minervaTheme.input} ${styles$u.limitInput}`,
           value: maxInput,
           "aria-label": `${props.channelLabel} contrast maximum value`,
           min: scale2.dtypeMin,
@@ -93284,7 +93284,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const maskVizSwatchWhite = "_maskVizSwatchWhite_1d485_355";
   const maskVizSwatchRandom = "_maskVizSwatchRandom_1d485_356";
   const channelRow = "_channelRow_1d485_12";
-  const styles$s = {
+  const styles$t = {
     channelNameInput,
     channelRowMain,
     channelRowTitle,
@@ -93384,7 +93384,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return jsxRuntimeExports.jsxs("span", {
       className: [
-        styles$s.cursorHintHost,
+        styles$t.cursorHintHost,
         props.className
       ].filter(Boolean).join(" "),
       onPointerEnter: track,
@@ -93393,7 +93393,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         props.children,
         props.enabled && pos ? reactDomExports.createPortal(jsxRuntimeExports.jsx("output", {
-          className: styles$s.cursorHint,
+          className: styles$t.cursorHint,
           style: {
             "--hint-x": `${pos.x}px`,
             "--hint-y": `${pos.y}px`
@@ -93412,8 +93412,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         type: "button",
         className: [
           minervaTheme.focusRing,
-          styles$s.channelVisibilityButton,
-          visible ? "" : styles$s.channelVisibilityButtonHidden
+          styles$t.channelVisibilityButton,
+          visible ? "" : styles$t.channelVisibilityButtonHidden
         ].filter(Boolean).join(" "),
         title: blocked ? void 0 : title7,
         "aria-label": blocked ? VIEWER_INTENSITY_LIMIT_HINT : ariaLabel,
@@ -93435,8 +93435,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       type: "button",
       className: [
         minervaTheme.focusRing,
-        styles$s.channelColorSwatch,
-        fill ? null : styles$s.channelColorSwatchUnfilled,
+        styles$t.channelColorSwatch,
+        fill ? null : styles$t.channelColorSwatchUnfilled,
         busy ? minervaTheme.busyOverlay : null
       ].filter(Boolean).join(" "),
       style: fill ? {
@@ -93453,7 +93453,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function MaskVizButton(props) {
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: `${minervaTheme.focusRing} ${styles$s.maskVizOption}${props.active ? ` ${styles$s.maskVizOptionActive}` : ""}`,
+      className: `${minervaTheme.focusRing} ${styles$t.maskVizOption}${props.active ? ` ${styles$t.maskVizOptionActive}` : ""}`,
       "aria-pressed": props.active,
       title: props.title ?? props.label,
       "aria-label": props.label,
@@ -93497,7 +93497,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return jsxRuntimeExports.jsxs("label", {
       className: [
-        styles$s.maskOpacityControl,
+        styles$t.maskOpacityControl,
         className2
       ].filter(Boolean).join(" "),
       title: `Opacity ${pct}%`,
@@ -93506,11 +93506,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       children: [
         jsxRuntimeExports.jsxs("span", {
-          className: styles$s.maskOpacityInputRow,
+          className: styles$t.maskOpacityInputRow,
           children: [
             jsxRuntimeExports.jsx("input", {
               type: "range",
-              className: styles$s.maskOpacitySlider,
+              className: styles$t.maskOpacitySlider,
               min: 0,
               max: 100,
               step: 1,
@@ -93530,7 +93530,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onBlur: commit
             }),
             jsxRuntimeExports.jsxs("span", {
-              className: styles$s.maskOpacityValue,
+              className: styles$t.maskOpacityValue,
               children: [
                 pct,
                 "%"
@@ -93539,7 +93539,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         jsxRuntimeExports.jsx("span", {
-          className: styles$s.maskOpacityLabel,
+          className: styles$t.maskOpacityLabel,
           children: "Opacity"
         })
       ]
@@ -93558,19 +93558,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       colorTitle = "Random colors (click to re-seed)";
     }
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$s.maskModeControls,
+      className: styles$t.maskModeControls,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$s.maskModeGroup,
+          className: styles$t.maskModeGroup,
           children: [
             jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$s.maskVizToggle,
+              className: styles$t.maskVizToggle,
               "aria-label": `${ariaLabel} fill`,
               children: [
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.style === "outline",
                   label: "Outline",
-                  iconClass: styles$s.maskVizIconOutline,
+                  iconClass: styles$t.maskVizIconOutline,
                   onClick: () => onChange({
                     ...value,
                     style: "outline"
@@ -93579,7 +93579,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.style === "full",
                   label: "Full",
-                  iconClass: styles$s.maskVizIconFull,
+                  iconClass: styles$t.maskVizIconFull,
                   onClick: () => onChange({
                     ...value,
                     style: "full"
@@ -93588,22 +93588,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$s.maskModeGroupLabel,
+              className: styles$t.maskModeGroupLabel,
               children: "Fill"
             })
           ]
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$s.maskModeGroup,
+          className: styles$t.maskModeGroup,
           children: [
             jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$s.maskVizToggle,
+              className: styles$t.maskVizToggle,
               "aria-label": `${ariaLabel} color`,
               children: [
                 jsxRuntimeExports.jsx(MaskVizButton, {
                   active: value.color === "white",
                   label: "White",
-                  iconClass: styles$s.maskVizSwatchWhite,
+                  iconClass: styles$t.maskVizSwatchWhite,
                   onClick: () => onChange({
                     ...value,
                     color: "white"
@@ -93613,7 +93613,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   active: colored,
                   label: colorLabel,
                   title: colorTitle,
-                  iconClass: styles$s.maskVizSwatchRandom,
+                  iconClass: styles$t.maskVizSwatchRandom,
                   onClick: () => onChange(classColors ? {
                     ...value,
                     color: "random"
@@ -93622,7 +93622,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             jsxRuntimeExports.jsx("span", {
-              className: styles$s.maskModeGroupLabel,
+              className: styles$t.maskModeGroupLabel,
               children: "Color"
             })
           ]
@@ -93653,7 +93653,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       props.onBlur(trimmed);
     };
     return jsxRuntimeExports.jsx("input", {
-      className: `${minervaTheme.field} ${styles$s.channelNameInput}`,
+      className: `${minervaTheme.field} ${styles$t.channelNameInput}`,
       type: "text",
       value: draft,
       title: props.name,
@@ -93680,15 +93680,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showColor = !isMask && onColorClick;
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$s.channelRow,
-        locked ? styles$s.detailChannelRowLocked : null,
+        styles$t.channelRow,
+        locked ? styles$t.detailChannelRowLocked : null,
         fitting ? minervaTheme.busyOverlay : null
       ].filter(Boolean).join(" "),
       "aria-busy": fitting || void 0,
       title: fitting ? "Fitting contrast\u2026" : void 0,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: `${styles$s.channelRowMain}${showMask ? ` ${styles$s.channelRowMainMask}` : ""}`,
+          className: `${styles$t.channelRowMain}${showMask ? ` ${styles$t.channelRowMainMask}` : ""}`,
           children: [
             jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible,
@@ -93698,10 +93698,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: onToggleVisibility
             }),
             jsxRuntimeExports.jsxs("div", {
-              className: styles$s.channelRowTitle,
+              className: styles$t.channelRowTitle,
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$s.channelNameSlot,
+                  className: styles$t.channelNameSlot,
                   children: name2.mode === "label" ? jsxRuntimeExports.jsx("span", {
                     className: name2.className,
                     title: name2.title ?? name2.name,
@@ -93711,14 +93711,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   })
                 }),
                 imageSubtitle ? jsxRuntimeExports.jsx("span", {
-                  className: styles$s.channelImageSubtitle,
+                  className: styles$t.channelImageSubtitle,
                   title: `From ${imageSubtitle}`,
                   children: imageSubtitle
                 }) : null
               ]
             }),
             jsxRuntimeExports.jsxs("div", {
-              className: styles$s.channelRowMid,
+              className: styles$t.channelRowMid,
               children: [
                 contrast ? jsxRuntimeExports.jsx(ChannelContrastEditor, {
                   ...contrast
@@ -93732,7 +93732,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             showMask && fixedColorHex ? jsxRuntimeExports.jsx("span", {
-              className: styles$s.channelColorSwatchStatic,
+              className: styles$t.channelColorSwatchStatic,
               style: {
                 backgroundColor: `#${fixedColorHex}`
               },
@@ -93747,7 +93747,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: onColorClick
             }) : null,
             jsxRuntimeExports.jsx("div", {
-              className: styles$s.channelRowTrailing,
+              className: styles$t.channelRowTrailing,
               children: trailing
             }),
             showMask && onMaskVisualizationChange ? jsxRuntimeExports.jsx(OpacitySlider, {
@@ -93766,7 +93766,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         showMask && maskFooter ? jsxRuntimeExports.jsx("div", {
-          className: styles$s.maskControlsPanel,
+          className: styles$t.maskControlsPanel,
           children: maskFooter
         }) : null
       ]
@@ -94530,17 +94530,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const chevronLeft = "_chevronLeft_m5cf6_2";
   const chevronDown = "_chevronDown_m5cf6_3";
   const chevronUp = "_chevronUp_m5cf6_4";
-  const styles$r = {
+  const styles$s = {
     chevronRight,
     chevronLeft,
     chevronDown,
     chevronUp
   };
   const DIRECTION_CLASS = {
-    right: styles$r.chevronRight,
-    left: styles$r.chevronLeft,
-    down: styles$r.chevronDown,
-    up: styles$r.chevronUp
+    right: styles$s.chevronRight,
+    left: styles$s.chevronLeft,
+    down: styles$s.chevronDown,
+    up: styles$s.chevronUp
   };
   function ChevronIcon({ direction: direction2 = "down", className: className2 }) {
     return jsxRuntimeExports.jsx(SvgChevronDown, {
@@ -94574,7 +94574,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const closeIcon = "_closeIcon_1v3n3_54";
   const saturation = "_saturation_1v3n3_77";
   const saturationHidden = "_saturationHidden_1v3n3_83";
-  const styles$q = {
+  const styles$r = {
     backdrop,
     panel: panel$2,
     colorGrid,
@@ -94621,7 +94621,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const saturationProps = {
       hsva: currentColor.hsva,
-      className: expanded ? styles$q.saturation : `${styles$q.saturation} ${styles$q.saturationHidden}`,
+      className: expanded ? styles$r.saturation : `${styles$r.saturation} ${styles$r.saturationHidden}`,
       style: expanded ? void 0 : {
         height: 0
       },
@@ -94639,26 +94639,26 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$q.backdrop,
+          className: styles$r.backdrop,
           "aria-label": "Close color picker",
           onClick: onClose
         }),
         jsxRuntimeExports.jsx("div", {
           "data-minerva-color-picker": "",
-          className: styles$q.panel,
+          className: styles$r.panel,
           style: {
             top: position2.top,
             left: position2.left
           },
           children: jsxRuntimeExports.jsxs("div", {
-            className: expanded ? `${styles$q.colorGrid} ${styles$q.colorGridExpanded}` : styles$q.colorGrid,
+            className: expanded ? `${styles$r.colorGrid} ${styles$r.colorGridExpanded}` : styles$r.colorGrid,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$q.hueRow,
+                className: styles$r.hueRow,
                 children: [
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: styles$q.iconButton,
+                    className: styles$r.iconButton,
                     "aria-expanded": expanded,
                     title: expanded ? "Fewer colors" : "More colors",
                     onClick: () => setExpanded(!expanded),
@@ -94675,7 +94675,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   }),
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: styles$q.whiteSwatch,
+                    className: styles$r.whiteSwatch,
                     "aria-pressed": isWhite,
                     "aria-label": "White",
                     title: "White",
@@ -94685,14 +94685,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     type: "button",
                     title: "Close",
                     "aria-label": "Close color picker",
-                    className: styles$q.iconButton,
+                    className: styles$r.iconButton,
                     onClick: (e2) => {
                       e2.stopPropagation();
                       onClose();
                     },
                     children: jsxRuntimeExports.jsx(SvgClose, {
                       "aria-hidden": true,
-                      className: styles$q.closeIcon
+                      className: styles$r.closeIcon
                     })
                   })
                 ]
@@ -94762,7 +94762,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const imageCardMeta = "_imageCardMeta_eiqoz_398";
   const imageCardActions = "_imageCardActions_eiqoz_404";
   const imageOpacity = "_imageOpacity_eiqoz_413";
-  const styles$p = {
+  const styles$q = {
     stack,
     panelDropActive,
     addStrip,
@@ -94805,37 +94805,37 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function ImportOverlay(props) {
     const busy = props.busy === true;
     return reactDomExports.createPortal(jsxRuntimeExports.jsxs("div", {
-      className: styles$p.typeOverlay,
+      className: styles$q.typeOverlay,
       role: "dialog",
       "aria-modal": "true",
       "aria-busy": busy,
       "aria-labelledby": props.titleId,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$p.typeOverlayBackdrop,
+          className: styles$q.typeOverlayBackdrop,
           "aria-hidden": "true"
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: `${minervaTheme.surface} ${styles$p.typeOverlayCard}`,
+          className: `${minervaTheme.surface} ${styles$q.typeOverlayCard}`,
           children: [
             jsxRuntimeExports.jsx("div", {
               id: props.titleId,
-              className: styles$p.typeOverlayFile,
+              className: styles$q.typeOverlayFile,
               title: props.title,
               children: props.title
             }),
             props.children != null ? jsxRuntimeExports.jsx("fieldset", {
               disabled: props.importDisabled,
-              className: styles$p.typeOverlayFields,
+              className: styles$q.typeOverlayFields,
               children: props.children
             }) : null,
             props.error ? jsxRuntimeExports.jsx("div", {
-              className: styles$p.importError,
+              className: styles$q.importError,
               role: "alert",
               children: props.error
             }) : null,
             jsxRuntimeExports.jsxs("div", {
-              className: styles$p.typeFooter,
+              className: styles$q.typeFooter,
               children: [
                 jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
@@ -94845,7 +94845,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
-                  className: styles$p.typeImport,
+                  className: styles$q.typeImport,
                   disabled: props.importDisabled,
                   onClick: props.onImport,
                   children: busy ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
@@ -96261,7 +96261,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const swatch$1 = "_swatch_mykh6_192";
   const swatchPending = "_swatchPending_mykh6_207";
   const name$3 = "_name_mykh6_212";
-  const styles$o = {
+  const styles$p = {
     attach,
     attachBtn,
     attachLabel,
@@ -96344,7 +96344,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function TableLoading() {
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$o.loading,
+      className: styles$p.loading,
       children: [
         jsxRuntimeExports.jsx("div", {
           className: minervaTheme.spinnerSm,
@@ -96487,7 +96487,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         label2,
         jsxRuntimeExports.jsx("select", {
-          className: styles$o.field,
+          className: styles$p.field,
           value,
           "aria-label": `${label2} column`,
           onChange: (e2) => onChange(e2.target.value),
@@ -96499,7 +96499,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$o.colPick,
+      className: styles$p.colPick,
       children: [
         props.id != null && props.onId ? select("ID", props.id, props.onId) : null,
         select("Name", props.name, props.onName)
@@ -96523,11 +96523,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function FeatureTableGlyph(props) {
     const { wait: wait2, folder, title: title7, ariaLabel, onClick } = props;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$o.attach,
+      className: styles$p.attach,
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$o.attachBtn}${wait2 ? ` ${minervaTheme.busyOverlay}` : ""}`,
+          className: `${minervaTheme.focusRing} ${styles$p.attachBtn}${wait2 ? ` ${minervaTheme.busyOverlay}` : ""}`,
           disabled: wait2 || onClick == null,
           title: title7,
           "aria-label": ariaLabel,
@@ -96540,7 +96540,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }) : jsxRuntimeExports.jsx(TableIcon, {})
         }),
         jsxRuntimeExports.jsx("span", {
-          className: styles$o.attachLabel,
+          className: styles$p.attachLabel,
           children: "Table"
         })
       ]
@@ -96676,10 +96676,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$o.toolbar,
+          className: styles$p.toolbar,
           children: [
             jsxRuntimeExports.jsx("input", {
-              className: styles$o.field,
+              className: styles$p.field,
               type: "text",
               value: list2.filter,
               placeholder: "Filter classes\u2026",
@@ -96692,7 +96692,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+              className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
               disabled: readOnly2,
               onClick: () => {
                 if (waypointId && !readOnly2) setAllClassesVisible(waypointId, featureTableId, true);
@@ -96701,7 +96701,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+              className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
               disabled: readOnly2,
               onClick: () => {
                 if (waypointId && !readOnly2) setAllClassesVisible(waypointId, featureTableId, false);
@@ -96713,7 +96713,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         jsxRuntimeExports.jsxs("div", {
           ref: scrollerRef,
-          className: `${styles$o.scroller} ${panel$1.thinScrollbar}`,
+          className: `${styles$p.scroller} ${panel$1.thinScrollbar}`,
           onScroll: () => {
             const el2 = scrollerRef.current;
             if (!el2) return;
@@ -96721,7 +96721,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           },
           children: [
             overlay ? jsxRuntimeExports.jsx("div", {
-              className: styles$o.accessPrompt,
+              className: styles$p.accessPrompt,
               children: overlay
             }) : null,
             showBusy && !overlay ? jsxRuntimeExports.jsx(TableLoading, {}) : null,
@@ -96731,7 +96731,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 position: "relative"
               },
               children: list2.rows.map((row2, i2) => jsxRuntimeExports.jsxs("div", {
-                className: styles$o.row,
+                className: styles$p.row,
                 style: {
                   top: (list2.loadedOffset + i2) * ROW_H
                 },
@@ -96745,7 +96745,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   }),
                   row2.color ? jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$o.swatch}`,
+                    className: `${minervaTheme.focusRing} ${styles$p.swatch}`,
                     style: {
                       backgroundColor: `#${rgbToHex$1(row2.color)}`
                     },
@@ -96763,13 +96763,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     }
                   }) : jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${styles$o.swatch} ${styles$o.swatchPending} ${minervaTheme.busyOverlay}`,
+                    className: `${styles$p.swatch} ${styles$p.swatchPending} ${minervaTheme.busyOverlay}`,
                     "aria-label": `Assigning color for ${row2.name}`,
                     disabled: true
                   }),
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$o.name}`,
+                    className: `${minervaTheme.focusRing} ${styles$p.name}`,
                     title: row2.visible ? `Hide ${row2.name}` : `Show ${row2.name}`,
                     "aria-pressed": row2.visible,
                     disabled: readOnly2,
@@ -96828,7 +96828,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+      className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
       disabled: !hasView,
       onClick: () => resetClassView(waypoint.id, featureTableId),
       children: "Reset"
@@ -96855,14 +96855,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     if (!hasIngestedFeatureTable(featureTableId) && !needsReselect) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$o.root,
+      className: styles$p.root,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$o.toolbar,
+          className: styles$p.toolbar,
           children: waypoint ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
             children: [
               jsxRuntimeExports.jsx("span", {
-                className: styles$o.viewTitle,
+                className: styles$p.viewTitle,
                 title: waypoint.title,
                 children: waypoint.title.trim() || "Untitled waypoint"
               }),
@@ -96872,7 +96872,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               })
             ]
           }) : jsxRuntimeExports.jsx("span", {
-            className: styles$o.readOnlyNote,
+            className: styles$p.readOnlyNote,
             children: waypointCount === 0 ? "Add a waypoint to customize classes" : "Select a waypoint to customize classes"
           })
         }),
@@ -96893,7 +96893,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           overlay: needsReselect ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$o.textBtn}`,
+            className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
             onClick: () => void restoreFile(),
             children: "Choose file again"
           }) : null
@@ -96913,18 +96913,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     if (featureTables.length === 0) return null;
     return jsxRuntimeExports.jsx("div", {
-      className: styles$o.waypointClasses,
+      className: styles$p.waypointClasses,
       children: featureTables.map((featureTable) => {
         const label2 = maskNames.get(featureTable.sourceChannelId) ?? "Mask";
         const loaded = hasIngestedFeatureTable(featureTable.id);
         return jsxRuntimeExports.jsxs("div", {
-          className: styles$o.root,
+          className: styles$p.root,
           children: [
             jsxRuntimeExports.jsxs("div", {
-              className: styles$o.toolbar,
+              className: styles$p.toolbar,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$o.viewTitle,
+                  className: styles$p.viewTitle,
                   title: label2,
                   children: label2
                 }),
@@ -96939,7 +96939,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               waypoint,
               readOnly: readOnly2
             }) : jsxRuntimeExports.jsx("span", {
-              className: styles$o.readOnlyNote,
+              className: styles$p.readOnlyNote,
               children: "Table not loaded. Choose the file again in the channel panel."
             })
           ]
@@ -98576,7 +98576,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const chipHint = "_chipHint_j7rhr_121";
   const chipDim = "_chipDim_j7rhr_160";
   const editor = "_editor_j7rhr_164";
-  const styles$n = {
+  const styles$o = {
     root: root$9,
     groupCard,
     groupHeader,
@@ -98614,12 +98614,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showEditor = !chip2.key.endsWith(":rgb");
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$n.chipCell,
-        chip2.visible && chip2.hex && shown ? styles$n.chipOn : null,
-        chip2.hex && (!chip2.visible || !shown) ? styles$n.chipOutlined : null,
-        chip2.hex ? null : styles$n.chipUnassigned,
+        styles$o.chipCell,
+        chip2.visible && chip2.hex && shown ? styles$o.chipOn : null,
+        chip2.hex && (!chip2.visible || !shown) ? styles$o.chipOutlined : null,
+        chip2.hex ? null : styles$o.chipUnassigned,
         pending2 ? minervaTheme.busyOverlay : null,
-        dim ? styles$n.chipDim : null
+        dim ? styles$o.chipDim : null
       ].filter(Boolean).join(" "),
       style: chip2.hex ? {
         "--ch": `#${chip2.hex}`
@@ -98629,10 +98629,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         jsxRuntimeExports.jsx(CursorHint, {
           enabled: showBlocked,
           label: VIEWER_INTENSITY_LIMIT_HINT,
-          className: styles$n.chipHint,
+          className: styles$o.chipHint,
           children: jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$n.chip}`,
+            className: `${minervaTheme.focusRing} ${styles$o.chip}`,
             title: pending2 ? pendingLabel2 : void 0,
             "aria-label": pending2 ? pendingLabel2 : showBlocked ? VIEWER_INTENSITY_LIMIT_HINT : chipAriaLabel(chip2),
             "aria-pressed": chip2.visible,
@@ -98646,7 +98646,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         showEditor ? jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$n.chipMenu}`,
+          className: `${minervaTheme.focusRing} ${styles$o.chipMenu}`,
           title: `Edit ${chip2.name}`,
           "aria-label": `Edit ${chip2.name}`,
           "aria-expanded": open,
@@ -98705,7 +98705,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       onDismissEditor
     ]);
     return jsxRuntimeExports.jsx("div", {
-      className: styles$n.chipWrap,
+      className: styles$o.chipWrap,
       children: chips.map((chip2, i2) => jsxRuntimeExports.jsxs(reactExports.Fragment, {
         children: [
           jsxRuntimeExports.jsx(ChipButton, {
@@ -98721,7 +98721,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           i2 === rowEnd && openChip ? jsxRuntimeExports.jsx("div", {
             ref: editorRef,
-            className: styles$n.editor,
+            className: styles$o.editor,
             children: jsxRuntimeExports.jsx(ChannelEditor, {
               chip: openChip
             })
@@ -98734,10 +98734,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const visLabel = props.allVisible ? `Hide every channel in ${props.name}` : `Show every channel in ${props.name}`;
     const filtering = props.onNameFilterChange != null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$n.groupCard,
+      className: styles$o.groupCard,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$n.groupHeader,
+          className: styles$o.groupHeader,
           children: [
             props.onToggleVisibility ? jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible: Boolean(props.allVisible),
@@ -98747,11 +98747,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onClick: props.onToggleVisibility
             }) : null,
             jsxRuntimeExports.jsx("div", {
-              className: styles$n.groupLabel,
+              className: styles$o.groupLabel,
               children: props.name
             }),
             props.onNameFilterChange ? jsxRuntimeExports.jsx("input", {
-              className: styles$n.channelFilter,
+              className: styles$o.channelFilter,
               type: "text",
               value: props.nameFilter ?? "",
               placeholder: "Search...",
@@ -98768,7 +98768,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         filtering && props.chips.length === 0 ? jsxRuntimeExports.jsx("div", {
-          className: styles$n.filterEmpty,
+          className: styles$o.filterEmpty,
           children: "No matching channels"
         }) : jsxRuntimeExports.jsx(ChipGrid, {
           chips: props.chips,
@@ -98962,7 +98962,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     if (image2.channels.length === 0) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$n.root,
+      className: styles$o.root,
       children: [
         model.groups.map((group2) => {
           const rgbUnit = rgbDisplay && group2.chips[0] ? [
@@ -170395,9 +170395,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       type: "button",
       "aria-pressed": selected,
       className: [
-        selected ? styles$p.typeChipActive : null,
-        suggested ? styles$p.typeChipSuggested : null,
-        muted ? styles$p.typeChipMuted : null
+        selected ? styles$q.typeChipActive : null,
+        suggested ? styles$q.typeChipSuggested : null,
+        muted ? styles$q.typeChipMuted : null
       ].filter(Boolean).join(" "),
       onClick,
       children: label2
@@ -170918,27 +170918,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const fileReference = showAccessOverlay ? sourceFileReference(im) : null;
       const pointing = (pointTarget == null ? void 0 : pointTarget.imageId) === im.id ? pointTarget.mode : null;
       return jsxRuntimeExports.jsxs("article", {
-        className: styles$p.imageCard,
+        className: styles$q.imageCard,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$p.imageCardHeader,
+            className: styles$q.imageCardHeader,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$p.imageCardText,
+                className: styles$q.imageCardText,
                 children: [
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$p.imageCardTitle,
+                    className: styles$q.imageCardTitle,
                     title: title7,
                     children: title7
                   }),
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$p.imageCardMeta,
+                    className: styles$q.imageCardMeta,
                     children: metaParts.join(" \xB7 ")
                   })
                 ]
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$p.imageCardActions,
+                className: styles$q.imageCardActions,
                 children: [
                   jsxRuntimeExports.jsx(PanelIconButton, {
                     title: "Arrange",
@@ -170975,7 +170975,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           }),
           jsxRuntimeExports.jsx(OpacitySlider, {
-            className: styles$p.imageOpacity,
+            className: styles$q.imageOpacity,
             value: clampImageOpacity(im.opacity),
             ariaLabel: title7,
             onPreview: (opacity) => {
@@ -170999,16 +170999,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             image: im
           }),
           showAccessOverlay ? jsxRuntimeExports.jsxs("div", {
-            className: styles$p.fileAccessOverlay,
+            className: styles$q.fileAccessOverlay,
             children: [
               fileReference ? jsxRuntimeExports.jsx("div", {
-                className: styles$p.fileAccessName,
+                className: styles$q.fileAccessName,
                 title: fileReference,
                 children: fileReference
               }) : null,
               jsxRuntimeExports.jsx(PanelActionButton, {
                 type: "button",
-                className: styles$p.fileAccessAction,
+                className: styles$q.fileAccessAction,
                 active: pointing === "locate",
                 "aria-pressed": needsReselect || needsLocateFile ? pointing === "locate" : void 0,
                 onClick: (e2) => {
@@ -171026,18 +171026,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     const imageCards = images.length > 0 ? images.map((im, i2) => renderImageCard(im, i2)) : imageLoaded && loadedSource ? [
       jsxRuntimeExports.jsx("article", {
-        className: styles$p.imageCard,
+        className: styles$q.imageCard,
         children: jsxRuntimeExports.jsx("div", {
-          className: styles$p.imageCardHeader,
+          className: styles$q.imageCardHeader,
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$p.imageCardText,
+            className: styles$q.imageCardText,
             children: [
               jsxRuntimeExports.jsx("div", {
-                className: styles$p.imageCardTitle,
+                className: styles$q.imageCardTitle,
                 children: loadedSource.label
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$p.imageCardMeta,
+                className: styles$q.imageCardMeta,
                 children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
               })
             ]
@@ -171062,46 +171062,46 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const strip2 = popup || !pointTarget ? liveStrip : IDLE_STRIP;
       return jsxRuntimeExports.jsxs("div", {
         className: [
-          styles$p.addStrip,
-          row2 && !popup ? styles$p.addStripRow : "",
-          (row2 || popup) && strip2.dragging ? styles$p.panelDropActive : ""
+          styles$q.addStrip,
+          row2 && !popup ? styles$q.addStripRow : "",
+          (row2 || popup) && strip2.dragging ? styles$q.panelDropActive : ""
         ].filter(Boolean).join(" "),
         ...row2 || popup ? dropHandlers : {},
         children: [
           jsxRuntimeExports.jsx("button", {
             type: "button",
             className: [
-              styles$p.dropZone,
-              strip2.dragging ? styles$p.dropZoneActive : ""
+              styles$q.dropZone,
+              strip2.dragging ? styles$q.dropZoneActive : ""
             ].join(" "),
             disabled: disabled2,
             "aria-invalid": strip2.dropError ? true : void 0,
             onClick: () => void browseLocal(),
             children: jsxRuntimeExports.jsx("span", {
               className: [
-                styles$p.dropZoneTitle,
-                strip2.dropError ? styles$p.importError : ""
+                styles$q.dropZoneTitle,
+                strip2.dropError ? styles$q.importError : ""
               ].filter(Boolean).join(" "),
               role: strip2.dropError ? "alert" : void 0,
               children: strip2.dropError ?? "Drop or Browse Image File"
             })
           }),
           jsxRuntimeExports.jsx("div", {
-            className: styles$p.orDivider,
+            className: styles$q.orDivider,
             children: jsxRuntimeExports.jsx("span", {
               children: "or"
             })
           }),
           jsxRuntimeExports.jsxs("div", {
-            className: styles$p.urlRow,
+            className: styles$q.urlRow,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$p.urlField,
+                className: styles$q.urlField,
                 children: [
                   jsxRuntimeExports.jsx("input", {
                     id: popup ? void 0 : "upload-add-url",
                     type: "url",
-                    className: `${minervaTheme.input} ${styles$p.urlInput}`,
+                    className: `${minervaTheme.input} ${styles$q.urlInput}`,
                     placeholder: "Image URL (OME-TIFF or DICOMweb)",
                     "aria-label": "Image URL",
                     "aria-invalid": strip2.urlError ? true : void 0,
@@ -171120,7 +171120,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   }),
                   strip2.draft.trim() ? jsxRuntimeExports.jsx(PanelActionButton, {
                     type: "button",
-                    className: styles$p.urlAdd,
+                    className: styles$q.urlAdd,
                     disabled: disabled2 || !urlReady,
                     onClick: acceptUrlDraft,
                     children: "Add"
@@ -171128,7 +171128,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 ]
               }),
               strip2.urlError ? jsxRuntimeExports.jsx("div", {
-                className: styles$p.importError,
+                className: styles$q.importError,
                 role: "alert",
                 children: strip2.urlError
               }) : null
@@ -171149,12 +171149,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: [
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: styles$p.pointBackdrop,
+              className: styles$q.pointBackdrop,
               "aria-label": "Close",
               onClick: () => setPointTarget(null)
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$p.pointPopup,
+              className: styles$q.pointPopup,
               style: {
                 top: pointTarget.top,
                 left: pointTarget.left,
@@ -171169,7 +171169,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         row2 ? addStrip2 : jsxRuntimeExports.jsx("div", {
           className: [
             panel$1.authorPanel,
-            dragging ? styles$p.panelDropActive : ""
+            dragging ? styles$q.panelDropActive : ""
           ].join(" "),
           ...dropHandlers,
           children: jsxRuntimeExports.jsx("div", {
@@ -171178,7 +171178,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               panel$1.thinScrollbar
             ].join(" "),
             children: jsxRuntimeExports.jsxs("div", {
-              className: styles$p.stack,
+              className: styles$q.stack,
               children: [
                 imageCards,
                 addStrip2
@@ -171198,10 +171198,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           onImport: () => void runImport(),
           children: [
             jsxRuntimeExports.jsxs("div", {
-              className: styles$p.typeRow,
+              className: styles$q.typeRow,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$p.fieldLabel,
+                  className: styles$q.fieldLabel,
                   children: "Image Type"
                 }),
                 jsxRuntimeExports.jsx(FormatChip, {
@@ -171242,12 +171242,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               ]
             }),
             dicomAllowed ? jsxRuntimeExports.jsx("div", {
-              className: styles$p.typeSection,
+              className: styles$q.typeSection,
               children: jsxRuntimeExports.jsxs("div", {
-                className: styles$p.typeRow,
+                className: styles$q.typeRow,
                 children: [
                   jsxRuntimeExports.jsx("span", {
-                    className: styles$p.fieldLabel,
+                    className: styles$q.fieldLabel,
                     children: "Format"
                   }),
                   FORMAT_OPTIONS.map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
@@ -171264,10 +171264,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               })
             }) : null,
             overlayRole === "segmentation" || overlayRole === "intensity" && !overlayRgbDisplay ? jsxRuntimeExports.jsxs("div", {
-              className: styles$p.typeRow,
+              className: styles$q.typeRow,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$p.fieldLabel,
+                  className: styles$q.fieldLabel,
                   children: overlayRole === "segmentation" ? "Feature table" : "Markers"
                 }),
                 jsxRuntimeExports.jsx(PanelActionButton, {
@@ -173912,6 +173912,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       loaderErrors
     };
   }
+  const minervaMarkSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="3.9 0.5 162 162">\n  <polygon fill="#00A5DF" points="84.9,125.15 74.67,101.74 61.02,109.33 54.73,141.49 66.91,150.34 71.24,125.99 84.9,156.83 98.55,125.99 102.88,150.34 115.07,141.49 108.77,109.33 95.12,101.74"/>\n  <polygon fill="#00A5DF" points="98.18,94.75 105.77,94 103.52,82.52"/>\n  <polygon fill="#00A5DF" points="64.02,94 71.62,94.75 66.27,82.52"/>\n  <polygon fill="#963CBD" points="161.32,101.3 136.22,78.79 160.71,82.19 156.07,67.87 123.52,63.92 112.09,74.55 131.19,91.51 105.77,94 108.77,109.33 137.41,125.25 149.6,116.4 127.78,104.76"/>\n  <polygon fill="#963CBD" points="95.12,101.74 98.18,94.75 84.9,96.05"/>\n  <polygon fill="#963CBD" points="106.39,69.49 108.02,62.04 96.41,60.63"/>\n  <polygon fill="#004EA8" points="98.18,94.75 95.12,101.74 108.77,109.33 105.77,94"/>\n  <polygon fill="#93C90F" points="113.51,37.09 108.02,62.04 123.52,63.92 147.52,41.6 142.87,27.28 125.05,44.43 132.13,11.46 102.96,28.38 113.77,6.13 98.71,6.13 84.9,35.85 91.48,50.01"/>\n  <polygon fill="#93C90F" points="73.39,60.63 84.9,53.87 78.32,50.01"/>\n  <polygon fill="#93C90F" points="103.52,82.52 112.09,74.55 106.39,69.49"/>\n  <polygon fill="#007749" points="106.39,69.49 112.09,74.55 123.52,63.92 108.02,62.04"/>\n  <polygon fill="#D00070" points="91.48,50.01 84.9,53.87 96.41,60.63"/>\n  <polygon fill="#D00070" points="63.41,69.49 57.7,74.55 66.27,82.52"/>\n  <polygon fill="#D00070" points="56.28,37.09 78.32,50.01 84.9,35.85 71.09,6.13 56.03,6.13 66.83,28.38 37.66,11.46 44.74,44.43 26.92,27.28 22.27,41.6 46.27,63.92 61.77,62.04"/>\n  <polygon fill="#890C58" points="84.9,53.87 91.48,50.01 84.9,35.85 78.32,50.01"/>\n  <polygon fill="#FF6720" points="71.62,94.75 74.67,101.74 84.9,96.05"/>\n  <polygon fill="#FF6720" points="73.39,60.63 61.77,62.04 63.41,69.49"/>\n  <polygon fill="#FF6720" points="38.6,91.51 57.7,74.55 46.27,63.92 13.69,67.87 9.08,82.19 33.58,78.79 8.47,101.3 42.02,104.76 20.2,116.4 32.38,125.25 61.02,109.33 64.02,94"/>\n  <polygon fill="#00778B" points="71.62,94.75 64.02,94 61.02,109.33 74.67,101.74"/>\n  <polygon fill="#AB2328" points="63.41,69.49 61.77,62.04 46.27,63.92 57.7,74.55"/>\n</svg>\n';
   function storedTableFormat(bytes) {
     const parquet = bytes.byteLength >= 4 && bytes[0] === 80 && bytes[1] === 65 && bytes[2] === 82 && bytes[3] === 49;
     if (parquet) return {
@@ -174060,6 +174061,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   const version = "1.0.0-alpha.11";
   const LOCAL_PLAYER_DIR = "bundle";
+  const FAVICON_HREF = `data:image/svg+xml,${encodeURIComponent(minervaMarkSvg.replace(/\s*\n\s*/g, ""))}`;
   function hostedPlayerBaseUrl() {
     return null;
   }
@@ -174127,6 +174129,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${safeTitle}</title>
+    <link rel="icon" type="image/svg+xml" href="${FAVICON_HREF}" />
     <link rel="stylesheet" href="${css2}" />
     <style>
       /* Hex literal (no custom properties yet): matches --minerva-paper before player CSS loads. */
@@ -174512,7 +174515,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const rowTitle$1 = "_rowTitle_la95u_239";
   const rowDate = "_rowDate_la95u_249";
   const scrap = "_scrap_la95u_258";
-  const styles$m = {
+  const styles$n = {
     root: root$8,
     masthead,
     addWrap,
@@ -174586,7 +174589,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function ShelfBoard() {
     return jsxRuntimeExports.jsx("div", {
-      className: styles$m.shelfBoard,
+      className: styles$n.shelfBoard,
       "aria-hidden": true
     });
   }
@@ -174650,10 +174653,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     return jsxRuntimeExports.jsx("div", {
       ref: shelfRef,
-      className: styles$m.ghostShelf,
+      className: styles$n.ghostShelf,
       "aria-hidden": true,
       children: books.map((b2) => jsxRuntimeExports.jsx("div", {
-        className: styles$m.ghostBook,
+        className: styles$n.ghostBook,
         style: {
           width: b2.width,
           height: b2.height,
@@ -174830,46 +174833,46 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       summaries
     ]);
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$m.root,
+      className: styles$n.root,
       children: [
         error2 ? jsxRuntimeExports.jsx("p", {
-          className: styles$m.error,
+          className: styles$n.error,
           children: error2
         }) : null,
         jsxRuntimeExports.jsxs("header", {
-          className: styles$m.masthead,
+          className: styles$n.masthead,
           children: [
             jsxRuntimeExports.jsx("h1", {
               className: `${minervaTheme.wordmark} ${minervaTheme.wordmarkDisplay}`,
               children: "Minerva"
             }),
             jsxRuntimeExports.jsx("p", {
-              className: styles$m.tagline,
+              className: styles$n.tagline,
               children: "a microscopy viewer for non-experts"
             })
           ]
         }),
         jsxRuntimeExports.jsx("section", {
-          className: styles$m.bookcase,
+          className: styles$n.bookcase,
           "aria-label": "Library",
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$m.bookcaseInner,
+            className: styles$n.bookcaseInner,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$m.shelfBay,
+                className: styles$n.shelfBay,
                 children: [
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$m.bayContent,
+                    className: styles$n.bayContent,
                     children: jsxRuntimeExports.jsxs("div", {
-                      className: styles$m.intakeRow,
+                      className: styles$n.intakeRow,
                       children: [
                         jsxRuntimeExports.jsxs("div", {
-                          className: styles$m.addWrap,
+                          className: styles$n.addWrap,
                           ref: addRef,
                           children: [
                             jsxRuntimeExports.jsx("button", {
                               type: "button",
-                              className: `${minervaTheme.focusRing} ${styles$m.addTrigger}`,
+                              className: `${minervaTheme.focusRing} ${styles$n.addTrigger}`,
                               disabled: shelfBusy,
                               "aria-label": "Add story",
                               title: "New or import story",
@@ -174879,7 +174882,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                               children: jsxRuntimeExports.jsx(PlusIcon, {})
                             }),
                             addOpen ? jsxRuntimeExports.jsxs("div", {
-                              className: `${minervaTheme.menu} ${styles$m.addMenu}`,
+                              className: `${minervaTheme.menu} ${styles$n.addMenu}`,
                               role: "menu",
                               children: [
                                 jsxRuntimeExports.jsx("button", {
@@ -174932,48 +174935,48 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               bays.map((bay, index2) => {
                 const key2 = bay.kind === "story" ? bay.story.id : `bay-${index2}`;
                 return jsxRuntimeExports.jsxs("div", {
-                  className: styles$m.shelfBay,
+                  className: styles$n.shelfBay,
                   children: [
                     jsxRuntimeExports.jsxs("div", {
-                      className: bay.kind === "empty" ? `${styles$m.bayContent} ${styles$m.bayContentEmpty}` : styles$m.bayContent,
+                      className: bay.kind === "empty" ? `${styles$n.bayContent} ${styles$n.bayContentEmpty}` : styles$n.bayContent,
                       "aria-hidden": bay.kind === "empty" ? true : void 0,
                       children: [
                         bay.kind === "empty" ? jsxRuntimeExports.jsx(GhostBooks, {
                           bayIndex: index2
                         }) : null,
                         bay.kind === "loading" ? jsxRuntimeExports.jsx("p", {
-                          className: styles$m.whisper,
+                          className: styles$n.whisper,
                           children: "Opening the stacks\u2026"
                         }) : null,
                         bay.kind === "story" ? jsxRuntimeExports.jsxs("div", {
-                          className: styles$m.storyRow,
+                          className: styles$n.storyRow,
                           children: [
                             jsxRuntimeExports.jsxs("button", {
                               type: "button",
-                              className: `${minervaTheme.focusRing} ${styles$m.rowOpen}`,
+                              className: `${minervaTheme.focusRing} ${styles$n.rowOpen}`,
                               disabled: busyId === bay.story.id,
                               onClick: () => void openStory(bay.story.id),
                               children: [
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$m.rowThumb,
+                                  className: styles$n.rowThumb,
                                   "aria-hidden": true,
                                   children: bay.story.thumbnail ? jsxRuntimeExports.jsx("img", {
                                     src: bay.story.thumbnail,
                                     alt: "",
-                                    className: styles$m.rowThumbImg
+                                    className: styles$n.rowThumbImg
                                   }) : jsxRuntimeExports.jsx("span", {
-                                    className: styles$m.rowThumbBlank
+                                    className: styles$n.rowThumbBlank
                                   })
                                 }),
                                 jsxRuntimeExports.jsxs("span", {
-                                  className: styles$m.rowText,
+                                  className: styles$n.rowText,
                                   children: [
                                     jsxRuntimeExports.jsx("span", {
-                                      className: styles$m.rowTitle,
+                                      className: styles$n.rowTitle,
                                       children: bay.story.title
                                     }),
                                     jsxRuntimeExports.jsx("span", {
-                                      className: styles$m.rowDate,
+                                      className: styles$n.rowDate,
                                       children: formatShortDate(bay.story.modifiedAt)
                                     })
                                   ]
@@ -174982,7 +174985,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             }),
                             jsxRuntimeExports.jsx("button", {
                               type: "button",
-                              className: `${minervaTheme.focusRing} ${styles$m.scrap}`,
+                              className: `${minervaTheme.focusRing} ${styles$n.scrap}`,
                               disabled: busyId === bay.story.id,
                               "aria-label": `Remove ${bay.story.title}`,
                               onClick: (e2) => {
@@ -175049,7 +175052,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const headerTitle = "_headerTitle_o47qu_12";
   const headerCount = "_headerCount_o47qu_24";
   const headerActions = "_headerActions_o47qu_30";
-  const styles$l = {
+  const styles$m = {
     compactHeader,
     headerTitle,
     headerCount,
@@ -175080,7 +175083,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const showTitle = title7 != null && title7 !== "";
     const slot = reactExports.useContext(SidebarStripSlotContext);
     const actionsNode = actions2 == null ? null : jsxRuntimeExports.jsx("div", {
-      className: styles$l.headerActions,
+      className: styles$m.headerActions,
       children: actions2
     });
     if (!showTitle) {
@@ -175089,18 +175092,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$l.compactHeader,
+        styles$m.compactHeader,
         className2
       ].filter(Boolean).join(" "),
       children: [
         showTitle ? jsxRuntimeExports.jsxs("div", {
-          className: styles$l.headerTitle,
+          className: styles$m.headerTitle,
           children: [
             jsxRuntimeExports.jsx("span", {
               children: title7
             }),
             count2 != null ? jsxRuntimeExports.jsx("span", {
-              className: styles$l.headerCount,
+              className: styles$m.headerCount,
               children: count2
             }) : null
           ]
@@ -175136,7 +175139,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const brushEditIcon = "_brushEditIcon_1qxur_61";
   const itemListRoot = "_itemListRoot_1qxur_66";
   const metaIcon = "_metaIcon_1qxur_70";
-  const styles$k = {
+  const styles$l = {
     layersPanel,
     layersUnifiedTop,
     layersToolbarSlot,
@@ -175168,7 +175171,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const itemRowMainStatic = "_itemRowMainStatic_1ftcd_161";
   const itemListMarkdownEditor = "_itemListMarkdownEditor_1ftcd_167";
   const itemListCompact = "_itemListCompact_1ftcd_197";
-  const styles$j = {
+  const styles$k = {
     itemList,
     headerMarkdown,
     list: list$3,
@@ -175235,7 +175238,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       return jsxRuntimeExports.jsx("button", {
         type: "button",
-        className: styles$j.button,
+        className: styles$k.button,
         onClick: (e2) => {
           e2.stopPropagation();
           onToggleVisibility(item2.id);
@@ -175265,23 +175268,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const isDragging = draggedItemId === item2.id;
       const isDropTarget = dropTargetId === item2.id;
       const itemClasses = [
-        styles$j.item,
+        styles$k.item,
         item2.isActive ? minervaTheme.selectLeft : "",
-        item2.pulse ? styles$j.itemPulse : "",
-        item2.isHidden ? styles$j.itemHidden : "",
-        isDragging ? styles$j.itemDragging : "",
-        isDropTarget ? styles$j.itemDropTarget : "",
-        isChild2 ? styles$j.itemChild : ""
+        item2.pulse ? styles$k.itemPulse : "",
+        item2.isHidden ? styles$k.itemHidden : "",
+        isDragging ? styles$k.itemDragging : "",
+        isDropTarget ? styles$k.itemDropTarget : "",
+        isChild2 ? styles$k.itemChild : ""
       ].filter(Boolean).join(" ");
       const contentBlock = jsxRuntimeExports.jsxs("span", {
-        className: styles$j.content,
+        className: styles$k.content,
         children: [
           jsxRuntimeExports.jsx("span", {
-            className: `${styles$j.title} ${item2.isActive ? styles$j.titleActive : ""}`,
+            className: `${styles$k.title} ${item2.isActive ? styles$k.titleActive : ""}`,
             children: item2.title
           }),
           item2.subtitle ? jsxRuntimeExports.jsx("span", {
-            className: styles$j.subtitle,
+            className: styles$k.subtitle,
             children: item2.subtitle
           }) : null
         ]
@@ -175296,25 +175299,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         onDrop: (e2) => handleDrop(item2.id, e2),
         children: [
           visibilityToggleLeading ? jsxRuntimeExports.jsx("span", {
-            className: styles$j.itemLeadingVisibility,
+            className: styles$k.itemLeadingVisibility,
             children: renderVisibilityToggle(item2)
           }) : null,
           item2.icon ? onItemClick ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$j.itemIconHit}`,
+            className: `${minervaTheme.focusRing} ${styles$k.itemIconHit}`,
             onClick: (e2) => onItemClick(item2, e2),
             onDoubleClick: () => onItemDoubleClick == null ? void 0 : onItemDoubleClick(item2),
             children: jsxRuntimeExports.jsx("span", {
-              className: styles$j.icon,
+              className: styles$k.icon,
               children: item2.icon
             })
           }) : jsxRuntimeExports.jsx("div", {
-            className: styles$j.icon,
+            className: styles$k.icon,
             children: item2.icon
           }) : null,
           showExpandToggle && item2.children && jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$j.button,
+            className: styles$k.button,
             onClick: (e2) => {
               e2.stopPropagation();
               onToggleExpand == null ? void 0 : onToggleExpand(item2.id);
@@ -175325,22 +175328,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           onItemClick ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$j.itemRowMain}`,
+            className: `${minervaTheme.focusRing} ${styles$k.itemRowMain}`,
             onClick: (e2) => onItemClick(item2, e2),
             onDoubleClick: () => onItemDoubleClick == null ? void 0 : onItemDoubleClick(item2),
             children: contentBlock
           }) : jsxRuntimeExports.jsx("div", {
-            className: styles$j.itemRowMainStatic,
+            className: styles$k.itemRowMainStatic,
             children: contentBlock
           }),
           jsxRuntimeExports.jsxs("div", {
-            className: styles$j.actions,
+            className: styles$k.actions,
             children: [
               !visibilityToggleLeading ? renderVisibilityToggle(item2) : null,
               itemActions == null ? void 0 : itemActions(item2),
               showDeleteButton && onDelete && jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$j.button,
+                className: styles$k.button,
                 onClick: (e2) => {
                   e2.stopPropagation();
                   onDelete(item2.id);
@@ -175360,12 +175363,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       title: title7,
       count: `(${items.length})`,
       actions: headerActions2,
-      className: variant === "markdownEditor" ? styles$j.headerMarkdown : void 0
+      className: variant === "markdownEditor" ? styles$k.headerMarkdown : void 0
     });
     const rootClass = [
-      styles$j.itemList,
-      variant === "markdownEditor" ? styles$j.itemListMarkdownEditor : "",
-      compactRows ? styles$j.itemListCompact : "",
+      styles$k.itemList,
+      variant === "markdownEditor" ? styles$k.itemListMarkdownEditor : "",
+      compactRows ? styles$k.itemListCompact : "",
       className2
     ].filter(Boolean).join(" ");
     return jsxRuntimeExports.jsxs("div", {
@@ -175377,14 +175380,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: emptyMessage2
         }) : jsxRuntimeExports.jsx("ul", {
           className: [
-            styles$j.list,
+            styles$k.list,
             panel$1.thinScrollbar
           ].join(" "),
           children: items.map((item2) => jsxRuntimeExports.jsxs(reactExports.Fragment, {
             children: [
               renderItem(item2),
               item2.isExpanded && item2.children && item2.children.map((child) => customChildRenderer ? jsxRuntimeExports.jsx("li", {
-                className: styles$j.itemChild,
+                className: styles$k.itemChild,
                 children: customChildRenderer(child, item2)
               }, `${item2.id}-child-${child.id}`) : jsxRuntimeExports.jsx(reactExports.Fragment, {
                 children: renderItem(child, true)
@@ -175523,7 +175526,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const textInput = "_textInput_ex885_42";
   const actions = "_actions_ex885_48";
   const hint = "_hint_ex885_55";
-  const styles$i = {
+  const styles$j = {
     panel,
     title,
     field: field$1,
@@ -175537,18 +175540,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const TextEditPanel = ({ title: title7, textValue, fontSize = 14, onTextChange, onFontSizeChange, onSubmit, onCancel, submitButtonText, allowEmpty = false, showFontSize = true, singleLine = false, placeholder = "Enter your text here..." }) => {
     const canSubmit = allowEmpty || !!(textValue == null ? void 0 : textValue.trim());
     return jsxRuntimeExports.jsxs("div", {
-      className: `${minervaTheme.surface} ${styles$i.panel}`,
+      className: `${minervaTheme.surface} ${styles$j.panel}`,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$i.title,
+          className: styles$j.title,
           children: title7
         }),
         showFontSize ? jsxRuntimeExports.jsxs("div", {
-          className: styles$i.field,
+          className: styles$j.field,
           children: [
             jsxRuntimeExports.jsx("label", {
               htmlFor: "fontSizeInput",
-              className: styles$i.label,
+              className: styles$j.label,
               children: "Font Size:"
             }),
             jsxRuntimeExports.jsx("input", {
@@ -175559,7 +175562,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               onChange: (e2) => onFontSizeChange == null ? void 0 : onFontSizeChange(parseInt(e2.target.value, 10) || 14),
               min: "8",
               max: "72",
-              className: `${minervaTheme.input} ${styles$i.numberInput}`
+              className: `${minervaTheme.input} ${styles$j.numberInput}`
             })
           ]
         }) : null,
@@ -175568,7 +175571,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           value: textValue,
           onChange: (e2) => onTextChange(e2.target.value),
           placeholder,
-          className: `${minervaTheme.input} ${styles$i.textInput}`,
+          className: `${minervaTheme.input} ${styles$j.textInput}`,
           onKeyDown: (e2) => {
             if (e2.key === "Enter") {
               onSubmit();
@@ -175580,7 +175583,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           value: textValue,
           onChange: (e2) => onTextChange(e2.target.value),
           placeholder,
-          className: `${minervaTheme.input} ${styles$i.textarea}`,
+          className: `${minervaTheme.input} ${styles$j.textarea}`,
           onKeyDown: (e2) => {
             if (e2.key === "Enter" && e2.ctrlKey) {
               onSubmit();
@@ -175590,7 +175593,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: styles$i.actions,
+          className: styles$j.actions,
           children: [
             jsxRuntimeExports.jsx(PanelActionButton, {
               type: "button",
@@ -175607,7 +175610,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$i.hint,
+          className: styles$j.hint,
           children: singleLine ? "Press Enter to submit, Escape to cancel" : "Press Ctrl+Enter to submit, Escape to cancel"
         })
       ]
@@ -175886,7 +175889,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         isActive: selectedGroupId === group2.id,
         pulse: flashGroupId === group2.id,
         icon: jsxRuntimeExports.jsx(SvgFolder, {
-          className: styles$k.metaIcon
+          className: styles$l.metaIcon
         }),
         children,
         metadata: {
@@ -176112,7 +176115,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const isBrushActive = isPolygon && brushEditTargetId === annotation.id && brushEditMode === "add";
         const isEraserActive = isPolygon && brushEditTargetId === annotation.id && brushEditMode === "subtract";
         return jsxRuntimeExports.jsxs("div", {
-          className: styles$k.brushEditActions,
+          className: styles$l.brushEditActions,
           children: [
             isPolygon && jsxRuntimeExports.jsx(PanelIconButton, {
               variant: "row",
@@ -176130,7 +176133,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               },
               title: "Brush add to polygon",
               children: jsxRuntimeExports.jsx(SvgAddBrush, {
-                className: styles$k.brushEditIcon
+                className: styles$l.brushEditIcon
               })
             }),
             isPolygon && jsxRuntimeExports.jsx(PanelIconButton, {
@@ -176149,7 +176152,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               },
               title: "Brush subtract from polygon",
               children: jsxRuntimeExports.jsx(SvgEraser, {
-                className: styles$k.brushEditIcon
+                className: styles$l.brushEditIcon
               })
             })
           ]
@@ -176194,24 +176197,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     });
     const hasUnifiedToolbar = !!toolbarSlot2;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$k.layersPanel,
+      className: styles$l.layersPanel,
       children: [
         hasUnifiedToolbar ? jsxRuntimeExports.jsxs("div", {
-          className: styles$k.layersUnifiedTop,
+          className: styles$l.layersUnifiedTop,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$k.layersToolbarSlot,
+              className: styles$l.layersToolbarSlot,
               children: toolbarSlot2
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$k.layersMetaCluster,
+              className: styles$l.layersMetaCluster,
               children: layerMetaButtons
             })
           ]
         }) : null,
         jsxRuntimeExports.jsx("div", {
           ref: itemListRootRef,
-          className: styles$k.itemListRoot,
+          className: styles$l.itemListRoot,
           children: jsxRuntimeExports.jsx(ItemList, {
             className: className2,
             variant: itemListVariant,
@@ -176235,7 +176238,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             showDeleteButton: false,
             showExpandToggle: true,
             headerActions: hasUnifiedToolbar ? void 0 : jsxRuntimeExports.jsx("div", {
-              className: styles$k.layersMetaCluster,
+              className: styles$l.layersMetaCluster,
               children: layerMetaButtons
             }),
             itemActions
@@ -176272,7 +176275,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const menu = "_menu_1gwwf_36";
   const menuItem = "_menuItem_1gwwf_48";
   const menuItemLabel = "_menuItemLabel_1gwwf_54";
-  const styles$h = {
+  const styles$i = {
     container,
     toggle,
     chevron,
@@ -176310,18 +176313,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setIsOpen(false);
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$h.container,
+      className: styles$i.container,
       children: [
         jsxRuntimeExports.jsxs("button", {
           ref: toggleRef,
           type: "button",
-          className: `${styles$h.toggle} ${buttonClassName} ${isActive ? activeClassName : ""}`,
+          className: `${styles$i.toggle} ${buttonClassName} ${isActive ? activeClassName : ""}`,
           title: parentTitle,
           onClick: () => setIsOpen((prev) => !prev),
           children: [
             activeItem ? activeItem.icon : parentIcon,
             jsxRuntimeExports.jsx("span", {
-              className: styles$h.chevron,
+              className: styles$i.chevron,
               "aria-hidden": true,
               children: jsxRuntimeExports.jsxs("svg", {
                 width: "8",
@@ -176348,20 +176351,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }),
         isOpen && reactDomExports.createPortal(jsxRuntimeExports.jsx("div", {
           ref: menuRef,
-          className: `${minervaTheme.menuFixed} ${styles$h.menu}`,
+          className: `${minervaTheme.menuFixed} ${styles$i.menu}`,
           style: {
             top: menuPos.top,
             left: menuPos.left
           },
           children: items.map((item2) => jsxRuntimeExports.jsxs("button", {
             type: "button",
-            className: `${minervaTheme.menuItem} ${styles$h.menuItem} ${activeTool === item2.id ? minervaTheme.selectLeft : ""}`,
+            className: `${minervaTheme.menuItem} ${styles$i.menuItem} ${activeTool === item2.id ? minervaTheme.selectLeft : ""}`,
             title: item2.title,
             onClick: () => handleSelect(item2.id),
             children: [
               item2.icon,
               jsxRuntimeExports.jsx("span", {
-                className: styles$h.menuItemLabel,
+                className: styles$i.menuItemLabel,
                 children: item2.title
               })
             ]
@@ -177744,7 +177747,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const debugLabel = "_debugLabel_1fd03_64";
   const debugImage = "_debugImage_1fd03_70";
   const debugWaiting = "_debugWaiting_1fd03_76";
-  const styles$g = {
+  const styles$h = {
     errorToast,
     hintBar,
     hintAdd,
@@ -179026,16 +179029,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         sam2Error && activeTool === "magic_wand" && !sam2Session && jsxRuntimeExports.jsx("div", {
-          className: styles$g.errorToast,
+          className: styles$h.errorToast,
           children: sam2Error
         }),
         sam2Session && activeTool === "magic_wand" && jsxRuntimeExports.jsxs("div", {
-          className: styles$g.hintBar,
+          className: styles$h.hintBar,
           children: [
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$g.hintAdd,
+                  className: styles$h.hintAdd,
                   children: "Click"
                 }),
                 " to add"
@@ -179044,7 +179047,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$g.hintRemove,
+                  className: styles$h.hintRemove,
                   children: "Shift+Click"
                 }),
                 " to remove"
@@ -179053,7 +179056,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$g.hintConfirm,
+                  className: styles$h.hintConfirm,
                   children: "Enter"
                 }),
                 " to confirm"
@@ -179062,14 +179065,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsxs("span", {
               children: [
                 jsxRuntimeExports.jsx("strong", {
-                  className: styles$g.hintCancel,
+                  className: styles$h.hintCancel,
                   children: "Esc"
                 }),
                 " to cancel"
               ]
             }),
             jsxRuntimeExports.jsxs("span", {
-              className: styles$g.hintCount,
+              className: styles$h.hintCount,
               children: [
                 "(",
                 sam2Session.points.length,
@@ -179081,18 +179084,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           ]
         }),
         sam2DebugImages && jsxRuntimeExports.jsxs("div", {
-          className: styles$g.debugOverlay,
+          className: styles$h.debugOverlay,
           children: [
             sam2DebugImages.encoded ? jsxRuntimeExports.jsxs("div", {
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$g.debugLabel,
+                  className: styles$h.debugLabel,
                   children: "Encoded (1024\xD71024)"
                 }),
                 jsxRuntimeExports.jsx("img", {
                   src: sam2DebugImages.encoded,
                   alt: "SAM2 encoded",
-                  className: styles$g.debugImage,
+                  className: styles$h.debugImage,
                   title: "Right-click \u2192 Save image as"
                 })
               ]
@@ -179100,18 +179103,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             sam2DebugImages.mask ? jsxRuntimeExports.jsxs("div", {
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$g.debugLabel,
+                  className: styles$h.debugLabel,
                   children: "Mask (256\xD7256)"
                 }),
                 jsxRuntimeExports.jsx("img", {
                   src: sam2DebugImages.mask,
                   alt: "SAM2 mask",
-                  className: styles$g.debugImage,
+                  className: styles$h.debugImage,
                   title: "Right-click \u2192 Save image as"
                 })
               ]
             }) : jsxRuntimeExports.jsx("div", {
-              className: styles$g.debugWaiting,
+              className: styles$h.debugWaiting,
               children: "Mask: waiting for decode\u2026"
             })
           ]
@@ -179196,7 +179199,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const annotationsPanelContent = "_annotationsPanelContent_fxe56_15";
   const layersContainer = "_layersContainer_fxe56_22";
   const annotationsPanelEmbedded = "_annotationsPanelEmbedded_fxe56_30";
-  const styles$f = {
+  const styles$g = {
     annotationsPanel,
     annotationsPanelContent,
     layersContainer,
@@ -179437,13 +179440,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
     return jsxRuntimeExports.jsxs("div", {
-      className: embeddedInScrollParent ? `${styles$f.annotationsPanel} ${styles$f.annotationsPanelEmbedded}` : styles$f.annotationsPanel,
+      className: embeddedInScrollParent ? `${styles$g.annotationsPanel} ${styles$g.annotationsPanelEmbedded}` : styles$g.annotationsPanel,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$f.annotationsPanelContent,
+          className: styles$g.annotationsPanelContent,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$f.layersContainer,
+              className: styles$g.layersContainer,
               children: jsxRuntimeExports.jsx(LayersPanel, {
                 itemListVariant: embeddedInScrollParent ? "markdownEditor" : "default",
                 toolbarSlot: drawingToolbar,
@@ -248854,7 +248857,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const channelGroupDropdownMenu = "_channelGroupDropdownMenu_17hko_466";
   const channelGroupDropdownItem = "_channelGroupDropdownItem_17hko_485";
   const channelGroupDropdownOption = "_channelGroupDropdownOption_17hko_490";
-  const styles$e = {
+  const styles$f = {
     rows,
     compactRow,
     compactRowEditable,
@@ -249326,7 +249329,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           children: "No waypoints yet"
         }) : jsxRuntimeExports.jsx("ul", {
           className: [
-            styles$e.rows,
+            styles$f.rows,
             panel$1.authorPanelBody,
             panel$1.thinScrollbar
           ].join(" "),
@@ -249339,11 +249342,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             const isDropTarget = dropTargetStoryId === storyId;
             return jsxRuntimeExports.jsxs("li", {
               className: [
-                styles$e.compactRow,
-                canEdit ? styles$e.compactRowEditable : "",
+                styles$f.compactRow,
+                canEdit ? styles$f.compactRowEditable : "",
                 isActive ? minervaTheme.selectLeft : "",
-                isDragging ? styles$e.compactRowDragging : "",
-                isDropTarget ? styles$e.compactRowDropTarget : ""
+                isDragging ? styles$f.compactRowDragging : "",
+                isDropTarget ? styles$f.compactRowDropTarget : ""
               ].filter(Boolean).join(" "),
               onDragOver: (e2) => handleDragOverRow(storyId, e2),
               onDragLeave: handleDragLeaveRow,
@@ -249354,7 +249357,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               children: [
                 canEdit ? jsxRuntimeExports.jsx("button", {
                   type: "button",
-                  className: styles$e.dragHandle,
+                  className: styles$f.dragHandle,
                   draggable: true,
                   title: `Drag ${story.title}`,
                   "aria-label": `Drag ${story.title}`,
@@ -249364,59 +249367,59 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }) : null,
                 canEdit ? jsxRuntimeExports.jsx(PanelIconButton, {
                   variant: "row",
-                  className: styles$e.rowOpenDetailButton,
+                  className: styles$f.rowOpenDetailButton,
                   title: "Open waypoint details",
                   onClick: () => openDetailForStoryId(storyId),
                   children: jsxRuntimeExports.jsx(ChevronIcon, {
                     direction: "right"
                   })
                 }) : jsxRuntimeExports.jsx("div", {
-                  className: styles$e.rowChevronSpacer,
+                  className: styles$f.rowChevronSpacer,
                   "aria-hidden": true
                 }),
                 jsxRuntimeExports.jsxs("button", {
                   type: "button",
-                  className: `${minervaTheme.focusRing} ${styles$e.rowMainHit}`,
+                  className: `${minervaTheme.focusRing} ${styles$f.rowMainHit}`,
                   "aria-label": `Select waypoint: ${story.title}`,
                   onClick: () => activateStoryIndex(index2, true),
                   onDoubleClick: () => openDetailForStoryId(storyId),
                   children: [
                     story.thumbnail ? jsxRuntimeExports.jsx("img", {
-                      className: `${minervaTheme.surface} ${styles$e.rowThumbnail}`,
+                      className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
                       src: story.thumbnail,
                       width: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
                       height: WAYPOINT_THUMBNAIL_PIXEL_SIZE,
                       alt: "",
                       "aria-hidden": true
                     }) : jsxRuntimeExports.jsx("div", {
-                      className: `${minervaTheme.surface} ${styles$e.rowThumbnail}`,
+                      className: `${minervaTheme.surface} ${styles$f.rowThumbnail}`,
                       "aria-hidden": true
                     }),
                     jsxRuntimeExports.jsxs("div", {
-                      className: styles$e.rowTextStack,
+                      className: styles$f.rowTextStack,
                       children: [
                         jsxRuntimeExports.jsxs("div", {
-                          className: styles$e.rowTitleRow,
+                          className: styles$f.rowTitleRow,
                           children: [
                             jsxRuntimeExports.jsx("span", {
-                              className: styles$e.rowTitle,
+                              className: styles$f.rowTitle,
                               title: story.title,
                               children: story.title
                             }),
                             jsxRuntimeExports.jsxs("span", {
-                              className: `${minervaTheme.surface} ${styles$e.annotationBadge}`,
+                              className: `${minervaTheme.surface} ${styles$f.annotationBadge}`,
                               title: annotationTitle,
                               children: [
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$e.visuallyHidden,
+                                  className: styles$f.visuallyHidden,
                                   children: annotationTitle
                                 }),
                                 jsxRuntimeExports.jsx(SvgShapes, {
-                                  className: styles$e.annotationIcon,
+                                  className: styles$f.annotationIcon,
                                   "aria-hidden": true
                                 }),
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$e.annotationCount,
+                                  className: styles$f.annotationCount,
                                   "aria-hidden": true,
                                   children: annotationCount2
                                 })
@@ -249425,7 +249428,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           ]
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$e.rowContent,
+                          className: styles$f.rowContent,
                           title: story.content ?? "",
                           children: story.content ?? ""
                         })
@@ -249434,7 +249437,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 jsxRuntimeExports.jsxs("div", {
-                  className: styles$e.rowViewportActions,
+                  className: styles$f.rowViewportActions,
                   children: [
                     canEdit ? jsxRuntimeExports.jsx(PanelIconButton, {
                       variant: "row",
@@ -249457,7 +249460,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           "aria-hidden": true
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$e.visuallyHidden,
+                          className: styles$f.visuallyHidden,
                           children: "Jump to waypoint view"
                         })
                       ]
@@ -249473,7 +249476,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           "aria-hidden": true
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$e.visuallyHidden,
+                          className: styles$f.visuallyHidden,
                           children: "Save waypoint view"
                         })
                       ]
@@ -249525,14 +249528,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         scheduleThumbnailCaptureForStory(detailStoryIndex, true, true, 1100);
       };
       return jsxRuntimeExports.jsxs("div", {
-        className: styles$e.detailView,
+        className: styles$f.detailView,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$e.detailHeader,
+            className: styles$f.detailHeader,
             children: [
               jsxRuntimeExports.jsxs("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$e.backButton}`,
+                className: `${minervaTheme.focusRing} ${styles$f.backButton}`,
                 onClick: () => setDetailStoryId(null),
                 title: "Back to waypoint list",
                 children: [
@@ -249545,7 +249548,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$e.detailTitle,
+                className: styles$f.detailTitle,
                 title: detailStory.title,
                 children: detailStory.title
               })
@@ -249553,24 +249556,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           jsxRuntimeExports.jsx("div", {
             className: [
-              styles$e.detailBody,
+              styles$f.detailBody,
               panel$1.thinScrollbar
             ].join(" "),
             ref: detailBodyRef,
             children: jsxRuntimeExports.jsxs("div", {
-              className: styles$e.detailBodyInner,
+              className: styles$f.detailBodyInner,
               children: [
                 jsxRuntimeExports.jsxs("div", {
-                  className: `${minervaTheme.surface} ${styles$e.detailTitleFieldWrap}`,
+                  className: `${minervaTheme.surface} ${styles$f.detailTitleFieldWrap}`,
                   children: [
                     jsxRuntimeExports.jsx("label", {
-                      className: styles$e.detailTitleLabel,
+                      className: styles$f.detailTitleLabel,
                       htmlFor: detailTitleFieldId,
                       children: "Title"
                     }),
                     jsxRuntimeExports.jsx("input", {
                       id: detailTitleFieldId,
-                      className: `${minervaTheme.input} ${styles$e.detailTitleInput}`,
+                      className: `${minervaTheme.input} ${styles$f.detailTitleInput}`,
                       type: "text",
                       value: detailStory.title ?? "",
                       onChange: (e2) => updateStory(detailStoryIndex, {
@@ -249586,47 +249589,47 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 channelGroups.length > 0 ? jsxRuntimeExports.jsxs("div", {
-                  className: `${minervaTheme.surface} ${styles$e.detailTitleFieldWrap}`,
+                  className: `${minervaTheme.surface} ${styles$f.detailTitleFieldWrap}`,
                   children: [
                     jsxRuntimeExports.jsx("label", {
-                      className: styles$e.detailTitleLabel,
+                      className: styles$f.detailTitleLabel,
                       htmlFor: detailGroupFieldId,
                       children: "Channel group"
                     }),
                     jsxRuntimeExports.jsxs("div", {
-                      className: styles$e.channelGroupDropdown,
+                      className: styles$f.channelGroupDropdown,
                       ref: channelGroupDropdownRef,
                       children: [
                         jsxRuntimeExports.jsxs("button", {
                           type: "button",
                           id: detailGroupFieldId,
-                          className: `${minervaTheme.input} ${minervaTheme.focusRing} ${styles$e.channelGroupDropdownTrigger}`,
+                          className: `${minervaTheme.input} ${minervaTheme.focusRing} ${styles$f.channelGroupDropdownTrigger}`,
                           "aria-haspopup": "listbox",
                           "aria-expanded": channelGroupMenuOpen,
                           disabled: !canEdit,
                           onClick: () => setChannelGroupMenuOpen((open) => !open),
                           children: [
                             jsxRuntimeExports.jsxs("span", {
-                              className: styles$e.channelGroupDropdownTriggerMain,
+                              className: styles$f.channelGroupDropdownTriggerMain,
                               children: [
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$e.channelGroupDropdownTitle,
+                                  className: styles$f.channelGroupDropdownTitle,
                                   children: selectedGroup.name
                                 }),
                                 jsxRuntimeExports.jsx("span", {
-                                  className: styles$e.channelGroupDropdownChannels,
+                                  className: styles$f.channelGroupDropdownChannels,
                                   children: selectedChannelsSubtitle || "\u2014"
                                 })
                               ]
                             }),
                             jsxRuntimeExports.jsx(ChevronIcon, {
                               direction: channelGroupMenuOpen ? "up" : "down",
-                              className: styles$e.channelGroupDropdownChevron
+                              className: styles$f.channelGroupDropdownChevron
                             })
                           ]
                         }),
                         channelGroupMenuOpen ? jsxRuntimeExports.jsx("div", {
-                          className: `${minervaTheme.menu} ${styles$e.channelGroupDropdownMenu}`,
+                          className: `${minervaTheme.menu} ${styles$f.channelGroupDropdownMenu}`,
                           role: "listbox",
                           "aria-label": "Channel groups",
                           children: channelGroups.map((group2) => {
@@ -249634,24 +249637,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             const subtitle2 = names.join(", ");
                             const isSelected = group2.id === selectedGroupUuid;
                             return jsxRuntimeExports.jsx("div", {
-                              className: styles$e.channelGroupDropdownItem,
+                              className: styles$f.channelGroupDropdownItem,
                               children: jsxRuntimeExports.jsxs("button", {
                                 type: "button",
                                 role: "option",
                                 "aria-selected": isSelected,
                                 className: [
                                   minervaTheme.menuItem,
-                                  styles$e.channelGroupDropdownOption,
+                                  styles$f.channelGroupDropdownOption,
                                   isSelected ? minervaTheme.selectLeft : ""
                                 ].filter(Boolean).join(" "),
                                 onClick: () => selectChannelGroupByUuid(group2.id),
                                 children: [
                                   jsxRuntimeExports.jsx("span", {
-                                    className: styles$e.channelGroupDropdownTitle,
+                                    className: styles$f.channelGroupDropdownTitle,
                                     children: group2.name
                                   }),
                                   jsxRuntimeExports.jsx("span", {
-                                    className: styles$e.channelGroupDropdownChannels,
+                                    className: styles$f.channelGroupDropdownChannels,
                                     children: subtitle2 || "\u2014"
                                   })
                                 ]
@@ -249665,29 +249668,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }) : null,
                 jsxRuntimeExports.jsxs("div", {
                   className: [
-                    styles$e.detailCollapsible,
+                    styles$f.detailCollapsible,
                     minervaTheme.surface,
-                    styles$e.detailMarkdownSection,
-                    !detailMarkdownExpanded ? styles$e.detailCollapsibleCollapsed : ""
+                    styles$f.detailMarkdownSection,
+                    !detailMarkdownExpanded ? styles$f.detailCollapsibleCollapsed : ""
                   ].filter(Boolean).join(" "),
                   children: [
                     jsxRuntimeExports.jsxs("button", {
                       type: "button",
-                      className: `${minervaTheme.focusRing} ${styles$e.detailCollapsibleHeader}`,
+                      className: `${minervaTheme.focusRing} ${styles$f.detailCollapsibleHeader}`,
                       "aria-expanded": detailMarkdownExpanded,
                       onClick: () => setDetailMarkdownExpanded((prev) => !prev),
                       children: [
                         jsxRuntimeExports.jsx(ChevronIcon, {
-                          className: styles$e.detailCollapsibleChevron
+                          className: styles$f.detailCollapsibleChevron
                         }),
                         jsxRuntimeExports.jsx("span", {
-                          className: styles$e.detailCollapsibleTitle,
+                          className: styles$f.detailCollapsibleTitle,
                           children: "Markdown"
                         })
                       ]
                     }),
                     detailMarkdownExpanded ? jsxRuntimeExports.jsx("div", {
-                      className: styles$e.detailCollapsibleBody,
+                      className: styles$f.detailCollapsibleBody,
                       children: jsxRuntimeExports.jsx(WaypointContentEditor, {
                         variant: "detail",
                         story: detailStory,
@@ -249698,28 +249701,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }),
                 classTables.length > 0 ? jsxRuntimeExports.jsxs("div", {
                   className: [
-                    styles$e.detailCollapsible,
+                    styles$f.detailCollapsible,
                     minervaTheme.surface,
-                    styles$e.detailClassesSection,
-                    !detailClassesExpanded ? styles$e.detailCollapsibleCollapsed : ""
+                    styles$f.detailClassesSection,
+                    !detailClassesExpanded ? styles$f.detailCollapsibleCollapsed : ""
                   ].filter(Boolean).join(" "),
                   children: [
                     jsxRuntimeExports.jsxs("button", {
                       type: "button",
-                      className: `${minervaTheme.focusRing} ${styles$e.detailCollapsibleHeader}`,
+                      className: `${minervaTheme.focusRing} ${styles$f.detailCollapsibleHeader}`,
                       "aria-expanded": detailClassesExpanded,
                       onClick: () => setDetailClassesExpanded((prev) => !prev),
                       children: [
                         jsxRuntimeExports.jsx(ChevronIcon, {
-                          className: styles$e.detailCollapsibleChevron
+                          className: styles$f.detailCollapsibleChevron
                         }),
                         jsxRuntimeExports.jsxs("span", {
-                          className: styles$e.detailCollapsibleTitle,
+                          className: styles$f.detailCollapsibleTitle,
                           children: [
                             "Classes",
                             " ",
                             jsxRuntimeExports.jsxs("span", {
-                              className: styles$e.detailCollapsibleCount,
+                              className: styles$f.detailCollapsibleCount,
                               children: [
                                 "(",
                                 classTables.length,
@@ -249731,7 +249734,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       ]
                     }),
                     detailClassesExpanded ? jsxRuntimeExports.jsx("div", {
-                      className: styles$e.detailCollapsibleBody,
+                      className: styles$f.detailCollapsibleBody,
                       children: jsxRuntimeExports.jsx(WaypointClassViews, {
                         waypoint: detailStory,
                         featureTables: classTables,
@@ -249742,29 +249745,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }) : null,
                 jsxRuntimeExports.jsxs("div", {
                   className: [
-                    styles$e.detailCollapsible,
+                    styles$f.detailCollapsible,
                     minervaTheme.surface,
-                    styles$e.detailAnnotationsSection,
-                    !detailAnnotationsExpanded ? styles$e.detailCollapsibleCollapsed : ""
+                    styles$f.detailAnnotationsSection,
+                    !detailAnnotationsExpanded ? styles$f.detailCollapsibleCollapsed : ""
                   ].filter(Boolean).join(" "),
                   children: [
                     jsxRuntimeExports.jsxs("button", {
                       type: "button",
-                      className: `${minervaTheme.focusRing} ${styles$e.detailCollapsibleHeader}`,
+                      className: `${minervaTheme.focusRing} ${styles$f.detailCollapsibleHeader}`,
                       "aria-expanded": detailAnnotationsExpanded,
                       title: detailAnnotationText,
                       onClick: () => setDetailAnnotationsExpanded((prev) => !prev),
                       children: [
                         jsxRuntimeExports.jsx(ChevronIcon, {
-                          className: styles$e.detailCollapsibleChevron
+                          className: styles$f.detailCollapsibleChevron
                         }),
                         jsxRuntimeExports.jsxs("span", {
-                          className: styles$e.detailCollapsibleTitle,
+                          className: styles$f.detailCollapsibleTitle,
                           children: [
                             "Annotations",
                             " ",
                             jsxRuntimeExports.jsxs("span", {
-                              className: styles$e.detailCollapsibleCount,
+                              className: styles$f.detailCollapsibleCount,
                               children: [
                                 "(",
                                 detailAnnotationCount,
@@ -249776,13 +249779,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                       ]
                     }),
                     detailAnnotationsExpanded ? jsxRuntimeExports.jsxs("div", {
-                      className: styles$e.detailCollapsibleBody,
+                      className: styles$f.detailCollapsibleBody,
                       children: [
                         detailAnnotationCount > 0 ? jsxRuntimeExports.jsx("div", {
-                          className: styles$e.detailSelectionActions,
+                          className: styles$f.detailSelectionActions,
                           children: jsxRuntimeExports.jsx("button", {
                             type: "button",
-                            className: `${minervaTheme.focusRing} ${styles$e.detailSelectionButton}`,
+                            className: `${minervaTheme.focusRing} ${styles$f.detailSelectionButton}`,
                             title: "Use a waypoint annotation as the spatial selection mask (prefers the selected shape in the layers list)",
                             onClick: () => {
                               const shapeIds = detailStory.shapeIds ?? [];
@@ -249855,7 +249858,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const filterEmpty = "_filterEmpty_1wvsk_240";
   const rootChannelList = "_rootChannelList_1wvsk_247";
   const rootChannelBlock = "_rootChannelBlock_1wvsk_255";
-  const styles$d = {
+  const styles$e = {
     channelActionButton,
     colorLockButtonLocked,
     dropHint,
@@ -249930,11 +249933,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function previewUngroupWhileDragging(row2) {
     const onOver = (ev) => {
       const el2 = document.elementFromPoint(ev.clientX, ev.clientY);
-      const overGroup = el2 instanceof Element && el2.closest(`.${styles$d.groupFolder}`);
-      row2.classList.toggle(styles$d.ungrouping, !overGroup);
+      const overGroup = el2 instanceof Element && el2.closest(`.${styles$e.groupFolder}`);
+      row2.classList.toggle(styles$e.ungrouping, !overGroup);
     };
     const onEnd = () => {
-      row2.classList.remove(styles$d.ungrouping);
+      row2.classList.remove(styles$e.ungrouping);
       document.removeEventListener("dragover", onOver, true);
       document.removeEventListener("dragend", onEnd);
     };
@@ -249948,23 +249951,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fromRowId: props.fromRowId
     };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$d.channelRowWrap,
+      className: styles$e.channelRowWrap,
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$d.dragHandle,
+          className: styles$e.dragHandle,
           draggable: true,
           onDragStart: (e2) => {
             startChannelDrag(e2, payload);
             if (!props.onRemoveFromGroup) return;
-            const row2 = e2.currentTarget.closest(`.${styles$d.channelRowWrap}`);
+            const row2 = e2.currentTarget.closest(`.${styles$e.channelRowWrap}`);
             if (row2 instanceof HTMLElement) previewUngroupWhileDragging(row2);
           },
           onDragEnd: (e2) => {
             if (!props.onRemoveFromGroup) return;
             if (e2.dataTransfer.dropEffect !== "none") return;
             const el2 = document.elementFromPoint(e2.clientX, e2.clientY);
-            const folder = e2.currentTarget.closest(`.${styles$d.groupFolder}`);
+            const folder = e2.currentTarget.closest(`.${styles$e.groupFolder}`);
             if (folder && el2 && folder.contains(el2)) return;
             props.onRemoveFromGroup();
           },
@@ -250042,7 +250045,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$d.channelActionButton,
+          className: styles$e.channelActionButton,
           "aria-label": `More actions for ${channelName2}`,
           "aria-expanded": menu2.open,
           "aria-haspopup": "menu",
@@ -250796,25 +250799,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       };
       return jsxRuntimeExports.jsxs("div", {
         className: [
-          styles$d.groupFolder,
+          styles$e.groupFolder,
           isActive ? minervaTheme.selectLeft : "",
-          isDropTarget ? styles$d.dropTargetActive : ""
+          isDropTarget ? styles$e.dropTargetActive : ""
         ].join(" "),
         ...folderDropProps,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$d.groupFolderHeader,
+            className: styles$e.groupFolderHeader,
             children: [
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$d.groupFolderActivate}`,
+                className: `${minervaTheme.focusRing} ${styles$e.groupFolderActivate}`,
                 "aria-label": `Select group ${group2.name}`,
                 "aria-pressed": isActive,
                 onClick: () => activateGroup(group2.id)
               }),
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$d.groupFolderChevron,
+                className: styles$e.groupFolderChevron,
                 "aria-expanded": expanded,
                 title: expanded ? "Collapse group" : "Expand group",
                 onClick: () => toggleGroupExpanded(group2.id),
@@ -250830,7 +250833,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 onClick: () => toggleGroupMasterVisibility(group2, groupShowAllNext)
               }),
               jsxRuntimeExports.jsx("input", {
-                className: `${minervaTheme.input} ${styles$d.groupFolderName}`,
+                className: `${minervaTheme.input} ${styles$e.groupFolderName}`,
                 type: "text",
                 defaultValue: group2.name,
                 maxLength: 200,
@@ -250852,7 +250855,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 }
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$d.groupFolderTrailing,
+                className: styles$e.groupFolderTrailing,
                 children: [
                   jsxRuntimeExports.jsx(GroupFolderGearMenu, {
                     groupName: group2.name,
@@ -250880,10 +250883,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           }),
           expanded && !rgbGroup ? jsxRuntimeExports.jsxs("div", {
-            className: styles$d.groupFolderBody,
+            className: styles$e.groupFolderBody,
             children: [
               jsxRuntimeExports.jsx("ul", {
-                className: styles$d.groupChildList,
+                className: styles$e.groupChildList,
                 children: group2.channels.map((gc2) => {
                   const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
                   const name2 = (sc2 == null ? void 0 : sc2.name) ?? "Unknown";
@@ -250904,7 +250907,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   const colorLocked = lockedIds.has(gc2.id);
                   const showColorLock = !(sc2 && isMaskChannel(sc2)) && !rgbDisplay;
                   return jsxRuntimeExports.jsx("li", {
-                    className: styles$d.groupChildBlock,
+                    className: styles$e.groupChildBlock,
                     children: jsxRuntimeExports.jsx(DraggableChannelRow, {
                       label: name2,
                       sourceId: gc2.channelId,
@@ -250936,7 +250939,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                           mode: "label",
                           name: name2,
                           title: name2,
-                          className: styles$d.groupChildName
+                          className: styles$e.groupChildName
                         },
                         imageSubtitle,
                         contrast,
@@ -250967,8 +250970,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                             showColorLock ? jsxRuntimeExports.jsx("button", {
                               type: "button",
                               className: [
-                                styles$d.channelActionButton,
-                                colorLocked ? styles$d.colorLockButtonLocked : ""
+                                styles$e.channelActionButton,
+                                colorLocked ? styles$e.colorLockButtonLocked : ""
                               ].join(" "),
                               title: colorLocked ? "Unlock color" : "Lock color",
                               "aria-label": colorLocked ? `Unlock color for ${name2}` : `Lock color for ${name2}`,
@@ -250993,7 +250996,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 })
               }),
               group2.channels.length === 0 ? jsxRuntimeExports.jsx("div", {
-                className: styles$d.dropHint,
+                className: styles$e.dropHint,
                 children: "Drag channels"
               }) : null
             ]
@@ -251092,7 +251095,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         histogramLoading: loadingHistogramSourceIds.includes(sc2.id)
       } : void 0;
       return jsxRuntimeExports.jsx("li", {
-        className: styles$d.rootChannelBlock,
+        className: styles$e.rootChannelBlock,
         children: jsxRuntimeExports.jsx(DraggableChannelRow, {
           label: sc2.name,
           sourceId: sc2.id,
@@ -251151,20 +251154,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           onDrop: handleDropRemoveFromGroup,
           children: [
             channelGroups.length > 0 ? jsxRuntimeExports.jsx("div", {
-              className: styles$d.groupFolders,
+              className: styles$e.groupFolders,
               children: channelGroups.map((group2, i2) => renderGroupFolder(group2, i2))
             }) : null,
             showAllChannelsList ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
               children: [
                 jsxRuntimeExports.jsxs("div", {
-                  className: styles$d.treeSeparator,
+                  className: styles$e.treeSeparator,
                   children: [
                     jsxRuntimeExports.jsx("span", {
-                      className: styles$d.treeSeparatorLabel,
+                      className: styles$e.treeSeparatorLabel,
                       children: "All channels"
                     }),
                     jsxRuntimeExports.jsx("input", {
-                      className: styles$d.channelFilter,
+                      className: styles$e.channelFilter,
                       type: "text",
                       value: channelNameFilter,
                       placeholder: "Search...",
@@ -251178,10 +251181,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   ]
                 }),
                 filteredAllChannels.length === 0 ? jsxRuntimeExports.jsx("div", {
-                  className: styles$d.filterEmpty,
+                  className: styles$e.filterEmpty,
                   children: "No matching channels"
                 }) : jsxRuntimeExports.jsx("ul", {
-                  className: styles$d.rootChannelList,
+                  className: styles$e.rootChannelList,
                   children: filteredAllChannels.map(renderAllChannelsRow)
                 })
               ]
@@ -251201,7 +251204,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               },
               name: {
                 mode: "label",
-                className: styles$d.groupChildName,
+                className: styles$e.groupChildName,
                 name: `${SELECTION_MASK_CHANNEL_KEY}${imageSelectionMask.sourceShapeLabel ? ` (${imageSelectionMask.sourceShapeLabel})` : ""}`
               },
               isMask: true,
@@ -251215,7 +251218,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               fixedColorHex: "ffcc00",
               trailing: jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$d.channelActionButton,
+                className: styles$e.channelActionButton,
                 title: "Clear selection",
                 "aria-label": "Clear selection",
                 onClick: () => clearImageSelectionMask(),
@@ -251277,7 +251280,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const previewNav = "_previewNav_1gyqk_97";
   const previewNavParked = "_previewNavParked_1gyqk_111";
   const viewerRegion = "_viewerRegion_1gyqk_115";
-  const styles$c = {
+  const styles$d = {
     sidebarHost,
     sidebarHostCollapsed,
     panelOuter,
@@ -251324,14 +251327,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       children: jsxRuntimeExports.jsx(SidebarStripSlotProvider, {
         children: jsxRuntimeExports.jsx("div", {
           className: [
-            styles$c.sidebarHost,
-            expanded ? null : styles$c.sidebarHostCollapsed
+            styles$d.sidebarHost,
+            expanded ? null : styles$d.sidebarHostCollapsed
           ].filter(Boolean).join(" "),
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$c.panelOuter,
+            className: styles$d.panelOuter,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: `${styles$c.tabRow} ${minervaTheme.strip}`,
+                className: `${styles$d.tabRow} ${minervaTheme.strip}`,
                 children: [
                   jsxRuntimeExports.jsx(TabBar, {
                     tabs: TAB_ITEMS,
@@ -251340,12 +251343,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                     "aria-label": "Author panels"
                   }),
                   jsxRuntimeExports.jsx(SidebarStripSlot, {
-                    className: styles$c.stripActions
+                    className: styles$d.stripActions
                   })
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$c.panelContent,
+                className: styles$d.panelContent,
                 role: "tabpanel",
                 children: activePanel
               })
@@ -251359,8 +251362,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const { collapsed, children, className: className2 } = props;
     return jsxRuntimeExports.jsx("div", {
       className: [
-        styles$c.viewport,
-        collapsed ? styles$c.viewportCollapsed : null,
+        styles$d.viewport,
+        collapsed ? styles$d.viewportCollapsed : null,
         className2
       ].filter(Boolean).join(" "),
       children
@@ -251369,7 +251372,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function AuthorViewerRegion(props) {
     return jsxRuntimeExports.jsx("div", {
       className: [
-        styles$c.viewerRegion,
+        styles$d.viewerRegion,
         props.className
       ].filter(Boolean).join(" "),
       children: props.children
@@ -251381,10 +251384,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const previewing = hasPreview && !props.previewNavHidden;
     return jsxRuntimeExports.jsxs(AuthorViewport, {
       collapsed: !expanded,
-      className: previewing ? styles$c.viewportPreview : void 0,
+      className: previewing ? styles$d.viewportPreview : void 0,
       children: [
         hasPreview ? jsxRuntimeExports.jsx("div", {
-          className: previewing ? styles$c.previewNav : styles$c.previewNavParked,
+          className: previewing ? styles$d.previewNav : styles$d.previewNavParked,
           children: props.previewNav
         }) : null,
         previewing ? null : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
@@ -251398,8 +251401,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx(PanelIconButton, {
               className: [
-                styles$c.expandControl,
-                expanded ? styles$c.expandControlExpanded : null
+                styles$d.expandControl,
+                expanded ? styles$d.expandControlExpanded : null
               ].filter(Boolean).join(" "),
               title: expanded ? "Collapse panel" : "Expand panel",
               "aria-label": expanded ? "Collapse panel" : "Expand panel",
@@ -255574,7 +255577,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const exportMessage = "_exportMessage_s6bvo_67";
   const exportHint = "_exportHint_s6bvo_75";
   const confirmActions = "_confirmActions_s6bvo_91";
-  const styles$b = {
+  const styles$c = {
     imageExporter,
     exportStatus,
     dismissButton,
@@ -256161,19 +256164,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     const clampedRatio = Math.min(1, Math.max(0, ratio));
     const skippedNote = done && skippedTables.length > 0 ? jsxRuntimeExports.jsxs("div", {
-      className: styles$b.exportMessage,
+      className: styles$c.exportMessage,
       children: [
         "Feature tables not loaded, left out: ",
         skippedTables.join(", ")
       ]
     }) : null;
     return jsxRuntimeExports.jsx("div", {
-      className: styles$b.imageExporter,
+      className: styles$c.imageExporter,
       children: exportError ? jsxRuntimeExports.jsxs("div", {
-        className: styles$b.exportStatus,
+        className: styles$c.exportStatus,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$b.exportMessage,
+            className: styles$c.exportMessage,
             children: [
               "Export failed: ",
               exportError
@@ -256181,53 +256184,53 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           }),
           jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$b.dismissButton,
+            className: styles$c.dismissButton,
             onClick: stopExport,
             children: "Dismiss"
           })
         ]
       }) : mode === "remote-url" ? jsxRuntimeExports.jsxs("div", {
-        className: styles$b.exportStatus,
+        className: styles$c.exportStatus,
         children: [
           jsxRuntimeExports.jsx("div", {
-            className: styles$b.exportMessage,
+            className: styles$c.exportMessage,
             children: done ? "Exported document.json + index.html (remote URLs)" : "Writing document.json + index.html\u2026"
           }),
           skippedNote,
           done ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$b.dismissButton,
+            className: styles$c.dismissButton,
             onClick: stopExport,
             children: "Dismiss"
           }) : null
         ]
       }) : !exportArmed ? jsxRuntimeExports.jsxs("div", {
-        className: styles$b.exportStatus,
+        className: styles$c.exportStatus,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$b.exportMessage,
+            className: styles$c.exportMessage,
             children: [
               jsxRuntimeExports.jsx("div", {
                 children: "Export JPEG OME-TIFF"
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$b.exportHint,
+                className: styles$c.exportHint,
                 children: "Brightfield: RGB. Fluorescence: cube-root."
               })
             ]
           }),
           jsxRuntimeExports.jsxs("div", {
-            className: styles$b.confirmActions,
+            className: styles$c.confirmActions,
             children: [
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$b.dismissButton,
+                className: styles$c.dismissButton,
                 onClick: armExport,
                 children: "Start export"
               }),
               canUpdateDocumentOnly ? jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$b.dismissButton,
+                className: styles$c.dismissButton,
                 onClick: () => {
                   var _a2;
                   void ((_a2 = props.onDocumentOnlyUpdate) == null ? void 0 : _a2.call(props).catch((e2) => {
@@ -256239,7 +256242,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
               }) : null,
               jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$b.dismissButton,
+                className: styles$c.dismissButton,
                 onClick: stopExport,
                 children: "Cancel"
               })
@@ -256247,12 +256250,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           })
         ]
       }) : jsxRuntimeExports.jsxs("div", {
-        className: styles$b.exportStatus,
+        className: styles$c.exportStatus,
         children: [
           jsxRuntimeExports.jsxs("div", {
             className: [
-              styles$b.progressBar,
-              done ? styles$b.progressBarDone : null
+              styles$c.progressBar,
+              done ? styles$c.progressBarDone : null
             ].filter(Boolean).join(" "),
             style: {
               "--progress-ratio": clampedRatio
@@ -256271,13 +256274,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           }),
           etaLabel ? jsxRuntimeExports.jsx("div", {
-            className: styles$b.etaLine,
+            className: styles$c.etaLine,
             children: etaLabel
           }) : null,
           skippedNote,
           done ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$b.dismissButton,
+            className: styles$c.dismissButton,
             onClick: stopExport,
             children: "Dismiss"
           }) : null
@@ -256285,6 +256288,116 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })
     });
   };
+  const SvgMinervaLogo = (props) => reactExports.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg",
+    viewBox: "0 0 720 162",
+    width: "1em",
+    height: "1em",
+    ...props
+  }, reactExports.createElement("g", {
+    fill: "currentColor"
+  }, reactExports.createElement("polygon", {
+    points: "178.39,125.26 197.56,27.3 228.84,98.11 261.23,27.3 278.46,125.26 264.36,125.26 255.57,70.26 228.6,129.44 202.4,70.2 192.61,125.26"
+  }), reactExports.createElement("rect", {
+    x: 293.46,
+    y: 34.15,
+    width: 13.75,
+    height: 91.11
+  }), reactExports.createElement("polygon", {
+    points: "327.1,125.26 327.1,27.95 388.31,96.67 388.31,34.15 402.06,34.15 402.06,130.8 340.85,62.24 340.85,125.26"
+  }), reactExports.createElement("polygon", {
+    points: "476.7,47.07 434.41,47.07 434.41,71.91 465.87,71.91 465.87,84.84 434.41,84.84 434.41,112.33 476.7,112.33 476.7,125.26 420.66,125.26 420.66,34.15 476.7,34.15"
+  }), reactExports.createElement("path", {
+    d: "M534.69,86.43l28.2,38.83h-16.82l-26.02-37.29h-12.55v37.29h-13.75V34.15h26.18c12.04,0,20.73,2.26,26.08,6.79 c5.9,5.03,8.85,11.68,8.85,19.94c0,6.45-1.85,12-5.55,16.64C545.63,82.16,540.75,85.13,534.69,86.43 M507.51,75.99h14.44 c13.02,0,19.53-4.98,19.53-14.93c0-9.32-6.33-13.98-19-13.98h-14.97V75.99z"
+  }), reactExports.createElement("polygon", {
+    points: "574.71,34.15 599.9,97.29 625.45,34.15 640.5,34.15 599.61,132.1 559.66,34.15"
+  }), reactExports.createElement("path", {
+    d: "M687.86,103.13h-39l-10.15,22.13H623.9l45.08-96.83l43.49,96.83h-15.05L687.86,103.13z M682.26,90.21 l-13.51-30.98l-14.16,30.98H682.26z"
+  })), reactExports.createElement("polygon", {
+    fill: "#00A5DF",
+    points: "84.9,125.15 74.67,101.74 61.02,109.33 54.73,141.49 66.91,150.34 71.24,125.99 84.9,156.83 98.55,125.99 102.88,150.34 115.07,141.49 108.77,109.33 95.12,101.74"
+  }), reactExports.createElement("polygon", {
+    fill: "#00A5DF",
+    points: "98.18,94.75 105.77,94 103.52,82.52"
+  }), reactExports.createElement("polygon", {
+    fill: "#00A5DF",
+    points: "64.02,94 71.62,94.75 66.27,82.52"
+  }), reactExports.createElement("polygon", {
+    fill: "#963CBD",
+    points: "161.32,101.3 136.22,78.79 160.71,82.19 156.07,67.87 123.52,63.92 112.09,74.55 131.19,91.51 105.77,94 108.77,109.33 137.41,125.25 149.6,116.4 127.78,104.76"
+  }), reactExports.createElement("polygon", {
+    fill: "#963CBD",
+    points: "95.12,101.74 98.18,94.75 84.9,96.05"
+  }), reactExports.createElement("polygon", {
+    fill: "#963CBD",
+    points: "106.39,69.49 108.02,62.04 96.41,60.63"
+  }), reactExports.createElement("polygon", {
+    fill: "#004EA8",
+    points: "98.18,94.75 95.12,101.74 108.77,109.33 105.77,94"
+  }), reactExports.createElement("polygon", {
+    fill: "#93C90F",
+    points: "113.51,37.09 108.02,62.04 123.52,63.92 147.52,41.6 142.87,27.28 125.05,44.43 132.13,11.46 102.96,28.38 113.77,6.13 98.71,6.13 84.9,35.85 91.48,50.01"
+  }), reactExports.createElement("polygon", {
+    fill: "#93C90F",
+    points: "73.39,60.63 84.9,53.87 78.32,50.01"
+  }), reactExports.createElement("polygon", {
+    fill: "#93C90F",
+    points: "103.52,82.52 112.09,74.55 106.39,69.49"
+  }), reactExports.createElement("polygon", {
+    fill: "#007749",
+    points: "106.39,69.49 112.09,74.55 123.52,63.92 108.02,62.04"
+  }), reactExports.createElement("polygon", {
+    fill: "#D00070",
+    points: "91.48,50.01 84.9,53.87 96.41,60.63"
+  }), reactExports.createElement("polygon", {
+    fill: "#D00070",
+    points: "63.41,69.49 57.7,74.55 66.27,82.52"
+  }), reactExports.createElement("polygon", {
+    fill: "#D00070",
+    points: "56.28,37.09 78.32,50.01 84.9,35.85 71.09,6.13 56.03,6.13 66.83,28.38 37.66,11.46 44.74,44.43 26.92,27.28 22.27,41.6 46.27,63.92 61.77,62.04"
+  }), reactExports.createElement("polygon", {
+    fill: "#890C58",
+    points: "84.9,53.87 91.48,50.01 84.9,35.85 78.32,50.01"
+  }), reactExports.createElement("polygon", {
+    fill: "#FF6720",
+    points: "71.62,94.75 74.67,101.74 84.9,96.05"
+  }), reactExports.createElement("polygon", {
+    fill: "#FF6720",
+    points: "73.39,60.63 61.77,62.04 63.41,69.49"
+  }), reactExports.createElement("polygon", {
+    fill: "#FF6720",
+    points: "38.6,91.51 57.7,74.55 46.27,63.92 13.69,67.87 9.08,82.19 33.58,78.79 8.47,101.3 42.02,104.76 20.2,116.4 32.38,125.25 61.02,109.33 64.02,94"
+  }), reactExports.createElement("polygon", {
+    fill: "#00778B",
+    points: "71.62,94.75 64.02,94 61.02,109.33 74.67,101.74"
+  }), reactExports.createElement("polygon", {
+    fill: "#AB2328",
+    points: "63.41,69.49 61.77,62.04 46.27,63.92 57.7,74.55"
+  }));
+  const badge = "_badge_7794a_1";
+  const logo = "_logo_7794a_23";
+  const styles$b = {
+    badge,
+    logo
+  };
+  function MadeWithMinerva() {
+    return jsxRuntimeExports.jsxs("a", {
+      className: styles$b.badge,
+      href: "https://minerva.im",
+      target: "_blank",
+      rel: "noopener noreferrer",
+      "aria-label": "Made with Minerva",
+      children: [
+        jsxRuntimeExports.jsx("span", {
+          children: "Made with"
+        }),
+        jsxRuntimeExports.jsx(SvgMinervaLogo, {
+          className: styles$b.logo,
+          "aria-hidden": true
+        })
+      ]
+    });
+  }
   const changelog = "https://github.com/remarkjs/react-markdown/blob/main/changelog.md";
   const emptyPlugins = [];
   const emptyRemarkRehypeOptions = {
@@ -257948,11 +258061,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   showStoryName: false
                 }) : void 0,
                 previewNavHidden: hideNavPane,
-                viewer: jsxRuntimeExports.jsx(ChannelPanel, {
+                viewer: jsxRuntimeExports.jsxs(ChannelPanel, {
                   hiddenChannel: !presenting && props.hiddenChannel,
                   noLoader: props.noLoader,
                   images: props.viewerImages,
-                  children: props.viewer
+                  children: [
+                    props.viewer,
+                    presenting ? jsxRuntimeExports.jsx(MadeWithMinerva, {}) : null
+                  ]
                 })
               })
             ]
@@ -259563,8 +259679,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-15T13:36:19.760Z";
-    const sha = "dc1ddbee3556c38766f8195cc15f5dcb83018bfe";
+    const iso = "2026-10-20T17:48:49.875Z";
+    const sha = "5af23f53fc7915269729bf0451042163075b5139";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
