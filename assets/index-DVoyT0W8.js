@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BbAIooqc.js","./pako.esm-KbdoS3Oq.js","./lerc-utaGHK1l.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CC7ByShZ.js","./pako.esm-KbdoS3Oq.js","./lerc-DNvtwgve.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18508,7 +18508,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "5af23f53fc7915269729bf0451042163075b5139"
+    "VITE_APP_GIT_SHA": "0d1ba6a344e0ccac2227d16c111a21196748d0c9"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79231,26 +79231,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-_-cOqhps.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BSanrA3-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CUFVdS5Q.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Be50yXbF.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BIQYf1Zt.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-D4QQfxjy.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BbAIooqc.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-C_Zw1VI9.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-utaGHK1l.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-CC7ByShZ.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-Cy5lEi8H.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DNvtwgve.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-vZMBVmKj.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DjwXG5ie.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-4DM99-jd.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-bMzW64Hn.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -258028,7 +258028,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const hideNavPane = usePresentationNavHidden();
     const exporting = props.ioState === "EXPORTING";
     const folderPrompt2 = props.exportFolderPrompt;
-    const overlayOpen = exporting || !!folderPrompt2;
+    const sourcePrompt = props.exportSourcePrompt;
+    const overlayOpen = exporting || !!folderPrompt2 || !!sourcePrompt;
     const exporterProps = {
       stopExport: props.stopExport,
       dicomIndexList: props.dicomIndexList,
@@ -258039,7 +258040,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     return jsxRuntimeExports.jsxs("div", {
       className: styles$4.modeViewport,
-      "data-mode": presenting ? "presenting" : exporting ? "exporting" : folderPrompt2 ? "export-dest" : "author",
+      "data-mode": presenting ? "presenting" : exporting ? "exporting" : folderPrompt2 || sourcePrompt ? "export-dest" : "author",
       children: [
         jsxRuntimeExports.jsx("div", {
           className: [
@@ -258074,7 +258075,45 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ]
           })
         }),
-        folderPrompt2 ? jsxRuntimeExports.jsx("div", {
+        sourcePrompt ? jsxRuntimeExports.jsx("div", {
+          className: styles$4.exportOverlay,
+          children: jsxRuntimeExports.jsxs("div", {
+            className: styles$4.folderPrompt,
+            role: "dialog",
+            "aria-modal": "true",
+            children: [
+              jsxRuntimeExports.jsx("div", {
+                className: styles$4.folderPromptTitle,
+                children: "Export story"
+              }),
+              jsxRuntimeExports.jsx("div", {
+                className: styles$4.folderPromptBody,
+                children: "The images are read from remote URLs. Link to them, or save a compressed OME-TIFF copy in the story folder?"
+              }),
+              jsxRuntimeExports.jsxs("div", {
+                className: styles$4.folderPromptActions,
+                children: [
+                  jsxRuntimeExports.jsx("button", {
+                    type: "button",
+                    className: styles$4.folderPromptPrimary,
+                    onClick: sourcePrompt.onLinkRemote,
+                    children: "Link remote images"
+                  }),
+                  jsxRuntimeExports.jsx("button", {
+                    type: "button",
+                    onClick: sourcePrompt.onSaveOmeTiff,
+                    children: "Save OME-TIFF copy"
+                  }),
+                  jsxRuntimeExports.jsx("button", {
+                    type: "button",
+                    onClick: sourcePrompt.onCancel,
+                    children: "Cancel"
+                  })
+                ]
+              })
+            ]
+          })
+        }) : folderPrompt2 ? jsxRuntimeExports.jsx("div", {
           className: styles$4.exportOverlay,
           children: jsxRuntimeExports.jsxs("div", {
             className: styles$4.folderPrompt,
@@ -259679,8 +259718,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-20T17:48:49.875Z";
-    const sha = "5af23f53fc7915269729bf0451042163075b5139";
+    const iso = "2026-10-20T18:40:13.288Z";
+    const sha = "0d1ba6a344e0ccac2227d16c111a21196748d0c9";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -261981,6 +262020,7 @@ uniform classStyleUniforms {
     const [viewerRemountKey, setViewerRemountKey] = reactExports.useState(0);
     const [directory_handle, setDirectoryHandle] = reactExports.useState(null);
     const [exportFolderPrompt, setExportFolderPrompt] = reactExports.useState(null);
+    const [exportSourcePrompt, setExportSourcePrompt] = reactExports.useState(false);
     const [presenting, setPresenting] = reactExports.useState(false);
     const beginExportToFolder = async (mode, dirHandle) => {
       const doc = useDocumentStore.getState();
@@ -263228,6 +263268,17 @@ uniform classStyleUniforms {
           })();
         },
         onCancel: () => setExportFolderPrompt(null)
+      } : null,
+      exportSourcePrompt: exportSourcePrompt ? {
+        onLinkRemote: () => {
+          setExportSourcePrompt(false);
+          void startExport("remote-url");
+        },
+        onSaveOmeTiff: () => {
+          setExportSourcePrompt(false);
+          void startExport("jpeg-ome-tiff");
+        },
+        onCancel: () => setExportSourcePrompt(false)
       } : null
     };
     const [previewImages, setPreviewImages] = reactExports.useState(null);
@@ -263556,7 +263607,15 @@ uniform classStyleUniforms {
             }),
             !presenting ? jsxRuntimeExports.jsx(StoryTitleBar, {
               onReturnToLibrary: returnToLibrary,
-              onExport: () => void startExport(canExportWithRemoteUrls(images) ? "remote-url" : "jpeg-ome-tiff"),
+              onExport: () => {
+                if (!canExportWithRemoteUrls(images)) {
+                  void startExport("jpeg-ome-tiff");
+                } else if (omeLoaderEntries.length > 0 || dicomIndexList.length > 0) {
+                  setExportSourcePrompt(true);
+                } else {
+                  void startExport("remote-url");
+                }
+              },
               onEnterPlaybackPreview: enterPlaybackPreview,
               playbackPreviewDisabled: _waypoints.length === 0
             }) : null,
