@@ -573,6 +573,8 @@ const Content = (props: Props) => {
     mode: StoryExportMode;
     root: FileSystemDirectoryHandle;
   } | null>(null);
+  /** Remote OME-TIFFs can be linked as is, or saved as a local OME-TIFF copy. */
+  const [exportSourcePrompt, setExportSourcePrompt] = useState(false);
   const [presenting, setPresenting] = useState(false);
 
   const beginExportToFolder = async (
@@ -2087,6 +2089,19 @@ const Content = (props: Props) => {
           onCancel: () => setExportFolderPrompt(null),
         }
       : null,
+    exportSourcePrompt: exportSourcePrompt
+      ? {
+          onLinkRemote: () => {
+            setExportSourcePrompt(false);
+            void startExport("remote-url");
+          },
+          onSaveOmeTiff: () => {
+            setExportSourcePrompt(false);
+            void startExport("jpeg-ome-tiff");
+          },
+          onCancel: () => setExportSourcePrompt(false),
+        }
+      : null,
   };
 
   // Story preview shows export colors for ungrouped channels on the same Deck.
@@ -2474,13 +2489,18 @@ const Content = (props: Props) => {
             {!presenting ? (
               <StoryTitleBar
                 onReturnToLibrary={returnToLibrary}
-                onExport={() =>
-                  void startExport(
-                    canExportWithRemoteUrls(images)
-                      ? "remote-url"
-                      : "jpeg-ome-tiff",
-                  )
-                }
+                onExport={() => {
+                  if (!canExportWithRemoteUrls(images)) {
+                    void startExport("jpeg-ome-tiff");
+                  } else if (
+                    omeLoaderEntries.length > 0 ||
+                    dicomIndexList.length > 0
+                  ) {
+                    setExportSourcePrompt(true);
+                  } else {
+                    void startExport("remote-url");
+                  }
+                }}
                 onEnterPlaybackPreview={enterPlaybackPreview}
                 playbackPreviewDisabled={_waypoints.length === 0}
               />
