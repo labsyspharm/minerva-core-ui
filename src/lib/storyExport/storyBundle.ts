@@ -1,3 +1,4 @@
+import minervaMarkSvg from "@/assets/minerva-mark.svg?raw";
 import { featureTableHandleKey } from "@/lib/featureTable";
 import {
   exportFeatureTableParquet,
@@ -23,6 +24,11 @@ import { routerBasepath } from "@/router/appRouter";
 import { version as MINERVA_VERSION } from "../../../package.json";
 
 const LOCAL_PLAYER_DIR = "bundle";
+
+/** Inlined so the story's index.html needs no extra file beside it. */
+const FAVICON_HREF = `data:image/svg+xml,${encodeURIComponent(
+  minervaMarkSvg.replace(/\s*\n\s*/g, ""),
+)}`;
 
 /**
  * PR previews build with `VITE_STORY_BUNDLE_URL` and ship the story player next
@@ -141,6 +147,7 @@ function storyIndexHtml(title?: string, version = MINERVA_VERSION): string {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${safeTitle}</title>
+    <link rel="icon" type="image/svg+xml" href="${FAVICON_HREF}" />
     <link rel="stylesheet" href="${css}" />
     <style>
       /* Hex literal (no custom properties yet): matches --minerva-paper before player CSS loads. */
