@@ -28,7 +28,6 @@ import {
   DEFAULT_MASK_VISUALIZATION,
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
-import { CONTOUR_SMOOTHING_STEPS } from "@/lib/imaging/contourExtension";
 import {
   contourSmoothingStepsFor,
   withContourLayers,
@@ -525,11 +524,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     const planeSets = loaderList
       .filter((item) => item.sourceImageId && imageIds.has(item.sourceImageId))
       .map((item) => item.loader.data);
-    setContourSmoothingSteps(
-      planeSets.length > 0
-        ? contourSmoothingStepsFor(planeSets)
-        : CONTOUR_SMOOTHING_STEPS,
-    );
+    setContourSmoothingSteps(contourSmoothingStepsFor(planeSets));
   }, [contourChannelIds, images, loaderList, setContourSmoothingSteps]);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
@@ -1085,10 +1080,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
   ]);
 
   const clippedImageLayers = useMemo(() => {
-    const mask =
-      selectionMaskActive && imageSelectionMask != null
-        ? { extension: maskExtension, maskId: IMAGE_SELECTION_MASK_LAYER_ID }
-        : undefined;
+    const mask = selectionMaskActive
+      ? { extension: maskExtension, maskId: IMAGE_SELECTION_MASK_LAYER_ID }
+      : undefined;
     return imageLayers.flatMap((layer) =>
       withContourLayers(layer, {
         contourChannelIds,
@@ -1103,7 +1097,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     contourLevels,
     contourSmoothing,
     selectionMaskActive,
-    imageSelectionMask,
     maskExtension,
   ]);
 

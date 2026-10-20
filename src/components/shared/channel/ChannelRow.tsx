@@ -451,9 +451,6 @@ function ContourControls() {
   const smoothing = useAppStore((s) => s.contourSmoothing);
   const setContourSmoothing = useAppStore((s) => s.setContourSmoothing);
   const smoothingSteps = useAppStore((s) => s.contourSmoothingSteps);
-  const smoothingValue = smoothingSteps.includes(smoothing)
-    ? smoothing
-    : (smoothingSteps[smoothingSteps.length - 1] ?? smoothing);
   return (
     <>
       <MenuStepper
@@ -471,7 +468,7 @@ function ContourControls() {
         decrease="Less contour smoothing"
         increase="More contour smoothing"
         steps={smoothingSteps}
-        value={smoothingValue}
+        value={smoothing}
         onChange={setContourSmoothing}
       />
     </>

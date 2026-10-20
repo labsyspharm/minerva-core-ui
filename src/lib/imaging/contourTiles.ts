@@ -394,7 +394,6 @@ export function withContourLayers(
     colors: keep(props.colors),
     contrastLimits: keep(props.contrastLimits),
     channelsVisible: keep(props.channelsVisible),
-    sourceChannelIds: keep(props.sourceChannelIds),
     renderSubLayers: renderContourSubLayers,
     contourLevels: opts.levels,
     pickable: false,
