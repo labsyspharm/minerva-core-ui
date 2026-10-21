@@ -18,6 +18,12 @@ export function importFileKind(name: string): ImportFileKind {
   );
 }
 
+/** True while the drag carries files from outside the page. */
+export function dragHasFiles(e: DragEvent): boolean {
+  const types = e.dataTransfer?.types;
+  return types != null && Array.from(types).includes("Files");
+}
+
 /** One picker filter for all `kinds`, so every accepted file shows at once. */
 export function importFilePickerOptions(kinds: readonly ImportFileKind[]): {
   description: string;

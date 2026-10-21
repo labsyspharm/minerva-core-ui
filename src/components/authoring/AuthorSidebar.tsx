@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import {
   type AuthorChannelNav,
@@ -13,6 +13,7 @@ import {
 } from "@/components/shared/panel/CompactHeader";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import { TabBar } from "@/components/shared/TabBar";
+import { dragHasFiles } from "@/lib/imaging/importFileKind";
 import { useAppStore } from "@/lib/stores/appStore";
 import styles from "./AuthorSidebar.module.css";
 
@@ -42,6 +43,22 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
     useAppStore.getState().editWaypointOnOpen ? "story" : "images",
   );
   const { expanded } = props;
+
+  // The Images panel takes file drops; bring it up when one enters the window.
+  useEffect(() => {
+    if (activeTab === "images") return;
+    const onFileDrag = (e: DragEvent) => {
+      if (!dragHasFiles(e)) return;
+      // Keep the browser from opening a file dropped before the panel mounts.
+      e.preventDefault();
+      setActiveTab("images");
+    };
+    const types = ["dragenter", "dragover", "drop"] as const;
+    for (const t of types) window.addEventListener(t, onFileDrag, true);
+    return () => {
+      for (const t of types) window.removeEventListener(t, onFileDrag, true);
+    };
+  }, [activeTab]);
 
   const channelNav = useMemo<AuthorChannelNav>(
     () => ({

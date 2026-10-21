@@ -37,6 +37,7 @@ import {
 } from "@/lib/imaging/filesystem";
 import { clampImageOpacity } from "@/lib/imaging/imageOpacity";
 import {
+  dragHasFiles,
   type ImportFileKind,
   importFileKind,
 } from "@/lib/imaging/importFileKind";
@@ -289,11 +290,6 @@ function pendingLabel(pending: PendingSource): string {
   return pending.url;
 }
 
-function dragHasFiles(e: DragEvent): boolean {
-  const types = e.dataTransfer?.types;
-  return types != null && Array.from(types).includes("Files");
-}
-
 type PointTarget = {
   imageId: string;
   mode: "locate" | "replace";
@@ -481,6 +477,8 @@ const Upload = (props: UploadProps) => {
         e.dataTransfer.dropEffect = disabled ? "none" : "copy";
       }
       if (disabled) return;
+      // A drag that began before mount (another tab) never sent us dragenter.
+      depth = Math.max(depth, 1);
       window.clearTimeout(hideTimer);
       hideTimer = window.setTimeout(end, 1000);
       setDragging(true);
