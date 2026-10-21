@@ -13,6 +13,7 @@ import {
 } from "@/components/shared/panel/CompactHeader";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import { TabBar } from "@/components/shared/TabBar";
+import { useAppStore } from "@/lib/stores/appStore";
 import styles from "./AuthorSidebar.module.css";
 
 type AuthorTab = "images" | "channels" | "story";
@@ -36,7 +37,10 @@ export type AuthorSidebarProps = {
 };
 
 export function AuthorSidebar(props: AuthorSidebarProps) {
-  const [activeTab, setActiveTab] = useState<AuthorTab>("images");
+  // From the player's "Edit this story", start where that waypoint is edited.
+  const [activeTab, setActiveTab] = useState<AuthorTab>(() =>
+    useAppStore.getState().editWaypointOnOpen ? "story" : "images",
+  );
   const { expanded } = props;
 
   const channelNav = useMemo<AuthorChannelNav>(
