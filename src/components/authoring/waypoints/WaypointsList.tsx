@@ -719,12 +719,12 @@ const WaypointsList = (props: WaypointsListProps) => {
                   </PanelIconButton>
                   <PanelIconButton
                     variant="row"
-                    title="Save waypoint view to story and download story.json"
+                    title="Update viewport"
                     onClick={(event) => handleOverwriteView(index, event)}
                   >
                     <OverwriteViewIcon width={14} height={14} aria-hidden />
                     <span className={styles.visuallyHidden}>
-                      Save waypoint view
+                      Update viewport
                     </span>
                   </PanelIconButton>
                 </div>
