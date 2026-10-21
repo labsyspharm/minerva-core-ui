@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-D5psz23z.js","./pako.esm-KbdoS3Oq.js","./lerc-Bc_6SsNg.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BgHaPyik.js","./pako.esm-KbdoS3Oq.js","./lerc-Do3-QAw7.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18505,7 +18505,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "16640de91978ae8684769c219e5eb5b729caf98c"
+    "VITE_APP_GIT_SHA": "66d36987a04174f40db3f013ce04412157363c97"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79228,26 +79228,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-_X6-qL80.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DXKlHUcV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BSuWa6Be.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Buw-ytzg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-tYPqmwnN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CZPE0waH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-D5psz23z.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DRbGkaD-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Bc_6SsNg.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BgHaPyik.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CcCHMN_Z.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Do3-QAw7.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Dg1U6xhK.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CICrHna2.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-D7mpfPzs.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-3fLJ1j3J.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -89889,6 +89889,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     hiddenLegendClasses: {},
     targetWaypointCamera: null,
     authoringWaypointEditorOpen: false,
+    editWaypointOnOpen: null,
     layersPanelSelectedShapeIds: [],
     layersPanelSelectedGroupId: null,
     layersPanelSelectionFlash: null,
@@ -90807,6 +90808,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           dragState: overlayInitialState.dragState
         });
       }
+    },
+    setEditWaypointOnOpen: (waypointId) => {
+      set2({
+        editWaypointOnOpen: waypointId
+      });
     },
     setAuthoringWaypointShapesIndex: (index2) => {
       set2({
@@ -248930,7 +248936,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
     const imageWidth = frame2.pixelWidth;
     const imageHeight = frame2.pixelHeight;
-    const { activeStoryIndex, setActiveStory, showOnlyChannelGroup, addStory, updateStory, reorderStories, importWaypointShapes, persistImportedShapesToStory, setTargetWaypointCamera, captureSquareViewportThumbnail, removeStory, setShowSquareViewportOverlay, setAuthoringWaypointEditorOpen, setAuthoringWaypointShapesIndex, handleToolChange, setImageSelectionMaskFromWaypoint, layersPanelSelectedShapeIds } = useAppStore();
+    const { activeStoryIndex, setActiveStory, showOnlyChannelGroup, addStory, updateStory, reorderStories, importWaypointShapes, persistImportedShapesToStory, setTargetWaypointCamera, captureSquareViewportThumbnail, removeStory, setShowSquareViewportOverlay, setAuthoringWaypointEditorOpen, setAuthoringWaypointShapesIndex, handleToolChange, setImageSelectionMaskFromWaypoint, layersPanelSelectedShapeIds, editWaypointOnOpen, setEditWaypointOnOpen } = useAppStore();
     const previousDetailStoryIdRef = reactExports.useRef(null);
     const detailBodyRef = reactExports.useRef(null);
     const detailTitleFieldId = reactExports.useId();
@@ -249083,6 +249089,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }
         if (overlayFlashTimeoutRef.current !== null) {
           window.clearTimeout(overlayFlashTimeoutRef.current);
+          useAppStore.getState().setShowSquareViewportOverlay(false);
         }
         const p2 = previousImportStoryIndexRef.current;
         if (p2 !== null) {
@@ -249202,7 +249209,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         saveCurrentViewToStory(index2, "scheduleThumbnail.full");
       }, delayMs);
     };
-    const activateStoryIndex = (index2, shouldCaptureThumbnail = false) => {
+    const showStoryIndex = reactExports.useCallback((index2) => {
       const priorActive = useAppStore.getState().activeStoryIndex;
       if (priorActive !== null && priorActive !== index2 && pendingThumbnailCaptureTimeoutRef.current !== null) {
         window.clearTimeout(pendingThumbnailCaptureTimeoutRef.current);
@@ -249215,15 +249222,25 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const auth = useAppStore.getState().waypointAuthoring.get(storyForNav.id);
         setTargetWaypointCamera(waypointToConfigWaypoint(storyForNav, auth));
       }
+      return storyForNav;
+    }, [
+      applyStoryChannelGroup,
+      imageHeight,
+      imageWidth,
+      setActiveStory,
+      setTargetWaypointCamera
+    ]);
+    const activateStoryIndex = (index2, shouldCaptureThumbnail = false) => {
+      const storyForNav = showStoryIndex(index2);
       if (shouldCaptureThumbnail && !(storyForNav == null ? void 0 : storyForNav.thumbnail)) {
         scheduleThumbnailCaptureForStory(index2, false, true, 1100);
       }
     };
-    const openDetailForStoryId = (storyId) => {
+    const openDetailForStoryId = reactExports.useCallback((storyId) => {
       if (!canEdit) return;
       const index2 = waypoints.findIndex((s2) => s2.id === storyId);
       if (index2 === -1) return;
-      activateStoryIndex(index2);
+      showStoryIndex(index2);
       setDetailStoryId(storyId);
       requestAnimationFrame(() => {
         var _a3;
@@ -249232,7 +249249,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           behavior: "auto"
         });
       });
-    };
+    }, [
+      canEdit,
+      showStoryIndex,
+      waypoints
+    ]);
+    reactExports.useEffect(() => {
+      if (!editWaypointOnOpen || imageWidth <= 0 || imageHeight <= 0) return;
+      if (!waypoints.some((s2) => s2.id === editWaypointOnOpen)) return;
+      setEditWaypointOnOpen(null);
+      openDetailForStoryId(editWaypointOnOpen);
+    }, [
+      editWaypointOnOpen,
+      imageHeight,
+      imageWidth,
+      openDetailForStoryId,
+      setEditWaypointOnOpen,
+      waypoints
+    ]);
     const handleOverwriteView = (index2, event) => {
       event.stopPropagation();
       event.preventDefault();
@@ -251311,7 +251345,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     label: TAB_LABELS[id2]
   }));
   function AuthorSidebar(props) {
-    const [activeTab, setActiveTab] = reactExports.useState("images");
+    const [activeTab, setActiveTab] = reactExports.useState(() => useAppStore.getState().editWaypointOnOpen ? "story" : "images");
     const { expanded } = props;
     const channelNav = reactExports.useMemo(() => ({
       ensureChannelHistograms: props.ensureChannelHistograms
@@ -259288,8 +259322,18 @@ uniform classStyleUniforms {
   }
   const INDEX_TEX_CACHE_MAX = 4;
   const PALETTE_TEX_CACHE_MAX = 64;
-  const indexTexCache = /* @__PURE__ */ new Map();
-  const paletteTexCache = /* @__PURE__ */ new Map();
+  const texCachesByDevice = /* @__PURE__ */ new WeakMap();
+  function texCachesFor(device) {
+    let caches = texCachesByDevice.get(device);
+    if (!caches) {
+      caches = {
+        index: /* @__PURE__ */ new Map(),
+        palette: /* @__PURE__ */ new Map()
+      };
+      texCachesByDevice.set(device, caches);
+    }
+    return caches;
+  }
   function rememberTex(cache2, max2, key2, tex) {
     var _a2, _b2;
     const hit = cache2.get(key2);
@@ -259417,6 +259461,7 @@ uniform classStyleUniforms {
       const key2 = styleKey(style2);
       if (this.state.classStyleKey === key2 && this.state.classIndexTexture) return;
       const device = this.context.device;
+      const { index: indexTexCache, palette: paletteTexCache } = texCachesFor(device);
       const indexKey = style2 ? `i:${style2.indexRev}:${style2.width}x${style2.height}` : "";
       const paletteKey = style2 ? `p:${style2.rev}` : "";
       let index2 = indexTexCache.get(indexKey);
@@ -259718,8 +259763,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-21T15:44:17.956Z";
-    const sha = "16640de91978ae8684769c219e5eb5b729caf98c";
+    const iso = "2026-10-21T23:26:46.636Z";
+    const sha = "66d36987a04174f40db3f013ce04412157363c97";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -260197,6 +260242,12 @@ uniform classStyleUniforms {
       viewportSize.width,
       viewportSize.height
     ]);
+    const flySeedViewsRef = reactExports.useRef(null);
+    reactExports.useLayoutEffect(() => {
+      flySeedViewsRef.current = null;
+    }, [
+      orthoSeed
+    ]);
     const targetWaypointCamera = useAppStore((state) => state.targetWaypointCamera);
     const clearTargetWaypointCamera = useAppStore((state) => state.clearTargetWaypointCamera);
     const refImageWidth = (frame2 == null ? void 0 : frame2.pixelWidth) ?? 0;
@@ -260366,11 +260417,12 @@ uniform classStyleUniforms {
       inTransitionRef.current = true;
       isCameraBusyRef.current = true;
       if (deck == null ? void 0 : deck.isInitialized) {
-        const setViews = (ortho2) => deck.setProps({
-          initialViewState: deckViewStates(ortho2, viewportW, viewportH)
+        const setViews = (views2) => deck.setProps({
+          initialViewState: views2
         });
-        setViews(from);
-        setViews(next2);
+        setViews(deckViewStates(from, viewportW, viewportH));
+        flySeedViewsRef.current = deckViewStates(next2, viewportW, viewportH);
+        setViews(flySeedViewsRef.current);
       }
       setOrthoSeed(next2);
       clearTargetWaypointCamera();
@@ -260769,7 +260821,7 @@ uniform classStyleUniforms {
               preserveDrawingBuffer
             }
           },
-          initialViewState: deckInitialViewState,
+          initialViewState: flySeedViewsRef.current ?? deckInitialViewState,
           onViewStateChange: handleViewStateChange,
           onInteractionStateChange: handleInteractionStateChange,
           onClick: handleClick,
