@@ -484,16 +484,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
   );
   // Live contrast/color preview is folded in `useViewerLayers`, not here.
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
-  const maskVisualizationPreview = useAppStore(
-    (s) => s.maskVisualizationPreview,
-  );
   const imageOrientationPreview = useAppStore((s) => s.imageOrientationPreview);
   const imageOpacityPreview = useAppStore((s) => s.imageOpacityPreview);
   const arrangeImageId = useAppStore((s) => s.arrangeImageId);
-  const selectionMaskVisualizationPreview =
-    maskVisualizationPreview?.sourceChannelId === SELECTION_MASK_CHANNEL_KEY
-      ? maskVisualizationPreview.visualization
-      : null;
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const featureTables = useDocumentStore((s) => s.featureTables);
@@ -607,14 +600,11 @@ export const ImageViewer = (props: ImageViewerProps) => {
         (e) => e.sourceImageId === sc.imageId,
       );
       if (!entry?.loader) continue;
-      const visualization =
-        maskVisualizationPreview?.sourceChannelId === sc.id
-          ? maskVisualizationPreview.visualization
-          : effectiveMaskVisualizationForSource(
-              sc,
-              channelGroups,
-              activeChannelGroupId,
-            );
+      const visualization = effectiveMaskVisualizationForSource(
+        sc,
+        channelGroups,
+        activeChannelGroupId,
+      );
       const imageOpacity = opacityForImage(
         images,
         sc.imageId,
@@ -667,7 +657,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     channelGroupRowVisibilities,
     activeChannelGroupId,
     channelGroups,
-    maskVisualizationPreview,
     imageOpacityPreview,
     imageOrientationPreview,
     featureTables,
@@ -1024,9 +1013,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     const [minX, minY, maxX, maxY] = imageSelectionMask.bounds;
     const bounds: [number, number, number, number] = [minX, minY, maxX, maxY];
     const visualization =
-      selectionMaskVisualizationPreview ??
-      imageSelectionMask.maskVisualization ??
-      DEFAULT_MASK_VISUALIZATION;
+      imageSelectionMask.maskVisualization ?? DEFAULT_MASK_VISUALIZATION;
     const layers: Layer[] = [
       new BitmapLayer({
         id: IMAGE_SELECTION_MASK_LAYER_ID,
@@ -1051,11 +1038,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       );
     }
     return layers;
-  }, [
-    imageSelectionMask,
-    selectionMaskActive,
-    selectionMaskVisualizationPreview,
-  ]);
+  }, [imageSelectionMask, selectionMaskActive]);
 
   const clippedImageLayers = useMemo(() => {
     if (!selectionMaskActive || !imageSelectionMask) return imageLayers;

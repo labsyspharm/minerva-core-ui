@@ -596,11 +596,6 @@ export type ChannelRendering =
       b: number;
     };
 
-type MaskVisualizationPreview = {
-  sourceChannelId: string;
-  visualization: MaskVisualization;
-};
-
 /** In-flight image placement while dragging on the canvas; committed on pointerup. */
 export type ImageOrientationPreview = {
   imageId: string;
@@ -798,11 +793,6 @@ export interface AppStore {
   channelRendering: ChannelRendering | null;
   setChannelRendering: (rendering: ChannelRendering) => void;
   clearChannelRendering: () => void;
-  /** In-flight mask styling; committed values live in the document store. */
-  maskVisualizationPreview: MaskVisualizationPreview | null;
-  setMaskVisualizationPreview: (
-    preview: MaskVisualizationPreview | null,
-  ) => void;
   /** In-flight move / resize / rotate; committed on pointerup. */
   imageOrientationPreview: ImageOrientationPreview | null;
   setImageOrientationPreview: (preview: ImageOrientationPreview | null) => void;
@@ -971,7 +961,6 @@ const overlayInitialState = {
   authoringWaypointShapesIndex: null as number | null,
   activeChannelGroupId: null, // No channel group initially
   channelRendering: null,
-  maskVisualizationPreview: null,
   imageOrientationPreview: null,
   imageOpacityPreview: null,
   arrangeImageId: null,
@@ -1262,7 +1251,6 @@ export const useAppStore = create<AppStore>()(
           brushMaskVersion: 0,
           brushLastScreenCoord: null,
           imageSelectionMask: null,
-          maskVisualizationPreview: null,
           channelVisibilities: vis,
           hiddenLegendClasses: {},
           activeStoryIndex: null,
@@ -1615,7 +1603,6 @@ export const useAppStore = create<AppStore>()(
         delete vis[SELECTION_MASK_CHANNEL_KEY];
         set({
           imageSelectionMask: null,
-          maskVisualizationPreview: null,
           channelVisibilities: vis,
         });
       },
@@ -2307,10 +2294,6 @@ export const useAppStore = create<AppStore>()(
 
       clearChannelRendering: () => {
         set({ channelRendering: null });
-      },
-
-      setMaskVisualizationPreview: (preview) => {
-        set({ maskVisualizationPreview: preview });
       },
 
       setImageOrientationPreview: (preview) => {
