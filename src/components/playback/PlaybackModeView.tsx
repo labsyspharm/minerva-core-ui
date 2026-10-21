@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AuthorView } from "@/components/authoring/AuthorSidebar";
 import { ImageExporter } from "@/components/playback/ImageExporter";
+import { MadeWithMinerva } from "@/components/playback/MadeWithMinerva";
 import {
   PresentationFrame,
   PresentationNav,
@@ -40,6 +41,12 @@ export type PlaybackModeViewProps = {
     onChooseDifferent: () => void;
     onCancel: () => void;
   } | null;
+  /** When set, ask whether remote images are linked or saved as OME-TIFF. */
+  exportSourcePrompt?: {
+    onLinkRemote: () => void;
+    onSaveOmeTiff: () => void;
+    onCancel: () => void;
+  } | null;
 };
 
 /**
@@ -51,7 +58,8 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
   const hideNavPane = usePresentationNavHidden();
   const exporting = props.ioState === "EXPORTING";
   const folderPrompt = props.exportFolderPrompt;
-  const overlayOpen = exporting || !!folderPrompt;
+  const sourcePrompt = props.exportSourcePrompt;
+  const overlayOpen = exporting || !!folderPrompt || !!sourcePrompt;
   const exporterProps = {
     stopExport: props.stopExport,
     dicomIndexList: props.dicomIndexList,
@@ -69,7 +77,7 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
           ? "presenting"
           : exporting
             ? "exporting"
-            : folderPrompt
+            : folderPrompt || sourcePrompt
               ? "export-dest"
               : "author"
       }
@@ -104,12 +112,38 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
                 images={props.viewerImages}
               >
                 {props.viewer}
+                {presenting ? <MadeWithMinerva /> : null}
               </ChannelPanel>
             }
           />
         </PresentationFrame>
       </div>
-      {folderPrompt ? (
+      {sourcePrompt ? (
+        <div className={styles.exportOverlay}>
+          <div className={styles.folderPrompt} role="dialog" aria-modal="true">
+            <div className={styles.folderPromptTitle}>Export story</div>
+            <div className={styles.folderPromptBody}>
+              The images are read from remote URLs. Link to them, or save a
+              compressed OME-TIFF copy in the story folder?
+            </div>
+            <div className={styles.folderPromptActions}>
+              <button
+                type="button"
+                className={styles.folderPromptPrimary}
+                onClick={sourcePrompt.onLinkRemote}
+              >
+                Link remote images
+              </button>
+              <button type="button" onClick={sourcePrompt.onSaveOmeTiff}>
+                Save OME-TIFF copy
+              </button>
+              <button type="button" onClick={sourcePrompt.onCancel}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : folderPrompt ? (
         <div className={styles.exportOverlay}>
           <div className={styles.folderPrompt} role="dialog" aria-modal="true">
             <div className={styles.folderPromptTitle}>Export story</div>

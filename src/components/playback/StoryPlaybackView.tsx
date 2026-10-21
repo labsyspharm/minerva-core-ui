@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { MadeWithMinerva } from "@/components/playback/MadeWithMinerva";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
@@ -145,6 +146,7 @@ export function StoryPlaybackView(
           props.onEdit ? <EditStoryButton onEdit={props.onEdit} /> : undefined
         }
       />
+      <MadeWithMinerva />
       {props.imagesLoading ? (
         <output className={styles.imageLoading} aria-busy="true">
           <div className={minervaTheme.spinner} />

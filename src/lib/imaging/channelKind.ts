@@ -220,6 +220,13 @@ export function isRgbDisplayChannel(
   return isRgbDisplaySource([channel]);
 }
 
+/** Every intensity plane of one image: the unit an RGB / H&E row stands for. */
+export function imageIntensityChannels<
+  T extends { kind?: string; imageId?: string },
+>(channels: readonly T[], imageId: string | undefined): T[] {
+  return channels.filter((c) => c.imageId === imageId && isImageChannel(c));
+}
+
 /** Document-level role inferred from persisted channel kinds on one image row. */
 export type ImageSourceRole = "intensity" | "segmentation" | "mixed";
 

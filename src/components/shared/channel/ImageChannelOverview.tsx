@@ -19,7 +19,6 @@ import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
   applyGroupRowVisibilities,
   applyStackVisibilities,
-  isRgbDisplayFullyGrouped,
   isStackVisible,
   type VivIntensityCapVis,
   visibilitiesForRgbUnit,
@@ -384,9 +383,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
   );
   const rgbDisplay = isRgbDisplayImage(image);
   const rgbChannels = flattenImageChannelsInDocumentOrder([image]);
-  const showAllChannelsStrip =
-    model.allChannels.length > 0 &&
-    !isRgbDisplayFullyGrouped(rgbChannels, channelGroups);
+  const showAllChannelsStrip = model.allChannels.length > 0;
 
   const overviewChips = [
     ...model.groups.flatMap((g) => g.chips),
