@@ -29,7 +29,6 @@ import {
   applyStackVisibilities,
   isDisplayedViaGroupRow,
   isGroupRowVisible,
-  isRgbDisplayFullyGrouped,
   isStackVisible,
   type VivIntensityCapVis,
   visibilitiesForRgbUnit,
@@ -39,6 +38,7 @@ import {
 } from "@/lib/imaging/channelCompositor";
 import {
   DEFAULT_MASK_VISUALIZATION,
+  imageIntensityChannels,
   isImageChannel,
   isMaskChannel,
   isRgbDisplayChannel,
@@ -574,9 +574,7 @@ export const ChannelGroupsMasterDetail = (
     groupId?: string,
   ) => {
     const next = visibilitiesForRgbUnit({
-      rgbChannels: sourceChannels.filter(
-        (c) => c.imageId === imageId && isImageChannel(c),
-      ),
+      rgbChannels: imageIntensityChannels(sourceChannels, imageId),
       channelGroups,
       groupRowVisibilities: channelGroupRowVisibilities,
       stackVisibilities: stackVisibilities,
@@ -642,9 +640,7 @@ export const ChannelGroupsMasterDetail = (
     const rest = matched.filter((sc) => !isImageChannel(sc));
     return first ? [first, ...rest] : matched;
   }, [uniqueSourceChannels, channelNameFilter]);
-  const showAllChannelsList =
-    uniqueSourceChannels.length > 0 &&
-    !isRgbDisplayFullyGrouped(uniqueSourceChannels, channelGroups);
+  const showAllChannelsList = uniqueSourceChannels.length > 0;
 
   React.useEffect(() => {
     setLockedColorRowIdsByGroup((prev) => {
@@ -939,8 +935,10 @@ export const ChannelGroupsMasterDetail = (
       const lockedIds = new Set(group.channels.map((gc) => gc.id));
       const slotIndex = group.channels.length;
       const isMask = isMaskChannel(sc);
+      // H&E joins as one unit: every plane of its image, no GMM or palette.
+      const rgbUnit = isRgbDisplayChannel(sc, sourceChannels);
       let fittedLimits: ContrastLimits | null = null;
-      if (!isMask) {
+      if (!isMask && !rgbUnit) {
         fittedLimits = sc.gmmContrastLimits
           ? {
               lower: sc.gmmContrastLimits.lower,
@@ -955,25 +953,28 @@ export const ChannelGroupsMasterDetail = (
         }
       }
 
-      const newChannel = makeGroupChannelRow(sc, slotIndex, sourceChannels);
+      const newRows = (
+        rgbUnit ? imageIntensityChannels(sourceChannels, sc.imageId) : [sc]
+      ).map((c, i) => makeGroupChannelRow(c, slotIndex + i, sourceChannels));
       if (fittedLimits) {
-        newChannel.lowerLimit = fittedLimits.lower;
-        newChannel.upperLimit = fittedLimits.upper;
+        newRows[0].lowerLimit = fittedLimits.lower;
+        newRows[0].upperLimit = fittedLimits.upper;
       }
 
       const newGroups = channelGroups.map((g) =>
-        g.id !== groupId ? g : { ...g, channels: [...g.channels, newChannel] },
+        g.id !== groupId ? g : { ...g, channels: [...g.channels, ...newRows] },
       );
 
       const updatedGroup = newGroups.find((g) => g.id === groupId);
       setChannelGroupRowVisibilities({
         ...channelGroupRowVisibilities,
-        [newChannel.id]: true,
+        ...Object.fromEntries(newRows.map((gc) => [gc.id, true])),
       });
 
       if (
         !updatedGroup ||
         isMask ||
+        rgbUnit ||
         !isGroupEligibleForPsudoOptimize(updatedGroup, sourceChannels)
       ) {
         syncGroupState(newGroups);
@@ -1018,23 +1019,34 @@ export const ChannelGroupsMasterDetail = (
 
   const removeChannelFromGroup = (groupId: string, rowId: string) => {
     const groups = useDocumentStore.getState().channelGroups;
+    const removedRow = groups
+      .find((g) => g.id === groupId)
+      ?.channels.find((gc) => gc.id === rowId);
+    const removedSc = removedRow
+      ? findSourceChannel(sourceChannels, removedRow.channelId)
+      : undefined;
+    // The H&E row stands for every plane of its image.
+    const unitIds =
+      removedSc && isRgbDisplayChannel(removedSc, sourceChannels)
+        ? new Set(
+            imageIntensityChannels(sourceChannels, removedSc.imageId).map(
+              (c) => c.id,
+            ),
+          )
+        : null;
+    // Locked-color ids for dropped rows are pruned by the channelGroups effect.
     syncGroupState(
       groups.map((g) =>
         g.id !== groupId
           ? g
-          : { ...g, channels: g.channels.filter((gc) => gc.id !== rowId) },
+          : {
+              ...g,
+              channels: g.channels.filter((gc) =>
+                unitIds ? !unitIds.has(gc.channelId) : gc.id !== rowId,
+              ),
+            },
       ),
     );
-    setLockedColorRowIdsByGroup((prev) => {
-      const set = prev.get(groupId);
-      if (!set?.has(rowId)) return prev;
-      const next = new Map(prev);
-      const updated = new Set(set);
-      updated.delete(rowId);
-      if (updated.size === 0) next.delete(groupId);
-      else next.set(groupId, updated);
-      return next;
-    });
   };
 
   const syncMaskVisualization = (
@@ -1221,12 +1233,21 @@ export const ChannelGroupsMasterDetail = (
       group.channels.some((gc) =>
         isGroupRowVisible(channelGroupRowVisibilities, gc.id),
       );
-    const rgbGroup =
-      group.channels.length > 0 &&
-      group.channels.every((row) => {
-        const src = findSourceChannel(sourceChannels, row.channelId);
-        return src != null && isRgbDisplayChannel(src, sourceChannels);
-      });
+    // One H&E row per RGB image.
+    const rgbImagesShown = new Set<string>();
+    const shownRows = expanded
+      ? group.channels.flatMap((gc) => {
+          const sc = findSourceChannel(sourceChannels, gc.channelId);
+          const rgbDisplay = sc
+            ? isRgbDisplayChannel(sc, sourceChannels)
+            : false;
+          if (sc && rgbDisplay) {
+            if (rgbImagesShown.has(sc.imageId)) return [];
+            rgbImagesShown.add(sc.imageId);
+          }
+          return [{ gc, sc, rgbDisplay }];
+        })
+      : [];
     const lockedIds = lockedIdsForGroup(group.id);
     const allGroupRowsOn =
       group.channels.length > 0 &&
@@ -1342,12 +1363,11 @@ export const ChannelGroupsMasterDetail = (
             </PanelIconButton>
           </div>
         </div>
-        {expanded && !rgbGroup ? (
+        {expanded ? (
           <div className={styles.groupFolderBody}>
             <ul className={styles.groupChildList}>
-              {group.channels.map((gc) => {
-                const sc = findSourceChannel(sourceChannels, gc.channelId);
-                const name = sc?.name ?? "Unknown";
+              {shownRows.map(({ gc, sc, rgbDisplay }) => {
+                const name = rgbDisplay ? "H&E" : (sc?.name ?? "Unknown");
                 const visible = isGroupRowVisible(
                   channelGroupRowVisibilities,
                   gc.id,
@@ -1369,9 +1389,6 @@ export const ChannelGroupsMasterDetail = (
                   ? assignedDisplayHex(sc, sourceChannels, gc, channelRendering)
                   : rgbToHex(gc.color);
                 const palettePending = palettePendingIds.includes(gc.channelId);
-                const rgbDisplay = sc
-                  ? isRgbDisplayChannel(sc, sourceChannels)
-                  : false;
                 const contrast =
                   props.contrastEditable &&
                   sc &&

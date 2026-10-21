@@ -497,40 +497,14 @@ const extractChannels: ExtractChannels = (
       SourceChannels,
       ChannelGroups,
     };
-  } else if (
+  }
+  if (
     SourceChannels.length === 1 &&
     SourceChannels[0].samples === 3 &&
     SourceChannels[0].sourceDataTypeId === "Uint8"
   ) {
-    const group_uuid = crypto.randomUUID();
-    const groupName = "Hematoxylin & Eosin";
-    const channelName = "H&E";
-    const ChannelGroups: ChannelGroup[] = [
-      {
-        id: group_uuid,
-        expanded: true,
-        name: groupName,
-        channels: SourceChannels.map((channel, _index) => {
-          return {
-            id: crypto.randomUUID(),
-            channelId: channel.id,
-            color: hex_to_rgb("cc00ff"),
-            lowerLimit: 0,
-            upperLimit: 255,
-          };
-        }),
-      },
-    ];
-    if (SourceChannels.length === 1) {
-      SourceChannels[0] = {
-        ...SourceChannels[0],
-        name: channelName,
-      };
-    }
-    return {
-      SourceChannels,
-      ChannelGroups,
-    };
+    // Packed RGB is named H&E but left ungrouped; the user groups it if they want.
+    SourceChannels[0].name = "H&E";
   }
   return {
     SourceChannels,

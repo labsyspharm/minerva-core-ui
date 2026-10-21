@@ -101,13 +101,11 @@ export function buildOmeImportSlice(args: {
     basename,
     existingImages,
   );
-  let extractedGroups = extracted.ChannelGroups;
   if (role === "intensity" && rgbDisplay === false) {
     sourceChannels = namePackedRgbIfChannels(sourceChannels);
     sourceChannels = sourceChannels.map((c, i) =>
       c.name === "H&E" ? { ...c, name: `Channel ${i + 1}` } : c,
     );
-    extractedGroups = [];
   }
   if (role === "segmentation") {
     sourceChannels = seedMaskSourceChannelStyles(sourceChannels);
@@ -136,30 +134,9 @@ export function buildOmeImportSlice(args: {
     taggedForRgb,
     persistRgbDisplay,
   );
-  if (
-    role === "intensity" &&
-    extractedGroups.length === 0 &&
-    isRgbDisplaySource(taggedForRgb)
-  ) {
-    const intensity = sourceChannels.filter(isImageChannel);
-    extractedGroups = [
-      {
-        id: crypto.randomUUID(),
-        expanded: true,
-        name: "Hematoxylin & Eosin",
-        channels: intensity.map((channel) => ({
-          id: crypto.randomUUID(),
-          channelId: channel.id,
-          color: { r: 204, g: 0, b: 255 },
-          lowerLimit: 0,
-          upperLimit: 255,
-        })),
-      },
-    ];
-  }
   return {
     sourceChannels: taggedForRgb,
-    extractedGroups,
+    extractedGroups: extracted.ChannelGroups,
     nextImages,
   };
 }
