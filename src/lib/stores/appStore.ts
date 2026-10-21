@@ -678,6 +678,9 @@ export interface AppStore {
   /** Authoring: viewer annotation pick/hover/drag only while a waypoint detail editor is open. */
   authoringWaypointEditorOpen: boolean;
   setAuthoringWaypointEditorOpen: (open: boolean) => void;
+  /** One-shot: the editor opens this waypoint (set by the player's "Edit this story"). */
+  editWaypointOnOpen: string | null;
+  setEditWaypointOnOpen: (waypointId: string | null) => void;
 
   /** Layers panel: selected annotation ids (multi-select) for copy / keyboard shortcuts. */
   layersPanelSelectedShapeIds: string[];
@@ -1003,6 +1006,7 @@ const overlayInitialState = {
   hiddenLegendClasses: {} as Record<string, string[]>,
   targetWaypointCamera: null,
   authoringWaypointEditorOpen: false,
+  editWaypointOnOpen: null,
   layersPanelSelectedShapeIds: [] as string[],
   layersPanelSelectedGroupId: null as string | null,
   layersPanelSelectionFlash: null,
@@ -2025,6 +2029,10 @@ export const useAppStore = create<AppStore>()(
             dragState: overlayInitialState.dragState,
           });
         }
+      },
+
+      setEditWaypointOnOpen: (waypointId) => {
+        set({ editWaypointOnOpen: waypointId });
       },
 
       setAuthoringWaypointShapesIndex: (index: number | null) => {

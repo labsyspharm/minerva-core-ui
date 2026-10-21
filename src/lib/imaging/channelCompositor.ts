@@ -100,17 +100,6 @@ export function sourceChannelInAnyGroup(
   return sourceIdsInAnyGroup(channelGroups).has(sourceId);
 }
 
-/** RGB / H&E already in a group — All Channels is the same catalog twice. */
-export function isRgbDisplayFullyGrouped(
-  channels: readonly Channel[],
-  channelGroups: ChannelGroup[],
-): boolean {
-  const intensity = channels.filter(isImageChannel);
-  if (intensity.length === 0 || !isRgbDisplaySource(channels)) return false;
-  const groupedIds = sourceIdsInAnyGroup(channelGroups);
-  return intensity.every((c) => groupedIds.has(c.id));
-}
-
 /**
  * Every channel in `group` on, every other source channel and group row off.
  * The selection-mask eye is left as it was.

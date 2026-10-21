@@ -5,6 +5,7 @@ import { Main } from "@/components/Main";
 import { getDemoMainProps } from "@/lib/persistence/demo";
 import { getStoryRecord } from "@/lib/persistence/storyPersistence";
 import { useAppStore } from "@/lib/stores/appStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
 import { importStoryFromUrl } from "@/lib/storyExport/importStoryFolder";
 import {
   createAppRouter,
@@ -19,8 +20,15 @@ const OME_TIFF_HANDLE_KEYS = ["img-1"];
  * `?storyid=`, so the editor opens it and a reload keeps editing it.
  */
 export async function beginEditing(documentUrl: string): Promise<void> {
+  // The copy keeps waypoint ids, so the editor can open the one on screen.
+  const { activeStoryIndex } = useAppStore.getState();
+  const waypointId =
+    activeStoryIndex === null
+      ? null
+      : (useDocumentStore.getState().waypoints[activeStoryIndex]?.id ?? null);
   const storyId = await importStoryFromUrl(documentUrl);
   useAppStore.getState().resetStoryViewerSession();
+  useAppStore.getState().setEditWaypointOnOpen(waypointId);
   const url = new URL(window.location.href);
   url.searchParams.set("storyid", storyId);
   window.history.replaceState(window.history.state, "", url);

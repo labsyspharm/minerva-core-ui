@@ -37,6 +37,9 @@ export const DEMO_SHELF_TITLE =
 const CRC_SIZE_X = 26139;
 const CRC_SIZE_Y = 27120;
 
+/** PhysicalSizeX/Y of CRC01-096-097.ome.tif. Shapes are stored in µm. */
+const CRC_UM_PER_PIXEL = 0.325;
+
 /** Nominal authoring viewport used only to bake Pan/Zoom → bounds at seed time. */
 const SEED_VIEWPORT_W = 1280;
 const SEED_VIEWPORT_H = 800;
@@ -196,8 +199,8 @@ export function buildDemoCrcDocumentData(): DocumentData {
   const { stories: migrated, shapes } = migrateLegacyWaypointShapes(
     structuredClone(configWaypoints),
     [],
-    CRC_SIZE_X,
-    CRC_SIZE_Y,
+    CRC_SIZE_X * CRC_UM_PER_PIXEL,
+    CRC_SIZE_Y * CRC_UM_PER_PIXEL,
   );
 
   const waypoints = migrated.map((story) => {
