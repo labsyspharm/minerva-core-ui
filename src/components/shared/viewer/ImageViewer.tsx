@@ -5,6 +5,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -772,6 +773,16 @@ export const ImageViewer = (props: ImageViewerProps) => {
     () => deckViewStates(orthoSeed, viewportSize.width, viewportSize.height),
     [orthoSeed, viewportSize.width, viewportSize.height],
   );
+  // A waypoint fly seeds Deck directly. Until orthoSeed commits, renders pass
+  // that same seed: Deck resets to any other initialViewState, so a render with
+  // the old seed would fly back toward the previous waypoint first.
+  const flySeedViewsRef = useRef<ReturnType<typeof deckViewStates> | null>(
+    null,
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: orthoSeed commit ends the override
+  useLayoutEffect(() => {
+    flySeedViewsRef.current = null;
+  }, [orthoSeed]);
 
   const targetWaypointCamera = useAppStore(
     (state) => state.targetWaypointCamera,
@@ -953,12 +964,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
     inTransitionRef.current = true;
     isCameraBusyRef.current = true;
     if (deck?.isInitialized) {
-      const setViews = (ortho: OrthographicViewState) =>
+      const setViews = (views: ReturnType<typeof deckViewStates>) =>
         deck.setProps({
-          initialViewState: deckViewStates(ortho, viewportW, viewportH),
+          initialViewState: views,
         } as unknown as Parameters<typeof deck.setProps>[0]);
-      setViews(from);
-      setViews(next);
+      setViews(deckViewStates(from, viewportW, viewportH));
+      flySeedViewsRef.current = deckViewStates(next, viewportW, viewportH);
+      setViews(flySeedViewsRef.current);
     }
     setOrthoSeed(next);
     clearTargetWaypointCamera();
@@ -1426,7 +1438,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
             preserveDrawingBuffer,
           },
         }}
-        initialViewState={deckInitialViewState}
+        initialViewState={flySeedViewsRef.current ?? deckInitialViewState}
         onViewStateChange={handleViewStateChange}
         onInteractionStateChange={handleInteractionStateChange}
         onClick={handleClick}

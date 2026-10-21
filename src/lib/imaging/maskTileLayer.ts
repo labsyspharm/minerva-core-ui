@@ -195,8 +195,22 @@ const INDEX_TEX_CACHE_MAX = 4;
 // Eviction destroys a texture a live layer may still bind. A story with more
 // than 64 live palette keys evicts the oldest key.
 const PALETTE_TEX_CACHE_MAX = 64;
-const indexTexCache = new Map<string, GpuTexture>();
-const paletteTexCache = new Map<string, GpuTexture>();
+type TexCaches = {
+  index: Map<string, GpuTexture>;
+  palette: Map<string, GpuTexture>;
+};
+// Per device: a texture only binds in the WebGL context that made it, and a
+// new Deck (player → editor, viewer remount) brings a new context.
+const texCachesByDevice = new WeakMap<object, TexCaches>();
+
+function texCachesFor(device: object): TexCaches {
+  let caches = texCachesByDevice.get(device);
+  if (!caches) {
+    caches = { index: new Map(), palette: new Map() };
+    texCachesByDevice.set(device, caches);
+  }
+  return caches;
+}
 
 function rememberTex(
   cache: Map<string, GpuTexture>,
@@ -367,6 +381,8 @@ class MaskBitmaskLayer extends XRLayerBase {
     if (this.state.classStyleKey === key && this.state.classIndexTexture)
       return;
     const device = this.context.device;
+    const { index: indexTexCache, palette: paletteTexCache } =
+      texCachesFor(device);
     const indexKey = style
       ? `i:${style.indexRev}:${style.width}x${style.height}`
       : "";
