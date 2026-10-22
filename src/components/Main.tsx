@@ -98,7 +98,11 @@ import { useViewerLayers } from "@/lib/imaging/viewerLayers";
 import { effectiveWorldFrame } from "@/lib/imaging/worldFrame";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
-import { getDemoDocumentTitle } from "@/lib/persistence/demo";
+import {
+  DEMO_SHELF_STORY_ID,
+  getDemoDocumentTitle,
+  isDemoOpenPreview,
+} from "@/lib/persistence/demo";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
 import {
   locatedFileStorageKey,
@@ -575,7 +579,11 @@ const Content = (props: Props) => {
   } | null>(null);
   /** Remote OME-TIFFs can be linked as is, or saved as a local OME-TIFF copy. */
   const [exportSourcePrompt, setExportSourcePrompt] = useState(false);
-  const [presenting, setPresenting] = useState(false);
+  const [presenting, setPresenting] = useState(
+    () =>
+      isDemoOpenPreview() &&
+      useDocumentStore.getState().activeStoryId === DEMO_SHELF_STORY_ID,
+  );
 
   const beginExportToFolder = async (
     mode: StoryExportMode,

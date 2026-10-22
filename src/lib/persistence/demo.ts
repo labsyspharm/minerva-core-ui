@@ -130,6 +130,17 @@ export function isDemoContentEnabled(): boolean {
   return isJpegDemoMode() || import.meta.env.MODE === "demo";
 }
 
+/**
+ * Hosted CRC01 demo (`VITE_DEMO_OPEN_PREVIEW` in CI): land on the demo shelf story in
+ * playback preview instead of the Minerva Library. Local `pnpm run demo` leaves it unset.
+ */
+export function isDemoOpenPreview(): boolean {
+  return (
+    import.meta.env.MODE === "demo" &&
+    Boolean(import.meta.env.VITE_DEMO_OPEN_PREVIEW)
+  );
+}
+
 export function getDemoDocumentTitle(): string {
   return isDemoContentEnabled() ? "Minerva 2.0 Demo" : "Minerva";
 }
