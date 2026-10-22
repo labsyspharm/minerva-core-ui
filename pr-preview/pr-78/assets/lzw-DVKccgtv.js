@@ -1,4 +1,4 @@
-import { B as BaseDecoder } from "./index-B84vSPeo.js";
+import { B as BaseDecoder } from "./index-Dqi54Gva.js";
 const MIN_BITS = 9;
 const CLEAR_CODE = 256;
 const EOI_CODE = 257;

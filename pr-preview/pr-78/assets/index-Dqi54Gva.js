@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-UCqLVAQC.js","./pako.esm-KbdoS3Oq.js","./lerc-B1hFl-EX.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Cd2WRm_F.js","./pako.esm-KbdoS3Oq.js","./lerc-h3QrPdn_.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18505,7 +18505,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "8bb6a138507c20dbe367971d9a51515b0a4f0b8b",
+    "VITE_APP_GIT_SHA": "f1b1425a59854b92a3e865801cd620a27e9182bb",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -18780,8 +18780,11 @@ let __tla = (async () => {
   const HE_HIST_BINS = 50;
   const HE_HIST_STEP = 4;
   const HE_HIST_TIMEOUT_MS = 1e4;
+  const HE_HIST_TILES = 8;
+  const MAX_OVERVIEW_PIXELS = 4096 * 4096;
   const N_TILES = 16;
   const MAX_READS = 32;
+  const MAX_BLIND_READS = 96;
   const OVERVIEW_TISSUE = 0.5;
   const FULLRES_TISSUE = 0.4;
   const TISSUE_MAX = 220;
@@ -18922,29 +18925,33 @@ let __tla = (async () => {
     if ((ro + go2 + bo) * SQRT3_INV / mag >= GRAY_COS) return false;
     return true;
   }
-  function equalSubsamplePacked3(packed, count2) {
-    if (count2 <= MAX_PIXELS) {
-      return packed.length === count2 * 3 ? packed : packed.subarray(0, count2 * 3);
-    }
-    const spacing = Math.ceil(count2 / MAX_PIXELS);
-    const outCount = Math.floor(count2 / spacing);
-    const out = new Float32Array(outCount * 3);
-    for (let i2 = 0; i2 < outCount; i2++) {
-      const s2 = i2 * spacing * 3;
-      const d2 = i2 * 3;
-      out[d2] = packed[s2];
-      out[d2 + 1] = packed[s2 + 1];
-      out[d2 + 2] = packed[s2 + 2];
-    }
-    return out;
-  }
-  function farthestPointSample(pts, n2) {
-    if (pts.length <= n2) return pts.slice();
-    let s2 = FPS_SEED >>> 0;
-    const rand = () => {
+  function seededRandom(seed) {
+    let s2 = seed >>> 0;
+    return () => {
       s2 = Math.imul(s2, 1664525) + 1013904223 >>> 0;
       return s2 / 2 ** 32;
     };
+  }
+  function odReservoir(capacity) {
+    const packed = new Float32Array(capacity * 3);
+    const rand = seededRandom(FPS_SEED);
+    let seen2 = 0;
+    return {
+      add(ro, go2, bo) {
+        const slot = seen2 < capacity ? seen2 : Math.floor(rand() * (seen2 + 1));
+        seen2 += 1;
+        if (slot >= capacity) return;
+        packed[slot * 3] = ro;
+        packed[slot * 3 + 1] = go2;
+        packed[slot * 3 + 2] = bo;
+      },
+      count: () => Math.min(seen2, capacity),
+      packed: () => packed.subarray(0, Math.min(seen2, capacity) * 3)
+    };
+  }
+  function farthestPointSample(pts, n2) {
+    if (pts.length <= n2) return pts.slice();
+    const rand = seededRandom(FPS_SEED);
     const picked = [
       pts[Math.floor(rand() * pts.length)]
     ];
@@ -19129,6 +19136,24 @@ let __tla = (async () => {
     }
     return n2 > 0 ? t2 / n2 : 0;
   }
+  function overviewPlane(planes) {
+    const coarsest = planes[planes.length - 1];
+    const { width, height } = planeSize$2(coarsest);
+    if (width <= 0 || height <= 0) return null;
+    return width * height <= MAX_OVERVIEW_PIXELS ? coarsest : null;
+  }
+  function tileGrid(plane) {
+    const { width, height } = planeSize$2(plane);
+    const tileSize = Math.max(1, plane.tileSize || 1024);
+    const tiles = [];
+    for (let y2 = 0; y2 < Math.ceil(height / tileSize); y2++) {
+      for (let x2 = 0; x2 < Math.ceil(width / tileSize); x2++) tiles.push({
+        x: x2,
+        y: y2
+      });
+    }
+    return tiles;
+  }
   async function readRgb(plane, channelIndex, tile, signal) {
     var _a2;
     const raw2 = tile ? await plane.getTile({
@@ -19163,28 +19188,23 @@ let __tla = (async () => {
       const planes = loader.data;
       if (!(planes == null ? void 0 : planes.length)) return defaultFit();
       const finest = planes[0];
-      const coarsest = planes[planes.length - 1];
       const { width: fineW, height: fineH } = planeSize$2(finest);
-      const { width: coarseW, height: coarseH } = planeSize$2(coarsest);
       const tileSize = Math.max(1, finest.tileSize || 1024);
-      if (fineW <= 0 || fineH <= 0 || coarseW <= 0 || coarseH <= 0) {
-        return defaultFit();
-      }
-      let overview = null;
-      try {
-        overview = await readRgb(coarsest, channelIndex);
-      } catch {
-        return defaultFit();
-      }
-      if (!overview) return defaultFit();
+      if (fineW <= 0 || fineH <= 0) return defaultFit();
       const fallback = defaultFit();
-      const sx = overview.w / fineW;
-      const sy = overview.h / fineH;
-      const nx = Math.ceil(fineW / tileSize);
-      const ny = Math.ceil(fineH / tileSize);
-      const tissueTiles = [];
-      for (let ty = 0; ty < ny; ty++) {
-        for (let tx = 0; tx < nx; tx++) {
+      const overviewSource = overviewPlane(planes);
+      let tissueTiles = tileGrid(finest);
+      if (overviewSource) {
+        let overview = null;
+        try {
+          overview = await readRgb(overviewSource, channelIndex);
+        } catch {
+          return defaultFit();
+        }
+        if (!overview) return defaultFit();
+        const sx = overview.w / fineW;
+        const sy = overview.h / fineH;
+        tissueTiles = tissueTiles.filter(({ x: tx, y: ty }) => {
           const x0 = tx * tileSize;
           const y0 = ty * tileSize;
           const x1 = Math.min(fineW, x0 + tileSize);
@@ -19193,20 +19213,21 @@ let __tla = (async () => {
           const oy0 = Math.max(0, Math.floor(y0 * sy));
           const ox1 = Math.min(overview.w, Math.max(ox0 + 1, Math.ceil(x1 * sx)));
           const oy1 = Math.min(overview.h, Math.max(oy0 + 1, Math.ceil(y1 * sy)));
-          if (tissueFrac(overview.r, overview.g, overview.b, overview.w, ox0, oy0, ox1, oy1) >= OVERVIEW_TISSUE) {
-            tissueTiles.push({
-              x: tx,
-              y: ty
-            });
-          }
-        }
+          return tissueFrac(overview.r, overview.g, overview.b, overview.w, ox0, oy0, ox1, oy1) >= OVERVIEW_TISSUE;
+        });
       }
       if (tissueTiles.length === 0) return fallback;
-      const ranked = farthestPointSample(tissueTiles, Math.min(tissueTiles.length, MAX_READS));
-      const od2 = [];
+      const maxReads = overviewSource ? MAX_READS : MAX_BLIND_READS;
+      const queue2 = farthestPointSample(tissueTiles, Math.min(tissueTiles.length, maxReads));
+      const queued = new Set(queue2.map((t2) => `${t2.x},${t2.y}`));
+      const gridW = Math.ceil(fineW / tileSize);
+      const gridH = Math.ceil(fineH / tileSize);
+      const od2 = odReservoir(MAX_PIXELS);
       let accepted = 0;
-      for (let i2 = 0; i2 < ranked.length && accepted < N_TILES; i2 += READ_BATCH) {
-        const batch2 = ranked.slice(i2, i2 + READ_BATCH);
+      let reads = 0;
+      while (queue2.length > 0 && reads < maxReads && accepted < N_TILES) {
+        const batch2 = queue2.splice(0, Math.min(READ_BATCH, maxReads - reads));
+        reads += batch2.length;
         const rgbs = await Promise.all(batch2.map(async (tile) => {
           try {
             const rgb = await readRgb(finest, channelIndex, tile);
@@ -19219,22 +19240,38 @@ let __tla = (async () => {
             return null;
           }
         }));
-        for (const rgb of rgbs) {
+        for (const [k2, rgb] of rgbs.entries()) {
           if (!rgb || accepted >= N_TILES) continue;
           accepted += 1;
+          if (!overviewSource) {
+            const { x: x2, y: y2 } = batch2[k2];
+            for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                const nx = x2 + dx;
+                const ny = y2 + dy;
+                const key2 = `${nx},${ny}`;
+                if (nx < 0 || ny < 0 || nx >= gridW || ny >= gridH) continue;
+                if (queued.has(key2)) continue;
+                queued.add(key2);
+                queue2.unshift({
+                  x: nx,
+                  y: ny
+                });
+              }
+            }
+          }
           box3MeanTwoPass(rgb.r, rgb.g, rgb.b, rgb.w, rgb.h);
           const n2 = rgb.r.length;
           for (let p2 = 0; p2 < n2; p2++) {
             const ro = opticalDensity(rgb.r[p2]);
             const go2 = opticalDensity(rgb.g[p2]);
             const bo = opticalDensity(rgb.b[p2]);
-            if (keepHeOdPixel(ro, go2, bo)) od2.push(ro, go2, bo);
+            if (keepHeOdPixel(ro, go2, bo)) od2.add(ro, go2, bo);
           }
         }
       }
-      if (accepted === 0 || od2.length < 6) return fallback;
-      const packed = equalSubsamplePacked3(new Float32Array(od2), od2.length / 3);
-      return fitAutoFromPackedOd(packed, packed.length / 3);
+      if (accepted === 0 || od2.count() < 2) return fallback;
+      return fitAutoFromPackedOd(od2.packed(), od2.count());
     } catch {
       return defaultFit();
     }
@@ -19264,22 +19301,33 @@ let __tla = (async () => {
     const planes = loader.data;
     if (!(planes == null ? void 0 : planes.length)) return empty2;
     const coarsest = planes[planes.length - 1];
-    let rgb = null;
+    const overviewSource = overviewPlane(planes);
+    let rgbs = [];
     try {
       const signal = AbortSignal.timeout(HE_HIST_TIMEOUT_MS);
-      rgb = await readRgb(coarsest, channelIndex, void 0, signal);
+      if (overviewSource) {
+        const rgb = await readRgb(overviewSource, channelIndex, void 0, signal);
+        if (rgb) rgbs = [
+          rgb
+        ];
+      } else {
+        const tiles = farthestPointSample(tileGrid(coarsest), HE_HIST_TILES);
+        const read = await Promise.all(tiles.map((tile) => readRgb(coarsest, channelIndex, tile, signal).catch(() => null)));
+        rgbs = read.filter((rgb) => rgb != null);
+      }
     } catch {
       return empty2;
     }
-    if (!rgb) return empty2;
+    if (rgbs.length === 0) return empty2;
     const h2 = [];
     const e2 = [];
-    const n2 = rgb.r.length;
-    for (let i2 = 0; i2 < n2; i2++) {
-      if (i2 % HE_HIST_STEP !== 0) continue;
-      const [ch2, ce2] = unmixHe(inverse2, opticalDensity(rgb.r[i2]), opticalDensity(rgb.g[i2]), opticalDensity(rgb.b[i2]));
-      h2.push(ch2 * HE_CONTRAST_SCALE);
-      e2.push(ce2 * HE_CONTRAST_SCALE);
+    for (const rgb of rgbs) {
+      const n2 = rgb.r.length;
+      for (let i2 = 0; i2 < n2; i2 += HE_HIST_STEP) {
+        const [ch2, ce2] = unmixHe(inverse2, opticalDensity(rgb.r[i2]), opticalDensity(rgb.g[i2]), opticalDensity(rgb.b[i2]));
+        h2.push(ch2 * HE_CONTRAST_SCALE);
+        e2.push(ce2 * HE_CONTRAST_SCALE);
+      }
     }
     return {
       fitKey,
@@ -79797,26 +79845,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DWXca4Da.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-YUFJozfC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CfSfmmaG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DVKccgtv.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-BueWm-YC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DdtoZGNh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-UCqLVAQC.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-B3SlC4B8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-B1hFl-EX.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-Cd2WRm_F.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BysCW0Rh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-h3QrPdn_.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-mrzf40u2.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DDCk1ECJ.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-g-lFX3kN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BIQv0JXZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -260583,8 +260631,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-22T00:16:23.628Z";
-    const sha = "8bb6a138507c20dbe367971d9a51515b0a4f0b8b";
+    const iso = "2026-10-22T00:27:46.820Z";
+    const sha = "f1b1425a59854b92a3e865801cd620a27e9182bb";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
