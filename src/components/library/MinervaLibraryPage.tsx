@@ -15,6 +15,7 @@ import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   importStoryFolderFromPicker,
+  importStoryJsonFile,
   importStoryJsonFromPicker,
 } from "@/lib/storyExport/importStoryFolder";
 import { rootRouteApi } from "@/router/appRouter";
@@ -434,6 +435,9 @@ export function MinervaLibraryPage() {
                   row
                   onAllow={toFile}
                   disabled={shelfBusy}
+                  onImportStory={(file) =>
+                    handleImport(() => importStoryJsonFile(file))
+                  }
                   onImportOme={(req) =>
                     startStoryWithPendingImport({ ...req, kind: "ome" })
                   }

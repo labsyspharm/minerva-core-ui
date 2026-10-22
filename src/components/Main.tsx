@@ -794,7 +794,6 @@ const Content = (props: Props) => {
     delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
     useAppStore.setState({
       imageSelectionMask: null,
-      maskVisualizationPreview: null,
       channelVisibilities,
     });
     const keys = removed.flatMap((im) =>

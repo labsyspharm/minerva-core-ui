@@ -291,13 +291,6 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     };
   }, [nav, chip.sourceId, distLen, sc, sourceChannels]);
 
-  React.useEffect(
-    () => () => {
-      useAppStore.getState().setMaskVisualizationPreview(null);
-    },
-    [],
-  );
-
   if (!sc) return null;
 
   const rgbDisplay = isRgbDisplayChannel(sc, sourceChannels);
@@ -410,7 +403,6 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
       }),
     }));
     setImagesAndChannelGroups(nextImages, nextGroups);
-    useAppStore.getState().setMaskVisualizationPreview(null);
   };
 
   const openColor = (el: HTMLButtonElement) => {
@@ -464,13 +456,6 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
               maskAriaLabel: `Mask display for ${sc.name}`,
               ...featureTableRowExtras(sc.id, featureTables),
               onMaskVisualizationChange: syncMask,
-              onMaskVisualizationPreview: (viz: MaskVisualization | null) => {
-                useAppStore
-                  .getState()
-                  .setMaskVisualizationPreview(
-                    viz ? { sourceChannelId: sc.id, visualization: viz } : null,
-                  );
-              },
             }
           : !rgbDisplay
             ? {

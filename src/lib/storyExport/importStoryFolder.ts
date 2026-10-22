@@ -329,7 +329,35 @@ export async function importStoryJsonFromPicker(): Promise<string> {
     extensions: [".json"],
     multiple: false,
   });
-  const data = validateDocumentData(JSON.parse(await file.text()) as unknown);
+  return importStoryJsonFile(file);
+}
+
+/** Story arrays `validateDocumentData` reads; it defaults every missing one. */
+const STORY_JSON_KEYS = [
+  "waypoints",
+  "shapes",
+  "images",
+  "channelGroups",
+  "groups",
+  "channels",
+];
+
+/** True when `raw` has at least one story array, so any other JSON is refused. */
+function looksLikeStoryJson(raw: unknown): boolean {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    return false;
+  }
+  const o = raw as Record<string, unknown>;
+  return STORY_JSON_KEYS.some((k) => Array.isArray(o[k]));
+}
+
+/** Open a story JSON (picked or dropped) and return the new story id. */
+export async function importStoryJsonFile(file: File): Promise<string> {
+  const raw = JSON.parse(await file.text()) as unknown;
+  if (!looksLikeStoryJson(raw)) {
+    throw new Error(`${file.name} is not a Minerva story.`);
+  }
+  const data = validateDocumentData(raw);
   const base = file.name.replace(/\.json$/i, "").trim();
   const fallback = /^(document|story)$/i.test(base) ? "Imported Story" : base;
   return persistImportedStory(data, fallback);

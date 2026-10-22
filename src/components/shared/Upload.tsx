@@ -1,8 +1,8 @@
-import type { DragEvent as ReactDragEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { OpacitySlider } from "@/components/shared/channel/ChannelRow";
 import {
+  FeatureCsvAttachDialog,
   FeatureCsvColumnPick,
   pickFeatureCsv,
 } from "@/components/shared/channel/FeatureTable";
@@ -37,6 +37,11 @@ import {
 } from "@/lib/imaging/filesystem";
 import { clampImageOpacity } from "@/lib/imaging/imageOpacity";
 import {
+  dragHasFiles,
+  type ImportFileKind,
+  importFileKind,
+} from "@/lib/imaging/importFileKind";
+import {
   isRelativeOmeTiffUrl,
   jpegSourceNeedsLocalRoot,
 } from "@/lib/imaging/loadJpegFromDocument";
@@ -55,6 +60,7 @@ import {
   detectOmeTiffRgbLayout,
 } from "@/lib/imaging/omeTiff";
 import { urlFileName } from "@/lib/imaging/sourceUrl";
+import { applyOmeRoisFromAnnotationXmlString } from "@/lib/shapes/applyOmeRoisToDocument";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentStore";
 import {
@@ -104,7 +110,13 @@ export type OmeImportRequest = {
 };
 
 type UploadProps = {
-  onAllow: () => Promise<Handle.File[]>;
+  onAllow: (kinds?: readonly ImportFileKind[]) => Promise<Handle.File[]>;
+  /**
+   * Drop / Browse route by extension. Images open the import dialog. With this
+   * (Library), `.json` stories are accepted; without it (a story), `.xml` OME
+   * ROIs attach to the story and `.csv` feature tables to a mask.
+   */
+  onImportStory?: (file: File) => void | Promise<void>;
   /** Bumps after a successful image import; clears pending add state. */
   importRevision?: number;
   /** True when the viewer has image data (same idea as `!noLoader` in main). */
@@ -148,7 +160,6 @@ type UploadProps = {
     imageId: string,
     source: OmeImageSource,
   ) => void | Promise<void>;
-  /** Library strip (horizontal); default is the Images panel stack. */
   row?: boolean;
   disabled?: boolean;
 };
@@ -310,12 +321,12 @@ const IDLE_STRIP = {
   draft: "",
   dropError: null,
   urlError: null,
-  dragging: false,
 } as const;
 
 const Upload = (props: UploadProps) => {
   const {
     onAllow,
+    onImportStory,
     importRevision = 0,
     imageLoaded = false,
     loadedSource,
@@ -422,9 +433,78 @@ const Upload = (props: UploadProps) => {
       cancel = true;
     };
   }, [featureCsvFile, overlayRole]);
+  const [csvDrop, setCsvDrop] = useState<{
+    file: File;
+    masks: { id: string; name?: string }[];
+  } | null>(null);
+  /** Brief success line in the drop zone (annotations / feature table). */
+  const [notice, setNotice] = useState<string | null>(null);
+  useEffect(() => {
+    if (!notice) return;
+    const t = window.setTimeout(() => setNotice(null), 4000);
+    return () => window.clearTimeout(t);
+  }, [notice]);
   const [dragging, setDragging] = useState(false);
-  const dragDepthRef = useRef(0);
+  const acceptDroppedFilesRef = useRef<(dt: DataTransfer) => Promise<void>>(
+    async () => {},
+  );
   const localPickInFlightRef = useRef(false);
+
+  useEffect(() => {
+    let depth = 0;
+    let hideTimer = 0;
+    const end = () => {
+      window.clearTimeout(hideTimer);
+      depth = 0;
+      setDragging(false);
+    };
+    const onDragEnter = (e: DragEvent) => {
+      if (!dragHasFiles(e) || disabled) return;
+      e.preventDefault();
+      depth += 1;
+      setDragging(true);
+    };
+    const onDragLeave = (e: DragEvent) => {
+      if (!dragHasFiles(e) || disabled) return;
+      depth = Math.max(0, depth - 1);
+      if (depth === 0) setDragging(false);
+    };
+    const onDragOver = (e: DragEvent) => {
+      if (!dragHasFiles(e)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = disabled ? "none" : "copy";
+      }
+      if (disabled) return;
+      // A drag that began before mount (another tab) never sent us dragenter.
+      depth = Math.max(depth, 1);
+      window.clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(end, 1000);
+      setDragging(true);
+    };
+    const onDrop = (e: DragEvent) => {
+      if (!dragHasFiles(e)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      end();
+      if (disabled || !e.dataTransfer) return;
+      void acceptDroppedFilesRef.current(e.dataTransfer);
+    };
+    window.addEventListener("dragenter", onDragEnter, true);
+    window.addEventListener("dragleave", onDragLeave, true);
+    window.addEventListener("dragover", onDragOver, true);
+    window.addEventListener("drop", onDrop, true);
+    window.addEventListener("dragend", end, true);
+    return () => {
+      end();
+      window.removeEventListener("dragenter", onDragEnter, true);
+      window.removeEventListener("dragleave", onDragLeave, true);
+      window.removeEventListener("dragover", onDragOver, true);
+      window.removeEventListener("drop", onDrop, true);
+      window.removeEventListener("dragend", end, true);
+    };
+  }, [disabled]);
   const prevImportRev = useRef(importRevision);
   const formatDetectAbortRef = useRef<AbortController | null>(null);
   const formatChosenByUserRef = useRef(false);
@@ -590,42 +670,97 @@ const Upload = (props: UploadProps) => {
     [pointTarget, onReplaceImage, onLocateImage],
   );
 
-  const acceptLocalHandles = useCallback(
-    async (handles: Handle.File[]) => {
-      if (handles.length === 0) return;
-      const handle = handles[0];
-      if (!(await ensureFileHandlePermission(handle))) {
-        setStripErrorAt("drop");
-        setImportError("Allow file access to load this image.");
-        return;
-      }
-      if (!(await findFile({ handle }))) {
-        setStripErrorAt("drop");
-        setImportError("Could not read the selected file.");
-        return;
-      }
-      if (await applyPointedSource({ kind: "local", handle })) return;
-      openPending({
-        kind: "local",
-        handles: [handle],
-        label: handle.name || "image.ome.tif",
-      });
-    },
-    [applyPointedSource, openPending],
-  );
+  const acceptedKinds: ImportFileKind[] = pointTarget
+    ? ["image"]
+    : onImportStory
+      ? ["image", "story"]
+      : ["image", "annotations", "featureTable"];
 
-  const browseLocal = useCallback(async () => {
+  const failDrop = (message: string) => {
+    setStripErrorAt("drop");
+    setImportError(message);
+  };
+
+  const importOtherFile = async (kind: ImportFileKind, file: File) => {
+    if (kind === "story") {
+      await onImportStory?.(file);
+    } else if (kind === "annotations") {
+      const r = applyOmeRoisFromAnnotationXmlString(await file.text());
+      if (r.success === false) failDrop(r.error);
+      else {
+        const n = r.shapeCount;
+        setNotice(`Imported ${n} annotation${n === 1 ? "" : "s"}.`);
+      }
+    } else {
+      const doc = useDocumentStore.getState();
+      const hasTable = new Set(doc.featureTables.map((t) => t.sourceChannelId));
+      const masks = flattenImageChannelsInDocumentOrder(doc.images).filter(
+        isMaskChannel,
+      );
+      const free = masks.flatMap(({ id, name }) =>
+        id && !hasTable.has(id) ? [{ id, name }] : [],
+      );
+      if (free.length > 0) setCsvDrop({ file, masks: free });
+      else
+        failDrop(
+          masks.length > 0
+            ? "Every mask already has a feature table."
+            : "Add a segmentation mask before attaching a feature table.",
+        );
+    }
+  };
+
+  const acceptLocalHandle = async (handle: Handle.File) => {
+    setImportError(null);
+    setNotice(null);
+    const kind = importFileKind(handle.name);
+    if (!acceptedKinds.includes(kind)) {
+      failDrop(
+        pointTarget
+          ? "Choose an image file."
+          : onImportStory
+            ? "Open a story to add this file."
+            : "Import story files from the Library.",
+      );
+      return;
+    }
+    if (!(await ensureFileHandlePermission(handle))) {
+      failDrop("Allow file access to read this file.");
+      return;
+    }
+    if (!(await findFile({ handle }))) {
+      failDrop("Could not read the selected file.");
+      return;
+    }
+    if (kind !== "image") {
+      try {
+        await importOtherFile(kind, await handle.getFile());
+      } catch (e: unknown) {
+        failDrop(
+          e instanceof Error ? e.message : "Could not read the selected file.",
+        );
+      }
+      return;
+    }
+    if (await applyPointedSource({ kind: "local", handle })) return;
+    openPending({
+      kind: "local",
+      handles: [handle],
+      label: handle.name || "image.ome.tif",
+    });
+  };
+
+  const browseLocal = async () => {
     if (disabled || localPickInFlightRef.current) return;
     localPickInFlightRef.current = true;
     setImportError(null);
     try {
-      const picked = await onAllow();
-      if (picked.length === 0) return;
-      await acceptLocalHandles(picked);
+      const [handle] = await onAllow(acceptedKinds);
+      if (handle) await acceptLocalHandle(handle);
     } finally {
       localPickInFlightRef.current = false;
     }
-  }, [acceptLocalHandles, disabled, onAllow]);
+  };
 
   const acceptUrlDraft = useCallback(() => {
     if (disabled) return;
@@ -643,47 +778,19 @@ const Upload = (props: UploadProps) => {
     openPending({ kind: "url", url });
   }, [applyPointedSource, disabled, openPending, pointTarget, urlDraft]);
 
-  const onDragEnter = (e: ReactDragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragDepthRef.current += 1;
-    if (e.dataTransfer.types.includes("Files")) setDragging(true);
-  };
-
-  const onDragLeave = (e: ReactDragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
-    if (dragDepthRef.current === 0) setDragging(false);
-  };
-
-  const onDragOver = (e: ReactDragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer.types.includes("Files")) {
-      e.dataTransfer.dropEffect = "copy";
-    }
-  };
-
-  const onDrop = async (e: ReactDragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragDepthRef.current = 0;
-    setDragging(false);
+  acceptDroppedFilesRef.current = async (dt) => {
     if (disabled) return;
-    const items = [...e.dataTransfer.items].filter((i) => i.kind === "file");
+    const items = [...dt.items].filter((i) => i.kind === "file");
     if (items.length === 0) {
-      setStripErrorAt("drop");
-      setImportError("Drop an image file to add it.");
+      failDrop("Drop a file to add it.");
       return;
     }
     const handle = await fileHandleFromDataTransferItem(items[0]);
     if (!handle) {
-      setStripErrorAt("drop");
-      setImportError("Could not read the dropped file.");
+      failDrop("Could not read the dropped file.");
       return;
     }
-    await acceptLocalHandles([handle]);
+    await acceptLocalHandle(handle);
   };
 
   const runImport = async () => {
@@ -960,39 +1067,24 @@ const Upload = (props: UploadProps) => {
           ]
         : [];
 
-  const dropHandlers = {
-    onDragEnter,
-    onDragLeave,
-    onDragOver,
-    onDrop: (e: ReactDragEvent) => void onDrop(e),
-  };
   const stripError = importError && !pending ? importError : null;
   const liveStrip = {
     draft: urlDraft,
     dropError: stripErrorAt === "drop" ? stripError : null,
     urlError: stripErrorAt === "url" ? stripError : null,
-    dragging,
   };
   const renderAddStrip = (popup: boolean) => {
-    // While the popup is open it owns the shared draft, errors, and drag state.
+    // While the popup is open it owns the shared draft and errors.
     const strip = popup || !pointTarget ? liveStrip : IDLE_STRIP;
     return (
       <div
-        className={[
-          styles.addStrip,
-          row && !popup ? styles.addStripRow : "",
-          (row || popup) && strip.dragging ? styles.panelDropActive : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        {...(row || popup ? dropHandlers : {})}
+        className={
+          popup ? styles.addStrip : `${styles.addStrip} ${styles.addStripRow}`
+        }
       >
         <button
           type="button"
-          className={[
-            styles.dropZone,
-            strip.dragging ? styles.dropZoneActive : "",
-          ].join(" ")}
+          className={styles.dropZone}
           disabled={disabled}
           aria-invalid={strip.dropError ? true : undefined}
           onClick={() => void browseLocal()}
@@ -1004,9 +1096,12 @@ const Upload = (props: UploadProps) => {
             ]
               .filter(Boolean)
               .join(" ")}
-            role={strip.dropError ? "alert" : undefined}
+            role={strip.dropError ? "alert" : notice ? "status" : undefined}
           >
-            {strip.dropError ?? "Drop or Browse Image File"}
+            {strip.dropError ??
+              (popup
+                ? "Drop or Browse Image File"
+                : (notice ?? "Drop or Browse File"))}
           </span>
         </button>
         <div className={styles.orDivider}>
@@ -1018,7 +1113,7 @@ const Upload = (props: UploadProps) => {
               id={popup ? undefined : "upload-add-url"}
               type="url"
               className={`${minervaTheme.input} ${styles.urlInput}`}
-              placeholder="Image URL (OME-TIFF or DICOMweb)"
+              placeholder="Image URL"
               aria-label="Image URL"
               aria-invalid={strip.urlError ? true : undefined}
               value={strip.draft}
@@ -1065,6 +1160,14 @@ const Upload = (props: UploadProps) => {
 
   return (
     <>
+      {dragging
+        ? createPortal(
+            <output className={styles.windowDrop}>
+              {pointTarget ? "Drop image file" : "Drop file"}
+            </output>,
+            document.body,
+          )
+        : null}
       {pointTarget
         ? createPortal(
             <>
@@ -1097,20 +1200,14 @@ const Upload = (props: UploadProps) => {
       {row ? (
         addStrip
       ) : (
-        <div
-          className={[
-            panel.authorPanel,
-            dragging ? styles.panelDropActive : "",
-          ].join(" ")}
-          {...dropHandlers}
-        >
+        <div className={panel.authorPanel}>
+          <div className={styles.panelDock}>{addStrip}</div>
           <div
             className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}
           >
-            <div className={styles.stack}>
-              {imageCards}
-              {addStrip}
-            </div>
+            {imageCards.length > 0 ? (
+              <div className={styles.stack}>{imageCards}</div>
+            ) : null}
           </div>
         </div>
       )}
@@ -1234,6 +1331,14 @@ const Upload = (props: UploadProps) => {
             />
           ) : null}
         </ImportOverlay>
+      ) : null}
+      {csvDrop ? (
+        <FeatureCsvAttachDialog
+          file={csvDrop.file}
+          masks={csvDrop.masks}
+          onClose={() => setCsvDrop(null)}
+          onAttached={() => setNotice("Attached feature table.")}
+        />
       ) : null}
     </>
   );

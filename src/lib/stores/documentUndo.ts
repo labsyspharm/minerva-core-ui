@@ -94,7 +94,6 @@ export function syncAppStoreShapesFromDocument(): void {
 export function syncAppStoreFromDocument(): void {
   useAppStore.getState().clearChannelRendering();
   useAppStore.setState({
-    maskVisualizationPreview: null,
     imageOrientationPreview: null,
     imageOpacityPreview: null,
   });
