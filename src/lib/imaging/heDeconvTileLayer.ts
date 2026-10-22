@@ -1,5 +1,6 @@
 import type { Layer } from "@deck.gl/core";
 import { COORDINATE_SYSTEM, picking, project32 } from "@deck.gl/core";
+import { DTYPE_VALUES } from "@hms-dbmi/viv";
 import type { Matrix4 } from "@math.gl/core";
 import {
   defaultHeDeconvSplit,
@@ -12,7 +13,10 @@ import {
   rgb8ScaleFromDtype,
 } from "@/lib/imaging/heStainFit";
 import { imageFadeParameters } from "@/lib/imaging/imageOpacity";
-import type { SupportedTypedArray } from "@/lib/imaging/loaderTypes";
+import type {
+  SupportedDtype,
+  SupportedTypedArray,
+} from "@/lib/imaging/loaderTypes";
 import { planeSize } from "@/lib/imaging/loaderTypes";
 import {
   ADDITIVE_BLEND_PARAMETERS,
@@ -126,7 +130,9 @@ uniform heDeconvUniforms {
 };
 
 const HE_XR_PROPS = {
-  interpolation: "linear",
+  // Same as every Viv tile (vivNearestSampling): textures keep the dtype's
+  // integer format; linear would need float textures many iOS GPUs can't filter.
+  interpolation: "nearest",
   channelsVisible: [true, true, true],
   contrastLimits: [
     [0, 1],
@@ -137,6 +143,13 @@ const HE_XR_PROPS = {
   pickable: false,
   opacity: 1,
 } as const;
+
+/** GLSL sampler for Viv's nearest-sampled texture of `dtype` (see DTYPE_VALUES). */
+function heSamplerType(dtype: unknown): string {
+  return (
+    DTYPE_VALUES[dtype as SupportedDtype]?.sampler ?? DTYPE_VALUES.Uint8.sampler
+  );
+}
 
 function stainContrast(stain: HeStainView): [number, number] {
   return [stain.lower / HE_CONTRAST_SCALE, stain.upper / HE_CONTRAST_SCALE];
@@ -176,11 +189,12 @@ class HeDeconvXrLayer extends XRLayerBase {
       vs: HE_VS,
       fs: HE_FS,
       modules: [project32, picking, heDeconv],
-      // Linear interpolation uploads integer dtypes as Float32.
+      // Sampler must match the texture XRLayer.dataToTexture made for this
+      // dtype (Uint8 → r8uint → usampler2D), or every draw is GL_INVALID_OPERATION.
       // VivShaderAssembler hook signatures use float[NUM_CHANNELS]; XRLayer
       // normally injects these via expandShaderModule, which this subclass skips.
       defines: {
-        SAMPLER_TYPE: "sampler2D",
+        SAMPLER_TYPE: heSamplerType(this.props.dtype),
         NUM_CHANNELS: "3",
         NUM_PLANES: "1",
       },
