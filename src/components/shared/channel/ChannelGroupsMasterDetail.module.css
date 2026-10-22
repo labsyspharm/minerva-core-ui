@@ -1,5 +1,16 @@
 /* Channel group list layout. */
 
+/* H&E stain rows under a split RGB channel. */
+.heStainList {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 4px 28px;
+}
+
+.heStainBlock {
+  margin: 0;
+}
+
 .channelActionButton {
   background: none;
   border: none;
