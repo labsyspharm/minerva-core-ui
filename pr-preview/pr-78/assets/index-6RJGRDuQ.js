@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Cd2WRm_F.js","./pako.esm-KbdoS3Oq.js","./lerc-h3QrPdn_.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-ByEu9PD-.js","./pako.esm-KbdoS3Oq.js","./lerc-DDFbIkpS.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18505,7 +18505,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "f1b1425a59854b92a3e865801cd620a27e9182bb",
+    "VITE_APP_GIT_SHA": "a4b97dcbb47e1eb92d0d0e89dc33ec87ef15d300",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -79845,26 +79845,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CfSfmmaG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DVKccgtv.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-D49NHn78.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-KiWFx5Ji.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DdtoZGNh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BImliEuo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-Cd2WRm_F.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BysCW0Rh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-h3QrPdn_.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-ByEu9PD-.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-m60bv0iy.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DDFbIkpS.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DDCk1ECJ.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BnbUkWxV.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BIQv0JXZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DA_S7HOV.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -260631,8 +260631,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-22T00:27:46.820Z";
-    const sha = "f1b1425a59854b92a3e865801cd620a27e9182bb";
+    const iso = "2026-10-22T00:38:09.464Z";
+    const sha = "a4b97dcbb47e1eb92d0d0e89dc33ec87ef15d300";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -262304,7 +262304,7 @@ void main() {
     }
   };
   const HE_XR_PROPS = {
-    interpolation: "linear",
+    interpolation: "nearest",
     channelsVisible: [
       true,
       true,
@@ -262328,6 +262328,10 @@ void main() {
     pickable: false,
     opacity: 1
   };
+  function heSamplerType(dtype) {
+    var _a2;
+    return ((_a2 = DTYPE_VALUES[dtype]) == null ? void 0 : _a2.sampler) ?? DTYPE_VALUES.Uint8.sampler;
+  }
   function stainContrast(stain) {
     return [
       stain.lower / HE_CONTRAST_SCALE,
@@ -262366,7 +262370,7 @@ void main() {
           heDeconv
         ],
         defines: {
-          SAMPLER_TYPE: "sampler2D",
+          SAMPLER_TYPE: heSamplerType(this.props.dtype),
           NUM_CHANNELS: "3",
           NUM_PLANES: "1"
         }
