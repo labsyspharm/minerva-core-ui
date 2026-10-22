@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BqQEJcm8.js","./pako.esm-KbdoS3Oq.js","./lerc-CzVRclb_.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-YN2FKUY5.js","./pako.esm-KbdoS3Oq.js","./lerc-CISrD2uZ.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18505,7 +18505,8 @@ let __tla = (async () => {
     "MODE": "demo",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "c79a50508ab1d74c0a16345aa381d0b606a37d85"
+    "VITE_APP_GIT_SHA": "58f080e3502f6a7b60b471c23f4fc917c6161e82",
+    "VITE_DEMO_OPEN_PREVIEW": "true"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79228,26 +79229,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-dPkJt4dW.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DqXtt4yY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BiTSJgKG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-B2vQdz1q.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CDyisXXz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-C_WSXV6y.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BqQEJcm8.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-B854ogyi.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CzVRclb_.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-YN2FKUY5.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-0szt8grf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CISrD2uZ.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DK7M4wAB.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CLmZppuQ.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-ByDXUB3c.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BmRhfno3.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -173680,6 +173681,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function isDemoContentEnabled() {
     return true;
   }
+  function isDemoOpenPreview() {
+    return Boolean("true");
+  }
   function getDemoDocumentTitle() {
     return "Minerva 2.0 Demo";
   }
@@ -259929,8 +259933,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-22T01:11:19.769Z";
-    const sha = "c79a50508ab1d74c0a16345aa381d0b606a37d85";
+    const iso = "2026-10-22T17:08:28.831Z";
+    const sha = "58f080e3502f6a7b60b471c23f4fc917c6161e82";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -262216,7 +262220,7 @@ uniform classStyleUniforms {
     const [directory_handle, setDirectoryHandle] = reactExports.useState(null);
     const [exportFolderPrompt, setExportFolderPrompt] = reactExports.useState(null);
     const [exportSourcePrompt, setExportSourcePrompt] = reactExports.useState(false);
-    const [presenting, setPresenting] = reactExports.useState(false);
+    const [presenting, setPresenting] = reactExports.useState(() => isDemoOpenPreview() && useDocumentStore.getState().activeStoryId === DEMO_SHELF_STORY_ID);
     const beginExportToFolder = async (mode, dirHandle) => {
       const doc = useDocumentStore.getState();
       const storyId = doc.activeStoryId;
@@ -263858,6 +263862,11 @@ uniform classStyleUniforms {
     "img-1"
   ];
   document.title = getDemoDocumentTitle();
+  if (isDemoOpenPreview() && parsePreferredStoryIdFromLocation() === null) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("storyid", DEMO_SHELF_STORY_ID);
+    window.history.replaceState(null, "", url);
+  }
   const appRouter = createAppRouter(Main, {
     handleKeys: OME_TIFF_HANDLE_KEYS,
     ...getDemoMainProps()
