@@ -40,11 +40,20 @@ export type HeHistogram = {
 const HE_HIST_BINS = 50;
 const HE_HIST_STEP = 4;
 const HE_HIST_TIMEOUT_MS = 10_000;
+/** Spread coarsest-level tiles read for histograms when no level fits whole. */
+const HE_HIST_TILES = 8;
+/**
+ * Largest level read as one raster (~15 bytes per pixel once split). A
+ * single-level image or shallow pyramid is read tile by tile instead.
+ */
+const MAX_OVERVIEW_PIXELS = 4096 * 4096;
 
 type Vec3 = [number, number, number];
 
 const N_TILES = 16;
 const MAX_READS = 32;
+/** Read budget without an overview tissue map to pick tiles from. */
+const MAX_BLIND_READS = 96;
 const OVERVIEW_TISSUE = 0.5;
 const FULLRES_TISSUE = 0.4;
 const TISSUE_MAX = 220;
@@ -205,24 +214,35 @@ function keepHeOdPixel(ro: number, go: number, bo: number): boolean {
   return true;
 }
 
-function equalSubsamplePacked3(
-  packed: Float32Array,
-  count: number,
-): Float32Array {
-  if (count <= MAX_PIXELS) {
-    return packed.length === count * 3 ? packed : packed.subarray(0, count * 3);
-  }
-  const spacing = Math.ceil(count / MAX_PIXELS);
-  const outCount = Math.floor(count / spacing);
-  const out = new Float32Array(outCount * 3);
-  for (let i = 0; i < outCount; i++) {
-    const s = i * spacing * 3;
-    const d = i * 3;
-    out[d] = packed[s];
-    out[d + 1] = packed[s + 1];
-    out[d + 2] = packed[s + 2];
-  }
-  return out;
+/** Seeded LCG in [0, 1), so fits repeat for the same image. */
+function seededRandom(seed: number): () => number {
+  let s = seed >>> 0 || 1;
+  return () => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    return s / 2 ** 32;
+  };
+}
+
+/**
+ * Uniform sample of at most `capacity` OD pixels (reservoir sampling), so the
+ * fit holds one fixed buffer however many tile pixels pass `keepHeOdPixel`.
+ */
+function odReservoir(capacity: number) {
+  const packed = new Float32Array(capacity * 3);
+  const rand = seededRandom(FPS_SEED);
+  let seen = 0;
+  return {
+    add(ro: number, go: number, bo: number) {
+      const slot = seen < capacity ? seen : Math.floor(rand() * (seen + 1));
+      seen += 1;
+      if (slot >= capacity) return;
+      packed[slot * 3] = ro;
+      packed[slot * 3 + 1] = go;
+      packed[slot * 3 + 2] = bo;
+    },
+    count: () => Math.min(seen, capacity),
+    packed: () => packed.subarray(0, Math.min(seen, capacity) * 3),
+  };
 }
 
 function farthestPointSample(
@@ -230,11 +250,7 @@ function farthestPointSample(
   n: number,
 ): { x: number; y: number }[] {
   if (pts.length <= n) return pts.slice();
-  let s = FPS_SEED >>> 0 || 1;
-  const rand = () => {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
-    return s / 2 ** 32;
-  };
+  const rand = seededRandom(FPS_SEED);
   const picked: { x: number; y: number }[] = [
     pts[Math.floor(rand() * pts.length)],
   ];
@@ -415,6 +431,24 @@ function tissueFrac(
   return n > 0 ? t / n : 0;
 }
 
+/** Coarsest level when it fits MAX_OVERVIEW_PIXELS; otherwise read tiles. */
+function overviewPlane(planes: readonly LoaderPlane[]): LoaderPlane | null {
+  const coarsest = planes[planes.length - 1];
+  const { width, height } = planeSize(coarsest);
+  if (width <= 0 || height <= 0) return null;
+  return width * height <= MAX_OVERVIEW_PIXELS ? coarsest : null;
+}
+
+function tileGrid(plane: LoaderPlane): { x: number; y: number }[] {
+  const { width, height } = planeSize(plane);
+  const tileSize = Math.max(1, plane.tileSize || 1024);
+  const tiles: { x: number; y: number }[] = [];
+  for (let y = 0; y < Math.ceil(height / tileSize); y++) {
+    for (let x = 0; x < Math.ceil(width / tileSize); x++) tiles.push({ x, y });
+  }
+  return tiles;
+}
+
 async function readRgb(
   plane: LoaderPlane,
   channelIndex: number,
@@ -453,30 +487,26 @@ async function estimateHeStainFit(
     const planes = loader.data;
     if (!planes?.length) return defaultFit();
     const finest = planes[0];
-    const coarsest = planes[planes.length - 1];
     const { width: fineW, height: fineH } = planeSize(finest);
-    const { width: coarseW, height: coarseH } = planeSize(coarsest);
     const tileSize = Math.max(1, finest.tileSize || 1024);
-    if (fineW <= 0 || fineH <= 0 || coarseW <= 0 || coarseH <= 0) {
-      return defaultFit();
-    }
-
-    let overview: Awaited<ReturnType<typeof readRgb>> = null;
-    try {
-      overview = await readRgb(coarsest, channelIndex);
-    } catch {
-      return defaultFit();
-    }
-    if (!overview) return defaultFit();
+    if (fineW <= 0 || fineH <= 0) return defaultFit();
     const fallback = defaultFit();
 
-    const sx = overview.w / fineW;
-    const sy = overview.h / fineH;
-    const nx = Math.ceil(fineW / tileSize);
-    const ny = Math.ceil(fineH / tileSize);
-    const tissueTiles: { x: number; y: number }[] = [];
-    for (let ty = 0; ty < ny; ty++) {
-      for (let tx = 0; tx < nx; tx++) {
+    // Without a small enough overview, spread reads over every full-res tile;
+    // the FULLRES_TISSUE check below still drops background tiles.
+    const overviewSource = overviewPlane(planes);
+    let tissueTiles = tileGrid(finest);
+    if (overviewSource) {
+      let overview: Awaited<ReturnType<typeof readRgb>> = null;
+      try {
+        overview = await readRgb(overviewSource, channelIndex);
+      } catch {
+        return defaultFit();
+      }
+      if (!overview) return defaultFit();
+      const sx = overview.w / fineW;
+      const sy = overview.h / fineH;
+      tissueTiles = tissueTiles.filter(({ x: tx, y: ty }) => {
         const x0 = tx * tileSize;
         const y0 = ty * tileSize;
         const x1 = Math.min(fineW, x0 + tileSize);
@@ -485,7 +515,7 @@ async function estimateHeStainFit(
         const oy0 = Math.max(0, Math.floor(y0 * sy));
         const ox1 = Math.min(overview.w, Math.max(ox0 + 1, Math.ceil(x1 * sx)));
         const oy1 = Math.min(overview.h, Math.max(oy0 + 1, Math.ceil(y1 * sy)));
-        if (
+        return (
           tissueFrac(
             overview.r,
             overview.g,
@@ -496,22 +526,26 @@ async function estimateHeStainFit(
             ox1,
             oy1,
           ) >= OVERVIEW_TISSUE
-        ) {
-          tissueTiles.push({ x: tx, y: ty });
-        }
-      }
+        );
+      });
     }
     if (tissueTiles.length === 0) return fallback;
 
-    const ranked = farthestPointSample(
+    const maxReads = overviewSource ? MAX_READS : MAX_BLIND_READS;
+    const queue = farthestPointSample(
       tissueTiles,
-      Math.min(tissueTiles.length, MAX_READS),
+      Math.min(tissueTiles.length, maxReads),
     );
+    const queued = new Set(queue.map((t) => `${t.x},${t.y}`));
+    const gridW = Math.ceil(fineW / tileSize);
+    const gridH = Math.ceil(fineH / tileSize);
 
-    const od: number[] = [];
+    const od = odReservoir(MAX_PIXELS);
     let accepted = 0;
-    for (let i = 0; i < ranked.length && accepted < N_TILES; i += READ_BATCH) {
-      const batch = ranked.slice(i, i + READ_BATCH);
+    let reads = 0;
+    while (queue.length > 0 && reads < maxReads && accepted < N_TILES) {
+      const batch = queue.splice(0, Math.min(READ_BATCH, maxReads - reads));
+      reads += batch.length;
       const rgbs = await Promise.all(
         batch.map(async (tile) => {
           try {
@@ -529,23 +563,38 @@ async function estimateHeStainFit(
           }
         }),
       );
-      for (const rgb of rgbs) {
+      for (const [k, rgb] of rgbs.entries()) {
         if (!rgb || accepted >= N_TILES) continue;
         accepted += 1;
+        // Blind reads rarely land on tissue; it clumps, so try a hit's
+        // neighbors before the next spread tile.
+        if (!overviewSource) {
+          const { x, y } = batch[k];
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const nx = x + dx;
+              const ny = y + dy;
+              const key = `${nx},${ny}`;
+              if (nx < 0 || ny < 0 || nx >= gridW || ny >= gridH) continue;
+              if (queued.has(key)) continue;
+              queued.add(key);
+              queue.unshift({ x: nx, y: ny });
+            }
+          }
+        }
         box3MeanTwoPass(rgb.r, rgb.g, rgb.b, rgb.w, rgb.h);
         const n = rgb.r.length;
         for (let p = 0; p < n; p++) {
           const ro = opticalDensity(rgb.r[p]);
           const go = opticalDensity(rgb.g[p]);
           const bo = opticalDensity(rgb.b[p]);
-          if (keepHeOdPixel(ro, go, bo)) od.push(ro, go, bo);
+          if (keepHeOdPixel(ro, go, bo)) od.add(ro, go, bo);
         }
       }
     }
 
-    if (accepted === 0 || od.length < 6) return fallback;
-    const packed = equalSubsamplePacked3(new Float32Array(od), od.length / 3);
-    return fitAutoFromPackedOd(packed, packed.length / 3);
+    if (accepted === 0 || od.count() < 2) return fallback;
+    return fitAutoFromPackedOd(od.packed(), od.count());
   } catch {
     return defaultFit();
   }
@@ -584,28 +633,47 @@ async function computeHeHistograms(
   const planes = loader.data;
   if (!planes?.length) return empty;
   const coarsest = planes[planes.length - 1];
-  let rgb: Awaited<ReturnType<typeof readRgb>> = null;
+  const overviewSource = overviewPlane(planes);
+  let rgbs: NonNullable<Awaited<ReturnType<typeof readRgb>>>[] = [];
   try {
     const signal = AbortSignal.timeout(HE_HIST_TIMEOUT_MS);
-    // Full overview raster — not tile (0,0) — so sparklines match tissue.
-    rgb = await readRgb(coarsest, channelIndex, undefined, signal);
+    if (overviewSource) {
+      // Full overview raster — not tile (0,0) — so sparklines match tissue.
+      const rgb = await readRgb(
+        overviewSource,
+        channelIndex,
+        undefined,
+        signal,
+      );
+      if (rgb) rgbs = [rgb];
+    } else {
+      // Too big to read whole: a spread of coarsest-level tiles stands in.
+      const tiles = farthestPointSample(tileGrid(coarsest), HE_HIST_TILES);
+      const read = await Promise.all(
+        tiles.map((tile) =>
+          readRgb(coarsest, channelIndex, tile, signal).catch(() => null),
+        ),
+      );
+      rgbs = read.filter((rgb) => rgb != null);
+    }
   } catch {
     return empty;
   }
-  if (!rgb) return empty;
+  if (rgbs.length === 0) return empty;
   const h: number[] = [];
   const e: number[] = [];
-  const n = rgb.r.length;
-  for (let i = 0; i < n; i++) {
-    if (i % HE_HIST_STEP !== 0) continue;
-    const [ch, ce] = unmixHe(
-      inverse,
-      opticalDensity(rgb.r[i]),
-      opticalDensity(rgb.g[i]),
-      opticalDensity(rgb.b[i]),
-    );
-    h.push(ch * HE_CONTRAST_SCALE);
-    e.push(ce * HE_CONTRAST_SCALE);
+  for (const rgb of rgbs) {
+    const n = rgb.r.length;
+    for (let i = 0; i < n; i += HE_HIST_STEP) {
+      const [ch, ce] = unmixHe(
+        inverse,
+        opticalDensity(rgb.r[i]),
+        opticalDensity(rgb.g[i]),
+        opticalDensity(rgb.b[i]),
+      );
+      h.push(ch * HE_CONTRAST_SCALE);
+      e.push(ce * HE_CONTRAST_SCALE);
+    }
   }
   return {
     fitKey,
