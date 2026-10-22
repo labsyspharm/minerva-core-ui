@@ -1,0 +1,566 @@
+import {
+  type ContrastLimits,
+  fitChannelGmmContrastFromUint16,
+} from "@/lib/imaging/autoContrast";
+import { isGmmEligible } from "@/lib/imaging/channelKind";
+import { looksLikeImportDefaultLimits } from "@/lib/imaging/sourceChannelStyle";
+import type { Channel } from "@/lib/stores/documentStore";
+import {
+  flattenImageChannelsInDocumentOrder,
+  useDocumentStore,
+} from "@/lib/stores/documentStore";
+import { applySourceChannelsToImages } from "@/lib/stores/storeUtils";
+import {
+  dequantizeFromUint16,
+  type FloatRange,
+  finiteSampleRange,
+  isFloatDtype,
+  quantizeFloatToUint16,
+} from "./floatRange";
+import type { LoaderPlane } from "./loaderTypes";
+
+const FETCH_CONCURRENCY = 1;
+const FIT_CONCURRENCY = 2;
+const GMM_MAX_SAMPLES = 40_000;
+/** Skip a tile/plane decode above this (uint16 4MP ≈ 8MB). */
+const GMM_MAX_DECODE_PIXELS = 4_000_000;
+const GMM_MAX_TILES = 8;
+
+type Loader = { data: LoaderPlane[] };
+
+type WriteGuard =
+  | { kind: "still-missing" }
+  | { kind: "unchanged"; expected: ContrastLimits };
+
+type Job = {
+  rasterKey: string;
+  loader: Loader;
+  sourceImageId: string;
+  index: number;
+  guards: Map<string, WriteGuard>;
+};
+
+type FitOutcome =
+  | { kind: "fitted"; window: ContrastLimits }
+  | { kind: "failed" };
+
+type GmmFitSnapshot = {
+  pendingIds: readonly string[];
+};
+
+const emptySnapshot: GmmFitSnapshot = {
+  pendingIds: [],
+};
+
+let generation = 0;
+const loadersByImageId = new Map<string, Loader>();
+const jobsByKey = new Map<string, Job>();
+const queue: string[] = [];
+const inFlight = new Map<string, Promise<FitOutcome>>();
+const failedKeys = new Set<string>();
+const listeners = new Set<() => void>();
+let snapshot: GmmFitSnapshot = emptySnapshot;
+let pendingKey = "";
+const fetchWaiters: (() => void)[] = [];
+const fitWaiters: (() => void)[] = [];
+const fetchUsedBox = { n: 0 };
+const fitUsedBox = { n: 0 };
+
+function rasterKey(sourceImageId: string, index: number): string {
+  return `${sourceImageId}\0${index}`;
+}
+
+function limitsEqual(
+  a: { lower?: number; upper?: number } | undefined,
+  b: ContrastLimits,
+): boolean {
+  return a != null && a.lower === b.lower && a.upper === b.upper;
+}
+
+function asWindow(
+  limits: { lower?: number; upper?: number } | undefined,
+): ContrastLimits | undefined {
+  if (limits?.lower == null || limits.upper == null) return undefined;
+  return { lower: limits.lower, upper: limits.upper };
+}
+
+function documentChannels(): Channel[] {
+  return flattenImageChannelsInDocumentOrder(
+    useDocumentStore.getState().images,
+  );
+}
+
+function acquire(used: { n: number }, waiters: (() => void)[], max: number) {
+  return new Promise<void>((resolve) => {
+    if (used.n < max) {
+      used.n++;
+      resolve();
+      return;
+    }
+    waiters.push(() => {
+      used.n++;
+      resolve();
+    });
+  });
+}
+
+function release(used: { n: number }, waiters: (() => void)[]) {
+  used.n = Math.max(0, used.n - 1);
+  waiters.shift()?.();
+}
+
+function notify() {
+  const pendingIds: string[] = [];
+  for (const job of jobsByKey.values()) {
+    for (const id of job.guards.keys()) pendingIds.push(id);
+  }
+  pendingIds.sort();
+  const key = pendingIds.join("\0");
+  if (key === pendingKey) return;
+  pendingKey = key;
+  snapshot = { pendingIds };
+  for (const listener of listeners) listener();
+}
+
+function readChannel(channelId: string): Channel | undefined {
+  return documentChannels().find((sc) => sc.id === channelId);
+}
+
+function removeFromQueues(key: string) {
+  const idx = queue.indexOf(key);
+  if (idx >= 0) queue.splice(idx, 1);
+}
+
+function enqueue(job: Job) {
+  removeFromQueues(job.rasterKey);
+  queue.push(job.rasterKey);
+}
+
+function finishJob(job: Job, gen: number) {
+  if (gen !== generation) return;
+  jobsByKey.delete(job.rasterKey);
+  removeFromQueues(job.rasterKey);
+  inFlight.delete(job.rasterKey);
+  notify();
+}
+
+function commitFitted(
+  job: Job,
+  window: ContrastLimits,
+  range: FloatRange | null,
+): void {
+  const doc = useDocumentStore.getState();
+  const channels = flattenImageChannelsInDocumentOrder(doc.images);
+  let changed = false;
+  const next = channels.map((sc) => {
+    if (!job.guards.has(sc.id)) return sc;
+    const guard = job.guards.get(sc.id) ?? { kind: "still-missing" as const };
+    if (guard.kind === "still-missing") {
+      if (sc.gmmContrastLimits) return sc;
+    } else if (!limitsEqual(sc.gmmContrastLimits, guard.expected)) {
+      return sc;
+    }
+    changed = true;
+    const dist = sc.sourceDistribution;
+    const distMatches =
+      range != null &&
+      dist?.XScale === "linear" &&
+      dist.LowerRange === range.min &&
+      dist.UpperRange === range.max;
+    return {
+      ...sc,
+      gmmContrastLimits: { lower: window.lower, upper: window.upper },
+      lowerLimit: window.lower,
+      upperLimit: window.upper,
+      ...(range ? { floatRange: range } : {}),
+      ...(range && !distMatches ? { sourceDistribution: undefined } : {}),
+    };
+  });
+  if (changed) {
+    doc.setImages(applySourceChannelsToImages(doc.images, next));
+  }
+
+  let groupsChanged = false;
+  const nextGroups = doc.channelGroups.map((g) => ({
+    ...g,
+    channels: g.channels.map((gc) => {
+      if (!job.guards.has(gc.channelId)) return gc;
+      if (!looksLikeImportDefaultLimits(gc.lowerLimit, gc.upperLimit)) {
+        return gc;
+      }
+      groupsChanged = true;
+      return {
+        ...gc,
+        lowerLimit: window.lower,
+        upperLimit: window.upper,
+      };
+    }),
+  }));
+  if (groupsChanged) doc.setChannelGroups(nextGroups);
+}
+
+function planeSize(plane: Loader["data"][number]): {
+  width: number;
+  height: number;
+} {
+  const xi = plane.labels.indexOf("x");
+  const yi = plane.labels.indexOf("y");
+  return {
+    width: xi >= 0 ? plane.shape[xi] : 0,
+    height: yi >= 0 ? plane.shape[yi] : 0,
+  };
+}
+
+function pickTileCoords(nx: number, ny: number): [number, number][] {
+  if (nx <= 0 || ny <= 0) return [];
+  const cx = Math.floor(nx / 2);
+  const cy = Math.floor(ny / 2);
+  const out: [number, number][] = [];
+  const seen = new Set<string>();
+  const add = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= nx || y >= ny || out.length >= GMM_MAX_TILES) {
+      return;
+    }
+    const k = `${x},${y}`;
+    if (seen.has(k)) return;
+    seen.add(k);
+    out.push([x, y]);
+  };
+  add(cx, cy);
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) add(cx + dx, cy + dy);
+  }
+  const sx = Math.max(1, Math.floor(nx / 3));
+  const sy = Math.max(1, Math.floor(ny / 3));
+  for (let y = 0; y < ny; y += sy) {
+    for (let x = 0; x < nx; x += sx) add(x, y);
+  }
+  return out;
+}
+
+function sampleToUint16(v: number, u8: boolean): number {
+  if (u8) return v << 8;
+  if (!Number.isFinite(v)) return 0;
+  return Math.max(0, Math.min(65535, Math.round(v)));
+}
+
+type CoarsestSample = { u16: Uint16Array; range: FloatRange | null };
+
+/** Coarsest pyramid tiles, at most GMM_MAX_SAMPLES. Never getRaster. */
+async function fetchCoarsestUint16(
+  loader: Loader,
+  sourceIndex: number,
+): Promise<CoarsestSample | null> {
+  const planes = loader.data;
+  if (!planes?.length) return null;
+  const cIdx = planes[0].labels.indexOf("c");
+  const nC = cIdx >= 0 ? planes[0].shape[cIdx] : 1;
+  if (sourceIndex < 0 || sourceIndex >= nC) return null;
+
+  const selection = { t: 0, z: 0, c: sourceIndex };
+  const raw = new Float64Array(GMM_MAX_SAMPLES);
+
+  for (let i = planes.length - 1; i >= 0; i--) {
+    const plane = planes[i];
+    const { width, height } = planeSize(plane);
+    if (width <= 0 || height <= 0) continue;
+    const ts = Math.max(1, plane.tileSize || Math.max(width, height));
+    const nx = Math.ceil(width / ts);
+    const ny = Math.ceil(height / ts);
+    const maxTile = Math.min(ts, width) * Math.min(ts, height);
+    if (maxTile > GMM_MAX_DECODE_PIXELS) continue;
+
+    let o = 0;
+    let sawU8 = false;
+    for (const [x, y] of pickTileCoords(nx, ny)) {
+      if (o >= GMM_MAX_SAMPLES) break;
+      let data: ArrayLike<number> | undefined;
+      try {
+        const tile = await plane.getTile({ x, y, selection });
+        if (tile?.data?.length) data = tile.data;
+      } catch {
+        continue;
+      }
+      if (!data?.length || data.length > GMM_MAX_DECODE_PIXELS) continue;
+      if (data instanceof Uint8Array || data instanceof Uint8ClampedArray) {
+        sawU8 = true;
+      }
+      const stride = Math.max(
+        1,
+        Math.ceil(data.length / (GMM_MAX_SAMPLES - o)),
+      );
+      for (let p = 0; p < data.length && o < GMM_MAX_SAMPLES; p += stride) {
+        raw[o++] = Number(data[p]);
+      }
+    }
+    if (o === 0) continue;
+    const samples = raw.subarray(0, o);
+    const range = isFloatDtype(plane.dtype) ? finiteSampleRange(samples) : null;
+    const u16 = new Uint16Array(o);
+    for (let s = 0; s < o; s++) {
+      u16[s] = range
+        ? quantizeFloatToUint16(samples[s], range)
+        : sampleToUint16(samples[s], sawU8);
+    }
+    return { u16, range };
+  }
+  return null;
+}
+
+async function runJob(job: Job, gen: number): Promise<FitOutcome> {
+  await acquire(fetchUsedBox, fetchWaiters, FETCH_CONCURRENCY);
+  let sampled: CoarsestSample | null = null;
+  try {
+    if (gen !== generation) return { kind: "failed" };
+    sampled = await fetchCoarsestUint16(job.loader, job.index);
+  } finally {
+    release(fetchUsedBox, fetchWaiters);
+    pump();
+  }
+
+  if (gen !== generation) return { kind: "failed" };
+  if (!sampled) {
+    failedKeys.add(job.rasterKey);
+    finishJob(job, gen);
+    pump();
+    return { kind: "failed" };
+  }
+
+  await acquire(fitUsedBox, fitWaiters, FIT_CONCURRENCY);
+  let window: ContrastLimits | null = null;
+  try {
+    if (gen === generation) {
+      window = await fitChannelGmmContrastFromUint16(sampled.u16);
+    }
+  } finally {
+    release(fitUsedBox, fitWaiters);
+  }
+
+  if (gen !== generation) return { kind: "failed" };
+  if (sampled.range) {
+    const range = sampled.range;
+    if (window) {
+      window = {
+        lower: dequantizeFromUint16(window.lower, range),
+        upper: dequantizeFromUint16(window.upper, range),
+      };
+    }
+    if (!window || !(window.upper > window.lower)) {
+      window = { lower: range.min, upper: range.max };
+    }
+  }
+
+  if (!window) {
+    failedKeys.add(job.rasterKey);
+    finishJob(job, gen);
+    pump();
+    return { kind: "failed" };
+  }
+
+  commitFitted(job, window, sampled.range);
+  finishJob(job, gen);
+  pump();
+  return { kind: "fitted", window };
+}
+
+function intern(job: Job): Promise<FitOutcome> {
+  const existing = inFlight.get(job.rasterKey);
+  if (existing) return existing;
+  removeFromQueues(job.rasterKey);
+  const gen = generation;
+  const promise = runJob(job, gen).catch((error): FitOutcome => {
+    if (import.meta.env.DEV) {
+      console.warn("[psudo] gmm job failed", error);
+    }
+    if (gen === generation) {
+      failedKeys.add(job.rasterKey);
+      finishJob(job, gen);
+      pump();
+    }
+    return { kind: "failed" };
+  });
+  inFlight.set(job.rasterKey, promise);
+  notify();
+  return promise;
+}
+
+function pump() {
+  for (const key of [...queue]) {
+    const job = jobsByKey.get(key);
+    if (!job || inFlight.has(key)) continue;
+    intern(job);
+  }
+}
+
+function attachChannel(job: Job, channelId: string, guard: WriteGuard) {
+  const prev = job.guards.get(channelId);
+  if (!(prev?.kind === "unchanged" && guard.kind === "still-missing")) {
+    job.guards.set(channelId, guard);
+  }
+}
+
+function upsertJob(args: {
+  sc: Channel;
+  loader: Loader;
+  guard: WriteGuard;
+  retryFailed: boolean;
+}): Job | null {
+  const { sc, loader, guard, retryFailed } = args;
+  const key = rasterKey(sc.imageId, sc.index);
+  if (failedKeys.has(key)) {
+    if (!retryFailed) return null;
+    failedKeys.delete(key);
+  }
+  const existing = jobsByKey.get(key);
+  if (existing) {
+    attachChannel(existing, sc.id, guard);
+    if (!inFlight.has(key)) enqueue(existing);
+    return existing;
+  }
+  const job: Job = {
+    rasterKey: key,
+    loader,
+    sourceImageId: sc.imageId,
+    index: sc.index,
+    guards: new Map([[sc.id, guard]]),
+  };
+  jobsByKey.set(key, job);
+  enqueue(job);
+  return job;
+}
+
+function targetFor(channelId: string): { sc: Channel; loader: Loader } | null {
+  const all = documentChannels();
+  const sc = all.find((c) => c.id === channelId);
+  if (!sc || !isGmmEligible(sc, all)) return null;
+  const loader = loadersByImageId.get(sc.imageId);
+  if (!loader) return null;
+  return { sc, loader };
+}
+
+export function reconcileGmm(args: {
+  loaderEntries: readonly { loader: Loader; sourceImageId: string }[];
+  channels: readonly Channel[];
+  visibleChannelIds: ReadonlySet<string>;
+}): void {
+  const { loaderEntries, channels, visibleChannelIds } = args;
+  loadersByImageId.clear();
+  for (const entry of loaderEntries) {
+    loadersByImageId.set(entry.sourceImageId, entry.loader);
+  }
+  const liveIds = new Set(loaderEntries.map((e) => e.sourceImageId));
+  for (const [key, job] of [...jobsByKey]) {
+    if (liveIds.has(job.sourceImageId)) continue;
+    if (!inFlight.has(key)) {
+      jobsByKey.delete(key);
+      removeFromQueues(key);
+    }
+  }
+
+  for (const sc of channels) {
+    if (!isGmmEligible(sc, channels)) continue;
+    if (sc.gmmContrastLimits) continue;
+    if (!visibleChannelIds.has(sc.id)) continue;
+    const loader = loadersByImageId.get(sc.imageId);
+    if (!loader) continue;
+    upsertJob({
+      sc,
+      loader,
+      guard: { kind: "still-missing" },
+      retryFailed: false,
+    });
+  }
+
+  notify();
+  pump();
+}
+
+export async function ensureGmm(
+  channelIds: readonly string[],
+): Promise<Map<string, ContrastLimits>> {
+  const result = new Map<string, ContrastLimits>();
+  const waits: Promise<void>[] = [];
+  for (const channelId of channelIds) {
+    const target = targetFor(channelId);
+    if (!target) continue;
+    const current = asWindow(target.sc.gmmContrastLimits);
+    if (current) {
+      result.set(channelId, { lower: current.lower, upper: current.upper });
+      continue;
+    }
+    const job = upsertJob({
+      sc: target.sc,
+      loader: target.loader,
+      guard: { kind: "still-missing" },
+      retryFailed: true,
+    });
+    if (!job) continue;
+    waits.push(
+      intern(job).then(() => {
+        const sc = readChannel(channelId);
+        const limits = asWindow(sc?.gmmContrastLimits);
+        if (limits)
+          result.set(channelId, { lower: limits.lower, upper: limits.upper });
+      }),
+    );
+  }
+  notify();
+  pump();
+  await Promise.all(waits);
+  return result;
+}
+
+export async function refitGmm(
+  channelId: string,
+): Promise<ContrastLimits | null> {
+  const target = targetFor(channelId);
+  if (!target) return null;
+  const key = rasterKey(target.sc.imageId, target.sc.index);
+  const running = inFlight.get(key);
+  if (running) await running;
+  const latest = targetFor(channelId);
+  if (!latest) return null;
+  const expected = asWindow(latest.sc.gmmContrastLimits);
+  const guard: WriteGuard = expected
+    ? {
+        kind: "unchanged",
+        expected: { lower: expected.lower, upper: expected.upper },
+      }
+    : { kind: "still-missing" };
+  const job = upsertJob({
+    sc: latest.sc,
+    loader: latest.loader,
+    guard,
+    retryFailed: true,
+  });
+  if (!job) return null;
+  notify();
+  const outcome = await intern(job);
+  if (outcome.kind !== "fitted") return null;
+  const sc = readChannel(channelId);
+  if (!limitsEqual(sc?.gmmContrastLimits, outcome.window)) return null;
+  return { lower: outcome.window.lower, upper: outcome.window.upper };
+}
+
+export function subscribeGmmFit(onStoreChange: () => void): () => void {
+  listeners.add(onStoreChange);
+  return () => {
+    listeners.delete(onStoreChange);
+  };
+}
+
+export function getGmmPendingIds(): readonly string[] {
+  return snapshot.pendingIds;
+}
+
+export function clearGmmScheduler(): void {
+  generation += 1;
+  loadersByImageId.clear();
+  jobsByKey.clear();
+  queue.length = 0;
+  inFlight.clear();
+  failedKeys.clear();
+  pendingKey = "";
+  snapshot = emptySnapshot;
+  for (const listener of listeners) listener();
+}

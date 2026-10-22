@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { useAppStore } from "@/lib/stores/appStore";
 import {
   type ChannelGroup,
@@ -9,25 +10,15 @@ import styles from "./ChannelGroups.module.css";
 
 const GroupRow = (props: { group: ChannelGroup }) => {
   const { group } = props;
-  const { name } = group;
-
-  const { setActiveChannelGroup } = useAppStore();
-  const docChannelGroups = useDocumentStore((s) => s.channelGroups);
-  const row_group = React.useMemo(
-    () =>
-      docChannelGroups.find((grp) => grp.name === name) || docChannelGroups[0],
-    [docChannelGroups, name],
-  );
-
-  const toGroup = () => {
-    if (row_group) {
-      setActiveChannelGroup(row_group.id);
-    }
-  };
+  const showOnlyChannelGroup = useAppStore((s) => s.showOnlyChannelGroup);
 
   return (
-    <button type="button" className={styles.groupAltRow} onClick={toGroup}>
-      {name}
+    <button
+      type="button"
+      className={`${minervaTheme.focusRing} ${styles.groupAltRow}`}
+      onClick={() => showOnlyChannelGroup(group.id)}
+    >
+      {group.name}
     </button>
   );
 };
@@ -75,7 +66,7 @@ export const ChannelGroups = (props: {
     <div className={styles.wrapRows}>
       <button
         type="button"
-        className={styles.activeGroupTrigger}
+        className={`${minervaTheme.focusRing} ${styles.activeGroupTrigger}`}
         aria-expanded={expanded}
         onClick={() => setExpanded(!expanded)}
       >

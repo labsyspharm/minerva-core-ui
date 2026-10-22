@@ -1,0 +1,39 @@
+.badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 5px 3px;
+  color: var(--minerva-ink);
+  background: color-mix(in srgb, var(--minerva-paper) 80%, transparent);
+  font-family: var(--minerva-font);
+  font-size: var(--minerva-size-note);
+  line-height: 1;
+  text-decoration: none;
+}
+
+.badge:focus-visible {
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: var(--minerva-focus-offset);
+}
+
+.logo {
+  display: block;
+  width: 85px;
+  height: auto;
+  aspect-ratio: 720 / 162;
+}
+
+@media (max-width: 720px) {
+  .badge {
+    left: 4px;
+    bottom: 4px;
+  }
+
+  .logo {
+    width: 68px;
+  }
+}

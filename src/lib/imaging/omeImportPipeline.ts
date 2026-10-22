@@ -1,8 +1,12 @@
 import { extractChannels } from "@/lib/authoring/config";
-import { resolveImageImportRole } from "@/lib/imaging/channelKind";
+import {
+  isImageChannel,
+  isRgbDisplaySource,
+  resolveImageImportRole,
+} from "@/lib/imaging/channelKind";
 import { loadOmeLoaderForRole } from "@/lib/imaging/filesystem";
+import type { DecodePool } from "@/lib/imaging/omeDecodePool";
 import type { Loader } from "@/lib/imaging/viv";
-import type { PoolClass } from "@/lib/imaging/workers/pool";
 import type { ConfigGroup } from "@/lib/legacy/exhibit";
 import type { Image } from "@/lib/stores/documentSchema";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
@@ -12,6 +16,7 @@ import {
   rebindReplacementImageChannels,
   replaceImageRowInDocument,
 } from "@/lib/stores/storeUtils";
+import { renameChannelsFromMarkers } from "./markerCsv";
 import {
   mergeExtractedChannelsIntoImages,
   type OmeImageImportRole,
@@ -20,8 +25,33 @@ import {
 import {
   applySharedImportPaletteToChannelGroups,
   applySharedImportPaletteToSourceChannels,
-} from "./pseudoPalette";
-import { styleSourceChannelsForRole } from "./sourceChannelStyle";
+} from "./psudoPalette";
+import { seedMaskSourceChannelStyles } from "./sourceChannelStyle";
+import { urlFileName } from "./sourceUrl";
+
+const PACKED_RGB_IF_NAMES = new Set(["r", "g", "b"]);
+
+/** Viv planar packed RGB names the planes R/G/B; IF import uses Channel 1/2/3. */
+function namePackedRgbIfChannels(channels: Channel[]): Channel[] {
+  const intensity = channels
+    .filter(isImageChannel)
+    .sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+  if (intensity.length !== 3) return channels;
+  if (
+    !intensity.every((c) =>
+      PACKED_RGB_IF_NAMES.has((c.name ?? "").trim().toLowerCase()),
+    )
+  ) {
+    return channels;
+  }
+  const names = new Map(
+    intensity.map((c, i) => [c.id, `Channel ${i + 1}`] as const),
+  );
+  return channels.map((c) => {
+    const name = names.get(c.id);
+    return name ? { ...c, name } : c;
+  });
+}
 
 export type BuiltOmeImportSlice = {
   sourceChannels: Channel[];
@@ -42,6 +72,10 @@ export function buildOmeImportSlice(args: {
   sourceImageId: string;
   existingImages: Image[];
   relevantGroups?: ConfigGroup[];
+  /** Persist when import dialog asked RGB vs separate channels. */
+  rgbDisplay?: boolean;
+  /** 0-based channel index → marker name from an optional markers.csv. */
+  channelNames?: ReadonlyMap<number, string>;
 }): BuiltOmeImportSlice {
   const {
     loader,
@@ -50,6 +84,8 @@ export function buildOmeImportSlice(args: {
     sourceImageId,
     existingImages,
     relevantGroups = [],
+    rgbDisplay,
+    channelNames,
   } = args;
   const defaultKind = role === "segmentation" ? "mask" : "channel";
   const extracted = extractChannels(
@@ -65,19 +101,41 @@ export function buildOmeImportSlice(args: {
     basename,
     existingImages,
   );
-  if (role === "segmentation") {
-    sourceChannels = styleSourceChannelsForRole(sourceChannels, role);
+  if (role === "intensity" && rgbDisplay === false) {
+    sourceChannels = namePackedRgbIfChannels(sourceChannels);
+    sourceChannels = sourceChannels.map((c, i) =>
+      c.name === "H&E" ? { ...c, name: `Channel ${i + 1}` } : c,
+    );
   }
+  if (role === "segmentation") {
+    sourceChannels = seedMaskSourceChannelStyles(sourceChannels);
+  }
+  if (role === "intensity" && channelNames && channelNames.size > 0) {
+    const renamed = renameChannelsFromMarkers(sourceChannels, channelNames);
+    if (renamed.applied === 0) {
+      throw new Error("Markers CSV did not match any channel.");
+    }
+    sourceChannels = renamed.channels;
+  }
+  const taggedForRgb =
+    rgbDisplay == null
+      ? sourceChannels
+      : sourceChannels.map((c) => ({ ...c, rgbDisplay }));
+  const persistRgbDisplay =
+    role === "intensity"
+      ? (rgbDisplay ?? (isRgbDisplaySource(taggedForRgb) ? true : undefined))
+      : undefined;
   const nextImages = mergeExtractedChannelsIntoImages(
     existingImages,
     sourceImageId,
     loader,
     basename,
     role,
-    sourceChannels,
+    taggedForRgb,
+    persistRgbDisplay,
   );
   return {
-    sourceChannels,
+    sourceChannels: taggedForRgb,
     extractedGroups: extracted.ChannelGroups,
     nextImages,
   };
@@ -102,21 +160,17 @@ export async function finalizeAppendedIntensityGroups(args: {
 /** Re-apply source-channel palette into images (fresh replace, no groups). */
 export async function applyPaletteToFlatImportImages(
   images: Image[],
-  sourceChannels: Channel[],
 ): Promise<Image[]> {
-  const styled = await applySharedImportPaletteToSourceChannels(sourceChannels);
+  const flat = flattenImageChannelsInDocumentOrder(images);
+  const styled = await applySharedImportPaletteToSourceChannels(flat);
   return applySourceChannelsToImages(images, styled);
 }
 
-/** Palette for a replace-import that already has extracted groups. */
-export async function applyPaletteToGroupedImport(
-  groups: ChannelGroup[],
-  sourceChannels: Channel[],
-): Promise<ChannelGroup[]> {
-  return applySharedImportPaletteToChannelGroups(groups, sourceChannels);
-}
+export type OmeImageSource =
+  | { kind: "local"; handle: Handle.File }
+  | { kind: "url"; url: string };
 
-export type ReplaceOmeLocalImageResult =
+export type ReplaceOmeImageResult =
   | {
       ok: true;
       oldImageId: string;
@@ -129,17 +183,17 @@ export type ReplaceOmeLocalImageResult =
   | { ok: false; reason: "missing" | "unsupported" | "error"; error?: string };
 
 /**
- * Load a local OME-TIFF as a replacement for `imageId`: new image id, same
- * channel ids (by index). Caller persists the file handle and updates React
- * loader entries / channel store.
+ * Load an OME-TIFF file or URL as a replacement for `imageId`: new image id,
+ * same channel ids (by index). Caller persists a local handle or URL source
+ * and updates React loader entries / channel store.
  */
-export async function replaceOmeLocalImageInDocument(args: {
+export async function replaceOmeImageInDocument(args: {
   images: Image[];
   imageId: string;
-  handle: Handle.File;
-  pool?: PoolClass;
-}): Promise<ReplaceOmeLocalImageResult> {
-  const { images, imageId, handle, pool } = args;
+  source: OmeImageSource;
+  pool?: DecodePool;
+}): Promise<ReplaceOmeImageResult> {
+  const { images, imageId, source, pool } = args;
   const oldImage = images.find((im) => im.id === imageId);
   if (!oldImage) return { ok: false, reason: "missing" };
   if (
@@ -151,23 +205,25 @@ export async function replaceOmeLocalImageInDocument(args: {
 
   const oldLocalHandleKey =
     oldImage.source?.kind === "local" ? oldImage.source.handleKey : undefined;
-  const file = await handle.getFile();
+  const basename =
+    source.kind === "local"
+      ? (await source.handle.getFile()).name
+      : urlFileName(source.url) || "remote.ome.tif";
   const role = resolveImageImportRole({
     contentRole: oldImage.contentRole,
     channels: oldImage.channels ?? [],
   });
   const loader = await loadOmeLoaderForRole(role, {
-    kind: "local",
-    handle,
-    in_f: file.name,
+    ...source,
     pool,
+    rgbDisplay: oldImage.rgbDisplay,
   });
   const newImageId = crypto.randomUUID();
   const withoutOld = images.filter((im) => im.id !== imageId);
   const slice = buildOmeImportSlice({
     loader,
     role,
-    basename: file.name,
+    basename,
     sourceImageId: newImageId,
     existingImages: withoutOld,
   });
@@ -190,7 +246,7 @@ export async function replaceOmeLocalImageInDocument(args: {
     oldImageId: imageId,
     newImageId,
     loader,
-    basename: file.name,
+    basename,
     nextImages: replaceImageRowInDocument(images, imageId, rebound),
     oldLocalHandleKey,
   };

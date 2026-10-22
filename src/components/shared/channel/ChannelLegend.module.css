@@ -1,8 +1,8 @@
 .channelsSection {
   margin-top: 4px;
-  border-radius: 5px;
-  background: color-mix(in srgb, black 28%, transparent);
-  border: 1px solid color-mix(in srgb, var(--theme-glass-edge) 40%, transparent);
+  border-radius: 0;
+  background: var(--minerva-paper);
+  border: 1px solid var(--minerva-edge);
   overflow: hidden;
 }
 
@@ -12,20 +12,23 @@
   justify-content: space-between;
   gap: 6px;
   padding: 3px 6px;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--theme-glass-edge) 35%, transparent);
+  border-bottom: 1px solid var(--minerva-edge);
 }
 
 .sectionLabel {
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-size: 10px;
-  color: color-mix(in srgb, var(--theme-light-contrast-color) 52%, transparent);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  font-size: 0.7rem;
+  color: var(--minerva-quiet);
   line-height: 1.2;
   margin: 0;
   flex: 1;
   min-width: 0;
+}
+
+/* Hidden while the presentation frame is wide; the static label is the header then. */
+.collapseToggle {
+  display: none;
 }
 
 .toolbarSlot {
@@ -46,8 +49,7 @@
 .imageSection:not(:first-child) {
   margin-top: 4px;
   padding-top: 4px;
-  border-top: 1px solid
-    color-mix(in srgb, var(--theme-glass-edge) 28%, transparent);
+  border-top: 1px solid var(--minerva-edge);
 }
 
 .imageSectionLabel {
@@ -56,7 +58,7 @@
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.02em;
-  color: color-mix(in srgb, var(--theme-light-contrast-color) 42%, transparent);
+  color: var(--minerva-quiet);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -75,25 +77,49 @@
   width: 100%;
   min-height: 18px;
   padding: 1px 3px;
-  border-radius: 2px;
+  border-radius: 0;
   box-sizing: border-box;
 }
 
 .legendRowWrap:hover {
-  background: color-mix(in srgb, white 7%, transparent);
+  background: var(--minerva-wash);
 }
 
 .rowClickArea {
-  all: unset;
   box-sizing: border-box;
-  color: rgb(230, 237, 243);
+  color: var(--minerva-ink);
   display: flex;
   align-items: center;
   gap: 5px;
   flex: 1;
   min-width: 0;
+  font: inherit;
+  text-align: left;
+}
+
+.swatchButton,
+.nameButton {
+  all: unset;
+  box-sizing: border-box;
   cursor: pointer;
   font: inherit;
+  color: inherit;
+}
+
+.swatchButton {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 2px;
+  margin: -2px;
+}
+
+.nameButton {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 5px;
+  min-width: 0;
   text-align: left;
 }
 
@@ -101,11 +127,10 @@
   height: 10px;
   width: 10px;
   flex-shrink: 0;
-  border-radius: 2px;
+  border-radius: 0;
   box-sizing: border-box;
   border: 1.5px solid var(--swatch-color);
   background-color: transparent;
-  box-shadow: 0 0 0 1px color-mix(in srgb, black 25%, transparent);
 }
 
 .swatchFilled {
@@ -114,8 +139,7 @@
 
 .legendDivider {
   margin: 3px 2px 2px;
-  border-top: 1px solid
-    color-mix(in srgb, var(--theme-glass-edge) 50%, transparent);
+  border-top: 1px solid var(--minerva-edge);
 }
 
 .nameSlot {
@@ -125,4 +149,45 @@
   align-items: center;
   font-size: 11px;
   line-height: 1.2;
+}
+
+/**
+ * Same breakpoint as the stacked preview/player (`Presentation` is the container).
+ * Wide frames keep the list open; the toggle is not a control there.
+ */
+@container (width < 768px) {
+  .channelsSectionHeader {
+    padding: 7px 8px;
+  }
+
+  .collapseToggle {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: var(--minerva-quiet);
+  }
+
+  .collapseToggle:hover,
+  .collapseToggle:hover .sectionLabel {
+    color: var(--minerva-ink);
+  }
+
+  .sectionLabelStatic {
+    display: none;
+  }
+
+  .channelsCollapsed .legendBody {
+    display: none;
+  }
+
+  .channelsCollapsed .channelsSectionHeader {
+    border-bottom-color: transparent;
+  }
 }

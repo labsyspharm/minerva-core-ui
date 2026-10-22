@@ -2,8 +2,9 @@
   display: grid;
   place-items: center;
   height: 100%;
-  color: #aaa;
+  color: var(--minerva-quiet);
   padding: 24px;
   text-align: center;
-  background: #111;
+  background: var(--minerva-paper);
+  font-family: var(--minerva-font);
 }

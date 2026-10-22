@@ -1,15 +1,12 @@
-import type { CSSProperties, MouseEvent, ReactElement } from "react";
+import type { CSSProperties, MouseEvent, ReactElement, ReactNode } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import ChevronDownIcon from "@/components/shared/icons/chevron-down.svg?react";
-import {
-  StoryBannerBar,
-  storyBannerTitleClassName,
-} from "@/components/shared/StoryBannerBar";
-import {
-  effectiveReferenceImagePixelSize,
-  useAppStore,
-} from "@/lib/stores/appStore";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { PanelActionButton } from "@/components/shared/panel/PanelButtons";
+import { StorySpines } from "@/components/shared/StorySpines";
+import { effectiveWorldFrame } from "@/lib/imaging/worldFrame";
+import { useAppStore } from "@/lib/stores/appStore";
 import type { Waypoint } from "@/lib/stores/documentStore";
 import {
   findSourceChannel,
@@ -19,16 +16,99 @@ import {
 import { waypointToConfigWaypoint } from "@/lib/stores/storeUtils";
 import styles from "./Presentation.module.css";
 
-/** Shared by authoring preview and the CDN story player bundle. */
+/** CDN story player layout. Authoring preview composes the pieces below. */
 export type PresentationProps = {
   children: ReactElement;
-  /** When set, shows the authoring “Back / Story preview” ribbon. */
-  exitPlaybackPreview?: () => void;
-  /**
-   * When true (CDN player), show the document title in the top ribbon without
-   * authoring “Back” / “Story preview” controls.
-   */
+  /** Show the document title in the top ribbon. */
   showDocumentTitle?: boolean;
+};
+
+/** One waypoint and no markdown: the nav has nothing to show. */
+export function usePresentationNavHidden() {
+  return useDocumentStore(
+    (s) => s.waypoints.length === 1 && !(s.waypoints[0]?.content ?? "").trim(),
+  );
+}
+
+/** Same element whether active or not, so children (the Deck) stay mounted. */
+export function PresentationFrame(props: {
+  active: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={
+        props.active
+          ? `${styles.frame} ${styles.presentation} minerva-seal`
+          : styles.frame
+      }
+    >
+      {props.children}
+    </div>
+  );
+}
+
+/** Top ribbon; `exitPlaybackPreview` adds the authoring “Back / Story preview” controls. */
+export function PresentationRibbon(props: {
+  exitPlaybackPreview?: () => void;
+}) {
+  const documentTitle = useDocumentStore((s) => s.metadata.title ?? "");
+  const ribbonDocTitle = documentTitle.trim() || "Untitled story";
+  const flushTitle = !props.exitPlaybackPreview;
+  return (
+    <div className={`${minervaTheme.bar} ${styles.previewRibbon}`}>
+      {props.exitPlaybackPreview ? (
+        <PanelActionButton
+          type="button"
+          onClick={props.exitPlaybackPreview}
+          title="Back to editing"
+          aria-label="Back to editing"
+        >
+          <ChevronDownIcon
+            className={styles.previewRibbonChevron}
+            aria-hidden
+          />
+          <span>Back</span>
+        </PanelActionButton>
+      ) : null}
+      <span
+        title={ribbonDocTitle}
+        className={[
+          minervaTheme.title,
+          styles.previewRibbonDocumentTitle,
+          flushTitle ? styles.previewRibbonDocumentTitleFlush : null,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <StorySpines />
+        {ribbonDocTitle}
+      </span>
+      {props.exitPlaybackPreview ? (
+        <span className={styles.previewRibbonPreviewBadge}>Story preview</span>
+      ) : null}
+    </div>
+  );
+}
+
+export const Presentation = (props: PresentationProps) => {
+  const hideNavPane = usePresentationNavHidden();
+  return (
+    <PresentationFrame active>
+      {props.showDocumentTitle ? <PresentationRibbon /> : null}
+      <div
+        className={[
+          styles.splitGrid,
+          hideNavPane ? styles.splitGridViewerOnly : null,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <PresentationNav showStoryName={!props.showDocumentTitle} />
+        <div className={styles.presentationViewerRegion}>{props.children}</div>
+      </div>
+    </PresentationFrame>
+  );
 };
 
 /** Square viewBox so the glyph’s visual center matches the SVG box center. */
@@ -57,7 +137,11 @@ const NavChevron = (props: { dir: "left" | "right"; px: number }) => {
   );
 };
 
-export const Presentation = (props: PresentationProps) => {
+/**
+ * Waypoint nav pane plus playback effects (camera fly, group, shapes). Stays
+ * mounted while presenting even when the pane itself is hidden.
+ */
+export function PresentationNav(props: { showStoryName: boolean }) {
   const documentTitle = useDocumentStore((s) => s.metadata.title ?? "");
   const waypoints = useDocumentStore((s) => s.waypoints);
   const shapes = useDocumentStore((s) => s.shapes);
@@ -69,61 +153,54 @@ export const Presentation = (props: PresentationProps) => {
   );
   const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
   const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
-  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
-  const { width: imageWidth, height: imageHeight } =
-    effectiveReferenceImagePixelSize(
-      viewerRefSize,
-      docImageWidth,
-      docImageHeight,
-    );
+  const viewerWorldFrame = useAppStore((s) => s.viewerWorldFrame);
+  const frame = effectiveWorldFrame(
+    viewerWorldFrame,
+    docImageWidth,
+    docImageHeight,
+  );
+  const imageWidth = frame.pixelWidth;
+  const imageHeight = frame.pixelHeight;
   const {
     activeStoryIndex,
     setActiveStory,
     activeChannelGroupId,
-    setActiveChannelGroup,
+    showOnlyChannelGroup,
     importWaypointShapes,
     setTargetWaypointCamera,
   } = useAppStore();
 
   const previousActiveStoryIndexRef = useRef<number | null>(null);
+  /** Story index we last applied the waypoint's channel group for. */
+  const groupAppliedForStoryRef = useRef<number | null>(null);
+  /** Story index we last flew the camera to (must not re-fire on shapes/groups). */
+  const cameraAppliedForStoryRef = useRef<number | null>(null);
 
-  // Auto-import shapes for the active story when dimensions / selection / channel groups change.
+  // Fly camera + import shapes only when the active waypoint changes — never when
+  // channel groups / shapes churn (that stole zoom and re-tweened the viewport).
   useEffect(() => {
     if (waypoints.length === 0) return;
-    // Wait for image dimensions to be set
     if (imageWidth === 0 || imageHeight === 0) return;
-    // Wait for active story to be explicitly set (avoid duplicate imports)
     if (activeStoryIndex === null) return;
+    if (cameraAppliedForStoryRef.current === activeStoryIndex) return;
 
     const story = waypoints[activeStoryIndex];
+    if (!story) return;
 
-    if (story) {
-      const idx = activeStoryIndex;
-      const prev = previousActiveStoryIndexRef.current;
-      const store = useAppStore.getState();
-      if (prev !== null && prev !== idx) {
-        store.persistImportedShapesToStory(prev);
-      }
-      previousActiveStoryIndexRef.current = idx;
-
-      // Import shapes from the story (clearing existing imported ones atomically)
-      importWaypointShapes(story, true, shapes);
-
-      const authoringMap = useAppStore.getState().waypointAuthoring;
-      const wp = waypointToConfigWaypoint(story, authoringMap.get(story.id));
-      if (imageWidth > 0 && imageHeight > 0) {
-        setTargetWaypointCamera(wp);
-      }
-
-      const gid = wp.groupId;
-      if (channelGroups.length > 0 && gid) {
-        const foundGroup =
-          channelGroups.find((g) => g.id === gid) || channelGroups[0];
-        if (foundGroup) {
-          setActiveChannelGroup(foundGroup.id);
-        }
-      }
+    const idx = activeStoryIndex;
+    const prev = previousActiveStoryIndexRef.current;
+    if (prev !== null && prev !== idx) {
+      useAppStore.getState().persistImportedShapesToStory(prev);
     }
+    previousActiveStoryIndexRef.current = idx;
+    cameraAppliedForStoryRef.current = idx;
+    groupAppliedForStoryRef.current = null;
+
+    importWaypointShapes(story, true, shapes);
+
+    const authoringMap = useAppStore.getState().waypointAuthoring;
+    const wp = waypointToConfigWaypoint(story, authoringMap.get(story.id));
+    setTargetWaypointCamera(wp);
   }, [
     waypoints,
     activeStoryIndex,
@@ -132,9 +209,25 @@ export const Presentation = (props: PresentationProps) => {
     shapes,
     importWaypointShapes,
     setTargetWaypointCamera,
-    channelGroups,
-    setActiveChannelGroup,
   ]);
+
+  // Apply the waypoint's group once per story visit. Do not re-apply when the
+  // user creates a "… copy" group while recoloring in the legend.
+  useEffect(() => {
+    if (activeStoryIndex === null) return;
+    if (channelGroups.length === 0) return;
+    const story = waypoints[activeStoryIndex];
+    if (!story) return;
+
+    if (groupAppliedForStoryRef.current === activeStoryIndex) return;
+
+    const gid = story.groupId;
+    const foundGroup =
+      (gid && channelGroups.find((g) => g.id === gid)) || channelGroups[0];
+    if (!foundGroup) return;
+    groupAppliedForStoryRef.current = activeStoryIndex;
+    showOnlyChannelGroup(foundGroup.id);
+  }, [activeStoryIndex, channelGroups, waypoints, showOnlyChannelGroup]);
 
   useEffect(() => {
     return () => {
@@ -143,12 +236,12 @@ export const Presentation = (props: PresentationProps) => {
         const doc = useDocumentStore.getState();
         const st = useAppStore.getState();
         const im = doc.images[0];
-        const { width: w, height: h } = effectiveReferenceImagePixelSize(
-          st.viewerReferenceImagePixelSize,
+        const f = effectiveWorldFrame(
+          st.viewerWorldFrame,
           im?.sizeX ?? 0,
           im?.sizeY ?? 0,
         );
-        if (w > 0 && h > 0) {
+        if (f.worldWidth > 0 && f.worldHeight > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
@@ -161,42 +254,29 @@ export const Presentation = (props: PresentationProps) => {
     const gid = story.groupId;
     const found_group =
       (gid && channelGroups.find(({ id }) => id === gid)) || channelGroups[0];
-    if (found_group) {
-      setActiveChannelGroup(found_group.id);
-    }
+    if (found_group) showOnlyChannelGroup(found_group.id);
   };
 
-  const updateViewState = (storyIndex: number) => {
-    const story = waypoints[storyIndex];
-    if (!story) return;
-    if (imageWidth > 0 && imageHeight > 0) {
-      const auth = useAppStore.getState().waypointAuthoring.get(story.id);
-      setTargetWaypointCamera(waypointToConfigWaypoint(story, auth));
-    }
-  };
-
+  // Camera is applied solely by the activeStoryIndex effect above — do not also
+  // call setTargetWaypointCamera here or the ImageViewer tween restarts twice.
   const storyFirst = () => {
     setActiveStory(0);
     updateGroup(0);
-    updateViewState(0);
   };
   const storyLeft = () => {
     const active_story = Math.max(0, activeStoryIndex - 1);
     setActiveStory(active_story);
     updateGroup(active_story);
-    updateViewState(active_story);
   };
   const storyRight = () => {
     const active_story = Math.min(waypoints.length - 1, activeStoryIndex + 1);
     setActiveStory(active_story);
     updateGroup(active_story);
-    updateViewState(active_story);
   };
   const storyAt = (i: number) => {
     const active_story = Math.min(waypoints.length - 1, Math.max(0, i));
     setActiveStory(active_story);
     updateGroup(active_story);
-    updateViewState(active_story);
   };
   const iconPx = 16;
   const toc_button = (
@@ -310,9 +390,6 @@ export const Presentation = (props: PresentationProps) => {
   const story = waypoints[activeStoryIndex];
   const story_title = story?.title ?? `Waypoint ${activeStoryIndex + 1}`;
   const story_content = story?.content;
-  const ribbonDocTitle = documentTitle.trim()
-    ? documentTitle.trim()
-    : "Untitled story";
 
   // Scroll waypoint content back to top when changing to a different waypoint.
   const contentPaneRef = useRef<HTMLDivElement>(null);
@@ -360,106 +437,63 @@ export const Presentation = (props: PresentationProps) => {
     return { processedContent: content, channelColors: colors };
   }, [story_content, activeChannelGroupId, channelGroups, sourceChannels]);
 
-  const showRibbon = Boolean(
-    props.exitPlaybackPreview || props.showDocumentTitle,
-  );
   /** Left-nav title only when there is no top ribbon (ribbon already shows it). */
   const navStoryName =
-    !showRibbon && documentTitle.trim() ? documentTitle.trim() : "";
-  const flushTitle = !props.exitPlaybackPreview;
+    props.showStoryName && documentTitle.trim() ? documentTitle.trim() : "";
+  const hideNavPane = usePresentationNavHidden();
+  if (hideNavPane) return null;
 
   return (
-    <div className={styles.presentationShell}>
-      {showRibbon ? (
-        <StoryBannerBar className={styles.previewRibbon}>
-          {props.exitPlaybackPreview ? (
-            <button
-              type="button"
-              className={styles.previewBackButton}
-              onClick={props.exitPlaybackPreview}
-              title="Back to editing"
-              aria-label="Back to editing"
-            >
-              <ChevronDownIcon
-                className={styles.previewRibbonChevron}
-                aria-hidden
-              />
-              <span>Back</span>
-            </button>
-          ) : null}
-          <span
-            title={ribbonDocTitle}
-            className={[
-              storyBannerTitleClassName,
-              styles.previewRibbonDocumentTitle,
-              flushTitle ? styles.previewRibbonDocumentTitleFlush : null,
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            {ribbonDocTitle}
-          </span>
-          {props.exitPlaybackPreview ? (
-            <span className={styles.previewRibbonPreviewBadge}>
-              Story preview
-            </span>
-          ) : null}
-        </StoryBannerBar>
+    <div
+      className={[
+        styles.navPane,
+        navStoryName ? styles.navPaneHasStoryName : null,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {navStoryName ? (
+        <div className={styles.storyTitle}>{navStoryName}</div>
       ) : null}
-      <div className={styles.splitGrid}>
-        <div
-          className={[
-            styles.navPane,
-            navStoryName ? styles.navPaneHasStoryName : null,
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          {navStoryName ? (
-            <div className={styles.storyTitle}>{navStoryName}</div>
-          ) : null}
-          <div className={styles.toolbar}>
-            {toc_button}
-            <StoryLeft active={!first_story} />
-            {count}
-            <StoryRight active={!last_story} />
-          </div>
-          <div ref={contentPaneRef} className={styles.contentWrap}>
-            <h2 className={styles.heading}>{story_title}</h2>
-            <ReactMarkdown
-              components={{
-                strong: ({ children }) => {
-                  const text = String(children);
-                  const color = channelColors.get(text);
-                  return color ? (
-                    <span
-                      className={styles.channelName}
-                      style={{ "--channel-color": color } as CSSProperties}
-                    >
-                      {text}
-                    </span>
-                  ) : (
-                    <strong>{children}</strong>
-                  );
-                },
-              }}
-            >
-              {processedContent}
-            </ReactMarkdown>
-            {first_story && <TableOfContents waypoints={waypoints} />}
-            <div className={styles.inlineNext}>
-              {last_story ? (
-                <p>End</p>
+      <div className={styles.toolbar}>
+        {toc_button}
+        <StoryLeft active={!first_story} />
+        {count}
+        <StoryRight active={!last_story} />
+      </div>
+      <div ref={contentPaneRef} className={styles.contentWrap}>
+        <h2 className={styles.heading}>{story_title}</h2>
+        <ReactMarkdown
+          components={{
+            strong: ({ children }) => {
+              const text = String(children);
+              const color = channelColors.get(text);
+              return color ? (
+                <span
+                  className={styles.channelName}
+                  style={{ "--channel-color": color } as CSSProperties}
+                >
+                  {text}
+                </span>
               ) : (
-                <>
-                  {story_next} <StoryRight active={!last_story} />
-                </>
-              )}
-            </div>
-          </div>
+                <strong>{children}</strong>
+              );
+            },
+          }}
+        >
+          {processedContent}
+        </ReactMarkdown>
+        {first_story && <TableOfContents waypoints={waypoints} />}
+        <div className={styles.inlineNext}>
+          {last_story ? (
+            <p>End</p>
+          ) : (
+            <>
+              {story_next} <StoryRight active={!last_story} />
+            </>
+          )}
         </div>
-        <div className={styles.presentationViewerRegion}>{props.children}</div>
       </div>
     </div>
   );
-};
+}

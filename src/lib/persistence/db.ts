@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { FileHandleRow, StoryRecord } from "./types";
+import type { BlobRow, FileHandleRow, StoryRecord } from "./types";
 
 export type SettingsRow = {
   key: string;
@@ -16,6 +16,7 @@ class MinervaStoriesDB extends Dexie {
   settings!: Table<SettingsRow, string>;
   /** Local file handles keyed by `handleKey` (separate object store from `stories`). */
   handles!: Table<FileHandleRow, string>;
+  blobs!: Table<BlobRow, string>;
 
   constructor() {
     super("minerva-stories");
@@ -86,7 +87,31 @@ class MinervaStoriesDB extends Dexie {
           await storyTable.put(rest as StoryRecord);
         }
       });
+    this.version(5).stores({
+      stories: "id, modifiedAt",
+      settings: "key",
+      handles: "id",
+      blobs: "id",
+    });
   }
 }
 
 export const storyDb = new MinervaStoriesDB();
+
+export async function putBlob(id: string, bytes: Uint8Array): Promise<void> {
+  await storyDb.blobs.put({ id, bytes });
+}
+
+export async function getBlob(id: string): Promise<Uint8Array | undefined> {
+  const row = await storyDb.blobs.get(id);
+  return row?.bytes;
+}
+
+export async function deleteBlob(id: string): Promise<void> {
+  await storyDb.blobs.delete(id);
+}
+
+export async function deleteBlobsForStory(storyId: string): Promise<void> {
+  const prefix = `story:${storyId}:`;
+  await storyDb.blobs.where("id").startsWith(prefix).delete();
+}

@@ -1,4 +1,12 @@
+import { rgbaToHsva } from "@uiw/react-color";
 import type { CSSProperties } from "react";
+import * as React from "react";
+import {
+  ColorPickerPopover,
+  colorPickerAnchorPosition,
+} from "@/components/shared/ColorPickerPopover";
+import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
   PopUpdate as PopUpdateChannel,
   Push as PushChannel,
@@ -9,15 +17,22 @@ import {
   isGroupRowVisible,
   isStackVisible,
 } from "@/lib/imaging/channelCompositor";
+import { isMaskChannel } from "@/lib/imaging/channelKind";
 import {
-  effectiveSourceColor,
+  getStackPalettePendingIds,
+  subscribeStackPalettePending,
+} from "@/lib/imaging/psudoPalette";
+import {
+  assignedDisplayHex,
   effectiveSourceLimits,
+  rgbToHex,
 } from "@/lib/imaging/sourceChannelStyle";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
 import { basenameImportLabel } from "@/lib/stores/storeUtils";
+import { isMobileDevice } from "@/lib/viewer/isMobileDevice";
 import styles from "./ChannelLegend.module.css";
 
-export const defaultChannels = [
+const defaultChannels = [
   { color: "0000FF", name: "DNA" },
   { color: "FF0000", name: "Red" },
   { color: "00FF00", name: "Green" },
@@ -35,6 +50,7 @@ export type LegendChannel = {
   group_uuid: string;
   source_uuid: string;
   channel_uuid: string;
+  mask?: boolean;
 };
 
 export type LegendEntry =
@@ -47,54 +63,46 @@ export type LegendSection = {
   entries: LegendEntry[];
 };
 
-/** Legend swatch matching what the viewer draws (group row or stack source). */
 export function legendChannelFromLayer(
   sc: Channel,
-  gc: ChannelGroupChannel | null,
-  activeGroupId: string | null,
-  colorIndex: number,
+  gc: ChannelGroupChannel,
+  groupId: string,
 ): LegendChannel {
-  if (gc) {
-    const { r, g, b } = gc.color;
-    const hex_color = [r, g, b]
-      .map((n) => n.toString(16).padStart(2, "0"))
-      .join("");
-    return {
-      r,
-      g,
-      b,
-      lower_range: gc.lowerLimit,
-      upper_range: gc.upperLimit,
-      name: sc.name,
-      color: hex_color,
-      group_uuid: activeGroupId ?? "",
-      source_uuid: sc.id,
-      channel_uuid: gc.id,
-    };
-  }
-  return legendChannelFromSource(sc, colorIndex);
-}
-
-export function legendChannelFromSource(
-  sc: Channel,
-  colorIndex: number,
-): LegendChannel {
-  const { r, g, b } = effectiveSourceColor(sc, colorIndex);
-  const hex_color = [r, g, b]
-    .map((n) => n.toString(16).padStart(2, "0"))
-    .join("");
-  const [lo, hi] = effectiveSourceLimits(sc);
+  const { r, g, b } = gc.color;
+  const hex_color = rgbToHex(gc.color);
   return {
     r,
     g,
     b,
+    lower_range: gc.lowerLimit,
+    upper_range: gc.upperLimit,
+    name: sc.name,
+    color: hex_color,
+    group_uuid: groupId,
+    source_uuid: sc.id,
+    channel_uuid: gc.id,
+    mask: isMaskChannel(sc),
+  };
+}
+
+export function legendChannelFromSource(
+  sc: Channel,
+  allChannels: readonly Channel[] = [],
+): LegendChannel {
+  const hex = assignedDisplayHex(sc, allChannels, null);
+  const [lo, hi] = effectiveSourceLimits(sc);
+  return {
+    r: sc.color?.r ?? 255,
+    g: sc.color?.g ?? 255,
+    b: sc.color?.b ?? 255,
     lower_range: lo,
     upper_range: hi,
     name: sc.name,
-    color: hex_color,
+    color: hex ?? "",
     group_uuid: "",
     source_uuid: sc.id,
     channel_uuid: sc.id,
+    mask: isMaskChannel(sc),
   };
 }
 
@@ -121,32 +129,29 @@ type LegendRowProps = {
   g: number;
   total: number;
   editable?: boolean;
+  colorPending?: boolean;
   channelVisibilities: Record<string, boolean>;
   channelGroupRowVisibilities: Record<string, boolean>;
-  /** Group member hidden in the viewer — stroked swatch, still listed. */
-  hiddenInViewer?: boolean;
   toggleChannel: (c: LegendChannel) => void;
   updateChannel: (
-    channel: LegendChannel,
-    ctx: { idx: number; g: number },
+    gid: string,
+    cid: string,
+    c: Partial<ChannelGroupChannel>,
   ) => void;
+  onColorClick: (e: React.MouseEvent) => void;
   popChannel: (ctx: { g: number; idx: number }) => void;
 };
 
-const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
+const LegendRow = (props: LegendRowProps) => {
   const { channel } = props;
   const channelName = channel.name;
-  const { idx, g, onClick } = props;
-  const rowVisible = props.hiddenInViewer
-    ? false
-    : legendRowVisible(
-        channel,
-        props.channelVisibilities,
-        props.channelGroupRowVisibilities,
-      );
-  const setInput = (t: string) => {
-    props.updateChannel({ ...channel, name: t }, { idx, g });
-  };
+  const { idx, g, onColorClick } = props;
+  const colorPending = !!props.colorPending;
+  const rowVisible = legendRowVisible(
+    channel,
+    props.channelVisibilities,
+    props.channelGroupRowVisibilities,
+  );
   const onPop = () => {
     props.popChannel({ g, idx });
   };
@@ -154,34 +159,63 @@ const LegendRow = (props: LegendRowProps & { onClick: () => void }) => {
   const uuid = `group/channel/name/${idx}`;
   const statusProps = {
     ...props,
-    // Must be explicit: EditableText defaults `editable` to true (bordered
-    // textarea). Playback / CDN pass undefined and must stay read-only.
     editable: props.editable === true,
     md: false,
-    setInput,
+    setInput: () => null,
     updateCache: () => null,
     cache: new Map(),
     uuid,
   };
 
+  const swatchLabel = colorPending
+    ? `Optimizing color of ${channelName}`
+    : `Change color of ${channelName}`;
   const coreUI = (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
       className={styles.rowClickArea}
-      title={rowVisible ? `Hide ${channelName}` : `Show ${channelName}`}
       style={{ opacity: rowVisible ? 1 : 0.55 }}
     >
-      <div
-        className={[styles.swatch, rowVisible ? styles.swatchFilled : null]
-          .filter(Boolean)
-          .join(" ")}
-        style={{ "--swatch-color": `#${channel.color}` } as CSSProperties}
-      />
-      <span className={styles.nameSlot}>
-        <EditableText {...statusProps}>{channelName}</EditableText>
-      </span>
-    </button>
+      {channel.mask ? null : (
+        <button
+          type="button"
+          className={[
+            styles.swatchButton,
+            colorPending ? minervaTheme.busyOverlay : null,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          onClick={onColorClick}
+          title={swatchLabel}
+          aria-label={swatchLabel}
+          aria-busy={colorPending || undefined}
+        >
+          <div
+            className={[
+              styles.swatch,
+              channel.color && rowVisible ? styles.swatchFilled : null,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            style={
+              {
+                "--swatch-color": channel.color ? `#${channel.color}` : "#fff",
+              } as CSSProperties
+            }
+          />
+        </button>
+      )}
+      <button
+        type="button"
+        className={styles.nameButton}
+        onClick={() => props.toggleChannel(channel)}
+        title={rowVisible ? `Hide ${channelName}` : `Show ${channelName}`}
+        aria-label={rowVisible ? `Hide ${channelName}` : `Show ${channelName}`}
+      >
+        <span className={styles.nameSlot}>
+          <EditableText {...statusProps}>{channelName}</EditableText>
+        </span>
+      </button>
+    </div>
   );
   const editSwitch = [
     ["div", { children: coreUI }],
@@ -215,6 +249,11 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
   const pushChannel = props.pushChannel;
   const { sections } = props;
   const channelGroupRowVisibilities = props.channelGroupRowVisibilities ?? {};
+  const palettePendingIds = React.useSyncExternalStore(
+    subscribeStackPalettePending,
+    getStackPalettePendingIds,
+    getStackPalettePendingIds,
+  );
   const total = sections.reduce(
     (n, s) => n + s.entries.filter((e) => e.type === "channel").length,
     0,
@@ -231,6 +270,35 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
   const addChannelUI = pushChannel ? (
     <EditModeSwitcher {...{ ...props, editSwitch }} />
   ) : null;
+  const [colorPickerPos, setColorPickerPos] = React.useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const [pickerHsva, setPickerHsva] = React.useState(() =>
+    rgbaToHsva({ r: 255, g: 255, b: 255, a: 1 }),
+  );
+  const [colorPickerChannel, setColorPickerChannel] =
+    React.useState<LegendChannel | null>(null);
+  /** Phones and tablets start collapsed. A wide frame shows the list either way. */
+  const [legendOpen, setLegendOpen] = React.useState(() => !isMobileDevice());
+
+  const closeColorPicker = React.useCallback(() => {
+    setColorPickerChannel(null);
+    setColorPickerPos(null);
+  }, []);
+
+  const handleColorPickerOpen = (anchor: DOMRect, c: LegendChannel) => {
+    setColorPickerChannel(c);
+    setPickerHsva(
+      rgbaToHsva({
+        r: c.r,
+        g: c.g,
+        b: c.b,
+        a: 1,
+      }),
+    );
+    setColorPickerPos(colorPickerAnchorPosition(anchor));
+  };
 
   if (sections.length === 0) {
     return (
@@ -245,9 +313,30 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
 
   let rowIdx = 0;
   return (
-    <div className={styles.channelsSection}>
+    <div
+      className={[
+        styles.channelsSection,
+        legendOpen ? null : styles.channelsCollapsed,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div className={styles.channelsSectionHeader}>
-        <div className={styles.sectionLabel}>Channels</div>
+        <button
+          type="button"
+          className={`${minervaTheme.focusRing} ${styles.collapseToggle}`}
+          aria-expanded={legendOpen}
+          onClick={() => {
+            if (legendOpen) closeColorPicker();
+            setLegendOpen((open) => !open);
+          }}
+        >
+          <ChevronIcon direction={legendOpen ? "up" : "down"} />
+          <span className={styles.sectionLabel}>Channels</span>
+        </button>
+        <div className={`${styles.sectionLabel} ${styles.sectionLabelStatic}`}>
+          Channels
+        </div>
         <div className={styles.toolbarSlot}>{addChannelUI}</div>
       </div>
       <div className={styles.legendBody}>
@@ -269,25 +358,22 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
                 const c = entry.channel;
                 const k = rowIdx;
                 rowIdx += 1;
-                const hiddenInViewer =
-                  !!c.group_uuid &&
-                  !isGroupRowVisible(
-                    channelGroupRowVisibilities,
-                    c.channel_uuid,
-                  );
-                const rowProps: LegendRowProps & { onClick: () => void } = {
+                const rowProps: LegendRowProps = {
                   channel: c,
                   idx: k,
                   g,
                   total,
                   editable: props.editable,
+                  colorPending: palettePendingIds.includes(c.source_uuid),
                   channelVisibilities: props.channelVisibilities,
                   channelGroupRowVisibilities,
-                  hiddenInViewer,
                   toggleChannel: props.toggleChannel,
                   updateChannel: props.updateChannel ?? (() => {}),
                   popChannel: props.popChannel ?? (() => {}),
-                  onClick: () => props.toggleChannel(c),
+                  onColorClick: (e) => {
+                    const anchor = e.currentTarget.getBoundingClientRect();
+                    handleColorPickerOpen(anchor, c);
+                  },
                 };
                 return (
                   <LegendRow
@@ -298,6 +384,133 @@ export const ChannelLegend = (props: ChannelLegendProps) => {
               })}
             </div>
           </div>
+        ))}
+      </div>
+      <ColorPickerPopover
+        position={colorPickerPos}
+        onClose={closeColorPicker}
+        color={pickerHsva}
+        showAlpha
+        onChange={(c) => {
+          setPickerHsva(c.hsva);
+          const { r, g, b } = c.rgba;
+          const color = { r, g, b };
+          if (colorPickerChannel !== null) {
+            const channel = colorPickerChannel;
+            const groupId = channel.group_uuid;
+            const channelId = channel.source_uuid;
+            props.updateChannel?.(groupId, channelId, { color });
+          }
+        }}
+      />
+    </div>
+  );
+};
+
+export type ClassLegendSection = {
+  channelId: string;
+  label: string;
+  /** `color` is hex without `#`; `hidden` was turned off from the legend. */
+  rows: { name: string; color: string; hidden: boolean }[];
+  /** False for a white mask, which draws every class the same. */
+  showSwatches: boolean;
+};
+
+const CLASS_LEGEND_ROWS = 12;
+
+function ClassLegendList({
+  section,
+  onToggle,
+}: {
+  section: ClassLegendSection;
+  onToggle: (channelId: string, name: string) => void;
+}) {
+  const [expanded, setExpanded] = React.useState(false);
+  const more = section.rows.length - CLASS_LEGEND_ROWS;
+  const rows =
+    expanded || more <= 0
+      ? section.rows
+      : section.rows.slice(0, CLASS_LEGEND_ROWS);
+  return (
+    <div className={styles.imageSection}>
+      <div className={styles.imageSectionLabel} title={section.label}>
+        {section.label}
+      </div>
+      <div className={styles.channelList}>
+        {rows.map((row) => {
+          const label = row.name.trim() ? row.name : "Unnamed";
+          return (
+            <div className={styles.legendRowWrap} key={row.name}>
+              <div
+                className={styles.rowClickArea}
+                style={{ opacity: row.hidden ? 0.55 : 1 }}
+              >
+                <button
+                  type="button"
+                  className={`${minervaTheme.focusRing} ${styles.nameButton}`}
+                  onClick={() => onToggle(section.channelId, row.name)}
+                  title={row.hidden ? `Show ${label}` : `Hide ${label}`}
+                  aria-pressed={!row.hidden}
+                >
+                  {section.showSwatches ? (
+                    <div
+                      className={[
+                        styles.swatch,
+                        row.hidden ? null : styles.swatchFilled,
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      style={
+                        { "--swatch-color": `#${row.color}` } as CSSProperties
+                      }
+                    />
+                  ) : null}
+                  <span className={styles.nameSlot}>{label}</span>
+                </button>
+              </div>
+            </div>
+          );
+        })}
+        {more > 0 && !expanded ? (
+          <div className={styles.legendRowWrap}>
+            <button
+              type="button"
+              className={`${minervaTheme.focusRing} ${styles.nameButton}`}
+              onClick={() => setExpanded(true)}
+            >
+              <span className={styles.nameSlot}>+{more} more</span>
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Classes the active waypoint shows, one list per mask with a table.
+ * Clicking a class hides or shows it for this session.
+ */
+export const ClassLegend = ({
+  sections,
+  onToggle,
+}: {
+  sections: ClassLegendSection[];
+  onToggle: (channelId: string, name: string) => void;
+}) => {
+  if (sections.length === 0) return null;
+  return (
+    <div className={styles.channelsSection}>
+      <div className={styles.channelsSectionHeader}>
+        <div className={styles.sectionLabel}>Classes</div>
+      </div>
+      <div className={styles.legendBody}>
+        {sections.map((section) => (
+          <ClassLegendList
+            key={section.channelId}
+            section={section}
+            onToggle={onToggle}
+          />
         ))}
       </div>
     </div>

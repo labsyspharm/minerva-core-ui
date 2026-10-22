@@ -1,4 +1,10 @@
 import { getImageSize } from "@hms-dbmi/viv";
+import {
+  type FloatRange,
+  finiteSampleRange,
+  isFloatDtype,
+} from "../imaging/floatRange";
+import { MAX_HISTOGRAM_TILE_PIXELS } from "../imaging/histogramBin";
 import { histogramBinTile } from "../imaging/histogramBinPool";
 import type {
   HasTile,
@@ -10,6 +16,7 @@ import type { ConfigGroup as LegacyConfigGroup } from "../legacy/exhibit";
 import type {
   Channel,
   ChannelGroup,
+  ClassView,
   StoryShape,
 } from "../stores/documentSchema";
 
@@ -97,8 +104,10 @@ type Initialize = (i: InitIn) => FullState;
 type BinIn = InitIn & {
   bits: number;
   index: Index;
+  /** When set, bin linearly across this span instead of the dtype. */
+  range?: FloatRange | null;
 };
-type Bin = (i: BinIn) => Promise<number[]>;
+type Bin = (i: BinIn) => Promise<{ y: number[]; range: FloatRange | null }>;
 type CaptureTile = (i: Index, planes: LoaderPlane[]) => Promise<HasTile>;
 
 export type ConfigProps = {
@@ -116,6 +125,10 @@ export type ConfigWaypoint = WaypointProperties & {
   shapeIds?: string[];
   /** References {@link ChannelGroup.id}. */
   groupId?: string;
+  /** Story `waypoints[].name`; distinct from the `Name` title. */
+  name?: string;
+  /** Story `waypoints[].classViews`. */
+  classViews?: ClassView[];
 };
 
 type ExtractDistributions = (
@@ -191,7 +204,7 @@ const HISTOGRAM_TILE_TIMEOUT_MS = 10_000;
 const HISTOGRAM_EXTRACT_CONCURRENCY = 6;
 
 /**
- * Bit depth passed to `histogramBinFromPixels` (log-spaced thresholds up to 2^bits).
+ * Bit depth passed to `histogramBinFromPixels` (linear ≤8-bit, log2 >8-bit).
  * Integer dtypes parse from the Viv dtype string; float planes use a nominal depth
  * so we still produce a curve instead of skipping (NaN from `parseInt` on "Float32").
  */
@@ -202,9 +215,7 @@ function histogramBitsFromDtype(dtype: string | undefined): number | null {
   }
   const parsed = parseInt(dtype.replace(/.?int/, ""), 10);
   if (!Number.isNaN(parsed)) return parsed;
-  if (/float/i.test(dtype)) {
-    return 16;
-  }
+  if (isFloatDtype(dtype)) return 16;
   console.warn(
     `[minerva] histogram: unsupported dtype "${dtype}" (expected Uint*/Int* or Float*)`,
   );
@@ -227,8 +238,15 @@ async function mapIndicesInBatches<T>(
 const captureTile: CaptureTile = async (index, planes) => {
   const level = Math.abs(index.z);
   const z_plane = planes[level];
-  const selection = { t: 0, z: 0, c: index.c };
   const { x, y } = index;
+  const { width: pw, height: ph } = getImageSize(z_plane as VivImageSizeInput);
+  const ts = Math.max(1, z_plane.tileSize);
+  const tw = Math.max(0, Math.min(ts, pw - x * ts));
+  const th = Math.max(0, Math.min(ts, ph - y * ts));
+  if (tw * th > MAX_HISTOGRAM_TILE_PIXELS) {
+    return { data: new Uint8Array(0), width: 0, height: 0 };
+  }
+  const selection = { t: 0, z: 0, c: index.c };
   const signal = AbortSignal.timeout(HISTOGRAM_TILE_TIMEOUT_MS);
   const tile = await z_plane.getTile({
     selection,
@@ -241,8 +259,23 @@ const captureTile: CaptureTile = async (index, planes) => {
 };
 
 const bin: Bin = async (inputs) => {
-  const { data, width } = await captureTile(inputs.index, inputs.planes);
-  return histogramBinTile(inputs.bits, width, data);
+  const { data, width, height } = await captureTile(
+    inputs.index,
+    inputs.planes,
+  );
+  if (!data?.length || width * height > MAX_HISTOGRAM_TILE_PIXELS) {
+    return { y: [], range: null };
+  }
+  const dtype = inputs.planes[Math.abs(inputs.index.z)].dtype;
+  const range =
+    inputs.range ??
+    (isFloatDtype(dtype) ||
+    data instanceof Float32Array ||
+    data instanceof Float64Array
+      ? finiteSampleRange(data)
+      : null);
+  const y = await histogramBinTile(inputs.bits, width, data, range);
+  return { y, range };
 };
 
 const toTilePlane: ToTilePlane = (zoom, planes) => {
@@ -304,6 +337,7 @@ const initialize: Initialize = (inputs) => {
 const extractDistributionsForSourceIndices = async (
   loader: Loader,
   sourceIndices: readonly number[],
+  ranges?: ReadonlyMap<number, FloatRange>,
 ): Promise<Map<number, ConfigSourceDistribution>> => {
   const init = initialize({ planes: loader.data });
   const dtype = init.tileProps.dtype;
@@ -314,7 +348,6 @@ const extractDistributionsForSourceIndices = async (
     return new Map();
   }
 
-  let tileErrorCount = 0;
   const indexObjs = filtered.flatMap((c) => {
     const idx = indexByC.get(c);
     return idx ? [idx] : [];
@@ -325,40 +358,43 @@ const extractDistributionsForSourceIndices = async (
     async (index) => {
       const SourceIndex = index.c;
       let YValues: number[] = [];
+      let range: FloatRange | null = null;
       if (bits != null) {
         try {
-          YValues = await bin({
+          const binned = await bin({
             bits,
             index,
             planes: loader.data,
+            range: ranges?.get(SourceIndex) ?? null,
           });
+          YValues = binned.y;
+          range = binned.range;
         } catch (err) {
-          tileErrorCount += 1;
           const msg = err instanceof Error ? err.message : String(err);
           console.warn(
             `[minerva] histogram: channel ${SourceIndex} tile/bin failed (${msg})`,
           );
         }
       }
+      const floatPlane =
+        isFloatDtype(dtype) || isFloatDtype(loader.metadata?.Pixels?.Type);
+      const linear = range != null || floatPlane || (bits != null && bits <= 8);
       return [
         SourceIndex,
         {
           id: crypto.randomUUID(),
           YValues,
-          XScale: "log",
+          XScale: linear ? "linear" : "log",
           YScale: "linear",
-          LowerRange: 0,
-          UpperRange: bits ?? 0,
+          LowerRange: range?.min ?? 0,
+          UpperRange: range
+            ? range.max
+            : bits != null && bits <= 8
+              ? 2 ** bits - 1
+              : (bits ?? 0),
         },
       ] as [number, ConfigSourceDistribution];
     },
-  );
-
-  const nonEmpty = entries.filter(([, d]) => d.YValues.length > 0).length;
-  const emptyCurves = entries.length - nonEmpty;
-  const skippedNoBits = bits == null ? filtered.length : 0;
-  console.log(
-    `[minerva] histogram extract: dtype=${dtype} effectiveBits=${bits ?? "none"} requested=${sourceIndices.length} resolved=${filtered.length} nonEmpty=${nonEmpty} emptyCurve=${emptyCurves} tileErrors=${tileErrorCount} skippedNoBits=${skippedNoBits}`,
   );
 
   return new Map<number, ConfigSourceDistribution>(entries);
@@ -461,40 +497,14 @@ const extractChannels: ExtractChannels = (
       SourceChannels,
       ChannelGroups,
     };
-  } else if (
+  }
+  if (
     SourceChannels.length === 1 &&
     SourceChannels[0].samples === 3 &&
     SourceChannels[0].sourceDataTypeId === "Uint8"
   ) {
-    const group_uuid = crypto.randomUUID();
-    const groupName = "Hematoxylin & Eosin";
-    const channelName = "H&E";
-    const ChannelGroups: ChannelGroup[] = [
-      {
-        id: group_uuid,
-        expanded: true,
-        name: groupName,
-        channels: SourceChannels.map((channel, _index) => {
-          return {
-            id: crypto.randomUUID(),
-            channelId: channel.id,
-            color: hex_to_rgb("cc00ff"),
-            lowerLimit: 0,
-            upperLimit: 255,
-          };
-        }),
-      },
-    ];
-    if (SourceChannels.length === 1) {
-      SourceChannels[0] = {
-        ...SourceChannels[0],
-        name: channelName,
-      };
-    }
-    return {
-      SourceChannels,
-      ChannelGroups,
-    };
+    // Packed RGB is named H&E but left ungrouped; the user groups it if they want.
+    SourceChannels[0].name = "H&E";
   }
   return {
     SourceChannels,

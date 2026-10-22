@@ -5,6 +5,7 @@ import mkcert from "vite-plugin-mkcert";
 import svgr from "vite-plugin-svgr";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
+import { gitSha } from "./vite.gitSha.js";
 
 /** ISO UTC time baked into each bundle; override in CI with `VITE_APP_BUILD_TIME` (ISO-8601). */
 const BUILD_TIME_ISO =
@@ -19,6 +20,7 @@ export default defineConfig(({ command }) => {
   return {
     define: {
       __BUILD_TIME_ISO__: JSON.stringify(BUILD_TIME_ISO),
+      __BUILD_GIT_SHA__: JSON.stringify(gitSha()),
     },
     assetsInclude: ["**/*.wasm"],
     worker: {
@@ -44,7 +46,12 @@ export default defineConfig(({ command }) => {
       }),
     ].filter(Boolean),
     optimizeDeps: {
-      exclude: ["onnxruntime-web", "psudo", "@jsquash/jpeg"],
+      exclude: [
+        "onnxruntime-web",
+        "psudo",
+        "@jsquash/jpeg",
+        "@duckdb/duckdb-wasm",
+      ],
       include: [
         "@luma.gl/core",
         "@luma.gl/constants",
@@ -55,6 +62,8 @@ export default defineConfig(({ command }) => {
         "@deck.gl/core",
         "@deck.gl/layers",
         "@deck.gl/react",
+        "geotiff",
+        "lzw-tiff-decoder",
       ],
     },
     resolve: {

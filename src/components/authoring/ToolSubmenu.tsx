@@ -1,5 +1,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { useClickOutside } from "@/components/shared/useClickOutside";
 import styles from "./ToolSubmenu.module.css";
 
 export interface ToolSubmenuItem {
@@ -24,8 +26,8 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
   onToolChange,
   parentIcon,
   parentTitle,
-  buttonClassName = "",
-  activeClassName = "",
+  buttonClassName = minervaTheme.control,
+  activeClassName = minervaTheme.controlActive,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const toggleRef = React.useRef<HTMLButtonElement>(null);
@@ -38,21 +40,7 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
   const isActive = items.some((item) => item.id === activeTool);
   const activeItem = items.find((item) => item.id === activeTool);
 
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (
-        toggleRef.current &&
-        !toggleRef.current.contains(target) &&
-        menuRef.current &&
-        !menuRef.current.contains(target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useClickOutside(isOpen, () => setIsOpen(false), [toggleRef, menuRef]);
 
   React.useEffect(() => {
     if (isOpen && toggleRef.current) {
@@ -100,14 +88,14 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
         createPortal(
           <div
             ref={menuRef}
-            className={styles.menu}
+            className={`${minervaTheme.menuFixed} ${styles.menu}`}
             style={{ top: menuPos.top, left: menuPos.left }}
           >
             {items.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                className={`${styles.menuItem} ${activeTool === item.id ? styles.menuItemActive : ""}`}
+                className={`${minervaTheme.menuItem} ${styles.menuItem} ${activeTool === item.id ? minervaTheme.selectLeft : ""}`}
                 title={item.title}
                 onClick={() => handleSelect(item.id)}
               >

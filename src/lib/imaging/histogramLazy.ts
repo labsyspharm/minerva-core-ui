@@ -8,6 +8,7 @@
 import type { ConfigSourceDistribution } from "../authoring/config";
 import { extractDistributionsForSourceIndices } from "../authoring/config";
 import type { Channel } from "../stores/documentStore";
+import type { FloatRange } from "./floatRange";
 import type { Loader } from "./viv";
 
 export type BackgroundTaskHandle = { cancel: () => void };
@@ -56,8 +57,10 @@ function cacheKey(
   imageKey: string,
   sourceImageId: string,
   sourceIndex: number,
+  range?: FloatRange | null,
 ): string {
-  return `${imageKey}\u0000${sourceImageId}\u0000${sourceIndex}`;
+  const span = range ? `\0${range.min}\0${range.max}` : "";
+  return `${imageKey}\u0000${sourceImageId}\u0000${sourceIndex}${span}`;
 }
 
 export function clearOmeHistogramCache(): void {
@@ -73,7 +76,15 @@ export function mergeHistogramsIntoSourceChannelsByChannelId(
   const next = channels.map((sc) => {
     const dist = byChannelId.get(sc.id);
     if (!dist) return sc;
-    if (sourceDistributionYValuesLength(sc) > 0) return sc;
+    const prev = sc.sourceDistribution;
+    if (
+      sourceDistributionYValuesLength(sc) > 0 &&
+      prev?.LowerRange === dist.LowerRange &&
+      prev?.UpperRange === dist.UpperRange &&
+      prev?.XScale === dist.XScale
+    ) {
+      return sc;
+    }
     changed = true;
     return { ...sc, sourceDistribution: dist };
   });
@@ -81,14 +92,15 @@ export function mergeHistogramsIntoSourceChannelsByChannelId(
 }
 
 /**
- * Resolve histogram distributions for OME source indices, using an in-memory cache
- * keyed by `{imageKey, index}` (unique for a single multichannel OME-TIFF).
+ * Resolve histogram distributions for OME source indices. The cache key is
+ * image, source index, and float span when one was passed.
  */
 export async function ensureOmeHistogramDistributions(
   loader: Loader,
   imageKey: string,
   sourceImageId: string,
   sourceIndices: readonly number[],
+  ranges?: ReadonlyMap<number, FloatRange>,
 ): Promise<Map<number, ConfigSourceDistribution>> {
   const unique = [...new Set(sourceIndices)].filter(
     (i) => Number.isFinite(i) && i >= 0,
@@ -97,7 +109,9 @@ export async function ensureOmeHistogramDistributions(
   const toCompute: number[] = [];
 
   for (const c of unique) {
-    const hit = omeHistogramCache.get(cacheKey(imageKey, sourceImageId, c));
+    const hit = omeHistogramCache.get(
+      cacheKey(imageKey, sourceImageId, c, ranges?.get(c)),
+    );
     if (hit) {
       result.set(c, hit);
     } else {
@@ -109,11 +123,18 @@ export async function ensureOmeHistogramDistributions(
     return result;
   }
 
-  const fresh = await extractDistributionsForSourceIndices(loader, toCompute);
+  const fresh = await extractDistributionsForSourceIndices(
+    loader,
+    toCompute,
+    ranges,
+  );
   for (const c of toCompute) {
     const dist = fresh.get(c);
     if (dist) {
-      omeHistogramCache.set(cacheKey(imageKey, sourceImageId, c), dist);
+      omeHistogramCache.set(
+        cacheKey(imageKey, sourceImageId, c, ranges?.get(c)),
+        dist,
+      );
       result.set(c, dist);
     }
   }

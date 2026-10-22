@@ -1,9 +1,15 @@
 import type { Layer } from "@deck.gl/core";
 import * as React from "react";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 
 type LoadingWidgetProps = {
   /** Widget positioning within the view. Default 'top-left'. */
-  placement?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  placement?:
+    | "center"
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right";
   /** Tooltip message when loading */
   label?: string;
 };
@@ -17,12 +23,11 @@ export const LoadingWidget = React.forwardRef<
   { onRedraw: (params: { layers: Layer[] }) => void },
   LoadingWidgetProps
 >(({ placement = "top-left", label = "Loading layer data" }, ref) => {
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
 
-  // onRedraw callback - matches the original Widget implementation
   const onRedraw = React.useCallback(({ layers }: { layers: Layer[] }) => {
     const isLoading = layers.some((layer) => !layer.isLoaded);
-    setLoading((prev) => (prev !== isLoading ? isLoading : prev));
+    setLoading((prev) => (prev === isLoading ? prev : isLoading));
   }, []);
 
   React.useImperativeHandle(ref, () => ({ onRedraw }), [onRedraw]);
@@ -39,27 +44,23 @@ export const LoadingWidget = React.forwardRef<
     ...(placement === "top-right" && { top: "8px", right: "8px" }),
     ...(placement === "bottom-left" && { bottom: "8px", left: "8px" }),
     ...(placement === "bottom-right" && { bottom: "8px", right: "8px" }),
+    ...(placement === "center" && {
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+    }),
   };
 
   return (
-    <div className="deck-widget-loading" style={positionStyles} title={label}>
-      <div
-        style={{
-          width: "24px",
-          height: "24px",
-          border: "3px solid rgba(255, 255, 255, 0.3)",
-          borderTop: "3px solid rgba(255, 255, 255, 0.9)",
-          borderRadius: "50%",
-          animation: "spin 1s linear infinite",
-        }}
-      />
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
+    <output
+      className="deck-widget-loading"
+      style={{ ...positionStyles, pointerEvents: "none" }}
+      title={label}
+      aria-live="polite"
+      aria-label={label}
+    >
+      <div className={minervaTheme.spinnerMd} aria-hidden="true" />
+    </output>
   );
 });
 

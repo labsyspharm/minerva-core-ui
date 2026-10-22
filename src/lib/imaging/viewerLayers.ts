@@ -1,14 +1,29 @@
 import type { Layer } from "@deck.gl/core";
-import { MultiscaleImageLayer } from "@hms-dbmi/viv";
+import { isInterleaved, MultiscaleImageLayer } from "@hms-dbmi/viv";
 import { useEffect, useMemo, useRef } from "react";
+import {
+  bitmapLayerOpacity,
+  type ImageOpacityPreview,
+  imageFadeParameters,
+  opacityForImage,
+} from "@/lib/imaging/imageOpacity";
 import type {
   JpegLoaderEntry,
   LoaderList,
   MainSettings,
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
-import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
-import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
+import {
+  type ChannelRendering,
+  type ImageOrientationPreview,
+  useAppStore,
+} from "@/lib/stores/appStore";
+import type {
+  Channel,
+  ChannelGroup,
+  Image,
+  ImageOrientation,
+} from "@/lib/stores/documentStore";
 import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { createTileLayers } from "./dicom.js";
@@ -25,13 +40,21 @@ import {
   type HeStainFit,
   stainInverseKey,
 } from "./heStainFit";
+import { orientationForImage } from "./imageOrientation";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
 import { ADDITIVE_BLEND_PARAMETERS } from "./pyramidTileLayer";
-import { type Config, type Loader, toSettings } from "./viv";
+import {
+  type Loader,
+  PlaceholderTileset2D,
+  TILE_CACHE_PROPS,
+  toSettings,
+} from "./viv";
+import "./vivNearestSampling";
+import { inheritUnitlessPhysicalSize, layerModelMatrix } from "./worldFrame";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
-export function applyChannelRendering<S extends MainSettings>(
+function applyChannelRendering<S extends MainSettings>(
   settings: S,
   live: ChannelRendering | null | undefined,
 ): S {
@@ -42,11 +65,9 @@ export function applyChannelRendering<S extends MainSettings>(
   if (idx < 0) return settings;
   if (live.kind === "contrast") {
     if (idx >= settings.contrastLimits.length) return settings;
-    const lo = Math.round(live.lower);
-    const hi = Math.round(live.upper);
     const contrastLimits = settings.contrastLimits.map((pair, i) =>
       i === idx
-        ? ([lo, hi] as [number, number])
+        ? ([live.lower, live.upper] as [number, number])
         : ([pair[0], pair[1]] as [number, number]),
     );
     return { ...settings, contrastLimits };
@@ -63,22 +84,20 @@ export function applyChannelRendering<S extends MainSettings>(
   return { ...settings, colors };
 }
 
-export type ViewerLoaderSources = {
+type ViewerLoaderSources = {
   dicomIndexList?: DicomIndex[];
   omeLoaderEntries?: OmeLoaderEntry[];
   jpegLoaderEntries?: JpegLoaderEntry[];
 };
 
 /** Loader-list rows in paint order: DICOM → OME → encoded pyramids. */
-export function loaderListFromEntries(
-  sources: ViewerLoaderSources,
-): LoaderList {
+function loaderListFromEntries(sources: ViewerLoaderSources): LoaderList {
   const {
     dicomIndexList = [],
     omeLoaderEntries = [],
     jpegLoaderEntries = [],
   } = sources;
-  return [
+  const list = [
     ...dicomIndexList.map(({ sourceImageId, loader, modality }) => ({
       sourceImageId,
       loader,
@@ -95,40 +114,33 @@ export function loaderListFromEntries(
       modality: "Colorimetric" as const,
     })),
   ];
+  inheritUnitlessPhysicalSize(list.map((row) => row.loader));
+  return list;
 }
 
-export function createViewerConfigFromDocument(args: {
-  sourceChannels: Channel[];
-  channelGroups: ChannelGroup[];
-}): Config {
-  return {
-    toSettings: toSettings({
-      SourceChannels: args.sourceChannels,
-      channelGroups: args.channelGroups,
-    }),
-  };
-}
-
-export function createDicomTileLayer(args: {
+function createDicomTileLayer(args: {
   entry: DicomIndex;
   settings: unknown;
-  index: number;
   remountKey?: string | number;
-}): Layer {
+  orientation?: ImageOrientation | null;
+  opacity: number;
+}): Layer | null {
   const rgbImage = args.entry.modality === "Brightfield";
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
+  const imageKey = args.entry.sourceImageId || `dicom-${args.entry.series}`;
   return createTileLayers({
     pyramids: args.entry.pyramids,
     dicomLoader: args.entry.loader,
     settings: args.settings,
     rgbImage,
-    imageID: `dicom-${args.entry.series}-${args.index}${remount}`,
+    imageID: `${imageKey}${remount}`,
+    modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
+    opacity: args.opacity,
   });
 }
 
 /** Later OME intensity layers: skip Viv's opaque background and add onto the base. */
 const OME_INTENSITY_OVERLAY_PROPS = {
-  excludeBackground: true,
   refinementStrategy: "no-overlap" as const,
   parameters: {
     blend: true,
@@ -136,10 +148,11 @@ const OME_INTENSITY_OVERLAY_PROPS = {
   },
 };
 
-export function createMultiscaleLayer(args: {
+function createMultiscaleLayer(args: {
   loader: Loader;
   settings: MainSettings | Record<string, unknown>;
-  index: number;
+  /** Stable deck.gl layer id (e.g. sourceImageId); remountKey is appended. */
+  layerId: string;
   /** Appended to the layer id (e.g. after export remount). */
   remountKey?: string | number;
   /**
@@ -148,6 +161,8 @@ export function createMultiscaleLayer(args: {
    */
   transfer?: JpegExportTransfer;
   overlay?: boolean;
+  orientation?: ImageOrientation | null;
+  opacity: number;
 }): Layer {
   const base = args.settings as MainSettings;
   const settings: MainSettings =
@@ -159,27 +174,41 @@ export function createMultiscaleLayer(args: {
           ),
         }
       : base;
-  const selections = settings.selections ?? [];
-  const selectionId = selections.map(({ c }) => c).join("-");
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
   return new MultiscaleImageLayer({
-    id: `mainLayer-${args.index}-${selectionId}${remount}`,
+    id: `${args.layerId}${remount}`,
     ...settings,
+    ...TILE_CACHE_PROPS,
+    TilesetClass: PlaceholderTileset2D,
+    // Viv's overview ImageLayer getRaster()s the full coarsest plane; isLoaded
+    // waits on that decode even after tiles have painted.
+    excludeBackground: true,
     ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
+    ...imageFadeParameters(Boolean(args.overlay), args.opacity),
+    // Viv draws interleaved (packed RGB) tiles with deck's BitmapLayer.
+    opacity: isInterleaved(args.loader.data[0].shape)
+      ? bitmapLayerOpacity(args.opacity)
+      : args.opacity,
     loader: args.loader.data,
+    modelMatrix: layerModelMatrix(args.loader, args.orientation),
   } as never);
 }
 
-export function createEncodedImageLayer(args: {
+function createEncodedImageLayer(args: {
   entry: JpegLoaderEntry;
   settings: unknown;
+  remountKey?: string | number;
+  orientation?: ImageOrientation | null;
+  opacity: number;
 }): Layer {
+  const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
   return createJpegLayers({
     jpegLoader: args.entry.loader.data,
     settings: args.settings,
-    imagePath: args.entry.imagePath ?? ".",
-    channelFolders: args.entry.channelFolders ?? {},
     transfer: args.entry.transfer ?? "contrast",
+    layerId: `jpeg-${args.entry.sourceImageId}${remount}`,
+    modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
+    opacity: args.opacity,
   });
 }
 
@@ -253,7 +282,7 @@ function peelHeDeconvFromSettings(
   };
 }
 
-export function buildImageLayers(args: {
+function buildImageLayers(args: {
   dicomIndexList?: DicomIndex[];
   omeLoaderEntries?: OmeLoaderEntry[];
   jpegLoaderEntries?: JpegLoaderEntry[];
@@ -261,6 +290,9 @@ export function buildImageLayers(args: {
   omeSettingsList?: unknown[];
   jpegSettingsList?: unknown[];
   remountKey?: string | number;
+  images?: Image[];
+  orientationPreview?: ImageOrientationPreview | null;
+  opacityPreview?: ImageOpacityPreview | null;
   heDeconvByChannelId?: Record<string, HeDeconvSplit>;
   heStainFitByChannelId?: Record<string, HeStainFit>;
   channelRendering?: ChannelRendering | null;
@@ -271,23 +303,33 @@ export function buildImageLayers(args: {
   const dicomSettingsList = args.dicomSettingsList ?? [];
   const omeSettingsList = args.omeSettingsList ?? [];
   const jpegSettingsList = args.jpegSettingsList ?? [];
+  const { images, orientationPreview, opacityPreview } = args;
+  const opacityOf = (sourceImageId: string | undefined) =>
+    opacityForImage(images, sourceImageId, opacityPreview);
 
-  // One global index across DICOM → OME → JPEG so layer ids stay unique and
-  // align with loaderList / mainSettingsList order.
-  let nextIndex = 0;
-  let omeIntensityPainted = 0;
+  let omeVisiblePainted = 0;
   return [
-    ...dicomIndexList.map((entry, i) =>
-      createDicomTileLayer({
+    ...dicomIndexList.flatMap((entry, i) => {
+      const settings = dicomSettingsList[i] as MainSettings | undefined;
+      if (!settings?.selections?.length) return [];
+      const layer = createDicomTileLayer({
         entry,
-        settings: dicomSettingsList[i],
-        index: nextIndex++,
+        settings,
         remountKey: args.remountKey,
-      }),
-    ),
-    ...omeLoaderEntries.flatMap(({ loader, transfer }, i) => {
+        orientation: orientationForImage(
+          images,
+          entry.sourceImageId,
+          orientationPreview,
+        ),
+        opacity: opacityOf(entry.sourceImageId),
+      });
+      if (!layer) return [];
+      return [layer];
+    }),
+    ...omeLoaderEntries.flatMap(({ loader, transfer, sourceImageId }, i) => {
       const settings = omeSettingsList[i] as MainSettings | undefined;
       // Mask-only loaders have no intensity selections; painted by createMaskTileLayer.
+      // H&E-split channels leave Viv's settings and paint as their own layer.
       const peeled = peelHeDeconvFromSettings(
         settings,
         args.heDeconvByChannelId,
@@ -297,8 +339,14 @@ export function buildImageLayers(args: {
       if (!vivSettings?.selections?.length && !peeled.heLayers.length) {
         return [];
       }
-      const overlay = omeIntensityPainted > 0;
-      omeIntensityPainted += 1;
+      const overlay = omeVisiblePainted > 0;
+      omeVisiblePainted += 1;
+      const orientation = orientationForImage(
+        images,
+        sourceImageId,
+        orientationPreview,
+      );
+      const opacity = opacityOf(sourceImageId);
       const remount =
         args.remountKey === undefined ? "" : `-r${args.remountKey}`;
       const out: Layer[] = [];
@@ -307,35 +355,49 @@ export function buildImageLayers(args: {
           createMultiscaleLayer({
             loader,
             settings: vivSettings,
-            index: nextIndex,
+            layerId: `mainLayer-${sourceImageId}`,
             remountKey: args.remountKey,
             overlay,
+            orientation,
+            opacity,
             ...(transfer ? { transfer } : {}),
           }),
         );
       }
       for (const he of peeled.heLayers) {
         const layer = createHeDeconvLayer({
-          id: `heDeconv-${i}-${he.sourceChannelId}${remount}`,
+          id: `heDeconv-${sourceImageId}-${he.sourceChannelId}${remount}`,
           loader,
           parentIndex: he.parentIndex,
           hematoxylin: he.hematoxylin,
           eosin: he.eosin,
           overlay: overlay || out.length > 0,
+          modelMatrix: layerModelMatrix(loader, orientation),
+          opacity,
           stainInverse:
             args.heStainFitByChannelId?.[he.sourceChannelId]?.glslInverse,
         });
         if (layer) out.push(layer);
       }
-      nextIndex += 1;
       return out;
     }),
-    ...jpegLoaderEntries.map((entry, i) =>
-      createEncodedImageLayer({
-        entry,
-        settings: jpegSettingsList[i],
-      }),
-    ),
+    ...jpegLoaderEntries.flatMap((entry, i) => {
+      const settings = jpegSettingsList[i] as MainSettings | undefined;
+      if (!settings?.selections?.length) return [];
+      return [
+        createEncodedImageLayer({
+          entry,
+          settings,
+          remountKey: args.remountKey,
+          orientation: orientationForImage(
+            images,
+            entry.sourceImageId,
+            orientationPreview,
+          ),
+          opacity: opacityOf(entry.sourceImageId),
+        }),
+      ];
+    }),
   ];
 }
 
@@ -351,6 +413,12 @@ export function useViewerLayers(args: {
   channelGroupRowVisibilities: Record<string, boolean>;
   /** Authoring: live contrast/color drag preview (CDN omits). */
   channelRendering?: ChannelRendering | null;
+  /** Document images (for per-image orientation → modelMatrix). */
+  images?: Image[];
+  /** Authoring: live orientation drag preview (CDN omits). */
+  orientationPreview?: ImageOrientationPreview | null;
+  /** Authoring: live image-opacity slider (CDN omits). */
+  opacityPreview?: ImageOpacityPreview | null;
   /** Authoring: bump after export to recreate GL layers (CDN omits). */
   remountKey?: string | number;
 }) {
@@ -364,6 +432,9 @@ export function useViewerLayers(args: {
     channelVisibilities,
     channelGroupRowVisibilities,
     channelRendering = null,
+    images,
+    orientationPreview = null,
+    opacityPreview = null,
     remountKey,
   } = args;
   const heDeconvByChannelId = useAppStore((s) => s.heDeconvByChannelId);
@@ -440,13 +511,13 @@ export function useViewerLayers(args: {
   const channelsRef = useRef({ sourceChannels, channelGroups });
   channelsRef.current = { sourceChannels, channelGroups };
 
-  const viewerConfig = useMemo(() => {
+  const toDocSettings = useMemo(() => {
     // `channelsSignature` is the intentional memo key (histogram-stable).
     // Read channels from the ref so we close over the arrays from this signature.
     void channelsSignature;
     const { sourceChannels: sc, channelGroups: cg } = channelsRef.current;
-    return createViewerConfigFromDocument({
-      sourceChannels: sc,
+    return toSettings({
+      SourceChannels: sc,
       channelGroups: cg,
     });
   }, [channelsSignature]);
@@ -461,68 +532,43 @@ export function useViewerLayers(args: {
     [dicomIndexList, omeLoaderEntries, jpegLoaderEntries],
   );
 
-  const dicomSettingsList = useMemo(
-    () =>
-      dicomIndexList.map(({ loader, modality, sourceImageId }) =>
-        viewerConfig.toSettings(
+  const { dicomSettingsList, omeSettingsList, jpegSettingsList } =
+    useMemo(() => {
+      const settingsFor = (
+        modality: string,
+        loader: Loader | undefined,
+        sourceImageId?: string,
+      ) =>
+        toDocSettings(
           activeChannelGroupId,
           modality,
           loader,
           channelVisibilities,
-          sourceImageId || undefined,
+          sourceImageId,
           channelGroupRowVisibilities,
+        ) as MainSettings;
+
+      return {
+        dicomSettingsList: dicomIndexList.map(
+          ({ loader, modality, sourceImageId }) =>
+            settingsFor(modality, loader, sourceImageId || undefined),
         ),
-      ),
-    [
+        omeSettingsList: omeLoaderEntries.map(({ loader, sourceImageId }) =>
+          settingsFor("Colorimetric", loader, sourceImageId),
+        ),
+        jpegSettingsList: jpegLoaderEntries.map(({ loader, sourceImageId }) =>
+          settingsFor("Colorimetric", loader, sourceImageId),
+        ),
+      };
+    }, [
       dicomIndexList,
-      viewerConfig,
-      activeChannelGroupId,
-      channelVisibilities,
-      channelGroupRowVisibilities,
-    ],
-  );
-
-  const omeSettingsList = useMemo(
-    () =>
-      omeLoaderEntries.map(({ loader, sourceImageId }) =>
-        viewerConfig.toSettings(
-          activeChannelGroupId,
-          "Colorimetric",
-          loader,
-          channelVisibilities,
-          sourceImageId,
-          channelGroupRowVisibilities,
-        ),
-      ),
-    [
       omeLoaderEntries,
-      viewerConfig,
-      activeChannelGroupId,
-      channelVisibilities,
-      channelGroupRowVisibilities,
-    ],
-  );
-
-  const jpegSettingsList = useMemo(
-    () =>
-      jpegLoaderEntries.map(({ loader, sourceImageId }) =>
-        viewerConfig.toSettings(
-          activeChannelGroupId,
-          "Colorimetric",
-          loader,
-          channelVisibilities,
-          sourceImageId,
-          channelGroupRowVisibilities,
-        ),
-      ),
-    [
       jpegLoaderEntries,
-      viewerConfig,
+      toDocSettings,
       activeChannelGroupId,
       channelVisibilities,
       channelGroupRowVisibilities,
-    ],
-  );
+    ]);
 
   const dicomSettingsWithLive = useMemo(
     () =>
@@ -568,6 +614,9 @@ export function useViewerLayers(args: {
         omeSettingsList: omeSettingsWithLive,
         jpegSettingsList: jpegSettingsWithLive,
         remountKey,
+        images,
+        orientationPreview,
+        opacityPreview,
         heDeconvByChannelId,
         heStainFitByChannelId,
         channelRendering,
@@ -580,11 +629,14 @@ export function useViewerLayers(args: {
       omeSettingsWithLive,
       jpegSettingsWithLive,
       remountKey,
+      images,
+      orientationPreview,
+      opacityPreview,
       heDeconvByChannelId,
       heStainFitByChannelId,
       channelRendering,
     ],
   );
 
-  return { viewerConfig, loaderList, mainSettingsList, imageLayers };
+  return { loaderList, mainSettingsList, imageLayers };
 }

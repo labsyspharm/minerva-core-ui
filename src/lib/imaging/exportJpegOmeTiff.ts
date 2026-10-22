@@ -1,4 +1,3 @@
-import type { TiffPixelSource } from "@hms-dbmi/viv";
 import { getImageSize } from "@hms-dbmi/viv";
 import {
   browserFileSink,
@@ -6,300 +5,320 @@ import {
   grayscaleJpegTags,
   type PlanPyramidJob,
   planPyramid,
+  tiffTag,
 } from "tiffwriter";
-import { effectiveChannelKind } from "@/lib/imaging/channelKind";
 import type {
   ChannelGroup,
   Image,
   ImageChannel,
 } from "@/lib/stores/documentSchema";
-import type { JpegExportTransfer } from "./cubeRootEncoding";
-import { folderLimitsForTransfer } from "./cubeRootEncoding";
-import { encodeTileJpeg, jpegExportConcurrency } from "./jpegExportPool";
+import {
+  isRgbDisplayImage,
+  planarRgbSlotFromName,
+  sourceDtypeMax,
+} from "./channelKind";
+import {
+  exportTransferForImage,
+  folderLimitsForTransfer,
+  type JpegExportTransfer,
+} from "./cubeRootEncoding";
+import { readExportTile } from "./exportTileReader";
+import {
+  exportZlibOmeTiffImage,
+  maskExportTileCount,
+} from "./exportZlibOmeTiff";
+import { encodeTileJpeg } from "./jpegExportPool";
 import { JPEG_PYRAMID_TILE_SIZE } from "./jpegPyramid";
 import type { OmeLoaderEntry } from "./loaderEntries";
+import {
+  type BrightfieldTally,
+  brightfieldSampleMax,
+  brightfieldSampleOffsets,
+  brightfieldTallyMatches,
+  tallyBrightfieldSamples,
+} from "./omeTiff";
+import {
+  allocateOmeTiffExportFileNames,
+  buildOmeTiffXml,
+  contrastLimitsForExportedChannel,
+  exportPlaneLevels,
+  groupIntensityChannelsForOmeExport,
+  groupMaskChannelsForOmeExport,
+  type LoaderPlane,
+  loaderPlanesOrUndef,
+  type OmePixelsMeta,
+  remappedImageForOmeTiffExport,
+  stitchOmeTiffExportImages,
+  tileCountForLevels,
+} from "./omeTiffExport";
+import { writeTiffOffsetsJson } from "./tiffOffsetsJson";
 
-type LoaderPlane = TiffPixelSource<string[]>;
-
-type LevelSize = {
-  width: number;
-  height: number;
-  tileSize: number;
+type JpegExportChannelSource = {
+  channel: ImageChannel;
+  planes: LoaderPlane[];
 };
-
-function omeTiffExportFileName(image: Image, used: Set<string>): string {
-  const raw =
-    image.basename?.replace(/\.(ome\.)?(tif|tiff)$/i, "") ||
-    image.id ||
-    "image";
-  const base = raw.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
-  let name = `${base}.ome.tif`;
-  let n = 2;
-  while (used.has(name.toLowerCase())) {
-    name = `${base}_${n}.ome.tif`;
-    n += 1;
-  }
-  used.add(name.toLowerCase());
-  return name;
-}
-
-/** Unique channelIds referenced by any channel group. */
-function channelIdsFromGroups(channelGroups: ChannelGroup[]): Set<string> {
-  const ids = new Set<string>();
-  for (const g of channelGroups) {
-    for (const row of g.channels) {
-      ids.add(row.channelId);
-    }
-  }
-  return ids;
-}
-
-/**
- * Intensity channels that appear in channel groups (JPEG-pyramid scope).
- * Stable TIFF IFD order: ascending source `index`.
- */
-function groupIntensityChannelsForOmeExport(
-  image: Image,
-  channelGroups: ChannelGroup[],
-): ImageChannel[] {
-  const wanted = channelIdsFromGroups(channelGroups);
-  if (wanted.size === 0) return [];
-  return (image.channels ?? [])
-    .filter((ch) => wanted.has(ch.id) && effectiveChannelKind(ch) === "channel")
-    .slice()
-    .sort((a, b) => a.index - b.index);
-}
-
-function assertNoSelectedMaskChannels(
-  images: Image[],
-  channelGroups: ChannelGroup[],
-): void {
-  const wanted = channelIdsFromGroups(channelGroups);
-  for (const im of images) {
-    const selectedMasks = (im.channels ?? []).filter(
-      (ch) => wanted.has(ch.id) && effectiveChannelKind(ch) === "mask",
-    );
-    if (selectedMasks.length > 0) {
-      throw new Error(
-        `OME-TIFF export does not support mask/segmentation channels yet (${im.basename || im.id}). Remove masks from channel groups or export as JPEG folders.`,
-      );
-    }
-  }
-}
-
-/** Remap exported channels to TIFF positions 0..k-1; point source at the relative file. */
-function remappedImageForOmeTiffExport(
-  image: Image,
-  exportedChannels: ImageChannel[],
-  fileName: string,
-): Image {
-  return {
-    ...image,
-    sizeC: exportedChannels.length,
-    channels: exportedChannels.map((ch, i) => ({ ...ch, index: i })),
-    source: { kind: "url", url: fileName },
-  };
-}
-
-function planeLevels(loaderData: LoaderPlane[]): LevelSize[] {
-  return loaderData.map((plane) => {
-    const { width, height } = getImageSize(plane);
-    const tileSize =
-      typeof plane.tileSize === "number" && plane.tileSize > 0
-        ? plane.tileSize
-        : JPEG_PYRAMID_TILE_SIZE;
-    return { width, height, tileSize };
-  });
-}
-
-function tileCountForLevels(
-  levels: readonly LevelSize[],
-  channelCount: number,
-): number {
-  let n = 0;
-  for (const level of levels) {
-    n +=
-      Math.ceil(level.width / level.tileSize) *
-      Math.ceil(level.height / level.tileSize) *
-      channelCount;
-  }
-  return n;
-}
-
-function escapeXmlAttr(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-/** OME Channel `Color` is signed big-endian RGBA packed into an int32. */
-function omeColorInt(color: { r: number; g: number; b: number }): number {
-  const view = new DataView(new ArrayBuffer(4));
-  view.setUint8(0, color.r & 0xff);
-  view.setUint8(1, color.g & 0xff);
-  view.setUint8(2, color.b & 0xff);
-  view.setUint8(3, 255);
-  return view.getInt32(0, false);
-}
-
-function optionalNumberAttr(name: string, value: unknown): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "";
-  return ` ${name}="${value}"`;
-}
-
-function optionalStringAttr(name: string, value: unknown): string {
-  if (typeof value !== "string" || !value.trim()) return "";
-  return ` ${name}="${escapeXmlAttr(value)}"`;
-}
-
-type OmePixelsMeta = {
-  PhysicalSizeX?: number;
-  PhysicalSizeY?: number;
-  PhysicalSizeZ?: number;
-  PhysicalSizeXUnit?: string;
-  PhysicalSizeYUnit?: string;
-  PhysicalSizeZUnit?: string;
-};
-
-/**
- * Contrast for one exported channel: first matching group row (required —
- * OME export only writes group channels).
- */
-function contrastLimitsForExportedChannel(
-  channel: ImageChannel,
-  channelGroups: ChannelGroup[],
-): { lowerLimit: number; upperLimit: number } {
-  for (const g of channelGroups) {
-    for (const row of g.channels) {
-      if (row.channelId !== channel.id) continue;
-      return { lowerLimit: row.lowerLimit, upperLimit: row.upperLimit };
-    }
-  }
-  throw new Error(`No channel-group contrast for channel ${channel.id}`);
-}
-
-/** Minimal OME-XML for Viv `loadOmeTiff` (ImageDescription.replace). */
-function buildJpegOmeTiffXml(opts: {
-  image: Image;
-  channels: ReadonlyArray<ImageChannel>;
-  width: number;
-  height: number;
-  fileName: string;
-  pixels?: OmePixelsMeta | null;
-}): string {
-  const { image, channels, width, height, fileName, pixels } = opts;
-  const imageName = image.basename || image.id || "image";
-  const sizeC = channels.length;
-
-  // Writer emits planar single-sample JPEG IFDs (one channel per IFD).
-  const channelXml = channels
-    .map((ch, i) => {
-      const id = escapeXmlAttr(ch.id || `Channel:0:${i}`);
-      const chName = escapeXmlAttr(ch.name?.trim() || `Channel ${i}`);
-      const colorAttr =
-        ch.color &&
-        typeof ch.color.r === "number" &&
-        typeof ch.color.g === "number" &&
-        typeof ch.color.b === "number"
-          ? ` Color="${omeColorInt({ r: ch.color.r, g: ch.color.g, b: ch.color.b })}"`
-          : "";
-      return `<Channel ID="${id}" Name="${chName}" SamplesPerPixel="1"${colorAttr}/>`;
-    })
-    .join("");
-
-  const tiffDataXml = channels
-    .map((_, i) => {
-      const uuid = escapeXmlAttr(fileName);
-      return (
-        `<TiffData FirstC="${i}" FirstT="0" FirstZ="0" IFD="${i}" PlaneCount="1">` +
-        `<UUID FileName="${uuid}">${uuid}</UUID>` +
-        `</TiffData>`
-      );
-    })
-    .join("");
-
-  const physicalAttrs =
-    optionalNumberAttr("PhysicalSizeX", pixels?.PhysicalSizeX) +
-    optionalNumberAttr("PhysicalSizeY", pixels?.PhysicalSizeY) +
-    optionalNumberAttr("PhysicalSizeZ", pixels?.PhysicalSizeZ) +
-    optionalStringAttr("PhysicalSizeXUnit", pixels?.PhysicalSizeXUnit) +
-    optionalStringAttr("PhysicalSizeYUnit", pixels?.PhysicalSizeYUnit) +
-    optionalStringAttr("PhysicalSizeZUnit", pixels?.PhysicalSizeZUnit);
-
-  return (
-    `<?xml version="1.0" encoding="UTF-8"?>` +
-    `<OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06"` +
-    ` xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"` +
-    ` xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd">` +
-    `<Image ID="Image:0" Name="${escapeXmlAttr(imageName)}">` +
-    `<Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="uint8"` +
-    ` SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1"` +
-    ` SignificantBits="8" Interleaved="false" BigEndian="false"${physicalAttrs}>` +
-    `${channelXml}${tiffDataXml}` +
-    `</Pixels></Image></OME>`
-  );
-}
 
 type ExportJpegOmeTiffOpts = {
   directory: FileSystemDirectoryHandle;
-  entry: OmeLoaderEntry;
+  layoutPlanes: LoaderPlane[];
   image: Image;
-  channels: ImageChannel[];
+  channelSources: JpegExportChannelSource[];
   channelGroups: ChannelGroup[];
   fileName: string;
   transfer: JpegExportTransfer;
   signal: AbortSignal;
   onProgress?: (deltaCompleted: number) => void;
+  /** Brightfield source channels in R,G,B order (or one packed channel). */
+  rgb: ImageChannel[] | null;
+  pixels?: OmePixelsMeta | null;
 };
 
-/** Write one multi-channel JPEG pyramidal OME-TIFF (contrast or cube-root uint8). */
+/** Brightfield: one IFD, 4:2:0 YCbCr JPEG tiles (Viv converts to RGB). Must match `encodeRgbJpeg`. */
+const RGB_JPEG_TAGS = [
+  tiffTag("BitsPerSample", "SHORT", [8, 8, 8]),
+  tiffTag("Compression", "SHORT", 7),
+  tiffTag("PhotometricInterpretation", "SHORT", 6),
+  tiffTag("SamplesPerPixel", "SHORT", 3),
+  tiffTag("PlanarConfiguration", "SHORT", 1),
+  tiffTag(530, "SHORT", [2, 2]), // YCbCrSubSampling
+  tiffTag("SampleFormat", "SHORT", [1, 1, 1]),
+];
+
+/**
+ * Tiles in flight. Reads dominate (a network share takes ~20 ms each), so this
+ * is well above the encoder pool size.
+ */
+const TILES_IN_FLIGHT = 32;
+/** Encoded bytes queued for the (serial) TIFF writer before tiles wait on it. */
+const MAX_PENDING_WRITE_BYTES = 64 * 1024 * 1024;
+
+function interleavePlanar(planes: ArrayLike<number>[]): Float64Array {
+  const n = planes.reduce(
+    (min, plane) => Math.min(min, plane.length),
+    planes[0]?.length ?? 0,
+  );
+  const out = new Float64Array(n * planes.length);
+  for (let i = 0; i < n; i++) {
+    for (let c = 0; c < planes.length; c++) {
+      out[i * planes.length + c] = planes[c][i];
+    }
+  }
+  return out;
+}
+
+const HE_COLOR = { r: 204, g: 0, b: 255 };
+
+/**
+ * Brightfield sources all export as one interleaved RGB plane: a packed
+ * channel as is, or a planar triplet in R,G,B order (by name, else index).
+ */
+function rgbExportChannels(
+  image: Image,
+  channels: ImageChannel[],
+): ImageChannel[] | null {
+  if (!isRgbDisplayImage(image)) return null;
+  if (channels.length === 1 && channels[0].samples === 3) return channels;
+  if (channels.length !== 3 || channels.some((c) => c.samples === 3)) {
+    return null;
+  }
+  const slots = channels.map((c) => planarRgbSlotFromName(c.name));
+  const named = !slots.includes(null) && new Set(slots).size === 3;
+  return channels
+    .map((c, i) => ({ c, key: named ? (slots[i] as number) : c.index }))
+    .sort((a, b) => a.key - b.key)
+    .map(({ c }) => c);
+}
+
+/** The single packed channel an RGB export writes. A planar triplet keeps the R id. */
+function rgbFileChannel(rgb: ImageChannel[]): ImageChannel {
+  const [first] = rgb;
+  if (rgb.length === 1) return { ...first, sourceDataTypeId: "Uint8" };
+  return {
+    id: first.id,
+    index: 0,
+    name: "H&E",
+    kind: "channel",
+    samples: 3,
+    sourceDataTypeId: "Uint8",
+  };
+}
+
+/** Planar R/G/B group rows collapse to one H&E row on the kept (R) channel id. */
+function collapsePlanarRgbRows(
+  groups: ChannelGroup[],
+  triplets: ImageChannel[][],
+): ChannelGroup[] {
+  if (triplets.length === 0) return groups;
+  const keepOf = new Map(
+    triplets.flatMap((rgb) => rgb.map((c) => [c.id, rgb[0].id] as const)),
+  );
+  return groups.map((group) => {
+    const seen = new Set<string>();
+    return {
+      ...group,
+      channels: group.channels.flatMap((row) => {
+        const keep = keepOf.get(row.channelId);
+        if (keep == null) return [row];
+        if (seen.has(keep)) return [];
+        seen.add(keep);
+        return [
+          {
+            ...row,
+            channelId: keep,
+            color: HE_COLOR,
+            lowerLimit: 0,
+            upperLimit: 255,
+          },
+        ];
+      }),
+    };
+  });
+}
+
+/**
+ * Cube-root lifts dark pixels. That is right for fluorescence and washes out
+ * brightfield (white glass, dark stain). Sample the coarsest level the same
+ * way import does; a brightfield hit forces contrast.
+ */
+async function planesLookBrightfield(
+  planes: LoaderPlane[],
+  channels: ImageChannel[],
+  signal: AbortSignal,
+): Promise<boolean> {
+  if (channels.length !== 1 && channels.length < 3) return false;
+  const level = planes[planes.length - 1];
+  if (!level?.getTile) return false;
+  const { width, height } = getImageSize(level);
+  if (width <= 0 || height <= 0) return false;
+  const tile = level.tileSize > 0 ? level.tileSize : JPEG_PYRAMID_TILE_SIZE;
+  const xs = brightfieldSampleOffsets(width, tile);
+  const ys = brightfieldSampleOffsets(height, tile);
+  const use = channels.slice(0, 3);
+  const tally: BrightfieldTally = { nDark: 0, nLight: 0 };
+  for (const y0 of ys) {
+    for (const x0 of xs) {
+      if (signal.aborted) return false;
+      const x = Math.floor(x0 / tile);
+      const y = Math.floor(y0 / tile);
+      let tiles: { data: ArrayLike<number> }[];
+      try {
+        tiles = await Promise.all(
+          use.map((ch) =>
+            level.getTile({
+              selection: { t: 0, z: 0, c: ch.index },
+              x,
+              y,
+              signal,
+            }),
+          ),
+        );
+      } catch {
+        continue;
+      }
+      if (signal.aborted) return false;
+      const sampleMax = brightfieldSampleMax(tiles[0].data, level.dtype);
+      if (use.length >= 3) {
+        tallyBrightfieldSamples(
+          interleavePlanar(tiles.map((t) => t.data)),
+          { sampleMax, channels: 3 },
+          tally,
+        );
+      } else {
+        tallyBrightfieldSamples(
+          tiles[0].data,
+          { sampleMax, channels: 1 },
+          tally,
+        );
+      }
+    }
+  }
+  return brightfieldTallyMatches(tally);
+}
+
+async function transferForBrightfield(
+  image: Image,
+  storyTransfer: JpegExportTransfer,
+  planes: LoaderPlane[],
+  channels: ImageChannel[],
+  signal: AbortSignal,
+): Promise<{ transfer: JpegExportTransfer; image: Image }> {
+  const transfer = exportTransferForImage(image, storyTransfer);
+  // `rgbDisplay: false` is the user's "independent IF channels" choice.
+  if (transfer !== "cube-root" || image.rgbDisplay === false) {
+    return { transfer, image };
+  }
+  if (!(await planesLookBrightfield(planes, channels, signal))) {
+    return { transfer, image };
+  }
+  return {
+    transfer: "contrast",
+    image: image.rgbDisplay === true ? image : { ...image, rgbDisplay: true },
+  };
+}
+
+/**
+ * Write one JPEG pyramidal OME-TIFF: grayscale IFD per channel (contrast or
+ * cube-root uint8), or one interleaved RGB IFD for brightfield.
+ */
 async function exportJpegOmeTiffImage(
   opts: ExportJpegOmeTiffOpts,
 ): Promise<Image> {
   const {
     directory,
-    entry,
+    layoutPlanes,
     image,
-    channels,
+    channelSources,
     channelGroups,
     fileName,
     transfer,
     signal,
     onProgress,
+    rgb,
+    pixels,
   } = opts;
+  const channels = channelSources.map((s) => s.channel);
   if (channels.length === 0) {
     throw new Error(
       `No intensity channels to export for ${image.basename || image.id}`,
     );
   }
-  const loaderData = entry.loader.data as LoaderPlane[] | undefined;
-  if (!loaderData?.length) {
+  if (!layoutPlanes.length) {
     throw new Error(
       `Loader has no pyramid levels for ${image.basename || image.id}`,
     );
   }
 
-  const levels = planeLevels(loaderData);
+  const levels = exportPlaneLevels(layoutPlanes);
+  const fileChannels = rgb ? [rgbFileChannel(rgb)] : channels;
   const channelLimits = channels.map((ch) => {
     const lim = contrastLimitsForExportedChannel(ch, channelGroups);
     return folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
   });
+  // Packed RGB is drawn as a bitmap (no contrast), so only scale to 8-bit.
+  const rgbLimits =
+    rgb?.length === 1
+      ? Array(3).fill([0, sourceDtypeMax(layoutPlanes[0].dtype)])
+      : rgb?.map((ch) => {
+          const lim = contrastLimitsForExportedChannel(ch, channelGroups);
+          return [lim.lowerLimit, lim.upperLimit] as const;
+        });
 
-  const omeXml = buildJpegOmeTiffXml({
-    image,
-    channels,
+  const omeXml = buildOmeTiffXml({
+    imageName: image.basename || image.id || "image",
+    channels: fileChannels,
     width: levels[0].width,
     height: levels[0].height,
     fileName,
-    pixels: entry.loader.metadata?.Pixels ?? null,
+    pixelType: "uint8",
+    significantBits: 8,
+    samplesPerPixel: rgb ? 3 : 1,
+    pixels,
   });
 
   const { layouts, jobs } = planPyramid({
     levels,
-    channelCount: channels.length,
-    baseTags: grayscaleJpegTags(),
+    channelCount: fileChannels.length,
+    baseTags: rgb ? RGB_JPEG_TAGS : grayscaleJpegTags(),
     imageDescription: omeXml,
   });
 
@@ -340,26 +359,50 @@ async function exportJpegOmeTiffImage(
     throw e;
   }
 
-  const concurrency = Math.min(
-    jpegExportConcurrency(),
-    Math.max(1, jobs.length),
-  );
+  const concurrency = Math.min(TILES_IN_FLIGHT, Math.max(1, jobs.length));
   let next = 0;
+
+  // The writer appends one tile at a time; tiles queue their bytes and move on.
+  const pendingWrites = new Set<Promise<void>>();
+  let pendingWriteBytes = 0;
+  const queueWrite = async (job: PlanPyramidJob, bytes: Uint8Array) => {
+    while (pendingWriteBytes >= MAX_PENDING_WRITE_BYTES) {
+      await Promise.race(pendingWrites);
+    }
+    pendingWriteBytes += bytes.byteLength;
+    const write = writer
+      .writeSegment(job.address, bytes)
+      .then(() => onProgress?.(1), failExport)
+      .finally(() => {
+        pendingWriteBytes -= bytes.byteLength;
+        pendingWrites.delete(write);
+      });
+    pendingWrites.add(write);
+  };
 
   const runJob = async (job: PlanPyramidJob) => {
     if (workSignal.aborted) return;
-    const plane = loaderData[job.levelIndex];
+    const source = channelSources[job.channelIndex];
+    const levelIndex = Math.min(job.levelIndex, source.planes.length - 1);
+    const plane = source.planes[levelIndex];
     const tileSize = levels[job.levelIndex].tileSize;
-    const channel = channels[job.channelIndex];
     const limits = channelLimits[job.channelIndex];
-    const tile = await plane.getTile({
-      selection: { t: 0, z: 0, c: channel.index },
-      x: job.x,
-      y: job.y,
-      signal: workSignal,
-    });
+    const readTile = (channel: ImageChannel) =>
+      readExportTile(
+        plane,
+        tileSize,
+        { t: 0, z: 0, c: channel.index },
+        job.x,
+        job.y,
+        workSignal,
+      );
+    const tiles = await Promise.all((rgb ?? [source.channel]).map(readTile));
     if (workSignal.aborted) return;
-    const { width, height, data } = tile;
+    const { width, height } = tiles[0];
+    const data =
+      tiles.length === 3
+        ? interleavePlanar(tiles.map((t) => t.data))
+        : tiles[0].data;
     const jpeg = await encodeTileJpeg({
       width,
       height,
@@ -372,10 +415,10 @@ async function exportJpegOmeTiffImage(
       upperLimit: limits.upperLimit,
       transfer,
       padTileSize: tileSize,
+      rgbLimits,
     });
     if (workSignal.aborted) return;
-    await writer.writeSegment(job.address, new Uint8Array(jpeg));
-    onProgress?.(1);
+    await queueWrite(job, new Uint8Array(jpeg));
   };
 
   const workerLoop = async () => {
@@ -400,6 +443,7 @@ async function exportJpegOmeTiffImage(
 
   try {
     await Promise.all(Array.from({ length: concurrency }, () => workerLoop()));
+    await Promise.all(pendingWrites);
     if (exportFailed) throw exportFailed;
     if (signal.aborted || workSignal.aborted) {
       throw new DOMException("Aborted", "AbortError");
@@ -421,7 +465,11 @@ async function exportJpegOmeTiffImage(
     signal.removeEventListener("abort", onOuterAbort);
   }
 
-  return remappedImageForOmeTiffExport(image, channels, fileName);
+  return remappedImageForOmeTiffExport(
+    rgb ? { ...image, rgbDisplay: true } : image,
+    fileChannels,
+    fileName,
+  );
 }
 
 export type ExportJpegOmeTiffStoryOpts = {
@@ -434,9 +482,10 @@ export type ExportJpegOmeTiffStoryOpts = {
   onProgress?: (completed: number, total: number) => void;
 };
 
+/** Planar brightfield collapses to one packed channel, so groups come back too. */
 export async function exportJpegOmeTiffStory(
   opts: ExportJpegOmeTiffStoryOpts,
-): Promise<Image[]> {
+): Promise<{ images: Image[]; channelGroups: ChannelGroup[] }> {
   const {
     directory,
     omeLoaderEntries,
@@ -451,79 +500,142 @@ export async function exportJpegOmeTiffStory(
       "OME-TIFF export needs an OME or DICOM source image loaded.",
     );
   }
-  if (
-    channelGroups.length === 0 ||
-    !channelGroups.some((g) => g.channels.length > 0)
-  ) {
-    throw new Error(
-      "Add a channel group with at least one channel before exporting OME-TIFF.",
-    );
-  }
 
-  const candidateImages = omeLoaderEntries
-    .map((e) => images.find((im) => im.id === e.sourceImageId))
-    .filter((im): im is Image => !!im);
-  assertNoSelectedMaskChannels(candidateImages, channelGroups);
-
-  const usedNames = new Set<string>();
-  const remappedImages: Image[] = [];
-
-  let totalTiles = 0;
-  const work: {
+  type ImageWork = {
     entry: OmeLoaderEntry;
     image: Image;
-    channels: ImageChannel[];
-    fileName: string;
-  }[] = [];
+    planes: LoaderPlane[];
+    intensity: ImageChannel[];
+    masks: ImageChannel[];
+  };
+  const perImage: ImageWork[] = [];
 
   for (const entry of omeLoaderEntries) {
     const image = images.find((im) => im.id === entry.sourceImageId);
     if (!image) continue;
-    const channels = groupIntensityChannelsForOmeExport(image, channelGroups);
-    if (channels.length === 0) continue;
-    const loaderData = entry.loader.data as LoaderPlane[] | undefined;
-    if (!loaderData?.length) continue;
-    const levels = planeLevels(loaderData);
-    totalTiles += tileCountForLevels(levels, channels.length);
-    work.push({
-      entry,
-      image,
-      channels,
-      fileName: omeTiffExportFileName(image, usedNames),
-    });
+    const planes = loaderPlanesOrUndef(entry);
+    if (!planes) continue;
+    const intensity = groupIntensityChannelsForOmeExport(image, channelGroups);
+    const masks = groupMaskChannelsForOmeExport(image, channelGroups);
+    if (intensity.length === 0 && masks.length === 0) continue;
+    perImage.push({ entry, image, planes, intensity, masks });
   }
 
-  if (work.length === 0) {
-    throw new Error(
-      "No channel-group intensity channels available for OME-TIFF export.",
+  const imageOrder = new Map(images.map((im, i) => [im.id, i]));
+  const byDoc = (a: ImageWork, b: ImageWork) =>
+    (imageOrder.get(a.image.id) ?? 0) - (imageOrder.get(b.image.id) ?? 0);
+  const intensityItems = perImage
+    .filter((w) => w.intensity.length > 0)
+    .sort(byDoc);
+  const maskItems = perImage.filter((w) => w.masks.length > 0).sort(byDoc);
+
+  if (intensityItems.length === 0 && maskItems.length === 0) {
+    throw new Error("No channels available for OME-TIFF export.");
+  }
+
+  const decisions: {
+    transfer: JpegExportTransfer;
+    image: Image;
+    rgb: ImageChannel[] | null;
+  }[] = [];
+  let totalTiles = 0;
+  for (const item of intensityItems) {
+    const decided = await transferForBrightfield(
+      item.image,
+      transfer,
+      item.planes,
+      item.intensity,
+      signal,
+    );
+    const rgb = rgbExportChannels(decided.image, item.intensity);
+    decisions.push({ ...decided, rgb });
+    totalTiles += tileCountForLevels(
+      exportPlaneLevels(item.planes),
+      rgb ? 1 : item.intensity.length,
     );
   }
+  for (const item of maskItems) {
+    totalTiles += maskExportTileCount(item.entry, item.masks.length);
+  }
+
+  const { intensityFileNames, maskFileNames } = allocateOmeTiffExportFileNames(
+    intensityItems.map((item) => item.image),
+    maskItems.map((item) => item.image),
+  );
 
   let completed = 0;
   onProgress?.(0, totalTiles);
+  const bump = (delta: number) => {
+    completed += delta;
+    onProgress?.(completed, totalTiles);
+  };
 
-  for (const item of work) {
+  const remappedById = new Map<string, Image>();
+  const insertedAfter = new Map<string, Image[]>();
+
+  for (let i = 0; i < intensityItems.length; i++) {
     if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-    remappedImages.push(
-      await exportJpegOmeTiffImage({
-        directory,
-        entry: item.entry,
-        image: item.image,
-        channels: item.channels,
-        channelGroups,
-        fileName: item.fileName,
-        transfer,
-        signal,
-        onProgress: (delta) => {
-          completed += delta;
-          onProgress?.(completed, totalTiles);
-        },
-      }),
-    );
+    const item = intensityItems[i];
+    const decided = decisions[i];
+    let jpegImage = await exportJpegOmeTiffImage({
+      directory,
+      layoutPlanes: item.planes,
+      image: decided.image,
+      channelSources: item.intensity.map((channel) => ({
+        channel,
+        planes: item.planes,
+      })),
+      channelGroups,
+      fileName: intensityFileNames[i],
+      transfer: decided.transfer,
+      signal,
+      onProgress: bump,
+      rgb: decided.rgb,
+      pixels: item.entry.loader.metadata?.Pixels,
+    });
+    await writeTiffOffsetsJson(directory, intensityFileNames[i]);
+    if (item.masks.length > 0) {
+      jpegImage = { ...jpegImage, contentRole: "intensity" };
+    }
+    remappedById.set(item.image.id, jpegImage);
   }
 
-  const remappedById = new Map(
-    remappedImages.map((image) => [image.id, image]),
-  );
-  return images.map((im) => remappedById.get(im.id) ?? im);
+  for (let i = 0; i < maskItems.length; i++) {
+    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    const item = maskItems[i];
+    const splitFromIntensity = remappedById.has(item.image.id);
+    const maskSource = splitFromIntensity
+      ? { ...item.image, id: crypto.randomUUID() }
+      : item.image;
+    const maskImage = await exportZlibOmeTiffImage({
+      directory,
+      entry: item.entry,
+      image: maskSource,
+      channels: item.masks,
+      fileName: maskFileNames[i],
+      signal,
+      onProgress: bump,
+    });
+    await writeTiffOffsetsJson(directory, maskFileNames[i]);
+    if (splitFromIntensity) {
+      const extra = insertedAfter.get(item.image.id) ?? [];
+      extra.push(maskImage);
+      insertedAfter.set(item.image.id, extra);
+    } else {
+      remappedById.set(item.image.id, maskImage);
+    }
+  }
+
+  return {
+    images: stitchOmeTiffExportImages(
+      images,
+      remappedById,
+      insertedAfter,
+      new Set(),
+    ),
+    channelGroups: collapsePlanarRgbRows(
+      channelGroups,
+      decisions.flatMap((d) => (d.rgb?.length === 3 ? [d.rgb] : [])),
+    ),
+  };
 }

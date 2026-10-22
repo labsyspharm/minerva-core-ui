@@ -5,7 +5,7 @@
 }
 
 .textWrap > div.core {
-  color: #e6edf3;
+  color: var(--minerva-ink);
   position: absolute;
   right: 0;
   top: 0;
@@ -36,15 +36,13 @@
   padding: 6px 8px 7px;
   overflow: auto;
   overscroll-behavior: contain;
-  scrollbar-color: #888 var(--theme-dim-gray-color);
+  scrollbar-color: var(--minerva-quiet) var(--minerva-paper);
   scrollbar-width: thin;
   pointer-events: all;
   word-wrap: break-word;
-  border: 1px solid color-mix(in srgb, var(--theme-glass-edge) 75%, transparent);
-  background-color: color-mix(in srgb, var(--dark-glass) 92%, black);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: var(--radius-0001);
+  border: 1px solid var(--minerva-edge);
+  background-color: var(--minerva-paper);
+  border-radius: 0;
   box-sizing: border-box;
   font-size: 12px;
   font-weight: 400;
@@ -52,11 +50,10 @@
 }
 
 .overlaySectionLabel {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--theme-light-contrast-color) 52%, transparent);
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--minerva-quiet);
   margin: 0 0 4px;
   line-height: 1.2;
 }

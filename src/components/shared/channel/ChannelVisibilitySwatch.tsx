@@ -1,4 +1,13 @@
-import type { MouseEventHandler } from "react";
+import type {
+  CSSProperties,
+  MouseEventHandler,
+  PointerEvent,
+  ReactNode,
+} from "react";
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import { VIEWER_INTENSITY_LIMIT_HINT } from "@/lib/imaging/channelKind";
 import styles from "./ChannelRow.module.css";
 
 const EyeIcon = () => (
@@ -43,54 +52,78 @@ type VisibilityProps = {
   visible: boolean;
   title: string;
   ariaLabel: string;
-  onClick: () => void;
-  className?: string;
+  blocked?: boolean;
+  /** Read-only: shows the state without toggling it. */
+  disabled?: boolean;
+  onClick: MouseEventHandler<HTMLButtonElement>;
 };
+
+export function CursorHint(props: {
+  enabled: boolean;
+  label: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const track = (e: PointerEvent<HTMLElement>) => {
+    setPos({ x: e.clientX, y: e.clientY });
+  };
+  return (
+    <span
+      className={[styles.cursorHintHost, props.className]
+        .filter(Boolean)
+        .join(" ")}
+      onPointerEnter={track}
+      onPointerMove={track}
+      onPointerLeave={() => setPos(null)}
+    >
+      {props.children}
+      {props.enabled && pos
+        ? createPortal(
+            <output
+              className={styles.cursorHint}
+              style={
+                {
+                  "--hint-x": `${pos.x}px`,
+                  "--hint-y": `${pos.y}px`,
+                } as CSSProperties
+              }
+            >
+              {props.label}
+            </output>,
+            document.body,
+          )
+        : null}
+    </span>
+  );
+}
 
 /** Eye toggle for channel / group visibility (Photoshop-style). */
 export function ChannelVisibilitySwatch(props: VisibilityProps) {
-  const { visible, title, ariaLabel, onClick, className } = props;
+  const { visible, title, ariaLabel, blocked, disabled, onClick } = props;
   return (
-    <button
-      type="button"
-      className={
-        className ??
-        [
+    <CursorHint enabled={Boolean(blocked)} label={VIEWER_INTENSITY_LIMIT_HINT}>
+      <button
+        type="button"
+        className={[
+          minervaTheme.focusRing,
           styles.channelVisibilityButton,
           visible ? "" : styles.channelVisibilityButtonHidden,
         ]
           .filter(Boolean)
-          .join(" ")
-      }
-      title={title}
-      aria-label={ariaLabel}
-      aria-pressed={visible}
-      onClick={onClick}
-    >
-      {visible ? <EyeIcon /> : <EyeOffIcon />}
-    </button>
-  );
-}
-
-type ColorProps = {
-  hex: string;
-  title: string;
-  ariaLabel: string;
-  onClick: MouseEventHandler<HTMLButtonElement>;
-  className?: string;
-};
-
-/** Filled square showing channel color; opens the color picker when clicked. */
-export function ChannelColorSwatchButton(props: ColorProps) {
-  const { hex, title, ariaLabel, onClick, className } = props;
-  return (
-    <button
-      type="button"
-      className={className ?? styles.channelColorSwatch}
-      style={{ backgroundColor: `#${hex}` }}
-      title={title}
-      aria-label={ariaLabel}
-      onClick={onClick}
-    />
+          .join(" ")}
+        title={blocked ? undefined : title}
+        aria-label={blocked ? VIEWER_INTENSITY_LIMIT_HINT : ariaLabel}
+        aria-pressed={visible}
+        aria-disabled={blocked || undefined}
+        disabled={disabled}
+        onClick={(e) => {
+          if (blocked) return;
+          onClick(e);
+        }}
+      >
+        {visible ? <EyeIcon /> : <EyeOffIcon />}
+      </button>
+    </CursorHint>
   );
 }

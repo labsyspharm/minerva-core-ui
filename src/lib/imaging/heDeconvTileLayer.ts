@@ -1,5 +1,6 @@
 import type { Layer } from "@deck.gl/core";
 import { COORDINATE_SYSTEM, picking, project32 } from "@deck.gl/core";
+import type { Matrix4 } from "@math.gl/core";
 import {
   defaultHeDeconvSplit,
   HE_CONTRAST_SCALE,
@@ -10,6 +11,7 @@ import {
   type GlslMat3,
   rgb8ScaleFromDtype,
 } from "@/lib/imaging/heStainFit";
+import { imageFadeParameters } from "@/lib/imaging/imageOpacity";
 import type { SupportedTypedArray } from "@/lib/imaging/loaderTypes";
 import { planeSize } from "@/lib/imaging/loaderTypes";
 import {
@@ -18,12 +20,7 @@ import {
   layerGetShaders,
   XRLayerBase,
 } from "@/lib/imaging/pyramidTileLayer";
-import {
-  type Loader,
-  loaderPixelSizeXY,
-  VIV_TILE_DEBOUNCE_MS,
-  VIV_TILE_MAX_REQUESTS,
-} from "@/lib/imaging/viv";
+import type { Loader } from "@/lib/imaging/viv";
 
 type HeTileData = {
   data: SupportedTypedArray[];
@@ -250,6 +247,10 @@ export function createHeDeconvLayer(args: {
   hematoxylin: HeStainView;
   eosin: HeStainView;
   overlay: boolean;
+  /** `layerModelMatrix` for the image, like its Viv layer. */
+  modelMatrix: Matrix4;
+  /** Image opacity (`opacityForImage`), 0–1. */
+  opacity: number;
   stainInverse?: GlslMat3;
 }): Layer | null {
   const planes = args.loader.data;
@@ -257,9 +258,6 @@ export function createHeDeconvLayer(args: {
   const finest = planes[0];
   const { width: planeW, height: planeH } = planeSize(finest);
   if (planeW <= 0 || planeH <= 0) return null;
-  const world = loaderPixelSizeXY(args.loader);
-  const worldW = world?.sizeX ?? planeW;
-  const worldH = world?.sizeY ?? planeH;
   const parentIndex = args.parentIndex;
   const dtype = finest.dtype;
   const uToRgb8 = rgb8ScaleFromDtype(dtype);
@@ -269,16 +267,22 @@ export function createHeDeconvLayer(args: {
   const uEColor = stainColor(args.eosin);
   const uStainInverse = args.stainInverse ?? DEFAULT_STAIN_INVERSE;
   // Opaque: best-available covers holes. Additive: no-overlap or LODs flash 2×.
-  const refinementStrategy = args.overlay ? "no-overlap" : "best-available";
+  const { overlay, opacity } = args;
+  const refinementStrategy =
+    overlay || opacity < 1 ? "no-overlap" : "best-available";
+  // Match createMultiscaleLayer: additive onto earlier images, faded by alpha.
+  const parameters =
+    opacity < 1
+      ? imageFadeParameters(overlay, opacity).parameters
+      : overlay
+        ? ADDITIVE_BLEND_PARAMETERS
+        : undefined;
 
   return createLoaderPyramidTileLayer<HeTileData>({
     id: args.id,
     planes,
-    scaleX: worldW / planeW,
-    scaleY: worldH / planeH,
+    modelMatrix: args.modelMatrix,
     refinementStrategy,
-    debounceTime: VIV_TILE_DEBOUNCE_MS,
-    maxRequests: VIV_TILE_MAX_REQUESTS,
     updateTriggers: {
       getTileData: [parentIndex],
       renderSubLayers: [
@@ -289,6 +293,8 @@ export function createHeDeconvLayer(args: {
         ...uHColor,
         ...uEColor,
         ...uStainInverse,
+        opacity,
+        args.modelMatrix,
       ],
     },
     getTileData: async ({ plane, x, y, signal }) => {
@@ -305,11 +311,12 @@ export function createHeDeconvLayer(args: {
       if (!split) return null;
       return { data: split, width: tile.width, height: tile.height };
     },
-    renderSubLayer: ({ layerId, tileData, bounds, tileId }) =>
+    renderSubLayer: ({ layerId, tileData, bounds, tileId, modelMatrix }) =>
       new HeDeconvXrLayer({
         id: `${layerId}-xr-${tileId}`,
         channelData: tileData,
         bounds,
+        modelMatrix,
         dtype,
         uToRgb8,
         uHContrast,
@@ -318,7 +325,8 @@ export function createHeDeconvLayer(args: {
         uEColor,
         uStainInverse,
         ...HE_XR_PROPS,
-        ...(args.overlay ? { parameters: ADDITIVE_BLEND_PARAMETERS } : {}),
+        opacity,
+        ...(parameters ? { parameters } : {}),
       }) as unknown as Layer,
   });
 }

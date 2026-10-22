@@ -7,9 +7,12 @@ import {
   DEFAULT_VISIBLE_INTENSITY_CHANNELS,
   isImageChannel,
   isMaskChannel,
+  isRgbDisplaySource,
+  MAX_VIV_INTENSITY_CHANNELS,
 } from "./channelKind";
+import { SELECTION_MASK_CHANNEL_KEY } from "./maskLayers";
 
-/** Stack (All Channels) eye — layer overlay on the active group composite. */
+/** Stack (All Channels) eye — layer overlay for ungrouped channels. */
 export function isStackVisible(
   stackVisibilities: Record<string, boolean>,
   sourceChannelId: string,
@@ -17,7 +20,7 @@ export function isStackVisible(
   return stackVisibilities[sourceChannelId] !== false;
 }
 
-/** Per group-row eye — member of the active group look. */
+/** Per group-row eye. */
 export function isGroupRowVisible(
   groupRowVisibilities: Record<string, boolean>,
   rowId: string,
@@ -31,48 +34,60 @@ export type CompositedIntensityLayer = {
   gc: ChannelGroupChannel | null;
 };
 
-/** Sort key for All Channels: stack-on or on in the active group (top of list). */
-export function isShownFirstInAllChannelsList(
-  sc: Channel,
-  stackVisibilities: Record<string, boolean>,
-  activeGroup: ChannelGroup | undefined,
+/** True when any group-row eye for this source is on. */
+export function isDisplayedViaGroupRow(
+  sourceId: string,
+  channelGroups: readonly ChannelGroup[],
   groupRowVisibilities: Record<string, boolean>,
 ): boolean {
-  if (isStackVisible(stackVisibilities, sc.id)) return true;
-  if (!activeGroup) return false;
-  return activeGroup.channels.some(
-    (gc) =>
-      gc.channelId === sc.id && isGroupRowVisible(groupRowVisibilities, gc.id),
+  return channelGroups.some((g) =>
+    g.channels.some(
+      (gc) =>
+        gc.channelId === sourceId &&
+        isGroupRowVisible(groupRowVisibilities, gc.id),
+    ),
   );
 }
 
-function activeGroupRowForSource(
-  activeGroup: ChannelGroup | undefined,
-  sourceId: string,
-): ChannelGroupChannel | undefined {
-  return activeGroup?.channels.find((gc) => gc.channelId === sourceId);
-}
-
-/** True when the active group row eye is on for this source channel. */
-export function isDisplayedViaActiveGroup(
-  sourceId: string,
-  activeGroup: ChannelGroup | undefined,
-  groupRowVisibilities: Record<string, boolean>,
-): boolean {
-  const row = activeGroupRowForSource(activeGroup, sourceId);
-  return row != null && isGroupRowVisible(groupRowVisibilities, row.id);
+/** Viv draws one layer per source; turning a row on hides other memberships. */
+export function withGroupRowVisible(
+  prev: Record<string, boolean>,
+  channelGroups: readonly ChannelGroup[],
+  rowId: string,
+  visible: boolean,
+): Record<string, boolean> {
+  const next = { ...prev, [rowId]: visible };
+  if (!visible) return next;
+  let sourceId: string | undefined;
+  for (const group of channelGroups) {
+    const row = group.channels.find((gc) => gc.id === rowId);
+    if (row) {
+      sourceId = row.channelId;
+      break;
+    }
+  }
+  if (!sourceId) return next;
+  for (const group of channelGroups) {
+    for (const gc of group.channels) {
+      if (gc.channelId === sourceId && gc.id !== rowId) next[gc.id] = false;
+    }
+  }
+  return next;
 }
 
 type CompositedLayersArgs = {
   onLoader: Channel[];
   activeGroup: ChannelGroup | undefined;
-  channelGroups?: ChannelGroup[];
+  channelGroups?: readonly ChannelGroup[];
   stackVisibilities: Record<string, boolean>;
   groupRowVisibilities: Record<string, boolean>;
   hasVisibilityMap: boolean;
+  requireColor?: boolean;
 };
 
-function sourceIdsInAnyGroup(channelGroups: ChannelGroup[]): Set<string> {
+function sourceIdsInAnyGroup(
+  channelGroups: readonly ChannelGroup[],
+): Set<string> {
   return new Set(
     channelGroups.flatMap((g) => g.channels.map((gc) => gc.channelId)),
   );
@@ -85,17 +100,74 @@ export function sourceChannelInAnyGroup(
   return sourceIdsInAnyGroup(channelGroups).has(sourceId);
 }
 
-function isUngroupedStackVisible(
-  sourceId: string,
-  groupedIds: Set<string>,
-  stackVisibilities: Record<string, boolean>,
-  hasVisibilityMap: boolean,
-): boolean {
-  if (groupedIds.has(sourceId)) return false;
-  return !hasVisibilityMap || isStackVisible(stackVisibilities, sourceId);
+/**
+ * Every channel in `group` on, every other source channel and group row off.
+ * The selection-mask eye is left as it was.
+ */
+export function visibilitiesShowingOnlyGroup(args: {
+  group: ChannelGroup;
+  channelGroups: readonly ChannelGroup[];
+  sourceChannels: readonly Channel[];
+  stackVisibilities: Record<string, boolean>;
+}): {
+  channelVisibilities: Record<string, boolean>;
+  channelGroupRowVisibilities: Record<string, boolean>;
+} {
+  const memberIds = new Set(args.group.channels.map((gc) => gc.channelId));
+  const channelVisibilities = { ...args.stackVisibilities };
+  for (const sc of args.sourceChannels) {
+    channelVisibilities[sc.id] = memberIds.has(sc.id);
+  }
+  const channelGroupRowVisibilities: Record<string, boolean> = {};
+  for (const group of args.channelGroups) {
+    const on = group.id === args.group.id;
+    for (const gc of group.channels) channelGroupRowVisibilities[gc.id] = on;
+  }
+  return { channelVisibilities, channelGroupRowVisibilities };
 }
 
-/** Intensity layers sent to Viv (one OME channel per source; stack style wins over group). */
+/** Flip every RGB / H&E plane of one image together. */
+export function visibilitiesForRgbUnit(args: {
+  rgbChannels: readonly Channel[];
+  channelGroups: readonly ChannelGroup[];
+  groupRowVisibilities: Record<string, boolean>;
+  stackVisibilities: Record<string, boolean>;
+  visible: boolean;
+  groupId?: string;
+}): {
+  channelGroupRowVisibilities: Record<string, boolean>;
+  channelVisibilities: Record<string, boolean>;
+} {
+  const ids = new Set(args.rgbChannels.filter(isImageChannel).map((c) => c.id));
+  const channelGroupRowVisibilities = { ...args.groupRowVisibilities };
+  for (const group of args.channelGroups) {
+    if (args.groupId && group.id !== args.groupId) continue;
+    for (const gc of group.channels) {
+      if (ids.has(gc.channelId)) {
+        channelGroupRowVisibilities[gc.id] = args.visible;
+      }
+    }
+  }
+  const channelVisibilities = { ...args.stackVisibilities };
+  if (!args.groupId) {
+    for (const id of ids) channelVisibilities[id] = args.visible;
+  }
+  return { channelGroupRowVisibilities, channelVisibilities };
+}
+
+/**
+ * Every group's visible rows may paint. The active group is first so its
+ * color wins when the same source is showing in more than one group.
+ */
+function groupsOnView(
+  activeGroup: ChannelGroup | undefined,
+  channelGroups: readonly ChannelGroup[],
+): readonly ChannelGroup[] {
+  if (!activeGroup) return channelGroups;
+  return [activeGroup, ...channelGroups.filter((g) => g.id !== activeGroup.id)];
+}
+
+/** Intensity layers sent to Viv. Visible rows from every group; active group color wins ties. */
 export function buildCompositedIntensityLayers(
   args: CompositedLayersArgs,
 ): CompositedIntensityLayer[] {
@@ -106,139 +178,336 @@ export function buildCompositedIntensityLayers(
     stackVisibilities,
     groupRowVisibilities,
     hasVisibilityMap,
+    requireColor = true,
   } = args;
 
+  const viewGroups = groupsOnView(activeGroup, channelGroups);
   const groupedIds = sourceIdsInAnyGroup(channelGroups);
+  const rgbSource = isRgbDisplaySource(onLoader);
 
-  if (!activeGroup) {
+  if (rgbSource) {
+    const intensity = onLoader.filter(isImageChannel);
+    const unitOn = intensity.every((sc) =>
+      groupedIds.has(sc.id)
+        ? isDisplayedViaGroupRow(sc.id, viewGroups, groupRowVisibilities)
+        : !hasVisibilityMap || isStackVisible(stackVisibilities, sc.id),
+    );
+    if (!unitOn) return [];
+    return intensity.map((sc) => {
+      let gc: ChannelGroupChannel | null = null;
+      for (const group of viewGroups) {
+        const row = group.channels.find(
+          (r) =>
+            r.channelId === sc.id &&
+            isGroupRowVisible(groupRowVisibilities, r.id),
+        );
+        if (row) {
+          gc = row;
+          break;
+        }
+      }
+      return { sc, gc };
+    });
+  }
+
+  if (channelGroups.length === 0) {
     const layers = hasVisibilityMap
       ? onLoader.filter((sc) => isStackVisible(stackVisibilities, sc.id))
       : onLoader.slice(0, DEFAULT_VISIBLE_INTENSITY_CHANNELS);
-    return layers.map((sc) => ({ sc, gc: null }));
+    return layers
+      .filter((sc) => !(requireColor && sc.samples !== 3 && !sc.color))
+      .map((sc) => ({ sc, gc: null }));
   }
 
   const ordered: CompositedIntensityLayer[] = [];
+  const usedSourceIds = new Set<string>();
 
-  for (const gc of activeGroup.channels) {
-    const sc = onLoader.find((c) => c.id === gc.channelId);
-    if (!sc) continue;
-    const rowOn = isGroupRowVisible(groupRowVisibilities, gc.id);
-    // Group members render via row styling only — stack overlay is for ungrouped channels.
-    const stackOn = isUngroupedStackVisible(
-      sc.id,
-      groupedIds,
-      stackVisibilities,
-      hasVisibilityMap,
-    );
-    if (!rowOn && !stackOn) continue;
-    if (rowOn) ordered.push({ sc, gc });
-    else if (stackOn) ordered.push({ sc, gc: null });
+  for (const group of viewGroups) {
+    for (const gc of group.channels) {
+      if (!isGroupRowVisible(groupRowVisibilities, gc.id)) continue;
+      const sc = onLoader.find((c) => c.id === gc.channelId);
+      if (!sc || usedSourceIds.has(sc.id)) continue;
+      usedSourceIds.add(sc.id);
+      ordered.push({ sc, gc });
+    }
   }
 
   for (const sc of onLoader) {
-    if (groupedIds.has(sc.id)) continue;
-    const inActiveGroup = activeGroup.channels.some(
-      (gc) => gc.channelId === sc.id,
-    );
-    if (inActiveGroup) continue;
-    if (hasVisibilityMap && !isStackVisible(stackVisibilities, sc.id)) {
+    if (groupedIds.has(sc.id) || usedSourceIds.has(sc.id)) continue;
+    if (!hasVisibilityMap || !isStackVisible(stackVisibilities, sc.id)) {
       continue;
     }
-    if (!hasVisibilityMap) continue;
+    if (requireColor && !rgbSource && sc.samples !== 3 && !sc.color) continue;
+    usedSourceIds.add(sc.id);
     ordered.push({ sc, gc: null });
   }
 
   return ordered;
 }
 
+export type VivIntensityCapVis = {
+  channels: readonly Channel[];
+  activeGroup: ChannelGroup | undefined;
+  channelGroups: readonly ChannelGroup[];
+  stackVisibilities: Record<string, boolean>;
+  groupRowVisibilities: Record<string, boolean>;
+};
+
+function compositedForImage(imageId: string, vis: VivIntensityCapVis) {
+  return buildCompositedIntensityLayers({
+    onLoader: vis.channels.filter(
+      (sc) => sc.imageId === imageId && isImageChannel(sc),
+    ),
+    activeGroup: vis.activeGroup,
+    channelGroups: vis.channelGroups,
+    stackVisibilities: vis.stackVisibilities,
+    groupRowVisibilities: vis.groupRowVisibilities,
+    hasVisibilityMap: true,
+    requireColor: false,
+  });
+}
+
+/** Source ids occupying a Viv slot per image (first `MAX_VIV_INTENSITY_CHANNELS`). */
+export function vivShownIntensitySourceIds(
+  vis: VivIntensityCapVis,
+): Set<string> {
+  const ids = new Set<string>();
+  const imageIds = new Set<string>();
+  for (const sc of vis.channels) {
+    if (isImageChannel(sc)) imageIds.add(sc.imageId);
+  }
+  for (const imageId of imageIds) {
+    const layers = compositedForImage(imageId, vis);
+    for (let i = 0; i < layers.length && i < MAX_VIV_INTENSITY_CHANNELS; i++) {
+      ids.add(layers[i].sc.id);
+    }
+  }
+  return ids;
+}
+
+export function vivIntensityLayerCount(
+  imageId: string,
+  vis: VivIntensityCapVis,
+): number {
+  return compositedForImage(imageId, vis).length;
+}
+
+/** True when this image's composite would exceed the Viv shader cap. */
+export function vivIntensityCapExceeded(
+  imageId: string,
+  vis: VivIntensityCapVis,
+): boolean {
+  return vivIntensityLayerCount(imageId, vis) > MAX_VIV_INTENSITY_CHANNELS;
+}
+
 export function isMaskSourceRendered(args: {
   sc: Channel;
-  activeGroup: ChannelGroup | undefined;
   channelGroups?: ChannelGroup[];
   stackVisibilities: Record<string, boolean>;
   groupRowVisibilities: Record<string, boolean>;
 }): boolean {
   const {
     sc,
-    activeGroup,
     channelGroups = [],
     stackVisibilities,
     groupRowVisibilities,
   } = args;
-  const groupedIds = sourceIdsInAnyGroup(channelGroups);
-  const stackOn = isUngroupedStackVisible(
-    sc.id,
-    groupedIds,
-    stackVisibilities,
-    true,
+  return (
+    isDisplayedViaGroupRow(sc.id, channelGroups, groupRowVisibilities) ||
+    (!sourceChannelInAnyGroup(channelGroups, sc.id) &&
+      isStackVisible(stackVisibilities, sc.id))
   );
-  if (!activeGroup) return isStackVisible(stackVisibilities, sc.id);
-  const rows = activeGroup.channels.filter((gc) => gc.channelId === sc.id);
-  if (rows.length === 0) return stackOn;
-  const rowOn = rows.some((gc) =>
-    isGroupRowVisible(groupRowVisibilities, gc.id),
-  );
-  return rowOn || stackOn;
 }
 
-/**
- * Default visibility map for a new import: first `DEFAULT_VISIBLE_INTENSITY_CHANNELS`
- * intensity channels on, masks on, rest off. Existing entries in `prev` win so
- * user toggles survive a re-import / append.
- */
-export function defaultVisibilitiesForSources(
+export type VisibilityTransition =
+  | { kind: "fresh" }
+  | { kind: "appendMask"; newChannelIds: readonly string[] }
+  | {
+      kind: "appendIntensity";
+      newChannelIds: readonly string[];
+      newGroupRowIds: readonly string[];
+    }
+  | { kind: "remove" }
+  | { kind: "sync" };
+
+export function diffChannelIds(
+  before: readonly Channel[],
+  after: readonly Channel[],
+): string[] {
+  const beforeIds = new Set(before.map((sc) => sc.id));
+  return after.filter((sc) => !beforeIds.has(sc.id)).map((sc) => sc.id);
+}
+
+export function diffGroupRowIds(
+  before: readonly ChannelGroup[],
+  after: readonly ChannelGroup[],
+): string[] {
+  const beforeIds = new Set(
+    before.flatMap((g) => g.channels.map((gc) => gc.id)),
+  );
+  return after
+    .flatMap((g) => g.channels.map((gc) => gc.id))
+    .filter((id) => !beforeIds.has(id));
+}
+
+function preservedStackVisibilities(
   sourceChannels: Channel[],
-  prev: Record<string, boolean> = {},
-  channelGroups: ChannelGroup[] = [],
+  prev: Record<string, boolean>,
+  preserveSelectionMask = false,
 ): Record<string, boolean> {
   const sourceIds = new Set(sourceChannels.map((sc) => sc.id));
-  const hasDocumentGroups = channelGroups.length > 0;
-  const prevVisibility = (sc: Channel): boolean | undefined => {
-    if (prev[sc.id] !== undefined) return prev[sc.id];
-    if (prev[sc.name] !== undefined) return prev[sc.name];
-    return undefined;
-  };
-  const hasHiddenSource = sourceChannels.some(
-    (sc) => prevVisibility(sc) === false,
-  );
-  const visibleIntensityCount = sourceChannels.filter(
-    (sc) => isImageChannel(sc) && prevVisibility(sc) !== false,
-  ).length;
-
-  const shouldPreserveExisting =
-    hasHiddenSource ||
-    (!hasDocumentGroups &&
-      visibleIntensityCount <= DEFAULT_VISIBLE_INTENSITY_CHANNELS);
-
   const out: Record<string, boolean> = {};
   for (const [key, visible] of Object.entries(prev)) {
-    if (sourceIds.has(key)) continue;
-    if (sourceChannels.some((sc) => sc.name === key)) continue;
-    out[key] = visible;
+    if (
+      sourceIds.has(key) ||
+      (preserveSelectionMask && key === SELECTION_MASK_CHANNEL_KEY)
+    ) {
+      out[key] = visible;
+    }
   }
+  return out;
+}
+
+function freshStackDefaults(
+  sourceChannels: Channel[],
+): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
   let intensitySeen = 0;
   for (const sc of sourceChannels) {
-    const existing = prevVisibility(sc);
-    if (existing !== undefined && shouldPreserveExisting) {
-      if (existing !== false && isImageChannel(sc)) intensitySeen++;
-      out[sc.id] = existing;
-      continue;
-    }
     if (isMaskChannel(sc)) {
       out[sc.id] = true;
       continue;
     }
     if (isImageChannel(sc)) {
-      if (hasDocumentGroups) {
-        out[sc.id] = false;
-        continue;
+      const show = intensitySeen < DEFAULT_VISIBLE_INTENSITY_CHANNELS;
+      out[sc.id] = show;
+      if (show) intensitySeen++;
+      continue;
+    }
+    out[sc.id] = true;
+  }
+  return out;
+}
+
+/** Apply explicit stack (All Channels) visibility for import / remove / sync. */
+export function applyStackVisibilities(
+  sourceChannels: Channel[],
+  prev: Record<string, boolean>,
+  transition: VisibilityTransition,
+): Record<string, boolean> {
+  switch (transition.kind) {
+    case "fresh":
+      return freshStackDefaults(sourceChannels);
+    case "remove":
+      return preservedStackVisibilities(sourceChannels, prev);
+    case "appendMask": {
+      const out = preservedStackVisibilities(sourceChannels, prev, true);
+      const newIds = new Set(transition.newChannelIds);
+      for (const sc of sourceChannels) {
+        if (newIds.has(sc.id) && isMaskChannel(sc)) out[sc.id] = true;
       }
-      const shouldShow = intensitySeen < DEFAULT_VISIBLE_INTENSITY_CHANNELS;
-      out[sc.id] = shouldShow;
-      if (shouldShow) intensitySeen++;
-    } else {
-      out[sc.id] = true;
+      return out;
+    }
+    case "appendIntensity": {
+      const out = preservedStackVisibilities(sourceChannels, prev, true);
+      const newIds = new Set(transition.newChannelIds);
+      for (const sc of sourceChannels) {
+        if (newIds.has(sc.id)) out[sc.id] = false;
+      }
+      return out;
+    }
+    case "sync": {
+      // Visibility is session-only. A restored document can inherit a non-empty
+      // map containing only ids from the previously open story.
+      if (!sourceChannels.some((sc) => prev[sc.id] !== undefined)) {
+        return freshStackDefaults(sourceChannels);
+      }
+      const out = preservedStackVisibilities(sourceChannels, prev, true);
+      for (const sc of sourceChannels) {
+        if (out[sc.id] !== undefined) continue;
+        out[sc.id] = isMaskChannel(sc);
+      }
+      return out;
+    }
+  }
+}
+
+/**
+ * Apply explicit group-row visibility for import / remove / sync. Every group
+ * with a visible row paints, so a row new to a known map shows only in a
+ * group already showing one, or in `activeGroupId` (the group being edited).
+ */
+export function applyGroupRowVisibilities(
+  channelGroups: ChannelGroup[],
+  prev: Record<string, boolean>,
+  transition: VisibilityTransition,
+  activeGroupId?: string | null,
+): Record<string, boolean> {
+  const rowIds = new Set(
+    channelGroups.flatMap((g) => g.channels.map((gc) => gc.id)),
+  );
+
+  const out: Record<string, boolean> = {};
+  for (const [id, visible] of Object.entries(prev)) {
+    if (rowIds.has(id)) out[id] = visible;
+  }
+  if (transition.kind === "remove") return out;
+
+  const newRowIds =
+    transition.kind === "appendIntensity"
+      ? new Set(transition.newGroupRowIds)
+      : null;
+  const inherited = Object.keys(out).length > 0;
+  // A fresh map shows the first group only.
+  const showing = new Set(
+    inherited
+      ? channelGroups
+          .filter(
+            (g) =>
+              g.id === activeGroupId || g.channels.some((gc) => out[gc.id]),
+          )
+          .map((g) => g.id)
+      : channelGroups.slice(0, 1).map((g) => g.id),
+  );
+
+  for (const group of channelGroups) {
+    for (const gc of group.channels) {
+      if (out[gc.id] !== undefined) continue;
+      out[gc.id] = !newRowIds?.has(gc.id) && showing.has(group.id);
     }
   }
   return out;
+}
+
+/** Empty session map → first-group / import defaults. A written map is kept. */
+export function visibilityKindForMap(
+  map: Record<string, boolean>,
+): VisibilityTransition {
+  return Object.keys(map).length === 0 ? { kind: "fresh" } : { kind: "sync" };
+}
+
+export function applyVisibilityTransition(
+  sourceChannels: Channel[],
+  channelGroups: ChannelGroup[],
+  stackVisibilities: Record<string, boolean>,
+  groupRowVisibilities: Record<string, boolean>,
+  transition: VisibilityTransition,
+  /** Rows new to its group show; see {@link applyGroupRowVisibilities}. */
+  activeGroupId?: string | null,
+) {
+  const useStored = transition.kind === "fresh" || transition.kind === "sync";
+  const channelVisibilities = applyStackVisibilities(
+    sourceChannels,
+    stackVisibilities,
+    useStored ? visibilityKindForMap(stackVisibilities) : transition,
+  );
+  return {
+    channelVisibilities,
+    channelGroupRowVisibilities: applyGroupRowVisibilities(
+      channelGroups,
+      groupRowVisibilities,
+      transition,
+      activeGroupId,
+    ),
+  };
 }

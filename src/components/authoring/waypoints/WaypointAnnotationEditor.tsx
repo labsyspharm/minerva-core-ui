@@ -3,9 +3,9 @@ import * as React from "react";
 import { LayersPanel } from "@/components/authoring/LayersPanel";
 import { ToolSubmenu } from "@/components/authoring/ToolSubmenu";
 import {
-  ChromeColorPickerPopover,
-  chromeColorPickerAnchorPosition,
-} from "@/components/shared/ChromeColorPickerPopover";
+  ColorPickerPopover,
+  colorPickerAnchorPosition,
+} from "@/components/shared/ColorPickerPopover";
 import ArrowIcon from "@/components/shared/icons/arrow-tool.svg?react";
 import BrushIcon from "@/components/shared/icons/brush.svg?react";
 import CopyAnnotationsIcon from "@/components/shared/icons/copy-annotations.svg?react";
@@ -21,7 +21,7 @@ import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import RectangleIcon from "@/components/shared/icons/rectangle.svg?react";
 import ShapesIcon from "@/components/shared/icons/shapes.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
-import toolButton from "@/components/shared/panel/toolButton.module.css";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import { DrawingOverlay } from "@/components/shared/viewer/layers/DrawingOverlay";
 import {
   cloneShapesForPaste,
@@ -197,7 +197,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         a: globalColor[3] / 255,
       }),
     );
-    setColorPickerPos(chromeColorPickerAnchorPosition(anchor));
+    setColorPickerPos(colorPickerAnchorPosition(anchor));
   };
 
   const handleOpenAnnotationColorPicker = (
@@ -214,28 +214,24 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         a: rgba[3] / 255,
       }),
     );
-    setColorPickerPos(chromeColorPickerAnchorPosition(anchor));
+    setColorPickerPos(colorPickerAnchorPosition(anchor));
   };
 
   const waypointClipboardActions = (
     <>
-      <button
-        type="button"
-        className={toolButton.toolButton}
+      <PanelIconButton
         disabled={layersPanelSelectedShapeIds.length === 0}
         title="Copy selected shapes to the clipboard"
         onClick={() => void copySelectedWaypointShapes()}
       >
         <CopyAnnotationsIcon />
-      </button>
-      <button
-        type="button"
-        className={toolButton.toolButton}
+      </PanelIconButton>
+      <PanelIconButton
         title="Paste shapes from the clipboard"
         onClick={() => void pasteWaypointShapesFromClipboard()}
       >
         <PasteAnnotationsIcon />
-      </button>
+      </PanelIconButton>
     </>
   );
 
@@ -245,14 +241,13 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
 
   const drawingToolbar = (
     <>
-      <button
-        type="button"
-        className={`${toolButton.toolButton} ${activeTool === TOOLS.MOVE ? toolButton.active : ""}`}
+      <PanelIconButton
+        active={activeTool === TOOLS.MOVE}
         title="Move Tool"
         onClick={() => handleToolChangeLocal(TOOLS.MOVE)}
       >
         <MoveIcon />
-      </button>
+      </PanelIconButton>
 
       <ToolSubmenu
         items={[
@@ -272,8 +267,6 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<ShapesIcon />}
         parentTitle="Shapes"
-        buttonClassName={toolButton.toolButton}
-        activeClassName={toolButton.active}
       />
 
       <ToolSubmenu
@@ -286,45 +279,39 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         onToolChange={handleToolChangeLocal}
         parentIcon={<LinesIcon />}
         parentTitle="Lines"
-        buttonClassName={toolButton.toolButton}
-        activeClassName={toolButton.active}
       />
 
-      <button
-        type="button"
-        className={`${toolButton.toolButton} ${activeTool === TOOLS.BRUSH ? toolButton.active : ""}`}
+      <PanelIconButton
+        active={activeTool === TOOLS.BRUSH}
         title="Brush"
         onClick={() => handleToolChangeLocal(TOOLS.BRUSH)}
       >
         <BrushIcon />
-      </button>
+      </PanelIconButton>
 
-      <button
-        type="button"
-        className={`${toolButton.toolButton} ${activeTool === TOOLS.TEXT ? toolButton.active : ""}`}
+      <PanelIconButton
+        active={activeTool === TOOLS.TEXT}
         title="Text Tool"
         onClick={() => handleToolChangeLocal(TOOLS.TEXT)}
       >
         <TextIcon />
-      </button>
+      </PanelIconButton>
 
-      <button
-        type="button"
-        className={`${toolButton.toolButton} ${activeTool === TOOLS.POINT ? toolButton.active : ""}`}
+      <PanelIconButton
+        active={activeTool === TOOLS.POINT}
         title="Point Tool"
         onClick={() => handleToolChangeLocal(TOOLS.POINT)}
       >
         <PointIcon />
-      </button>
+      </PanelIconButton>
 
-      <button
-        type="button"
-        className={`${toolButton.toolButton} ${activeTool === TOOLS.MAGIC_WAND ? toolButton.active : ""}`}
+      <PanelIconButton
+        active={activeTool === TOOLS.MAGIC_WAND}
         title="Magic Wand"
         onClick={() => handleToolChangeLocal(TOOLS.MAGIC_WAND)}
       >
         <MagicWandIcon />
-      </button>
+      </PanelIconButton>
     </>
   );
 
@@ -357,7 +344,7 @@ const WaypointAnnotationEditor: React.FC<WaypointAnnotationEditorProps> = ({
         ) : null}
       </div>
 
-      <ChromeColorPickerPopover
+      <ColorPickerPopover
         position={colorPickerPos}
         onClose={closeColorPicker}
         color={pickerHsva}

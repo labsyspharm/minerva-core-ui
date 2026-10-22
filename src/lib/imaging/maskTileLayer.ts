@@ -1,20 +1,31 @@
 import type { Layer } from "@deck.gl/core";
 import { COORDINATE_SYSTEM, picking, project32 } from "@deck.gl/core";
+import { XRLayer } from "@hms-dbmi/viv";
 import {
   DEFAULT_MASK_VISUALIZATION,
   type MaskVisualization,
 } from "@/lib/imaging/channelKind";
-import type { SupportedTypedArray } from "@/lib/imaging/loaderTypes";
-import { planeSize } from "@/lib/imaging/loaderTypes";
+import type {
+  LoaderPlane,
+  SupportedTypedArray,
+} from "@/lib/imaging/loaderTypes";
+import { CELL_OUTLINE_RGB, type MaskGpuStyle } from "@/lib/imaging/maskLayers";
 import {
-  createLoaderPyramidTileLayer,
-  layerGetShaders,
-  XRLayerBase,
-} from "@/lib/imaging/pyramidTileLayer";
-import type { Loader } from "@/lib/imaging/viv";
+  TILE_EDGE_BUFFER_GLSL,
+  TileEdgeBufferLayer,
+  type WithTileEdgeBuffer,
+} from "@/lib/imaging/tileEdgeBuffer";
+import { type Loader, TILE_CACHE_PROPS } from "@/lib/imaging/viv";
+import { layerModelMatrix } from "@/lib/imaging/worldFrame";
+import type { ImageOrientation } from "@/lib/stores/documentSchema";
+
+const CELL_OUTLINE_COUNT = CELL_OUTLINE_RGB.length;
+const CELL_OUTLINE_VEC3: [number, number, number][] = CELL_OUTLINE_RGB.map(
+  ([r, g, b]) => [r / 255, g / 255, b / 255],
+);
 
 type MaskTileData = {
-  data: Uint32Array[];
+  data: Uint32Array<ArrayBuffer>[];
   width: number;
   height: number;
 };
@@ -52,40 +63,57 @@ uniform SAMPLER_TYPE channel0;
 
 in vec2 vTexCoord;
 out vec4 fragColor;
-
-uint hashLabel(uint x) {
-  x ^= x >> 16u;
-  x *= 0x7feb352du;
-  x ^= x >> 15u;
-  x *= 0x846ca68bu;
-  x ^= x >> 16u;
-  return x;
-}
-
+${TILE_EDGE_BUFFER_GLSL}
 vec3 randomColor(uint label) {
-  uint h = hashLabel(label ^ uint(maskViz.uColorSeed));
-  return vec3(
-    float(50u + (h & 0x9fu)) / 255.0,
-    float(50u + ((h >> 8u) & 0x9fu)) / 255.0,
-    float(50u + ((h >> 16u) & 0x9fu)) / 255.0
-  );
+  uint i = (label ^ uint(maskViz.uColorSeed)) % ${CELL_OUTLINE_COUNT}u;
+  if (i == 0u) return maskViz.uPalette0;
+  if (i == 1u) return maskViz.uPalette1;
+  if (i == 2u) return maskViz.uPalette2;
+  if (i == 3u) return maskViz.uPalette3;
+  if (i == 4u) return maskViz.uPalette4;
+  return maskViz.uPalette5;
 }
 
-bool isInteriorEdge(uint label, vec2 coord) {
-  uint n = uint(texture(channel0, coord + vec2(0.0, maskViz.uTexelSize.y)).r);
-  uint s = uint(texture(channel0, coord - vec2(0.0, maskViz.uTexelSize.y)).r);
-  uint e = uint(texture(channel0, coord + vec2(maskViz.uTexelSize.x, 0.0)).r);
-  uint w = uint(texture(channel0, coord - vec2(maskViz.uTexelSize.x, 0.0)).r);
-  return n != label || s != label || e != label || w != label;
+uint labelAt(vec2 coord) {
+  return uint(texture(channel0, coord).r);
+}
+
+bool isOutline(uint label, vec2 coord) {
+  vec2 t = 1.0 / vec2(textureSize(channel0, 0));
+  return
+    labelAt(coord + vec2( t.x, 0.0)) != label ||
+    labelAt(coord + vec2(-t.x, 0.0)) != label ||
+    labelAt(coord + vec2(0.0,  t.y)) != label ||
+    labelAt(coord + vec2(0.0, -t.y)) != label;
 }
 
 void main() {
-  uint label = uint(texture(channel0, vTexCoord).r);
+  vec2 uv = maskViz.uOutline != 0
+    ? tileEdgeBufferUv(vTexCoord, vec2(textureSize(channel0, 0)))
+    : vTexCoord;
+  uint label = labelAt(uv);
   if (label == 0u) discard;
-  if (maskViz.uOutline != 0 && !isInteriorEdge(label, vTexCoord)) discard;
+  if (maskViz.uOutline != 0) {
+    if (!isOutline(label, uv)) discard;
+  }
 
-  vec3 rgb = maskViz.uRandomColors != 0 ? randomColor(label) : vec3(1.0);
-  float a = (maskViz.uOutline != 0 ? 235.0 : 200.0) / 255.0;
+  vec3 rgb;
+  int w = int(classStyle.uLutSize.x);
+  int h = int(classStyle.uLutSize.y);
+  int y = int(label) / w;
+  uint cls = 0u;
+  if (y < h) {
+    cls = uint(round(texelFetch(classIndex, ivec2(int(label) % w, y), 0).r * 255.0));
+  }
+  if (cls == 0u) {
+    if (classStyle.uMissHidden != 0) discard;
+    rgb = maskViz.uRandomColors != 0 ? randomColor(label) : vec3(1.0);
+  } else {
+    vec4 c = texelFetch(classPalette, ivec2(int(cls), 0), 0);
+    if (c.a == 0.0) discard;
+    rgb = maskViz.uRandomColors != 0 ? c.rgb : vec3(1.0);
+  }
+  float a = (maskViz.uOutline != 0 ? 230.0 : 170.0) / 255.0;
   fragColor = vec4(rgb, a * maskViz.opacity);
 
   geometry.uv = vTexCoord;
@@ -111,18 +139,165 @@ uniform maskVizUniforms {
   int uOutline;
   int uRandomColors;
   float uColorSeed;
-  vec2 uTexelSize;
   float opacity;
+  vec3 uPalette0;
+  vec3 uPalette1;
+  vec3 uPalette2;
+  vec3 uPalette3;
+  vec3 uPalette4;
+  vec3 uPalette5;
 } maskViz;
 `,
   uniformTypes: {
     uOutline: "i32",
     uRandomColors: "i32",
     uColorSeed: "f32",
-    uTexelSize: "vec2<f32>",
     opacity: "f32",
+    uPalette0: "vec3<f32>",
+    uPalette1: "vec3<f32>",
+    uPalette2: "vec3<f32>",
+    uPalette3: "vec3<f32>",
+    uPalette4: "vec3<f32>",
+    uPalette5: "vec3<f32>",
   },
 };
+
+const classStyleMod = {
+  name: "classStyle",
+  fs: `\
+uniform sampler2D classIndex;
+uniform sampler2D classPalette;
+uniform classStyleUniforms {
+  vec2 uLutSize;
+  int uMissHidden;
+} classStyle;
+`,
+  uniformTypes: {
+    uLutSize: "vec2<f32>",
+    uMissHidden: "i32",
+  },
+};
+
+const DUMMY_RGBA = new Uint8Array([0, 0, 0, 0]);
+const DUMMY_R8 = new Uint8Array([0]);
+
+function styleKey(style: MaskGpuStyle | undefined): string {
+  return style ? `${style.indexRev}:${style.rev}` : "";
+}
+
+type GpuTexture = {
+  destroy?: () => void;
+  delete?: () => void;
+};
+
+// Index texture is stable per CSV; palette is tiny and changes with vis/color.
+const INDEX_TEX_CACHE_MAX = 4;
+// Eviction destroys a texture a live layer may still bind. A story with more
+// than 64 live palette keys evicts the oldest key.
+const PALETTE_TEX_CACHE_MAX = 64;
+type TexCaches = {
+  index: Map<string, GpuTexture>;
+  palette: Map<string, GpuTexture>;
+};
+// Per device: a texture only binds in the WebGL context that made it, and a
+// new Deck (player → editor, viewer remount) brings a new context.
+const texCachesByDevice = new WeakMap<object, TexCaches>();
+
+function texCachesFor(device: object): TexCaches {
+  let caches = texCachesByDevice.get(device);
+  if (!caches) {
+    caches = { index: new Map(), palette: new Map() };
+    texCachesByDevice.set(device, caches);
+  }
+  return caches;
+}
+
+function rememberTex(
+  cache: Map<string, GpuTexture>,
+  max: number,
+  key: string,
+  tex: GpuTexture,
+): GpuTexture {
+  const hit = cache.get(key);
+  if (hit) {
+    cache.delete(key);
+    cache.set(key, hit);
+    return hit;
+  }
+  while (cache.size >= max) {
+    const oldest = cache.keys().next().value;
+    if (oldest == null) break;
+    const evicted = cache.get(oldest);
+    evicted?.destroy?.();
+    evicted?.delete?.();
+    cache.delete(oldest);
+  }
+  cache.set(key, tex);
+  return tex;
+}
+
+const NEAREST_SAMPLER = {
+  minFilter: "nearest",
+  magFilter: "nearest",
+  addressModeU: "clamp-to-edge",
+  addressModeV: "clamp-to-edge",
+} as const;
+
+function makeTexture(
+  device: XRLayerInstance["context"]["device"],
+  data: Uint8Array,
+  width: number,
+  height: number,
+  format: "r8unorm" | "rgba8unorm",
+): GpuTexture {
+  try {
+    return device.createTexture({
+      data,
+      width,
+      height,
+      format,
+      mipmaps: false,
+      sampler: NEAREST_SAMPLER,
+    });
+  } catch (e) {
+    console.warn("[featureTable] class texture create failed", e);
+    return device.createTexture({
+      data: format === "r8unorm" ? DUMMY_R8 : DUMMY_RGBA,
+      width: 1,
+      height: 1,
+      format,
+      mipmaps: false,
+      sampler: NEAREST_SAMPLER,
+    });
+  }
+}
+
+// Viv types XRLayer as a constructable const; subclass at runtime (Vitessce pattern).
+type XRLayerInstance = {
+  props: Record<string, unknown>;
+  context: {
+    device: { createTexture: (props: Record<string, unknown>) => GpuTexture };
+  };
+  state: {
+    textures?: Record<string, unknown> | null;
+    model?: {
+      shaderInputs: { setProps: (props: Record<string, unknown>) => void };
+      setBindings?: (props: Record<string, unknown>) => void;
+    } | null;
+    classIndexTexture?: GpuTexture;
+    classPaletteTexture?: GpuTexture;
+    classStyleKey?: string;
+  };
+  updateState(params: unknown): void;
+};
+const XRLayerBase = XRLayer as unknown as new (
+  props?: Record<string, unknown>,
+) => XRLayerInstance;
+const layerGetShaders = Object.getPrototypeOf(XRLayerBase.prototype)
+  .getShaders as (
+  this: XRLayerInstance,
+  opts?: Record<string, unknown>,
+) => Record<string, unknown>;
 
 class MaskBitmaskLayer extends XRLayerBase {
   static layerName = "MaskBitmaskLayer";
@@ -143,9 +318,7 @@ class MaskBitmaskLayer extends XRLayerBase {
     return layerGetShaders.call(this, {
       vs: MASK_VS,
       fs: MASK_FS,
-      modules: [project32, picking, maskViz],
-      // VivShaderAssembler hook signatures use float[NUM_CHANNELS]; XRLayer
-      // normally injects these via expandShaderModule, which this subclass skips.
+      modules: [project32, picking, maskViz, classStyleMod],
       defines: {
         SAMPLER_TYPE: "usampler2D",
         NUM_CHANNELS: "1",
@@ -154,29 +327,101 @@ class MaskBitmaskLayer extends XRLayerBase {
     });
   }
 
-  updateState(params: unknown) {
-    super.updateState(params);
+  finalizeState() {
+    this.state.classIndexTexture = undefined;
+    this.state.classPaletteTexture = undefined;
+    const proto = Object.getPrototypeOf(XRLayerBase.prototype) as {
+      finalizeState?: (this: XRLayerInstance) => void;
+    };
+    proto.finalizeState?.call(this);
+  }
+
+  writeMaskViz() {
     const { model } = this.state;
     if (!model) return;
-    const channelData = this.props.channelData as MaskTileData | undefined;
-    const w = Math.max(1, channelData?.width ?? 1);
-    const h = Math.max(1, channelData?.height ?? 1);
     const viz =
       (this.props.visualization as MaskVisualization | undefined) ??
       DEFAULT_MASK_VISUALIZATION;
+    const opacity = Math.min(1, Math.max(0, viz.opacity ?? 1));
+    const style = this.props.classStyle as MaskGpuStyle | undefined;
     model.shaderInputs.setProps({
       maskViz: {
         uOutline: viz.style === "outline" ? 1 : 0,
         uRandomColors: viz.color === "random" ? 1 : 0,
         uColorSeed: viz.colorSeed ?? 0,
-        uTexelSize: [1 / w, 1 / h],
-        opacity: this.props.opacity ?? 1,
+        opacity,
+        uPalette0: CELL_OUTLINE_VEC3[0],
+        uPalette1: CELL_OUTLINE_VEC3[1],
+        uPalette2: CELL_OUTLINE_VEC3[2],
+        uPalette3: CELL_OUTLINE_VEC3[3],
+        uPalette4: CELL_OUTLINE_VEC3[4],
+        uPalette5: CELL_OUTLINE_VEC3[5],
+      },
+      classStyle: {
+        uLutSize: style ? [style.width, style.height] : [1, 1],
+        uMissHidden: style?.missHidden ? 1 : 0,
       },
     });
   }
+
+  updateState(params: unknown) {
+    super.updateState(params);
+    const { model } = this.state;
+    if (!model) return;
+    this.ensureClassTextures(this.props.classStyle as MaskGpuStyle | undefined);
+    this.writeMaskViz();
+    model.setBindings?.({
+      classIndex: this.state.classIndexTexture,
+      classPalette: this.state.classPaletteTexture,
+    });
+  }
+
+  ensureClassTextures(style: MaskGpuStyle | undefined) {
+    const key = styleKey(style);
+    if (this.state.classStyleKey === key && this.state.classIndexTexture)
+      return;
+    const device = this.context.device;
+    const { index: indexTexCache, palette: paletteTexCache } =
+      texCachesFor(device);
+    const indexKey = style
+      ? `i:${style.indexRev}:${style.width}x${style.height}`
+      : "";
+    const paletteKey = style ? `p:${style.rev}` : "";
+    let index = indexTexCache.get(indexKey);
+    if (!index) {
+      index = style
+        ? makeTexture(device, style.index, style.width, style.height, "r8unorm")
+        : makeTexture(device, DUMMY_R8, 1, 1, "r8unorm");
+    }
+    this.state.classIndexTexture = rememberTex(
+      indexTexCache,
+      INDEX_TEX_CACHE_MAX,
+      indexKey,
+      index,
+    );
+    let palette = paletteTexCache.get(paletteKey);
+    if (!palette) {
+      palette = style
+        ? makeTexture(
+            device,
+            style.palette,
+            Math.max(1, style.palette.length / 4),
+            1,
+            "rgba8unorm",
+          )
+        : makeTexture(device, DUMMY_RGBA, 1, 1, "rgba8unorm");
+    }
+    this.state.classPaletteTexture = rememberTex(
+      paletteTexCache,
+      PALETTE_TEX_CACHE_MAX,
+      paletteKey,
+      palette,
+    );
+    this.state.classStyleKey = key;
+  }
 }
 
-function asLabelUint32(data: SupportedTypedArray): Uint32Array {
+function asLabelUint32(data: SupportedTypedArray): Uint32Array<ArrayBuffer> {
   if (data instanceof Uint32Array) return data;
   const out = new Uint32Array(data.length);
   for (let i = 0; i < data.length; i++) {
@@ -186,54 +431,111 @@ function asLabelUint32(data: SupportedTypedArray): Uint32Array {
   return out;
 }
 
-/** Tiled GPU bitmask overlay; stretches mask pixels into the viewer frame. */
+function planeSize(plane: LoaderPlane): { width: number; height: number } {
+  const xi = plane.labels.indexOf("x");
+  const yi = plane.labels.indexOf("y");
+  return {
+    width: xi >= 0 ? plane.shape[xi] : 0,
+    height: yi >= 0 ? plane.shape[yi] : 0,
+  };
+}
+
 export function createMaskTileLayer(args: {
   id: string;
   loader: Loader;
   channelIndex: number;
   visualization: MaskVisualization;
-  worldWidth: number;
-  worldHeight: number;
+  orientation?: ImageOrientation | null;
+  classStyle?: MaskGpuStyle;
+  visible?: boolean;
 }): Layer | null {
   const planes = args.loader.data;
   if (!planes?.length) return null;
   const finest = planes[0];
   const { width: maskW, height: maskH } = planeSize(finest);
   if (maskW <= 0 || maskH <= 0) return null;
-  if (args.worldWidth <= 0 || args.worldHeight <= 0) return null;
 
-  const { visualization: viz, channelIndex } = args;
+  const modelMatrix = layerModelMatrix(args.loader, args.orientation);
+  const { visualization: viz, channelIndex, classStyle } = args;
+  const visible = args.visible !== false;
 
-  return createLoaderPyramidTileLayer<MaskTileData>({
+  const outline = viz.style === "outline";
+  return new TileEdgeBufferLayer<MaskTileData>({
     id: args.id,
-    planes,
-    scaleX: args.worldWidth / maskW,
-    scaleY: args.worldHeight / maskH,
+    padTileEdgeBuffer: outline,
+    tileSize: finest.tileSize,
+    minZoom: -(planes.length - 1),
+    maxZoom: 0,
+    zoomOffset: Math.round(Math.log2(modelMatrix.getScale()[0] || 1)),
+    extent: [0, 0, maskW, maskH],
+    modelMatrix,
+    visible,
+    refinementStrategy: "best-available",
+    pickable: false,
+    ...TILE_CACHE_PROPS,
     updateTriggers: {
       getTileData: [channelIndex],
-      renderSubLayers: [viz.style, viz.color, viz.colorSeed ?? 0],
+      renderSubLayers: [
+        viz.style,
+        viz.color,
+        viz.colorSeed ?? 0,
+        viz.opacity ?? 1,
+        modelMatrix,
+        styleKey(classStyle),
+        visible,
+      ],
     },
-    getTileData: async ({ plane, x, y, signal }) => {
-      const tile = await plane.getTile({
-        x,
-        y,
-        selection: { t: 0, z: 0, c: channelIndex },
-        signal,
-      });
-      if (!tile?.data?.length || tile.width <= 0 || tile.height <= 0) {
+    getTileData: async ({ index, signal }) => {
+      const level = Math.min(
+        planes.length - 1,
+        Math.max(0, Math.round(-index.z)),
+      );
+      try {
+        const tile = await planes[level].getTile({
+          x: index.x,
+          y: index.y,
+          selection: { t: 0, z: 0, c: channelIndex },
+          signal,
+        });
+        if (!tile?.data?.length || tile.width <= 0 || tile.height <= 0) {
+          return null;
+        }
+        const labels = asLabelUint32(tile.data);
+        if (labels.length < tile.width * tile.height) return null;
+        return { data: [labels], width: tile.width, height: tile.height };
+      } catch (e) {
+        if (signal?.aborted || e === "__vivSignalAborted") return null;
+        console.error(e);
         return null;
       }
-      const labels = asLabelUint32(tile.data);
-      if (labels.length < tile.width * tile.height) return null;
-      return { data: [labels], width: tile.width, height: tile.height };
     },
-    renderSubLayer: ({ layerId, tileData, bounds, tileId }) =>
-      new MaskBitmaskLayer({
-        id: `${layerId}-bitmask-${tileId}`,
-        channelData: tileData,
-        bounds,
+    renderSubLayers: (props) => {
+      const { data: tileData, tileEdgeBuffer } = props as WithTileEdgeBuffer<
+        typeof props
+      >;
+      if (!tileData?.data?.[0] || tileData.width <= 0 || tileData.height <= 0) {
+        return null;
+      }
+      const bbox = props.tile.bbox;
+      if (!("left" in bbox)) return null;
+      const { left, top } = bbox;
+      if ([left, top].some((v) => v < 0)) return null;
+      const scale = 2 ** Math.round(-props.tile.index.z);
+      return new MaskBitmaskLayer({
+        id: `${args.id}-bitmask-${props.tile.id}`,
+        channelData: outline ? tileEdgeBuffer : tileData,
+        modelMatrix,
+        visible,
+        bounds: [
+          left,
+          top + tileData.height * scale,
+          left + tileData.width * scale,
+          top,
+        ],
         visualization: viz,
+        classStyle,
         ...BITMASK_PROPS,
-      }) as unknown as Layer,
+      }) as unknown as Layer;
+    },
   });
 }

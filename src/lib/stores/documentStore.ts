@@ -16,6 +16,7 @@ import hash from "stable-hash";
 import { temporal } from "zundo";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
+import { deleteBlobsForStory } from "../persistence/db";
 import {
   deleteFileHandlesForStory,
   getFileHandle as loadFileHandleFromDb,
@@ -34,6 +35,7 @@ import type {
   ChannelGroup,
   DocumentData,
   DocumentMetadata,
+  FeatureTable,
   Image,
   Shape,
   Waypoint,
@@ -49,6 +51,7 @@ export type {
   Id,
   Image,
   ImageChannel,
+  ImageOrientation,
   Waypoint,
 } from "./documentSchema";
 export {
@@ -63,6 +66,7 @@ export type DocumentState = {
   shapes: Shape[];
   channelGroups: ChannelGroup[];
   images: Image[];
+  featureTables: FeatureTable[];
   metadata: DocumentMetadata;
 };
 
@@ -93,6 +97,12 @@ export type DocumentStore = DocumentState & {
   setShapes: (shapes: Shape[]) => void;
   setChannelGroups: (channelGroups: ChannelGroup[]) => void;
   setImages: (images: Image[]) => void;
+  setFeatureTables: (featureTables: FeatureTable[]) => void;
+  /** Atomically update coupled channel source/group state as one undo step. */
+  setImagesAndChannelGroups: (
+    images: Image[],
+    channelGroups: ChannelGroup[],
+  ) => void;
   /** Merge into `metadata`; use when persisting exhibit title/version, etc. */
   setMetadata: (metadata: Partial<DocumentMetadata>) => void;
 
@@ -111,6 +121,7 @@ function createEmptyDocumentSlices(): Omit<DocumentState, "activeStoryId"> {
     shapes: [],
     channelGroups: [],
     images: [],
+    featureTables: [],
     metadata: {},
   };
 }
@@ -137,14 +148,22 @@ export function documentShapes(s: DocumentStore): Shape[] {
 
 export type DocumentUndoState = Pick<
   DocumentState,
-  "waypoints" | "shapes" | "channelGroups" | "images" | "metadata"
+  | "waypoints"
+  | "shapes"
+  | "channelGroups"
+  | "images"
+  | "featureTables"
+  | "metadata"
 >;
 
 function documentUndoEquality(
   past: DocumentUndoState,
   current: DocumentUndoState,
 ): boolean {
-  return hash(past) === hash(current);
+  if (past.featureTables !== current.featureTables) return false;
+  const { featureTables: _p, ...p } = past;
+  const { featureTables: _c, ...c } = current;
+  return hash(p) === hash(c);
 }
 
 const documentTemporalOptions = {
@@ -153,6 +172,7 @@ const documentTemporalOptions = {
     shapes: state.shapes,
     channelGroups: state.channelGroups,
     images: state.images,
+    featureTables: state.featureTables,
     metadata: state.metadata,
   }),
   limit: 100,
@@ -176,6 +196,7 @@ export const useDocumentStore = create<DocumentStore>()(
             shapes: [...data.shapes],
             channelGroups: [...data.channelGroups],
             images: [...data.images],
+            featureTables: [...data.featureTables],
             metadata: {
               ...m,
               id: m.id ?? activeStoryId,
@@ -193,6 +214,7 @@ export const useDocumentStore = create<DocumentStore>()(
               shapes: [...data.shapes],
               channelGroups: [...data.channelGroups],
               images: [...data.images],
+              featureTables: [...data.featureTables],
               metadata: {
                 ...m,
                 id: m.id ?? state.activeStoryId ?? undefined,
@@ -211,6 +233,7 @@ export const useDocumentStore = create<DocumentStore>()(
             shapes: [...s.shapes],
             channelGroups: [...s.channelGroups],
             images: [...s.images],
+            featureTables: [...s.featureTables],
           };
         },
 
@@ -246,6 +269,7 @@ export const useDocumentStore = create<DocumentStore>()(
             shapes: [...rec.data.shapes],
             channelGroups: [...rec.data.channelGroups],
             images: [...rec.data.images],
+            featureTables: [...(rec.data.featureTables ?? [])],
             metadata: { ...rec.data.metadata },
           });
           clearDocumentHistory();
@@ -264,6 +288,7 @@ export const useDocumentStore = create<DocumentStore>()(
             shapes: [...rec.data.shapes],
             channelGroups: [...rec.data.channelGroups],
             images: [...rec.data.images],
+            featureTables: [...(rec.data.featureTables ?? [])],
             metadata: { ...rec.data.metadata },
           });
           clearDocumentHistory();
@@ -273,6 +298,7 @@ export const useDocumentStore = create<DocumentStore>()(
         deleteStory: async (id) => {
           await deleteStoryRecord(id);
           await deleteFileHandlesForStory(id);
+          await deleteBlobsForStory(id);
           const current = get().activeStoryId;
           if (current !== id) return;
 
@@ -286,6 +312,7 @@ export const useDocumentStore = create<DocumentStore>()(
               shapes: [...rec.data.shapes],
               channelGroups: [...rec.data.channelGroups],
               images: [...rec.data.images],
+              featureTables: [...(rec.data.featureTables ?? [])],
               metadata: { ...rec.data.metadata },
             });
             clearDocumentHistory();
@@ -307,6 +334,7 @@ export const useDocumentStore = create<DocumentStore>()(
             shapes: [...rec.data.shapes],
             channelGroups: [...rec.data.channelGroups],
             images: [...rec.data.images],
+            featureTables: [...(rec.data.featureTables ?? [])],
             metadata: { ...rec.data.metadata },
           });
           clearDocumentHistory();
@@ -320,6 +348,15 @@ export const useDocumentStore = create<DocumentStore>()(
           set(() => ({ channelGroups: [...channelGroups] })),
 
         setImages: (images) => set(() => ({ images: [...images] })),
+
+        setFeatureTables: (featureTables) =>
+          set(() => ({ featureTables: [...featureTables] })),
+
+        setImagesAndChannelGroups: (images, channelGroups) =>
+          set(() => ({
+            images: [...images],
+            channelGroups: [...channelGroups],
+          })),
 
         /** Prefer `get()` + object `set` (not `set(fn)`) so devtools middleware always merges metadata reliably. */
         setMetadata: (patch) => {

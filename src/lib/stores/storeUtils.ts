@@ -15,7 +15,8 @@
  */
 
 import type { ConfigWaypoint } from "../authoring/config";
-import { resolveImageImportRole } from "../imaging/channelKind";
+import { clampImageOpacity } from "../imaging/imageOpacity";
+import { effectiveOrientation } from "../imaging/imageOrientation";
 import { type Loader, loaderPixelSizeXY } from "../imaging/viv";
 import {
   importedLineStyle,
@@ -43,8 +44,10 @@ import type {
   ArrowShape,
   Channel,
   ChannelGroup,
+  FeatureTable,
   Image,
   ImageChannel,
+  ImageOrientation,
   ImageSource,
   Point,
   StoryShape,
@@ -82,6 +85,7 @@ export function flattenImageChannelsInDocumentOrder(
       out.push({
         ...ch,
         imageId: im.id,
+        ...(im.rgbDisplay != null ? { rgbDisplay: im.rgbDisplay } : {}),
       });
     }
   }
@@ -131,6 +135,7 @@ export function applySourceChannelsToImages(
       sourceDataTypeId,
       sourceDistribution,
       gmmContrastLimits,
+      floatRange,
       color,
       lowerLimit,
       upperLimit,
@@ -145,6 +150,7 @@ export function applySourceChannelsToImages(
       ...(sourceDataTypeId !== undefined ? { sourceDataTypeId } : {}),
       ...(sourceDistribution !== undefined ? { sourceDistribution } : {}),
       ...(gmmContrastLimits !== undefined ? { gmmContrastLimits } : {}),
+      ...(floatRange !== undefined ? { floatRange } : {}),
       ...(color !== undefined ? { color } : {}),
       ...(lowerLimit !== undefined ? { lowerLimit } : {}),
       ...(upperLimit !== undefined ? { upperLimit } : {}),
@@ -174,6 +180,9 @@ export function applySourceChannelsToImages(
           sizeC: chans.length,
           omeXmlHash: "",
           basename: "",
+          rotationDegrees: 0,
+          flipHorizontal: false,
+          flipVertical: false,
           channels: chans,
         },
       ];
@@ -223,6 +232,37 @@ export function setImageBasename(
   return next;
 }
 
+/** Write placement onto one image. Defaults are stored. */
+export function setImageOrientation(
+  images: Image[],
+  imageId: string,
+  orientation: ImageOrientation,
+): Image[] {
+  const idx = images.findIndex((im) => im.id === imageId);
+  if (idx < 0) return images;
+  const next = [...images];
+  const placed = effectiveOrientation(orientation);
+  const row = { ...next[idx], ...placed };
+  if (placed.umPerPixel == null) delete row.umPerPixel;
+  next[idx] = row;
+  return next;
+}
+
+/** Set whole-image alpha (`0…1`) on one image row. */
+export function setImageOpacity(
+  images: Image[],
+  imageId: string,
+  opacity: number,
+): Image[] {
+  const idx = images.findIndex((im) => im.id === imageId);
+  if (idx < 0) return images;
+  const nextOpacity = clampImageOpacity(opacity);
+  if (clampImageOpacity(images[idx].opacity) === nextOpacity) return images;
+  const next = [...images];
+  next[idx] = { ...next[idx], opacity: nextOpacity };
+  return next;
+}
+
 /**
  * Copy stable channel ids (+ persisted styling) from `previous` onto
  * `incoming` by sorted OME index. Channel groups / waypoints keep working
@@ -250,6 +290,7 @@ export function rebindReplacementImageChannels(
       lowerLimit: prev.lowerLimit ?? ch.lowerLimit,
       upperLimit: prev.upperLimit ?? ch.upperLimit,
       gmmContrastLimits: prev.gmmContrastLimits ?? ch.gmmContrastLimits,
+      floatRange: prev.floatRange ?? ch.floatRange,
       maskVisualization: prev.maskVisualization ?? ch.maskVisualization,
     };
   });
@@ -257,6 +298,8 @@ export function rebindReplacementImageChannels(
     ...incoming,
     channels,
     contentRole: previous.contentRole ?? incoming.contentRole,
+    rgbDisplay: previous.rgbDisplay ?? incoming.rgbDisplay,
+    opacity: clampImageOpacity(previous.opacity),
   };
 }
 
@@ -281,14 +324,16 @@ export function removeImageFromDocument(
   images: Image[],
   channelGroups: ChannelGroup[],
   imageId: string,
+  featureTables: FeatureTable[],
 ): {
   images: Image[];
   channelGroups: ChannelGroup[];
   removedChannelIds: string[];
+  featureTables: FeatureTable[];
 } {
   const image = images.find((im) => im.id === imageId);
   if (!image) {
-    return { images, channelGroups, removedChannelIds: [] };
+    return { images, channelGroups, removedChannelIds: [], featureTables };
   }
   const removedChannelIds = image.channels.map((ch) => ch.id);
   const removed = new Set(removedChannelIds);
@@ -301,32 +346,8 @@ export function removeImageFromDocument(
       }))
       .filter((g) => g.channels.length > 0),
     removedChannelIds,
+    featureTables: featureTables.filter((c) => !removed.has(c.sourceChannelId)),
   };
-}
-
-/** Drop an existing row before re-importing the same basename + role. */
-export function dedupeImagesForImport(
-  images: Image[],
-  basename: string,
-  contentRole: "intensity" | "segmentation",
-): { images: Image[]; removedImageIds: string[] } {
-  const key = basename.trim().toLowerCase();
-  if (!key) return { images, removedImageIds: [] };
-  const removedImageIds: string[] = [];
-  const next = images.filter((im) => {
-    const base = im.basename.trim().toLowerCase();
-    if (!base || base !== key) return true;
-    const role = resolveImageImportRole({
-      contentRole: im.contentRole,
-      channels: im.channels ?? [],
-    });
-    if (role === contentRole) {
-      removedImageIds.push(im.id);
-      return false;
-    }
-    return true;
-  });
-  return { images: next, removedImageIds };
 }
 
 /** Strip the OME-TIFF extension to derive a short import label from a basename. */
@@ -336,20 +357,47 @@ export function basenameImportLabel(basename: string): string {
   return trimmed.replace(/\.ome\.tiff?$/i, "").replace(/\.tiff?$/i, "");
 }
 
+/**
+ * Display name suitable for a story title from the first document image
+ * (OME-TIFF basename without extension, DICOMweb display basename, or URL leaf).
+ */
+export function firstImageNameForStoryTitle(
+  images: readonly Image[],
+): string | null {
+  const im = images[0];
+  if (!im) return null;
+  const base = im.basename.trim();
+  if (base) {
+    const label = basenameImportLabel(base);
+    return label.trim() || base;
+  }
+  const src = im.source;
+  if (src?.kind === "dicomWeb") {
+    const modality = src.modality.trim();
+    if (modality) return modality;
+  }
+  if (src?.kind === "url") {
+    const leaf = src.url.split("/").pop()?.trim();
+    if (leaf) {
+      const label = basenameImportLabel(leaf);
+      return label.trim() || leaf;
+    }
+  }
+  return null;
+}
+
 /** Short per-image labels; identical basenames become `name`, `name (2)`, … */
 export function uniqueImageDisplayLabels(
-  images: readonly { id?: string; basename?: string }[],
+  images: readonly Image[],
 ): Map<string, string> {
-  const rows = images
-    .filter((im): im is { id: string; basename?: string } => !!im.id)
-    .map((im) => {
-      const trimmed = (im.basename ?? "").trim();
-      const base = trimmed
-        ? trimmed.replace(/\.ome\.tiff?$/i, "").replace(/\.tiff?$/i, "") ||
-          "Image"
-        : "Image";
-      return { id: im.id, base };
-    });
+  const rows = images.map((im) => {
+    const trimmed = (im.basename ?? "").trim();
+    const base = trimmed
+      ? trimmed.replace(/\.ome\.tiff?$/i, "").replace(/\.tiff?$/i, "") ||
+        "Image"
+      : "Image";
+    return { id: im.id, base };
+  });
   const counts = new Map<string, number>();
   for (const { base } of rows) counts.set(base, (counts.get(base) ?? 0) + 1);
   const seen = new Map<string, number>();
@@ -535,6 +583,8 @@ function exportViewportToBounds(v: Viewport): WaypointBounds {
   return { x0, x1, y0, y1 };
 }
 
+// Every waypoint field must be copied here and in `waypointToConfigWaypoint`;
+// `updateStory` round-trips through both and drops anything else.
 function configWaypointToExportWaypoint(
   wp: ConfigWaypoint,
   imageWidth: number,
@@ -572,9 +622,13 @@ function configWaypointToExportWaypoint(
     content: wp.Content ?? "",
     viewport: boundsToExportViewport(bounds),
     shapeIds: [...(wp.shapeIds ?? [])],
+    classViews: wp.classViews ?? [],
   };
   if (wp.groupId) {
     out.groupId = wp.groupId;
+  }
+  if (wp.name !== undefined) {
+    out.name = wp.name;
   }
   if (wp.ThumbnailDataUrl) {
     out.thumbnail = wp.ThumbnailDataUrl;
@@ -624,9 +678,13 @@ export function waypointToConfigWaypoint(
     ViewState: authoring?.ViewState,
     Pan: authoring?.Pan,
     Zoom: authoring?.Zoom,
+    classViews: wp.classViews ?? [],
   };
   if (wp.groupId !== undefined) {
     out.groupId = wp.groupId;
+  }
+  if (wp.name !== undefined) {
+    out.name = wp.name;
   }
   if (wp.thumbnail !== undefined) {
     out.ThumbnailDataUrl = wp.thumbnail;

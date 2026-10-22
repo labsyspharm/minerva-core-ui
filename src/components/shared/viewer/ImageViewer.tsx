@@ -1,20 +1,37 @@
-import {
-  LinearInterpolator,
-  OrthographicView,
-  type OrthographicViewState,
-} from "@deck.gl/core";
+import { OrthographicView, type OrthographicViewState } from "@deck.gl/core";
 import Deck, { type DeckGLRef } from "@deck.gl/react";
 import { ScaleBarLayer } from "@hms-dbmi/viv";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import "@deck.gl/widgets/stylesheet.css";
 
 import type { Layer } from "@deck.gl/core";
 import { MaskExtension } from "@deck.gl/extensions";
 import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
+import { ImageArrangeBox } from "@/components/shared/viewer/ImageArrangeBox";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
+import {
+  classViewFor,
+  gpuStyleForFeatureTable,
+  withHiddenClasses,
+} from "@/lib/featureTable";
+import { useFeatureTableLutEpoch } from "@/lib/featureTable/hooks";
 import { isMaskSourceRendered } from "@/lib/imaging/channelCompositor";
-import { isMaskChannel } from "@/lib/imaging/channelKind";
+import {
+  DEFAULT_MASK_VISUALIZATION,
+  isMaskChannel,
+} from "@/lib/imaging/channelKind";
+import { opacityForImage } from "@/lib/imaging/imageOpacity";
+import { orientationForImage } from "@/lib/imaging/imageOrientation";
+import type { LoaderList } from "@/lib/imaging/loaderEntries";
 import {
   IMAGE_SELECTION_MASK_LAYER_ID,
   SELECTION_MASK_CHANNEL_KEY,
@@ -23,17 +40,30 @@ import {
 } from "@/lib/imaging/maskLayers";
 import { createMaskTileLayer } from "@/lib/imaging/maskTileLayer";
 import { effectiveMaskVisualizationForSource } from "@/lib/imaging/sourceChannelStyle";
+import { type Loader, TILE_CACHE_PROPS } from "@/lib/imaging/viv";
+import {
+  viewStateToWorld,
+  WORLD_MICRON,
+  worldFrameFromLoader,
+} from "@/lib/imaging/worldFrame";
+import { createSam2ImageFetcher } from "@/lib/sam2/sam2ImageFetcher";
 import { useShapeLayers } from "@/lib/shapes/shapeLayers";
 import type { OverlayLayer } from "@/lib/shapes/shapeModel";
-import { useAppStore } from "@/lib/stores/appStore";
+import { legendClassKey, useAppStore } from "@/lib/stores/appStore";
 import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
+import { uniqueImageDisplayLabels } from "@/lib/stores/storeUtils";
+import { useActiveWaypoint } from "@/lib/stores/useActiveWaypoint";
+import { isMobileDevice } from "@/lib/viewer/isMobileDevice";
 import {
   getViewerViewportSnapshotFromDeck,
   orthographicZoomToNumber,
   registerViewerLiveSnapshotReader,
+  toFlatViewState,
+  WAYPOINT_TRANSITION_INTERPOLATOR,
+  withOrthoZoom,
 } from "@/lib/viewer/viewerViewport";
 import { getWaypointViewState } from "@/lib/waypoints/waypoint";
 import {
@@ -45,6 +75,121 @@ import styles from "./ImageViewer.module.css";
 /** Keep in sync with `OrthographicView({ id })` below. */
 const ORTHO_VIEW_ID = "ortho";
 const SCALEBAR_VIEW_ID = "scalebar-overlay";
+
+const WAYPOINT_FLY_MS = 1400;
+/** Wheel flickers isZooming off between notches; wait before syncing React. */
+const CAMERA_IDLE_COMMIT_MS = 160;
+const easeInOutCubic = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+
+function utcShort(iso: string): string | null {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return null;
+  return new Date(t).toISOString().replace("T", " ").slice(0, 16);
+}
+
+function buildStamp(): { text: string; title: string } | null {
+  const iso = typeof __BUILD_TIME_ISO__ === "string" ? __BUILD_TIME_ISO__ : "";
+  const sha = typeof __BUILD_GIT_SHA__ === "string" ? __BUILD_GIT_SHA__ : "";
+  const label = utcShort(iso);
+  const short = sha.slice(0, 7);
+  const text = [label ? `Updated ${label} UTC` : "", short]
+    .filter(Boolean)
+    .join(" · ");
+  if (!text) return null;
+  return { text, title: [iso, sha].filter(Boolean).join("\n") };
+}
+
+/** Device class and the tile cache it gets, for the info box. */
+function deviceLabel(): string {
+  const mb = TILE_CACHE_PROPS.maxCacheByteSize / 2 ** 20;
+  const cache = mb > 0 ? `${mb} MB` : "off";
+  return `${isMobileDevice() ? "Mobile" : "Desktop"} · tile cache ${cache}`;
+}
+
+// Both are fixed for the life of the page.
+const BUILD_STAMP = buildStamp();
+const DEVICE_LABEL = deviceLabel();
+
+function planeWidth(plane: Loader["data"][number]): number {
+  const i = plane.labels.indexOf("x");
+  return i >= 0 ? (plane.shape[i] ?? 0) : 0;
+}
+
+/** Avivator Footer: `"1/5 [t, c, z, y, x]"` — 1 is finest. */
+function formatPyramidStatus(zoom: number, loader: Loader): string | null {
+  const planes = loader.data;
+  if (planes.length === 0) return null;
+  const baseWidth = planeWidth(planes[0]);
+  const levelZooms = planes.map((level) => {
+    const width = planeWidth(level);
+    return -Math.round(Math.log2(baseWidth / width));
+  });
+  const coarsest = levelZooms[levelZooms.length - 1] ?? 0;
+  const zoomOffset = Math.round(
+    Math.log2(worldFrameFromLoader(loader).umPerPixelX || 1),
+  );
+  const tileZ = Math.min(0, Math.max(coarsest, Math.ceil(zoom + zoomOffset)));
+  let snapped = coarsest;
+  for (const lz of levelZooms) {
+    if (lz <= tileZ) {
+      snapped = lz;
+      break;
+    }
+  }
+  const resolution = Math.max(0, levelZooms.indexOf(snapped));
+  const shape = planes[resolution]?.shape;
+  if (!shape) return null;
+  return `${resolution + 1}/${planes.length} [${shape.join(", ")}]`;
+}
+
+type PyramidHudLine = { key: string; text: string };
+
+function formatPyramidHudLines(
+  zoom: number,
+  loaders: LoaderList,
+  images: Parameters<typeof uniqueImageDisplayLabels>[0],
+): PyramidHudLine[] {
+  const labels = uniqueImageDisplayLabels(images);
+  const rows: { key: string; status: string; label: string }[] = [];
+  const seen = new Set<string>();
+  for (const item of loaders) {
+    const key = item.sourceImageId ?? `${item.modality}:${rows.length}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const status = formatPyramidStatus(zoom, item.loader);
+    if (!status) continue;
+    rows.push({
+      key,
+      status,
+      label:
+        (item.sourceImageId && labels.get(item.sourceImageId)) || item.modality,
+    });
+  }
+  if (rows.length === 0) return [];
+  if (rows.length > 1 && rows.every((row) => row.status === rows[0].status)) {
+    return [
+      ...rows.map((row) => ({ key: row.key, text: row.label })),
+      { key: `${rows[0].key}-level`, text: rows[0].status },
+    ];
+  }
+  return rows.map((row) => ({
+    key: row.key,
+    text: `${row.label} · ${row.status}`,
+  }));
+}
+
+const deckViewStates = (
+  ortho: OrthographicViewState,
+  width: number,
+  height: number,
+) => ({
+  [ORTHO_VIEW_ID]: ortho,
+  [SCALEBAR_VIEW_ID]: {
+    zoom: 0,
+    target: [width / 2, height / 2, 0],
+  } as OrthographicViewState,
+});
 
 type InteractionType = "click" | "dragStart" | "drag" | "dragEnd" | "hover";
 type InteractionCallback = (
@@ -75,6 +220,18 @@ type WorldToScreen = (
   worldX: number,
   worldY: number,
 ) => [number, number] | undefined;
+
+/** Drag on these tools draws or places a shape, so the view must not pan. */
+const TOOLS_THAT_DRAW_ON_DRAG = new Set([
+  "rectangle",
+  "ellipse",
+  "arrow",
+  "line",
+  "lasso",
+  "polyline",
+  "brush",
+  "point",
+]);
 
 /** Translate Deck.gl pick events into overlay / brush interactions. */
 const createDragHandlers = (
@@ -143,7 +300,17 @@ const createDragHandlers = (
       if (coord) emit("click", coord);
     },
 
-    onDragStart: (info: PickInfo) => {
+    onDragStart: (
+      info: PickInfo,
+      event?: { stopImmediatePropagation?: () => void },
+    ) => {
+      // Runs before the view controller, so the same drag does not start a pan.
+      if (
+        TOOLS_THAT_DRAW_ON_DRAG.has(activeTool) ||
+        (activeTool === "move" && !!store().hoverState.hoveredShapeId)
+      ) {
+        event?.stopImmediatePropagation?.();
+      }
       const coord = toCoord(info);
       if (coord && activeTool === "brush" && getScreenFromWorld) {
         const screen = getScreenFromWorld(coord[0], coord[1]);
@@ -241,11 +408,7 @@ const useWindowSize = () => {
   return windowSize;
 };
 
-import type {
-  LoaderList,
-  MainSettings,
-  OmeLoaderEntry,
-} from "@/lib/imaging/loaderEntries";
+import type { MainSettings, OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 
 export type {
   JpegLoaderEntry,
@@ -270,44 +433,26 @@ export type ImageViewerProps = {
     type: "click" | "dragStart" | "drag" | "dragEnd" | "hover",
     coordinate: [number, number, number],
   ) => void;
+  /** Show the frame for the store's `arrangeImageId`. */
+  canArrange?: boolean;
   zoomInButton?: HTMLElement | null;
   zoomOutButton?: HTMLElement | null;
   showSquareViewportOverlay?: boolean;
   squareViewportScale?: number;
   squareViewportColor?: string;
   squareViewportBorderWidth?: number;
+  /**
+   * Keep the drawn frame for later reads (thumbnail capture, SAM2). The
+   * published player reads nothing back, and a preserved buffer costs an
+   * extra full-canvas copy each frame on mobile GPUs.
+   */
+  preserveDrawingBuffer?: boolean;
+  /** Last row of the info panel (the published player's Edit link). */
+  infoFooter?: ReactNode;
 };
 
 const _isElement = (x = {}): x is HTMLElement => {
   return ["Width", "Height"].every((k) => `client${k}` in x);
-};
-
-/** Normalize view state to flat { zoom, target } — Deck may return ortho-nested. */
-const toFlatViewState = (
-  v:
-    | {
-        ortho?: { zoom?: number | [number, number]; target?: number[] };
-        zoom?: number | [number, number];
-        target?: number[];
-      }
-    | null
-    | undefined,
-): { zoom: number; target: [number, number, number] } | null => {
-  const inner = v?.ortho ?? v;
-  if (!inner || !Array.isArray(inner.target) || inner.target.length < 3)
-    return null;
-  const zoomVal = inner.zoom;
-  const zoom =
-    typeof zoomVal === "number"
-      ? zoomVal
-      : Array.isArray(zoomVal) && typeof zoomVal[0] === "number"
-        ? zoomVal[0]
-        : null;
-  if (zoom === null) return null;
-  return {
-    zoom,
-    target: inner.target.slice(0, 3) as [number, number, number],
-  };
 };
 
 export const ImageViewer = (props: ImageViewerProps) => {
@@ -322,126 +467,196 @@ export const ImageViewer = (props: ImageViewerProps) => {
     isDragging = false,
     hoveredShapeId = null,
     onOverlayInteraction,
+    canArrange = false,
     showSquareViewportOverlay = false,
     squareViewportScale = 0.9,
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
     squareViewportBorderWidth = 2,
+    preserveDrawingBuffer = true,
   } = props;
-  const {
-    activeChannelGroupId,
-    channelVisibilities,
-    channelGroupRowVisibilities,
-    sam2Processing,
-    authoringWaypointEditorOpen,
-  } = useAppStore();
+  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
+  const channelVisibilities = useAppStore((s) => s.channelVisibilities);
+  const channelGroupRowVisibilities = useAppStore(
+    (s) => s.channelGroupRowVisibilities,
+  );
+  const sam2Processing = useAppStore((s) => s.sam2Processing);
+  const authoringWaypointEditorOpen = useAppStore(
+    (s) => s.authoringWaypointEditorOpen,
+  );
   // Live contrast/color preview is folded in `useViewerLayers`, not here.
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
+  const maskVisualizationPreview = useAppStore(
+    (s) => s.maskVisualizationPreview,
+  );
+  const imageOrientationPreview = useAppStore((s) => s.imageOrientationPreview);
+  const imageOpacityPreview = useAppStore((s) => s.imageOpacityPreview);
+  const arrangeImageId = useAppStore((s) => s.arrangeImageId);
+  const selectionMaskVisualizationPreview =
+    maskVisualizationPreview?.sourceChannelId === SELECTION_MASK_CHANNEL_KEY
+      ? maskVisualizationPreview.visualization
+      : null;
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
+  const featureTables = useDocumentStore((s) => s.featureTables);
+  const activeWaypoint = useActiveWaypoint();
+  const hiddenLegendClasses = useAppStore((s) => s.hiddenLegendClasses);
+  const featureTableLutEpoch = useFeatureTableLutEpoch();
   const selectionMaskActive =
     imageSelectionMask != null &&
     (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
   const maskExtension = useMemo(() => new MaskExtension(), []);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
+  /** False until the viewer element reports its size; the window size is only a guess. */
+  const [viewportMeasured, setViewportMeasured] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<DeckGLRef | null>(null);
+  const arrangeLayoutRef = useRef<(() => void) | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
-  // Set up ResizeObserver to track viewport size changes
-  useEffect(() => {
-    const element = rootRef.current;
+  // Callback ref: the viewer returns null until loaders exist, so a mount-only
+  // effect never sees the element and the frame stays on the window size.
+  const setRoot = useCallback((element: HTMLDivElement | null) => {
+    rootRef.current = element;
+    resizeObserverRef.current?.disconnect();
+    resizeObserverRef.current = null;
     if (!element) return;
-
+    const publish = (width: number, height: number) => {
+      if (width <= 0 || height <= 0) return;
+      setViewportSize({ width, height });
+      setViewportMeasured(true);
+      useAppStore.getState().setViewerViewportSize({ width, height });
+    };
+    publish(element.clientWidth, element.clientHeight);
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
-        setViewportSize({ width, height });
-        // Same tick as layout — avoids null viewerViewportSize before React commits.
-        if (width > 0 && height > 0) {
-          useAppStore.getState().setViewerViewportSize({ width, height });
-        }
+        publish(width, height);
       }
     });
-
     resizeObserver.observe(element);
-    return () => resizeObserver.disconnect();
+    resizeObserverRef.current = resizeObserver;
   }, []);
 
-  /**
-   * Waypoints, overlays, SAM2, and initial pan/zoom use **only the first stacked
-   * image** (`mainSettingsList[0]`, i.e. first OME file or first DICOM series).
-   * Additional OME layers share the same world axes; different sizes are not registered.
-   */
-  const setViewerReferenceImagePixelSize = useAppStore(
-    (s) => s.setViewerReferenceImagePixelSize,
-  );
+  const setViewerWorldFrame = useAppStore((s) => s.setViewerWorldFrame);
 
   const firstLoader = useMemo(
     () => (loaderList.length > 0 ? loaderList[0] : null),
     [loaderList],
   );
+  const [pyramidHud, setPyramidHud] = useState<PyramidHudLine[]>([]);
+  const [pyramidInfoOpen, setPyramidInfoOpen] = useState(false);
+  const pyramidInfoRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!pyramidInfoOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const root = pyramidInfoRef.current;
+      if (!root || root.contains(event.target as Node)) return;
+      setPyramidInfoOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [pyramidInfoOpen]);
+  const publishPyramidHud = useCallback(
+    (zoom: number) => {
+      const next = formatPyramidHudLines(zoom, loaderList, images);
+      setPyramidHud((prev) => {
+        const prevKey = prev.map((line) => line.text).join("\n");
+        const nextKey = next.map((line) => line.text).join("\n");
+        return prevKey === nextKey ? prev : next;
+      });
+    },
+    [loaderList, images],
+  );
 
-  // Memoize image shape computation
-  const imageShape = useMemo(() => {
-    if (firstLoader === null) {
-      return { x: 0, y: 0 };
-    }
-    const shape_labels = firstLoader.loader.data[0].labels;
-    const shape_values = firstLoader.loader.data[0].shape;
-    return Object.fromEntries(shape_labels.map((k, i) => [k, shape_values[i]]));
-  }, [firstLoader]);
+  const frame = useMemo(() => {
+    if (!firstLoader) return null;
+    const base = worldFrameFromLoader(firstLoader.loader);
+    const um = images.find(
+      (im) => im.id === firstLoader.sourceImageId,
+    )?.umPerPixel;
+    if (typeof um !== "number" || !Number.isFinite(um) || um <= 0) return base;
+    return {
+      ...base,
+      umPerPixelX: um,
+      umPerPixelY: um,
+      worldWidth: base.pixelWidth * um,
+      worldHeight: base.pixelHeight * um,
+    };
+  }, [firstLoader, images]);
 
   useEffect(() => {
-    if (imageShape.x > 0 && imageShape.y > 0) {
-      setViewerReferenceImagePixelSize({
-        width: Number(imageShape.x),
-        height: Number(imageShape.y),
-      });
-    } else {
-      setViewerReferenceImagePixelSize(null);
-    }
-    return () => {
-      setViewerReferenceImagePixelSize(null);
-    };
-  }, [imageShape.x, imageShape.y, setViewerReferenceImagePixelSize]);
+    setViewerWorldFrame(frame);
+    return () => setViewerWorldFrame(null);
+  }, [frame, setViewerWorldFrame]);
 
   const maskDisplayLayers = useMemo(() => {
-    const imgW = Number(imageShape.x) || 0;
-    const imgH = Number(imageShape.y) || 0;
-    if (imgW <= 0 || imgH <= 0 || omeLoaderEntries.length === 0) return [];
+    void featureTableLutEpoch;
+    if (omeLoaderEntries.length === 0) return [];
 
-    const activeGroup = activeChannelGroupId
-      ? channelGroups.find((g) => g.id === activeChannelGroupId)
-      : undefined;
     const layers: Layer[] = [];
-    for (const sc of flattenImageChannelsInDocumentOrder(images)) {
+    const channels = flattenImageChannelsInDocumentOrder(images);
+    for (const sc of channels) {
       if (!isMaskChannel(sc)) continue;
-      if (
-        !isMaskSourceRendered({
-          sc,
-          activeGroup,
-          channelGroups,
-          stackVisibilities: channelVisibilities ?? {},
-          groupRowVisibilities: channelGroupRowVisibilities,
-        })
-      ) {
-        continue;
-      }
+      const rendered = isMaskSourceRendered({
+        sc,
+        channelGroups,
+        stackVisibilities: channelVisibilities ?? {},
+        groupRowVisibilities: channelGroupRowVisibilities,
+      });
       const entry = omeLoaderEntries.find(
         (e) => e.sourceImageId === sc.imageId,
       );
       if (!entry?.loader) continue;
+      const visualization =
+        maskVisualizationPreview?.sourceChannelId === sc.id
+          ? maskVisualizationPreview.visualization
+          : effectiveMaskVisualizationForSource(
+              sc,
+              channelGroups,
+              activeChannelGroupId,
+            );
+      const imageOpacity = opacityForImage(
+        images,
+        sc.imageId,
+        imageOpacityPreview,
+      );
+      const paintedVisualization =
+        imageOpacity < 1
+          ? {
+              ...visualization,
+              opacity: visualization.opacity * imageOpacity,
+            }
+          : visualization;
+      const orientation = orientationForImage(
+        images,
+        sc.imageId,
+        imageOrientationPreview,
+      );
+      const featureTable = featureTables.find(
+        (c) => c.sourceChannelId === sc.id,
+      );
+      const classStyle = featureTable
+        ? gpuStyleForFeatureTable(
+            featureTable,
+            withHiddenClasses(
+              classViewFor(activeWaypoint, sc.id),
+              sc.id,
+              hiddenLegendClasses[legendClassKey(activeWaypoint?.id, sc.id)],
+            ),
+            visualization.colorSeed ?? 0,
+            activeWaypoint?.id,
+          )
+        : undefined;
+      // Without a style the shader falls back to per-cell random colors.
       const layer = createMaskTileLayer({
         id: `mask-channel-${sc.id}`,
         loader: entry.loader,
         channelIndex: sc.index,
-        visualization: effectiveMaskVisualizationForSource(
-          sc,
-          channelGroups,
-          activeChannelGroupId,
-        ),
-        worldWidth: imgW,
-        worldHeight: imgH,
+        visualization: paintedVisualization,
+        orientation,
+        visible: rendered,
+        classStyle,
       });
       if (layer) layers.push(layer);
     }
@@ -449,78 +664,99 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }, [
     images,
     omeLoaderEntries,
-    imageShape.x,
-    imageShape.y,
     channelVisibilities,
     channelGroupRowVisibilities,
     activeChannelGroupId,
     channelGroups,
+    maskVisualizationPreview,
+    imageOpacityPreview,
+    imageOrientationPreview,
+    featureTables,
+    activeWaypoint,
+    hiddenLegendClasses,
+    featureTableLutEpoch,
   ]);
 
-  // Memoize initial view state
-  const initialViewState = useMemo(() => {
-    const n_levels = firstLoader === null ? 1 : firstLoader.loader.data.length;
-    return {
-      zoom: -n_levels,
-      target: [imageShape.x / 2, imageShape.y / 2, 0],
-    } as OrthographicViewState;
-  }, [firstLoader, imageShape]);
+  // Fit the whole image. Pyramid depth says nothing about size on screen:
+  // some files keep halving down to a few pixels.
+  const fitViewState = useMemo(() => {
+    const { width, height } = viewportSize;
+    const zoom =
+      frame &&
+      frame.worldWidth > 0 &&
+      frame.worldHeight > 0 &&
+      width > 0 &&
+      height > 0
+        ? Math.log2(
+            0.95 *
+              Math.min(width / frame.worldWidth, height / frame.worldHeight),
+          )
+        : 0;
+    return withOrthoZoom({
+      zoom,
+      target: frame
+        ? [frame.worldWidth / 2, frame.worldHeight / 2, 0]
+        : [0, 0, 0],
+    });
+  }, [frame, viewportSize]);
 
+  // Deck owns live pan/zoom via `initialViewState`. React `viewState` is the last
+  // idle snapshot (overlays / Zustand). `orthoSeed` matches it except during a
+  // waypoint fly, when the seed carries transition props.
   const [viewState, setViewState] =
-    useState<OrthographicViewState>(initialViewState);
+    useState<OrthographicViewState>(fitViewState);
+  const [orthoSeed, setOrthoSeed] =
+    useState<OrthographicViewState>(fitViewState);
+  const cameraRef = useRef<OrthographicViewState>(fitViewState);
+  const viewportSizeRef = useRef(viewportSize);
+  viewportSizeRef.current = viewportSize;
   const hasInitialized = useRef(false);
+  const waypointTransitionGenRef = useRef(0);
+  const inTransitionRef = useRef(false);
+  /** True while pan/zoom/drag/transition is active, until idle-commit debounce fires. */
+  const isCameraBusyRef = useRef(false);
+  const idleCommitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const commitIdleCamera = useCallback(
+    (vs: OrthographicViewState, reseedDeck = false) => {
+      const flat = toFlatViewState(vs);
+      if (!flat) return;
+      const { width, height } = viewportSizeRef.current;
+      const next = {
+        ...withOrthoZoom(flat),
+        ...(width > 0 && height > 0 ? { width, height } : {}),
+      } as OrthographicViewState;
+      cameraRef.current = next;
+      if (idleCommitTimerRef.current) {
+        clearTimeout(idleCommitTimerRef.current);
+        idleCommitTimerRef.current = null;
+      }
+      isCameraBusyRef.current = false;
+      // Only re-seed Deck on init/resize/waypoint — not every wheel-idle.
+      if (reseedDeck) setOrthoSeed(next);
+      setViewState(next);
+      publishPyramidHud(flat.zoom);
+    },
+    [publishPyramidHud],
+  );
+
+  const scheduleIdleCameraCommit = useCallback(() => {
+    if (idleCommitTimerRef.current) clearTimeout(idleCommitTimerRef.current);
+    idleCommitTimerRef.current = setTimeout(() => {
+      idleCommitTimerRef.current = null;
+      commitIdleCamera(cameraRef.current);
+    }, CAMERA_IDLE_COMMIT_MS);
+  }, [commitIdleCamera]);
+
+  useEffect(
+    () => () => {
+      if (idleCommitTimerRef.current) clearTimeout(idleCommitTimerRef.current);
+    },
+    [],
+  );
 
   const setViewportZoom = useAppStore((state) => state.setViewportZoom);
   const setBrushViewport = useAppStore((state) => state.setBrushViewport);
-
-  const viewRef = useRef({ viewState, viewportSize });
-  viewRef.current = { viewState, viewportSize };
-
-  // When we apply a programmatic waypoint view, ignore the next handleViewStateChange
-  // (Deck may emit stale state and overwrite our update)
-  const ignoreNextViewStateChangeRef = useRef(false);
-
-  // Get target waypoint view state for responding to waypoint selection
-  const targetWaypointCamera = useAppStore(
-    (state) => state.targetWaypointCamera,
-  );
-  const clearTargetWaypointCamera = useAppStore(
-    (state) => state.clearTargetWaypointCamera,
-  );
-  const refImageWidth = Number(imageShape.x) || 0;
-  const refImageHeight = Number(imageShape.y) || 0;
-
-  // Update viewState only on initial mount (not when loader changes)
-  useEffect(() => {
-    if (firstLoader !== null && !hasInitialized.current) {
-      setViewState(initialViewState);
-      // Set initial viewport zoom for line width calculations
-      if (typeof initialViewState.zoom === "number") {
-        setViewportZoom(initialViewState.zoom);
-      }
-      hasInitialized.current = true;
-    }
-  }, [initialViewState, firstLoader, setViewportZoom]);
-
-  // Sync viewport size and visible world bounds for brush (canvas-aligned mask)
-  useEffect(() => {
-    const { width, height } = viewportSize;
-    if (width <= 0 || height <= 0) return;
-    const zoom = typeof viewState?.zoom === "number" ? viewState.zoom : 0;
-    const target = viewState?.target ?? [0, 0, 0];
-    const scale = 2 ** zoom;
-    const halfW = width / (2 * scale);
-    const halfH = height / (2 * scale);
-    // BitmapLayer bounds are [left, bottom, right, top] in world coords.
-    // Our world space for images uses y increasing downward, so "bottom" is +halfH and "top" is -halfH.
-    const bounds: [number, number, number, number] = [
-      target[0] - halfW,
-      target[1] + halfH,
-      target[0] + halfW,
-      target[1] - halfH,
-    ];
-    setBrushViewport(width, height, bounds);
-  }, [viewState, viewportSize, setBrushViewport]);
   const setViewerViewState = useAppStore((s) => s.setViewerViewState);
   const setViewerViewportSize = useAppStore((s) => s.setViewerViewportSize);
   const setSquareViewportThumbnailCapture = useAppStore(
@@ -529,42 +765,124 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const setViewerImageLayersLoaded = useAppStore(
     (s) => s.setViewerImageLayersLoaded,
   );
-
   const setSam2ViewState = useAppStore((s) => s.setSam2ViewState);
   const setSam2ViewportSize = useAppStore((s) => s.setSam2ViewportSize);
+  const setSam2ImageFetcher = useAppStore((s) => s.setSam2ImageFetcher);
+
+  const deckInitialViewState = useMemo(
+    () => deckViewStates(orthoSeed, viewportSize.width, viewportSize.height),
+    [orthoSeed, viewportSize.width, viewportSize.height],
+  );
+  // A waypoint fly seeds Deck directly. Until orthoSeed commits, renders pass
+  // that same seed: Deck resets to any other initialViewState, so a render with
+  // the old seed would fly back toward the previous waypoint first.
+  const flySeedViewsRef = useRef<ReturnType<typeof deckViewStates> | null>(
+    null,
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: orthoSeed commit ends the override
+  useLayoutEffect(() => {
+    flySeedViewsRef.current = null;
+  }, [orthoSeed]);
+
+  const targetWaypointCamera = useAppStore(
+    (state) => state.targetWaypointCamera,
+  );
+  const clearTargetWaypointCamera = useAppStore(
+    (state) => state.clearTargetWaypointCamera,
+  );
+  const refImageWidth = frame?.pixelWidth ?? 0;
+  const refImageHeight = frame?.pixelHeight ?? 0;
+
+  useEffect(() => {
+    if (firstLoader !== null && viewportMeasured && !hasInitialized.current) {
+      commitIdleCamera(fitViewState, true);
+      hasInitialized.current = true;
+    }
+  }, [fitViewState, firstLoader, viewportMeasured, commitIdleCamera]);
+
+  useEffect(() => {
+    const zoom =
+      toFlatViewState(cameraRef.current)?.zoom ??
+      toFlatViewState(fitViewState)?.zoom;
+    if (zoom != null) publishPyramidHud(zoom);
+  }, [fitViewState, publishPyramidHud]);
+
+  // Resize changes the scalebar view; re-seed from the live camera so Deck does
+  // not snap ortho back to the last programmatic seed.
+  useEffect(() => {
+    const { width, height } = viewportSize;
+    if (!hasInitialized.current) return;
+    if (width <= 0 || height <= 0) return;
+    if (inTransitionRef.current) return;
+    commitIdleCamera(cameraRef.current, true);
+  }, [viewportSize, commitIdleCamera]);
+
+  // Sync viewport size and visible world bounds for brush (canvas-aligned mask)
+  useEffect(() => {
+    const { width, height } = viewportSize;
+    if (width <= 0 || height <= 0) return;
+    const flat = toFlatViewState(viewState);
+    if (!flat) return;
+    const scale = 2 ** flat.zoom;
+    const halfW = width / (2 * scale);
+    const halfH = height / (2 * scale);
+    const [x, y] = flat.target;
+    // BitmapLayer bounds are [left, bottom, right, top] in world coords.
+    // Our world space for images uses y increasing downward, so "bottom" is +halfH and "top" is -halfH.
+    setBrushViewport(width, height, [
+      x - halfW,
+      y + halfH,
+      x + halfW,
+      y - halfH,
+    ]);
+  }, [viewState, viewportSize, setBrushViewport]);
 
   useEffect(() => {
     setSam2ViewState(viewState);
-  }, [viewState, setSam2ViewState]);
+    const flat = toFlatViewState(viewState);
+    if (!flat) return;
+    setViewportZoom(flat.zoom);
+    setViewerViewState(flat);
+  }, [viewState, setSam2ViewState, setViewportZoom, setViewerViewState]);
 
   useEffect(() => {
     setSam2ViewportSize(viewportSize);
-  }, [viewportSize, setSam2ViewportSize]);
-
-  // Keep SAM2 store in sync with current view so useSam2 can compute the
-  // visible region at click time without needing direct access to ImageViewer state.
-  // Deck.gl passes view state keyed by view id ("ortho"); normalize to flat { zoom, target }
-  // so consumers get a consistent shape.
-  useEffect(() => {
-    const raw = viewState as {
-      ortho?: { zoom: number; target: [number, number, number] };
-      zoom?: number;
-      target?: [number, number, number];
-    } | null;
-    if (!raw) return;
-    const flat =
-      raw.ortho ??
-      (typeof raw.zoom === "number" &&
-      Array.isArray(raw.target) &&
-      raw.target.length === 3
-        ? { zoom: raw.zoom, target: raw.target as [number, number, number] }
-        : null);
-    if (flat) setViewerViewState(flat);
-  }, [viewState, setViewerViewState]);
-
-  useEffect(() => {
     setViewerViewportSize(viewportSize);
-  }, [viewportSize, setViewerViewportSize]);
+  }, [viewportSize, setSam2ViewportSize, setViewerViewportSize]);
+
+  // Magic wand reads the visible region through this fetcher. Pixel size, not
+  // world microns: the click path converts the view rect before calling it.
+  useEffect(() => {
+    const loader = firstLoader?.loader;
+    const settings = mainSettingsList[0];
+    const width = frame?.pixelWidth ?? 0;
+    const height = frame?.pixelHeight ?? 0;
+    if (!loader || !settings || width <= 0 || height <= 0) {
+      setSam2ImageFetcher(null);
+      return;
+    }
+    setSam2ImageFetcher(
+      createSam2ImageFetcher(
+        loader,
+        {
+          selections: settings.selections.map((s) => ({ z: 0, t: 0, c: s.c })),
+          colors: settings.colors.map(
+            (c) => [c[0], c[1], c[2]] as [number, number, number],
+          ),
+          contrastLimits: settings.contrastLimits.map(
+            (lim) => [lim[0], lim[1]] as [number, number],
+          ),
+          channelsVisible: [
+            ...(settings.channelsVisible ??
+              settings.selections.map(() => true)),
+          ],
+        },
+        width,
+        height,
+      ),
+    );
+    return () => setSam2ImageFetcher(null);
+  }, [firstLoader, mainSettingsList, frame, setSam2ImageFetcher]);
 
   useEffect(() => {
     registerViewerLiveSnapshotReader(() => {
@@ -581,10 +899,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
           return fromDeck;
         }
       }
-      const { viewState: vs, viewportSize: vp } = viewRef.current;
-      const flat = toFlatViewState(vs);
-      if (!flat) return null;
-      if (vp.width <= 0 || vp.height <= 0) return null;
+      const vp = viewportSizeRef.current;
+      const flat = toFlatViewState(cameraRef.current);
+      if (!flat || vp.width <= 0 || vp.height <= 0) return null;
       return { viewState: flat as OrthographicViewState, viewportSize: vp };
     });
     return () => registerViewerLiveSnapshotReader(null);
@@ -593,101 +910,87 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // Apply waypoint camera when requested — resolve with this viewer's live size
   // so author vs preview layout changes cannot mix stale width/height with Deck.
   useEffect(() => {
-    if (targetWaypointCamera === null) {
-      return;
-    }
+    if (targetWaypointCamera === null) return;
+    if (viewportSize.width <= 0 || viewportSize.height <= 0) return;
+    if (refImageWidth <= 0 || refImageHeight <= 0) return;
 
-    if (viewportSize.width <= 0 || viewportSize.height <= 0) {
-      return;
-    }
-
-    if (refImageWidth <= 0 || refImageHeight <= 0) {
-      return;
-    }
-
-    const vs = getWaypointViewState(
+    const vsPixels = getWaypointViewState(
       targetWaypointCamera,
       refImageWidth,
       refImageHeight,
       viewportSize.width,
       viewportSize.height,
     );
-    if (!vs) {
+    if (!vsPixels || !frame) {
       clearTargetWaypointCamera();
       return;
     }
+    const vs = viewStateToWorld(vsPixels, frame);
 
-    // Cancel any ongoing transition first
-    setViewState(
-      (currentViewState) =>
-        ({
-          ...currentViewState,
-          transitionDuration: 0,
-        }) as OrthographicViewState,
-    );
+    const gen = ++waypointTransitionGenRef.current;
+    const viewportW = viewportSize.width;
+    const viewportH = viewportSize.height;
+    const settled = {
+      ...withOrthoZoom(vs),
+      width: viewportW,
+      height: viewportH,
+    } as OrthographicViewState;
 
-    const clearId = window.setTimeout(() => {
-      const viewStateWithTransition = {
-        ...vs,
-        transitionDuration: 1000,
-        transitionInterpolator: new LinearInterpolator(["target", "zoom"]),
-        transitionEasing: (t: number) => (t === 1 ? 1 : 1 - 2 ** (-10 * t)),
-      };
+    const next = {
+      ...settled,
+      transitionDuration: WAYPOINT_FLY_MS,
+      transitionInterpolator: WAYPOINT_TRANSITION_INTERPOLATOR,
+      transitionEasing: easeInOutCubic,
+      onTransitionEnd: () => {
+        if (gen !== waypointTransitionGenRef.current) return;
+        inTransitionRef.current = false;
+        commitIdleCamera(settled, true);
+      },
+    } as OrthographicViewState;
 
-      setViewState(viewStateWithTransition as OrthographicViewState);
-      setViewportZoom(vs.zoom);
-      clearTargetWaypointCamera();
-    }, 0);
+    // Deck transitions from the previous seed, not the live camera. Jump the
+    // seed to the live view first, then apply the destination.
+    const deck = deckRef.current?.deck;
+    const liveFlat =
+      toFlatViewState(getViewerViewportSnapshotFromDeck(deck)?.viewState) ??
+      toFlatViewState(cameraRef.current);
+    const from = {
+      ...(liveFlat ? withOrthoZoom(liveFlat) : withOrthoZoom(vs)),
+      width: viewportW,
+      height: viewportH,
+    } as OrthographicViewState;
+    if (liveFlat) cameraRef.current = withOrthoZoom(liveFlat);
 
-    return () => {
-      window.clearTimeout(clearId);
-    };
+    inTransitionRef.current = true;
+    isCameraBusyRef.current = true;
+    if (deck?.isInitialized) {
+      const setViews = (views: ReturnType<typeof deckViewStates>) =>
+        deck.setProps({
+          initialViewState: views,
+        } as unknown as Parameters<typeof deck.setProps>[0]);
+      setViews(deckViewStates(from, viewportW, viewportH));
+      flySeedViewsRef.current = deckViewStates(next, viewportW, viewportH);
+      setViews(flySeedViewsRef.current);
+    }
+    setOrthoSeed(next);
+    clearTargetWaypointCamera();
   }, [
     targetWaypointCamera,
-    viewportSize,
+    viewportSize.width,
+    viewportSize.height,
     refImageWidth,
     refImageHeight,
+    frame,
     clearTargetWaypointCamera,
-    setViewportZoom,
+    commitIdleCamera,
   ]);
 
   // Memoize scale bar layer
   const scaleBarLayer = useMemo(() => {
-    // Get physical size from loader metadata if available
-    const pixels = firstLoader?.loader?.metadata?.Pixels;
-    const physicalSize = pixels?.PhysicalSizeX;
-    const unit = pixels?.PhysicalSizeXUnit || "µm";
-    const units = new Set(
-      [
-        "Y",
-        "Z",
-        "E",
-        "P",
-        "T",
-        "G",
-        "M",
-        "k",
-        "h",
-        "da",
-        "",
-        "d",
-        "c",
-        "m",
-        "µ",
-        "n",
-        "p",
-        "f",
-        "a",
-        "z",
-        "y",
-      ].map((prefix) => `${prefix}m`),
-    );
-    if (!units.has(unit)) return null;
-    if (!physicalSize || viewportSize.width <= 0 || viewportSize.height <= 0)
+    if (!frame || viewportSize.width <= 0 || viewportSize.height <= 0) {
       return null;
+    }
 
-    // The updated ScaleBarLayer expects imageViewState + height/width as top-level
-    // props for screen-space positioning, but the published types don't expose them.
     return new ScaleBarLayer({
       id: "scale-bar",
       imageViewState: {
@@ -695,18 +998,18 @@ export const ImageViewer = (props: ImageViewerProps) => {
         width: viewportSize.width,
         height: viewportSize.height,
       },
-      unit,
-      size: physicalSize,
+      unit: WORLD_MICRON,
+      size: 1,
       snap: true,
       height: viewportSize.height,
       width: viewportSize.width,
     } as ConstructorParameters<typeof ScaleBarLayer>[0]);
-  }, [viewState, firstLoader, viewportSize.width, viewportSize.height]);
+  }, [viewState, frame, viewportSize.width, viewportSize.height]);
 
   // Invisible layer under the image so gutter picks have geometry (see dragHandlers toCoord).
   const worldPickSurfaceLayer = useMemo(() => {
-    const w = Number(imageShape.x) || 0;
-    const h = Number(imageShape.y) || 0;
+    const w = frame?.worldWidth ?? 0;
+    const h = frame?.worldHeight ?? 0;
     const cx = w > 0 ? w / 2 : 0;
     const cy = h > 0 ? h / 2 : 0;
     const R = Math.min(Math.max(Math.max(w, h, 4096) * 8, 512_000), 50_000_000);
@@ -726,12 +1029,16 @@ export const ImageViewer = (props: ImageViewerProps) => {
       getFillColor: [0, 0, 0, 0],
       getLineWidth: 0,
     });
-  }, [imageShape.x, imageShape.y]);
+  }, [frame]);
 
   const selectionMaskDeckLayers = useMemo(() => {
     if (!imageSelectionMask) return [] as Layer[];
     const [minX, minY, maxX, maxY] = imageSelectionMask.bounds;
     const bounds: [number, number, number, number] = [minX, minY, maxX, maxY];
+    const visualization =
+      selectionMaskVisualizationPreview ??
+      imageSelectionMask.maskVisualization ??
+      DEFAULT_MASK_VISUALIZATION;
     const layers: Layer[] = [
       new BitmapLayer({
         id: IMAGE_SELECTION_MASK_LAYER_ID,
@@ -746,13 +1053,21 @@ export const ImageViewer = (props: ImageViewerProps) => {
         new BitmapLayer({
           id: "image-selection-display",
           bounds,
-          image: selectionMaskDisplayImageData(imageSelectionMask),
+          image: selectionMaskDisplayImageData({
+            ...imageSelectionMask,
+            maskVisualization: visualization,
+          }),
+          opacity: visualization.opacity,
           pickable: false,
         }),
       );
     }
     return layers;
-  }, [imageSelectionMask, selectionMaskActive]);
+  }, [
+    imageSelectionMask,
+    selectionMaskActive,
+    selectionMaskVisualizationPreview,
+  ]);
 
   const clippedImageLayers = useMemo(() => {
     if (!selectionMaskActive || !imageSelectionMask) return imageLayers;
@@ -874,9 +1189,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   const getScreenFromWorld = useCallback(
     (worldX: number, worldY: number): [number, number] => {
-      const { viewState: vs, viewportSize: vp } = viewRef.current;
-      const zoom = typeof vs?.zoom === "number" ? vs.zoom : 0;
-      const target = (vs as { target?: number[] })?.target ?? [0, 0, 0];
+      const flat = toFlatViewState(cameraRef.current);
+      const vp = viewportSizeRef.current;
+      const zoom = flat?.zoom ?? 0;
+      const target = flat?.target ?? [0, 0, 0];
       const scale = 2 ** zoom;
       return [
         (worldX - target[0]) * scale + vp.width / 2,
@@ -887,10 +1203,44 @@ export const ImageViewer = (props: ImageViewerProps) => {
     [],
   );
 
+  const getDeckCanvas = useCallback(
+    () => deckRef.current?.deck?.getCanvas() ?? null,
+    [],
+  );
+
+  const clientToWorld = useCallback(
+    (clientX: number, clientY: number): [number, number] | null => {
+      const root = rootRef.current;
+      const flat = toFlatViewState(cameraRef.current);
+      if (!root || !flat?.target) return null;
+      const scale = 2 ** (flat.zoom ?? 0);
+      if (!Number.isFinite(scale) || scale === 0) return null;
+      const rect = root.getBoundingClientRect();
+      const vp = viewportSizeRef.current;
+      const sx = clientX - rect.left;
+      const sy = clientY - rect.top;
+      return [
+        (sx - vp.width / 2) / scale + flat.target[0],
+        (sy - vp.height / 2) / scale + flat.target[1],
+      ];
+    },
+    [],
+  );
+
   const dragHandlers = useMemo(
     () =>
       createDragHandlers(activeTool, onOverlayInteraction, getScreenFromWorld),
     [activeTool, onOverlayInteraction, getScreenFromWorld],
+  );
+
+  // A click on empty canvas ends arranging; clicks on the image hit the frame.
+  const handleClick = useCallback(
+    (info: PickInfo) => {
+      const app = useAppStore.getState();
+      if (app.arrangeImageId) app.setArrangeImageId(null);
+      dragHandlers.onClick?.(info);
+    },
+    [dragHandlers],
   );
 
   // Memoize cursor function
@@ -925,19 +1275,21 @@ export const ImageViewer = (props: ImageViewerProps) => {
     [activeTool, hoveredShapeId, sam2Processing],
   );
 
-  // Memoize controller configuration
-  // When move tool is active and hovering over an annotation, disable pan so drag moves the annotation
+  // Drawing tools own the drag. The move tool pans unless it is dragging a shape.
   const controllerConfig = useMemo(
     () => ({
-      dragPan: activeTool === "move" && !isDragging && !hoveredShapeId,
+      dragPan:
+        !TOOLS_THAT_DRAW_ON_DRAG.has(activeTool) &&
+        !(activeTool === "move" && !!hoveredShapeId) &&
+        !isDragging,
       dragRotate: false,
       scrollZoom: true,
       doubleClickZoom: true,
       touchZoom: true,
       touchRotate: false,
       keyboard: false,
-      /** Pan / pinch coast after release; `true` → Deck default (~300ms). Use a number for custom ms. */
-      inertia: true,
+      /** Pan/pinch coast duration (ms); also scales coast distance. Deck default is 300. */
+      inertia: 650,
     }),
     [activeTool, isDragging, hoveredShapeId],
   );
@@ -945,39 +1297,89 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // Memoize view configuration — main image view + a fixed overlay for the scale bar
   const views = useMemo(
     () => [
-      new OrthographicView({ id: ORTHO_VIEW_ID, controller: true }),
+      new OrthographicView({ id: ORTHO_VIEW_ID, controller: controllerConfig }),
       new OrthographicView({ id: SCALEBAR_VIEW_ID, controller: false }),
     ],
-    [],
+    [controllerConfig],
   );
 
-  // Memoize view state change handler.
   const handleViewStateChange = useCallback(
-    ({ viewState: nextViewState }) => {
-      if (ignoreNextViewStateChangeRef.current) return;
-      // Only skip while dragging an annotation (move tool). Do not skip for
-      // viewport pan/zoom while using brush or other tools — otherwise the store
-      // keeps a stale camera and waypoint overwrite saves the wrong view.
+    ({
+      viewState: nextViewState,
+      viewId,
+      interactionState,
+    }: {
+      viewState?: OrthographicViewState & {
+        ortho?: OrthographicViewState;
+        [key: string]: unknown;
+      };
+      viewId?: string;
+      interactionState?: {
+        inTransition?: boolean;
+        isDragging?: boolean;
+        isPanning?: boolean;
+        isZooming?: boolean;
+      };
+    }) => {
+      if (viewId === SCALEBAR_VIEW_ID) return;
+      // Only skip while dragging an annotation (move tool).
       if (isDragging) return;
-      // Store normalized flat format when possible; else accept Deck's format
-      const flat = toFlatViewState(nextViewState);
-      if (flat) {
-        setViewState(flat as OrthographicViewState);
-        setViewportZoom(flat.zoom);
-        // Keep Zustand in sync in the same tick so waypoint save / overwrite reads
-        // the latest camera (the useEffect below only runs after commit).
-        setViewerViewState(flat);
-      } else {
-        setViewState(nextViewState);
-        const zoom =
-          nextViewState?.ortho?.zoom ??
-          (typeof nextViewState?.zoom === "number"
-            ? nextViewState.zoom
-            : undefined);
-        if (typeof zoom === "number") setViewportZoom(zoom);
+
+      // User pan/zoom cancels a pending waypoint onTransitionEnd snap-back.
+      if (
+        !interactionState?.inTransition &&
+        (interactionState?.isZooming ||
+          interactionState?.isPanning ||
+          interactionState?.isDragging)
+      ) {
+        waypointTransitionGenRef.current += 1;
       }
+
+      const ortho =
+        (nextViewState?.[ORTHO_VIEW_ID] as OrthographicViewState | undefined) ??
+        nextViewState?.ortho ??
+        nextViewState;
+      const flat = toFlatViewState(ortho) ?? toFlatViewState(nextViewState);
+      if (flat) {
+        cameraRef.current = withOrthoZoom(flat);
+      } else if (nextViewState) {
+        cameraRef.current = nextViewState as OrthographicViewState;
+      }
+      // DeckGL can call this while rendering (a resize re-applies a waypoint
+      // transition in deck.setProps); React state updates must wait.
+      queueMicrotask(() => {
+        if (flat) publishPyramidHud(flat.zoom);
+        arrangeLayoutRef.current?.();
+      });
     },
-    [isDragging, setViewportZoom, setViewerViewState],
+    [isDragging, publishPyramidHud],
+  );
+
+  const handleInteractionStateChange = useCallback(
+    (state: {
+      inTransition?: boolean;
+      isDragging?: boolean;
+      isPanning?: boolean;
+      isZooming?: boolean;
+    }) => {
+      const busy = !!(
+        state.inTransition ||
+        state.isPanning ||
+        state.isZooming ||
+        state.isDragging
+      );
+      inTransitionRef.current = !!state.inTransition;
+      if (busy) {
+        isCameraBusyRef.current = true;
+        if (idleCommitTimerRef.current) {
+          clearTimeout(idleCommitTimerRef.current);
+          idleCommitTimerRef.current = null;
+        }
+        return;
+      }
+      scheduleIdleCameraCommit();
+    },
+    [scheduleIdleCameraCommit],
   );
 
   // LoadingWidget ref for onRedraw callback
@@ -988,8 +1390,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   const handleAfterRender = useCallback(() => {
     if (loadingWidgetRef.current) {
-      loadingWidgetRef.current.onRedraw({ layers: allLayers });
+      // Display-only overlays (mask opacity/color, annotations) should not
+      // activate the image-data loading spinner.
+      loadingWidgetRef.current.onRedraw({ layers: imageLayers });
     }
+    // Skip Zustand while the camera is busy — isLoaded flickers as LODs churn.
+    if (isCameraBusyRef.current) return;
     const loaded =
       imageLayers.length > 0 &&
       imageLayers.every((layer) => (layer as { isLoaded?: boolean }).isLoaded);
@@ -997,7 +1403,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       imageLayersLoadedRef.current = loaded;
       setViewerImageLayersLoaded(loaded);
     }
-  }, [allLayers, imageLayers, setViewerImageLayersLoaded]);
+  }, [imageLayers, setViewerImageLayersLoaded]);
 
   useEffect(() => {
     return () => {
@@ -1021,7 +1427,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }
 
   return (
-    <div className={styles.main} ref={rootRef}>
+    <div className={styles.main} ref={setRoot}>
       <Deck
         ref={deckRef}
         getCursor={getCursor}
@@ -1029,18 +1435,13 @@ export const ImageViewer = (props: ImageViewerProps) => {
         controller={controllerConfig}
         deviceProps={{
           webgl: {
-            preserveDrawingBuffer: true,
+            preserveDrawingBuffer,
           },
         }}
-        viewState={{
-          [ORTHO_VIEW_ID]: viewState,
-          [SCALEBAR_VIEW_ID]: {
-            zoom: 0,
-            target: [viewportSize.width / 2, viewportSize.height / 2, 0],
-          } as Record<string, unknown>,
-        }}
+        initialViewState={flySeedViewsRef.current ?? deckInitialViewState}
         onViewStateChange={handleViewStateChange}
-        onClick={dragHandlers.onClick}
+        onInteractionStateChange={handleInteractionStateChange}
+        onClick={handleClick}
         onDragStart={dragHandlers.onDragStart}
         onDrag={dragHandlers.onDrag}
         onDragEnd={dragHandlers.onDragEnd}
@@ -1049,7 +1450,78 @@ export const ImageViewer = (props: ImageViewerProps) => {
         layerFilter={layerFilter}
         views={views}
       />
-      <LoadingWidget ref={loadingWidgetRef} />
+      {canArrange && arrangeImageId ? (
+        <ImageArrangeBox
+          imageId={arrangeImageId}
+          images={images}
+          loaders={loaderList}
+          preview={imageOrientationPreview}
+          project={getScreenFromWorld}
+          unproject={clientToWorld}
+          layoutRef={arrangeLayoutRef}
+          getCanvas={getDeckCanvas}
+        />
+      ) : null}
+      <LoadingWidget ref={loadingWidgetRef} placement="center" />
+      <div className={styles.viewerInfo} ref={pyramidInfoRef}>
+        {pyramidInfoOpen ? (
+          <div
+            className={styles.viewerInfoPanel}
+            role="dialog"
+            aria-label="Image list and resolution"
+          >
+            <div className={styles.viewerInfoPanelHead}>
+              <span>Images</span>
+              <button
+                type="button"
+                className={styles.viewerInfoClose}
+                aria-label="Close image list"
+                onClick={() => setPyramidInfoOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            {pyramidHud.length > 0 ? (
+              <output className={styles.viewerInfoList}>
+                {pyramidHud.map((line) => (
+                  <div key={line.key} title={line.text}>
+                    {line.text}
+                  </div>
+                ))}
+              </output>
+            ) : null}
+            <div
+              className={styles.viewerInfoStamp}
+              title={[BUILD_STAMP?.title, navigator.userAgent]
+                .filter(Boolean)
+                .join("\n")}
+            >
+              {BUILD_STAMP ? <div>{BUILD_STAMP.text}</div> : null}
+              <div>{DEVICE_LABEL}</div>
+            </div>
+            {props.infoFooter ? (
+              <div className={styles.viewerInfoFooter}>{props.infoFooter}</div>
+            ) : null}
+          </div>
+        ) : null}
+        <button
+          type="button"
+          className={styles.viewerInfoButton}
+          aria-label="Image list and resolution"
+          aria-expanded={pyramidInfoOpen}
+          onClick={() => setPyramidInfoOpen((open) => !open)}
+        >
+          {/* A dark disc just past the ring, drawn here so the global button
+              radius cannot square it: reads on light and dark images. */}
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="8" r="8" fill="#000" fillOpacity="0.55" />
+            <g fill="none" stroke="#fff" strokeLinecap="round">
+              <circle cx="8" cy="8" r="6.25" strokeWidth="1.25" />
+              <path d="M8 7.2v4.2M8 4.6v.6" strokeWidth="1.4" />
+            </g>
+          </svg>
+        </button>
+      </div>
       {showSquareViewportOverlay && (
         <div
           className={styles.squareViewportOverlay}

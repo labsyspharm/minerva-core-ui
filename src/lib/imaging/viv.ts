@@ -1,10 +1,15 @@
+import { _Tileset2D as Tileset2D } from "@deck.gl/geo-layers";
 import type {
   ChannelGroup,
   Channel as SourceChannel,
 } from "@/lib/stores/documentStore";
 import type { Roi } from "../shapes/roiParser";
-import { buildCompositedIntensityLayers } from "./channelCompositor";
-import { isImageChannel } from "./channelKind";
+import { isMobileDevice } from "../viewer/isMobileDevice";
+import {
+  applyVisibilityTransition,
+  buildCompositedIntensityLayers,
+} from "./channelCompositor";
+import { isImageChannel, MAX_VIV_INTENSITY_CHANNELS } from "./channelKind";
 import type { LoaderPlane } from "./loaderTypes";
 import {
   effectiveDisplayColor,
@@ -13,21 +18,148 @@ import {
 } from "./sourceChannelStyle";
 
 /**
- * Viv's `XRLayer` shader compiles with `MAX_CHANNELS` (10 in Viv 0.22).
- * Passing more than that crashes the WebGL draw. We cap visible intensity
- * layers at this limit and warn so the panel can surface a hint.
+ * CPU raster bytes Deck may keep per layer; each cached tile also holds its
+ * GPU textures. Phones and tablets keep only the tiles on screen: iOS kills a
+ * tab long before desktop memory runs out.
  */
-export const MAX_VIV_INTENSITY_CHANNELS = 10;
+const VIV_TILE_MAX_CACHE_BYTE_SIZE = isMobileDevice() ? 0 : 512 * 1024 * 1024;
+
+function rasterTileByteLength(data: unknown): number {
+  if (data == null) return 0;
+  if (ArrayBuffer.isView(data)) return data.byteLength;
+  if (Array.isArray(data)) {
+    let n = 0;
+    for (const ch of data) n += rasterTileByteLength(ch);
+    return n;
+  }
+  return 0;
+}
+
+/** Viv's getTileData omits `byteLength`; Deck needs it for maxCacheByteSize. */
+function stampDeckTileByteLength(tile: {
+  content?: { data?: unknown; byteLength?: number } | null;
+}): void {
+  const c = tile.content;
+  if (c == null || Number.isFinite(c.byteLength)) return;
+  c.byteLength = rasterTileByteLength(c.data);
+}
+
+type TileIndicesOpts = Parameters<Tileset2D["getTileIndices"]>[0];
+
+/** Deck's tile list overhangs a rotated image; viv draws blank tiles there. */
+class ImageTileset2D extends Tileset2D {
+  getTileIndices(opts: TileIndicesOpts) {
+    const indices = super.getTileIndices(opts);
+    const { extent, tileSize } = this.opts;
+    if (!extent) return indices;
+    return indices.filter(({ x, y, z }) => {
+      const size = tileSize / 2 ** z;
+      return x >= 0 && y >= 0 && x * size < extent[2] && y * size < extent[3];
+    });
+  }
+
+  /**
+   * Deck 9.3.3 drops unselected tiles here without subtracting their bytes,
+   * then counts each reloaded tile again in `onTileLoad`. A few channel-group
+   * changes made the 512 MB budget read full while ~50 MB was held, and the
+   * cache shrank to the tiles on screen.
+   */
+  reloadAll() {
+    super.reloadAll();
+    (this as unknown as { _cacheByteSize: number })._cacheByteSize = 0;
+  }
+}
+
+/** Placeholder levels above the on-screen tiles: the coarsest, and this far up. */
+const PLACEHOLDER_LEVELS_UP = 3;
+
+/** The parts of Deck's cached tile header the placeholder pass reads. */
+type CachedTile = {
+  index: { z: number };
+  isSelected: boolean;
+  isVisible: boolean;
+  isLoaded: boolean;
+  parent: CachedTile | null;
+};
 
 /**
- * Shared Viv `MultiscaleImageLayer` / TileLayer fetch tuning.
- * Default Viv uses maxRequests=10 and debounceTime=0, which under continuous
- * zoom starts then aborts many mid-LOD tiles. A short debounce lets the camera
- * settle before fetching; a slightly lower concurrency reduces thrash when
- * each tile fans out across multiple channel selections.
+ * Also selects coarse ancestors of the on-screen tiles, ahead of them, so
+ * Deck loads them first and draws them under the fine tiles. A tile still
+ * loading shows blur instead of black. Only for opaque layers (Deck's
+ * `best-available`): a faded or additive layer would show both levels.
  */
-export const VIV_TILE_MAX_REQUESTS = 6;
-export const VIV_TILE_DEBOUNCE_MS = 75;
+export class PlaceholderTileset2D extends ImageTileset2D {
+  getTileIndices(opts: TileIndicesOpts) {
+    const indices = super.getTileIndices(opts);
+    if (
+      this.opts.refinementStrategy !== "best-available" ||
+      indices.length === 0
+    ) {
+      return indices;
+    }
+    const z = indices[0].z;
+    const coarsest = opts.minZoom ?? z;
+    if (coarsest >= z) return indices;
+    const levels = [coarsest, Math.max(coarsest, z - PLACEHOLDER_LEVELS_UP)];
+    const placeholders = new Map<string, (typeof indices)[number]>();
+    for (const level of levels) {
+      const scale = 2 ** (z - level);
+      for (const { x, y } of indices) {
+        const parent = {
+          x: Math.floor(x / scale),
+          y: Math.floor(y / scale),
+          z: level,
+        };
+        placeholders.set(this.getTileId(parent), parent);
+      }
+    }
+    return [...placeholders.values(), ...indices];
+  }
+}
+
+/** Deck's types make it private; it runs on every tileset update. */
+type TileStateUpdate = { updateTileStates(): boolean };
+const deckUpdateTileStates = (
+  ImageTileset2D.prototype as unknown as TileStateUpdate
+).updateTileStates;
+
+/**
+ * A placeholder draws only while an on-screen tile under it is loading.
+ * Once they have all loaded it would be one more full-viewport pass per
+ * frame, hidden under them.
+ */
+(
+  PlaceholderTileset2D.prototype as unknown as TileStateUpdate
+).updateTileStates = function (this: PlaceholderTileset2D) {
+  const tiles = Array.from(
+    (this as unknown as { _cache: Map<string, CachedTile> })._cache.values(),
+  );
+  const before = tiles.map((tile) => tile.isVisible);
+  deckUpdateTileStates.call(this);
+  // Placeholders are the selected tiles above the on-screen level.
+  let fineZ = Number.NEGATIVE_INFINITY;
+  for (const tile of tiles) {
+    if (tile.isSelected) fineZ = Math.max(fineZ, tile.index.z);
+  }
+  const isPlaceholder = (tile: CachedTile) =>
+    tile.isSelected && tile.index.z < fineZ;
+  const needed = new Set<CachedTile>();
+  for (const tile of tiles) {
+    if (!tile.isSelected || tile.isLoaded || isPlaceholder(tile)) continue;
+    for (let up = tile.parent; up; up = up.parent) needed.add(up);
+  }
+  for (const tile of tiles) {
+    if (isPlaceholder(tile) && !needed.has(tile)) tile.isVisible = false;
+  }
+  return tiles.some((tile, i) => tile.isVisible !== before[i]);
+};
+
+/** Omit maxCacheSize so Deck's count cap is Infinity when a byte budget is set. */
+export const TILE_CACHE_PROPS = {
+  maxCacheByteSize: VIV_TILE_MAX_CACHE_BYTE_SIZE,
+  onTileLoad: stampDeckTileByteLength,
+  TilesetClass: ImageTileset2D,
+};
 
 type Selection = Record<"z" | "t" | "c", number>;
 type Color = [number, number, number];
@@ -93,48 +225,44 @@ type Metadata = {
   ROIs?: Roi[];
 };
 
-export type Config = {
-  toSettings: (
-    activeChannelGroupId: string | null,
-    modality: string,
-    l?: Loader,
-    channelVisibilities?: Record<string, boolean>,
-    /** When set (OME multi-image UUID), channel visibility matches this instead of `modality`. */
-    loaderSourceImageId?: string,
-    channelGroupRowVisibilities?: Record<string, boolean>,
-  ) => Settings;
-};
-
-/** Full-resolution pixel width/height from OME metadata or the finest pyramid level. */
+/** Full-resolution pixel size from OME metadata or finest pyramid level (>1 rejects placeholders). */
 export function loaderPixelSizeXY(loader: Loader): {
   sizeX: number;
   sizeY: number;
 } | null {
   const px = loader.metadata?.Pixels;
+  const metaX = Number(px?.SizeX);
+  const metaY = Number(px?.SizeY);
   if (
-    px &&
-    typeof px.SizeX === "number" &&
-    typeof px.SizeY === "number" &&
-    px.SizeX > 0 &&
-    px.SizeY > 0
+    Number.isFinite(metaX) &&
+    Number.isFinite(metaY) &&
+    metaX > 1 &&
+    metaY > 1
   ) {
-    return { sizeX: px.SizeX, sizeY: px.SizeY };
+    return { sizeX: Math.round(metaX), sizeY: Math.round(metaY) };
   }
   const level = loader.data?.[0];
-  if (!level) return null;
+  if (!level?.labels || !level?.shape) return null;
   const xi = level.labels.indexOf("x");
   const yi = level.labels.indexOf("y");
   if (xi < 0 || yi < 0) return null;
-  const sizeX = level.shape[xi];
-  const sizeY = level.shape[yi];
-  if (sizeX <= 0 || sizeY <= 0) return null;
-  return { sizeX, sizeY };
+  const sizeX = Number(level.shape[xi]);
+  const sizeY = Number(level.shape[yi]);
+  if (
+    !Number.isFinite(sizeX) ||
+    !Number.isFinite(sizeY) ||
+    sizeX <= 1 ||
+    sizeY <= 1
+  ) {
+    return null;
+  }
+  return { sizeX: Math.round(sizeX), sizeY: Math.round(sizeY) };
 }
 
 const toDefaultSettings = (n: number) => {
   const chan_range = [...Array(n).keys()];
   const n_shown = 3;
-  const n_sub = n_shown; //TODO
+  const n_sub = n_shown;
   return {
     loader: null,
     selections: chan_range
@@ -168,7 +296,7 @@ type ToSettingsOpts = {
 
 const toSettings = (opts: ToSettingsOpts) => {
   return (
-    _activeChannelGroupId: string | null,
+    activeChannelGroupId: string | null,
     modality: string,
     loader: Loader | undefined,
     channelVisibilities?: Record<string, boolean>,
@@ -177,9 +305,6 @@ const toSettings = (opts: ToSettingsOpts) => {
   ) => {
     const { SourceChannels, channelGroups = [] } = opts;
     if (!loader) return toDefaultSettings(3);
-    const full_level = loader.data[0];
-    const { labels, shape } = full_level;
-    const c_idx = labels.indexOf("c");
     const sourceImageMatches = (image_id: string) =>
       loaderSourceImageId !== undefined && loaderSourceImageId !== ""
         ? image_id === loaderSourceImageId
@@ -190,46 +315,50 @@ const toSettings = (opts: ToSettingsOpts) => {
       (sc) => sourceImageMatches(sc.imageId) && isImageChannel(sc),
     );
 
-    const activeGroup = _activeChannelGroupId
-      ? channelGroups.find((g) => g.id === _activeChannelGroupId)
+    const activeGroup = activeChannelGroupId
+      ? channelGroups.find((g) => g.id === activeChannelGroupId)
       : undefined;
 
-    const hasVisibilityMap =
-      channelVisibilities != null &&
-      Object.keys(channelVisibilities).length > 0;
+    const filled = applyVisibilityTransition(
+      SourceChannels,
+      channelGroups,
+      channelVisibilities ?? {},
+      channelGroupRowVisibilities,
+      Object.keys(channelVisibilities ?? {}).length === 0
+        ? { kind: "fresh" }
+        : { kind: "sync" },
+    );
     const composited = buildCompositedIntensityLayers({
       onLoader,
       activeGroup,
       channelGroups,
-      stackVisibilities: channelVisibilities ?? {},
-      groupRowVisibilities: channelGroupRowVisibilities,
-      hasVisibilityMap,
+      stackVisibilities: filled.channelVisibilities,
+      groupRowVisibilities: filled.channelGroupRowVisibilities,
+      hasVisibilityMap: true,
     });
 
-    const layersAll = composited;
-    const layers = layersAll.slice(0, MAX_VIV_INTENSITY_CHANNELS);
-    if (layersAll.length > MAX_VIV_INTENSITY_CHANNELS && import.meta.env.DEV) {
+    if (composited.length > MAX_VIV_INTENSITY_CHANNELS && import.meta.env.DEV) {
       console.warn(
-        `[viv] ${layersAll.length} visible intensity channels exceeds ` +
+        `[viv] ${composited.length} visible intensity channels exceeds ` +
           `MAX_VIV_INTENSITY_CHANNELS=${MAX_VIV_INTENSITY_CHANNELS}; ` +
           "extra channels are hidden until you toggle some off.",
       );
     }
 
+    const layers = composited.slice(0, MAX_VIV_INTENSITY_CHANNELS);
     const selections: Selection[] = [];
     const colors: Color[] = [];
     const contrastLimits: Limit[] = [];
     const channelsVisible: boolean[] = [];
     const sourceChannelIds: string[] = [];
 
-    for (let i = 0; i < layers.length; i++) {
-      const { sc, gc } = layers[i];
+    for (const { sc, gc } of layers) {
       const [lo, hi] = gc
         ? [gc.lowerLimit, gc.upperLimit]
         : effectiveSourceLimits(sc);
       const { r, g, b } = gc
-        ? effectiveDisplayColor(sc, SourceChannels, gc, i)
-        : effectiveSourceColor(sc, i, SourceChannels);
+        ? effectiveDisplayColor(sc, SourceChannels, gc)
+        : effectiveSourceColor(sc, SourceChannels);
       selections.push({ z: 0, t: 0, c: sc.index });
       colors.push([r, g, b]);
       contrastLimits.push([lo, hi]);
@@ -237,9 +366,7 @@ const toSettings = (opts: ToSettingsOpts) => {
       sourceChannelIds.push(sc.id);
     }
 
-    const n_channels = c_idx >= 0 ? shape[c_idx] || 0 : 1;
     return {
-      ...toDefaultSettings(n_channels),
       selections,
       colors,
       contrastLimits,

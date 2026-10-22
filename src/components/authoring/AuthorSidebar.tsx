@@ -1,10 +1,19 @@
-import type { ReactNode } from "react";
-import * as React from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
+import {
+  type AuthorChannelNav,
+  AuthorChannelNavProvider,
+} from "@/components/shared/channel/AuthorChannelNav";
 import { ChannelGroupsMasterDetail } from "@/components/shared/channel/ChannelGroupsMasterDetail";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
-import { GlassTabBar } from "@/components/shared/GlassTabBar";
-import type { ContrastLimits } from "@/lib/imaging/autoContrast";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
+import {
+  SidebarStripSlot,
+  SidebarStripSlotProvider,
+} from "@/components/shared/panel/CompactHeader";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
+import { TabBar } from "@/components/shared/TabBar";
+import { useAppStore } from "@/lib/stores/appStore";
 import styles from "./AuthorSidebar.module.css";
 
 type AuthorTab = "images" | "channels" | "story";
@@ -19,45 +28,27 @@ const TAB_LABELS: Record<AuthorTab, string> = {
 
 const TAB_ITEMS = TAB_ORDER.map((id) => ({ id, label: TAB_LABELS[id] }));
 
-export type AuthorSidebarHostProps = {
-  collapsed: boolean;
-  children: ReactNode;
-  className?: string;
-};
-
-/** Thin layout wrapper (formerly styled); kept for stable export API. */
-export function AuthorSidebarHost(props: AuthorSidebarHostProps) {
-  const { collapsed, children, className } = props;
-  return (
-    <div
-      className={[
-        styles.sidebarHost,
-        collapsed ? styles.sidebarHostCollapsed : null,
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      {children}
-    </div>
-  );
-}
-
 export type AuthorSidebarProps = {
   imagesPanel: ReactNode;
   noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
-  ensureChannelGmmContrastLimits?: (
-    channelIds: string[],
-    opts?: { overwriteExistingLimits?: boolean },
-  ) => Promise<Map<string, ContrastLimits>>;
   contrastEditable?: boolean;
   expanded: boolean;
 };
 
 export function AuthorSidebar(props: AuthorSidebarProps) {
-  const [activeTab, setActiveTab] = React.useState<AuthorTab>("images");
+  // From the player's "Edit this story", start where that waypoint is edited.
+  const [activeTab, setActiveTab] = useState<AuthorTab>(() =>
+    useAppStore.getState().editWaypointOnOpen ? "story" : "images",
+  );
   const { expanded } = props;
+
+  const channelNav = useMemo<AuthorChannelNav>(
+    () => ({
+      ensureChannelHistograms: props.ensureChannelHistograms,
+    }),
+    [props.ensureChannelHistograms],
+  );
 
   const activePanel =
     activeTab === "images" ? (
@@ -65,8 +56,6 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
     ) : activeTab === "channels" ? (
       <ChannelGroupsMasterDetail
         noLoader={props.noLoader}
-        ensureChannelHistograms={props.ensureChannelHistograms}
-        ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
         contrastEditable={props.contrastEditable}
       />
     ) : (
@@ -74,25 +63,33 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
     );
 
   return (
-    <AuthorSidebarHost collapsed={!expanded}>
-      <div className={styles.sidebar}>
-        <div className={styles.panelOuter}>
-          <div className={styles.tabRow}>
-            <GlassTabBar<AuthorTab>
-              tabs={TAB_ITEMS}
-              value={activeTab}
-              onChange={setActiveTab}
-              aria-label="Author panels"
-            />
-          </div>
-          <div className={styles.panelContent} role="tabpanel">
-            <div className={styles.panelContentInner}>
-              <div className={styles.panelSlot}>{activePanel}</div>
+    <AuthorChannelNavProvider value={channelNav}>
+      <SidebarStripSlotProvider>
+        <div
+          className={[
+            styles.sidebarHost,
+            expanded ? null : styles.sidebarHostCollapsed,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <div className={styles.panelOuter}>
+            <div className={`${styles.tabRow} ${minervaTheme.strip}`}>
+              <TabBar<AuthorTab>
+                tabs={TAB_ITEMS}
+                value={activeTab}
+                onChange={setActiveTab}
+                aria-label="Author panels"
+              />
+              <SidebarStripSlot className={styles.stripActions} />
+            </div>
+            <div className={styles.panelContent} role="tabpanel">
+              {activePanel}
             </div>
           </div>
         </div>
-      </div>
-    </AuthorSidebarHost>
+      </SidebarStripSlotProvider>
+    </AuthorChannelNavProvider>
   );
 }
 
@@ -141,41 +138,58 @@ export type AuthorViewProps = {
   viewer: ReactNode;
   noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
-  ensureChannelGmmContrastLimits?: (
-    channelIds: string[],
-    opts?: { overwriteExistingLimits?: boolean },
-  ) => Promise<Map<string, ContrastLimits>>;
   contrastEditable?: boolean;
+  /** Story preview pane shown instead of the sidebar; the viewer stays mounted. */
+  previewNav?: ReactNode;
+  /**
+   * Keep `previewNav` mounted (playback effects) but show the sidebar.
+   * Used when the pane renders nothing, e.g. one waypoint and no content.
+   */
+  previewNavHidden?: boolean;
 };
 
 export function AuthorView(props: AuthorViewProps) {
-  const [expanded, setExpanded] = React.useState(true);
+  const [expanded, setExpanded] = useState(true);
+  const hasPreview = props.previewNav != null;
+  const previewing = hasPreview && !props.previewNavHidden;
 
   return (
-    <AuthorViewport collapsed={!expanded}>
-      <AuthorSidebar
-        imagesPanel={props.imagesPanel}
-        noLoader={props.noLoader}
-        ensureChannelHistograms={props.ensureChannelHistograms}
-        ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
-        contrastEditable={props.contrastEditable}
-        expanded={expanded}
-      />
-      <button
-        type="button"
-        className={[
-          styles.expandControl,
-          expanded ? styles.expandControlExpanded : null,
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        title={expanded ? "Collapse panel" : "Expand panel"}
-        aria-label={expanded ? "Collapse panel" : "Expand panel"}
-        aria-expanded={expanded}
-        onClick={() => setExpanded((open) => !open)}
-      >
-        <ChevronIcon direction={expanded ? "left" : "right"} />
-      </button>
+    <AuthorViewport
+      collapsed={!expanded}
+      className={previewing ? styles.viewportPreview : undefined}
+    >
+      {hasPreview ? (
+        <div
+          className={previewing ? styles.previewNav : styles.previewNavParked}
+        >
+          {props.previewNav}
+        </div>
+      ) : null}
+      {previewing ? null : (
+        <>
+          <AuthorSidebar
+            imagesPanel={props.imagesPanel}
+            noLoader={props.noLoader}
+            ensureChannelHistograms={props.ensureChannelHistograms}
+            contrastEditable={props.contrastEditable}
+            expanded={expanded}
+          />
+          <PanelIconButton
+            className={[
+              styles.expandControl,
+              expanded ? styles.expandControlExpanded : null,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            title={expanded ? "Collapse panel" : "Expand panel"}
+            aria-label={expanded ? "Collapse panel" : "Expand panel"}
+            aria-expanded={expanded}
+            onClick={() => setExpanded((open) => !open)}
+          >
+            <ChevronIcon direction={expanded ? "left" : "right"} />
+          </PanelIconButton>
+        </>
+      )}
       <AuthorViewerRegion>{props.viewer}</AuthorViewerRegion>
     </AuthorViewport>
   );

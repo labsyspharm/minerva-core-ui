@@ -1,3 +1,8 @@
+import {
+  isRgbDisplayImage,
+  resolveImageContentRole,
+} from "@/lib/imaging/channelKind";
+
 /** Intensity transfer for JPEG pyramid / OME-TIFF encode/decode. */
 
 export type JpegExportTransfer = "contrast" | "cube-root";
@@ -15,6 +20,17 @@ export function isJpegOmeTiffImageSource(
   return (
     imageSource === JPEG_OME_TIFF_IMAGE_SOURCE ||
     imageSource === JPEG_OME_TIFF_CONTRAST_IMAGE_SOURCE
+  );
+}
+
+/** 8-bit JPEG pixels (pyramid or OME-TIFF) the player decodes by transfer. */
+export function isJpegEncodedImageSource(
+  imageSource: string | undefined,
+): boolean {
+  return (
+    imageSource === "jpeg-pyramid" ||
+    imageSource === "jpeg-pyramid-cube-root" ||
+    isJpegOmeTiffImageSource(imageSource)
   );
 }
 
@@ -64,7 +80,59 @@ export function encodeCubeRootU16ToU8(pixel: number): number {
   );
 }
 
-export function decodeCubeRootU8ToU16(byte: number): number {
+function decodeCubeRootU8ToU16(byte: number): number {
   if (!Number.isFinite(byte) || byte <= 0) return 0;
   return Math.min(65535, Math.max(0, Math.round((byte / 256) ** 3 * 65536)));
+}
+
+const CUBE_ROOT_U8_TO_U16 = Uint16Array.from({ length: 256 }, (_, b) =>
+  decodeCubeRootU8ToU16(b),
+);
+
+const CONTRAST_U8_TO_U16 = Uint16Array.from({ length: 256 }, (_, b) => b << 8);
+
+/** Decoded JPEG byte → display uint16: inverse cube root, or `byte << 8` (baked window). */
+export function u8ToU16Lut(transfer: JpegExportTransfer): Uint16Array {
+  return transfer === "cube-root" ? CUBE_ROOT_U8_TO_U16 : CONTRAST_U8_TO_U16;
+}
+
+type TransferImage = {
+  contentRole?: "intensity" | "segmentation";
+  rgbDisplay?: boolean;
+  channels?: ReadonlyArray<{
+    kind?: "channel" | "mask";
+    samples?: number;
+    sourceDataTypeId?: string;
+    name?: string;
+  }>;
+};
+
+/** Brightfield / RGB / H&E stays contrast; IF multiplex uses the story transfer. */
+export function exportTransferForImage(
+  image: TransferImage,
+  storyTransfer: JpegExportTransfer,
+): JpegExportTransfer {
+  if (isRgbDisplayImage(image)) return "contrast";
+  return storyTransfer;
+}
+
+/**
+ * JPEG OME-TIFF hydrate wrap. `null` means do not wrap (masks, packed RGB).
+ * Planar RGB is contrast even when the story `imageSource` is cube-root.
+ * Packed RGB stays uint8: Viv uploads interleaved tiles as rgba8unorm.
+ */
+export function hydrateJpegTransferForImage(
+  image: TransferImage,
+  storyTransfer: JpegExportTransfer,
+): JpegExportTransfer | null {
+  if (image.channels?.some((c) => c.samples === 3)) return null;
+  if (
+    resolveImageContentRole({
+      contentRole: image.contentRole,
+      channels: [...(image.channels ?? [])],
+    }) === "segmentation"
+  ) {
+    return null;
+  }
+  return exportTransferForImage(image, storyTransfer);
 }

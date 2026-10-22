@@ -1,34 +1,32 @@
 import type { ReactNode } from "react";
 import { AuthorView } from "@/components/authoring/AuthorSidebar";
 import { ImageExporter } from "@/components/playback/ImageExporter";
-import { Presentation } from "@/components/playback/Presentation";
+import { MadeWithMinerva } from "@/components/playback/MadeWithMinerva";
 import {
-  type StoryPlaybackLoaders,
-  StoryPlaybackView,
-} from "@/components/playback/StoryPlaybackView";
+  PresentationFrame,
+  PresentationNav,
+  PresentationRibbon,
+  usePresentationNavHidden,
+} from "@/components/playback/Presentation";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
-import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
-import type { Config } from "@/lib/imaging/viv";
+import type { Image } from "@/lib/stores/documentStore";
 import type { StoryExportMode } from "@/lib/storyExport/storyBundle";
 import styles from "./PlaybackModeView.module.css";
 
-export type PlaybackModeViewProps = StoryPlaybackLoaders & {
+export type PlaybackModeViewProps = {
   viewer: ReactNode;
   imagesPanel: ReactNode;
   hiddenChannel: boolean;
   noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
-  ensureChannelGmmContrastLimits?: (
-    channelIds: string[],
-    opts?: { overwriteExistingLimits?: boolean },
-  ) => Promise<Map<string, ContrastLimits>>;
   contrastEditable?: boolean;
   ioState: null | string;
   stopExport: () => void;
   presenting: boolean;
-  viewerConfig: Config;
+  /** Images the viewer paints (export colors for ungrouped channels while presenting). */
+  viewerImages: Image[];
   directory_handle: FileSystemDirectoryHandle;
   exitPlaybackPreview?: () => void;
   dicomIndexList: DicomIndex[];
@@ -43,39 +41,27 @@ export type PlaybackModeViewProps = StoryPlaybackLoaders & {
     onChooseDifferent: () => void;
     onCancel: () => void;
   } | null;
+  /** When set, ask whether remote images are linked or saved as OME-TIFF. */
+  exportSourcePrompt?: {
+    onLinkRemote: () => void;
+    onSaveOmeTiff: () => void;
+    onCancel: () => void;
+  } | null;
 };
 
+/**
+ * Authoring and Story preview share one tree so the viewer's Deck is never
+ * unmounted: a remount would re-init already-finalized deck.gl layers.
+ */
 export const PlaybackModeView = (props: PlaybackModeViewProps) => {
-  const channelPanelProps = {
-    hiddenChannel: props.hiddenChannel,
-    noLoader: props.noLoader,
-  };
-
-  if (props.presenting) {
-    return (
-      <div
-        key="presenting"
-        className={styles.modeViewport}
-        data-mode="presenting"
-      >
-        <Presentation exitPlaybackPreview={props.exitPlaybackPreview}>
-          <StoryPlaybackView
-            jpegLoaderEntries={props.jpegLoaderEntries}
-            setJpegLoaderEntries={props.setJpegLoaderEntries}
-            omeLoaderEntries={props.omeLoaderEntries}
-            dicomIndexList={props.dicomIndexList}
-          />
-        </Presentation>
-      </div>
-    );
-  }
-
+  const { presenting } = props;
+  const hideNavPane = usePresentationNavHidden();
   const exporting = props.ioState === "EXPORTING";
   const folderPrompt = props.exportFolderPrompt;
-  const overlayOpen = exporting || !!folderPrompt;
+  const sourcePrompt = props.exportSourcePrompt;
+  const overlayOpen = exporting || !!folderPrompt || !!sourcePrompt;
   const exporterProps = {
     stopExport: props.stopExport,
-    viewerConfig: props.viewerConfig,
     dicomIndexList: props.dicomIndexList,
     omeLoaderEntries: props.omeLoaderEntries,
     directory_handle: props.directory_handle,
@@ -85,10 +71,15 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
 
   return (
     <div
-      key="author"
       className={styles.modeViewport}
       data-mode={
-        exporting ? "exporting" : folderPrompt ? "export-dest" : "author"
+        presenting
+          ? "presenting"
+          : exporting
+            ? "exporting"
+            : folderPrompt || sourcePrompt
+              ? "export-dest"
+              : "author"
       }
     >
       <div
@@ -99,18 +90,60 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
           .filter(Boolean)
           .join(" ")}
       >
-        <AuthorView
-          imagesPanel={props.imagesPanel}
-          noLoader={props.noLoader}
-          ensureChannelHistograms={props.ensureChannelHistograms}
-          ensureChannelGmmContrastLimits={props.ensureChannelGmmContrastLimits}
-          contrastEditable={props.contrastEditable}
-          viewer={
-            <ChannelPanel {...channelPanelProps}>{props.viewer}</ChannelPanel>
-          }
-        />
+        <PresentationFrame active={presenting}>
+          {presenting ? (
+            <PresentationRibbon
+              exitPlaybackPreview={props.exitPlaybackPreview}
+            />
+          ) : null}
+          <AuthorView
+            imagesPanel={props.imagesPanel}
+            noLoader={props.noLoader}
+            ensureChannelHistograms={props.ensureChannelHistograms}
+            contrastEditable={props.contrastEditable}
+            previewNav={
+              presenting ? <PresentationNav showStoryName={false} /> : undefined
+            }
+            previewNavHidden={hideNavPane}
+            viewer={
+              <ChannelPanel
+                hiddenChannel={!presenting && props.hiddenChannel}
+                noLoader={props.noLoader}
+                images={props.viewerImages}
+              >
+                {props.viewer}
+                {presenting ? <MadeWithMinerva /> : null}
+              </ChannelPanel>
+            }
+          />
+        </PresentationFrame>
       </div>
-      {folderPrompt ? (
+      {sourcePrompt ? (
+        <div className={styles.exportOverlay}>
+          <div className={styles.folderPrompt} role="dialog" aria-modal="true">
+            <div className={styles.folderPromptTitle}>Export story</div>
+            <div className={styles.folderPromptBody}>
+              The images are read from remote URLs. Link to them, or save a
+              compressed OME-TIFF copy in the story folder?
+            </div>
+            <div className={styles.folderPromptActions}>
+              <button
+                type="button"
+                className={styles.folderPromptPrimary}
+                onClick={sourcePrompt.onLinkRemote}
+              >
+                Link remote images
+              </button>
+              <button type="button" onClick={sourcePrompt.onSaveOmeTiff}>
+                Save OME-TIFF copy
+              </button>
+              <button type="button" onClick={sourcePrompt.onCancel}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : folderPrompt ? (
         <div className={styles.exportOverlay}>
           <div className={styles.folderPrompt} role="dialog" aria-modal="true">
             <div className={styles.folderPromptTitle}>Export story</div>

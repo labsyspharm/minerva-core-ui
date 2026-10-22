@@ -1,18 +1,21 @@
 import * as React from "react";
+import { WaypointClassViews } from "@/components/shared/channel/FeatureTable";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import JumpToViewIcon from "@/components/shared/icons/jump-to-view.svg?react";
 import OverwriteViewIcon from "@/components/shared/icons/overwrite-view.svg?react";
 import AnnotationsIcon from "@/components/shared/icons/shapes.svg?react";
+import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
 import type { ConfigWaypoint } from "@/lib/authoring/config";
 import {
-  effectiveReferenceImagePixelSize,
-  useAppStore,
-} from "@/lib/stores/appStore";
+  effectiveWorldFrame,
+  viewStateToPixels,
+} from "@/lib/imaging/worldFrame";
+import { useAppStore } from "@/lib/stores/appStore";
 import type {
   Channel,
   ChannelGroup,
@@ -63,23 +66,25 @@ const WaypointsList = (props: WaypointsListProps) => {
   const shapes = useDocumentStore((s) => s.shapes);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
+  const featureTables = useDocumentStore((s) => s.featureTables);
   const sourceChannels = React.useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
   const docImageWidth = useDocumentStore((s) => s.images[0]?.sizeX ?? 0);
   const docImageHeight = useDocumentStore((s) => s.images[0]?.sizeY ?? 0);
-  const viewerRefSize = useAppStore((s) => s.viewerReferenceImagePixelSize);
-  const { width: imageWidth, height: imageHeight } =
-    effectiveReferenceImagePixelSize(
-      viewerRefSize,
-      docImageWidth,
-      docImageHeight,
-    );
+  const viewerWorldFrame = useAppStore((s) => s.viewerWorldFrame);
+  const frame = effectiveWorldFrame(
+    viewerWorldFrame,
+    docImageWidth,
+    docImageHeight,
+  );
+  const imageWidth = frame.pixelWidth;
+  const imageHeight = frame.pixelHeight;
   const {
     activeStoryIndex,
     setActiveStory,
-    setActiveChannelGroup,
+    showOnlyChannelGroup,
     addStory,
     updateStory,
     reorderStories,
@@ -94,6 +99,8 @@ const WaypointsList = (props: WaypointsListProps) => {
     handleToolChange,
     setImageSelectionMaskFromWaypoint,
     layersPanelSelectedShapeIds,
+    editWaypointOnOpen,
+    setEditWaypointOnOpen,
   } = useAppStore();
 
   const previousDetailStoryIdRef = React.useRef<string | null>(null);
@@ -111,6 +118,8 @@ const WaypointsList = (props: WaypointsListProps) => {
   const [detailMarkdownExpanded, setDetailMarkdownExpanded] =
     React.useState(true);
   const [detailAnnotationsExpanded, setDetailAnnotationsExpanded] =
+    React.useState(true);
+  const [detailClassesExpanded, setDetailClassesExpanded] =
     React.useState(true);
 
   React.useEffect(() => {
@@ -130,6 +139,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     if (detailStoryId) {
       setDetailMarkdownExpanded(true);
       setDetailAnnotationsExpanded(true);
+      setDetailClassesExpanded(true);
     }
     setChannelGroupMenuOpen(false);
   }, [detailStoryId]);
@@ -218,6 +228,52 @@ const WaypointsList = (props: WaypointsListProps) => {
     importWaypointShapes,
   ]);
 
+  // A class edit changes the picture, so retake a thumbnail that is already
+  // set. The capture rides on the edit's undo step instead of adding one.
+  const shownWaypoint =
+    activeStoryIndex == null ? undefined : waypoints[activeStoryIndex];
+  const activeWaypointId = shownWaypoint?.id;
+  // No list and an empty one draw the same (a row read before parsing has none).
+  const activeClassViews = shownWaypoint?.classViews?.length
+    ? shownWaypoint.classViews
+    : undefined;
+  const lastClassViewsRef = React.useRef({
+    id: activeWaypointId,
+    classViews: activeClassViews,
+  });
+  React.useEffect(() => {
+    const last = lastClassViewsRef.current;
+    lastClassViewsRef.current = {
+      id: activeWaypointId,
+      classViews: activeClassViews,
+    };
+    if (activeStoryIndex == null || activeWaypointId == null) return;
+    // Only a class edit on the same waypoint alters the picture. Undo, redo
+    // and a reload hand back equal lists under a new identity.
+    if (
+      last.id !== activeWaypointId ||
+      JSON.stringify(last.classViews) === JSON.stringify(activeClassViews)
+    ) {
+      return;
+    }
+    const index = activeStoryIndex;
+    const timeout = window.setTimeout(() => {
+      const st = useAppStore.getState();
+      if (st.activeStoryIndex !== index || !st.viewerImageLayersLoaded) return;
+      if (!useDocumentStore.getState().waypoints[index]?.thumbnail) return;
+      const thumbnail = st.captureSquareViewportThumbnail();
+      if (!thumbnail) return;
+      const history = useDocumentStore.temporal.getState();
+      history.pause();
+      try {
+        st.updateStory(index, { ThumbnailDataUrl: thumbnail });
+      } finally {
+        history.resume();
+      }
+    }, 600);
+    return () => window.clearTimeout(timeout);
+  }, [activeStoryIndex, activeWaypointId, activeClassViews]);
+
   React.useEffect(() => {
     return () => {
       if (pendingThumbnailCaptureTimeoutRef.current !== null) {
@@ -225,18 +281,20 @@ const WaypointsList = (props: WaypointsListProps) => {
       }
       if (overlayFlashTimeoutRef.current !== null) {
         window.clearTimeout(overlayFlashTimeoutRef.current);
+        // Unmounting mid-flash (e.g. a tab switch) would leave the square up.
+        useAppStore.getState().setShowSquareViewportOverlay(false);
       }
       const p = previousImportStoryIndexRef.current;
       if (p !== null) {
         const doc = useDocumentStore.getState();
         const st = useAppStore.getState();
         const im = doc.images[0];
-        const { width: w, height: h } = effectiveReferenceImagePixelSize(
-          st.viewerReferenceImagePixelSize,
+        const f = effectiveWorldFrame(
+          st.viewerWorldFrame,
           im?.sizeX ?? 0,
           im?.sizeY ?? 0,
         );
-        if (w > 0 && h > 0) {
+        if (f.worldWidth > 0 && f.worldHeight > 0) {
           useAppStore.getState().persistImportedShapesToStory(p);
         }
       }
@@ -281,8 +339,8 @@ const WaypointsList = (props: WaypointsListProps) => {
       const st = useAppStore.getState();
       const doc = useDocumentStore.getState();
       const im = doc.images[0];
-      const { width: iw, height: ih } = effectiveReferenceImagePixelSize(
-        st.viewerReferenceImagePixelSize,
+      const f = effectiveWorldFrame(
+        st.viewerWorldFrame,
         im?.sizeX ?? 0,
         im?.sizeY ?? 0,
       );
@@ -294,19 +352,26 @@ const WaypointsList = (props: WaypointsListProps) => {
           index,
           viewerViewState: st.viewerViewState,
           viewerViewportSize: st.viewerViewportSize,
-          viewerReferenceImagePixelSize: st.viewerReferenceImagePixelSize,
-          imageWidth: iw,
-          imageHeight: ih,
+          viewerWorldFrame: st.viewerWorldFrame,
+          imageWidth: f.worldWidth,
+          imageHeight: f.worldHeight,
         },
       );
       return false;
     }
     const loaded = useAppStore.getState().viewerImageLayersLoaded;
     const thumbnail = loaded ? captureSquareViewportThumbnail() : null;
+    const vsPixels = viewStateToPixels(viewStateCanon, frame);
+    const boundsPixels = {
+      x0: bounds.x0 / frame.umPerPixelX,
+      x1: bounds.x1 / frame.umPerPixelX,
+      y0: bounds.y0 / frame.umPerPixelY,
+      y1: bounds.y1 / frame.umPerPixelY,
+    };
 
     updateStory(index, {
-      Bounds: bounds,
-      ViewState: viewStateCanon,
+      Bounds: boundsPixels,
+      ViewState: vsPixels,
       Pan: undefined,
       Zoom: undefined,
       ...(thumbnail ? { ThumbnailDataUrl: thumbnail } : {}),
@@ -341,11 +406,9 @@ const WaypointsList = (props: WaypointsListProps) => {
         (story.groupId &&
           channelGroups.find((group) => group.id === story.groupId)) ||
         channelGroups[0];
-      if (foundGroup) {
-        setActiveChannelGroup(foundGroup.id);
-      }
+      if (foundGroup) showOnlyChannelGroup(foundGroup.id);
     },
-    [channelGroups, setActiveChannelGroup],
+    [channelGroups, showOnlyChannelGroup],
   );
 
   const scheduleThumbnailCaptureForStory = (
@@ -375,28 +438,44 @@ const WaypointsList = (props: WaypointsListProps) => {
     }, delayMs);
   };
 
+  const showStoryIndex = React.useCallback(
+    (index: number) => {
+      const priorActive = useAppStore.getState().activeStoryIndex;
+      if (
+        priorActive !== null &&
+        priorActive !== index &&
+        pendingThumbnailCaptureTimeoutRef.current !== null
+      ) {
+        window.clearTimeout(pendingThumbnailCaptureTimeoutRef.current);
+        pendingThumbnailCaptureTimeoutRef.current = null;
+      }
+
+      setActiveStory(index);
+
+      const storyForNav = documentWaypoints(useDocumentStore.getState())[index];
+      applyStoryChannelGroup(storyForNav);
+      if (storyForNav && imageWidth > 0 && imageHeight > 0) {
+        const auth = useAppStore
+          .getState()
+          .waypointAuthoring.get(storyForNav.id);
+        setTargetWaypointCamera(waypointToConfigWaypoint(storyForNav, auth));
+      }
+      return storyForNav;
+    },
+    [
+      applyStoryChannelGroup,
+      imageHeight,
+      imageWidth,
+      setActiveStory,
+      setTargetWaypointCamera,
+    ],
+  );
+
   const activateStoryIndex = (
     index: number,
     shouldCaptureThumbnail = false,
   ) => {
-    const priorActive = useAppStore.getState().activeStoryIndex;
-    if (
-      priorActive !== null &&
-      priorActive !== index &&
-      pendingThumbnailCaptureTimeoutRef.current !== null
-    ) {
-      window.clearTimeout(pendingThumbnailCaptureTimeoutRef.current);
-      pendingThumbnailCaptureTimeoutRef.current = null;
-    }
-
-    setActiveStory(index);
-
-    const storyForNav = documentWaypoints(useDocumentStore.getState())[index];
-    applyStoryChannelGroup(storyForNav);
-    if (storyForNav && imageWidth > 0 && imageHeight > 0) {
-      const auth = useAppStore.getState().waypointAuthoring.get(storyForNav.id);
-      setTargetWaypointCamera(waypointToConfigWaypoint(storyForNav, auth));
-    }
+    const storyForNav = showStoryIndex(index);
     // Only grab the preview image after the camera settles — never rewrite
     // Bounds/ViewState on row select (use save-view control on the row to persist camera).
     if (shouldCaptureThumbnail && !storyForNav?.thumbnail) {
@@ -404,20 +483,39 @@ const WaypointsList = (props: WaypointsListProps) => {
     }
   };
 
-  const openDetailForStoryId = (storyId: string) => {
-    if (!canEdit) return;
+  const openDetailForStoryId = React.useCallback(
+    (storyId: string) => {
+      if (!canEdit) return;
 
-    const index = waypoints.findIndex((s) => s.id === storyId);
-    if (index === -1) return;
+      const index = waypoints.findIndex((s) => s.id === storyId);
+      if (index === -1) return;
 
-    activateStoryIndex(index);
-    setDetailStoryId(storyId);
+      showStoryIndex(index);
+      setDetailStoryId(storyId);
 
-    // Slide-to-top behavior: ensure detail scroll starts at the top.
-    requestAnimationFrame(() => {
-      detailBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
-    });
-  };
+      // Slide-to-top behavior: ensure detail scroll starts at the top.
+      requestAnimationFrame(() => {
+        detailBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
+      });
+    },
+    [canEdit, showStoryIndex, waypoints],
+  );
+
+  // From the player's "Edit this story": once the story and its image are
+  // loaded, open the waypoint the reader was on (the camera needs the image).
+  React.useEffect(() => {
+    if (!editWaypointOnOpen || imageWidth <= 0 || imageHeight <= 0) return;
+    if (!waypoints.some((s) => s.id === editWaypointOnOpen)) return;
+    setEditWaypointOnOpen(null);
+    openDetailForStoryId(editWaypointOnOpen);
+  }, [
+    editWaypointOnOpen,
+    imageHeight,
+    imageWidth,
+    openDetailForStoryId,
+    setEditWaypointOnOpen,
+    waypoints,
+  ]);
 
   const handleOverwriteView = (
     index: number,
@@ -436,10 +534,14 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   const handleAddWaypoint = () => {
     const storyIndex = waypoints.length;
+    const app = useAppStore.getState();
     const currentGroup =
-      channelGroups.find(
-        (group) => group.id === useAppStore.getState().activeChannelGroupId,
-      ) || channelGroups[0];
+      channelGroups.find((group) => group.id === app.activeChannelGroupId) ||
+      channelGroups[0];
+    const activeWaypoint =
+      app.activeStoryIndex == null
+        ? undefined
+        : waypoints[app.activeStoryIndex];
     const newWaypoint: ConfigWaypoint = {
       id: crypto.randomUUID(),
       State: { Expanded: true },
@@ -447,10 +549,14 @@ const WaypointsList = (props: WaypointsListProps) => {
       Content: "",
       groupId: currentGroup?.id,
       shapeIds: [],
+      classViews: structuredClone(activeWaypoint?.classViews ?? []),
     };
 
     addStory(newWaypoint);
-    activateStoryIndex(storyIndex);
+    // Capture the live camera immediately so jumps between this and other
+    // waypoints have a distinct Bounds/ViewState (not the shared full-image default).
+    saveCurrentViewToStory(storyIndex, "handleAddWaypoint");
+    activateStoryIndex(storyIndex, true);
     setDetailStoryId(newWaypoint.id);
 
     requestAnimationFrame(() => {
@@ -498,28 +604,15 @@ const WaypointsList = (props: WaypointsListProps) => {
 
   const listHeader = (
     <CompactHeader
-      title="Waypoints"
-      count={`(${waypoints.length})`}
       actions={
         canEdit ? (
-          <>
-            <PanelIconButton
-              onClick={() => {
-                if (waypoints.length === 0) return;
-                const indexToRemove = activeStoryIndex ?? 0;
-                if (indexToRemove < 0 || indexToRemove >= waypoints.length)
-                  return;
-                removeStory(indexToRemove);
-              }}
-              disabled={waypoints.length === 0}
-              title="Delete active waypoint"
-            >
-              <TrashIcon />
-            </PanelIconButton>
-            <PanelIconButton onClick={handleAddWaypoint} title="Add waypoint">
-              <PlusIcon />
-            </PanelIconButton>
-          </>
+          <PanelIconButton
+            onClick={handleAddWaypoint}
+            title="Add"
+            aria-label="Add waypoint"
+          >
+            <PlusIcon />
+          </PanelIconButton>
         ) : undefined
       }
     />
@@ -529,7 +622,7 @@ const WaypointsList = (props: WaypointsListProps) => {
     <>
       {listHeader}
       {waypoints.length === 0 ? (
-        <div className={styles.emptyMessage}>No waypoints yet</div>
+        <div className={panel.emptyMessage}>No waypoints yet</div>
       ) : (
         <ul
           className={[
@@ -546,25 +639,18 @@ const WaypointsList = (props: WaypointsListProps) => {
             const isDragging = draggedStoryId === storyId;
             const isDropTarget = dropTargetStoryId === storyId;
 
-            const rowDragProps = canEdit
-              ? ({
-                  draggable: true,
-                  onDragStart: (e: React.DragEvent) =>
-                    handleDragStart(storyId, e),
-                  onDragEnd: handleDragEnd,
-                } as const)
-              : ({} as const);
-
             return (
               <li
                 key={storyId}
                 className={[
                   styles.compactRow,
-                  canEdit ? styles.compactRowDraggable : "",
-                  isActive ? styles.compactRowActive : "",
+                  canEdit ? styles.compactRowEditable : "",
+                  isActive ? minervaTheme.selectLeft : "",
                   isDragging ? styles.compactRowDragging : "",
                   isDropTarget ? styles.compactRowDropTarget : "",
-                ].join(" ")}
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 onDragOver={(e) => handleDragOverRow(storyId, e)}
                 onDragLeave={handleDragLeaveRow}
                 onDrop={(e) => {
@@ -575,48 +661,58 @@ const WaypointsList = (props: WaypointsListProps) => {
                 {canEdit ? (
                   <button
                     type="button"
-                    {...rowDragProps}
+                    className={styles.dragHandle}
+                    draggable
+                    title={`Drag ${story.title}`}
+                    aria-label={`Drag ${story.title}`}
+                    onDragStart={(e) => handleDragStart(storyId, e)}
+                    onDragEnd={handleDragEnd}
+                  >
+                    ⋮⋮
+                  </button>
+                ) : null}
+                {canEdit ? (
+                  <PanelIconButton
+                    variant="row"
                     className={styles.rowOpenDetailButton}
                     title="Open waypoint details"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openDetailForStoryId(storyId);
-                    }}
+                    onClick={() => openDetailForStoryId(storyId)}
                   >
                     <ChevronIcon direction="right" />
-                  </button>
+                  </PanelIconButton>
                 ) : (
                   <div className={styles.rowChevronSpacer} aria-hidden />
                 )}
 
-                {story.thumbnail ? (
-                  <img
-                    className={styles.rowThumbnail}
-                    src={story.thumbnail}
-                    width={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
-                    height={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
-                    alt=""
-                    aria-hidden
-                  />
-                ) : (
-                  <div className={styles.rowThumbnail} aria-hidden />
-                )}
-
                 <button
                   type="button"
-                  {...rowDragProps}
-                  className={styles.rowMainHit}
+                  className={`${minervaTheme.focusRing} ${styles.rowMainHit}`}
                   aria-label={`Select waypoint: ${story.title}`}
                   onClick={() => activateStoryIndex(index, true)}
                   onDoubleClick={() => openDetailForStoryId(storyId)}
                 >
+                  {story.thumbnail ? (
+                    <img
+                      className={`${minervaTheme.surface} ${styles.rowThumbnail}`}
+                      src={story.thumbnail}
+                      width={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
+                      height={WAYPOINT_THUMBNAIL_PIXEL_SIZE}
+                      alt=""
+                      aria-hidden
+                    />
+                  ) : (
+                    <div
+                      className={`${minervaTheme.surface} ${styles.rowThumbnail}`}
+                      aria-hidden
+                    />
+                  )}
                   <div className={styles.rowTextStack}>
                     <div className={styles.rowTitleRow}>
                       <span className={styles.rowTitle} title={story.title}>
                         {story.title}
                       </span>
                       <span
-                        className={styles.annotationBadge}
+                        className={`${minervaTheme.surface} ${styles.annotationBadge}`}
                         title={annotationTitle}
                       >
                         <span className={styles.visuallyHidden}>
@@ -640,13 +736,20 @@ const WaypointsList = (props: WaypointsListProps) => {
                   </div>
                 </button>
                 <div className={styles.rowViewportActions}>
+                  {canEdit ? (
+                    <PanelIconButton
+                      variant="row"
+                      title="Delete waypoint"
+                      aria-label={`Delete waypoint: ${story.title}`}
+                      onClick={() => removeStory(index)}
+                    >
+                      <TrashIcon title="Delete" size={14} />
+                    </PanelIconButton>
+                  ) : null}
                   <PanelIconButton
                     variant="row"
                     title="Jump to waypoint view"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      activateStoryIndex(index);
-                    }}
+                    onClick={() => activateStoryIndex(index)}
                   >
                     <JumpToViewIcon width={14} height={14} aria-hidden />
                     <span className={styles.visuallyHidden}>
@@ -655,12 +758,12 @@ const WaypointsList = (props: WaypointsListProps) => {
                   </PanelIconButton>
                   <PanelIconButton
                     variant="row"
-                    title="Save waypoint view to story and download story.json"
+                    title="Update viewport"
                     onClick={(event) => handleOverwriteView(index, event)}
                   >
                     <OverwriteViewIcon width={14} height={14} aria-hidden />
                     <span className={styles.visuallyHidden}>
-                      Save waypoint view
+                      Update viewport
                     </span>
                   </PanelIconButton>
                 </div>
@@ -705,6 +808,12 @@ const WaypointsList = (props: WaypointsListProps) => {
       );
       selectedChannelsSubtitle = selectedChannelNames.join(", ");
     }
+    // Classes only for masks in this waypoint's group that have a table.
+    const classTables = featureTables.filter((table) =>
+      selectedGroup?.channels.some(
+        (gc) => gc.channelId === table.sourceChannelId,
+      ),
+    );
 
     const selectChannelGroupByUuid = (nextGroupUuid: string) => {
       const nextGroup = channelGroups.find(
@@ -712,7 +821,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       );
       if (!nextGroup) return;
       updateStory(detailStoryIndex, { groupId: nextGroup.id });
-      setActiveChannelGroup(nextGroup.id);
+      showOnlyChannelGroup(nextGroup.id);
       setChannelGroupMenuOpen(false);
       scheduleThumbnailCaptureForStory(detailStoryIndex, true, true, 1100);
     };
@@ -722,7 +831,7 @@ const WaypointsList = (props: WaypointsListProps) => {
         <div className={styles.detailHeader}>
           <button
             type="button"
-            className={styles.backButton}
+            className={`${minervaTheme.focusRing} ${styles.backButton}`}
             onClick={() => setDetailStoryId(null)}
             title="Back to waypoint list"
           >
@@ -739,7 +848,9 @@ const WaypointsList = (props: WaypointsListProps) => {
           ref={detailBodyRef}
         >
           <div className={styles.detailBodyInner}>
-            <div className={styles.detailTitleFieldWrap}>
+            <div
+              className={`${minervaTheme.surface} ${styles.detailTitleFieldWrap}`}
+            >
               <label
                 className={styles.detailTitleLabel}
                 htmlFor={detailTitleFieldId}
@@ -748,7 +859,7 @@ const WaypointsList = (props: WaypointsListProps) => {
               </label>
               <input
                 id={detailTitleFieldId}
-                className={styles.detailTitleInput}
+                className={`${minervaTheme.input} ${styles.detailTitleInput}`}
                 type="text"
                 value={detailStory.title ?? ""}
                 onChange={(e) =>
@@ -763,7 +874,9 @@ const WaypointsList = (props: WaypointsListProps) => {
               />
             </div>
             {channelGroups.length > 0 ? (
-              <div className={styles.detailTitleFieldWrap}>
+              <div
+                className={`${minervaTheme.surface} ${styles.detailTitleFieldWrap}`}
+              >
                 <label
                   className={styles.detailTitleLabel}
                   htmlFor={detailGroupFieldId}
@@ -777,7 +890,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                   <button
                     type="button"
                     id={detailGroupFieldId}
-                    className={styles.channelGroupDropdownTrigger}
+                    className={`${minervaTheme.input} ${minervaTheme.focusRing} ${styles.channelGroupDropdownTrigger}`}
                     aria-haspopup="listbox"
                     aria-expanded={channelGroupMenuOpen}
                     disabled={!canEdit}
@@ -798,7 +911,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                   </button>
                   {channelGroupMenuOpen ? (
                     <div
-                      className={styles.channelGroupDropdownMenu}
+                      className={`${minervaTheme.menu} ${styles.channelGroupDropdownMenu}`}
                       role="listbox"
                       aria-label="Channel groups"
                     >
@@ -819,10 +932,9 @@ const WaypointsList = (props: WaypointsListProps) => {
                               role="option"
                               aria-selected={isSelected}
                               className={[
+                                minervaTheme.menuItem,
                                 styles.channelGroupDropdownOption,
-                                isSelected
-                                  ? styles.channelGroupDropdownOptionSelected
-                                  : "",
+                                isSelected ? minervaTheme.selectLeft : "",
                               ]
                                 .filter(Boolean)
                                 .join(" ")}
@@ -850,6 +962,7 @@ const WaypointsList = (props: WaypointsListProps) => {
             <div
               className={[
                 styles.detailCollapsible,
+                minervaTheme.surface,
                 styles.detailMarkdownSection,
                 !detailMarkdownExpanded
                   ? styles.detailCollapsibleCollapsed
@@ -860,7 +973,7 @@ const WaypointsList = (props: WaypointsListProps) => {
             >
               <button
                 type="button"
-                className={styles.detailCollapsibleHeader}
+                className={`${minervaTheme.focusRing} ${styles.detailCollapsibleHeader}`}
                 aria-expanded={detailMarkdownExpanded}
                 onClick={() => setDetailMarkdownExpanded((prev) => !prev)}
               >
@@ -878,9 +991,48 @@ const WaypointsList = (props: WaypointsListProps) => {
                 </div>
               ) : null}
             </div>
+            {classTables.length > 0 ? (
+              <div
+                className={[
+                  styles.detailCollapsible,
+                  minervaTheme.surface,
+                  styles.detailClassesSection,
+                  !detailClassesExpanded
+                    ? styles.detailCollapsibleCollapsed
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                <button
+                  type="button"
+                  className={`${minervaTheme.focusRing} ${styles.detailCollapsibleHeader}`}
+                  aria-expanded={detailClassesExpanded}
+                  onClick={() => setDetailClassesExpanded((prev) => !prev)}
+                >
+                  <ChevronIcon className={styles.detailCollapsibleChevron} />
+                  <span className={styles.detailCollapsibleTitle}>
+                    Classes{" "}
+                    <span className={styles.detailCollapsibleCount}>
+                      ({classTables.length})
+                    </span>
+                  </span>
+                </button>
+                {detailClassesExpanded ? (
+                  <div className={styles.detailCollapsibleBody}>
+                    <WaypointClassViews
+                      waypoint={detailStory}
+                      featureTables={classTables}
+                      readOnly={!canEdit}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             <div
               className={[
                 styles.detailCollapsible,
+                minervaTheme.surface,
                 styles.detailAnnotationsSection,
                 !detailAnnotationsExpanded
                   ? styles.detailCollapsibleCollapsed
@@ -891,7 +1043,7 @@ const WaypointsList = (props: WaypointsListProps) => {
             >
               <button
                 type="button"
-                className={styles.detailCollapsibleHeader}
+                className={`${minervaTheme.focusRing} ${styles.detailCollapsibleHeader}`}
                 aria-expanded={detailAnnotationsExpanded}
                 title={detailAnnotationText}
                 onClick={() => setDetailAnnotationsExpanded((prev) => !prev)}
@@ -910,7 +1062,7 @@ const WaypointsList = (props: WaypointsListProps) => {
                     <div className={styles.detailSelectionActions}>
                       <button
                         type="button"
-                        className={styles.detailSelectionButton}
+                        className={`${minervaTheme.focusRing} ${styles.detailSelectionButton}`}
                         title="Use a waypoint annotation as the spatial selection mask (prefers the selected shape in the layers list)"
                         onClick={() => {
                           const shapeIds = detailStory.shapeIds ?? [];

@@ -3,7 +3,7 @@
  * Kept out of `lib/authoring/config` so imaging does not depend on authoring.
  */
 
-import type { DTYPE_VALUES } from "@vivjs/constants";
+import type { DTYPE_VALUES } from "@hms-dbmi/viv";
 
 export type SupportedDtype = keyof typeof DTYPE_VALUES;
 export type SupportedTypedArray = InstanceType<
@@ -58,6 +58,15 @@ export type LoaderPlane = {
   onTileError: (e: Error) => void;
   getRaster: (s: SelectionConfig) => Promise<HasTile>;
   getTile: (s: TileConfig) => Promise<HasTile>;
+  /**
+   * Any `[x0, y0, x1, y1]` window in one read; the export reads through it
+   * when set. Mask planes set it (their tiles can be a whole level, which
+   * re-tiling would read once per tile), as do JPEG-export wraps (to read
+   * around the remote block cache).
+   */
+  readWindow?: (
+    s: SelectionConfig & { window: [number, number, number, number] },
+  ) => Promise<HasTile>;
 };
 
 export type VivLoaderPlane = LoaderPlane & {

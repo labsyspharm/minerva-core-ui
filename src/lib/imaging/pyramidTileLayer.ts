@@ -5,8 +5,10 @@
 import type { Layer } from "@deck.gl/core";
 import { TileLayer } from "@deck.gl/geo-layers";
 import { XRLayer } from "@hms-dbmi/viv";
+import type { Matrix4 } from "@math.gl/core";
 import type { LoaderPlane } from "@/lib/imaging/loaderTypes";
 import { planeSize } from "@/lib/imaging/loaderTypes";
+import { TILE_CACHE_PROPS } from "@/lib/imaging/viv";
 
 // --- Non-dyadic pyramid ↔ deck.gl TileLayer zoom ---
 
@@ -68,20 +70,6 @@ function pyramidTilePixelBounds(args: {
   ];
 }
 
-function scalePixelBounds(
-  bounds: [number, number, number, number],
-  scaleX: number,
-  scaleY: number,
-): [number, number, number, number] {
-  if (scaleX === 1 && scaleY === 1) return bounds;
-  return [
-    bounds[0] * scaleX,
-    bounds[1] * scaleY,
-    bounds[2] * scaleX,
-    bounds[3] * scaleY,
-  ];
-}
-
 // --- Viv XRLayer subclass (Vitessce pattern) ---
 
 type XRLayerInstance = {
@@ -126,11 +114,9 @@ export const ADDITIVE_BLEND_PARAMETERS = {
 export function createLoaderPyramidTileLayer<T extends PyramidTileData>(args: {
   id: string;
   planes: LoaderPlane[];
-  scaleX?: number;
-  scaleY?: number;
+  /** Image placement (`layerModelMatrix`): physical size, then orientation. */
+  modelMatrix: Matrix4;
   refinementStrategy?: "best-available" | "no-overlap";
-  debounceTime?: number;
-  maxRequests?: number;
   pickable?: boolean;
   updateTriggers: Record<string, unknown>;
   getTileData: (ctx: {
@@ -145,6 +131,7 @@ export function createLoaderPyramidTileLayer<T extends PyramidTileData>(args: {
     tileData: T;
     bounds: [number, number, number, number];
     tileId: string | number;
+    modelMatrix: Matrix4;
   }) => Layer | null;
 }): Layer | null {
   const { planes } = args;
@@ -152,8 +139,7 @@ export function createLoaderPyramidTileLayer<T extends PyramidTileData>(args: {
   const finest = planes[0];
   const { width, height } = planeSize(finest);
   if (width <= 0 || height <= 0) return null;
-  const scaleX = args.scaleX ?? 1;
-  const scaleY = args.scaleY ?? 1;
+  const { modelMatrix } = args;
   const scales = pyramidScales(planes.map((plane) => planeSize(plane).width));
 
   return new TileLayer<T>({
@@ -161,14 +147,12 @@ export function createLoaderPyramidTileLayer<T extends PyramidTileData>(args: {
     tileSize: finest.tileSize,
     minZoom: pyramidMinZoom(scales),
     maxZoom: 0,
+    // Same as createMaskTileLayer: modelMatrix scales pixels to world units.
+    zoomOffset: Math.round(Math.log2(modelMatrix.getScale()[0] || 1)),
     extent: [0, 0, width, height],
+    modelMatrix,
     refinementStrategy: args.refinementStrategy ?? "best-available",
-    ...(args.debounceTime !== undefined
-      ? { debounceTime: args.debounceTime }
-      : {}),
-    ...(args.maxRequests !== undefined
-      ? { maxRequests: args.maxRequests }
-      : {}),
+    ...TILE_CACHE_PROPS,
     pickable: args.pickable ?? false,
     updateTriggers: args.updateTriggers,
     getTileData: async ({ index, signal }) => {
@@ -196,22 +180,19 @@ export function createLoaderPyramidTileLayer<T extends PyramidTileData>(args: {
       if (!("left" in bbox)) return null;
       const { left, top } = bbox;
       if (left < 0 || top < 0) return null;
-      const bounds = scalePixelBounds(
-        pyramidTilePixelBounds({
-          index: props.tile.index,
-          dataWidth: tileData.width,
-          dataHeight: tileData.height,
-          tileSize: finest.tileSize,
-          scales,
-        }),
-        scaleX,
-        scaleY,
-      );
+      const bounds = pyramidTilePixelBounds({
+        index: props.tile.index,
+        dataWidth: tileData.width,
+        dataHeight: tileData.height,
+        tileSize: finest.tileSize,
+        scales,
+      });
       return args.renderSubLayer({
         layerId: args.id,
         tileData,
         bounds,
         tileId: props.tile.id,
+        modelMatrix,
       });
     },
   });

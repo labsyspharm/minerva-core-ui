@@ -1,0 +1,12 @@
+.volume {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 1.15em;
+  flex-shrink: 0;
+}
+
+.spine {
+  display: block;
+  width: 6px;
+}

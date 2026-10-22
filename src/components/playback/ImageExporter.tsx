@@ -3,10 +3,8 @@ import { getImageSize } from "@hms-dbmi/viv";
 import * as React from "react";
 import { type CSSProperties, useMemo, useState } from "react";
 import {
-  folderLimitsForTransfer,
   imageSourceFromJpegTransfer,
   imageSourceFromOmeTiffTransfer,
-  isJpegOmeTiffImageSource,
   type JpegExportTransfer,
   jpegTransferFromImageSource,
 } from "@/lib/imaging/cubeRootEncoding";
@@ -18,8 +16,11 @@ import {
 } from "@/lib/imaging/jpegExportPool";
 import { jpegPyramidFolderName } from "@/lib/imaging/jpegPyramid";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
-import type { Config } from "@/lib/imaging/viv";
-import { useAppStore } from "@/lib/stores/appStore";
+import { jpegPyramidExportChannels } from "@/lib/imaging/omeTiffExport";
+import { paintUngroupedExportColors } from "@/lib/imaging/psudoPalette";
+import { writeDirectoryFile } from "@/lib/persistence/directoryFiles";
+import { deleteFileHandle } from "@/lib/persistence/fileHandles";
+import { locatedFileStorageKey } from "@/lib/persistence/imageHandles";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   type StoryExportMode,
@@ -48,7 +49,6 @@ type TileCountsIn = {
 type ToTileCounts = (i: TileCountsIn) => TileCounts;
 
 type InitIn = {
-  loader: LoaderPlane[];
   cRange: Index[];
 };
 
@@ -56,8 +56,10 @@ type Progress = {
   completed: number;
   total: number;
   done: boolean;
-  startedAt: number | null;
 };
+
+/** Progress re-renders at most this often; tiles finish far faster. */
+const PROGRESS_INTERVAL_MS = 250;
 
 const formatMinutesLeft = (ms: number): string => {
   const mins = Math.round(ms / 60000);
@@ -68,36 +70,28 @@ const formatMinutesLeft = (ms: number): string => {
   return rm > 0 ? `~${h}h ${rm}m left` : `~${h}h left`;
 };
 
-/** Remaining time from average tile throughput so far; null until first tile finishes. */
+/** Recent completions only. Startup and the first tiles are slower than the run. */
+const RATE_WINDOW_MS = 5_000;
+
+type RateSample = { at: number; completed: number };
+
+/** Rate over the window up to `now`, so time since the last tile slows it. */
 const estimateRemainingMs = (
-  completed: number,
+  samples: readonly RateSample[],
   total: number,
-  startedAt: number | null,
   now: number,
 ): number | null => {
-  if (startedAt === null || completed <= 0 || total <= completed) return null;
-  const elapsed = now - startedAt;
-  if (elapsed <= 0) return null;
-  return ((total - completed) * elapsed) / completed;
-};
-
-const toSettingsInternal = (
-  loader,
-  modality,
-  activeChannelGroupId,
-  channelVisibilities,
-  channelGroupRowVisibilities,
-  toSettings,
-  loaderSourceImageId?: string,
-) => {
-  return toSettings(
-    activeChannelGroupId,
-    modality,
-    loader ?? undefined,
-    channelVisibilities,
-    loaderSourceImageId,
-    channelGroupRowVisibilities,
-  );
+  if (samples.length < 2) return null;
+  const base = samples[0];
+  const tip = samples[samples.length - 1];
+  const gained = tip.completed - base.completed;
+  if (
+    tip.at - base.at < RATE_WINDOW_MS ||
+    gained <= 0 ||
+    total <= tip.completed
+  )
+    return null;
+  return ((total - tip.completed) * (now - base.at)) / gained;
 };
 
 const toFilename = (index: Index) => {
@@ -106,15 +100,10 @@ const toFilename = (index: Index) => {
   return `${level}_${x}_${y}.jpg`;
 };
 
-const exportTile = async (
-  index: Index,
-  loader: LoaderPlane[],
-  signal: AbortSignal,
-  transfer: JpegExportTransfer,
-) => {
+const exportTile = async (index: Index, signal: AbortSignal) => {
   const filename = toFilename(index);
   const level = Math.abs(index.z);
-  const z_loader = loader[level];
+  const z_loader = index.loader[level];
   const selection = { t: 0, z: 0, c: index.c };
   const { x, y } = index;
   const tile = await z_loader.getTile({
@@ -135,69 +124,55 @@ const exportTile = async (
     },
     lowerLimit: index.lowerLimit,
     upperLimit: index.upperLimit,
-    transfer,
+    transfer: index.transfer,
   });
   if (signal.aborted) return;
-  const fh = await index.dh.getFileHandle(filename, { create: true });
-  const write = await fh.createWritable();
-  await write.write(jpeg);
-  await write.close();
+  await writeDirectoryFile(index.dh, filename, jpeg);
 };
 
 const createCRange = async (
-  channelGroups,
-  imageChannels,
-  directory_handle,
-  transfer: JpegExportTransfer,
+  channels: ReturnType<typeof jpegPyramidExportChannels>,
+  directory_handle: FileSystemDirectoryHandle,
+  planesByImageId: Map<string, LoaderPlane[]>,
 ): Promise<Index[]> => {
-  const pending = channelGroups.flatMap(({ channels }) =>
-    channels.map(async ({ channelId, lowerLimit, upperLimit }) => {
-      const c = imageChannels[channelId];
-      if (c === undefined) {
-        return null;
-      }
-      const folderLimits = folderLimitsForTransfer(
-        transfer,
-        lowerLimit,
-        upperLimit,
-      );
-      const folderName = await jpegPyramidFolderName(
-        channelId,
-        folderLimits.lowerLimit,
-        folderLimits.upperLimit,
-      );
-      const dh = await directory_handle.getDirectoryHandle(folderName, {
-        create: true,
-      });
-      const fh = await dh.getFileHandle("settings.json", {
-        create: true,
-      });
-      const write = await fh.createWritable();
-      await write.write(
-        JSON.stringify(
-          {
-            channel: c,
-            channelId,
-            lowerLimit,
-            upperLimit,
-          },
-          null,
-          2,
-        ),
-      );
-      await write.close();
-      return {
-        z: 0,
-        x: 0,
-        y: 0,
-        c,
-        dh,
-        encoded: folderName,
-        lowerLimit,
-        upperLimit,
-      } as Index;
-    }),
-  );
+  const pending = channels.map(async (ch) => {
+    const loader = planesByImageId.get(ch.sourceImageId);
+    if (!loader?.length) return null;
+    const folderName = await jpegPyramidFolderName(
+      ch.channelId,
+      ch.lowerLimit,
+      ch.upperLimit,
+    );
+    const dh = await directory_handle.getDirectoryHandle(folderName, {
+      create: true,
+    });
+    await writeDirectoryFile(
+      dh,
+      "settings.json",
+      JSON.stringify(
+        {
+          channel: ch.index,
+          channelId: ch.channelId,
+          lowerLimit: ch.lowerLimit,
+          upperLimit: ch.upperLimit,
+        },
+        null,
+        2,
+      ),
+    );
+    return {
+      z: 0,
+      x: 0,
+      y: 0,
+      c: ch.index,
+      dh,
+      encoded: folderName,
+      lowerLimit: ch.lowerLimit,
+      upperLimit: ch.upperLimit,
+      loader,
+      transfer: ch.transfer,
+    } as Index;
+  });
   const resolved = await Promise.all(pending);
   return resolved.filter((v): v is Index => v !== null);
 };
@@ -219,6 +194,8 @@ type Index = {
   lowerLimit: number;
   upperLimit: number;
   dh: FileSystemDirectoryHandle;
+  loader: LoaderPlane[];
+  transfer: JpegExportTransfer;
 };
 type FullState = {
   indices: Index[];
@@ -266,11 +243,7 @@ const toTileCounts: ToTileCounts = ({ zoom, tileProps }) => {
 };
 
 const initialize: Initialize = (inputs) => {
-  const { loader, cRange } = inputs;
-  const tileProps = toTileLayer(loader);
-  const mz = Math.abs(tileProps.minZoom || 0) + 1;
-  const zoomRange = [...new Array(mz).keys()];
-  const zr = zoomRange.reverse().map((z) => -z);
+  const { cRange } = inputs;
   const cRangeUnique = [] as Index[];
   const cEncodedSet = new Set();
   for (const index of cRange) {
@@ -280,24 +253,31 @@ const initialize: Initialize = (inputs) => {
       cRangeUnique.push(index);
     }
   }
-  const indices = ([] as Index[]).concat(
-    ...zr.map((zoom) => {
+  const indices = cRangeUnique.flatMap((opts) => {
+    const tileProps = toTileLayer(opts.loader);
+    const mz = Math.abs(tileProps.minZoom || 0) + 1;
+    const zr = [...new Array(mz).keys()].reverse().map((z) => -z);
+    return zr.flatMap((zoom) => {
       const counts = toTileCounts({ zoom, tileProps });
-      const xRange = [...new Array(counts.x).keys()];
-      const yRange = [...new Array(counts.y).keys()];
-      return ([] as Index[]).concat(
-        ...xRange.map((x) => {
-          return ([] as Index[]).concat(
-            ...yRange.map((y) => {
-              return cRangeUnique.map((opts) => {
-                return { ...opts, z: zoom, x, y };
-              });
-            }),
-          );
-        }),
-      );
-    }),
-  );
+      const tiles: Index[] = [];
+      for (let x = 0; x < counts.x; x++) {
+        for (let y = 0; y < counts.y; y++) {
+          tiles.push({ ...opts, z: zoom, x, y });
+        }
+      }
+      return tiles;
+    });
+  });
+  const tileProps =
+    cRangeUnique[0] != null
+      ? toTileLayer(cRangeUnique[0].loader)
+      : {
+          id: "Tiled-Image-0",
+          tileSize: 1024,
+          extent: [0, 0, 0, 0] as Four,
+          minZoom: 0,
+          maxZoom: 0,
+        };
   return { indices, tileProps };
 };
 
@@ -311,109 +291,50 @@ export type ImageExporterProps = {
   stopExport: () => void;
   dicomIndexList: DicomIndex[];
   omeLoaderEntries: OmeLoaderEntry[];
-  viewerConfig: Config;
-  /** Default: bake JPEG pyramids. `remote-url` writes sidecars only. */
+  /** Default: JPEG OME-TIFF. `remote-url` writes sidecars only. Folder pyramids remain in code but are not selectable from the UI. */
   exportMode?: StoryExportMode;
   /** When set, offer a document.json-only update (current transfer only). */
   onDocumentOnlyUpdate?: () => Promise<void>;
 };
 
 export const ImageExporter = (props: ImageExporterProps) => {
-  const { viewerConfig } = props;
   const { omeLoaderEntries, dicomIndexList } = props;
-  const exportMode: StoryExportMode = props.exportMode ?? "jpeg-pyramid";
-
-  const {
-    activeChannelGroupId,
-    channelVisibilities,
-    channelGroupRowVisibilities,
-  } = useAppStore();
-
-  const mainSettingsOmeList = useMemo(() => {
-    const modality = "Colorimetric";
-    return omeLoaderEntries.map(({ loader, sourceImageId }) =>
-      toSettingsInternal(
-        loader,
-        modality,
-        activeChannelGroupId,
-        channelVisibilities,
-        channelGroupRowVisibilities,
-        viewerConfig.toSettings,
-        sourceImageId,
-      ),
-    );
-  }, [
-    omeLoaderEntries,
-    activeChannelGroupId,
-    channelVisibilities,
-    channelGroupRowVisibilities,
-    viewerConfig.toSettings,
-  ]);
-
-  const mainSettingsDicomList = useMemo(() => {
-    return dicomIndexList.map((dicomIndex) => {
-      const { modality } = dicomIndex;
-      return toSettingsInternal(
-        dicomIndex.loader,
-        modality,
-        activeChannelGroupId,
-        channelVisibilities,
-        channelGroupRowVisibilities,
-        viewerConfig.toSettings,
-      );
-    });
-  }, [
-    dicomIndexList,
-    activeChannelGroupId,
-    channelVisibilities,
-    channelGroupRowVisibilities,
-    viewerConfig.toSettings,
-  ]);
-
-  const mainSettingsList = useMemo(
-    () =>
-      omeLoaderEntries.length > 0 ? mainSettingsOmeList : mainSettingsDicomList,
-    [omeLoaderEntries, mainSettingsOmeList, mainSettingsDicomList],
-  );
-
   const { directory_handle } = props;
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
-  const imageChannels = useMemo(() => {
-    return Object.fromEntries(
-      [].concat(
-        ...images.map(({ channels }) => {
-          return channels.map(({ id, index }) => [id, index]);
-        }),
-      ),
-    );
-  }, [images]);
+  const planesByImageId = useMemo(() => {
+    const m = new Map<string, LoaderPlane[]>();
+    for (const e of omeLoaderEntries) {
+      const data = e.loader.data as LoaderPlane[] | undefined;
+      if (data?.length && e.sourceImageId) m.set(e.sourceImageId, data);
+    }
+    for (const d of dicomIndexList) {
+      if (d.sourceImageId && d.loader.data?.length && !m.has(d.sourceImageId)) {
+        m.set(d.sourceImageId, d.loader.data as unknown as LoaderPlane[]);
+      }
+    }
+    return m;
+  }, [omeLoaderEntries, dicomIndexList]);
   const [progress, setProgress] = useState<Progress>({
     completed: 0,
     total: 0,
     done: false,
-    startedAt: null,
   });
-  const [nowMs, setNowMs] = useState(() => performance.now());
+  const rateSamplesRef = React.useRef<RateSample[]>([]);
+  const [remainingMs, setRemainingMs] = useState<number | null>(null);
   const [cRange, setCRange] = useState<Index[] | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
-  const [jpegTransfer, setJpegTransfer] = useState<JpegExportTransfer>(() =>
-    jpegTransferFromImageSource(
-      useDocumentStore.getState().metadata.imageSource,
-    ),
+  /** Masks whose feature table was not loaded, so the export left it out. */
+  const [skippedTables, setSkippedTables] = useState<string[]>([]);
+  /** Fluorescence is cube-root. Brightfield is contrast, or a byte copy when the source TIFF is already JPEG. */
+  const jpegTransfer: JpegExportTransfer = "cube-root";
+  /**
+   * Folder JPEG pyramids remain implemented below but are not user-selectable.
+   * Only `remote-url` (sidecar) or `jpeg-ome-tiff` are reachable from the UI.
+   */
+  const [mode] = useState<StoryExportMode>(() =>
+    props.exportMode === "remote-url" ? "remote-url" : "jpeg-ome-tiff",
   );
-  /** Session mode: props.exportMode, or jpeg-ome-tiff when that option is checked. */
-  const [mode, setMode] = useState<StoryExportMode>(() => {
-    if (exportMode === "remote-url") return "remote-url";
-    // Prefer last published format so re-export still shows the confirm UI
-    // with the previous choice preselected.
-    if (
-      isJpegOmeTiffImageSource(useDocumentStore.getState().metadata.imageSource)
-    ) {
-      return "jpeg-ome-tiff";
-    }
-    return exportMode;
-  });
   const [exportArmed, setExportArmed] = useState(false);
   /** Frozen at Start so post-export store updates cannot re-trigger the job. */
   const armedSnapshotRef = React.useRef<{
@@ -426,7 +347,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
   );
   const canUpdateDocumentOnly =
     !!props.onDocumentOnlyUpdate &&
-    mode === "jpeg-pyramid" &&
+    mode === "jpeg-ome-tiff" &&
     jpegTransfer === docTransfer;
 
   const armExport = () => {
@@ -434,9 +355,10 @@ export const ImageExporter = (props: ImageExporterProps) => {
     setExportArmed(true);
   };
 
-  const hasChannelGroup =
-    channelGroups.length > 0 &&
-    channelGroups.some((g) => g.channels.length > 0);
+  const pyramidChannels = useMemo(
+    () => jpegPyramidExportChannels(images, channelGroups, jpegTransfer),
+    [images, channelGroups],
+  );
 
   React.useEffect(() => {
     if (mode === "remote-url" || mode === "jpeg-ome-tiff") {
@@ -447,21 +369,14 @@ export const ImageExporter = (props: ImageExporterProps) => {
       setCRange(null);
       return;
     }
-    if (!hasChannelGroup) {
+    if (pyramidChannels.length === 0) {
       setCRange([]);
-      setExportError(
-        "Add a channel group with at least one channel before exporting.",
-      );
+      setExportError("No channels to export.");
       return;
     }
     setExportError(null);
     let cancelled = false;
-    void createCRange(
-      channelGroups,
-      imageChannels,
-      directory_handle,
-      jpegTransfer,
-    )
+    void createCRange(pyramidChannels, directory_handle, planesByImageId)
       .then((range) => {
         if (!cancelled) setCRange(range);
       })
@@ -475,32 +390,18 @@ export const ImageExporter = (props: ImageExporterProps) => {
     return () => {
       cancelled = true;
     };
-  }, [
-    channelGroups,
-    imageChannels,
-    directory_handle,
-    hasChannelGroup,
-    mode,
-    exportArmed,
-    jpegTransfer,
-  ]);
-  const loader = useMemo(
-    () =>
-      mainSettingsList.length > 0 ? mainSettingsList[0].loader.data : null,
-    [mainSettingsList],
-  );
-
+  }, [pyramidChannels, directory_handle, planesByImageId, mode, exportArmed]);
   const state: MainState = useMemo(() => {
     if (mode !== "jpeg-pyramid" || !exportArmed) return null;
-    if (loader === null || cRange === null) {
+    if (cRange === null) {
       return null;
     }
-    const init = initialize({ loader, cRange });
-    if (isFullState(init) && loader?.length) {
+    const init = initialize({ cRange });
+    if (isFullState(init)) {
       return init;
     }
     return null;
-  }, [loader, cRange, mode, exportArmed]);
+  }, [cRange, mode, exportArmed]);
 
   const stopExport = props.stopExport;
 
@@ -508,21 +409,27 @@ export const ImageExporter = (props: ImageExporterProps) => {
     if (mode !== "remote-url") return;
     if (exportError) return;
     let cancelled = false;
-    const wallStart = performance.now();
-    setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
+    setProgress({ completed: 0, total: 1, done: false });
     void (async () => {
       try {
-        await writeStoryBundleSidecars(
+        const doc = useDocumentStore.getState().toDocumentData();
+        const written = await writeStoryBundleSidecars(
           directory_handle,
-          useDocumentStore.getState().toDocumentData(),
+          {
+            ...doc,
+            images: await paintUngroupedExportColors(
+              doc.images,
+              doc.channelGroups,
+            ),
+          },
           { mode: "remote-url" },
         );
         if (cancelled) return;
+        setSkippedTables(written.skippedFeatureTables);
         setProgress({
           completed: 1,
           total: 1,
           done: true,
-          startedAt: wallStart,
         });
       } catch (e) {
         if (cancelled) return;
@@ -558,18 +465,20 @@ export const ImageExporter = (props: ImageExporterProps) => {
               loader: d.loader as OmeLoaderEntry["loader"],
               sourceImageId: d.sourceImageId as string,
             }));
-    const imagesSnapshot = useDocumentStore.getState().images;
-    const channelGroupsSnapshot = useDocumentStore.getState().channelGroups;
+    const docAtStart = useDocumentStore.getState();
+    const channelGroupsSnapshot = docAtStart.channelGroups;
+    const imagesAtStart = docAtStart.images;
 
-    setProgress({ completed: 0, total: 1, done: false, startedAt: wallStart });
+    setProgress({ completed: 0, total: 1, done: false });
 
-    const etaInterval = window.setInterval(() => {
-      if (!cancelled) setNowMs(performance.now());
-    }, 1000);
-
+    let lastProgressAt = 0;
     void (async () => {
       try {
-        const remappedImages = await exportJpegOmeTiffStory({
+        const imagesSnapshot = await paintUngroupedExportColors(
+          imagesAtStart,
+          channelGroupsSnapshot,
+        );
+        const exported = await exportJpegOmeTiffStory({
           directory: directory_handle,
           omeLoaderEntries: loaderEntries,
           images: imagesSnapshot,
@@ -577,12 +486,15 @@ export const ImageExporter = (props: ImageExporterProps) => {
           transfer: jpegTransfer,
           signal: abort.signal,
           onProgress: (completed, total) => {
-            if (cancelled) return;
+            const now = performance.now();
+            if (cancelled || now - lastProgressAt < PROGRESS_INTERVAL_MS) {
+              return;
+            }
+            lastProgressAt = now;
             setProgress({
               completed,
               total: Math.max(total, 1),
               done: false,
-              startedAt: wallStart,
             });
           },
         });
@@ -592,17 +504,39 @@ export const ImageExporter = (props: ImageExporterProps) => {
         const baseDoc = useDocumentStore.getState().toDocumentData();
         const doc = {
           ...baseDoc,
-          images: remappedImages,
+          images: exported.images,
+          channelGroups: exported.channelGroups,
           metadata: {
             ...baseDoc.metadata,
             imageSource: nextSource,
           },
         };
-        await writeStoryBundleSidecars(directory_handle, doc, {
+        const written = await writeStoryBundleSidecars(directory_handle, doc, {
           mode: "jpeg-ome-tiff",
         });
+        setSkippedTables(written.skippedFeatureTables);
         const store = useDocumentStore.getState();
-        store.setImages(remappedImages);
+        // The exported files now answer these paths, not a file located
+        // for an earlier source at the same path.
+        await Promise.all(
+          exported.images.flatMap((im) =>
+            im.source?.kind === "url"
+              ? [
+                  deleteFileHandle(
+                    locatedFileStorageKey(
+                      store.activeStoryId,
+                      im.id,
+                      im.source.url,
+                    ),
+                  ),
+                ]
+              : [],
+          ),
+        );
+        store.setImagesAndChannelGroups(
+          exported.images,
+          exported.channelGroups,
+        );
         store.setMetadata({
           imageSource: nextSource,
         });
@@ -625,20 +559,19 @@ export const ImageExporter = (props: ImageExporterProps) => {
 
     return () => {
       cancelled = true;
-      window.clearInterval(etaInterval);
       if (!finishedOk) abort.abort();
     };
-  }, [mode, exportArmed, exportError, directory_handle, jpegTransfer]);
+  }, [mode, exportArmed, exportError, directory_handle]);
 
   React.useEffect(() => {
     if (mode !== "jpeg-pyramid" || !exportArmed || exportError) return;
-    if (!state || !loader?.length) return;
+    if (!state) return;
     if (cRange !== null && cRange.length === 0) {
-      setExportError("No exportable channels in the current channel groups.");
+      setExportError("No channels to export.");
       return;
     }
     if (state.indices.length === 0) {
-      setExportError("No exportable channels in the current channel groups.");
+      setExportError("No channels to export.");
       return;
     }
 
@@ -649,11 +582,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
     const total = indices.length;
     const wallStart = performance.now();
 
-    setProgress({ completed: 0, total, done: false, startedAt: wallStart });
-
-    const etaInterval = window.setInterval(() => {
-      if (!cancelled) setNowMs(performance.now());
-    }, 1000);
+    setProgress({ completed: 0, total, done: false });
 
     const run = async () => {
       let nextIndex = 0;
@@ -674,12 +603,12 @@ export const ImageExporter = (props: ImageExporterProps) => {
           if (i >= total) return;
           const index = indices[i];
           try {
-            await exportTile(index, loader, abort.signal, jpegTransfer);
+            await exportTile(index, abort.signal);
           } catch (e) {
             if (abort.signal.aborted || cancelled) return;
             console.error(e instanceof Error ? e.message : e);
             try {
-              await exportTile(index, loader, abort.signal, jpegTransfer);
+              await exportTile(index, abort.signal);
             } catch (e2) {
               console.error(e2 instanceof Error ? e2.message : e2);
               failExport(e2);
@@ -692,7 +621,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
             completed,
             total,
             done: completed >= total,
-            startedAt: wallStart,
           });
         }
       };
@@ -715,14 +643,19 @@ export const ImageExporter = (props: ImageExporterProps) => {
       try {
         const nextSource = imageSourceFromJpegTransfer(jpegTransfer);
         const doc = useDocumentStore.getState().toDocumentData();
-        await writeStoryBundleSidecars(
+        const written = await writeStoryBundleSidecars(
           directory_handle,
           {
             ...doc,
+            images: await paintUngroupedExportColors(
+              doc.images,
+              doc.channelGroups,
+            ),
             metadata: { ...doc.metadata, imageSource: nextSource },
           },
           { mode: "jpeg-pyramid" },
         );
+        setSkippedTables(written.skippedFeatureTables);
         useDocumentStore.getState().setMetadata({ imageSource: nextSource });
       } catch (e) {
         console.error("[minerva] failed to write story bundle sidecars", e);
@@ -737,7 +670,6 @@ export const ImageExporter = (props: ImageExporterProps) => {
         completed: total,
         total,
         done: true,
-        startedAt: wallStart,
       });
     };
 
@@ -749,22 +681,33 @@ export const ImageExporter = (props: ImageExporterProps) => {
 
     return () => {
       cancelled = true;
-      window.clearInterval(etaInterval);
       // Avoid aborting the shared Viv loader after a successful export.
       if (!finishedOk) abort.abort();
     };
-  }, [
-    state,
-    loader,
-    cRange,
-    exportError,
-    directory_handle,
-    mode,
-    exportArmed,
-    jpegTransfer,
-  ]);
+  }, [state, cRange, exportError, directory_handle, mode, exportArmed]);
 
-  const { completed, total, done, startedAt } = progress;
+  const { completed, total, done } = progress;
+  React.useEffect(() => {
+    const samples = rateSamplesRef.current;
+    if (done || completed <= 0) {
+      samples.length = 0;
+      setRemainingMs(null);
+      return;
+    }
+    const at = performance.now();
+    if (samples[samples.length - 1]?.completed !== completed) {
+      samples.push({ at, completed });
+      while (samples.length > 2 && at - samples[1].at >= RATE_WINDOW_MS) {
+        samples.shift();
+      }
+    }
+    const update = () =>
+      setRemainingMs(estimateRemainingMs(samples, total, performance.now()));
+    update();
+    // Re-estimate while waiting on the next tile, so a stall lengthens the ETA.
+    const tick = window.setInterval(update, 1000);
+    return () => window.clearInterval(tick);
+  }, [completed, total, done]);
   let ratio = done ? 1 : 0;
   if (!done && total > 1) {
     ratio = completed / total;
@@ -774,23 +717,23 @@ export const ImageExporter = (props: ImageExporterProps) => {
     ratio = 0;
   }
 
-  const remainingMs = estimateRemainingMs(
-    completed,
-    total,
-    startedAt,
-    Math.max(nowMs, performance.now()),
-  );
   const percentLabel = `${(ratio * 100).toFixed(3)}%`;
   let etaLabel = "";
   if (done) {
-    etaLabel = "done";
+    etaLabel = "Done";
   } else if (remainingMs !== null) {
     etaLabel = formatMinutesLeft(remainingMs);
   } else if (total > 0) {
-    etaLabel = "estimating…";
+    etaLabel = "Estimating…";
   }
 
   const clampedRatio = Math.min(1, Math.max(0, ratio));
+  const skippedNote =
+    done && skippedTables.length > 0 ? (
+      <div className={styles.exportMessage}>
+        Feature tables not loaded, left out: {skippedTables.join(", ")}
+      </div>
+    ) : null;
 
   return (
     <div className={styles.imageExporter}>
@@ -814,6 +757,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
               ? "Exported document.json + index.html (remote URLs)"
               : "Writing document.json + index.html…"}
           </div>
+          {skippedNote}
           {done ? (
             <button
               type="button"
@@ -827,34 +771,11 @@ export const ImageExporter = (props: ImageExporterProps) => {
       ) : !exportArmed ? (
         <div className={styles.exportStatus}>
           <div className={styles.exportMessage}>
-            {mode === "jpeg-ome-tiff"
-              ? "Export JPEG OME-TIFF"
-              : "Export JPEG pyramid"}
+            <div>Export JPEG OME-TIFF</div>
+            <div className={styles.exportHint}>
+              Brightfield: RGB. Fluorescence: cube-root.
+            </div>
           </div>
-          <label className={styles.transferToggle}>
-            <input
-              type="checkbox"
-              checked={mode === "jpeg-ome-tiff"}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  setMode("jpeg-ome-tiff");
-                } else {
-                  setMode("jpeg-pyramid");
-                }
-              }}
-            />
-            <span>Single-file OME-TIFF</span>
-          </label>
-          <label className={styles.transferToggle}>
-            <input
-              type="checkbox"
-              checked={jpegTransfer === "cube-root"}
-              onChange={(e) =>
-                setJpegTransfer(e.target.checked ? "cube-root" : "contrast")
-              }
-            />
-            <span>Cube-root intensity encoding</span>
-          </label>
           <div className={styles.confirmActions}>
             <button
               type="button"
@@ -910,6 +831,7 @@ export const ImageExporter = (props: ImageExporterProps) => {
             <div> {percentLabel} </div>
           </div>
           {etaLabel ? <div className={styles.etaLine}>{etaLabel}</div> : null}
+          {skippedNote}
           {done ? (
             <button
               type="button"

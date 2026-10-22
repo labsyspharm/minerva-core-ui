@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  normalizeFeatureTableSource,
   normalizeWaypointRecord,
   preprocessJsonExportRoot,
 } from "./wirePreprocess";
@@ -94,7 +95,7 @@ export const ImageChannelKindSchema = z.preprocess(
   z.enum(["channel", "mask"]),
 );
 
-/** Mask display (legacy `"outline"` / `"randomColors"` coerced in preprocess). */
+/** Mask display. Legacy `"outline"` / `"randomColors"` strings are coerced here. */
 export const MaskVisualizationSchema = z.preprocess(
   (v) => {
     if (v === "outline") return { style: "outline", color: "white" };
@@ -106,6 +107,8 @@ export const MaskVisualizationSchema = z.preprocess(
     color: z.enum(["white", "random"]),
     /** 24-bit; XOR'd into the GPU label hash when `color` is `random`. */
     colorSeed: z.number().int().nonnegative().optional(),
+    /** Overlay alpha multiplier (`0…1`); omitted in older docs → `1`. */
+    opacity: z.number().min(0).max(1).default(1),
   }),
 );
 
@@ -119,6 +122,13 @@ export const ImageChannelSchema = z.object({
   sourceDataTypeId: z.string().optional(),
   sourceDistribution: SourceDistributionSchema.optional(),
   gmmContrastLimits: GmmContrastLimitsSchema.optional(),
+  /** Min/max of finite coarsest-plane samples. Float contrast uses this domain. */
+  floatRange: z
+    .object({
+      min: z.number(),
+      max: z.number(),
+    })
+    .optional(),
   /** Pseudocolor / mask display (napari-style layer list; persisted on source). */
   color: ColorSchema.optional(),
   lowerLimit: z.number().optional(),
@@ -173,6 +183,27 @@ export const ImageSchema = z.object({
   basename: z.string(),
   /** Import intent: intensity stack vs segmentation labels (persisted for Images tab). */
   contentRole: z.enum(["intensity", "segmentation"]).optional(),
+  /**
+   * Import override for 3-channel RGB sources: true = one color RGB unit,
+   * false = independent IF channels. Undefined → runtime heuristics.
+   */
+  rgbDisplay: z.boolean().optional(),
+  /** Degrees clockwise around the pixel center. Omitted input parses as 0. */
+  rotationDegrees: z.number().default(0),
+  /** Omitted input parses as false. */
+  flipHorizontal: z.boolean().default(false),
+  /** Omitted input parses as false. */
+  flipVertical: z.boolean().default(false),
+  /** µm, applied in world space after rotation. Omitted input parses as 0. */
+  translateX: z.number().default(0),
+  /** µm, applied in world space after rotation. Omitted input parses as 0. */
+  translateY: z.number().default(0),
+  /** Resize around the image center. 1 keeps the file's physical size. */
+  displayScale: z.number().positive().default(1),
+  /** Whole-image alpha (`0…1`). Omitted input parses as 1. */
+  opacity: z.number().min(0).max(1).default(1),
+  /** µm per pixel on both axes. Omitted uses the file's PhysicalSize. */
+  umPerPixel: z.number().positive().optional(),
   channels: z.array(ImageChannelSchema),
   source: ImageSourceSchema.optional(),
 });
@@ -195,6 +226,60 @@ export const ChannelGroupSchema = z.object({
   channels: z.array(ChannelGroupChannelSchema),
 });
 
+/* -------------------- feature tables -------------------- */
+
+/** Pixel / CSV classID after import. Integer in `1…0xFFFFFFFF`; 0 is unrepresentable. */
+const ClassIdSchema = z.number().int().positive().max(0xffff_ffff);
+
+/**
+ * Where the Parquet file lives. `local` is a Dexie blob under `handleKey`;
+ * `url` is relative to `document.json` in an exported story.
+ */
+const FeatureTableSourceSchema = z.preprocess(
+  normalizeFeatureTableSource,
+  z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("local"), handleKey: z.string().min(1) }),
+    z.object({ kind: z.literal("url"), url: z.string().min(1) }),
+  ]),
+);
+
+/**
+ * Sidecar name table for one mask plane (`sourceChannelId` = ImageChannel.id).
+ * Name rows live in DuckDB, not in this JSON object.
+ */
+const FeatureTableSchema = z.object({
+  id: IdSchema,
+  sourceChannelId: IdSchema,
+  source: FeatureTableSourceSchema,
+  maxClassId: ClassIdSchema,
+  nameColors: z.array(
+    z.object({
+      name: z.string(),
+      color: ColorSchema,
+    }),
+  ),
+  /** SHA-256 of the bytes stored at attach. Older stories hashed the CSV. */
+  digest: z.string().min(1),
+});
+
+export const ClassVisibilitySchema = z.discriminatedUnion("mode", [
+  z.object({ mode: z.literal("all") }),
+  z.object({ mode: z.literal("hide"), names: z.array(z.string()) }),
+  z.object({ mode: z.literal("show"), names: z.array(z.string()) }),
+]);
+
+/**
+ * One mask's classes on one waypoint. `channelId` is the mask's
+ * ImageChannel.id; `colors` override the table's `nameColors` by name.
+ */
+const ClassViewSchema = z.object({
+  channelId: IdSchema,
+  visibility: ClassVisibilitySchema,
+  colors: z
+    .array(z.object({ name: z.string(), color: ColorSchema }))
+    .default([]),
+});
+
 const waypointObjectZ = z.object({
   id: IdSchema,
   groupId: IdSchema.optional(),
@@ -204,6 +289,8 @@ const waypointObjectZ = z.object({
   content: z.string(),
   viewport: ViewportSchema,
   shapeIds: z.array(IdSchema),
+  /** No entry for a mask means every class in the table palette. */
+  classViews: z.array(ClassViewSchema).default([]),
 });
 
 export const WaypointSchema = z.preprocess((raw) => {
@@ -286,7 +373,7 @@ export const DocumentDataSchema = z.preprocess(
       const { groups, ...rest } = r;
       return { ...rest, channelGroups: groups };
     }
-    return raw;
+    return r;
   },
   z.object({
     metadata: DocumentMetadataSchema.default({}),
@@ -294,6 +381,7 @@ export const DocumentDataSchema = z.preprocess(
     shapes: z.array(ShapeSchema),
     channelGroups: z.array(ChannelGroupSchema),
     images: z.array(ImageSchema),
+    featureTables: z.array(FeatureTableSchema).default([]),
   }),
 );
 
@@ -313,6 +401,17 @@ export type Shape = z.infer<typeof ShapeSchema>;
 
 export type Image = z.infer<typeof ImageSchema>;
 export type ImageSource = z.infer<typeof ImageSourceSchema>;
+/** Resolved placement. Pose fields are always set. `umPerPixel` is omitted to use the file. */
+export type ImageOrientation = {
+  rotationDegrees: number;
+  flipHorizontal: boolean;
+  flipVertical: boolean;
+  translateX: number;
+  translateY: number;
+  displayScale: number;
+  /** µm per pixel on both axes. Absent uses the file's PhysicalSize. */
+  umPerPixel?: number;
+};
 export type ImageChannel = z.infer<typeof ImageChannelSchema>;
 export type ImageChannelKind = z.infer<typeof ImageChannelKindSchema>;
 export type MaskVisualization = z.infer<typeof MaskVisualizationSchema>;
@@ -324,12 +423,16 @@ export type GmmContrastLimits = z.infer<typeof GmmContrastLimitsSchema>;
  */
 export type Channel = ImageChannel & {
   imageId: string;
+  /** Copied from parent {@link Image.rgbDisplay} when flattened. */
+  rgbDisplay?: boolean;
 };
 
 export type ChannelGroupChannel = z.infer<typeof ChannelGroupChannelSchema>;
 export type ChannelGroup = z.infer<typeof ChannelGroupSchema>;
 export type Waypoint = z.infer<typeof WaypointSchema>;
+export type ClassView = z.infer<typeof ClassViewSchema>;
 export type SourceDistributionData = z.infer<typeof SourceDistributionSchema>;
+export type FeatureTable = z.infer<typeof FeatureTableSchema>;
 
 export type DocumentMetadata = z.infer<typeof DocumentMetadataSchema>;
 export type DocumentData = z.infer<typeof DocumentDataSchema>;

@@ -1,26 +1,51 @@
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import {
   DEFAULT_MASK_VISUALIZATION,
+  isImageChannel,
   isMaskChannel,
+  isUint8Dtype,
   normalizeMaskVisualization,
   planarRgbDisplayColor,
 } from "@/lib/imaging/channelKind";
+import type { ChannelRendering } from "@/lib/stores/appStore";
 import type { ChannelGroup, Color } from "@/lib/stores/documentSchema";
 import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
 
-/** Shared import-time palette seeds (used before psudo optimization). */
 export type RgbColor = { r: number; g: number; b: number };
 
-/** Default hex seeds from `extractChannels` (before psudo). */
 export const IMPORT_DEFAULT_SEED_HEX = [
   "0dabff",
   "c3ff00",
   "ff8b00",
   "ff00c7",
+  "1e5cff",
 ] as const;
 
 export const IMPORT_DEFAULT_LOWER_LIMIT = 2 ** 5;
 export const IMPORT_DEFAULT_UPPER_LIMIT = 2 ** 14;
+
+/** 8-bit planes use the full 0–255 window; 16-bit keeps the IF GMM seed. */
+function defaultSourceContrastLimits(
+  sourceDataTypeId?: string,
+): [number, number] {
+  if (isUint8Dtype(sourceDataTypeId)) return [0, 255];
+  return [IMPORT_DEFAULT_LOWER_LIMIT, IMPORT_DEFAULT_UPPER_LIMIT];
+}
+
+export function looksLikeImportDefaultLimits(
+  lower: number,
+  upper: number,
+): boolean {
+  if (
+    lower === IMPORT_DEFAULT_LOWER_LIMIT &&
+    upper === IMPORT_DEFAULT_UPPER_LIMIT
+  ) {
+    return true;
+  }
+  if (lower === 0 && upper === 65535) return true;
+  if (lower === 0 && upper === 255) return true;
+  return false;
+}
 
 export function hexToRgb(hex: string): RgbColor {
   const n = Number.parseInt(hex.replace("#", ""), 16);
@@ -31,15 +56,30 @@ export function hexToRgb(hex: string): RgbColor {
   };
 }
 
-function defaultSeedColorForIndex(index: number): Color {
-  return hexToRgb(
-    IMPORT_DEFAULT_SEED_HEX[index % IMPORT_DEFAULT_SEED_HEX.length],
+export function rgbToHex(color: {
+  r?: number;
+  g?: number;
+  b?: number;
+}): string {
+  return [color.r ?? 0, color.g ?? 0, color.b ?? 0]
+    .map((value) => value.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export function looksLikeImportDefaultSeedColor(color: {
+  r?: number;
+  g?: number;
+  b?: number;
+}): boolean {
+  return (IMPORT_DEFAULT_SEED_HEX as readonly string[]).includes(
+    rgbToHex(color),
   );
 }
 
+const UNASSIGNED_STACK_COLOR: Color = { r: 160, g: 160, b: 160 };
+
 export function effectiveSourceColor(
   channel: Channel,
-  indexInList: number,
   allChannels?: readonly Channel[],
 ): Color {
   if (channel.color) return channel.color;
@@ -50,30 +90,47 @@ export function effectiveSourceColor(
   if (channel.samples === 3) {
     return { r: 204, g: 0, b: 255 };
   }
-  return defaultSeedColorForIndex(indexInList);
+  return UNASSIGNED_STACK_COLOR;
 }
 
-/** Viewer / panel tint: planar RGB slot, then group row, then source defaults. */
 export function effectiveDisplayColor(
   channel: Channel,
   allChannels: readonly Channel[],
   groupRow?: ChannelGroupChannel | null,
-  indexInList = 0,
 ): Color {
   return (
     planarRgbDisplayColor(channel, allChannels) ??
     groupRow?.color ??
-    effectiveSourceColor(channel, indexInList, allChannels)
+    effectiveSourceColor(channel, allChannels)
   );
+}
+
+/** Hex for a color swatch, or undefined when the channel has no color yet. */
+export function assignedDisplayHex(
+  channel: Channel,
+  allChannels: readonly Channel[],
+  groupRow?: ChannelGroupChannel | null,
+  rendering?: ChannelRendering | null,
+): string | undefined {
+  if (rendering?.kind === "color" && rendering.sourceChannelId === channel.id) {
+    return rgbToHex(rendering);
+  }
+  if (
+    !channel.color &&
+    !groupRow?.color &&
+    !planarRgbDisplayColor(channel, allChannels)
+  ) {
+    return undefined;
+  }
+  return rgbToHex(effectiveDisplayColor(channel, allChannels, groupRow));
 }
 
 export function effectiveSourceLimits(channel: Channel): [number, number] {
   if (channel.gmmContrastLimits) {
     return [channel.gmmContrastLimits.lower, channel.gmmContrastLimits.upper];
   }
-  const lo = channel.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT;
-  const hi = channel.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT;
-  return [lo, hi];
+  const [defLo, defHi] = defaultSourceContrastLimits(channel.sourceDataTypeId);
+  return [channel.lowerLimit ?? defLo, channel.upperLimit ?? defHi];
 }
 
 export function effectiveMaskVisualization(row: {
@@ -82,7 +139,6 @@ export function effectiveMaskVisualization(row: {
   return normalizeMaskVisualization(row.maskVisualization);
 }
 
-/** Group-row viz wins when present; otherwise the source channel. */
 export function effectiveMaskVisualizationForSource(
   sc: Channel,
   channelGroups: ChannelGroup[],
@@ -102,7 +158,6 @@ export function effectiveMaskVisualizationForSource(
   return effectiveMaskVisualization(sc);
 }
 
-/** Default styles for mask source channels when not placed in a group row. */
 export function seedMaskSourceChannelStyles(channels: Channel[]): Channel[] {
   return channels.map((sc) => ({
     ...sc,
@@ -117,23 +172,13 @@ export function seedMaskSourceChannelStyles(channels: Channel[]): Channel[] {
   }));
 }
 
-/** Apply mask-specific defaults when importing a segmentation image. */
-export function styleSourceChannelsForRole(
-  channels: Channel[],
-  role: "intensity" | "segmentation",
-): Channel[] {
-  return role === "segmentation"
-    ? seedMaskSourceChannelStyles(channels)
-    : channels;
-}
-
-/** Seed import defaults on flat source channels (no channel groups). */
 export function seedDefaultSourceChannelStyles(
   sourceChannels: Channel[],
   palette?: readonly RgbColor[],
 ): Channel[] {
-  let intensityIndex = 0;
+  let paletteIndex = 0;
   return sourceChannels.map((sc) => {
+    const [defLo, defHi] = defaultSourceContrastLimits(sc.sourceDataTypeId);
     if (sc.samples === 3) {
       return {
         ...sc,
@@ -142,26 +187,35 @@ export function seedDefaultSourceChannelStyles(
         upperLimit: sc.upperLimit ?? 255,
       };
     }
-    const planar = planarRgbDisplayColor(sc, sourceChannels);
-    const idx = intensityIndex++;
-    const fromPalette = palette?.[idx % (palette?.length ?? 1)];
-    const color =
-      sc.color ??
-      planar ??
-      (fromPalette
-        ? { r: fromPalette.r, g: fromPalette.g, b: fromPalette.b }
-        : defaultSeedColorForIndex(idx));
+    if (isMaskChannel(sc)) {
+      return {
+        ...sc,
+        color: sc.color ?? { r: 136, g: 136, b: 136 },
+        lowerLimit: sc.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
+        upperLimit: sc.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT,
+        maskVisualization: sc.maskVisualization ?? DEFAULT_MASK_VISUALIZATION,
+      };
+    }
+    const tint = sc.color ?? planarRgbDisplayColor(sc, sourceChannels);
+    if (tint) {
+      return {
+        ...sc,
+        color: tint,
+        lowerLimit: sc.lowerLimit ?? defLo,
+        upperLimit: sc.upperLimit ?? defHi,
+      };
+    }
+    const fromPalette =
+      isImageChannel(sc) && palette && paletteIndex < palette.length
+        ? palette[paletteIndex++]
+        : undefined;
     return {
       ...sc,
-      color,
-      lowerLimit: sc.lowerLimit ?? IMPORT_DEFAULT_LOWER_LIMIT,
-      upperLimit: sc.upperLimit ?? IMPORT_DEFAULT_UPPER_LIMIT,
-      ...(isMaskChannel(sc)
-        ? {
-            maskVisualization:
-              sc.maskVisualization ?? DEFAULT_MASK_VISUALIZATION,
-          }
+      ...(fromPalette
+        ? { color: { r: fromPalette.r, g: fromPalette.g, b: fromPalette.b } }
         : {}),
+      lowerLimit: sc.lowerLimit ?? defLo,
+      upperLimit: sc.upperLimit ?? defHi,
     };
   });
 }

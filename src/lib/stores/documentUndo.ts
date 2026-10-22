@@ -1,7 +1,8 @@
 import { useStore } from "zustand";
+import { applyVisibilityTransition } from "@/lib/imaging/channelCompositor";
+import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/maskLayers";
 import { useAppStore } from "./appStore";
 import {
-  findSourceChannel,
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "./documentStore";
@@ -15,33 +16,20 @@ export function syncAppStoreChannelMirrorsFromDocument(): void {
   const groupNames = Object.fromEntries(
     groups.map(({ name, id }) => [id, name]),
   );
-  const groupChannelLists = Object.fromEntries(
-    groups.map(({ name, channels }) => [
-      name,
-      channels
-        .map((gc) => findSourceChannel(sourceChannels, gc.channelId))
-        .filter(Boolean)
-        .map((sc) => sc?.name as string),
-    ]),
+
+  const app = useAppStore.getState();
+  const visibility = applyVisibilityTransition(
+    sourceChannels,
+    groups,
+    app.channelVisibilities,
+    app.channelGroupRowVisibilities,
+    { kind: "sync" },
+    app.activeChannelGroupId,
   );
+  const { channelVisibilities } = visibility;
+  delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
 
-  const namesInUse = new Set<string>();
-  for (const g of groups) {
-    for (const gc of g.channels) {
-      const sc = findSourceChannel(sourceChannels, gc.channelId);
-      if (sc?.name) namesInUse.add(sc.name);
-    }
-  }
-
-  const prevVis = useAppStore.getState().channelVisibilities;
-  const channelVisibilities = { ...prevVis };
-  for (const name of namesInUse) {
-    if (channelVisibilities[name] === undefined) {
-      channelVisibilities[name] = true;
-    }
-  }
-
-  const activeId = useAppStore.getState().activeChannelGroupId;
+  const activeId = app.activeChannelGroupId;
   const nextActiveId =
     activeId && groups.some((g) => g.id === activeId)
       ? activeId
@@ -49,8 +37,8 @@ export function syncAppStoreChannelMirrorsFromDocument(): void {
 
   useAppStore.setState({
     groupNames,
-    groupChannelLists,
     channelVisibilities,
+    channelGroupRowVisibilities: visibility.channelGroupRowVisibilities,
     activeChannelGroupId: nextActiveId,
   });
 }
@@ -105,6 +93,11 @@ export function syncAppStoreShapesFromDocument(): void {
 /** Reconcile ephemeral UI state after the document store changes externally (undo/redo). */
 export function syncAppStoreFromDocument(): void {
   useAppStore.getState().clearChannelRendering();
+  useAppStore.setState({
+    maskVisualizationPreview: null,
+    imageOrientationPreview: null,
+    imageOpacityPreview: null,
+  });
   syncAppStoreChannelMirrorsFromDocument();
   syncAppStoreWaypointsFromDocument();
   syncAppStoreShapesFromDocument();

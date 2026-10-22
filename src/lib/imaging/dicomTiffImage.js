@@ -9,32 +9,50 @@ const littleEndianPlatform = (() => {
 class DicomTIFFImage {
   constructor(opts) {
     const { metadata, little_endian } = opts;
-    const { tileSize } = opts.pyramids[0][0];
     const { Pixels } = metadata;
     const rgbImage = Pixels.Type === "Uint8";
-    const bytesPerSample = rgbImage ? 3 : 2;
     this.Pixels = Pixels;
     this.level = opts.level;
     this.c = opts.c;
     this.series = opts.series;
+    // Keys are Viv channel indices ("0"…"N") after pyramidsForChannelIndex.
     this.pyramids = opts.pyramids;
     this.littleEndian = little_endian;
-    this.bytesPerSample = bytesPerSample;
-    this.tileWidth = tileSize;
-    this.tileHeight = tileSize;
+    this.bytesPerSample = rgbImage ? 3 : 2;
     this.rgbImage = rgbImage;
   }
 
   getPyramid() {
-    const n_levels = this.pyramids[this.c].length - 1;
-    const pyramid_level = n_levels - this.level;
-    const pyramid = this.pyramids[this.c][pyramid_level];
+    const levels = this.pyramids[String(this.c)];
+    if (!Array.isArray(levels) || levels.length === 0) {
+      throw new Error(
+        `[minerva] dicom: no pyramid levels for channel ${this.c}`,
+      );
+    }
+    // Viv level 0 = full resolution (finest→coarsest).
+    const pyramid = levels[this.level];
+    if (!pyramid) {
+      throw new Error(
+        `[minerva] dicom: missing pyramid level ${this.level} for channel ${this.c}`,
+      );
+    }
     return pyramid;
+  }
+
+  get tileWidth() {
+    return this.getPyramid().tileSize;
+  }
+
+  get tileHeight() {
+    return this.getPyramid().tileSize;
   }
 
   async getTileOrStrip(x, y, sample, signal) {
     const pyramid = this.getPyramid();
     const subpath = pyramid.frameMappings[`${y + 1}-${x + 1}-${this.c}`];
+    if (!subpath) {
+      throw "__minervaEmptyFramePath";
+    }
     const request = await fetchFrame({ series: this.series, subpath, signal });
     return { x, y, sample, data: request };
   }
@@ -45,7 +63,7 @@ class DicomTIFFImage {
     const imageWidth = this.getWidth();
     const origin_x = x * this.tileWidth;
     const origin_y = y * this.tileHeight;
-    return await this.getTileOrStrip(x, y, sample, signal).then((tile) => {
+    return this.getTileOrStrip(x, y, sample, signal).then((tile) => {
       const fullTile = tileHeight * tileWidth;
       const ymax = Math.min(tileHeight, height, imageHeight - origin_y);
       const xmax = Math.min(tileWidth, width, imageWidth - origin_x);
@@ -66,22 +84,21 @@ class DicomTIFFImage {
           height: full ? tileHeight : ymax,
         };
       }
-      const optimization = true;
-      if (littleEndianPlatform === this.littleEndian && optimization) {
-        const data = new Uint16Array(tile.data.buffer);
+      if (littleEndianPlatform === this.littleEndian) {
+        const data = new Uint16Array(
+          tile.data.buffer,
+          tile.data.byteOffset,
+          tile.data.byteLength / 2,
+        );
         const full = data.length === fullTile;
-        // Blackout missing data
         for (let pixel_y = ymax; pixel_y < tileHeight; ++pixel_y) {
           for (let pixel_x = 0; pixel_x < tileWidth; ++pixel_x) {
-            const windowCoordinate = pixel_y * tileWidth + pixel_x;
-            data[windowCoordinate] = 0;
+            data[pixel_y * tileWidth + pixel_x] = 0;
           }
         }
-        // Blackout missing data
         for (let pixel_x = xmax; pixel_x < tileWidth; ++pixel_x) {
           for (let pixel_y = 0; pixel_y < tileHeight; ++pixel_y) {
-            const windowCoordinate = pixel_y * tileWidth + pixel_x;
-            data[windowCoordinate] = 0;
+            data[pixel_y * tileWidth + pixel_x] = 0;
           }
         }
         return {
@@ -93,37 +110,20 @@ class DicomTIFFImage {
       const data = new Uint16Array(ymax * xmax);
       for (let pixel_y = 0; pixel_y < ymax; ++pixel_y) {
         for (let pixel_x = 0; pixel_x < xmax; ++pixel_x) {
-          const windowCoordinate = pixel_y * tileWidth + pixel_x;
-          data[windowCoordinate] = tile.data.getUint16(
-            windowCoordinate * this.bytesPerSample,
+          data[pixel_y * tileWidth + pixel_x] = tile.data.getUint16(
+            (pixel_y * tileWidth + pixel_x) * this.bytesPerSample,
             this.littleEndian,
           );
         }
       }
-      return {
-        data,
-        width: full ? tileWidth : xmax,
-        height: full ? tileHeight : ymax,
-      };
+      return { data, width: xmax, height: ymax };
     });
   }
 
   async readRasters(options = {}) {
-    const { signal } = options;
-    const { x, y, height, width } = options;
-    const samples = options.samples ?? [0];
-    const _origin_x = x * this.tileWidth;
-    const _origin_y = y * this.tileHeight;
-    const sample = samples[0];
-    const raster = await this._readRaster({
-      x,
-      y,
-      width,
-      height,
-      sample,
-      signal,
-    });
-    return raster;
+    const { signal, x, y, height, width } = options;
+    const sample = (options.samples ?? [0])[0];
+    return this._readRaster({ x, y, width, height, sample, signal });
   }
 
   getWidth() {

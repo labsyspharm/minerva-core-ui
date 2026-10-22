@@ -5,14 +5,13 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@hms-dbmi/viv': github:simonwarchol/viv#dabf526&path:packages/main
-  '@vivjs/constants': github:simonwarchol/viv#dabf526&path:packages/constants
-  '@vivjs/extensions': github:simonwarchol/viv#dabf526&path:packages/extensions
-  '@vivjs/layers': github:simonwarchol/viv#dabf526&path:packages/layers
-  '@vivjs/loaders': github:simonwarchol/viv#dabf526&path:packages/loaders
-  '@vivjs/viewers': github:simonwarchol/viv#dabf526&path:packages/viewers
-  '@vivjs/views': github:simonwarchol/viv#dabf526&path:packages/views
-  '@vivjs/types': github:simonwarchol/viv#dabf526&path:packages/types
+  '@vivjs/types': 0.22.1
+  '@vivjs/types@workspace:*': 0.22.1
+  '@vivjs/constants@workspace:*': 0.22.1
+  '@vivjs/extensions@workspace:*': 0.22.1
+  '@vivjs/loaders': github:simonwarchol/viv#8fe50dace590df5ebd66791caf5d5c240ac36221&path:packages/loaders
+  '@vivjs/loaders@workspace:*': github:simonwarchol/viv#8fe50dace590df5ebd66791caf5d5c240ac36221&path:packages/loaders
+  '@vivjs/layers': github:simonwarchol/viv#8fe50dace590df5ebd66791caf5d5c240ac36221&path:packages/layers
   math.gl: ^4.1.0
   '@math.gl/core': ^4.1.0
   '@math.gl/web-mercator': ^4.1.0
@@ -57,12 +56,12 @@ importers:
       '@deck.gl/widgets':
         specifier: 9.3.3
         version: 9.3.3(@deck.gl/core@9.3.3)(@luma.gl/core@9.3.3)
-      '@fontsource/overpass':
-        specifier: ^5.0.18
-        version: 5.2.5
+      '@duckdb/duckdb-wasm':
+        specifier: 1.32.0
+        version: 1.32.0
       '@hms-dbmi/viv':
-        specifier: github:simonwarchol/viv#dabf526&path:packages/main
-        version: https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/main(d83ab5bd87f60f0963d8a2873ede9650)
+        specifier: 0.22.1
+        version: 0.22.1(d83ab5bd87f60f0963d8a2873ede9650)
       '@jsquash/jpeg':
         specifier: ^1.6.0
         version: 1.6.0
@@ -129,15 +128,24 @@ importers:
       '@types/wicg-file-system-access':
         specifier: ^2023.10.5
         version: 2023.10.6
+      '@uiw/color-convert':
+        specifier: ^2.10.3
+        version: 2.10.3(@babel/runtime@7.27.4)
       '@uiw/react-color':
         specifier: ^2.9.6
         version: 2.9.6(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@uiw/react-color-alpha':
+        specifier: ^2.10.3
+        version: 2.10.3(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@uiw/react-color-hue':
+        specifier: ^2.10.3
+        version: 2.10.3(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@uiw/react-color-saturation':
+        specifier: ^2.10.3
+        version: 2.10.3(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@uiw/react-md-editor':
         specifier: ^4.0.11
         version: 4.0.11(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@vivjs/constants':
-        specifier: github:simonwarchol/viv#dabf526&path:packages/constants
-        version: https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/constants
       browser-fs-access:
         specifier: ^0.38.0
         version: 0.38.0
@@ -169,8 +177,8 @@ importers:
         specifier: ^0.15.7
         version: 0.15.7
       psudo:
-        specifier: 0.4.2
-        version: 0.4.2
+        specifier: 0.18.1
+        version: 0.18.1
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -187,8 +195,11 @@ importers:
         specifier: ^0.0.6
         version: 0.0.6
       tiffwriter:
-        specifier: ^0.1.6
-        version: 0.1.6
+        specifier: ^0.1.7
+        version: 0.1.7
+      ua-parser-js:
+        specifier: ^1.0.41
+        version: 1.0.41
       vite-plugin-svgr:
         specifier: ^4.3.0
         version: 4.5.0(rollup@4.41.1)(typescript@6.0.3)(vite@5.4.19(@types/node@20.17.57))
@@ -217,6 +228,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.3.0
         version: 18.3.7(@types/react@18.3.23)
+      '@types/ua-parser-js':
+        specifier: ^0.7.39
+        version: 0.7.39
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.33.1
         version: 8.33.1(@typescript-eslint/parser@8.33.1(eslint@9.28.0)(typescript@6.0.3))(eslint@9.28.0)(typescript@6.0.3)
@@ -226,9 +240,6 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.3.1
         version: 4.5.1(vite@5.4.19(@types/node@20.17.57))
-      '@vivjs/types':
-        specifier: github:simonwarchol/viv#dabf526&path:packages/types
-        version: https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/types
       eslint:
         specifier: ^9.7.0
         version: 9.28.0
@@ -475,6 +486,9 @@ packages:
       '@deck.gl/core': 9.3.3
       '@luma.gl/core': 9.3.3
 
+  '@duckdb/duckdb-wasm@1.32.0':
+    resolution: {integrity: sha512-IewXTNYEjsZCPE9weUWgtjGxUlMRo7qhX0GF6tq/KjK8bnY+RAl4cyUdYUfcdzbyb4b9ZxPC+FOsCcxgaKFWMg==}
+
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
     engines: {node: '>=12'}
@@ -660,12 +674,8 @@ packages:
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
 
-  '@fontsource/overpass@5.2.5':
-    resolution: {integrity: sha512-xwxYbZXc4lDQi1z0r9LiJhHTJm4UqprdYcdIZVi7C4lVtWZOTX0nvyto6Be8wWJMeu+sHb9fzLN3byldibSF4A==}
-
-  '@hms-dbmi/viv@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/main':
-    resolution: {gitHosted: true, integrity: sha512-MMWpRdxplPbfvCOhfmaGI/nH29bPqYdU4gXCBbqMv+x5E4+d2EKBuvxr61gup4pW1Y2mK5UY9/j7pnVTVoCmcA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863}
-    version: 0.22.1
+  '@hms-dbmi/viv@0.22.1':
+    resolution: {integrity: sha512-rJmh8VjLcVXwxlRZctuI7qLv7cT2DGlU3IfVULH7486LQAWfQdamRZ3IWjOby/e99/yKgXJkJiV1Nqvnk54CZQ==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -1304,6 +1314,12 @@ packages:
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
+  '@types/command-line-args@5.2.3':
+    resolution: {integrity: sha512-uv0aG6R0Y8WHZLTamZwtfsDLVRnOa+n+n5rEvFWL5Na5gZ8V2Teab/duDPFzIIIhs9qizDpcavCusCLJZu62Kw==}
+
+  '@types/command-line-usage@5.0.4':
+    resolution: {integrity: sha512-BwR5KP3Es/CSht0xqBcUXS3qCAUVXwpRKsV2+arxeb65atasuXG9LykC9Ab10Cw3s2raH92ZqOeILaQbsB2ACg==}
+
   '@types/crypto-js@4.2.2':
     resolution: {integrity: sha512-sDOLlVbHhXpAUAL0YHDUUwDZf3iN4Bwi4W6a0W0b+QcAezUbRtH4FVb+9J4h+XFPW7l/gQ9F8qC7P+Ec4k8QVQ==}
 
@@ -1365,6 +1381,9 @@ packages:
 
   '@types/react@18.3.23':
     resolution: {integrity: sha512-/LDXMQh55EzZQ0uVAZmKKhfENivEvWz6E+EYzh+/MCjMhNsotd+ZHhBGIjFDTi6+fz0OhQQQLbTgdQIxxCsC0w==}
+
+  '@types/ua-parser-js@0.7.39':
+    resolution: {integrity: sha512-P/oDfpofrdtF5xw433SPALpdSchtJmY7nsJItf8h3KXqOslkbySh8zq4dSWXH2oTjRvJ5PczVEoCZPow6GicLg==}
 
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
@@ -1434,6 +1453,11 @@ packages:
     resolution: {integrity: sha512-3i8NrFcZeeDHJ+7ZUuDkGT+UHq+XoFGsymNK2jZCOHcfEzRQ0BdpRtdpSx/Iyf3MHLWIcLS0COuOPibKQboIiQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@uiw/color-convert@2.10.3':
+    resolution: {integrity: sha512-5tIjb4CZzGR7K3Sshswsuuc6FOAFNFwjtF0hkhKH3f+CMauC4Akv7LPq6o9v68S7dIAeKvfj8qWg5Tc2I1TVSA==}
+    peerDependencies:
+      '@babel/runtime': '>=7.19.0'
+
   '@uiw/color-convert@2.9.6':
     resolution: {integrity: sha512-w8TpU3MRcquurQJxWR1daKcRygu/a0hLP/VGsLMA3ebb41sAZGxMQLHtS+zC/e3ciFNB7BbPrSPlzOcz6w6cRg==}
     peerDependencies:
@@ -1441,6 +1465,13 @@ packages:
 
   '@uiw/copy-to-clipboard@1.0.20':
     resolution: {integrity: sha512-IFQhS62CLNon1YgYJTEzXR2N3WVXg7V1FaBRDLMlzU6JY5X6Hr3OPAcw4WNoKcz2XcFD6XCgwEjlsmj+JA0mWA==}
+
+  '@uiw/react-color-alpha@2.10.3':
+    resolution: {integrity: sha512-82wtNRmEW5uZV2hmw5SYZKPIZjN6aqm8/CZOg8KXfx8eoIqpbjrRBwABggPO/O5Dj2JNAPC4eYyHslE24Pxy8w==}
+    peerDependencies:
+      '@babel/runtime': '>=7.19.0'
+      react: '>=16.9.0'
+      react-dom: '>=16.9.0'
 
   '@uiw/react-color-alpha@2.9.6':
     resolution: {integrity: sha512-DNzEVHZ0Izp4NAwzKqTcl4rLdPjSFjyZCP6Q2vKJEglugZ/bdPsmZaos9IYOrgnd1kPDmTSKZ/p8nI7vBIATGw==}
@@ -1512,6 +1543,13 @@ packages:
       react: '>=16.9.0'
       react-dom: '>=16.9.0'
 
+  '@uiw/react-color-hue@2.10.3':
+    resolution: {integrity: sha512-dlaLaQEPXvaywc8xS8DgiYIbq4qUuI8fyERR7/bRsRXCTA9x4tFAD+lWenXcZBEhQh8HfZd1MhbvjcLzs7xpFg==}
+    peerDependencies:
+      '@babel/runtime': '>=7.19.0'
+      react: '>=16.9.0'
+      react-dom: '>=16.9.0'
+
   '@uiw/react-color-hue@2.9.6':
     resolution: {integrity: sha512-B99dW2/AHMD3py83BrXl94bhXeGCZR1FMpU/FNbIIbUrV9QTiIXDs2/SB/tMD9ltcSP59RD5Sc5m2vCb/8anjw==}
     peerDependencies:
@@ -1530,6 +1568,13 @@ packages:
     resolution: {integrity: sha512-rAwE/JF/mhN3bDqu9XrHCovqVt4L68oDtm7IkamfMkqoydZ9HsjFmanhMEyBS9SU+hSK14u7OtebR48xFBQrDw==}
     peerDependencies:
       '@babel/runtime': '>=7.19.0'
+
+  '@uiw/react-color-saturation@2.10.3':
+    resolution: {integrity: sha512-iRIwNx3UTZrpV5hoQ5mcsZ8ahTXcMaGNvg8iS9JUByg+1PljwWcnqq5RNrRZJXPx+vryavefMkJLKHcPb9BLvQ==}
+    peerDependencies:
+      '@babel/runtime': '>=7.19.0'
+      react: '>=16.9.0'
+      react-dom: '>=16.9.0'
 
   '@uiw/react-color-saturation@2.9.6':
     resolution: {integrity: sha512-R1tiKbTG2WiJXerkmuaKnBFfzgyZUn08q9OjQSvNH1f3ov2/YeUVlOwQY9MbQE7ytZv+9x+1h0Lpk4QG7AdulQ==}
@@ -1575,6 +1620,13 @@ packages:
 
   '@uiw/react-color@2.9.6':
     resolution: {integrity: sha512-+0k2m6H7M/KSQcUGY/GaR9Gi3NgW45refRSJGg2yWHsMUN+Z8NZhxuZv3J8d6mQaiMijnNStLTgIxikKvfA2xw==}
+    peerDependencies:
+      '@babel/runtime': '>=7.19.0'
+      react: '>=16.9.0'
+      react-dom: '>=16.9.0'
+
+  '@uiw/react-drag-event-interactive@2.10.3':
+    resolution: {integrity: sha512-veLm9HF1cairiYbGxcALYVu51T4XAzDz8fmtQ0SiLVFHBX74+iUGo2jArS/XALFBnapsLYTAWTnHXxe38mC/Vw==}
     peerDependencies:
       '@babel/runtime': '>=7.19.0'
       react: '>=16.9.0'
@@ -1637,19 +1689,17 @@ packages:
   '@vitest/utils@3.2.7':
     resolution: {integrity: sha512-x6BDOd7dyo3PFLY3I9/HJ25X/6OurhGXk2/B9gOZNPF7XDVjeBK4k01lQE5uvDpbuheErh91qYuE1E2OEjK3Rw==}
 
-  '@vivjs/constants@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/constants':
-    resolution: {gitHosted: true, integrity: sha512-MMWpRdxplPbfvCOhfmaGI/nH29bPqYdU4gXCBbqMv+x5E4+d2EKBuvxr61gup4pW1Y2mK5UY9/j7pnVTVoCmcA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863}
-    version: 0.22.1
+  '@vivjs/constants@0.22.1':
+    resolution: {integrity: sha512-ELBgiDskTYmikKTKFf4CGtQHlso9b1JFf+1RVYCB1jZD30ffKkCwrFSxBvCxPLqLIFFeiSzgrsC9Ps4FWX9mpg==}
 
-  '@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/extensions':
-    resolution: {gitHosted: true, integrity: sha512-MMWpRdxplPbfvCOhfmaGI/nH29bPqYdU4gXCBbqMv+x5E4+d2EKBuvxr61gup4pW1Y2mK5UY9/j7pnVTVoCmcA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863}
-    version: 0.22.1
+  '@vivjs/extensions@0.22.1':
+    resolution: {integrity: sha512-joxKPPMSSjkJnS9lGnvC3jc2oXLWbIopn/rh3XxwKy3h5S4qc785fhXEPKGZdLBmO5vaqel6Gplt3dwGNqhuFw==}
     peerDependencies:
       '@deck.gl/core': 9.3.3
       '@luma.gl/shadertools': 9.3.3
 
-  '@vivjs/layers@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/layers':
-    resolution: {gitHosted: true, integrity: sha512-MMWpRdxplPbfvCOhfmaGI/nH29bPqYdU4gXCBbqMv+x5E4+d2EKBuvxr61gup4pW1Y2mK5UY9/j7pnVTVoCmcA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863}
+  '@vivjs/layers@https://codeload.github.com/simonwarchol/viv/tar.gz/8fe50dace590df5ebd66791caf5d5c240ac36221#path:packages/layers':
+    resolution: {gitHosted: true, path: packages/layers, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/8fe50dace590df5ebd66791caf5d5c240ac36221}
     version: 0.22.1
     peerDependencies:
       '@deck.gl/core': 9.3.3
@@ -1661,26 +1711,23 @@ packages:
       '@luma.gl/shadertools': 9.3.3
       '@luma.gl/webgl': 9.3.3
 
-  '@vivjs/loaders@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/loaders':
-    resolution: {gitHosted: true, integrity: sha512-MMWpRdxplPbfvCOhfmaGI/nH29bPqYdU4gXCBbqMv+x5E4+d2EKBuvxr61gup4pW1Y2mK5UY9/j7pnVTVoCmcA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863}
+  '@vivjs/loaders@https://codeload.github.com/simonwarchol/viv/tar.gz/8fe50dace590df5ebd66791caf5d5c240ac36221#path:packages/loaders':
+    resolution: {gitHosted: true, path: packages/loaders, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/8fe50dace590df5ebd66791caf5d5c240ac36221}
     version: 0.22.1
 
-  '@vivjs/types@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/types':
-    resolution: {gitHosted: true, integrity: sha512-MMWpRdxplPbfvCOhfmaGI/nH29bPqYdU4gXCBbqMv+x5E4+d2EKBuvxr61gup4pW1Y2mK5UY9/j7pnVTVoCmcA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863}
-    version: 0.22.1
+  '@vivjs/types@0.22.1':
+    resolution: {integrity: sha512-k9nHL3e8wcF3KAl70RiZWNhQJiA/MAtgSHy72DxUiYsXgBgNOHE2OeMzw/A26KgWFlLYHc0+MVOb7Jfj+xL5HA==}
 
-  '@vivjs/viewers@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/viewers':
-    resolution: {gitHosted: true, integrity: sha512-MMWpRdxplPbfvCOhfmaGI/nH29bPqYdU4gXCBbqMv+x5E4+d2EKBuvxr61gup4pW1Y2mK5UY9/j7pnVTVoCmcA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863}
-    version: 0.22.1
+  '@vivjs/viewers@0.22.1':
+    resolution: {integrity: sha512-QUV3jOhxn58GpRPZJpzXhgMheS/KlQA4Kmg7rhwfNUo3Bxk18B/vPssVveP12ic+4Fvf6FAeD/s83sWcSgUPkA==}
     peerDependencies:
       '@deck.gl/core': 9.3.3
       '@deck.gl/react': 9.3.3
       '@deck.gl/widgets': 9.3.3
-      react: 'catalog:'
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  '@vivjs/views@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/views':
-    resolution: {gitHosted: true, integrity: sha512-MMWpRdxplPbfvCOhfmaGI/nH29bPqYdU4gXCBbqMv+x5E4+d2EKBuvxr61gup4pW1Y2mK5UY9/j7pnVTVoCmcA==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863}
-    version: 0.22.1
+  '@vivjs/views@0.22.1':
+    resolution: {integrity: sha512-YyKmbaeN0MJp3IrerSGk3/m7O+HbFSFjFmlUcjDGr0YFBCsekFvy+kqLvyOsWXypsPU6n1OMVpKWSNpwNJwV3A==}
     peerDependencies:
       '@deck.gl/core': 9.3.3
       '@deck.gl/layers': 9.3.3
@@ -1727,6 +1774,10 @@ packages:
   anynum@1.0.1:
     resolution: {integrity: sha512-N6//FLET/tXYNM/F6ABca1oH6fWB+KlTt909Le28WMDBk8oaT4vY17DCrwg2MvmuqUKt3Ni4N5dGJ/EoBgcO6A==}
 
+  apache-arrow@17.0.0:
+    resolution: {integrity: sha512-X0p7auzdnGuhYMVKYINdQssS4EcKec9TCXyez/qtJt32DrIMGbzqiaMiQ0X6fQlQpw8Fl0Qygcv4dfRAr5Gu9Q==}
+    hasBin: true
+
   apache-arrow@21.2.0:
     resolution: {integrity: sha512-Hxe6Agq26gQOM954qpzYSllJBPJl+e16U5CkfuMUhLrNba+5nKkttIVlflaovN6oaTratqMGAO8H5u/aNhmHWQ==}
     hasBin: true
@@ -1739,6 +1790,14 @@ packages:
 
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
+
+  array-back@3.1.0:
+    resolution: {integrity: sha512-TkuxA4UCOvxuDK6NZYXCalszEzj+TLszyASooky+i742l9TqsOdYCMJJupxRic61hwquNtppB3hgcuq9SVSH1Q==}
+    engines: {node: '>=6'}
+
+  array-back@6.2.3:
+    resolution: {integrity: sha512-SGDvmg6QTYiTxCBkYVmThcoa67uLl35pyzRHdpCGBOcqFy6BtwnphoFPk7LhJshD+Yk1Kt35WGWeZPTgwR4Fhw==}
+    engines: {node: '>=12.17'}
 
   array-buffer-byte-length@1.0.2:
     resolution: {integrity: sha512-LHE+8BuR7RYGDKvnrmcuSq3tDcKv9OFEXQt/HpbZhY7V6h0zlUXutnAD82GiFx9rdieCMjkvtcsPqBwgUl1Iiw==}
@@ -1867,6 +1926,10 @@ packages:
     resolution: {integrity: sha512-4zNhdJD/iOjSH0A05ea+Ke6MU5mmpQcbQsSOkgdaUMJ9zTlDTD/GYlwohmIE2u0gaxHYiVHEn1Fw9mZ/ktJWgw==}
     engines: {node: '>=18'}
 
+  chalk-template@0.4.0:
+    resolution: {integrity: sha512-/ghrgmhfY8RaSdeo43hNXxpoHAtxdbskUHjPpfqUWGttFgycUhYPGx3YZBCnUCvOa7Doivn1IZec3DEGFoMgLg==}
+    engines: {node: '>=12'}
+
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
@@ -1915,6 +1978,14 @@ packages:
 
   comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
+
+  command-line-args@5.2.1:
+    resolution: {integrity: sha512-H4UfQhZyakIjC74I9d34fGYDwk3XpSr17QhEd0Q3I9Xq1CETHo4Hcuo87WyWHpAF1aSLjLRf5lD9ZGX2qStUvg==}
+    engines: {node: '>=4.0.0'}
+
+  command-line-usage@7.0.4:
+    resolution: {integrity: sha512-85UdvzTNx/+s5CkSgBm/0hzP80RFHAa7PsfeADE5ezZF3uHz3/Tqj9gIKGT9PTtpycc3Ua64T0oVulGfKxzfqg==}
+    engines: {node: '>=12.20.0'}
 
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
@@ -2231,6 +2302,10 @@ packages:
     resolution: {integrity: sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==}
     engines: {node: '>=8'}
 
+  find-replace@3.0.0:
+    resolution: {integrity: sha512-6Tb2myMioCAgv5kfvP5/PkZZ/ntTpVK39fHY7WkWBgvbeE+VHd/tZuZ4mrC+bxh4cfOZeYKVPaJIZtZXV7GNCQ==}
+    engines: {node: '>=4.0.0'}
+
   find-up@5.0.0:
     resolution: {integrity: sha512-78/PXT1wlLLDgTzDs7sjq9hzz0vXD+zn+7wypEe4fXQxCmdmqfGsEPQxmiCSQI3ajFV91bVSsvNtrJRiW6nGng==}
     engines: {node: '>=10'}
@@ -2238,6 +2313,9 @@ packages:
   flat-cache@4.0.1:
     resolution: {integrity: sha512-f7ccFPK3SXFHpx15UIGyRJ/FJQctuKZ0zVuN3frBo4HnK3cay9VEW0R6yPYFHC0AgqhukPzKjq22t5DmAyqGyw==}
     engines: {node: '>=16'}
+
+  flatbuffers@24.12.23:
+    resolution: {integrity: sha512-dLVCAISd5mhls514keQzmEG6QHmUUsNuWsb4tFafIUwvvgDjXhtfAYSKOzt5SWOy+qByV5pbsDZ+Vb7HUOBEdA==}
 
   flatbuffers@25.9.23:
     resolution: {integrity: sha512-MI1qs7Lo4Syw0EOzUl0xjs2lsoeqFku44KpngfIduHBYvzm8h2+7K8YMQh1JtVVVrUvhLpNwqVi4DERegUJhPQ==}
@@ -2661,6 +2739,10 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
+  json-bignum@0.0.3:
+    resolution: {integrity: sha512-2WHyXj3OfHSgNyuzDbSxI1w2jgw5gkWSWhS7Qg4bWXx1nLk3jnbwfUeS0PSba3IzpTUWdHxBieELUzXRjQB2zg==}
+    engines: {node: '>=0.8'}
+
   json-buffer@3.0.1:
     resolution: {integrity: sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==}
 
@@ -2764,6 +2846,9 @@ packages:
   locate-path@6.0.0:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
+
+  lodash.camelcase@4.3.0:
+    resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
 
   lodash.clonedeep@4.5.0:
     resolution: {integrity: sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==}
@@ -3205,8 +3290,8 @@ packages:
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
 
-  psudo@0.4.2:
-    resolution: {integrity: sha512-X8G/JxZkh9YpmmoM7oFdTC1l4we1kG9AAJwJaOWu+5Mft8jctoxffenjYFs1PNrlX471cdCWHjDjZa3hfo8FYQ==}
+  psudo@0.18.1:
+    resolution: {integrity: sha512-JJEXNBk8T+C3Vwmxi7rqgpgYps9ppXPSrFHXTX19SzuuqLTC0OzuZpKExekZ/gZxF9FmpfhHajFCFgOAOXgNKg==}
 
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
@@ -3556,12 +3641,16 @@ packages:
   svg-parser@2.0.4:
     resolution: {integrity: sha512-e4hG1hRwoOdRb37cIMSgzNsxyzKfayW6VOflrwvR+/bzrkyxY/31WkbgnQpgtrNp1SdpJvpUAGTa/ZoiPNDuRQ==}
 
+  table-layout@4.1.1:
+    resolution: {integrity: sha512-iK5/YhZxq5GO5z8wb0bY1317uDF3Zjpha0QFFLA8/trAoiLbQD0HUbMesEaxyzUgDxi2QlcbM8IvqOlEjgoXBA==}
+    engines: {node: '>=12.17'}
+
   texture-compressor@1.0.2:
     resolution: {integrity: sha512-dStVgoaQ11mA5htJ+RzZ51ZxIZqNOgWKAIvtjLrW1AliQQLCmrDqNzQZ8Jh91YealQ95DXt4MEduLzJmbs6lig==}
     hasBin: true
 
-  tiffwriter@0.1.6:
-    resolution: {integrity: sha512-SnyZwCGkyMjgCygJtpO9Ryn7pu5BQqcnuPrN6xxrAQYvbzrgvTllIcTcq40hM0J6izRdwAg1j1leGBa5jtfP6A==}
+  tiffwriter@0.1.7:
+    resolution: {integrity: sha512-eXsxHVPovE89cBwBkCYhljhOtJzqU8KS9yeuSPgwHahuQ77qjEMZu5rnZHCqhaWUMKs/10n8Z5n/g/pfKv7MtA==}
     engines: {node: '>=18'}
 
   tinybench@2.9.0:
@@ -3651,6 +3740,18 @@ packages:
   typescript@6.0.3:
     resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
+    hasBin: true
+
+  typical@4.0.0:
+    resolution: {integrity: sha512-VAH4IvQ7BDFYglMd7BPRDfLgxZZX4O4TFcRDA6EN5X7erNJJq+McIEp8np9aVtxrCJ6qx4GTYVfOWNjcqwZgRw==}
+    engines: {node: '>=8'}
+
+  typical@7.3.0:
+    resolution: {integrity: sha512-ya4mg/30vm+DOWfBg4YK3j2WD6TWtRkCbasOJr40CseYENzCUby/7rIvXA99JGsQHeNxLbnXdyLLxKSv3tauFw==}
+    engines: {node: '>=12.17'}
+
+  ua-parser-js@1.0.41:
+    resolution: {integrity: sha512-LbBDqdIC5s8iROCUjMbW1f5dJQTEFB1+KO9ogbvlb3nm9n4YHa5p4KTvFPWvh2Hs8gZMBuiB1/8+pdfe/tDPug==}
     hasBin: true
 
   unbox-primitive@1.1.0:
@@ -3860,6 +3961,10 @@ packages:
   word-wrap@1.2.5:
     resolution: {integrity: sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA==}
     engines: {node: '>=0.10.0'}
+
+  wordwrapjs@5.1.1:
+    resolution: {integrity: sha512-0yweIbkINJodk27gX9LBGMzyQdBDan3s/dEAiwBOj+Mf0PPyWL6/rikalkv8EeD0E8jm4o5RXEOrFTP3NXbhJg==}
+    engines: {node: '>=12.17'}
 
   wrap-ansi@7.0.0:
     resolution: {integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==}
@@ -4194,6 +4299,10 @@ snapshots:
       '@luma.gl/core': 9.3.3
       preact: 10.27.2
 
+  '@duckdb/duckdb-wasm@1.32.0':
+    dependencies:
+      apache-arrow: 17.0.0
+
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
 
@@ -4318,17 +4427,15 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
-  '@fontsource/overpass@5.2.5': {}
-
-  '@hms-dbmi/viv@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/main(d83ab5bd87f60f0963d8a2873ede9650)':
+  '@hms-dbmi/viv@0.22.1(d83ab5bd87f60f0963d8a2873ede9650)':
     dependencies:
-      '@vivjs/constants': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/constants
-      '@vivjs/extensions': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/extensions(@deck.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3))
-      '@vivjs/layers': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/layers(e486753ca2584f146add62c3dc387557)
-      '@vivjs/loaders': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/loaders
-      '@vivjs/types': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/types
-      '@vivjs/viewers': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/viewers(d83ab5bd87f60f0963d8a2873ede9650)
-      '@vivjs/views': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/views(e486753ca2584f146add62c3dc387557)
+      '@vivjs/constants': 0.22.1
+      '@vivjs/extensions': 0.22.1(@deck.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3))
+      '@vivjs/layers': https://codeload.github.com/simonwarchol/viv/tar.gz/8fe50dace590df5ebd66791caf5d5c240ac36221#path:packages/layers(e486753ca2584f146add62c3dc387557)
+      '@vivjs/loaders': https://codeload.github.com/simonwarchol/viv/tar.gz/8fe50dace590df5ebd66791caf5d5c240ac36221#path:packages/loaders
+      '@vivjs/types': 0.22.1
+      '@vivjs/viewers': 0.22.1(d83ab5bd87f60f0963d8a2873ede9650)
+      '@vivjs/views': 0.22.1(e486753ca2584f146add62c3dc387557)
     transitivePeerDependencies:
       - '@deck.gl/core'
       - '@deck.gl/geo-layers'
@@ -4898,7 +5005,6 @@ snapshots:
   '@swc/helpers@0.5.17':
     dependencies:
       tslib: 2.8.1
-    optional: true
 
   '@swc/types@0.1.27':
     dependencies:
@@ -4999,6 +5105,10 @@ snapshots:
       '@types/deep-eql': 4.0.2
       assertion-error: 2.0.1
 
+  '@types/command-line-args@5.2.3': {}
+
+  '@types/command-line-usage@5.0.4': {}
+
   '@types/crypto-js@4.2.2': {}
 
   '@types/debug@4.1.12':
@@ -5057,6 +5167,8 @@ snapshots:
     dependencies:
       '@types/prop-types': 15.7.14
       csstype: 3.1.3
+
+  '@types/ua-parser-js@0.7.39': {}
 
   '@types/unist@2.0.11': {}
 
@@ -5156,11 +5268,23 @@ snapshots:
       '@typescript-eslint/types': 8.33.1
       eslint-visitor-keys: 4.2.0
 
+  '@uiw/color-convert@2.10.3(@babel/runtime@7.27.4)':
+    dependencies:
+      '@babel/runtime': 7.27.4
+
   '@uiw/color-convert@2.9.6(@babel/runtime@7.27.4)':
     dependencies:
       '@babel/runtime': 7.27.4
 
   '@uiw/copy-to-clipboard@1.0.20': {}
+
+  '@uiw/react-color-alpha@2.10.3(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@babel/runtime': 7.27.4
+      '@uiw/color-convert': 2.10.3(@babel/runtime@7.27.4)
+      '@uiw/react-drag-event-interactive': 2.10.3(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@uiw/react-color-alpha@2.9.6(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -5251,6 +5375,14 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
+  '@uiw/react-color-hue@2.10.3(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@babel/runtime': 7.27.4
+      '@uiw/color-convert': 2.10.3(@babel/runtime@7.27.4)
+      '@uiw/react-color-alpha': 2.10.3(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   '@uiw/react-color-hue@2.9.6(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@babel/runtime': 7.27.4
@@ -5273,6 +5405,14 @@ snapshots:
       '@babel/runtime': 7.27.4
       colors-named: 1.0.5
       colors-named-hex: 1.0.4
+
+  '@uiw/react-color-saturation@2.10.3(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@babel/runtime': 7.27.4
+      '@uiw/color-convert': 2.10.3(@babel/runtime@7.27.4)
+      '@uiw/react-drag-event-interactive': 2.10.3(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@uiw/react-color-saturation@2.9.6(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -5349,6 +5489,12 @@ snapshots:
       '@uiw/react-color-slider': 2.9.6(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@uiw/react-color-swatch': 2.9.6(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@uiw/react-color-wheel': 2.9.6(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
+  '@uiw/react-drag-event-interactive@2.10.3(@babel/runtime@7.27.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@babel/runtime': 7.27.4
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
@@ -5447,17 +5593,17 @@ snapshots:
       loupe: 3.2.1
       tinyrainbow: 2.0.0
 
-  '@vivjs/constants@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/constants':
+  '@vivjs/constants@0.22.1':
     dependencies:
       '@luma.gl/constants': 9.3.3
 
-  '@vivjs/extensions@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/extensions(@deck.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3))':
+  '@vivjs/extensions@0.22.1(@deck.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3))':
     dependencies:
       '@deck.gl/core': 9.3.3
       '@luma.gl/shadertools': 9.3.3(@luma.gl/core@9.3.3)
-      '@vivjs/constants': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/constants
+      '@vivjs/constants': 0.22.1
 
-  '@vivjs/layers@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/layers(e486753ca2584f146add62c3dc387557)':
+  '@vivjs/layers@https://codeload.github.com/simonwarchol/viv/tar.gz/8fe50dace590df5ebd66791caf5d5c240ac36221#path:packages/layers(e486753ca2584f146add62c3dc387557)':
     dependencies:
       '@deck.gl/core': 9.3.3
       '@deck.gl/geo-layers': 9.3.3(@deck.gl/core@9.3.3)(@deck.gl/extensions@9.3.3(@deck.gl/core@9.3.3)(@luma.gl/core@9.3.3)(@luma.gl/engine@9.3.3(@luma.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3))))(@deck.gl/layers@9.3.3(@deck.gl/core@9.3.3)(@loaders.gl/core@4.4.5)(@luma.gl/core@9.3.3)(@luma.gl/engine@9.3.3(@luma.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3))))(@deck.gl/mesh-layers@9.3.3(@deck.gl/core@9.3.3)(@loaders.gl/core@4.4.5)(@luma.gl/core@9.3.3)(@luma.gl/engine@9.3.3(@luma.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3)))(@luma.gl/gltf@9.3.3(@luma.gl/core@9.3.3)(@luma.gl/engine@9.3.3(@luma.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3)))(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3)))(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3)))(@loaders.gl/core@4.4.5)(@luma.gl/core@9.3.3)(@luma.gl/engine@9.3.3(@luma.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3)))
@@ -5469,33 +5615,33 @@ snapshots:
       '@luma.gl/webgl': 9.3.3(@luma.gl/core@9.3.3)
       '@math.gl/core': 4.1.0
       '@math.gl/culling': 4.1.0
-      '@vivjs/constants': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/constants
-      '@vivjs/extensions': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/extensions(@deck.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3))
-      '@vivjs/loaders': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/loaders
-      '@vivjs/types': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/types
+      '@vivjs/constants': 0.22.1
+      '@vivjs/extensions': 0.22.1(@deck.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3))
+      '@vivjs/loaders': https://codeload.github.com/simonwarchol/viv/tar.gz/8fe50dace590df5ebd66791caf5d5c240ac36221#path:packages/loaders
+      '@vivjs/types': 0.22.1
 
-  '@vivjs/loaders@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/loaders':
+  '@vivjs/loaders@https://codeload.github.com/simonwarchol/viv/tar.gz/8fe50dace590df5ebd66791caf5d5c240ac36221#path:packages/loaders':
     dependencies:
-      '@vivjs/types': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/types
+      '@vivjs/types': 0.22.1
       geotiff: 2.1.4-beta.0
       lzw-tiff-decoder: 0.1.1
       quickselect: 2.0.0
       zarrita: 0.5.4
       zod: 3.25.76
 
-  '@vivjs/types@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/types':
+  '@vivjs/types@0.22.1':
     dependencies:
-      '@vivjs/constants': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/constants
+      '@vivjs/constants': 0.22.1
       math.gl: 4.1.0
 
-  '@vivjs/viewers@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/viewers(d83ab5bd87f60f0963d8a2873ede9650)':
+  '@vivjs/viewers@0.22.1(d83ab5bd87f60f0963d8a2873ede9650)':
     dependencies:
       '@deck.gl/core': 9.3.3
       '@deck.gl/react': 9.3.3(@deck.gl/core@9.3.3)(@deck.gl/widgets@9.3.3(@deck.gl/core@9.3.3)(@luma.gl/core@9.3.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@deck.gl/widgets': 9.3.3(@deck.gl/core@9.3.3)(@luma.gl/core@9.3.3)
-      '@vivjs/constants': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/constants
-      '@vivjs/extensions': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/extensions(@deck.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3))
-      '@vivjs/views': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/views(e486753ca2584f146add62c3dc387557)
+      '@vivjs/constants': 0.22.1
+      '@vivjs/extensions': 0.22.1(@deck.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3))
+      '@vivjs/views': 0.22.1(e486753ca2584f146add62c3dc387557)
       fast-deep-equal: 3.1.3
       lodash: 4.18.1
       react: 18.3.1
@@ -5508,7 +5654,7 @@ snapshots:
       - '@luma.gl/shadertools'
       - '@luma.gl/webgl'
 
-  '@vivjs/views@https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/views(e486753ca2584f146add62c3dc387557)':
+  '@vivjs/views@0.22.1(e486753ca2584f146add62c3dc387557)':
     dependencies:
       '@deck.gl/core': 9.3.3
       '@deck.gl/layers': 9.3.3(@deck.gl/core@9.3.3)(@loaders.gl/core@4.4.5)(@luma.gl/core@9.3.3)(@luma.gl/engine@9.3.3(@luma.gl/core@9.3.3)(@luma.gl/shadertools@9.3.3(@luma.gl/core@9.3.3)))
@@ -5517,8 +5663,8 @@ snapshots:
       '@luma.gl/shadertools': 9.3.3(@luma.gl/core@9.3.3)
       '@luma.gl/webgl': 9.3.3(@luma.gl/core@9.3.3)
       '@math.gl/core': 4.1.0
-      '@vivjs/layers': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/layers(e486753ca2584f146add62c3dc387557)
-      '@vivjs/loaders': https://codeload.github.com/simonwarchol/viv/tar.gz/dabf52684d5a42ccac7565724de24560bfaba863#path:packages/loaders
+      '@vivjs/layers': https://codeload.github.com/simonwarchol/viv/tar.gz/8fe50dace590df5ebd66791caf5d5c240ac36221#path:packages/layers(e486753ca2584f146add62c3dc387557)
+      '@vivjs/loaders': https://codeload.github.com/simonwarchol/viv/tar.gz/8fe50dace590df5ebd66791caf5d5c240ac36221#path:packages/loaders
       math.gl: 4.1.0
     transitivePeerDependencies:
       - '@deck.gl/geo-layers'
@@ -5560,6 +5706,18 @@ snapshots:
 
   anynum@1.0.1: {}
 
+  apache-arrow@17.0.0:
+    dependencies:
+      '@swc/helpers': 0.5.17
+      '@types/command-line-args': 5.2.3
+      '@types/command-line-usage': 5.0.4
+      '@types/node': 20.17.57
+      command-line-args: 5.2.1
+      command-line-usage: 7.0.4
+      flatbuffers: 24.12.23
+      json-bignum: 0.0.3
+      tslib: 2.8.1
+
   apache-arrow@21.2.0:
     dependencies:
       '@types/node': 25.9.5
@@ -5574,6 +5732,10 @@ snapshots:
       sprintf-js: 1.0.3
 
   argparse@2.0.1: {}
+
+  array-back@3.1.0: {}
+
+  array-back@6.2.3: {}
 
   array-buffer-byte-length@1.0.2:
     dependencies:
@@ -5731,6 +5893,10 @@ snapshots:
       loupe: 3.2.1
       pathval: 2.0.1
 
+  chalk-template@0.4.0:
+    dependencies:
+      chalk: 4.1.2
+
   chalk@4.1.2:
     dependencies:
       ansi-styles: 4.3.0
@@ -5769,6 +5935,20 @@ snapshots:
       delayed-stream: 1.0.0
 
   comma-separated-tokens@2.0.3: {}
+
+  command-line-args@5.2.1:
+    dependencies:
+      array-back: 3.1.0
+      find-replace: 3.0.0
+      lodash.camelcase: 4.3.0
+      typical: 4.0.0
+
+  command-line-usage@7.0.4:
+    dependencies:
+      array-back: 6.2.3
+      chalk-template: 0.4.0
+      table-layout: 4.1.1
+      typical: 7.3.0
 
   concat-map@0.0.1: {}
 
@@ -6197,6 +6377,10 @@ snapshots:
     dependencies:
       to-regex-range: 5.0.1
 
+  find-replace@3.0.0:
+    dependencies:
+      array-back: 3.1.0
+
   find-up@5.0.0:
     dependencies:
       locate-path: 6.0.0
@@ -6206,6 +6390,8 @@ snapshots:
     dependencies:
       flatted: 3.3.3
       keyv: 4.5.4
+
+  flatbuffers@24.12.23: {}
 
   flatbuffers@25.9.23: {}
 
@@ -6558,7 +6744,7 @@ snapshots:
     dependencies:
       es-errors: 1.3.0
       hasown: 2.0.2
-      side-channel: 1.1.0
+      side-channel: 1.1.1
 
   iota-array@1.0.0: {}
 
@@ -6719,6 +6905,8 @@ snapshots:
 
   jsesc@3.1.0: {}
 
+  json-bignum@0.0.3: {}
+
   json-buffer@3.0.1: {}
 
   json-parse-even-better-errors@2.3.1: {}
@@ -6810,6 +6998,8 @@ snapshots:
   locate-path@6.0.0:
     dependencies:
       p-locate: 5.0.0
+
+  lodash.camelcase@4.3.0: {}
 
   lodash.clonedeep@4.5.0: {}
 
@@ -7462,7 +7652,7 @@ snapshots:
 
   proxy-from-env@1.1.0: {}
 
-  psudo@0.4.2: {}
+  psudo@0.18.1: {}
 
   punycode@2.3.1: {}
 
@@ -7970,12 +8160,17 @@ snapshots:
 
   svg-parser@2.0.4: {}
 
+  table-layout@4.1.1:
+    dependencies:
+      array-back: 6.2.3
+      wordwrapjs: 5.1.1
+
   texture-compressor@1.0.2:
     dependencies:
       argparse: 1.0.10
       image-size: 0.7.5
 
-  tiffwriter@0.1.6: {}
+  tiffwriter@0.1.7: {}
 
   tinybench@2.9.0: {}
 
@@ -8102,6 +8297,12 @@ snapshots:
   typescript@5.1.6: {}
 
   typescript@6.0.3: {}
+
+  typical@4.0.0: {}
+
+  typical@7.3.0: {}
+
+  ua-parser-js@1.0.41: {}
 
   unbox-primitive@1.1.0:
     dependencies:
@@ -8366,6 +8567,8 @@ snapshots:
       stackback: 0.0.2
 
   word-wrap@1.2.5: {}
+
+  wordwrapjs@5.1.1: {}
 
   wrap-ansi@7.0.0:
     dependencies:

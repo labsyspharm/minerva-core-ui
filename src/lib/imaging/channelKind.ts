@@ -8,8 +8,9 @@ import {
 export type { ImageChannelKind, MaskVisualization };
 
 export const DEFAULT_MASK_VISUALIZATION: MaskVisualization = {
-  style: "outline",
-  color: "white",
+  style: "full",
+  color: "random",
+  opacity: 1,
 };
 
 /** Enable random colors with a new seed (also used to re-roll while active). */
@@ -30,7 +31,12 @@ export function normalizeMaskVisualization(value: unknown): MaskVisualization {
 }
 
 /** Intensity channels on by default at import; matches default group slot count. */
-export const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 4;
+export const DEFAULT_VISIBLE_INTENSITY_CHANNELS = 5;
+
+/** Viv `XRLayer` shader cap (10 in Viv 0.22). Extra on-channels are not drawn. */
+export const MAX_VIV_INTENSITY_CHANNELS = 10;
+
+export const VIEWER_INTENSITY_LIMIT_HINT = `Max ${MAX_VIV_INTENSITY_CHANNELS} channels`;
 
 /** Document image role for import (`mixed` maps to intensity). */
 export function resolveImageImportRole(image: {
@@ -77,21 +83,29 @@ type RgbDisplayChannelFields = {
   name?: string;
   index?: number;
   id?: string;
+  /** Image-level import override, copied onto flattened channels. */
+  rgbDisplay?: boolean;
 };
 
-function isPlanarIntensityDtype(dtype: string | undefined): boolean {
+/** True for OME/Viv uint8 type ids (`Uint8`, `uint8`, `int8`). */
+export function isUint8Dtype(dtype: string | undefined): boolean {
   if (dtype == null || dtype === "") return false;
-  return /uint/i.test(dtype);
+  return /^u?int8$/i.test(dtype.trim());
+}
+
+/** Full-scale intensity for contrast / histogram (8-bit vs 16-bit). */
+export function sourceDtypeMax(sourceDataTypeId?: string): number {
+  return isUint8Dtype(sourceDataTypeId) ? 255 : 65535;
 }
 
 /** Pseudocolor tints for planar R/G/B channels in the viewer and channel panel. */
-export const PLANAR_RGB_DISPLAY_COLORS = [
+const PLANAR_RGB_DISPLAY_COLORS = [
   { r: 255, g: 0, b: 0 },
   { r: 0, g: 255, b: 0 },
   { r: 0, g: 0, b: 255 },
 ] as const;
 
-function planarRgbSlotFromName(name: string): 0 | 1 | 2 | null {
+export function planarRgbSlotFromName(name: string): 0 | 1 | 2 | null {
   const n = name.toLowerCase();
   if (n.endsWith("_r") || n.endsWith("-r") || n.endsWith("[r]") || n === "r") {
     return 0;
@@ -106,25 +120,46 @@ function planarRgbSlotFromName(name: string): 0 | 1 | 2 | null {
 }
 
 /**
- * True for interleaved RGB (SamplesPerPixel=3) or planar RGB (3×SPP=1, e.g. H&E HE_r/g/b).
- * These are shown as a single color image, not multiplex fluorescence.
+ * True for interleaved RGB (SamplesPerPixel=3), named planar RGB (HE_r/g/b),
+ * or unnamed 3×uint8 planar (typical H&E). Import may set `rgbDisplay` to
+ * override packed and planar cases (`false` = independent IF channels).
  */
 export function isRgbDisplaySource(
   channels: readonly RgbDisplayChannelFields[],
 ): boolean {
   const intensity = channels.filter(isImageChannel);
   if (intensity.length === 0) return false;
-  if (intensity.length === 1 && intensity[0].samples === 3) return true;
+  const override = intensity.find((c) => c.rgbDisplay != null)?.rgbDisplay;
+  // Shared Brightfield / Fluorescence flag wins over the 3-channel shape check.
+  if (override != null && intensity.every((c) => c.rgbDisplay === override)) {
+    return override;
+  }
+  if (intensity.length === 1 && intensity[0].samples === 3) {
+    return override !== false;
+  }
   const planar = intensity.filter((c) => (c.samples ?? 1) === 1);
   if (planar.length !== 3) return false;
+  if (override != null) return override;
   if (planar.every((c) => planarRgbSlotFromName(c.name ?? "") != null)) {
     return true;
   }
-  return planar.every((c) => isPlanarIntensityDtype(c.sourceDataTypeId));
+  return planar.every((c) => isUint8Dtype(c.sourceDataTypeId));
+}
+
+/** Apply image-level `rgbDisplay` onto channel fields for {@link isRgbDisplaySource}. */
+export function isRgbDisplayImage(image: {
+  channels?: readonly RgbDisplayChannelFields[] | null;
+  rgbDisplay?: boolean;
+}): boolean {
+  const channels = image.channels ?? [];
+  if (image.rgbDisplay == null) return isRgbDisplaySource(channels);
+  return isRgbDisplaySource(
+    channels.map((c) => ({ ...c, rgbDisplay: image.rgbDisplay })),
+  );
 }
 
 /** 0 = red, 1 = green, 2 = blue within a planar RGB source triplet. */
-export function planarRgbSlotIndex(
+function planarRgbSlotIndex(
   channel: RgbDisplayChannelFields,
   allChannels: readonly RgbDisplayChannelFields[],
 ): number | null {
@@ -157,16 +192,39 @@ export function planarRgbDisplayColor(
   return PLANAR_RGB_DISPLAY_COLORS[slot];
 }
 
+/** Packed RGB, planar H&E, and 8-bit (full 0–255 window) are not GMM channels. */
+export function isGmmEligible(
+  channel: RgbDisplayChannelFields,
+  allChannels: readonly RgbDisplayChannelFields[],
+): boolean {
+  return (
+    isImageChannel(channel) &&
+    channel.samples !== 3 &&
+    !isRgbDisplayChannel(channel, allChannels) &&
+    planarRgbSlotFromName(channel.name ?? "") == null &&
+    !isUint8Dtype(channel.sourceDataTypeId)
+  );
+}
+
 /** Whether histogram / contrast controls should be hidden for this channel. */
 export function isRgbDisplayChannel(
   channel: RgbDisplayChannelFields,
   allChannels: readonly RgbDisplayChannelFields[],
 ): boolean {
   if (!isImageChannel(channel)) return false;
-  if (channel.samples === 3) return true;
-  if (channel.imageId == null) return false;
-  const onImage = allChannels.filter((c) => c.imageId === channel.imageId);
-  return isRgbDisplaySource(onImage);
+  if (channel.imageId != null) {
+    return isRgbDisplaySource(
+      allChannels.filter((c) => c.imageId === channel.imageId),
+    );
+  }
+  return isRgbDisplaySource([channel]);
+}
+
+/** Every intensity plane of one image: the unit an RGB / H&E row stands for. */
+export function imageIntensityChannels<
+  T extends { kind?: string; imageId?: string },
+>(channels: readonly T[], imageId: string | undefined): T[] {
+  return channels.filter((c) => c.imageId === imageId && isImageChannel(c));
 }
 
 /** Document-level role inferred from persisted channel kinds on one image row. */

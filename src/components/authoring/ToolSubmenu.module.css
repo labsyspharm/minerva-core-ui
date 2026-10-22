@@ -3,7 +3,6 @@
   display: inline-block;
 }
 
-/* Visuals come from parent toolButton (LayersPanel); keep layout only */
 .toggle {
   display: flex;
   align-items: center;
@@ -16,17 +15,9 @@
   background: transparent;
   color: inherit;
   border: none;
-  border-radius: 2px;
+  border-radius: 0;
   cursor: pointer;
   line-height: 0;
-  transition:
-    background-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.toggle:hover,
-.toggle:focus-visible {
-  outline: none;
 }
 
 .chevron {
@@ -43,17 +34,9 @@
 }
 
 .menu {
-  position: fixed;
-  padding: 3px;
-  min-width: 128px;
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 4px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  gap: 1px;
 }
 
 .menu svg {
@@ -66,30 +49,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 8px;
-  background: transparent;
-  border: none;
-  border-radius: 2px;
-  color: #c9d1d9;
-  cursor: pointer;
-  font-size: 12px;
-  text-align: left;
-  line-height: 1.2;
-}
-
-.menuItem:hover {
-  background: rgba(110, 118, 129, 0.35);
-  color: #f0f6fc;
-}
-
-.menuItemActive {
-  background-color: var(--panel-accent, #58a6ff);
-  color: #fff;
-}
-
-.menuItemActive:hover {
-  background-color: #1f8ad6;
-  color: #fff;
 }
 
 .menuItemLabel {

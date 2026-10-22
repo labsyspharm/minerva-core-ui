@@ -16,7 +16,7 @@ import PointIcon from "@/components/shared/icons/point.svg?react";
 import PolygonIcon from "@/components/shared/icons/polygon.svg?react";
 import PolylineIcon from "@/components/shared/icons/polyline.svg?react";
 import TextIcon from "@/components/shared/icons/text.svg?react";
-import toolButton from "@/components/shared/panel/toolButton.module.css";
+import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import { TextEditPanel } from "@/components/shared/tools/TextEditPanel";
 import type { Shape } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -661,14 +661,9 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         <div className={styles.brushEditActions}>
           {/* Brush add mode */}
           {isPolygon && (
-            <button
-              type="button"
-              className={[
-                styles.brushEditButton,
-                isBrushActive ? styles.brushEditButtonActive : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
+            <PanelIconButton
+              variant="row"
+              active={isBrushActive}
               onClick={(e) => {
                 e.stopPropagation();
 
@@ -686,19 +681,14 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               title="Brush add to polygon"
             >
               <AddBrushIcon className={styles.brushEditIcon} />
-            </button>
+            </PanelIconButton>
           )}
 
           {/* Brush subtract (eraser) mode */}
           {isPolygon && (
-            <button
-              type="button"
-              className={[
-                styles.brushEditButton,
-                isEraserActive ? styles.brushEditButtonActive : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
+            <PanelIconButton
+              variant="row"
+              active={isEraserActive}
               onClick={(e) => {
                 e.stopPropagation();
 
@@ -716,7 +706,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
               title="Brush subtract from polygon"
             >
               <EraserIcon className={styles.brushEditIcon} />
-            </button>
+            </PanelIconButton>
           )}
         </div>
       );
@@ -732,17 +722,14 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
 
   const layerMetaButtons = (
     <>
-      <button
-        type="button"
-        className={toolButton.toolButton}
+      <PanelIconButton
         onClick={() => createGroup()}
-        title="Add group"
+        title="Add"
+        aria-label="Add group"
       >
         <FolderIcon />
-      </button>
-      <button
-        type="button"
-        className={toolButton.toolButton}
+      </PanelIconButton>
+      <PanelIconButton
         onClick={handleHeaderEditTextClick}
         disabled={headerEditTextDisabled}
         title={
@@ -752,10 +739,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         }
       >
         <CursorIcon />
-      </button>
-      <button
-        type="button"
-        className={toolButton.toolButton}
+      </PanelIconButton>
+      <PanelIconButton
         onClick={handleHeaderColorClick}
         disabled={headerColorDisabled}
         title={
@@ -769,10 +754,8 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         }
       >
         <AnnotationColorIcon />
-      </button>
-      <button
-        type="button"
-        className={toolButton.toolButton}
+      </PanelIconButton>
+      <PanelIconButton
         onClick={handleHeaderDeleteClick}
         disabled={!selectedGroupId && selectedShapeIds.length === 0}
         title={
@@ -784,16 +767,16 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
         }
       >
         <TrashIcon />
-      </button>
+      </PanelIconButton>
       {waypointClipboardActions}
     </>
   );
 
-  const hasUnifiedChrome = !!toolbarSlot;
+  const hasUnifiedToolbar = !!toolbarSlot;
 
   return (
     <div className={styles.layersPanel}>
-      {hasUnifiedChrome ? (
+      {hasUnifiedToolbar ? (
         <div className={styles.layersUnifiedTop}>
           <div className={styles.layersToolbarSlot}>{toolbarSlot}</div>
           <div className={styles.layersMetaCluster}>{layerMetaButtons}</div>
@@ -806,7 +789,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
           variant={itemListVariant}
           items={allItems}
           title="Layers"
-          noHeader={hasUnifiedChrome}
+          noHeader={hasUnifiedToolbar}
           emptyMessage="No layers yet"
           onItemClick={handleItemClick}
           onToggleVisibility={handleToggleVisibility}
@@ -824,7 +807,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
           showDeleteButton={false}
           showExpandToggle={true}
           headerActions={
-            hasUnifiedChrome ? undefined : (
+            hasUnifiedToolbar ? undefined : (
               <div className={styles.layersMetaCluster}>{layerMetaButtons}</div>
             )
           }

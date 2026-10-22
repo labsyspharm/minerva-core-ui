@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "@/lib/imaging/channelKind";
 import type { Shape } from "@/lib/shapes/shapeModel";
@@ -6,12 +7,57 @@ import {
   lineToPolygon,
   textToPolygon,
 } from "@/lib/shapes/shapeModel";
+import type { ClassVisibilitySchema } from "@/lib/stores/documentSchema";
 
 /** Channel-list visibility key for the virtual selection / mask row. */
 export const SELECTION_MASK_CHANNEL_KEY = "Selection";
 
 /** Deck.gl mask layer id (`operation: 'mask'`) for {@link MaskExtension}. */
 export const IMAGE_SELECTION_MASK_LAYER_ID = "image-selection-mask";
+
+/** Six colors for cell-outline random coloring (CPU + GPU bitmask shader). */
+export const CELL_OUTLINE_RGB = [
+  [82, 249, 0], // #52f900
+  [0, 251, 255], // #00fbff
+  [255, 0, 40], // #ff0028
+  [255, 188, 0], // #ffbc00
+  [145, 169, 255], // #91a9ff
+  [255, 0, 255], // #ff00ff
+] as const;
+
+/** Same XOR palette index as the mask fragment shader `randomColor`. */
+export function defaultClassColor(
+  classId: number,
+  colorSeed: number,
+): { r: number; g: number; b: number } {
+  const i = ((classId ^ colorSeed) >>> 0) % CELL_OUTLINE_RGB.length;
+  const [r, g, b] = CELL_OUTLINE_RGB[i];
+  return { r, g, b };
+}
+
+export type ClassVisibility = z.infer<typeof ClassVisibilitySchema>;
+
+export type MaskGpuStyle = {
+  /** R8, class index per cell id. 0 = unnamed. */
+  index: Uint8Array;
+  width: number;
+  height: number;
+  /** RGBA8, row of class colors. Texel 0 unused. */
+  palette: Uint8Array;
+  missHidden: boolean;
+  indexRev: string;
+  rev: string;
+};
+
+function cellOutlineRgbFromSeed(seed: string): [number, number, number] {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const [r, g, b] = CELL_OUTLINE_RGB[(h >>> 0) % CELL_OUTLINE_RGB.length];
+  return [r, g, b];
+}
 
 export type ImageSelectionMask = {
   width: number;
@@ -25,18 +71,14 @@ export type ImageSelectionMask = {
   maskVisualization?: MaskVisualization;
 };
 
-/** Stable RGB from a string seed (label id, shape id, channel name). */
-function colorFromSeed(seed: string): [number, number, number] {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  const r = 50 + ((h >> 16) & 0x9f);
-  const g = 50 + ((h >> 8) & 0x9f);
-  const b = 50 + (h & 0x9f);
-  return [r, g, b];
-}
+const binaryImageCache = new WeakMap<
+  Uint8Array,
+  { width: number; height: number; image: ImageData }
+>();
+const displayImageCache = new WeakMap<
+  Uint8Array,
+  { key: string; image: ImageData }
+>();
 
 function isEdgeAt(
   data: Uint8Array,
@@ -130,9 +172,12 @@ function binaryMaskToRgba(
       ? `${colorSeed}:${visualization.colorSeed}`
       : colorSeed;
   const rgb: [number, number, number] =
-    visualization.color === "random" ? colorFromSeed(seedKey) : [255, 255, 255];
+    visualization.color === "random"
+      ? cellOutlineRgbFromSeed(seedKey)
+      : [255, 255, 255];
   const outline = visualization.style === "outline";
-  const alpha = outline ? 230 : 170;
+  const opacity = Math.min(1, Math.max(0, visualization.opacity ?? 1));
+  const alpha = Math.round((outline ? 230 : 170) * opacity);
 
   if (!outline) {
     paintBinaryMask(rgba, data, rgb, alpha);
@@ -265,9 +310,11 @@ export function rasterizePolygonToImageMask(
 }
 
 export function selectionMaskBinaryImageData(
-  mask: ImageSelectionMask,
+  mask: Pick<ImageSelectionMask, "width" | "height" | "data">,
 ): ImageData {
   const { width, height, data } = mask;
+  const cached = binaryImageCache.get(data);
+  if (cached?.width === width && cached.height === height) return cached.image;
   const rgba = new Uint8ClampedArray(width * height * 4);
   for (let i = 0; i < width * height; i++) {
     const v = data[i] ? 255 : 0;
@@ -277,13 +324,43 @@ export function selectionMaskBinaryImageData(
     rgba[o + 2] = v;
     rgba[o + 3] = v;
   }
-  return new ImageData(rgba, width, height);
+  const image = new ImageData(rgba, width, height);
+  binaryImageCache.set(data, { width, height, image });
+  return image;
 }
 
 export function selectionMaskDisplayImageData(
-  mask: ImageSelectionMask,
+  mask: Pick<
+    ImageSelectionMask,
+    | "width"
+    | "height"
+    | "data"
+    | "sourceShapeId"
+    | "sourceShapeLabel"
+    | "maskVisualization"
+  >,
 ): ImageData {
   const viz = mask.maskVisualization ?? DEFAULT_MASK_VISUALIZATION;
   const seed = mask.sourceShapeId ?? mask.sourceShapeLabel ?? "selection";
-  return binaryMaskToRgba(mask.data, mask.width, mask.height, viz, seed);
+  const key = [
+    mask.width,
+    mask.height,
+    viz.style,
+    viz.color,
+    viz.colorSeed ?? 0,
+    seed,
+  ].join(":");
+  const cached = displayImageCache.get(mask.data);
+  if (cached?.key === key) return cached.image;
+  // BitmapLayer applies display opacity; keep pixel generation independent so
+  // dragging the opacity slider does not rebuild this potentially large buffer.
+  const image = binaryMaskToRgba(
+    mask.data,
+    mask.width,
+    mask.height,
+    { ...viz, opacity: 1 },
+    seed,
+  );
+  displayImageCache.set(mask.data, { key, image });
+  return image;
 }
