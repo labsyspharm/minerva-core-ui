@@ -29,6 +29,10 @@ import {
   DEFAULT_MASK_VISUALIZATION,
   isMaskChannel,
 } from "@/lib/imaging/channelKind";
+import {
+  contourSmoothingStepsFor,
+  withContourLayers,
+} from "@/lib/imaging/contourTiles";
 import { opacityForImage } from "@/lib/imaging/imageOpacity";
 import { orientationForImage } from "@/lib/imaging/imageOrientation";
 import type { LoaderList } from "@/lib/imaging/loaderEntries";
@@ -505,6 +509,24 @@ export const ImageViewer = (props: ImageViewerProps) => {
     imageSelectionMask != null &&
     (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
   const maskExtension = useMemo(() => new MaskExtension(), []);
+  const contourChannelIds = useAppStore((s) => s.contourChannelIds);
+  const contourLevels = useAppStore((s) => s.contourLevels);
+  const contourSmoothing = useAppStore((s) => s.contourSmoothing);
+  const setContourSmoothingSteps = useAppStore(
+    (s) => s.setContourSmoothingSteps,
+  );
+  useEffect(() => {
+    const imageIds = new Set<string>();
+    for (const image of images) {
+      for (const channel of image.channels) {
+        if (contourChannelIds[channel.id]) imageIds.add(image.id);
+      }
+    }
+    const planeSets = loaderList
+      .filter((item) => item.sourceImageId && imageIds.has(item.sourceImageId))
+      .map((item) => item.loader.data);
+    setContourSmoothingSteps(contourSmoothingStepsFor(planeSets));
+  }, [contourChannelIds, images, loaderList, setContourSmoothingSteps]);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   /** False until the viewer element reports its size; the window size is only a guess. */
@@ -1070,14 +1092,25 @@ export const ImageViewer = (props: ImageViewerProps) => {
   ]);
 
   const clippedImageLayers = useMemo(() => {
-    if (!selectionMaskActive || !imageSelectionMask) return imageLayers;
-    return imageLayers.map((layer) =>
-      layer.clone({
-        extensions: [maskExtension],
-        maskId: IMAGE_SELECTION_MASK_LAYER_ID,
-      } as Parameters<typeof layer.clone>[0]),
+    const mask = selectionMaskActive
+      ? { extension: maskExtension, maskId: IMAGE_SELECTION_MASK_LAYER_ID }
+      : undefined;
+    return imageLayers.flatMap((layer) =>
+      withContourLayers(layer, {
+        contourChannelIds,
+        levels: contourLevels,
+        smoothing: contourSmoothing,
+        mask,
+      }),
     );
-  }, [imageLayers, selectionMaskActive, imageSelectionMask, maskExtension]);
+  }, [
+    imageLayers,
+    contourChannelIds,
+    contourLevels,
+    contourSmoothing,
+    selectionMaskActive,
+    maskExtension,
+  ]);
 
   const allLayers = useMemo(() => {
     const layers: AnyLayer[] = [
@@ -1390,20 +1423,22 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   const handleAfterRender = useCallback(() => {
     if (loadingWidgetRef.current) {
-      // Display-only overlays (mask opacity/color, annotations) should not
-      // activate the image-data loading spinner.
-      loadingWidgetRef.current.onRedraw({ layers: imageLayers });
+      // Drawn image tiles only. Overlay layers stay out. Contour and
+      // selection-mask clones are the instances Deck updates.
+      loadingWidgetRef.current.onRedraw({ layers: clippedImageLayers });
     }
     // Skip Zustand while the camera is busy — isLoaded flickers as LODs churn.
     if (isCameraBusyRef.current) return;
     const loaded =
-      imageLayers.length > 0 &&
-      imageLayers.every((layer) => (layer as { isLoaded?: boolean }).isLoaded);
+      clippedImageLayers.length > 0 &&
+      clippedImageLayers.every(
+        (layer) => (layer as { isLoaded?: boolean }).isLoaded,
+      );
     if (imageLayersLoadedRef.current !== loaded) {
       imageLayersLoadedRef.current = loaded;
       setViewerImageLayersLoaded(loaded);
     }
-  }, [imageLayers, setViewerImageLayersLoaded]);
+  }, [clippedImageLayers, setViewerImageLayersLoaded]);
 
   useEffect(() => {
     return () => {

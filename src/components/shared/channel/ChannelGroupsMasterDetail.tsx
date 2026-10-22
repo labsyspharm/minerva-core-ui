@@ -11,7 +11,10 @@ import {
   type ChannelColorTarget,
   commitChannelColorTarget,
 } from "@/components/shared/channel/ChannelEditorPopover";
-import { ChannelRow } from "@/components/shared/channel/ChannelRow";
+import {
+  ChannelRow,
+  useAnchoredMenu,
+} from "@/components/shared/channel/ChannelRow";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import { featureTableRowExtras } from "@/components/shared/channel/FeatureTable";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
@@ -50,7 +53,6 @@ import { channelFloatRange, isFloatDtype } from "@/lib/imaging/floatRange";
 import {
   ensureGmm,
   getGmmPendingIds,
-  refitGmm,
   subscribeGmmFit,
 } from "@/lib/imaging/gmmScheduler";
 import {
@@ -221,134 +223,6 @@ function DraggableChannelRow(props: {
   );
 }
 
-function useAnchoredMenu(opts: {
-  align: "start" | "end";
-  estimateHeight: number;
-}) {
-  const { align, estimateHeight } = opts;
-  const [open, setOpen] = React.useState(false);
-  const wrapRef = React.useRef<HTMLDivElement>(null);
-  const menuRef = React.useRef<HTMLDivElement>(null);
-  const [menuStyle, setMenuStyle] = React.useState<React.CSSProperties>({});
-
-  const close = React.useCallback(() => setOpen(false), []);
-
-  const toggleFromButton = (btn: HTMLButtonElement) => {
-    if (open) {
-      close();
-      return;
-    }
-    const rect = btn.getBoundingClientRect();
-    const openUp =
-      rect.bottom + estimateHeight + 8 > window.innerHeight &&
-      rect.top > estimateHeight;
-    const top = openUp ? rect.top - 4 - estimateHeight : rect.bottom + 4;
-    setMenuStyle(
-      align === "end"
-        ? { top, right: Math.max(8, window.innerWidth - rect.right) }
-        : {
-            top,
-            left: Math.max(8, Math.min(rect.left, window.innerWidth - 188)),
-          },
-    );
-    setOpen(true);
-  };
-
-  React.useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (wrapRef.current?.contains(t) || menuRef.current?.contains(t)) return;
-      setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  return { open, wrapRef, menuRef, menuStyle, toggleFromButton, close };
-}
-
-type ChannelRowMoreMenuProps = {
-  channelName: string;
-  onFitContrast?: () => void;
-  fitBusy?: boolean;
-  onRemoveFromGroup?: () => void;
-};
-
-function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
-  const { channelName, onFitContrast, fitBusy, onRemoveFromGroup } = props;
-  const hasItems = Boolean(onFitContrast || onRemoveFromGroup);
-  const menu = useAnchoredMenu({ align: "end", estimateHeight: 72 });
-
-  if (!hasItems) return null;
-
-  return (
-    <div ref={menu.wrapRef}>
-      <button
-        type="button"
-        className={styles.channelActionButton}
-        aria-label={`More actions for ${channelName}`}
-        aria-expanded={menu.open}
-        aria-haspopup="menu"
-        onClick={(e) => {
-          e.stopPropagation();
-          menu.toggleFromButton(e.currentTarget);
-        }}
-      >
-        ⋮
-      </button>
-      {menu.open
-        ? createPortal(
-            <div
-              ref={menu.menuRef}
-              className={minervaTheme.menuFixed}
-              role="menu"
-              style={menu.menuStyle}
-            >
-              {onFitContrast ? (
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={minervaTheme.menuItem}
-                  disabled={fitBusy}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    menu.close();
-                    onFitContrast();
-                  }}
-                >
-                  {fitBusy ? "Fitting contrast…" : "Fit contrast"}
-                </button>
-              ) : null}
-              {onRemoveFromGroup ? (
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={minervaTheme.menuItem}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    menu.close();
-                    onRemoveFromGroup();
-                  }}
-                >
-                  Remove from group
-                </button>
-              ) : null}
-            </div>,
-            document.body,
-          )
-        : null}
-    </div>
-  );
-}
-
 function GearIcon({ size = 14 }: { size?: number }) {
   return (
     <svg
@@ -487,7 +361,6 @@ function groupOptimizePendingSourceIds(
 
 export type ChannelGroupsMasterDetailProps = {
   noLoader: boolean;
-  contrastEditable?: boolean;
 };
 
 export const ChannelGroupsMasterDetail = (
@@ -613,9 +486,6 @@ export const ChannelGroupsMasterDetail = (
     left: number;
   } | null>(null);
   const [optimizePaletteBusy, setOptimizePaletteBusy] = React.useState(false);
-  const [refittingContrastIds, setRefittingContrastIds] = React.useState(
-    () => new Set<string>(),
-  );
   const [dragOverGroupId, setDragOverGroupId] = React.useState<string | null>(
     null,
   );
@@ -855,72 +725,16 @@ export const ChannelGroupsMasterDetail = (
     setChannelGroupRowVisibilities(next);
   };
 
-  const { ensureChannelHistograms } = useAuthorChannelNav() ?? {};
+  const { ensureChannelHistograms, contrastEditable } =
+    useAuthorChannelNav() ?? {};
 
-  const refitAutoContrast = React.useCallback(
-    async (sourceChannelId: string) => {
-      const sc = sourceChannels.find((c) => c.id === sourceChannelId);
-      if (!sc || isMaskChannel(sc) || isRgbDisplayChannel(sc, sourceChannels)) {
-        return;
-      }
-      setRefittingContrastIds((prev) => {
-        const next = new Set(prev);
-        next.add(sourceChannelId);
-        return next;
-      });
-      useAppStore.getState().clearChannelRendering();
-      try {
-        const limits = await refitGmm(sourceChannelId);
-        if (!limits) return;
-        const groups = useDocumentStore.getState().channelGroups;
-        let changed = false;
-        const nextGroups = groups.map((g) => {
-          const channels = g.channels.map((gc) => {
-            if (gc.channelId !== sourceChannelId) return gc;
-            changed = true;
-            return {
-              ...gc,
-              lowerLimit: limits.lower,
-              upperLimit: limits.upper,
-            };
-          });
-          return { ...g, channels };
-        });
-        if (changed) setChannelGroups(nextGroups);
-      } catch {
-      } finally {
-        setRefittingContrastIds((prev) => {
-          const next = new Set(prev);
-          next.delete(sourceChannelId);
-          return next;
-        });
-      }
-    },
-    [setChannelGroups, sourceChannels],
-  );
-
-  const canFitContrast = (sc: Channel | undefined): sc is Channel =>
+  const canFitContrast = (sc: Channel | undefined): boolean =>
     Boolean(
-      props.contrastEditable &&
+      contrastEditable &&
         sc &&
         !isMaskChannel(sc) &&
         !isRgbDisplayChannel(sc, sourceChannels),
     );
-
-  const channelMoreMenu = (
-    sc: Channel | undefined,
-    name: string,
-    onRemoveFromGroup?: () => void,
-  ) => (
-    <ChannelRowMoreMenu
-      channelName={name}
-      onFitContrast={
-        canFitContrast(sc) ? () => void refitAutoContrast(sc.id) : undefined
-      }
-      fitBusy={sc ? refittingContrastIds.has(sc.id) : false}
-      onRemoveFromGroup={onRemoveFromGroup}
-    />
-  );
 
   const addChannelToGroup = React.useCallback(
     async (groupId: string, sourceChannelUUID: string) => {
@@ -1390,7 +1204,7 @@ export const ChannelGroupsMasterDetail = (
                   : rgbToHex(gc.color);
                 const palettePending = palettePendingIds.includes(gc.channelId);
                 const contrast =
-                  props.contrastEditable &&
+                  contrastEditable &&
                   sc &&
                   isImageChannel(sc) &&
                   visible &&
@@ -1513,55 +1327,42 @@ export const ChannelGroupsMasterDetail = (
                                 },
                               }
                             : {})}
+                        more={{
+                          sourceChannel: sc,
+                          allowContrast: canFitContrast(sc),
+                          onRemoveFromGroup: () =>
+                            removeChannelFromGroup(group.id, gc.id),
+                        }}
                         trailing={
-                          rgbDisplay ? (
-                            channelMoreMenu(sc, name, () =>
-                              removeChannelFromGroup(group.id, gc.id),
-                            )
-                          ) : (
-                            <>
-                              {showColorLock ? (
-                                <button
-                                  type="button"
-                                  className={[
-                                    styles.channelActionButton,
-                                    colorLocked
-                                      ? styles.colorLockButtonLocked
-                                      : "",
-                                  ].join(" ")}
-                                  title={
-                                    colorLocked ? "Unlock color" : "Lock color"
-                                  }
-                                  aria-label={
-                                    colorLocked
-                                      ? `Unlock color for ${name}`
-                                      : `Lock color for ${name}`
-                                  }
-                                  aria-pressed={colorLocked}
-                                  onClick={() =>
-                                    toggleColorLock(group.id, gc.id)
-                                  }
-                                >
-                                  {colorLocked ? (
-                                    <LockIcon
-                                      width={12}
-                                      height={12}
-                                      aria-hidden
-                                    />
-                                  ) : (
-                                    <LockOpenIcon
-                                      width={12}
-                                      height={12}
-                                      aria-hidden
-                                    />
-                                  )}
-                                </button>
-                              ) : null}
-                              {channelMoreMenu(sc, name, () =>
-                                removeChannelFromGroup(group.id, gc.id),
+                          showColorLock ? (
+                            <button
+                              type="button"
+                              className={[
+                                styles.channelActionButton,
+                                colorLocked ? styles.colorLockButtonLocked : "",
+                              ].join(" ")}
+                              title={
+                                colorLocked ? "Unlock color" : "Lock color"
+                              }
+                              aria-label={
+                                colorLocked
+                                  ? `Unlock color for ${name}`
+                                  : `Lock color for ${name}`
+                              }
+                              aria-pressed={colorLocked}
+                              onClick={() => toggleColorLock(group.id, gc.id)}
+                            >
+                              {colorLocked ? (
+                                <LockIcon width={12} height={12} aria-hidden />
+                              ) : (
+                                <LockOpenIcon
+                                  width={12}
+                                  height={12}
+                                  aria-hidden
+                                />
                               )}
-                            </>
-                          )
+                            </button>
+                          ) : undefined
                         }
                       />
                     </DraggableChannelRow>
@@ -1709,7 +1510,7 @@ export const ChannelGroupsMasterDetail = (
     const displayColor = effectiveDisplayColor(sc, sourceChannels, null);
     const displayLimits = effectiveSourceLimits(sc);
     const contrast =
-      expanded && props.contrastEditable && isImageChannel(sc) && !rgbDisplay
+      expanded && contrastEditable && isImageChannel(sc) && !rgbDisplay
         ? {
             ...contrastEditorPropsForSource(
               channelRendering,
@@ -1764,8 +1565,10 @@ export const ChannelGroupsMasterDetail = (
                     previewMaskVisualization(sc.id, viz),
                 }
               : colorSwatch)}
-            trailing={
-              expanded && !rgbDisplay ? channelMoreMenu(sc, sc.name) : undefined
+            more={
+              expanded && canFitContrast(sc)
+                ? { sourceChannel: sc, allowContrast: true }
+                : undefined
             }
           />
         </DraggableChannelRow>
