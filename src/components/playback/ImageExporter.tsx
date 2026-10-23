@@ -70,16 +70,9 @@ const formatMinutesLeft = (ms: number): string => {
   return rm > 0 ? `~${h}h ${rm}m left` : `~${h}h left`;
 };
 
-/**
- * Recent completions only. Startup and the first tiles are slower than the
- * run, and a 5 s window swung by tens of seconds as busy and empty tiles came
- * and went.
- */
+/** Recent completions only. Startup and the first tiles are slower than the run. */
 const RATE_WINDOW_MS = 60_000;
-/**
- * No estimate before this share of the tiles: one export ran at 0.5 tiles/s
- * for three minutes, then at ~7/s, and its first estimates read 41 hours.
- */
+/** No estimate until this share of the tiles is done. */
 const MIN_ESTIMATE_SHARE = 0.01;
 
 type RateSample = { at: number; completed: number };

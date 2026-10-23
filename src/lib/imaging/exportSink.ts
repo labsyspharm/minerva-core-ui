@@ -1,16 +1,8 @@
 import type { RandomAccessSink } from "tiffwriter";
 
-/** Bytes gathered into one file write. */
 const WRITE_CHUNK_BYTES = 8 * 1024 * 1024;
 
-/**
- * Gather consecutive writes into one write per {@link WRITE_CHUNK_BYTES}. The
- * TIFF writer appends each tile, then its alignment pad: two writes a tile,
- * and each write to a picked file is a round trip. On slow storage that is
- * the limit (40–190 ms a write capped one export near 8 tiles/s). A write
- * anywhere else in the file flushes first, so the file sees every write in
- * order.
- */
+/** Coalesce consecutive writes. A write that does not follow flushes first. */
 export function bufferedSink(sink: RandomAccessSink): RandomAccessSink {
   const buffer = new Uint8Array(WRITE_CHUNK_BYTES);
   let start = 0n;
@@ -18,8 +10,7 @@ export function bufferedSink(sink: RandomAccessSink): RandomAccessSink {
 
   const flush = async () => {
     if (length === 0) return;
-    // The stream has taken the bytes once the write resolves, so the buffer
-    // can be refilled after it.
+    // writeAt may keep this view until it resolves.
     await sink.writeAt(start, buffer.subarray(0, length));
     length = 0;
   };

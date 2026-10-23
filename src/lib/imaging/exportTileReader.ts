@@ -186,7 +186,7 @@ async function withReadSignal<T>(
 
 const HOST_LITTLE_ENDIAN = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1;
 
-/** Decoded block when it is this tile, or null to read through Viv. */
+/** Decoded tile from this block, or null to use the usual reader. */
 async function decodedBlockTile(
   reader: GeoTIFFImage,
   pool: unknown,
@@ -244,8 +244,8 @@ async function decodedBlockTile(
 /**
  * Export tile (x, y), `tileSize` px. A TIFF plane reads the source blocks
  * under the tile in a few merged reads (a row of neighboring blocks is
- * usually contiguous on disk), then decodes. A plane
- * with `readWindow` (masks, JPEG-export wraps) reads the tile's window;
+ * usually contiguous on disk), then decodes that block when it is the tile.
+ * A plane with `readWindow` (masks, JPEG-export wraps) reads the tile's window;
  * other planes are assembled from their own tiles.
  */
 export function readExportTile(

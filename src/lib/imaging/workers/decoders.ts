@@ -197,10 +197,10 @@ function registerJpegDecoder(): void {
   addDecoder(7, () => Promise.resolve(MozJpegDecoder));
 }
 
-/** Replace geotiff's deflate (compression 8 and 32946) decoder with the platform's. */
+/** Replace geotiff's deflate (compression 8 and 32946) decoder. */
 function registerDeflateDecoder(): void {
   if (typeof DecompressionStream === "undefined") return;
-  // Read geotiff's registration (made on import) before replacing it.
+  // Capture geotiff's decoder before addDecoder replaces it.
   pakoDeflateDecoder = getDecoder({ Compression: 8 }).then(
     (decoder) => decoder.constructor,
   );
