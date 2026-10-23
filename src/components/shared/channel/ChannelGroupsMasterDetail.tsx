@@ -11,10 +11,7 @@ import {
   type ChannelColorTarget,
   commitChannelColorTarget,
 } from "@/components/shared/channel/ChannelEditorPopover";
-import {
-  ChannelRow,
-  useAnchoredMenu,
-} from "@/components/shared/channel/ChannelRow";
+import { ChannelRow } from "@/components/shared/channel/ChannelRow";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import { featureTableRowExtras } from "@/components/shared/channel/FeatureTable";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
@@ -26,6 +23,7 @@ import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { CompactHeader } from "@/components/shared/panel/CompactHeader";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
+import { useAnchoredMenu } from "@/components/shared/useAnchoredMenu";
 import type { ContrastLimits } from "@/lib/imaging/autoContrast";
 import {
   applyGroupRowVisibilities,

@@ -2344,10 +2344,9 @@ export const useAppStore = create<AppStore>()(
       setContourSmoothingSteps: (steps) => {
         const usable = steps.length > 0 ? steps : CONTOUR_SMOOTHING_STEPS;
         const current = get().contourSmoothing;
-        let contourSmoothing = usable[0];
-        for (const step of usable) {
-          if (step <= current) contourSmoothing = step;
-        }
+        // The largest step not above the current one: dropped steps draw the same.
+        const contourSmoothing =
+          usable.findLast((step) => step <= current) ?? usable[0];
         const prev = get().contourSmoothingSteps;
         if (
           contourSmoothing === current &&

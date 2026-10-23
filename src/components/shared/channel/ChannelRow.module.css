@@ -64,7 +64,8 @@
 }
 
 .contourStepper output {
-  min-width: 3ch;
+  /* Fits "128 px", so both steppers line up. */
+  min-width: 6ch;
   align-self: center;
   color: var(--minerva-ink);
   text-align: center;
@@ -129,6 +130,12 @@
 .moreButton:hover {
   color: var(--minerva-ink);
   background: var(--minerva-wash);
+}
+
+/* Same "on" mark as the color lock. */
+.moreButtonActive {
+  color: var(--minerva-ink);
+  box-shadow: inset 0 -1px 0 var(--minerva-ink);
 }
 
 .channelRowTrailing {

@@ -13,7 +13,7 @@ import {
 } from "@/components/shared/channel/ChannelContrastEditor";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
-import { useClickOutside } from "@/components/shared/useClickOutside";
+import { useAnchoredMenu } from "@/components/shared/useAnchoredMenu";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import { withReseededRandomColors } from "@/lib/imaging/channelKind";
 import { CONTOUR_LEVELS_MAX } from "@/lib/imaging/contourExtension";
@@ -274,48 +274,6 @@ type ChannelRowProps = {
   };
 };
 
-export function useAnchoredMenu(opts: {
-  align: "start" | "end";
-  estimateHeight: number;
-}) {
-  const { align, estimateHeight } = opts;
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
-  const close = () => setOpen(false);
-  const toggleFromButton = (btn: HTMLButtonElement) => {
-    if (open) {
-      close();
-      return;
-    }
-    const rect = btn.getBoundingClientRect();
-    const openUp =
-      rect.bottom + estimateHeight + 8 > window.innerHeight &&
-      rect.top > estimateHeight;
-    const top = openUp ? rect.top - 4 - estimateHeight : rect.bottom + 4;
-    setMenuStyle(
-      align === "end"
-        ? { top, right: Math.max(8, window.innerWidth - rect.right) }
-        : {
-            top,
-            left: Math.max(8, Math.min(rect.left, window.innerWidth - 188)),
-          },
-    );
-    setOpen(true);
-  };
-  useClickOutside(open, close, [wrapRef, menuRef]);
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
-  return { open, wrapRef, menuRef, menuStyle, toggleFromButton, close };
-}
-
 function RowMoreMenu(props: {
   sourceChannel?: Channel;
   channelName: string;
@@ -361,8 +319,9 @@ function RowMoreMenu(props: {
     <div ref={menu.wrapRef}>
       <button
         type="button"
-        className={styles.moreButton}
-        aria-label={`More actions for ${channelName}`}
+        className={`${styles.moreButton}${contourOn ? ` ${styles.moreButtonActive}` : ""}`}
+        title={contourOn ? "Drawn as contour lines" : undefined}
+        aria-label={`More actions for ${channelName}${contourOn ? " (contour lines on)" : ""}`}
         aria-expanded={menu.open}
         aria-haspopup="menu"
         onClick={(e) => {
@@ -469,6 +428,7 @@ function ContourControls() {
         increase="More contour smoothing"
         steps={smoothingSteps}
         value={smoothing}
+        unit="px"
         onChange={setContourSmoothing}
       />
     </>
@@ -483,6 +443,7 @@ function MenuStepper(props: {
   increase: string;
   steps: readonly number[];
   value: number;
+  unit?: string;
   onChange: (value: number) => void;
 }) {
   const { steps } = props;
@@ -502,7 +463,9 @@ function MenuStepper(props: {
         >
           −
         </button>
-        <output aria-live="polite">{props.value}</output>
+        <output aria-live="polite">
+          {props.unit ? `${props.value} ${props.unit}` : props.value}
+        </output>
         <button
           type="button"
           className={minervaTheme.focusRing}
@@ -672,6 +635,7 @@ export function ChannelRow(props: ChannelRowProps) {
         ) : null}
         <div className={styles.channelRowTrailing}>
           {trailing}
+          {/* Contours are offered wherever the contrast editor is shown. */}
           {more || contrast ? (
             <RowMoreMenu
               channelName={name.name}
