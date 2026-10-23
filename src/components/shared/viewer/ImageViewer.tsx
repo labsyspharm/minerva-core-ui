@@ -115,6 +115,21 @@ function deviceLabel(): string {
 const BUILD_STAMP = buildStamp();
 const DEVICE_LABEL = deviceLabel();
 
+/**
+ * Deck's BitmapLayer has no data rows, so `getBounds()` is null and the mask
+ * effect draws it nowhere: an empty mask that clips the whole image away.
+ */
+class SelectionMaskBitmapLayer extends BitmapLayer {
+  static layerName = "SelectionMaskBitmapLayer";
+  getBounds(): [number[], number[]] {
+    const [minX, minY, maxX, maxY] = this.props.bounds as number[];
+    return [
+      [minX, minY],
+      [maxX, maxY],
+    ];
+  }
+}
+
 function planeWidth(plane: Loader["data"][number]): number {
   const i = plane.labels.indexOf("x");
   return i >= 0 ? (plane.shape[i] ?? 0) : 0;
@@ -1062,7 +1077,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       imageSelectionMask.maskVisualization ??
       DEFAULT_MASK_VISUALIZATION;
     const layers: Layer[] = [
-      new BitmapLayer({
+      new SelectionMaskBitmapLayer({
         id: IMAGE_SELECTION_MASK_LAYER_ID,
         operation: "mask",
         bounds,
@@ -1091,10 +1106,14 @@ export const ImageViewer = (props: ImageViewerProps) => {
     selectionMaskVisualizationPreview,
   ]);
 
+  // MaskExtension registers Deck's mask effect only when a layer is created,
+  // not when a clone adds it to a live layer, so image layers always carry it;
+  // maskId turns the clip on.
   const clippedImageLayers = useMemo(() => {
-    const mask = selectionMaskActive
-      ? { extension: maskExtension, maskId: IMAGE_SELECTION_MASK_LAYER_ID }
-      : undefined;
+    const mask = {
+      extension: maskExtension,
+      maskId: selectionMaskActive ? IMAGE_SELECTION_MASK_LAYER_ID : "",
+    };
     return imageLayers.flatMap((layer) =>
       withContourLayers(layer, {
         contourChannelIds,

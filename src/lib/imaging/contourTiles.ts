@@ -335,6 +335,7 @@ type ImageLayerProps = {
   channelsVisible?: boolean[];
   sourceChannelIds?: readonly string[];
   opacity?: number;
+  extensions: LayerExtension[];
 };
 
 type ContourMask = { extension: LayerExtension; maskId: string };
@@ -353,9 +354,10 @@ function contouredChannels(
 }
 
 /**
- * The layer, clipped by `mask` when set. With contoured channels it becomes
- * two layers: the fill with those channels hidden (still fetched, so toggling
- * does not reload it) and their isolines drawn additively above it.
+ * The layer with `mask` attached; an empty `maskId` leaves it unclipped. With
+ * contoured channels it becomes two layers: the fill with those channels
+ * hidden (still fetched, so toggling does not reload it) and their isolines
+ * drawn additively above it.
  */
 export function withContourLayers(
   layer: Layer,
@@ -363,26 +365,28 @@ export function withContourLayers(
     contourChannelIds: Record<string, boolean>;
     levels: number;
     smoothing: number;
-    mask?: ContourMask;
+    mask: ContourMask;
   },
 ): Layer[] {
   const { mask } = opts;
-  const clip = (extensions: object[]) =>
-    mask
-      ? { extensions: [...extensions, mask.extension], maskId: mask.maskId }
-      : { extensions };
   const props = layer.props as ImageLayerProps;
+  // Added to, not in place of, the layer's extensions: Viv colors tiles in its
+  // default `ColorPaletteExtension`.
+  const clip = (extensions: readonly LayerExtension[]) => ({
+    extensions: [...extensions, mask.extension],
+    maskId: mask.maskId,
+  });
   const contoured =
     layer instanceof MultiscaleImageLayer
       ? contouredChannels(props, opts.contourChannelIds)
       : null;
   if (!contoured) {
-    return [mask ? layer.clone(clip([]) as never) : layer];
+    return [layer.clone(clip(props.extensions) as never)];
   }
   const keep = <T>(values: readonly T[] | undefined) =>
     (values ?? []).filter((_, i) => contoured[i]);
   const fill = layer.clone({
-    ...(mask ? clip([]) : {}),
+    ...clip(props.extensions),
     channelsVisible: contoured.map(
       (on, i) => !on && (props.channelsVisible?.[i] ?? true),
     ),
