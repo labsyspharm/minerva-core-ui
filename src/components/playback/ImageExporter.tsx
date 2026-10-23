@@ -70,8 +70,17 @@ const formatMinutesLeft = (ms: number): string => {
   return rm > 0 ? `~${h}h ${rm}m left` : `~${h}h left`;
 };
 
-/** Recent completions only. Startup and the first tiles are slower than the run. */
-const RATE_WINDOW_MS = 5_000;
+/**
+ * Recent completions only. Startup and the first tiles are slower than the
+ * run, and a 5 s window swung by tens of seconds as busy and empty tiles came
+ * and went.
+ */
+const RATE_WINDOW_MS = 60_000;
+/**
+ * No estimate before this share of the tiles: one export ran at 0.5 tiles/s
+ * for three minutes, then at ~7/s, and its first estimates read 41 hours.
+ */
+const MIN_ESTIMATE_SHARE = 0.01;
 
 type RateSample = { at: number; completed: number };
 
@@ -87,6 +96,7 @@ const estimateRemainingMs = (
   const gained = tip.completed - base.completed;
   if (
     tip.at - base.at < RATE_WINDOW_MS ||
+    tip.completed < total * MIN_ESTIMATE_SHARE ||
     gained <= 0 ||
     total <= tip.completed
   )
