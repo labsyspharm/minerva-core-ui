@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CxG6aa5s.js","./pako.esm-KbdoS3Oq.js","./lerc-diYs1zg7.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CSdecwTy.js","./pako.esm-KbdoS3Oq.js","./lerc-Ct1-U1nD.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18505,7 +18505,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "769c8d2c6bbc9ec1ad20d89ba5e510086d393200",
+    "VITE_APP_GIT_SHA": "dd22a0fc3f7adf65aa6c61c75fadc8cfdbe29eb1",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -79229,26 +79229,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-B9QIRIRh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-B3j_81I_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CCcqTmGS.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CZZejOBm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-1XBNyUAQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-B5sw-WyL.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CxG6aa5s.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DXNsotgo.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-diYs1zg7.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-CSdecwTy.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BoAij9e1.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Ct1-U1nD.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DVSHSj5O.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Bap-woxZ.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-B1ECqRsG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-mQfUEkmU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -254995,21 +254995,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     1
   ]).buffer)[0] === 1;
   let cubeRootRgbaLut = null;
-  function cubeRootRgbaWords() {
-    if (!cubeRootRgbaLut) {
-      cubeRootRgbaLut = new Uint32Array(65536);
-      for (let p2 = 0; p2 < 65536; p2++) {
-        const v2 = encodeCubeRootU16ToU8(p2);
-        cubeRootRgbaLut[p2] = (4278190080 | v2 * 65793) >>> 0;
-      }
-    }
-    return cubeRootRgbaLut;
-  }
   function cubeRootPixelsToRgba(out, pixels) {
     if (HOST_LITTLE_ENDIAN && out.byteOffset % 4 === 0 && (pixels instanceof Uint16Array || pixels instanceof Uint8Array || pixels instanceof Uint8ClampedArray)) {
-      const words = cubeRootRgbaWords();
+      if (!cubeRootRgbaLut) {
+        cubeRootRgbaLut = new Uint32Array(65536);
+        for (let p2 = 0; p2 < 65536; p2++) {
+          const v2 = encodeCubeRootU16ToU8(p2);
+          cubeRootRgbaLut[p2] = (4278190080 | v2 * 65793) >>> 0;
+        }
+      }
       const out32 = new Uint32Array(out.buffer, out.byteOffset, pixels.length);
-      for (let i2 = 0; i2 < pixels.length; i2++) out32[i2] = words[pixels[i2]];
+      for (let i2 = 0; i2 < pixels.length; i2++) out32[i2] = cubeRootRgbaLut[pixels[i2]];
       return;
     }
     for (let i2 = 0; i2 < pixels.length; i2++) {
@@ -255137,7 +255133,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return copy2;
   }
   function WorkerWrapper$1(options) {
-    return new Worker("" + new URL("jpegExport.worker-DPrq9xGi.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-BBXq5Gqg.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -259916,8 +259912,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-23T18:21:57.432Z";
-    const sha = "769c8d2c6bbc9ec1ad20d89ba5e510086d393200";
+    const iso = "2026-10-23T18:25:33.935Z";
+    const sha = "dd22a0fc3f7adf65aa6c61c75fadc8cfdbe29eb1";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [

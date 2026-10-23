@@ -4488,21 +4488,18 @@ function clampPixelsToRgba(out, pixels, min, max) {
 }
 const HOST_LITTLE_ENDIAN = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1;
 let cubeRootRgbaLut = null;
-function cubeRootRgbaWords() {
-  if (!cubeRootRgbaLut) {
-    cubeRootRgbaLut = new Uint32Array(65536);
-    for (let p = 0; p < 65536; p++) {
-      const v = encodeCubeRootU16ToU8(p);
-      cubeRootRgbaLut[p] = (4278190080 | v * 65793) >>> 0;
-    }
-  }
-  return cubeRootRgbaLut;
-}
 function cubeRootPixelsToRgba(out, pixels) {
   if (HOST_LITTLE_ENDIAN && out.byteOffset % 4 === 0 && (pixels instanceof Uint16Array || pixels instanceof Uint8Array || pixels instanceof Uint8ClampedArray)) {
-    const words = cubeRootRgbaWords();
+    if (!cubeRootRgbaLut) {
+      cubeRootRgbaLut = new Uint32Array(65536);
+      for (let p = 0; p < 65536; p++) {
+        const v = encodeCubeRootU16ToU8(p);
+        cubeRootRgbaLut[p] = (4278190080 | v * 65793) >>> 0;
+      }
+    }
     const out32 = new Uint32Array(out.buffer, out.byteOffset, pixels.length);
-    for (let i = 0; i < pixels.length; i++) out32[i] = words[pixels[i]];
+    for (let i = 0; i < pixels.length; i++)
+      out32[i] = cubeRootRgbaLut[pixels[i]];
     return;
   }
   for (let i = 0; i < pixels.length; i++) {
