@@ -11,6 +11,8 @@ export type WorldFrame = {
   umPerPixelY: number;
   worldWidth: number;
   worldHeight: number;
+  /** Document image this frame belongs to, when known. */
+  sourceImageId?: string;
 };
 
 export const WORLD_MICRON = "µm";
@@ -187,6 +189,31 @@ export function inheritUnitlessPhysicalSize(loaders: readonly Loader[]): void {
   }
 }
 
+/**
+ * Frame for an OME `<Pixels>` element's pixel space (e.g. an ROI file): its own
+ * physical size if it has one, else the viewer image with the same pixel size.
+ */
+export function omePixelsWorldFrame(
+  pixels: Element,
+  imageFrames: readonly WorldFrame[],
+): WorldFrame | undefined {
+  const n = (name: string) => Number(pixels.getAttribute(name)) || null;
+  const scale = parsePhysicalScale({
+    PhysicalSizeX: n("PhysicalSizeX"),
+    PhysicalSizeY: n("PhysicalSizeY"),
+    PhysicalSizeXUnit: pixels.getAttribute("PhysicalSizeXUnit"),
+    PhysicalSizeYUnit: pixels.getAttribute("PhysicalSizeYUnit"),
+  });
+  const declared = frameFromPixels(n("SizeX") ?? 0, n("SizeY") ?? 0, scale);
+  const match = imageFrames.find(
+    (f) =>
+      f.pixelWidth === declared.pixelWidth &&
+      f.pixelHeight === declared.pixelHeight,
+  );
+  if (isIdentityScale(scale)) return match;
+  return { ...declared, sourceImageId: match?.sourceImageId };
+}
+
 export function worldFrameFromPixelCounts(
   width: number,
   height: number,
@@ -218,7 +245,14 @@ export function layerModelMatrix(
   loader: Loader,
   orientation?: Partial<ImageOrientation> | null,
 ): Matrix4 {
-  const frame = worldFrameFromLoader(loader);
+  return frameModelMatrix(worldFrameFromLoader(loader), orientation);
+}
+
+/** {@link layerModelMatrix} from a frame: maps an image's pixels to world µm. */
+export function frameModelMatrix(
+  frame: WorldFrame,
+  orientation?: Partial<ImageOrientation> | null,
+): Matrix4 {
   const o = effectiveOrientation(orientation);
   const { pixelWidth, pixelHeight } = frame;
   const umPerPixelX = o.umPerPixel ?? frame.umPerPixelX;

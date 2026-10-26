@@ -7,10 +7,10 @@ import type {
   Shape,
   TextShape,
 } from "./shapeModel";
-import { lineToPolygon, rectangleToPolygon } from "./shapeModel";
+import { lineToPolygon } from "./shapeModel";
 
 // Type definitions for ROI shapes from loader metadata (OME-XML compatible)
-interface Transform {
+export interface Transform {
   A00: number;
   A01: number;
   A02: number;
@@ -175,6 +175,20 @@ const getColors = (
   };
 };
 
+/** Rectangle corners, each passed through `transform` (which may rotate or shear). */
+const rectangleCorners = (
+  shape: RoiRectangleShape,
+  transform?: Transform,
+): [number, number][] => {
+  const { X, Y, Width, Height } = shape;
+  return [
+    applyTransform(X, Y, transform),
+    applyTransform(X + Width, Y, transform),
+    applyTransform(X + Width, Y + Height, transform),
+    applyTransform(X, Y + Height, transform),
+  ];
+};
+
 /**
  * Convert ROI rectangle shape to a closed polygon (same layer path as other regions).
  */
@@ -182,12 +196,10 @@ const rectangleShapeToViewerShape = (
   shape: RoiRectangleShape,
   roi: Roi,
 ): PolygonShape => {
-  const { X, Y, Width, Height, Transform, ID, Text, Name } = shape;
+  const { Transform, ID, Text, Name } = shape;
 
-  const topLeft = applyTransform(X, Y, Transform);
-  const bottomRight = applyTransform(X + Width, Y + Height, Transform);
-
-  const polygon = rectangleToPolygon(topLeft, bottomRight);
+  const corners = rectangleCorners(shape, Transform);
+  const polygon = [...corners, corners[0]];
 
   const colors = getColors(shape, [255, 0, 0, 50], [255, 0, 0, 255]);
 
@@ -391,15 +403,8 @@ const labelShapeToViewerShape = (shape: RoiLabelShape, roi: Roi): TextShape => {
 function collectRoiShapeWorldPoints(shape: RoiShape): [number, number][] {
   const T = shape.Transform;
   switch (shape.type) {
-    case "rectangle": {
-      const { X, Y, Width, Height } = shape;
-      return [
-        applyTransform(X, Y, T),
-        applyTransform(X + Width, Y, T),
-        applyTransform(X + Width, Y + Height, T),
-        applyTransform(X, Y + Height, T),
-      ];
-    }
+    case "rectangle":
+      return rectangleCorners(shape, T);
     case "ellipse":
       return ellipseToPolygon(
         shape.X,

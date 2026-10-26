@@ -16,10 +16,7 @@ import type {
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
 import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
-import type {
-  ConfigSourceDistribution,
-  ConfigWaypoint,
-} from "@/lib/authoring/config";
+import type { ConfigSourceDistribution } from "@/lib/authoring/config";
 import { extractChannels } from "@/lib/authoring/config";
 import {
   detachRemovedFeatureTables,
@@ -98,11 +95,7 @@ import { useViewerLayers } from "@/lib/imaging/viewerLayers";
 import { effectiveWorldFrame } from "@/lib/imaging/worldFrame";
 import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
-import {
-  DEMO_SHELF_STORY_ID,
-  getDemoDocumentTitle,
-  isDemoOpenPreview,
-} from "@/lib/persistence/demo";
+import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
 import {
   locatedFileStorageKey,
@@ -114,7 +107,7 @@ import {
   setActiveStoryId,
 } from "@/lib/persistence/storyPersistence";
 import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
-import { applyOmeRoisFromLoaderToFirstWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
+import { applyOmeRoisFromLoaderToWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentSchema";
 import type { ChannelGroup } from "@/lib/stores/documentStore";
@@ -129,7 +122,6 @@ import {
   applyLoaderPixelSizeToImage,
   applySourceChannelsToImages,
   firstImageNameForStoryTitle,
-  hydrateConfigWaypoint,
   type LegacyExhibitWaypoint,
   removeImageFromDocument,
   setImageBasename,
@@ -154,6 +146,7 @@ import {
   type StoryExportMode,
   writeStoryBundleSidecars,
 } from "@/lib/storyExport/storyBundle";
+import { ensureDefaultWaypoint } from "@/lib/waypoints/ensureDefaultWaypoint";
 import {
   applyWaypointSeedAction,
   planWaypointConfigSeedTick,
@@ -175,29 +168,10 @@ function maybeDefaultStoryTitleFromFirstImage(): void {
   doc.setMetadata({ title: name });
 }
 
-/** When the story has no waypoints yet, add a default row for image import to attach to. */
-function ensureDefaultWaypointForImageImport(): void {
-  const doc = useDocumentStore.getState();
-  if (doc.waypoints.length > 0) return;
-
-  const groupId = doc.channelGroups[0]?.id;
-  const raw: ConfigWaypoint = {
-    id: crypto.randomUUID(),
-    State: { Expanded: true },
-    Name: "Waypoint 1",
-    Content: "",
-    shapeIds: [],
-    ...(groupId !== undefined ? { groupId } : {}),
-  };
-  const app = useAppStore.getState();
-  app.addStory(hydrateConfigWaypoint(raw, doc.channelGroups));
-  app.setActiveStory(0);
-}
-
 /** Shared post-import document side effects after images land in the store. */
 function afterImageImportDocumentEffects(): void {
   maybeDefaultStoryTitleFromFirstImage();
-  ensureDefaultWaypointForImageImport();
+  ensureDefaultWaypoint();
 }
 
 function reconcileLoaderEntries<T extends { sourceImageId: string }>(
@@ -579,11 +553,7 @@ const Content = (props: Props) => {
   } | null>(null);
   /** Remote OME-TIFFs can be linked as is, or saved as a local OME-TIFF copy. */
   const [exportSourcePrompt, setExportSourcePrompt] = useState(false);
-  const [presenting, setPresenting] = useState(
-    () =>
-      isDemoOpenPreview() &&
-      useDocumentStore.getState().activeStoryId === DEMO_SHELF_STORY_ID,
-  );
+  const [presenting, setPresenting] = useState(false);
 
   const beginExportToFolder = async (
     mode: StoryExportMode,
@@ -1092,10 +1062,10 @@ const Content = (props: Props) => {
         const entry = entries[i];
         const handle = handles[i];
         if (!entry || !handle) continue;
-        const { loader } = entry;
+        const { loader, sourceImageId } = entry;
         const file = await handle.getFile();
         const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
-        applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+        applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
       }
     }
     setFileName(
@@ -1304,7 +1274,7 @@ const Content = (props: Props) => {
     afterImageImportDocumentEffects();
     if (role !== "segmentation") {
       const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
-      applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+      applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
     }
     setLastOmeTiffUrl(url);
     setFileName(basename);

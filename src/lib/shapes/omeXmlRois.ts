@@ -1,4 +1,4 @@
-import type { Roi, RoiShape } from "./roiParser";
+import type { Roi, RoiShape, Transform } from "./roiParser";
 
 const attr = (el: Element, ...keys: string[]): string | null => {
   for (const k of keys) {
@@ -70,6 +70,21 @@ const parseOmeColor = (
   return undefined;
 };
 
+/** Shape `<Transform A00…A12>` child: maps shape coordinates to image pixels. */
+const parseTransform = (el: Element): Transform | undefined => {
+  const t = Array.from(el.children).find((ch) => ch.localName === "Transform");
+  if (!t) return undefined;
+  const m: Transform = {
+    A00: num(t, "A00"),
+    A01: num(t, "A01"),
+    A02: num(t, "A02"),
+    A10: num(t, "A10"),
+    A11: num(t, "A11"),
+    A12: num(t, "A12"),
+  };
+  return Object.values(m).every(Number.isFinite) ? m : undefined;
+};
+
 const shapeCommon = (el: Element, id: string) => {
   const name = attr(el, "Name", "name");
   const text = attr(el, "Text", "text", "Value");
@@ -87,6 +102,7 @@ const shapeCommon = (el: Element, id: string) => {
     TheC?: number;
     TheT?: number;
     TheZ?: number;
+    Transform?: Transform;
   } = { ID: id };
   if (name) base.Name = name;
   if (text) base.Text = text;
@@ -102,6 +118,8 @@ const shapeCommon = (el: Element, id: string) => {
   if (!Number.isNaN(theC) && theC >= 0) base.TheC = Math.floor(theC);
   if (!Number.isNaN(theT) && theT >= 0) base.TheT = Math.floor(theT);
   if (!Number.isNaN(theZ) && theZ >= 0) base.TheZ = Math.floor(theZ);
+  const transform = parseTransform(el);
+  if (transform) base.Transform = transform;
   return base;
 };
 
@@ -194,11 +212,11 @@ function elementToRoiShape(el: Element, index: number): RoiShape | null {
 function unionShapeElements(roiEl: Element): Element[] {
   const out: Element[] = [];
   const ns = (name: string) => roiEl.getElementsByTagNameNS("*", name);
-  const unions = [
+  const unions = new Set([
     ...Array.from(ns("Union")),
     ...Array.from(roiEl.getElementsByTagName("Union")),
-  ];
-  if (unions.length > 0) {
+  ]);
+  if (unions.size > 0) {
     for (const u of unions) {
       for (const ch of u.children) {
         if (ch.nodeType === Node.ELEMENT_NODE) out.push(ch as Element);

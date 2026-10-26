@@ -690,6 +690,8 @@ const Upload = (props: UploadProps) => {
       else {
         const n = r.shapeCount;
         setNotice(`Imported ${n} annotation${n === 1 ? "" : "s"}.`);
+        // Show them: the Story tab opens the waypoint they were added to.
+        useAppStore.getState().setEditWaypointOnOpen(r.waypointId);
       }
     } else {
       const doc = useDocumentStore.getState();
