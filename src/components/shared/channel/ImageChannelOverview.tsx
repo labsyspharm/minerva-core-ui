@@ -212,7 +212,10 @@ function ChipGrid(props: {
     let downInside = false;
     const onDown = (e: MouseEvent) => {
       const root = editorRef.current;
-      downInside = root != null && pointerInEditor(e, root);
+      // An open row ⋮ menu takes this click to close itself; keep the editor.
+      const menuOpen =
+        document.querySelector("[data-channel-row-menu]") != null;
+      downInside = menuOpen || (root != null && pointerInEditor(e, root));
     };
     const onDoc = (e: MouseEvent) => {
       if (downInside) {

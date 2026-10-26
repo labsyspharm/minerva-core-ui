@@ -8,6 +8,12 @@ import {
 } from "../imaging/channelCompositor";
 import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
+import {
+  CONTOUR_LEVELS_DEFAULT,
+  CONTOUR_LEVELS_MAX,
+  CONTOUR_SMOOTHING_DEFAULT,
+  CONTOUR_SMOOTHING_STEPS,
+} from "../imaging/contourExtension";
 import type { ImageOpacityPreview } from "../imaging/imageOpacity";
 import {
   type ImageSelectionMask,
@@ -816,6 +822,18 @@ export interface AppStore {
   arrangeImageId: string | null;
   setArrangeImageId: (imageId: string | null) => void;
   channelVisibilities: Record<string, boolean>;
+  /** Source channel ids drawn as isolines instead of a color fill. */
+  contourChannelIds: Record<string, boolean>;
+  toggleContourChannel: (sourceChannelId: string) => void;
+  /** Isolines across each contoured channel's contrast window. */
+  contourLevels: number;
+  setContourLevels: (levels: number) => void;
+  /** Contour smoothing radius in full-resolution image pixels. */
+  contourSmoothing: number;
+  setContourSmoothing: (radius: number) => void;
+  /** Smoothing steps that still change the open contoured pyramids. */
+  contourSmoothingSteps: readonly number[];
+  setContourSmoothingSteps: (steps: readonly number[]) => void;
   groupNames: Record<string, string>;
   /**
    * Classes turned off from the playback legend, by `legendClassKey`.
@@ -979,6 +997,10 @@ const overlayInitialState = {
   imageOpacityPreview: null,
   arrangeImageId: null,
   channelVisibilities: {},
+  contourChannelIds: {},
+  contourLevels: CONTOUR_LEVELS_DEFAULT,
+  contourSmoothing: CONTOUR_SMOOTHING_DEFAULT,
+  contourSmoothingSteps: CONTOUR_SMOOTHING_STEPS,
   channelGroupRowVisibilities: {},
   groupNames: {},
   hiddenLegendClasses: {} as Record<string, string[]>,
@@ -2292,6 +2314,49 @@ export const useAppStore = create<AppStore>()(
 
       setEditingViewstateWaypointIndex: (index) => {
         set({ editingViewstateWaypointIndex: index });
+      },
+
+      toggleContourChannel: (sourceChannelId) => {
+        set((state) => {
+          const contourChannelIds = { ...state.contourChannelIds };
+          if (contourChannelIds[sourceChannelId]) {
+            delete contourChannelIds[sourceChannelId];
+          } else {
+            contourChannelIds[sourceChannelId] = true;
+          }
+          return { contourChannelIds };
+        });
+      },
+
+      setContourLevels: (levels) => {
+        set({
+          contourLevels: Math.min(
+            CONTOUR_LEVELS_MAX,
+            Math.max(1, Math.round(levels)),
+          ),
+        });
+      },
+
+      setContourSmoothing: (contourSmoothing) => {
+        set({ contourSmoothing });
+      },
+
+      setContourSmoothingSteps: (steps) => {
+        const usable = steps.length > 0 ? steps : CONTOUR_SMOOTHING_STEPS;
+        const current = get().contourSmoothing;
+        let contourSmoothing = usable[0];
+        for (const step of usable) {
+          if (step <= current) contourSmoothing = step;
+        }
+        const prev = get().contourSmoothingSteps;
+        if (
+          contourSmoothing === current &&
+          prev.length === usable.length &&
+          prev.every((step, i) => step === usable[i])
+        ) {
+          return;
+        }
+        set({ contourSmoothingSteps: usable, contourSmoothing });
       },
 
       setChannelVisibilities: (vis: Record<string, boolean>) => {

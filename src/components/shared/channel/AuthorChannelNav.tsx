@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 
 export type AuthorChannelNav = {
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
+  contrastEditable?: boolean;
 };
 
 const AuthorChannelNavContext = createContext<AuthorChannelNav | null>(null);
