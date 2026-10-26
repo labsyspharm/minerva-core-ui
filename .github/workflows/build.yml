@@ -42,6 +42,17 @@ jobs:
         run: |
           pnpm run pages
 
+      # CRC01 demo (`pnpm demo`) → https://demo.minerva.im/crc01/ via the same gh-pages publish.
+      # Relative base `./` lets `routerBasepath()` pick up `/crc01` from the location.
+      # `VITE_DEMO_OPEN_PREVIEW` opens the story straight into playback preview.
+      - name: Build CRC01 demo (main only)
+        if: github.ref == 'refs/heads/main'
+        env:
+          BASE_PATH: "./"
+          VITE_DEMO_OPEN_PREVIEW: "true"
+          VITE_APP_GIT_SHA: ${{ github.sha }}
+        run: pnpm exec vite build --mode demo --outDir dist/crc01
+
       # Package main build for the gh-pages publish job (cannot combine contents: read + git push in one job).
       - name: Upload dist for gh-pages (main only)
         if: github.ref == 'refs/heads/main'
