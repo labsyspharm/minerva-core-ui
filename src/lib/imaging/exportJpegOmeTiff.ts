@@ -22,6 +22,7 @@ import {
   folderLimitsForTransfer,
   type JpegExportTransfer,
 } from "./cubeRootEncoding";
+import { bufferedSink } from "./exportSink";
 import { readExportTile } from "./exportTileReader";
 import {
   exportZlibOmeTiffImage,
@@ -345,7 +346,7 @@ async function exportJpegOmeTiffImage(
   let writer: Awaited<ReturnType<typeof createTiffWriter>>;
   try {
     writer = await createTiffWriter({
-      sink: browserFileSink(writable),
+      sink: bufferedSink(browserFileSink(writable)),
       signal: workSignal,
       images: layouts,
     });

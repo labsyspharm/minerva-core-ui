@@ -156,6 +156,33 @@ class MozJpegDecoder extends BaseDecoder {
   }
 }
 
+let pakoDeflateDecoder!: Promise<
+  new (
+    fileDirectory: FileDirectory,
+  ) => { decodeBlock(buffer: ArrayBuffer): ArrayBuffer }
+>;
+
+class NativeDeflateDecoder extends BaseDecoder {
+  fileDirectory: FileDirectory;
+
+  constructor(fileDirectory: FileDirectory) {
+    super();
+    this.fileDirectory = fileDirectory;
+  }
+
+  async decodeBlock(buffer: ArrayBuffer): Promise<ArrayBuffer> {
+    try {
+      const inflated = new Blob([buffer])
+        .stream()
+        .pipeThrough(new DecompressionStream("deflate"));
+      return await new Response(inflated).arrayBuffer();
+    } catch {
+      const Fallback = await pakoDeflateDecoder;
+      return new Fallback(this.fileDirectory).decodeBlock(buffer);
+    }
+  }
+}
+
 /** Viv's loader registers an LZW decoder that ignores SamplesPerPixel. Install ours after that import. */
 function registerLzwDecoder(): void {
   addDecoder(5, () => Promise.resolve(LZWDecoder));
@@ -170,4 +197,14 @@ function registerJpegDecoder(): void {
   addDecoder(7, () => Promise.resolve(MozJpegDecoder));
 }
 
-export { registerJpegDecoder, registerLzwDecoder };
+/** Replace geotiff's deflate (compression 8 and 32946) decoder. */
+function registerDeflateDecoder(): void {
+  if (typeof DecompressionStream === "undefined") return;
+  // Capture geotiff's decoder before addDecoder replaces it.
+  pakoDeflateDecoder = getDecoder({ Compression: 8 }).then(
+    (decoder) => decoder.constructor,
+  );
+  addDecoder([8, 32946], () => Promise.resolve(NativeDeflateDecoder));
+}
+
+export { registerDeflateDecoder, registerJpegDecoder, registerLzwDecoder };
