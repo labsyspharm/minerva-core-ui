@@ -24,26 +24,26 @@ let __tla = (async ()=>{
     addDecoder([
         undefined,
         1
-    ], ()=>import('./raw-DmlynhyC.js').then((m)=>m.default), false);
-    addDecoder(5, ()=>import('./lzw-CCdPaZQ9.js').then((m)=>m.default));
+    ], ()=>import('./raw-CcjtMGZR.js').then((m)=>m.default), false);
+    addDecoder(5, ()=>import('./lzw-D_WM0NUE.js').then((m)=>m.default));
     addDecoder(6, ()=>{
         throw new Error('old style JPEG compression is not supported.');
     });
-    addDecoder(7, ()=>import('./jpeg-DGHvenU_.js').then((m)=>m.default));
+    addDecoder(7, ()=>import('./jpeg-Czkcj1vY.js').then((m)=>m.default));
     addDecoder([
         8,
         32946
-    ], ()=>import('./deflate-q3qjnBL5.js').then((m)=>m.default));
-    addDecoder(32773, ()=>import('./packbits-C9QjgiCf.js').then((m)=>m.default));
-    addDecoder(34887, ()=>import('./lerc-Cg3eOVA3.js').then(async (m)=>{
+    ], ()=>import('./deflate-5x1CtTRJ.js').then((m)=>m.default));
+    addDecoder(32773, ()=>import('./packbits-DjcVByMT.js').then((m)=>m.default));
+    addDecoder(34887, ()=>import('./lerc-cS3xLonO.js').then(async (m)=>{
             await m.zstd.init();
             return m;
         }).then((m)=>m.default));
-    addDecoder(50000, ()=>import('./zstd-YWQIFI7X.js').then(async (m)=>{
+    addDecoder(50000, ()=>import('./zstd-WFU9Gkvb.js').then(async (m)=>{
             await m.zstd.init();
             return m;
         }).then((m)=>m.default));
-    addDecoder(50001, ()=>import('./webimage-Bs6-MUfb.js').then((m)=>m.default), false);
+    addDecoder(50001, ()=>import('./webimage-CFnrVc6w.js').then((m)=>m.default), false);
     function decodeRowAcc(row, stride) {
         let length = row.length - stride;
         let offset = 0;
@@ -1823,6 +1823,20 @@ let __tla = (async ()=>{
             return out.buffer;
         }
     }
+    let pakoDeflateDecoder;
+    class NativeDeflateDecoder extends BaseDecoder {
+        async decodeBlock(buffer) {
+            try {
+                const inflated = new Blob([
+                    buffer
+                ]).stream().pipeThrough(new DecompressionStream("deflate"));
+                return await new Response(inflated).arrayBuffer();
+            } catch  {
+                const Fallback = await pakoDeflateDecoder;
+                return new Fallback().decodeBlock(buffer);
+            }
+        }
+    }
     function registerLzwDecoder() {
         addDecoder(5, ()=>Promise.resolve(LZWDecoder));
     }
@@ -1832,8 +1846,19 @@ let __tla = (async ()=>{
         }).then((decoder)=>decoder.constructor);
         addDecoder(7, ()=>Promise.resolve(MozJpegDecoder));
     }
+    function registerDeflateDecoder() {
+        if (typeof DecompressionStream === "undefined") return;
+        pakoDeflateDecoder = getDecoder({
+            Compression: 8
+        }).then((decoder)=>decoder.constructor);
+        addDecoder([
+            8,
+            32946
+        ], ()=>Promise.resolve(NativeDeflateDecoder));
+    }
     registerLzwDecoder();
     registerJpegDecoder();
+    registerDeflateDecoder();
     const worker = self;
     worker.addEventListener("message", async (e)=>{
         const { jobId, fileDirectory, buffer } = e.data;

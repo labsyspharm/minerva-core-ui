@@ -4486,7 +4486,22 @@ function clampPixelsToRgba(out, pixels, min, max) {
     out[o + 3] = 255;
   }
 }
+const HOST_LITTLE_ENDIAN = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1;
+let cubeRootRgbaLut = null;
 function cubeRootPixelsToRgba(out, pixels) {
+  if (HOST_LITTLE_ENDIAN && out.byteOffset % 4 === 0 && (pixels instanceof Uint16Array || pixels instanceof Uint8Array || pixels instanceof Uint8ClampedArray)) {
+    if (!cubeRootRgbaLut) {
+      cubeRootRgbaLut = new Uint32Array(65536);
+      for (let p = 0; p < 65536; p++) {
+        const v = encodeCubeRootU16ToU8(p);
+        cubeRootRgbaLut[p] = (4278190080 | v * 65793) >>> 0;
+      }
+    }
+    const out32 = new Uint32Array(out.buffer, out.byteOffset, pixels.length);
+    for (let i = 0; i < pixels.length; i++)
+      out32[i] = cubeRootRgbaLut[pixels[i]];
+    return;
+  }
   for (let i = 0; i < pixels.length; i++) {
     const v = encodeCubeRootU16ToU8(pixels[i]);
     const o = i * 4;
@@ -4541,7 +4556,51 @@ async function encodeRgbaToJpeg(width, height, rgba, quality, colorSpace = MOZJP
     chroma_subsample: 2
   });
 }
+const constantTileJpegs = /* @__PURE__ */ new Map();
+const MAX_CONSTANT_TILE_JPEGS = 64;
+function constantPixel(pixels) {
+  if (pixels.length === 0) return null;
+  const v = pixels[0];
+  for (let i = 1; i < pixels.length; i++) {
+    if (pixels[i] !== v) return null;
+  }
+  return v;
+}
 async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
+  const encode = () => encodeGrayscalePixels(
+    width,
+    height,
+    pixels,
+    lowerLimit,
+    upperLimit,
+    quality,
+    transfer,
+    padTileSize
+  );
+  const value = constantPixel(pixels);
+  if (value === null) return encode();
+  const key = [
+    transfer,
+    lowerLimit,
+    upperLimit,
+    quality,
+    width,
+    height,
+    padTileSize,
+    value
+  ].join();
+  let jpeg = constantTileJpegs.get(key);
+  if (!jpeg) {
+    jpeg = await encode();
+    if (constantTileJpegs.size >= MAX_CONSTANT_TILE_JPEGS) {
+      const oldest = constantTileJpegs.keys().next().value;
+      if (oldest !== void 0) constantTileJpegs.delete(oldest);
+    }
+    constantTileJpegs.set(key, jpeg);
+  }
+  return jpeg.slice(0);
+}
+async function encodeGrayscalePixels(width, height, pixels, lowerLimit, upperLimit, quality, transfer, padTileSize) {
   const rgba = new Uint8ClampedArray(
     new ArrayBuffer(width * height * 4)
   );

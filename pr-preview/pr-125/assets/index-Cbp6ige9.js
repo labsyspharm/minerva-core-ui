@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DzsfZQ87.js","./pako.esm-KbdoS3Oq.js","./lerc-D87ig3py.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-O_0MwG6h.js","./pako.esm-KbdoS3Oq.js","./lerc-BtGzpPO4.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18505,7 +18505,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "4d798a47e0b081aae71f088771f9eaa1262e0437",
+    "VITE_APP_GIT_SHA": "d72e43650c783d7aad83b396f591c07ac957eab3",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -79229,26 +79229,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-GbcEKIzC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DUko0Imq.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-wMeq_ok0.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-CvkiQ0so.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DOeLpaxh.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-cfN-bIJT.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DzsfZQ87.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CEITdAIQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-D87ig3py.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-O_0MwG6h.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BpUwtjV1.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BtGzpPO4.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BGhqD06D.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CFYy8haI.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CCsIb01Z.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-tYWYD5Kz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -168866,7 +168866,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }, (_2, i2) => i2);
   }
   function WorkerWrapper$2(options) {
-    return new Worker("" + new URL("decoder.worker-DskuWaKT.js", import.meta.url).href, {
+    return new Worker("" + new URL("decoder.worker-C5_45Yb3.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -173673,6 +173673,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return false;
   }
   function isDemoContentEnabled() {
+    return false;
+  }
+  function isDemoOpenPreview() {
     return false;
   }
   function getDemoDocumentTitle() {
@@ -252711,6 +252714,50 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
+  const WRITE_CHUNK_BYTES = 8 * 1024 * 1024;
+  function bufferedSink(sink) {
+    const buffer2 = new Uint8Array(WRITE_CHUNK_BYTES);
+    let start = 0n;
+    let length2 = 0;
+    const flush2 = async () => {
+      if (length2 === 0) return;
+      await sink.writeAt(start, buffer2.subarray(0, length2));
+      length2 = 0;
+    };
+    return {
+      async writeAt(offset, data2) {
+        const follows = length2 > 0 && offset === start + BigInt(length2);
+        if (follows && length2 + data2.byteLength <= buffer2.byteLength) {
+          buffer2.set(data2, length2);
+          length2 += data2.byteLength;
+          return;
+        }
+        await flush2();
+        if (data2.byteLength >= buffer2.byteLength) {
+          await sink.writeAt(offset, data2);
+          return;
+        }
+        buffer2.set(data2);
+        start = offset;
+        length2 = data2.byteLength;
+      },
+      async truncate(size) {
+        var _a2;
+        await flush2();
+        await ((_a2 = sink.truncate) == null ? void 0 : _a2.call(sink, size));
+      },
+      async close() {
+        var _a2;
+        await flush2();
+        await ((_a2 = sink.close) == null ? void 0 : _a2.call(sink));
+      },
+      async abort(reason2) {
+        var _a2;
+        length2 = 0;
+        await ((_a2 = sink.abort) == null ? void 0 : _a2.call(sink, reason2));
+      }
+    };
+  }
   const MERGE_GAP_BYTES = 256 * 1024;
   function mergedBlockRanges(image2, [x0, y0, x1, y1]) {
     const fd2 = image2.fileDirectory;
@@ -252836,6 +252883,50 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       signal.removeEventListener("abort", abort);
     }
   }
+  const HOST_LITTLE_ENDIAN$1 = new Uint8Array(new Uint16Array([
+    1
+  ]).buffer)[0] === 1;
+  async function decodedBlockTile(reader, pool, tileSize, x2, y2, [x0, y0, x1, y1], signal) {
+    if (!pool) return null;
+    let bits;
+    let bytesPerElement;
+    try {
+      if (!reader.isTiled || reader.getTileWidth() !== tileSize || reader.getTileHeight() !== tileSize || reader.getSamplesPerPixel() !== 1) {
+        return null;
+      }
+      bits = reader.getBitsPerSample(0);
+      bytesPerElement = reader.getArrayForSample(0, 0).BYTES_PER_ELEMENT;
+    } catch {
+      return null;
+    }
+    if (bits !== bytesPerElement * 8) return null;
+    if (bytesPerElement > 1 && reader.littleEndian !== HOST_LITTLE_ENDIAN$1) {
+      return null;
+    }
+    const block = await reader.getTileOrStrip(x2, y2, 0, pool, signal);
+    const full2 = reader.getArrayForSample(0, block.data);
+    if (full2.length !== tileSize * tileSize) return null;
+    const width = x1 - x0;
+    const height = y1 - y0;
+    if (width === tileSize && height === tileSize) {
+      return {
+        data: full2,
+        width,
+        height
+      };
+    }
+    const Typed = full2.constructor;
+    const data2 = new Typed(width * height);
+    for (let row2 = 0; row2 < height; row2++) {
+      const from = row2 * tileSize;
+      data2.set(full2.subarray(from, from + width), row2 * width);
+    }
+    return {
+      data: data2,
+      width,
+      height
+    };
+  }
   function readExportTile(plane, tileSize, selection, x2, y2, signal) {
     return withReadSignal(signal, (readSignal) => readTile(plane, tileSize, selection, x2, y2, readSignal));
   }
@@ -252867,6 +252958,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const image2 = await indexer(selection);
     const source2 = prefetchedSource(image2.source, mergedBlockRanges(image2, window2), signal);
     const reader = new GeoTIFFImage(image2.fileDirectory, image2.geoKeys, image2.dataView, image2.littleEndian, false, source2);
+    const decoded = await decodedBlockTile(reader, plane.pool, tileSize, x2, y2, window2, signal);
+    if (decoded) return decoded;
     const atTileSize = new TiffPixelSource(async () => reader, plane.dtype, tileSize, plane.shape, plane.labels, plane.meta, plane.pool);
     return atTileSize.getTile({
       selection,
@@ -253413,7 +253506,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const writable = await fh2.createWritable();
     try {
       await writeZlibOmeTiff({
-        sink: browserFileSink(writable),
+        sink: bufferedSink(browserFileSink(writable)),
         image: image2,
         channels: channels2,
         fileName,
@@ -254991,7 +255084,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       out[o2 + 3] = 255;
     }
   }
+  const HOST_LITTLE_ENDIAN = new Uint8Array(new Uint16Array([
+    1
+  ]).buffer)[0] === 1;
+  let cubeRootRgbaLut = null;
   function cubeRootPixelsToRgba(out, pixels) {
+    if (HOST_LITTLE_ENDIAN && out.byteOffset % 4 === 0 && (pixels instanceof Uint16Array || pixels instanceof Uint8Array || pixels instanceof Uint8ClampedArray)) {
+      if (!cubeRootRgbaLut) {
+        cubeRootRgbaLut = new Uint32Array(65536);
+        for (let p2 = 0; p2 < 65536; p2++) {
+          const v2 = encodeCubeRootU16ToU8(p2);
+          cubeRootRgbaLut[p2] = (4278190080 | v2 * 65793) >>> 0;
+        }
+      }
+      const out32 = new Uint32Array(out.buffer, out.byteOffset, pixels.length);
+      for (let i2 = 0; i2 < pixels.length; i2++) out32[i2] = cubeRootRgbaLut[pixels[i2]];
+      return;
+    }
     for (let i2 = 0; i2 < pixels.length; i2++) {
       const v2 = encodeCubeRootU16ToU8(pixels[i2]);
       const o2 = i2 * 4;
@@ -255040,7 +255149,42 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       chroma_subsample: 2
     });
   }
+  const constantTileJpegs = /* @__PURE__ */ new Map();
+  const MAX_CONSTANT_TILE_JPEGS = 64;
+  function constantPixel(pixels) {
+    if (pixels.length === 0) return null;
+    const v2 = pixels[0];
+    for (let i2 = 1; i2 < pixels.length; i2++) {
+      if (pixels[i2] !== v2) return null;
+    }
+    return v2;
+  }
   async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
+    const encode2 = () => encodeGrayscalePixels(width, height, pixels, lowerLimit, upperLimit, quality, transfer, padTileSize);
+    const value = constantPixel(pixels);
+    if (value === null) return encode2();
+    const key2 = [
+      transfer,
+      lowerLimit,
+      upperLimit,
+      quality,
+      width,
+      height,
+      padTileSize,
+      value
+    ].join();
+    let jpeg = constantTileJpegs.get(key2);
+    if (!jpeg) {
+      jpeg = await encode2();
+      if (constantTileJpegs.size >= MAX_CONSTANT_TILE_JPEGS) {
+        const oldest = constantTileJpegs.keys().next().value;
+        if (oldest !== void 0) constantTileJpegs.delete(oldest);
+      }
+      constantTileJpegs.set(key2, jpeg);
+    }
+    return jpeg.slice(0);
+  }
+  async function encodeGrayscalePixels(width, height, pixels, lowerLimit, upperLimit, quality, transfer, padTileSize) {
     const rgba = new Uint8ClampedArray(new ArrayBuffer(width * height * 4));
     if (transfer === "cube-root") {
       cubeRootPixelsToRgba(rgba, pixels);
@@ -255082,7 +255226,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return copy2;
   }
   function WorkerWrapper$1(options) {
-    return new Worker("" + new URL("jpegExport.worker-Dad1CIDO.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-BBXq5Gqg.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -255474,7 +255618,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     let writer;
     try {
       writer = await createTiffWriter({
-        sink: browserFileSink(writable),
+        sink: bufferedSink(browserFileSink(writable)),
         signal: workSignal,
         images: layouts
       });
@@ -255727,13 +255871,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const rm = mins % 60;
     return rm > 0 ? `~${h2}h ${rm}m left` : `~${h2}h left`;
   };
-  const RATE_WINDOW_MS = 5e3;
+  const RATE_WINDOW_MS = 6e4;
+  const MIN_ESTIMATE_SHARE = 0.01;
   const estimateRemainingMs = (samples, total, now) => {
     if (samples.length < 2) return null;
     const base2 = samples[0];
     const tip = samples[samples.length - 1];
     const gained = tip.completed - base2.completed;
-    if (tip.at - base2.at < RATE_WINDOW_MS || gained <= 0 || total <= tip.completed) return null;
+    if (tip.at - base2.at < RATE_WINDOW_MS || tip.completed < total * MIN_ESTIMATE_SHARE || gained <= 0 || total <= tip.completed) return null;
     return (total - tip.completed) * (now - base2.at) / gained;
   };
   const toFilename = (index2) => {
@@ -259860,8 +260005,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-21T23:48:27.826Z";
-    const sha = "4d798a47e0b081aae71f088771f9eaa1262e0437";
+    const iso = "2026-10-26T14:52:21.687Z";
+    const sha = "d72e43650c783d7aad83b396f591c07ac957eab3";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -262143,7 +262288,7 @@ uniform classStyleUniforms {
     const [directory_handle, setDirectoryHandle] = reactExports.useState(null);
     const [exportFolderPrompt, setExportFolderPrompt] = reactExports.useState(null);
     const [exportSourcePrompt, setExportSourcePrompt] = reactExports.useState(false);
-    const [presenting, setPresenting] = reactExports.useState(false);
+    const [presenting, setPresenting] = reactExports.useState(() => isDemoOpenPreview());
     const beginExportToFolder = async (mode, dirHandle) => {
       const doc = useDocumentStore.getState();
       const storyId = doc.activeStoryId;
