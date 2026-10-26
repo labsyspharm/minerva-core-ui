@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-C8_D-fNv.js","./pako.esm-KbdoS3Oq.js","./lerc-Bt06khh_.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-C_1ZFesp.js","./pako.esm-KbdoS3Oq.js","./lerc-BP0-PDS7.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18505,8 +18505,7 @@ let __tla = (async () => {
     "MODE": "demo",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "8bfc46cc555e43e98388577680c6d0b4961851f1",
-    "VITE_DEMO_OPEN_PREVIEW": "true"
+    "VITE_APP_GIT_SHA": "d4b5aa1164af8103323a067b43ff1e269035ed07"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79229,26 +79228,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-B-tUcHTD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Cb8qDIWy.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BmNFMnr-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-De2IhoLg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-Cy0RVJ9h.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-RN5n3Dsv.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-C8_D-fNv.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CypMYPiY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Bt06khh_.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-C_1ZFesp.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-Rsuquou_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BP0-PDS7.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-B7S056tT.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BVbXo8xU.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DOE-pTQc.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-Cu3WSEbK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -173681,9 +173680,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function isDemoContentEnabled() {
     return true;
   }
-  function isDemoOpenPreview() {
-    return Boolean("true");
-  }
   function getDemoDocumentTitle() {
     return "Minerva 2.0 Demo";
   }
@@ -251470,20 +251466,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })
     });
   }
-  const sidebarHost = "_sidebarHost_1gyqk_1";
-  const sidebarHostCollapsed = "_sidebarHostCollapsed_1gyqk_18";
-  const panelOuter = "_panelOuter_1gyqk_23";
-  const tabRow = "_tabRow_1gyqk_33";
-  const stripActions = "_stripActions_1gyqk_41";
-  const expandControl = "_expandControl_1gyqk_50";
-  const expandControlExpanded = "_expandControlExpanded_1gyqk_60";
-  const panelContent = "_panelContent_1gyqk_66";
-  const viewport = "_viewport_1gyqk_76";
-  const viewportCollapsed = "_viewportCollapsed_1gyqk_88";
-  const viewportPreview = "_viewportPreview_1gyqk_93";
-  const previewNav = "_previewNav_1gyqk_97";
-  const previewNavParked = "_previewNavParked_1gyqk_111";
-  const viewerRegion = "_viewerRegion_1gyqk_115";
+  const sidebarHost = "_sidebarHost_1mdmf_1";
+  const sidebarHostCollapsed = "_sidebarHostCollapsed_1mdmf_18";
+  const panelOuter = "_panelOuter_1mdmf_23";
+  const tabRow = "_tabRow_1mdmf_33";
+  const stripActions = "_stripActions_1mdmf_41";
+  const expandControl = "_expandControl_1mdmf_50";
+  const expandControlExpanded = "_expandControlExpanded_1mdmf_60";
+  const panelContent = "_panelContent_1mdmf_66";
+  const viewport = "_viewport_1mdmf_76";
+  const viewportCollapsed = "_viewportCollapsed_1mdmf_88";
+  const viewportPreview = "_viewportPreview_1mdmf_93";
+  const previewNav = "_previewNav_1mdmf_97";
+  const viewerRegion = "_viewerRegion_1mdmf_111";
   const styles$d = {
     sidebarHost,
     sidebarHostCollapsed,
@@ -251497,7 +251492,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     viewportCollapsed,
     viewportPreview,
     previewNav,
-    previewNavParked,
     viewerRegion
   };
   const TAB_ORDER = [
@@ -251584,17 +251578,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function AuthorView(props) {
     const [expanded, setExpanded] = reactExports.useState(true);
-    const hasPreview = props.previewNav != null;
-    const previewing = hasPreview && !props.previewNavHidden;
+    const previewing = props.previewNav != null;
     return jsxRuntimeExports.jsxs(AuthorViewport, {
       collapsed: !expanded,
       className: previewing ? styles$d.viewportPreview : void 0,
       children: [
-        hasPreview ? jsxRuntimeExports.jsx("div", {
-          className: previewing ? styles$d.previewNav : styles$d.previewNavParked,
+        previewing ? jsxRuntimeExports.jsx("div", {
+          className: styles$d.previewNav,
           children: props.previewNav
-        }) : null,
-        previewing ? null : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+        }) : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
           children: [
             jsxRuntimeExports.jsx(AuthorSidebar, {
               imagesPanel: props.imagesPanel,
@@ -258371,7 +258363,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   };
   const PlaybackModeView = (props) => {
     const { presenting } = props;
-    const hideNavPane = usePresentationNavHidden();
     const exporting = props.ioState === "EXPORTING";
     const folderPrompt2 = props.exportFolderPrompt;
     const sourcePrompt = props.exportSourcePrompt;
@@ -258407,7 +258398,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 previewNav: presenting ? jsxRuntimeExports.jsx(PresentationNav, {
                   showStoryName: false
                 }) : void 0,
-                previewNavHidden: hideNavPane,
                 viewer: jsxRuntimeExports.jsxs(ChannelPanel, {
                   hiddenChannel: !presenting && props.hiddenChannel,
                   noLoader: props.noLoader,
@@ -260075,8 +260065,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-26T14:09:46.867Z";
-    const sha = "8bfc46cc555e43e98388577680c6d0b4961851f1";
+    const iso = "2026-10-26T21:06:34.405Z";
+    const sha = "d4b5aa1164af8103323a067b43ff1e269035ed07";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -262362,7 +262352,7 @@ uniform classStyleUniforms {
     const [directory_handle, setDirectoryHandle] = reactExports.useState(null);
     const [exportFolderPrompt, setExportFolderPrompt] = reactExports.useState(null);
     const [exportSourcePrompt, setExportSourcePrompt] = reactExports.useState(false);
-    const [presenting, setPresenting] = reactExports.useState(() => isDemoOpenPreview() && useDocumentStore.getState().activeStoryId === DEMO_SHELF_STORY_ID);
+    const [presenting, setPresenting] = reactExports.useState(false);
     const beginExportToFolder = async (mode, dirHandle) => {
       const doc = useDocumentStore.getState();
       const storyId = doc.activeStoryId;
@@ -264004,11 +263994,6 @@ uniform classStyleUniforms {
     "img-1"
   ];
   document.title = getDemoDocumentTitle();
-  if (isDemoOpenPreview() && parsePreferredStoryIdFromLocation() === null) {
-    const url = new URL(window.location.href);
-    url.searchParams.set("storyid", DEMO_SHELF_STORY_ID);
-    window.history.replaceState(null, "", url);
-  }
   const appRouter = createAppRouter(Main, {
     handleKeys: OME_TIFF_HANDLE_KEYS,
     ...getDemoMainProps()
