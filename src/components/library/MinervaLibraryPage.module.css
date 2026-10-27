@@ -293,3 +293,49 @@
     gap: 4px;
   }
 }
+
+.buildInfo {
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
+  z-index: var(--minerva-z-menu);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.buildInfoButton {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--minerva-quiet);
+  cursor: pointer;
+}
+
+.buildInfoButton:hover {
+  color: var(--minerva-ink);
+  background: var(--minerva-wash);
+}
+
+.buildInfoButton svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.buildInfoStamp {
+  margin: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
+  color: var(--minerva-quiet);
+  font-size: 11px;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

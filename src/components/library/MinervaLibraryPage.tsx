@@ -18,10 +18,12 @@ import {
   importStoryJsonFile,
   importStoryJsonFromPicker,
 } from "@/lib/storyExport/importStoryFolder";
+import { buildStamp } from "@/lib/version/buildStamp";
 import { rootRouteApi } from "@/router/appRouter";
 import styles from "./MinervaLibraryPage.module.css";
 
 const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
+const BUILD_STAMP = buildStamp();
 
 /** One-shot handoff: library stash → story page consumes after navigate. */
 type PendingLibraryImport =
@@ -224,6 +226,36 @@ function buildBays(summaries: StorySummary[] | null): BaySlot[] {
     }
   }
   return out;
+}
+
+function LibraryBuildInfo() {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  useClickOutside(open, () => setOpen(false), [ref]);
+  if (!BUILD_STAMP) return null;
+  return (
+    <div className={styles.buildInfo} ref={ref}>
+      {open ? (
+        <div className={styles.buildInfoStamp} title={BUILD_STAMP.title}>
+          {BUILD_STAMP.text}
+        </div>
+      ) : null}
+      <button
+        type="button"
+        className={`${minervaTheme.focusRing} ${styles.buildInfoButton}`}
+        aria-label="Build information"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <g fill="none" stroke="currentColor" strokeLinecap="round">
+            <circle cx="8" cy="8" r="6.25" strokeWidth="1.25" />
+            <path d="M8 7.2v4.2M8 4.6v.6" strokeWidth="1.4" />
+          </g>
+        </svg>
+      </button>
+    </div>
+  );
 }
 
 export function MinervaLibraryPage() {
@@ -529,6 +561,7 @@ export function MinervaLibraryPage() {
           })}
         </div>
       </section>
+      <LibraryBuildInfo />
     </div>
   );
 }
