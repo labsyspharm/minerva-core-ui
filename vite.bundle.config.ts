@@ -115,7 +115,7 @@ export default defineConfig({
       // Splat training is authoring-only — drop Brush's ~40MB wasm (kiln
       // imports it as ./brush-js/brush_js.js).
       {
-        find: /(?:^|\/)brush-js(?:\/brush_js\.js)?$/,
+        find: /^(?:\.\/)?brush-js(?:\/brush_js\.js)?$/,
         replacement: path.resolve(
           __dirname,
           "./src/lib/volume/cdnStubs/brushJs.ts",
