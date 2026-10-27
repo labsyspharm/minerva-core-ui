@@ -8,16 +8,31 @@ import * as React from "react";
 import { z } from "zod";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
+import { classifyViewerLaunchUrl } from "@/lib/viewer/launchUrl";
 
 const storySearchSchema = z.object({
   storyid: z.string().uuid().optional(),
 });
 
-/** Root route search: optional Dexie story UUID in `storyid`. */
-export function parseRootSearch(raw: Record<string, unknown>) {
-  const r = storySearchSchema.safeParse(raw);
-  if (!r.success) return {};
-  return { storyid: r.data.storyid } as { storyid?: string };
+type RootSearch = {
+  storyid?: string;
+  /**
+   * Image URL (OME-TIFF or a DICOMweb series) or a story JSON URL
+   * (`config.json` / `document.json`).
+   */
+  src?: string;
+};
+
+/** Root route search: optional `storyid`, optional launch `src`. Each is kept on its own. */
+export function parseRootSearch(raw: Record<string, unknown>): RootSearch {
+  const out: RootSearch = {};
+  const story = storySearchSchema.safeParse(raw);
+  if (story.success && story.data.storyid) out.storyid = story.data.storyid;
+  if (typeof raw.src === "string") {
+    const src = raw.src.trim();
+    if (src && classifyViewerLaunchUrl(src)) out.src = src;
+  }
+  return out;
 }
 
 const uuidParamSchema = z.string().uuid();
@@ -85,15 +100,16 @@ export function StoryIdUrlSync() {
 
   React.useEffect(() => {
     if (activeStoryId === null) return;
-    if (search.storyid === activeStoryId) return;
+    if (search.storyid === activeStoryId && search.src === undefined) return;
     navigate({
-      search: (prev: { storyid?: string }) => ({
-        ...prev,
-        storyid: activeStoryId,
-      }),
+      search: (prev: RootSearch) => {
+        const next: RootSearch = { ...prev, storyid: activeStoryId };
+        delete next.src;
+        return next;
+      },
       replace: true,
     } as never);
-  }, [activeStoryId, navigate, search.storyid]);
+  }, [activeStoryId, navigate, search.storyid, search.src]);
 
   return null;
 }

@@ -368,9 +368,10 @@ const Content = (props: Props) => {
       useAppStore.getState().resetStoryViewerSession();
       s.clearForLibraryView();
       navigate({
-        search: (prev: { storyid?: string }) => {
+        search: (prev: { storyid?: string; src?: string }) => {
           const next = { ...prev };
           delete next.storyid;
+          delete next.src;
           return next;
         },
         replace: true,

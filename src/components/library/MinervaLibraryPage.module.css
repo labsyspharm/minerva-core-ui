@@ -19,7 +19,7 @@
 .masthead {
   display: flex;
   align-items: baseline;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.55em 0.85em;
   max-width: 52rem;
   margin: 0 auto 0.55em;
@@ -83,6 +83,20 @@
   font-weight: 400;
   font-style: italic;
   color: var(--minerva-quiet);
+}
+
+.exampleLink {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: var(--minerva-size);
+  font-style: italic;
+  color: var(--minerva-quiet);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.exampleLink:hover {
+  color: var(--minerva-ink);
 }
 
 .error {
