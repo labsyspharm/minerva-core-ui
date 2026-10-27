@@ -1,4 +1,6 @@
 onlyBuiltDependencies:
   - "@vivjs/loaders"
   - esbuild
+  # Builds lib/ on install; keep the commit in step with package.json.
+  - "kiln-render@https://codeload.github.com/simonwarchol/kiln-render/tar.gz/c797c341dbab7b288ff5b5b7e28e997acb7d9707"
   - lefthook

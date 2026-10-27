@@ -17,6 +17,7 @@ import type {
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
 import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
+import { VolumeViewer } from "@/components/shared/viewer/VolumeViewer";
 import type { ConfigSourceDistribution } from "@/lib/authoring/config";
 import { extractChannels } from "@/lib/authoring/config";
 import {
@@ -147,6 +148,11 @@ import {
   type StoryExportMode,
   writeStoryBundleSidecars,
 } from "@/lib/storyExport/storyBundle";
+import {
+  buildVolumeImport,
+  isVolumeImage,
+  probeImsVolume,
+} from "@/lib/volume/imsVolume";
 import { ensureDefaultWaypoint } from "@/lib/waypoints/ensureDefaultWaypoint";
 import {
   applyWaypointSeedAction,
@@ -463,6 +469,8 @@ const Content = (props: Props) => {
   const setImages = useDocumentStore((s) => s.setImages);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
+  /** A volume story shows the 3D viewer instead of the 2D one. */
+  const volumeImage = images.find(isVolumeImage);
   const gmmChannelKey = useMemo(
     () =>
       flattenImageChannelsInDocumentOrder(images)
@@ -1305,6 +1313,27 @@ const Content = (props: Props) => {
     setFileName(basename);
   };
 
+  /** Replace the story's images with one 3D volume (Imaris over HTTP). */
+  const onStartVolumeUrl = async (url: string) => {
+    omeTiffUrlLoadGenerationRef.current += 1;
+    const loadGeneration = omeTiffUrlLoadGenerationRef.current;
+    const probe = await probeImsVolume(url);
+    if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) return;
+    const { image, channelGroups } = buildVolumeImport(url, probe);
+    clearOmeDerivedCaches();
+    setDicomIndexList([]);
+    setOmeLoaderEntries([]);
+    setJpegLoaderEntries([]);
+    setDeniedHandleKeys([]);
+    publishChannelState([image], channelGroups, {
+      resetActiveGroup: true,
+      transition: { kind: "fresh" },
+    });
+    afterImageImportDocumentEffects();
+    setLastOmeTiffUrl(null);
+    setFileName(image.basename);
+  };
+
   const onAppendOmeTiffUrl = async (
     url: string,
     role: OmeImportRequest["role"],
@@ -1885,8 +1914,9 @@ const Content = (props: Props) => {
         .filter((entry) => expectedIds.has(entry.sourceImageId))
         .map((entry) => entry.sourceImageId),
     );
+    // Volumes stream through VolumeViewer; they never get a 2D loader.
     const missingImages = images.filter(
-      (im) => im.source && !loadedIds.has(im.id),
+      (im) => im.source && !isVolumeImage(im) && !loadedIds.has(im.id),
     );
     if (missingImages.length === 0) {
       setJpegLoaderEntries((prev) => reconcileLoaderEntries(prev, expectedIds));
@@ -1954,6 +1984,7 @@ const Content = (props: Props) => {
     jpegLoaderEntries.length === 0 &&
     omeLoaderEntries.length === 0 &&
     dicomIndexList.length === 0 &&
+    !volumeImage &&
     !hasDemo;
 
   useSyncJpegChannelFolders(
@@ -2438,6 +2469,29 @@ const Content = (props: Props) => {
           }
         };
 
+        const importVolume = async (req: {
+          url: string;
+        }): Promise<OmeImportResult> => {
+          try {
+            await onStartVolumeUrl(req.url);
+            const storyId = useDocumentStore.getState().activeStoryId;
+            if (storyId) {
+              await saveStoryDocument(
+                storyId,
+                useDocumentStore.getState().toDocumentData(),
+              );
+            }
+            setImportRevision((r) => r + 1);
+            return { ok: true };
+          } catch (e) {
+            return {
+              ok: false,
+              error:
+                e instanceof Error ? e.message : "Could not open the volume.",
+            };
+          }
+        };
+
         const uploadProps = {
           onAllow,
           importRevision,
@@ -2447,14 +2501,18 @@ const Content = (props: Props) => {
           lastOmeTiffUrl,
           onImportOme: importOme,
           onImportDicomWeb: importDicomWeb,
+          onImportVolume: importVolume,
           needsFileAccess: deniedHandleKeys.length > 0,
           onRequestFileAccess: requestLoaderFileAccess,
           missingHandleKeys,
-          loadedImageIds: new Set(
-            [...omeLoaderEntries, ...jpegLoaderEntries, ...dicomIndexList].map(
-              (entry) => entry.sourceImageId,
-            ),
-          ),
+          loadedImageIds: new Set([
+            ...[
+              ...omeLoaderEntries,
+              ...jpegLoaderEntries,
+              ...dicomIndexList,
+            ].map((entry) => entry.sourceImageId),
+            ...(volumeImage ? [volumeImage.id] : []),
+          ]),
           onLocateImage: locateImage,
           needsStoryRootReconnect: missingStoryRoot,
           onReconnectStoryRoot: reconnectStoryRoot,
@@ -2472,7 +2530,9 @@ const Content = (props: Props) => {
         const imagesPanel = <Upload {...uploadProps} />;
         const viewer = (
           <div className={styles.viewerHost}>
-            {noLoader ? null : (
+            {volumeImage ? (
+              <VolumeViewer image={volumeImage} canEdit={!presenting} />
+            ) : noLoader ? null : (
               <ImageViewer
                 key={viewerRemountKey}
                 {...imageProps}
@@ -2507,6 +2567,7 @@ const Content = (props: Props) => {
             <ConsumePendingLibraryImport
               importOme={importOme}
               importDicomWeb={importDicomWeb}
+              importVolume={importVolume}
               onSettled={clearImageLoading}
             />
             {!presenting ? (

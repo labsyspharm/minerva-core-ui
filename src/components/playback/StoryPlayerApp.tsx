@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { Presentation } from "@/components/playback/Presentation";
 import { StoryPlaybackView } from "@/components/playback/StoryPlaybackView";
+import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
+import { VolumeViewer } from "@/components/shared/viewer/VolumeViewer";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import type {
   JpegLoaderEntry,
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
 import { loadStoryDocument } from "@/lib/story/loadStoryDocument";
+import { useVolumeImage } from "@/lib/volume/imsVolume";
 import styles from "./StoryPlayerApp.module.css";
 
 /** CDN story player. Authoring preview reuses the Presentation ribbon and nav. */
@@ -56,13 +59,15 @@ export function StoryPlayerApp({
     };
   }, [documentUrl]);
 
+  // A 3D volume streams in its own viewer and has no 2D loader.
+  const volumeImage = useVolumeImage();
   const sourceCount =
     jpegLoaderEntries.length + omeLoaderEntries.length + dicomIndexList.length;
 
   if (error) return <div className={styles.status}>{error}</div>;
   if (!documentReady)
     return <div className={styles.status}>Loading story…</div>;
-  if (imagesReady && sourceCount === 0) {
+  if (imagesReady && sourceCount === 0 && !volumeImage) {
     return (
       <div className={styles.status}>
         No image sources in document.json. Re-export the story from Minerva
@@ -73,14 +78,27 @@ export function StoryPlayerApp({
 
   return (
     <Presentation showDocumentTitle>
-      <StoryPlaybackView
-        jpegLoaderEntries={jpegLoaderEntries}
-        setJpegLoaderEntries={setJpegLoaderEntries}
-        omeLoaderEntries={omeLoaderEntries}
-        dicomIndexList={dicomIndexList}
-        imagesLoading={!imagesReady}
-        onEdit={onEdit}
-      />
+      {volumeImage ? (
+        <ChannelPanel noLoader={false} hiddenChannel={false}>
+          <div className={styles.volumeHost}>
+            <VolumeViewer
+              image={volumeImage}
+              canEdit={false}
+              documentUrl={documentUrl}
+              preferSplats
+            />
+          </div>
+        </ChannelPanel>
+      ) : (
+        <StoryPlaybackView
+          jpegLoaderEntries={jpegLoaderEntries}
+          setJpegLoaderEntries={setJpegLoaderEntries}
+          omeLoaderEntries={omeLoaderEntries}
+          dicomIndexList={dicomIndexList}
+          imagesLoading={!imagesReady}
+          onEdit={onEdit}
+        />
+      )}
     </Presentation>
   );
 }

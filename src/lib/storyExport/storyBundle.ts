@@ -73,7 +73,13 @@ export function canExportWithRemoteUrls(images: Image[]): boolean {
   const withSource = images.filter((im) => im.source);
   if (withSource.length === 0) return false;
   return withSource.every((im) => {
-    if (im.source?.kind !== "url" && im.source?.kind !== "jpeg") return false;
+    if (
+      im.source?.kind !== "url" &&
+      im.source?.kind !== "jpeg" &&
+      im.source?.kind !== "volume"
+    ) {
+      return false;
+    }
     return /^https?:\/\//i.test(im.source.url.trim());
   });
 }
@@ -225,6 +231,21 @@ async function writeFeatureTableSidecars(
     featureTables.push({ ...featureTable, source: { kind: "url", url } });
   }
   return { featureTables, skipped };
+}
+
+/**
+ * Before a long export (3D splat training): fail now, not at the end, if the
+ * self-hosted player it will copy hasn't been built (`pnpm run pages`).
+ */
+export async function checkStoryPlayer(): Promise<void> {
+  const base = hostedPlayerBaseUrl();
+  if (!base) return;
+  const res = await fetch(`${base}/manifest.json`);
+  if (!res.ok) {
+    throw new Error(
+      `Story player missing at ${base}/manifest.json (${res.status}); build it with \`pnpm run pages\`.`,
+    );
+  }
 }
 
 /** Copy the preview-hosted player into `bundle/` beside the story. */
