@@ -120,6 +120,10 @@
   width: 350px;
 }
 
+.previewNavParked {
+  display: none;
+}
+
 .viewerRegion {
   grid-column: 2;
   grid-row: 1;
