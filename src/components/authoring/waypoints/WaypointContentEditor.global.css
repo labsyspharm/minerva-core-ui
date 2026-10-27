@@ -30,7 +30,6 @@
 
 .waypointMarkdownEditorDetail .w-md-editor-input {
   height: auto !important;
-  align-self: stretch;
 }
 
 .waypointMarkdownEditorDetail .w-md-editor-text {
@@ -48,7 +47,6 @@
 .waypointMarkdownEditorDetail .w-md-editor-show-live .w-md-editor-content {
   display: flex;
   flex-direction: row;
-  align-items: stretch;
 }
 
 .waypointMarkdownEditorDetail .w-md-editor-show-live .w-md-editor-input {
