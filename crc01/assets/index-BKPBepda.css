@@ -2100,7 +2100,7 @@ button._exportChoice_doy1a_9 {
  * wordmark, ink hairline case/shelves, cloth spines.
  */
 
-._root_la95u_6 {
+._root_gmkzm_6 {
   box-sizing: border-box;
   min-height: 100dvh;
   max-height: 100dvh;
@@ -2113,7 +2113,7 @@ button._exportChoice_doy1a_9 {
   font-family: var(--minerva-font);
 }
 
-._masthead_la95u_19 {
+._masthead_gmkzm_19 {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
@@ -2124,7 +2124,7 @@ button._exportChoice_doy1a_9 {
   box-sizing: border-box;
 }
 
-._addWrap_la95u_30 {
+._addWrap_gmkzm_30 {
   position: relative;
   display: flex;
   align-items: center;
@@ -2132,13 +2132,13 @@ button._exportChoice_doy1a_9 {
   align-self: center;
 }
 
-._addWrap_la95u_30 ._addMenu_la95u_38 {
+._addWrap_gmkzm_30 ._addMenu_gmkzm_38 {
   top: 100%;
   left: 0;
   right: auto;
 }
 
-._intakeRow_la95u_44 {
+._intakeRow_gmkzm_44 {
   position: relative;
   display: flex;
   align-items: center;
@@ -2148,7 +2148,7 @@ button._exportChoice_doy1a_9 {
   padding: 2px 0 4px;
 }
 
-._addTrigger_la95u_54 {
+._addTrigger_gmkzm_54 {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2164,17 +2164,17 @@ button._exportChoice_doy1a_9 {
   box-shadow: none;
 }
 
-._addTrigger_la95u_54:hover:not(:disabled) {
+._addTrigger_gmkzm_54:hover:not(:disabled) {
   color: var(--minerva-ink);
   background: var(--minerva-wash);
 }
 
-._addTrigger_la95u_54:disabled {
+._addTrigger_gmkzm_54:disabled {
   opacity: 0.45;
   cursor: wait;
 }
 
-._tagline_la95u_80 {
+._tagline_gmkzm_80 {
   margin: 0;
   font-size: var(--minerva-size);
   font-weight: 400;
@@ -2182,7 +2182,7 @@ button._exportChoice_doy1a_9 {
   color: var(--minerva-quiet);
 }
 
-._error_la95u_88 {
+._error_gmkzm_88 {
   max-width: 52rem;
   margin: 0 auto 16px;
   padding: 8px 0;
@@ -2191,7 +2191,7 @@ button._exportChoice_doy1a_9 {
   border-bottom: 1px solid var(--minerva-ink);
 }
 
-._whisper_la95u_97 {
+._whisper_gmkzm_97 {
   margin: 0;
   padding: 4px 6px 4px 0;
   font-size: 1rem;
@@ -2199,7 +2199,7 @@ button._exportChoice_doy1a_9 {
   color: var(--minerva-quiet);
 }
 
-._bookcase_la95u_105 {
+._bookcase_gmkzm_105 {
   position: relative;
   max-width: 52rem;
   margin: 0 auto;
@@ -2211,18 +2211,18 @@ button._exportChoice_doy1a_9 {
   background: transparent;
 }
 
-._bookcaseInner_la95u_117 {
+._bookcaseInner_gmkzm_117 {
   padding: 0;
   box-sizing: border-box;
 }
 
-._shelfBay_la95u_122 {
+._shelfBay_gmkzm_122 {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-._bayContent_la95u_128 {
+._bayContent_gmkzm_128 {
   position: relative;
   display: flex;
   align-items: stretch;
@@ -2231,13 +2231,13 @@ button._exportChoice_doy1a_9 {
   padding: 0;
 }
 
-._bayContentEmpty_la95u_137 {
+._bayContentEmpty_gmkzm_137 {
   min-height: 44px;
   padding: 0;
   box-sizing: border-box;
 }
 
-._ghostShelf_la95u_143 {
+._ghostShelf_gmkzm_143 {
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-end;
@@ -2249,11 +2249,11 @@ button._exportChoice_doy1a_9 {
   overflow: hidden;
 }
 
-._ghostBook_la95u_155 {
+._ghostBook_gmkzm_155 {
   flex: 0 0 auto;
 }
 
-._storyRow_la95u_159 {
+._storyRow_gmkzm_159 {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -2264,7 +2264,7 @@ button._exportChoice_doy1a_9 {
   background: transparent;
 }
 
-._shelfBoard_la95u_170 {
+._shelfBoard_gmkzm_170 {
   flex: 0 0 auto;
   height: 1px;
   width: 100%;
@@ -2273,7 +2273,7 @@ button._exportChoice_doy1a_9 {
   background: var(--minerva-edge);
 }
 
-._rowOpen_la95u_179 {
+._rowOpen_gmkzm_179 {
   flex: 1 1 auto;
   display: flex;
   align-items: center;
@@ -2290,16 +2290,16 @@ button._exportChoice_doy1a_9 {
   box-shadow: none;
 }
 
-._rowOpen_la95u_179:hover:not(:disabled) {
+._rowOpen_gmkzm_179:hover:not(:disabled) {
   background: var(--minerva-wash);
 }
 
-._rowOpen_la95u_179:disabled {
+._rowOpen_gmkzm_179:disabled {
   opacity: 0.45;
   cursor: wait;
 }
 
-._rowThumb_la95u_205 {
+._rowThumb_gmkzm_205 {
   flex: 0 0 auto;
   width: 32px;
   height: 32px;
@@ -2309,7 +2309,7 @@ button._exportChoice_doy1a_9 {
   box-shadow: none;
 }
 
-._rowThumbImg_la95u_215 {
+._rowThumbImg_gmkzm_215 {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -2317,14 +2317,14 @@ button._exportChoice_doy1a_9 {
   display: block;
 }
 
-._rowThumbBlank_la95u_223 {
+._rowThumbBlank_gmkzm_223 {
   display: block;
   width: 100%;
   height: 100%;
   background: var(--minerva-wash);
 }
 
-._rowText_la95u_230 {
+._rowText_gmkzm_230 {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
@@ -2333,7 +2333,7 @@ button._exportChoice_doy1a_9 {
   gap: 10px;
 }
 
-._rowTitle_la95u_239 {
+._rowTitle_gmkzm_239 {
   font-size: 1rem;
   font-weight: 400;
   letter-spacing: 0.01em;
@@ -2343,7 +2343,7 @@ button._exportChoice_doy1a_9 {
   white-space: nowrap;
 }
 
-._rowDate_la95u_249 {
+._rowDate_gmkzm_249 {
   flex: 0 0 auto;
   font-size: 0.8rem;
   font-style: italic;
@@ -2352,12 +2352,12 @@ button._exportChoice_doy1a_9 {
   font-variant-numeric: tabular-nums;
 }
 
-._storyRow_la95u_159:focus-within ._scrap_la95u_258,
-._storyRow_la95u_159:hover ._scrap_la95u_258 {
+._storyRow_gmkzm_159:focus-within ._scrap_gmkzm_258,
+._storyRow_gmkzm_159:hover ._scrap_gmkzm_258 {
   opacity: 1;
 }
 
-._scrap_la95u_258 {
+._scrap_gmkzm_258 {
   flex: 0 0 auto;
   align-self: center;
   width: 22px;
@@ -2373,22 +2373,68 @@ button._exportChoice_doy1a_9 {
   opacity: 0;
 }
 
-._scrap_la95u_258:hover:not(:disabled) {
+._scrap_gmkzm_258:hover:not(:disabled) {
   color: var(--minerva-ink);
   background: transparent;
 }
 
-._scrap_la95u_258:disabled {
+._scrap_gmkzm_258:disabled {
   opacity: 0.25;
   cursor: wait;
 }
 
 @media (max-width: 540px) {
-  ._rowText_la95u_230 {
+  ._rowText_gmkzm_230 {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
+}
+
+._buildInfo_gmkzm_297 {
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
+  z-index: var(--minerva-z-menu);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+._buildInfoButton_gmkzm_308 {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--minerva-quiet);
+  cursor: pointer;
+}
+
+._buildInfoButton_gmkzm_308:hover {
+  color: var(--minerva-ink);
+  background: var(--minerva-wash);
+}
+
+._buildInfoButton_gmkzm_308 svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+._buildInfoStamp_gmkzm_331 {
+  margin: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
+  color: var(--minerva-quiet);
+  font-size: 11px;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 ._compactHeader_o47qu_1 {
   display: grid;
@@ -4743,6 +4789,10 @@ body[data-color-mode*='light'] {
 /**
  * Expanded waypoint: natural height + no inner scroll so `.detailBody` scrolls.
  * Fixes live/split mode where the library uses absolute preview + overflow:auto.
+ *
+ * `.w-md-editor-text-input` is position:absolute inside `.w-md-editor-text`.
+ * That node has to fill the box; otherwise the gap under the first line is a
+ * non-editable parent (default cursor, clicks do not focus).
  */
 .waypointMarkdownEditorDetail .w-md-editor {
   height: auto !important;
@@ -4753,26 +4803,40 @@ body[data-color-mode*='light'] {
 .waypointMarkdownEditorDetail .w-md-editor-content {
   height: auto !important;
   min-height: 0;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
   overflow: visible !important;
 }
 
 .waypointMarkdownEditorDetail .w-md-editor-area {
   overflow: visible !important;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .waypointMarkdownEditorDetail .w-md-editor-input {
   height: auto !important;
-  align-self: flex-start;
+  align-self: stretch;
 }
 
 .waypointMarkdownEditorDetail .w-md-editor-text {
-  min-height: 0 !important;
+  flex: 1 0 auto;
+}
+
+/* Library height:100% does not track a flex-grown box. Stretch to its padding box. */
+.waypointMarkdownEditorDetail .w-md-editor-text-input {
+  top: 0;
+  bottom: 0;
+  height: auto;
+  cursor: text;
 }
 
 .waypointMarkdownEditorDetail .w-md-editor-show-live .w-md-editor-content {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 .waypointMarkdownEditorDetail .w-md-editor-show-live .w-md-editor-input {
