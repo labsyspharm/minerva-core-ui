@@ -40,7 +40,10 @@ WebGPU. Waypoints save the 3D view (camera, clip box, render mode, density,
 depth fade), and exporting a 3D story can train Gaussian splats (one PLY per
 channel in `splats/`) that the published story plays without streaming voxels.
 
-kiln-render is linked from a sibling checkout (`link:../kiln-render`; run
-`pnpm build:lib` there after changing it). The 3D story player isn't on npm
-yet, so exports copy this build's player (`bundle/`, set by
-`VITE_STORY_BUNDLE_URL` in `.env`): run `pnpm run pages` after changing the app.
+kiln-render comes from [the fork](https://github.com/simonwarchol/kiln-render)
+at a pinned commit, built on install. To update it, push Kiln and change the
+commit in `package.json` and in `pnpm-workspace.yaml`'s
+`onlyBuiltDependencies`; to work on both at once, `pnpm link ../kiln-render`.
+The 3D story player isn't on npm yet, so exports copy this build's player
+(`bundle/`, set by `VITE_STORY_BUNDLE_URL` in `.env`): run `pnpm run pages`
+after changing the app.

@@ -82,7 +82,7 @@
     "geotiff": "2.1.4-beta.0",
     "gl-matrix": "^3.4.3",
     "idb-keyval": "^6.2.1",
-    "kiln-render": "link:../kiln-render",
+    "kiln-render": "github:simonwarchol/kiln-render#c797c341dbab7b288ff5b5b7e28e997acb7d9707",
     "lefthook": "^2.1.1",
     "lzw-tiff-decoder": "^0.1.1",
     "onnxruntime-web": "^1.24.1",

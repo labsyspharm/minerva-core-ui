@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import react from "@vitejs/plugin-react";
-import { defineConfig, searchForWorkspaceRoot } from "vite";
+import { defineConfig } from "vite";
 import mkcert from "vite-plugin-mkcert";
 import svgr from "vite-plugin-svgr";
 import topLevelAwait from "vite-plugin-top-level-await";
@@ -11,18 +11,6 @@ import { gitSha } from "./vite.gitSha.js";
 /** ISO UTC time baked into each bundle; override in CI with `VITE_APP_BUILD_TIME` (ISO-8601). */
 const BUILD_TIME_ISO =
   process.env.VITE_APP_BUILD_TIME ?? new Date().toISOString();
-
-/**
- * kiln-render (3D volumes) may be linked from a sibling checkout; the dev
- * server must be allowed to serve its real path outside this workspace.
- */
-const kilnRealPath = (() => {
-  try {
-    return fs.realpathSync(path.resolve(__dirname, "node_modules/kiln-render"));
-  } catch {
-    return null;
-  }
-})();
 
 /**
  * Dev only: serve the built story player (`bundle/`) as plain files. Through
@@ -74,12 +62,6 @@ export default defineConfig(({ command }) => {
     },
     server: {
       https: true,
-      fs: {
-        allow: [
-          searchForWorkspaceRoot(process.cwd()),
-          ...(kilnRealPath ? [kilnRealPath] : []),
-        ],
-      },
       hmr: {
         overlay: true,
       },

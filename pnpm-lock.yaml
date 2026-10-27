@@ -165,8 +165,8 @@ importers:
         specifier: ^6.2.1
         version: 6.2.2
       kiln-render:
-        specifier: link:../kiln-render
-        version: link:../kiln-render
+        specifier: github:simonwarchol/kiln-render#c797c341dbab7b288ff5b5b7e28e997acb7d9707
+        version: https://codeload.github.com/simonwarchol/kiln-render/tar.gz/c797c341dbab7b288ff5b5b7e28e997acb7d9707
       lefthook:
         specifier: ^2.1.1
         version: 2.1.1
@@ -2781,6 +2781,10 @@ packages:
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
+
+  kiln-render@https://codeload.github.com/simonwarchol/kiln-render/tar.gz/c797c341dbab7b288ff5b5b7e28e997acb7d9707:
+    resolution: {gitHosted: true, integrity: sha512-n3vnrPC/fTt53XxAJSerLPcWNSkWXy9W6Z61VEHFi5PrDia/+M7WV8vd9lxdjGo1WdRRmx/X4rkLqlH+u19CqA==, tarball: https://codeload.github.com/simonwarchol/kiln-render/tar.gz/c797c341dbab7b288ff5b5b7e28e997acb7d9707}
+    version: 0.4.1
 
   ktx-parse@0.7.1:
     resolution: {integrity: sha512-FeA3g56ksdFNwjXJJsc1CCc7co+AJYDp6ipIp878zZ2bU8kWROatLYf39TQEd4/XRSUvBXovQ8gaVKWPXsCLEQ==}
@@ -6947,6 +6951,10 @@ snapshots:
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+
+  kiln-render@https://codeload.github.com/simonwarchol/kiln-render/tar.gz/c797c341dbab7b288ff5b5b7e28e997acb7d9707:
+    dependencies:
+      '@webgpu/types': 0.1.69
 
   ktx-parse@0.7.1: {}
 
