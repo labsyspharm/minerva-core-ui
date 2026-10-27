@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DmjYe5Wz.js","./pako.esm-KbdoS3Oq.js","./lerc-BpG4EGNj.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BBbwSgyc.js","./pako.esm-KbdoS3Oq.js","./lerc-D9tDeU_1.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -475,7 +475,7 @@ let __tla = (async () => {
     if (_depth > 500) return _next;
     const next2 = _next;
     const array = isPlainArray(prev) && isPlainArray(next2);
-    if (!array && !(isPlainObject$3(prev) && isPlainObject$3(next2))) return next2;
+    if (!array && !(isPlainObject$4(prev) && isPlainObject$4(next2))) return next2;
     const prevItems = array ? prev : getEnumerableOwnKeys(prev);
     if (!prevItems) return next2;
     const nextItems = array ? next2 : getEnumerableOwnKeys(next2);
@@ -515,7 +515,7 @@ let __tla = (async () => {
     }
     return keys2;
   }
-  function isPlainObject$3(o2) {
+  function isPlainObject$4(o2) {
     if (!hasObjectPrototype(o2)) return false;
     const ctor = o2.constructor;
     if (typeof ctor === "undefined") return true;
@@ -538,7 +538,7 @@ let __tla = (async () => {
       for (let i2 = 0, l2 = a2.length; i2 < l2; i2++) if (!deepEqual$3(a2[i2], b2[i2], opts)) return false;
       return true;
     }
-    if (isPlainObject$3(a2) && isPlainObject$3(b2)) {
+    if (isPlainObject$4(a2) && isPlainObject$4(b2)) {
       const ignoreUndefined = (opts == null ? void 0 : opts.ignoreUndefined) ?? true;
       if (opts == null ? void 0 : opts.partial) {
         for (const k2 in b2) if (!ignoreUndefined || b2[k2] !== void 0) {
@@ -1623,7 +1623,7 @@ let __tla = (async () => {
     let state = {};
     try {
       const parsed = JSON.parse(safeSessionStorage.getItem("tsr-scroll-restoration-v1_3") || "{}");
-      if (isPlainObject$3(parsed)) state = parsed;
+      if (isPlainObject$4(parsed)) state = parsed;
     } catch {
     }
     const persist = () => {
@@ -1725,7 +1725,7 @@ let __tla = (async () => {
         let restored = false;
         if (elementEntries) for (const elementSelector in elementEntries) {
           const entry = elementEntries[elementSelector];
-          if (!isPlainObject$3(entry)) continue;
+          if (!isPlainObject$4(entry)) continue;
           const { scrollX, scrollY } = entry;
           if (!Number.isFinite(scrollX) || !Number.isFinite(scrollY)) continue;
           if (elementSelector === windowScrollTarget) {
@@ -17774,6 +17774,16 @@ let __tla = (async () => {
     if (sawMask) return "segmentation";
     return "intensity";
   }
+  function mapShapePoints(shape, f2) {
+    if ("polygon" in shape) return {
+      ...shape,
+      polygon: shape.polygon.map(f2)
+    };
+    return {
+      ...shape,
+      position: f2(shape.position)
+    };
+  }
   const rectangleToPolygon = (start, end) => {
     const [startX, startY] = start;
     const [endX, endY] = end;
@@ -18502,10 +18512,10 @@ let __tla = (async () => {
   const __vite_import_meta_env__ = {
     "BASE_URL": "./",
     "DEV": false,
-    "MODE": "production",
+    "MODE": "demo",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "38124a190885d1ed6bf1d8e7cdf719959fee2cd7"
+    "VITE_APP_GIT_SHA": "88ff28d02dd0b15a66b13fed9a91ea1b22b4f339"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -18564,7 +18574,7 @@ let __tla = (async () => {
     const { enabled: enabled2, anonymousActionType, store, ...options } = devtoolsOptions;
     let extensionConnector;
     try {
-      extensionConnector = (enabled2 != null ? enabled2 : (__vite_import_meta_env__ ? "production" : void 0) !== "production") && window.__REDUX_DEVTOOLS_EXTENSION__;
+      extensionConnector = (enabled2 != null ? enabled2 : (__vite_import_meta_env__ ? "demo" : void 0) !== "production") && window.__REDUX_DEVTOOLS_EXTENSION__;
     } catch (e2) {
     }
     if (!extensionConnector) {
@@ -18621,7 +18631,7 @@ let __tla = (async () => {
       let didWarnAboutReservedActionType = false;
       const originalDispatch = api.dispatch;
       api.dispatch = (...args) => {
-        if ((__vite_import_meta_env__ ? "production" : void 0) !== "production" && args[0].type === "__setState" && !didWarnAboutReservedActionType) {
+        if ((__vite_import_meta_env__ ? "demo" : void 0) !== "production" && args[0].type === "__setState" && !didWarnAboutReservedActionType) {
           console.warn('[zustand devtools middleware] "__setState" action type is reserved to set state from the devtools. Avoid using it.');
           didWarnAboutReservedActionType = true;
         }
@@ -37625,7 +37635,7 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     }
     addChannel(props) {
       const { delay = 0, duration = Number.POSITIVE_INFINITY, rate = 1, repeat = 1 } = props;
-      const channelId = channelHandles++;
+      const channelId2 = channelHandles++;
       const channel = {
         time: 0,
         delay,
@@ -37634,29 +37644,29 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         repeat
       };
       this._setChannelTime(channel, this.time);
-      this.channels.set(channelId, channel);
-      return channelId;
+      this.channels.set(channelId2, channel);
+      return channelId2;
     }
-    removeChannel(channelId) {
-      this.channels.delete(channelId);
+    removeChannel(channelId2) {
+      this.channels.delete(channelId2);
       for (const [animationHandle, animation] of this.animations) {
-        if (animation.channel === channelId) {
+        if (animation.channel === channelId2) {
           this.detachAnimation(animationHandle);
         }
       }
     }
-    isFinished(channelId) {
-      const channel = this.channels.get(channelId);
+    isFinished(channelId2) {
+      const channel = this.channels.get(channelId2);
       if (channel === void 0) {
         return false;
       }
       return this.time >= channel.delay + channel.duration * channel.repeat;
     }
-    getTime(channelId) {
-      if (channelId === void 0) {
+    getTime(channelId2) {
+      if (channelId2 === void 0) {
         return this.time;
       }
-      const channel = this.channels.get(channelId);
+      const channel = this.channels.get(channelId2);
       if (channel === void 0) {
         return -1;
       }
@@ -37693,8 +37703,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       animation.setTime(this.getTime(channelHandle));
       return animationHandle;
     }
-    detachAnimation(channelId) {
-      this.animations.delete(channelId);
+    detachAnimation(channelId2) {
+      this.animations.delete(channelId2);
     }
     update(engineTime) {
       if (this.playing) {
@@ -53944,12 +53954,12 @@ void main(void) {
     if (Number.isFinite(container2.length)) {
       return container2.length;
     }
-    if (isPlainObject$2(container2)) {
+    if (isPlainObject$3(container2)) {
       return Object.keys(container2).length;
     }
     throw new Error(ERR_NOT_CONTAINER);
   }
-  function isPlainObject$2(value) {
+  function isPlainObject$3(value) {
     return value !== null && typeof value === "object" && value.constructor === Object;
   }
   function isObject(value) {
@@ -68946,7 +68956,7 @@ in vec2 mask_texCoords;
     if (lower === 0 && upper === 255) return true;
     return false;
   }
-  function hexToRgb(hex) {
+  function hexToRgb$1(hex) {
     const n2 = Number.parseInt(hex.replace("#", ""), 16);
     return {
       r: n2 >> 16 & 255,
@@ -69435,6 +69445,12 @@ in vec2 mask_texCoords;
       pixels.PhysicalSizeYUnit = WORLD_MICRON;
     }
   }
+  function omePixelsWorldFrame(pixels, imageFrames) {
+    const width = Number(pixels.getAttribute("SizeX")) || 0;
+    const height = Number(pixels.getAttribute("SizeY")) || 0;
+    if (width <= 0 || height <= 0) return void 0;
+    return imageFrames.find((f2) => f2.pixelWidth === width && f2.pixelHeight === height);
+  }
   function worldFrameFromPixelCounts(width, height) {
     return frameFromPixels(width, height, {
       umPerPixelX: IDENTITY_UM,
@@ -69448,7 +69464,9 @@ in vec2 mask_texCoords;
     return worldFrameFromPixelCounts(docWidth, docHeight);
   }
   function layerModelMatrix(loader, orientation) {
-    const frame2 = worldFrameFromLoader(loader);
+    return frameModelMatrix(worldFrameFromLoader(loader), orientation);
+  }
+  function frameModelMatrix(frame2, orientation) {
     const o2 = effectiveOrientation(orientation);
     const { pixelWidth, pixelHeight } = frame2;
     const umPerPixelX = o2.umPerPixel ?? frame2.umPerPixelX;
@@ -69496,7 +69514,12 @@ in vec2 mask_texCoords;
   }
   function isCalibratedScale(loader) {
     var _a2;
-    return !isIdentityScale(parsePhysicalScale((_a2 = loader.metadata) == null ? void 0 : _a2.Pixels));
+    const pixels = (_a2 = loader.metadata) == null ? void 0 : _a2.Pixels;
+    const present = (value) => {
+      const n2 = Number(value);
+      return Number.isFinite(n2) && n2 > 0;
+    };
+    return present(pixels == null ? void 0 : pixels.PhysicalSizeX) || present(pixels == null ? void 0 : pixels.PhysicalSizeY);
   }
   function pixelViewRectFromWorld(rect, scale2) {
     if (isIdentityScale(scale2)) return rect;
@@ -79228,26 +79251,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-WxGls4yM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BO4jLN9B.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DmnUODLD.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-AyMrCW3Z.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CIlQAaUN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CrKxEpEG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DmjYe5Wz.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-w7x6gGmU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BpG4EGNj.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BBbwSgyc.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DC8PsiFy.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-D9tDeU_1.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-C89atgo2.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-AWCiPhqN.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DBWG98YW.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CUADQfJ8.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -86452,24 +86475,37 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       extensions: [
         ".tif",
         ".tiff"
+      ],
+      mimeTypes: [
+        "image/tiff"
       ]
     },
     annotations: {
       label: "OME-XML annotations",
       extensions: [
         ".xml"
+      ],
+      mimeTypes: [
+        "text/xml",
+        "application/xml"
       ]
     },
     featureTable: {
       label: "CSV feature tables",
       extensions: [
         ".csv"
+      ],
+      mimeTypes: [
+        "text/csv"
       ]
     },
     story: {
       label: "Minerva story JSON",
       extensions: [
         ".json"
+      ],
+      mimeTypes: [
+        "application/json"
       ]
     }
   };
@@ -86486,7 +86522,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function importFilePickerOptions(kinds) {
     return {
       description: kinds.map((k2) => KINDS[k2].label).join(", "),
-      extensions: kinds.flatMap((k2) => KINDS[k2].extensions)
+      extensions: kinds.flatMap((k2) => KINDS[k2].extensions),
+      mimeTypes: kinds.flatMap((k2) => KINDS[k2].mimeTypes)
     };
   }
   function sanitizeOmeXml(raw2) {
@@ -86918,7 +86955,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       createWritable: async () => {
         throw new DOMException("Ephemeral file handle", "NotSupportedError");
       },
-      isSameEntry: async () => false,
       queryPermission: async () => "granted",
       requestPermission: async () => "granted"
     };
@@ -86926,6 +86962,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   async function fileHandleFromDataTransferItem(item2) {
     if (item2.kind !== "file") return null;
+    const file = item2.getAsFile();
     const withHandle = item2;
     if (typeof withHandle.getAsFileSystemHandle === "function") {
       try {
@@ -86936,7 +86973,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       } catch {
       }
     }
-    const file = item2.getAsFile();
     if (!file) return null;
     return ephemeralFileHandleFromFile(file);
   }
@@ -86979,9 +87015,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       throw e2;
     }
   };
-  const toFile = async (kinds = [
-    "image"
-  ]) => {
+  const toFile = async (kinds) => {
     try {
       const file = await n$1({
         ...importFilePickerOptions(kinds),
@@ -87530,8 +87564,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return out;
   }
-  function findSourceChannel(channels2, channelId) {
-    return channels2.find((c2) => c2.id === channelId);
+  function findSourceChannel(channels2, channelId2) {
+    return channels2.find((c2) => c2.id === channelId2);
   }
   function applySourceChannelsToImages(currentImages, flatChannels) {
     const byImage = /* @__PURE__ */ new Map();
@@ -87859,9 +87893,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function applyGroupChannelRange(channelGroups, raw2) {
     const lower = raw2.LowerRange;
     const upper = raw2.UpperRange;
-    const groupId = "groupId" in raw2 && raw2.groupId !== void 0 ? raw2.groupId : raw2.group_uuid;
+    const groupId2 = "groupId" in raw2 && raw2.groupId !== void 0 ? raw2.groupId : raw2.group_uuid;
     const channelEntryId = "channelId" in raw2 && raw2.channelId !== void 0 ? raw2.channelId : raw2.channel_uuid;
-    return channelGroups.map((group2) => group2.id !== groupId ? group2 : {
+    return channelGroups.map((group2) => group2.id !== groupId2 ? group2 : {
       ...group2,
       channels: group2.channels.map((e2) => e2.id === channelEntryId ? {
         ...e2,
@@ -87875,17 +87909,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const anyWp = wp;
     const id2 = anyWp.id ?? anyWp.UUID ?? "";
     const shapeIds = anyWp.shapeIds ?? anyWp.ShapeIds ?? [];
-    let groupId = anyWp.groupId;
+    let groupId2 = anyWp.groupId;
     const legacyGroup = anyWp.Group;
-    if (groupId === void 0 && legacyGroup !== void 0 && legacyGroup !== "") {
-      groupId = isUuid(legacyGroup) ? legacyGroup : ((_a2 = channelGroups.find((g2) => g2.name === legacyGroup)) == null ? void 0 : _a2.id) ?? legacyGroup;
+    if (groupId2 === void 0 && legacyGroup !== void 0 && legacyGroup !== "") {
+      groupId2 = isUuid(legacyGroup) ? legacyGroup : ((_a2 = channelGroups.find((g2) => g2.name === legacyGroup)) == null ? void 0 : _a2.id) ?? legacyGroup;
     }
     const next2 = {
       ...wp,
       id: id2,
       shapeIds,
-      ...groupId !== void 0 ? {
-        groupId
+      ...groupId2 !== void 0 ? {
+        groupId: groupId2
       } : {}
     };
     delete next2.UUID;
@@ -88791,14 +88825,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const groupIds = new Set(channelGroups.map((g2) => g2.id));
     const shapeIds = new Set(data2.shapes.map((s2) => s2.id));
     const waypoints = data2.waypoints.map((wp) => {
-      const groupId = wp.groupId != null && !groupIds.has(wp.groupId) ? void 0 : wp.groupId;
+      const groupId2 = wp.groupId != null && !groupIds.has(wp.groupId) ? void 0 : wp.groupId;
       const shapeIdsFiltered = wp.shapeIds.filter((id2) => shapeIds.has(id2));
-      if (groupId === wp.groupId && shapeIdsFiltered.length === wp.shapeIds.length) {
+      if (groupId2 === wp.groupId && shapeIdsFiltered.length === wp.shapeIds.length) {
         return wp;
       }
       return {
         ...wp,
-        groupId,
+        groupId: groupId2,
         shapeIds: shapeIdsFiltered
       };
     });
@@ -89300,6 +89334,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     })),
     setShapes: (shapes) => set2(() => ({
+      shapes: [
+        ...shapes
+      ]
+    })),
+    setWaypointsAndShapes: (waypoints, shapes) => set2(() => ({
+      waypoints: [
+        ...waypoints
+      ],
       shapes: [
         ...shapes
       ]
@@ -89867,8 +89909,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     get2().persistImportedShapesToStory(resolved);
   }
-  function legendClassKey(waypointId, channelId) {
-    return `${waypointId ?? ""}:${channelId}`;
+  function legendClassKey(waypointId, channelId2) {
+    return `${waypointId ?? ""}:${channelId2}`;
   }
   const overlayInitialState = {
     overlayLayers: [],
@@ -89913,6 +89955,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     activeStoryIndex: null,
     waypointAuthoring: /* @__PURE__ */ new Map(),
     authoringWaypointShapesIndex: null,
+    openWaypointId: null,
     activeChannelGroupId: null,
     channelRendering: null,
     imageOrientationPreview: null,
@@ -89937,6 +89980,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     viewerViewState: null,
     viewerViewportSize: null,
     viewerWorldFrame: null,
+    viewerImageFrames: [],
     viewerImageLayersLoaded: false,
     squareViewportThumbnailCapture: null,
     editingViewstateWaypointIndex: null
@@ -90168,8 +90212,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         shapes: []
       });
     },
-    toggleLegendClass: (waypointId, channelId, name2) => {
-      const key2 = legendClassKey(waypointId, channelId);
+    toggleLegendClass: (waypointId, channelId2, name2) => {
+      const key2 = legendClassKey(waypointId, channelId2);
       const prev = get2().hiddenLegendClasses;
       const names = prev[key2] ?? [];
       const next2 = names.includes(name2) ? names.filter((n2) => n2 !== name2) : [
@@ -90210,6 +90254,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         activeStoryIndex: null,
         waypointAuthoring: /* @__PURE__ */ new Map(),
         authoringWaypointShapesIndex: null,
+        openWaypointId: null,
         authoringWaypointEditorOpen: false,
         targetWaypointCamera: null,
         layersPanelSelectedShapeIds: [],
@@ -90852,6 +90897,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         authoringWaypointShapesIndex: index2
       });
     },
+    setOpenWaypointId: (waypointId) => {
+      set2({
+        openWaypointId: waypointId
+      });
+    },
     setLayersPanelSelectedShapeIds: (ids) => {
       set2({
         layersPanelSelectedShapeIds: [
@@ -90901,14 +90951,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         ]
       }));
     },
-    deleteGroup: (groupId) => {
+    deleteGroup: (groupId2) => {
       set2((state) => ({
-        shapeGroups: state.shapeGroups.filter((g2) => g2.id !== groupId)
+        shapeGroups: state.shapeGroups.filter((g2) => g2.id !== groupId2)
       }));
     },
-    addShapeToGroup: (groupId, shapeId) => {
+    addShapeToGroup: (groupId2, shapeId) => {
       set2((state) => ({
-        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId ? {
+        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId2 ? {
           ...group2,
           shapeIds: [
             ...group2.shapeIds,
@@ -90917,17 +90967,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         } : group2)
       }));
     },
-    removeShapeFromGroup: (groupId, shapeId) => {
+    removeShapeFromGroup: (groupId2, shapeId) => {
       set2((state) => ({
-        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId ? {
+        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId2 ? {
           ...group2,
           shapeIds: group2.shapeIds.filter((id2) => id2 !== shapeId)
         } : group2)
       }));
     },
-    toggleGroupExpanded: (groupId) => {
+    toggleGroupExpanded: (groupId2) => {
       set2((state) => ({
-        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId ? {
+        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId2 ? {
           ...group2,
           isExpanded: !group2.isExpanded
         } : group2)
@@ -91012,7 +91062,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const doc = useDocumentStore.getState();
       const removedId = (_a2 = doc.waypoints[index2]) == null ? void 0 : _a2.id;
       if (index2 >= 0 && index2 < doc.waypoints.length) {
-        doc.setWaypoints(doc.waypoints.filter((_2, i2) => i2 !== index2));
+        const waypoints = doc.waypoints.filter((_2, i2) => i2 !== index2);
+        const listed = new Set(waypoints.flatMap((w2) => w2.shapeIds ?? []));
+        doc.setWaypointsAndShapes(waypoints, documentShapes(doc).filter((s2) => listed.has(s2.id)));
       }
       set2((state) => {
         const next2 = new Map(state.waypointAuthoring);
@@ -91023,16 +91075,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         };
       });
     },
-    setWaypointClassView: (waypointId, channelId, next2) => {
+    setWaypointClassView: (waypointId, channelId2, next2) => {
       const doc = useDocumentStore.getState();
       const index2 = doc.waypoints.findIndex((w2) => w2.id === waypointId);
       const wp = doc.waypoints[index2];
       if (!wp) return;
-      const rest2 = (wp.classViews ?? []).filter((v2) => v2.channelId !== channelId);
+      const rest2 = (wp.classViews ?? []).filter((v2) => v2.channelId !== channelId2);
       const classViews = next2 ? [
         ...rest2,
         {
-          channelId,
+          channelId: channelId2,
           ...next2
         }
       ] : rest2;
@@ -91112,6 +91164,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     setViewerWorldFrame: (frame2) => {
       set2({
         viewerWorldFrame: frame2
+      });
+    },
+    setViewerImageFrames: (frames) => {
+      set2({
+        viewerImageFrames: frames
       });
     },
     setViewerImageLayersLoaded: (loaded) => {
@@ -91995,13 +92052,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       floatRange: channelFloatRange(sc2)
     };
   }
-  function contrastEditorPropsForGroupRow(channelRendering, groupId, gc2, sc2) {
+  function contrastEditorPropsForGroupRow(channelRendering, groupId2, gc2, sc2) {
     const sourceId = (sc2 == null ? void 0 : sc2.id) ?? gc2.channelId;
     const liveColor = renderingForSource(channelRendering, sourceId, "color");
     const c2 = liveColor ?? gc2.color;
     const liveContrast = renderingForSource(channelRendering, sourceId, "contrast");
     return {
-      groupId,
+      groupId: groupId2,
       channelId: gc2.id,
       sourceChannelId: sourceId,
       channelLabel: (sc2 == null ? void 0 : sc2.name) ?? "Channel",
@@ -94058,7 +94115,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   }
   const STACK_SEED_COLORS = [
-    ...IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex)),
+    ...IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb$1(hex)),
     {
       r: 255,
       g: 255,
@@ -94205,7 +94262,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return imageChannelCount >= 2;
   }
   function seedRgbForGroupChannelIndex(index2) {
-    return hexToRgb(IMPORT_DEFAULT_SEED_HEX[index2 % IMPORT_DEFAULT_SEED_HEX.length]);
+    return hexToRgb$1(IMPORT_DEFAULT_SEED_HEX[index2 % IMPORT_DEFAULT_SEED_HEX.length]);
   }
   function currentGroupColors(group2) {
     return (group2.channels ?? []).map((gc2) => ({
@@ -94227,10 +94284,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return optimizePaletteSlots(slots, lockedChannelRowIds);
   }
-  function applyOptimizedColorsToChannelGroup(channelGroups, groupId, colors, options) {
+  function applyOptimizedColorsToChannelGroup(channelGroups, groupId2, colors, options) {
     const locked = options == null ? void 0 : options.lockedChannelRowIds;
     return channelGroups.map((g2) => {
-      if (g2.id !== groupId) return g2;
+      if (g2.id !== groupId2) return g2;
       const channels2 = g2.channels.map((gc2, i2) => {
         if (locked == null ? void 0 : locked.has(gc2.id)) return gc2;
         const c2 = colors[i2];
@@ -95073,11 +95130,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     classColorPreview = null;
     noteLut();
   }
-  function classViewFor(waypoint, channelId) {
+  function classViewFor(waypoint, channelId2) {
     var _a2;
-    return (_a2 = waypoint == null ? void 0 : waypoint.classViews) == null ? void 0 : _a2.find((v2) => v2.channelId === channelId);
+    return (_a2 = waypoint == null ? void 0 : waypoint.classViews) == null ? void 0 : _a2.find((v2) => v2.channelId === channelId2);
   }
-  function withHiddenClasses(view, channelId, hidden) {
+  function withHiddenClasses(view, channelId2, hidden) {
     if (!(hidden == null ? void 0 : hidden.length)) return view;
     const vis = (view == null ? void 0 : view.visibility) ?? visibilityAllOn();
     const visibility = vis.mode === "show" ? {
@@ -95093,7 +95150,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     };
     return {
-      channelId,
+      channelId: channelId2,
       colors: (view == null ? void 0 : view.colors) ?? [],
       visibility
     };
@@ -95261,12 +95318,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     dropClassViews(sourceChannelId);
   }
-  function dropClassViews(channelId) {
+  function dropClassViews(channelId2) {
     const doc = useDocumentStore.getState();
-    if (!doc.waypoints.some((w2) => classViewFor(w2, channelId))) return;
-    doc.setWaypoints(doc.waypoints.map((w2) => classViewFor(w2, channelId) ? {
+    if (!doc.waypoints.some((w2) => classViewFor(w2, channelId2))) return;
+    doc.setWaypoints(doc.waypoints.map((w2) => classViewFor(w2, channelId2) ? {
       ...w2,
-      classViews: (w2.classViews ?? []).filter((v2) => v2.channelId !== channelId)
+      classViews: (w2.classViews ?? []).filter((v2) => v2.channelId !== channelId2)
     } : w2));
   }
   function detachRemovedFeatureTables(previous2, remaining) {
@@ -95283,10 +95340,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const featureTable = doc.featureTables.find((c2) => c2.id === featureTableId);
     const waypoint = doc.waypoints.find((w2) => w2.id === waypointId);
     if (!featureTable || !waypoint) return void 0;
-    const channelId = featureTable.sourceChannelId;
+    const channelId2 = featureTable.sourceChannelId;
     return {
-      channelId,
-      view: classViewFor(waypoint, channelId)
+      channelId: channelId2,
+      view: classViewFor(waypoint, channelId2)
     };
   }
   function updateClassView(waypointId, featureTableId, update) {
@@ -96256,8 +96313,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     for (const listener of listeners) listener();
   }
-  function readChannel(channelId) {
-    return documentChannels().find((sc2) => sc2.id === channelId);
+  function readChannel(channelId2) {
+    return documentChannels().find((sc2) => sc2.id === channelId2);
   }
   function removeFromQueues(key2) {
     const idx = queue.indexOf(key2);
@@ -96524,10 +96581,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       intern(job);
     }
   }
-  function attachChannel(job, channelId, guard) {
-    const prev = job.guards.get(channelId);
+  function attachChannel(job, channelId2, guard) {
+    const prev = job.guards.get(channelId2);
     if (!((prev == null ? void 0 : prev.kind) === "unchanged" && guard.kind === "still-missing")) {
-      job.guards.set(channelId, guard);
+      job.guards.set(channelId2, guard);
     }
   }
   function upsertJob(args) {
@@ -96559,9 +96616,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     enqueue(job);
     return job;
   }
-  function targetFor(channelId) {
+  function targetFor(channelId2) {
     const all2 = documentChannels();
-    const sc2 = all2.find((c2) => c2.id === channelId);
+    const sc2 = all2.find((c2) => c2.id === channelId2);
     if (!sc2 || !isGmmEligible(sc2, all2)) return null;
     const loader = loadersByImageId.get(sc2.imageId);
     if (!loader) return null;
@@ -96607,12 +96664,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   async function ensureGmm(channelIds) {
     const result = /* @__PURE__ */ new Map();
     const waits = [];
-    for (const channelId of channelIds) {
-      const target = targetFor(channelId);
+    for (const channelId2 of channelIds) {
+      const target = targetFor(channelId2);
       if (!target) continue;
       const current = asWindow(target.sc.gmmContrastLimits);
       if (current) {
-        result.set(channelId, {
+        result.set(channelId2, {
           lower: current.lower,
           upper: current.upper
         });
@@ -96628,9 +96685,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
       if (!job) continue;
       waits.push(intern(job).then(() => {
-        const sc2 = readChannel(channelId);
+        const sc2 = readChannel(channelId2);
         const limits = asWindow(sc2 == null ? void 0 : sc2.gmmContrastLimits);
-        if (limits) result.set(channelId, {
+        if (limits) result.set(channelId2, {
           lower: limits.lower,
           upper: limits.upper
         });
@@ -96641,13 +96698,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     await Promise.all(waits);
     return result;
   }
-  async function refitGmm(channelId) {
-    const target = targetFor(channelId);
+  async function refitGmm(channelId2) {
+    const target = targetFor(channelId2);
     if (!target) return null;
     const key2 = rasterKey(target.sc.imageId, target.sc.index);
     const running = inFlight.get(key2);
     if (running) await running;
-    const latest = targetFor(channelId);
+    const latest = targetFor(channelId2);
     if (!latest) return null;
     const expected = asWindow(latest.sc.gmmContrastLimits);
     const guard = expected ? {
@@ -96669,7 +96726,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     notify();
     const outcome = await intern(job);
     if (outcome.kind !== "fitted") return null;
-    const sc2 = readChannel(channelId);
+    const sc2 = readChannel(channelId2);
     if (!limitsEqual(sc2 == null ? void 0 : sc2.gmmContrastLimits, outcome.window)) return null;
     return {
       lower: outcome.window.lower,
@@ -97997,14 +98054,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...capVis,
       ...next2
     });
-    const applyRgbUnit = (visible, groupId) => {
+    const applyRgbUnit = (visible, groupId2) => {
       const next2 = visibilitiesForRgbUnit({
         rgbChannels,
         channelGroups,
         groupRowVisibilities: filledGroupVis,
         stackVisibilities: filledStackVis,
         visible,
-        groupId
+        groupId: groupId2
       });
       if (visible && !fits({
         stackVisibilities: next2.channelVisibilities,
@@ -168825,9 +168882,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     0,
     65535
   ];
-  async function jpegPyramidFolderName(channelId, lowerLimit, upperLimit) {
+  async function jpegPyramidFolderName(channelId2, lowerLimit, upperLimit) {
     const encoded = stableHash({
-      channelId,
+      channelId: channelId2,
       lowerLimit,
       upperLimit
     });
@@ -169310,10 +169367,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (jpegLoaderEntries.length === 0) return;
       const group2 = activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : channelGroups[0];
       const channels2 = (group2 == null ? void 0 : group2.channels) ?? [];
-      const groupId = (group2 == null ? void 0 : group2.id) ?? activeChannelGroupId;
+      const groupId2 = (group2 == null ? void 0 : group2.id) ?? activeChannelGroupId;
       let cancelled = false;
       void (async () => {
-        const next2 = await syncJpegEntryChannelFolders(jpegLoaderEntries, images, channels2, groupId);
+        const next2 = await syncJpegEntryChannelFolders(jpegLoaderEntries, images, channels2, groupId2);
         if (cancelled) return;
         setJpegLoaderEntries((prev) => prev.length === next2.length && prev.every((e2, i2) => e2 === next2[i2]) ? prev : next2);
       })();
@@ -169498,6 +169555,27 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       applied
     };
   }
+  function ensureDefaultWaypoint() {
+    var _a2;
+    const doc = useDocumentStore.getState();
+    if (doc.waypoints.length > 0) return;
+    const groupId2 = (_a2 = doc.channelGroups[0]) == null ? void 0 : _a2.id;
+    const raw2 = {
+      id: crypto.randomUUID(),
+      State: {
+        Expanded: true
+      },
+      Name: "Waypoint 1",
+      Content: "",
+      shapeIds: [],
+      ...groupId2 !== void 0 ? {
+        groupId: groupId2
+      } : {}
+    };
+    const app = useAppStore.getState();
+    app.addStory(raw2);
+    app.setActiveStory(0);
+  }
   const attr = (el2, ...keys2) => {
     for (const k2 of keys2) {
       const v2 = el2.getAttribute(k2);
@@ -169586,12 +169664,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return void 0;
   };
+  const transformCoeff = (el2, name2, fallback) => {
+    const s2 = attr(el2, name2);
+    if (s2 == null) return fallback;
+    const n2 = Number(s2);
+    return Number.isFinite(n2) ? n2 : Number.NaN;
+  };
+  const parseTransform = (el2) => {
+    const t2 = Array.from(el2.children).find((ch2) => ch2.localName === "Transform");
+    if (!t2) return void 0;
+    const m2 = {
+      A00: transformCoeff(t2, "A00", 1),
+      A01: transformCoeff(t2, "A01", 0),
+      A02: transformCoeff(t2, "A02", 0),
+      A10: transformCoeff(t2, "A10", 0),
+      A11: transformCoeff(t2, "A11", 1),
+      A12: transformCoeff(t2, "A12", 0)
+    };
+    return Object.values(m2).every(Number.isFinite) ? m2 : void 0;
+  };
   const shapeCommon = (el2, id2) => {
     const name2 = attr(el2, "Name", "name");
     const text2 = attr(el2, "Text", "text", "Value");
-    const theC = num(el2, "TheC", "theC");
-    const theT = num(el2, "TheT", "theT");
-    const theZ = num(el2, "TheZ", "theZ");
     const sw = num(el2, "StrokeWidth", "strokeWidth");
     const base2 = {
       ID: id2
@@ -169603,9 +169697,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (fill) base2.FillColor = fill;
     if (stroke) base2.StrokeColor = stroke;
     if (!Number.isNaN(sw) && sw > 0) base2.StrokeWidth = sw;
-    if (!Number.isNaN(theC) && theC >= 0) base2.TheC = Math.floor(theC);
-    if (!Number.isNaN(theT) && theT >= 0) base2.TheT = Math.floor(theT);
-    if (!Number.isNaN(theZ) && theZ >= 0) base2.TheZ = Math.floor(theZ);
+    const transform = parseTransform(el2);
+    if (transform) base2.Transform = transform;
     return base2;
   };
   const shapeIdFor = (el2, fallback) => attr(el2, "ID", "id", "Name", "name") || fallback;
@@ -169630,7 +169723,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         y2,
         w2,
         h2
-      ].some((n2) => Number.isNaN(n2)) || w2 <= 0 || h2 <= 0) {
+      ].some((n2) => Number.isNaN(n2)) || w2 === 0 || h2 === 0) {
         return null;
       }
       return common2({
@@ -169725,11 +169818,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function unionShapeElements(roiEl) {
     const out = [];
     const ns = (name2) => roiEl.getElementsByTagNameNS("*", name2);
-    const unions = [
+    const unions = /* @__PURE__ */ new Set([
       ...Array.from(ns("Union")),
       ...Array.from(roiEl.getElementsByTagName("Union"))
-    ];
-    if (unions.length > 0) {
+    ]);
+    if (unions.size > 0) {
       for (const u2 of unions) {
         for (const ch2 of u2.children) {
           if (ch2.nodeType === Node.ELEMENT_NODE) out.push(ch2);
@@ -169835,11 +169928,22 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       lineWidth: shape.StrokeWidth || 3
     };
   };
+  const rectangleCorners = (shape) => {
+    const { X: X2, Y: Y2, Width, Height, Transform } = shape;
+    return [
+      applyTransform(X2, Y2, Transform),
+      applyTransform(X2 + Width, Y2, Transform),
+      applyTransform(X2 + Width, Y2 + Height, Transform),
+      applyTransform(X2, Y2 + Height, Transform)
+    ];
+  };
   const rectangleShapeToViewerShape = (shape, roi) => {
-    const { X: X2, Y: Y2, Width, Height, Transform, ID, Text, Name } = shape;
-    const topLeft = applyTransform(X2, Y2, Transform);
-    const bottomRight = applyTransform(X2 + Width, Y2 + Height, Transform);
-    const polygon = rectangleToPolygon(topLeft, bottomRight);
+    const { ID, Text, Name } = shape;
+    const corners = rectangleCorners(shape);
+    const polygon = [
+      ...corners,
+      corners[0]
+    ];
     const colors = getColors(shape, [
       255,
       0,
@@ -169896,7 +170000,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const start = applyTransform(X1, Y1, Transform);
     const end = applyTransform(X2, Y2, Transform);
     const lineWidth = shape.StrokeWidth || 3;
-    const polygon = lineToPolygon(start, end, lineWidth);
+    const polygon = [
+      start,
+      end
+    ];
     const lineColor = shape.StrokeColor || [
       0,
       255,
@@ -170048,15 +170155,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function collectRoiShapeWorldPoints(shape) {
     const T2 = shape.Transform;
     switch (shape.type) {
-      case "rectangle": {
-        const { X: X2, Y: Y2, Width, Height } = shape;
-        return [
-          applyTransform(X2, Y2, T2),
-          applyTransform(X2 + Width, Y2, T2),
-          applyTransform(X2 + Width, Y2 + Height, T2),
-          applyTransform(X2, Y2 + Height, T2)
-        ];
-      }
+      case "rectangle":
+        return rectangleCorners(shape);
       case "ellipse":
         return ellipseToPolygon(shape.X, shape.Y, shape.RadiusX, shape.RadiusY, T2, 24);
       case "line":
@@ -170137,107 +170237,108 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   const parseRoisFromRoiList = (rois) => {
     const shapes = [];
-    const groups = [];
     if (!rois || rois.length === 0) {
-      return {
-        shapes,
-        groups
-      };
+      return shapes;
     }
-    console.log(`Found ${rois.length} ROIs in ROI list`);
     rois.forEach((roi) => {
-      console.log(`Processing ROI ${roi.ID} (${roi.Name || "unnamed"}) with ${roi.shapes.length} shapes`);
-      const groupId = `roi-group-${roi.ID}`;
-      const roiShapeIds = [];
+      let drewShape = false;
       roi.shapes.forEach((shape) => {
         try {
           let viewerShape = null;
           switch (shape.type) {
             case "rectangle":
               viewerShape = rectangleShapeToViewerShape(shape, roi);
-              console.log(`Created rectangle shape: ${viewerShape.id}`);
               break;
             case "ellipse":
               viewerShape = ellipseShapeToViewerShape(shape, roi);
-              console.log(`Created ellipse shape: ${viewerShape.id}`);
               break;
             case "line":
               viewerShape = lineShapeToViewerShape(shape, roi);
-              console.log(`Created line shape: ${viewerShape.id}`);
               break;
             case "point":
               viewerShape = pointShapeToViewerShape(shape, roi);
-              console.log(`Created point shape: ${viewerShape.id}`);
               break;
             case "polygon":
               viewerShape = polygonShapeToViewerShape(shape, roi);
-              console.log(`Created polygon shape: ${viewerShape.id}`);
               break;
             case "polyline":
               viewerShape = polylineShapeToViewerShape(shape, roi);
-              console.log(`Created polyline shape: ${viewerShape.id}`);
               break;
             case "label":
               viewerShape = labelShapeToViewerShape(shape, roi);
-              console.log(`Created text shape: ${viewerShape.id}`);
               break;
             default:
               console.warn(`Unknown shape: ${shape}`);
           }
           if (viewerShape) {
             shapes.push(viewerShape);
-            roiShapeIds.push(viewerShape.id);
+            drewShape = true;
           }
         } catch (error2) {
           console.error(`Error processing shape ${shape.ID} in ROI ${roi.ID}:`, error2);
         }
       });
       const labelOnlyRoi = roi.shapes.length > 0 && roi.shapes.every((s2) => s2.type === "label");
-      if (roiShapeIds.length > 0 && !labelOnlyRoi) {
+      if (drewShape && !labelOnlyRoi) {
         const centroidPos = importRoiCentroidPosition(roi);
         if (centroidPos) {
-          const centroidShape = makeImportCentroidTextShape(roi, centroidPos);
-          shapes.push(centroidShape);
-          roiShapeIds.push(centroidShape.id);
+          shapes.push(makeImportCentroidTextShape(roi, centroidPos));
         }
       }
-      if (roiShapeIds.length > 0) {
-        const group2 = {
-          id: groupId,
-          name: roi.Name || `ROI ${roi.ID}`,
-          shapeIds: roiShapeIds,
-          isExpanded: true
-        };
-        groups.push(group2);
-        console.log(`Created group for ROI ${roi.ID} with ${roiShapeIds.length} shapes`);
-      }
     });
-    console.log(`Total shapes created from ROIs: ${shapes.length}`);
-    console.log(`Total groups created from ROIs: ${groups.length}`);
-    return {
-      shapes,
-      groups
-    };
+    return shapes;
   };
   const parseRoisFromLoader = (loader) => {
     if (!loader || !loader.metadata || !loader.metadata.ROIs) {
-      console.log("No ROIs found in loader metadata");
-      return {
-        shapes: [],
-        groups: []
-      };
+      return [];
     }
     return parseRoisFromRoiList(loader.metadata.ROIs);
   };
+  function roiShapesToWorld(shapes, toWorld) {
+    return viewerShapesToStoryShapes(shapes.map((shape) => mapShapePoints(shape, ([x2, y2]) => {
+      const [wx, wy] = toWorld.transformAsPoint([
+        x2,
+        y2,
+        0
+      ]);
+      return [
+        wx,
+        wy
+      ];
+    })));
+  }
+  const imageOrientation = (imageId) => orientationForImage(useDocumentStore.getState().images, imageId, null);
+  function scopeImportedShapeIds(shapes, imageId) {
+    if (!imageId) return shapes;
+    return shapes.map((shape) => ({
+      ...shape,
+      id: `${imageId}:${shape.id}`
+    }));
+  }
+  function importTargetWaypointIndex() {
+    ensureDefaultWaypoint();
+    const { openWaypointId, activeStoryIndex } = useAppStore.getState();
+    const { waypoints } = useDocumentStore.getState();
+    const openIndex = waypoints.findIndex((w2) => w2.id === openWaypointId);
+    if (openIndex >= 0) return openIndex;
+    if (activeStoryIndex != null && activeStoryIndex >= 0 && activeStoryIndex < waypoints.length) {
+      return activeStoryIndex;
+    }
+    return 0;
+  }
   function appendImportedStoryShapesDeduped(storyShapes) {
-    if (storyShapes.length === 0) return 0;
+    if (storyShapes.length === 0) return {
+      added: 0,
+      waypointId: null
+    };
+    const idx = importTargetWaypointIndex();
     const doc = useDocumentStore.getState();
     const { waypoints, shapes } = doc;
-    if (waypoints.length === 0) {
-      return 0;
-    }
-    const idx = 0;
     const wp = waypoints[idx];
+    if (!wp) return {
+      added: 0,
+      waypointId: null
+    };
     const docIds = new Set(shapes.map((s2) => s2.id));
     const wpIds = new Set(wp.shapeIds ?? []);
     const seenInBatch = /* @__PURE__ */ new Set();
@@ -170250,40 +170351,44 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
       deduped.push(s2);
     }
-    if (deduped.length === 0) return 0;
+    if (deduped.length === 0) return {
+      added: 0,
+      waypointId: wp.id
+    };
     const newIds = deduped.map((s2) => s2.id);
-    doc.setShapes([
-      ...shapes,
-      ...deduped
-    ]);
-    doc.setWaypoints(waypoints.map((w2, i2) => i2 === idx ? {
+    doc.setWaypointsAndShapes(waypoints.map((w2, i2) => i2 === idx ? {
       ...w2,
       shapeIds: [
         ...w2.shapeIds ?? [],
         ...newIds
       ]
-    } : w2));
-    return deduped.length;
+    } : w2), [
+      ...shapes,
+      ...deduped
+    ]);
+    return {
+      added: deduped.length,
+      waypointId: wp.id
+    };
   }
-  function applyOmeRoisFromLoaderToFirstWaypoint(loader, imageDescriptionOmeXml = null) {
-    let { shapes: viewerRoiShapes } = parseRoisFromLoader(loader);
+  function applyOmeRoisFromLoaderToWaypoint(loader, imageId, imageDescriptionOmeXml = null) {
+    let viewerRoiShapes = parseRoisFromLoader(loader);
     if (viewerRoiShapes.length === 0 && imageDescriptionOmeXml) {
       try {
         const rois = parseOmeXmlStringToRois(imageDescriptionOmeXml);
-        viewerRoiShapes = parseRoisFromRoiList(rois).shapes;
+        viewerRoiShapes = parseRoisFromRoiList(rois);
       } catch (e2) {
       }
     }
-    const storyShapes = viewerShapesToStoryShapes(viewerRoiShapes);
-    appendImportedStoryShapesDeduped(storyShapes);
+    const storyShapes = roiShapesToWorld(viewerRoiShapes, layerModelMatrix(loader, imageOrientation(imageId)));
+    appendImportedStoryShapesDeduped(scopeImportedShapeIds(storyShapes, imageId));
   }
   function applyOmeRoisFromAnnotationXmlString(xml2) {
-    const doc = useDocumentStore.getState();
-    const { waypoints } = doc;
-    if (waypoints.length === 0) {
+    const { viewerImageFrames } = useAppStore.getState();
+    if (viewerImageFrames.length === 0) {
       return {
         success: false,
-        error: "Add a waypoint in the story first, then import annotations to attach them.",
+        error: "Load an image before importing annotations.",
         shapeCount: 0
       };
     }
@@ -170304,8 +170409,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         shapeCount: 0
       };
     }
-    const { shapes: viewerRoiShapes } = parseRoisFromRoiList(rois);
-    const storyShapes = viewerShapesToStoryShapes(viewerRoiShapes);
+    const viewerRoiShapes = parseRoisFromRoiList(rois);
+    const omeDoc = parseOmeXml(xml2);
+    const pixels = omeDoc && omePixelsElement(omeDoc);
+    const frame2 = (pixels && omePixelsWorldFrame(pixels, viewerImageFrames)) ?? viewerImageFrames[0];
+    const storyShapes = roiShapesToWorld(viewerRoiShapes, frameModelMatrix(frame2, imageOrientation(frame2.sourceImageId)));
     if (storyShapes.length === 0) {
       return {
         success: false,
@@ -170313,8 +170421,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         shapeCount: 0
       };
     }
-    const added = appendImportedStoryShapesDeduped(storyShapes);
-    if (added === 0) {
+    const { added, waypointId } = appendImportedStoryShapesDeduped(scopeImportedShapeIds(storyShapes, frame2.sourceImageId));
+    if (added === 0 || waypointId === null) {
       return {
         success: false,
         error: "All annotations from this file are already present (duplicate import skipped).",
@@ -170323,7 +170431,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return {
       success: true,
-      shapeCount: added
+      shapeCount: added,
+      waypointId
     };
   }
   function BrowseIcon({ title: title7, size = 14 }) {
@@ -170750,6 +170859,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         else {
           const n2 = r2.shapeCount;
           setNotice(`Imported ${n2} annotation${n2 === 1 ? "" : "s"}.`);
+          useAppStore.getState().setEditWaypointOnOpen(r2.waypointId);
         }
       } else {
         const doc = useDocumentStore.getState();
@@ -173660,25 +173770,191 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     ]
   };
+  const DEMO_SHELF_STORY_ID = "018fd3a0-0000-7000-8000-00000000de11";
   const DEMO_CRC_OME_TIFF_URL = "https://lsp-public-data.s3.amazonaws.com/lin-2021-crc-atlas/CRC01-096-097.ome.tif";
   const DEMO_JPEG_URL = "crc-export";
-  exhibit_config.Name ?? "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer";
+  const DEMO_SHELF_TITLE = exhibit_config.Name ?? "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer";
+  const CRC_SIZE_X = 26139;
+  const CRC_SIZE_Y = 27120;
+  const CRC_UM_PER_PIXEL = 0.325;
+  const SEED_VIEWPORT_W = 1280;
+  const SEED_VIEWPORT_H = 800;
+  const DEMO_IMAGE_ID = "018fd3a0-0000-7000-8000-00000000c001";
   const EMPTY_EXHIBIT_CONFIG = {
     Name: "",
     Stories: [],
     Groups: []
   };
+  const CRC_CHANNEL_NAMES = [
+    "DNA1",
+    "CYCIF_AF488",
+    "CYCIF_AF555",
+    "CYCIF_AF647",
+    "CYCIF_DNA2",
+    "CYCIF_CTRL488",
+    "CYCIF_CTRL555",
+    "CYCIF_CTRL647",
+    "CYCIF_DNA3",
+    "CYCIF_CD3",
+    "Na_K_ATPase",
+    "CYCIF_CD45RO",
+    "CYCIF_DNA4",
+    "Ki67",
+    "PanCK",
+    "ASMA",
+    "CYCIF_DNA5",
+    "CD4",
+    "CD45",
+    "PD1",
+    "CYCIF_DNA6",
+    "CD20",
+    "CD68",
+    "CD8a",
+    "CYCIF_DNA7",
+    "CD163",
+    "FOXP3",
+    "PDL1",
+    "CYCIF_DNA8",
+    "Ecadherin",
+    "Vimentin",
+    "CYCIF_CDX2",
+    "CYCIF_DNA9",
+    "LaminABC",
+    "Desmin",
+    "CD31",
+    "DNA10",
+    "PCNA",
+    "CYCIF_Ki67_2",
+    "Collagen",
+    "HE_r",
+    "HE_g",
+    "HE_b"
+  ];
+  function hexToRgb(c2) {
+    const n2 = Number.parseInt(c2, 16);
+    return {
+      r: n2 >> 16 & 255,
+      g: n2 >> 8 & 255,
+      b: n2 & 255
+    };
+  }
+  function channelId(index2) {
+    return `018fd3a0-0000-7000-8100-${index2.toString(16).padStart(12, "0")}`;
+  }
+  function groupId(index2) {
+    return `018fd3a0-0000-7000-8200-${index2.toString(16).padStart(12, "0")}`;
+  }
+  function groupChannelRowId(groupIndex, rowIndex) {
+    const n2 = groupIndex * 256 + rowIndex;
+    return `018fd3a0-0000-7000-8300-${n2.toString(16).padStart(12, "0")}`;
+  }
   function isJpegDemoMode() {
     return false;
   }
   function isDemoContentEnabled() {
-    return false;
+    return true;
   }
   function getDemoDocumentTitle() {
-    return "Minerva";
+    return "Minerva 2.0 Demo";
+  }
+  function buildDemoCrcDocumentData() {
+    const channels2 = CRC_CHANNEL_NAMES.map((name2, index2) => ({
+      id: channelId(index2),
+      index: index2,
+      name: name2,
+      kind: "channel",
+      samples: 1,
+      sourceDataTypeId: "uint16"
+    }));
+    const nameByExhibitChannel = {};
+    const channelGroups = [];
+    const groups = (exhibit_config.Groups ?? []).filter((g2) => {
+      var _a2;
+      return ((_a2 = g2.Image) == null ? void 0 : _a2.Method) === "Colorimetric" && g2.Path in GROUP_CHANNELS_CRC01;
+    });
+    for (let gi2 = 0; gi2 < groups.length; gi2++) {
+      const g2 = groups[gi2];
+      const indices = GROUP_CHANNELS_CRC01[g2.Path];
+      if (!indices || indices.length !== g2.Channels.length) continue;
+      for (let i2 = 0; i2 < indices.length; i2++) {
+        const idx = indices[i2];
+        const exhibitName = g2.Channels[i2];
+        nameByExhibitChannel[exhibitName] = channelId(idx);
+        const ch2 = channels2[idx];
+        if (ch2) ch2.name = exhibitName;
+      }
+      channelGroups.push({
+        id: groupId(gi2),
+        name: g2.Name,
+        expanded: gi2 === 0,
+        channels: g2.Channels.map((name2, i2) => ({
+          id: groupChannelRowId(gi2, i2),
+          channelId: nameByExhibitChannel[name2],
+          color: hexToRgb(g2.Colors[i2]),
+          lowerLimit: g2.Lows[i2],
+          upperLimit: g2.Highs[i2]
+        }))
+      });
+    }
+    const image2 = {
+      id: DEMO_IMAGE_ID,
+      sizeX: CRC_SIZE_X,
+      sizeY: CRC_SIZE_Y,
+      sizeC: CRC_CHANNEL_NAMES.length,
+      omeXmlHash: "",
+      basename: "CRC01-096-097.ome.tif",
+      contentRole: "intensity",
+      rotationDegrees: 0,
+      flipHorizontal: false,
+      flipVertical: false,
+      channels: channels2,
+      source: {
+        kind: "url",
+        url: DEMO_CRC_OME_TIFF_URL
+      }
+    };
+    const { stories: migrated, shapes } = migrateLegacyWaypointShapes(structuredClone(configWaypoints), [], CRC_SIZE_X * CRC_UM_PER_PIXEL, CRC_SIZE_Y * CRC_UM_PER_PIXEL);
+    const waypoints = migrated.map((story) => {
+      const hydrated = hydrateConfigWaypoint(story, channelGroups);
+      const normalized = normalizeWaypointToBounds(hydrated, CRC_SIZE_X, CRC_SIZE_Y, SEED_VIEWPORT_W, SEED_VIEWPORT_H);
+      const { waypoint } = configWaypointToWaypoint(normalized, CRC_SIZE_X, CRC_SIZE_Y, SEED_VIEWPORT_W, SEED_VIEWPORT_H);
+      return {
+        ...waypoint,
+        thumbnail: waypoint.thumbnail ?? ""
+      };
+    });
+    return {
+      metadata: {
+        title: DEMO_SHELF_TITLE,
+        imageSource: DEMO_CRC_OME_TIFF_URL
+      },
+      waypoints,
+      shapes,
+      channelGroups,
+      images: [
+        image2
+      ]
+    };
   }
   async function ensureDemoShelfStory() {
-    return;
+    const existing = await getStoryRecord(DEMO_SHELF_STORY_ID);
+    if (existing && existing.data.images.length > 0) return;
+    const seed = buildDemoCrcDocumentData();
+    if (!existing) {
+      await saveStoryDocument(DEMO_SHELF_STORY_ID, seed);
+      return;
+    }
+    await saveStoryDocument(DEMO_SHELF_STORY_ID, {
+      ...seed,
+      waypoints: existing.data.waypoints.length > 0 ? existing.data.waypoints : seed.waypoints,
+      shapes: existing.data.shapes.length > 0 ? existing.data.shapes : seed.shapes,
+      metadata: {
+        ...seed.metadata,
+        ...existing.data.metadata,
+        title: seed.metadata.title,
+        imageSource: seed.metadata.imageSource
+      }
+    });
   }
   function getDemoMainProps() {
     const jpeg = isJpegDemoMode();
@@ -173690,6 +173966,286 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       exhibit_config: enabled2 ? jpeg ? jpeg_exhibit_config : exhibit_config : EMPTY_EXHIBIT_CONFIG,
       configWaypoints: enabled2 && !jpeg ? configWaypoints : []
     };
+  }
+  function bitsPerSampleFromDtype(dtype) {
+    if (dtype === "Uint8" || dtype === "Int8") return 8;
+    if (dtype === "Uint16" || dtype === "Int16") return 16;
+    if (dtype === "Uint32" || dtype === "Int32") return 32;
+    throw new Error(`Unsupported mask dtype ${dtype}`);
+  }
+  function omeTypeFromDtype(dtype) {
+    switch (dtype) {
+      case "Uint8":
+        return "uint8";
+      case "Uint16":
+        return "uint16";
+      case "Uint32":
+        return "uint32";
+      case "Int8":
+        return "int8";
+      case "Int16":
+        return "int16";
+      case "Int32":
+        return "int32";
+      default:
+        throw new Error(`Unsupported mask dtype ${dtype}`);
+    }
+  }
+  function assertUnsignedLabelDtype(dtype) {
+    if (dtype === "Uint8" || dtype === "Uint16" || dtype === "Uint32") {
+      return dtype;
+    }
+    throw new Error(`Mask OME-TIFF export requires unsigned integer pixels (got ${dtype})`);
+  }
+  function escapeXmlAttr(value) {
+    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function omeColorInt(color2) {
+    const view = new DataView(new ArrayBuffer(4));
+    view.setUint8(0, color2.r & 255);
+    view.setUint8(1, color2.g & 255);
+    view.setUint8(2, color2.b & 255);
+    view.setUint8(3, 255);
+    return view.getInt32(0, false);
+  }
+  function optionalNumberAttr(name2, value) {
+    if (typeof value !== "number" || !Number.isFinite(value)) return "";
+    return ` ${name2}="${value}"`;
+  }
+  function optionalStringAttr(name2, value) {
+    if (typeof value !== "string" || !value.trim()) return "";
+    return ` ${name2}="${escapeXmlAttr(value)}"`;
+  }
+  function buildOmeTiffXml(opts) {
+    const { imageName, channels: channels2, width, height, fileName, pixelType, significantBits, pixels, samplesPerPixel = 1 } = opts;
+    const sizeC = channels2.length * samplesPerPixel;
+    const channelXml = channels2.map((ch2, i2) => {
+      var _a2;
+      const id2 = escapeXmlAttr(ch2.id || `Channel:0:${i2}`);
+      const chName = escapeXmlAttr(((_a2 = ch2.name) == null ? void 0 : _a2.trim()) || `Channel ${i2}`);
+      const colorAttr = ch2.color && typeof ch2.color.r === "number" && typeof ch2.color.g === "number" && typeof ch2.color.b === "number" ? ` Color="${omeColorInt({
+        r: ch2.color.r,
+        g: ch2.color.g,
+        b: ch2.color.b
+      })}"` : "";
+      return `<Channel ID="${id2}" Name="${chName}" SamplesPerPixel="${samplesPerPixel}"${colorAttr}/>`;
+    }).join("");
+    const tiffDataXml = channels2.map((_2, i2) => {
+      const uuid = escapeXmlAttr(fileName);
+      return `<TiffData FirstC="${i2}" FirstT="0" FirstZ="0" IFD="${i2}" PlaneCount="1"><UUID FileName="${uuid}">${uuid}</UUID></TiffData>`;
+    }).join("");
+    const physicalAttrs = optionalNumberAttr("PhysicalSizeX", pixels == null ? void 0 : pixels.PhysicalSizeX) + optionalNumberAttr("PhysicalSizeY", pixels == null ? void 0 : pixels.PhysicalSizeY) + optionalNumberAttr("PhysicalSizeZ", pixels == null ? void 0 : pixels.PhysicalSizeZ) + optionalStringAttr("PhysicalSizeXUnit", pixels == null ? void 0 : pixels.PhysicalSizeXUnit) + optionalStringAttr("PhysicalSizeYUnit", pixels == null ? void 0 : pixels.PhysicalSizeYUnit) + optionalStringAttr("PhysicalSizeZUnit", pixels == null ? void 0 : pixels.PhysicalSizeZUnit);
+    return `<?xml version="1.0" encoding="UTF-8"?><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"><Image ID="Image:0" Name="${escapeXmlAttr(imageName)}"><Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="${escapeXmlAttr(pixelType)}" SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1" SignificantBits="${significantBits}" Interleaved="${samplesPerPixel > 1}" BigEndian="false"${physicalAttrs}>${channelXml}${tiffDataXml}</Pixels></Image></OME>`;
+  }
+  function omeTiffExportBaseName(image2) {
+    var _a2;
+    const raw2 = ((_a2 = image2.basename) == null ? void 0 : _a2.replace(/\.(ome\.)?(tif|tiff)$/i, "")) || image2.id || "image";
+    const cleaned = raw2.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
+    return cleaned.replace(/-minerva$/i, "") || "image";
+  }
+  function omeTiffExportDiskName(stem2) {
+    return `${stem2}-minerva.ome.tif`;
+  }
+  function omeTiffExportFileName(image2, used) {
+    const base2 = omeTiffExportBaseName(image2);
+    let name2 = omeTiffExportDiskName(base2);
+    let n2 = 2;
+    while (used.has(name2.toLowerCase())) {
+      name2 = omeTiffExportDiskName(`${base2}_${n2}`);
+      n2 += 1;
+    }
+    used.add(name2.toLowerCase());
+    return name2;
+  }
+  function omeTiffMaskExportFileName(image2, used) {
+    const base2 = omeTiffExportBaseName(image2);
+    for (const candidate of [
+      omeTiffExportDiskName(base2),
+      omeTiffExportDiskName(`${base2}_mask`)
+    ]) {
+      if (!used.has(candidate.toLowerCase())) {
+        used.add(candidate.toLowerCase());
+        return candidate;
+      }
+    }
+    let n2 = 2;
+    let name2 = omeTiffExportDiskName(`${base2}_mask_${n2}`);
+    while (used.has(name2.toLowerCase())) {
+      n2 += 1;
+      name2 = omeTiffExportDiskName(`${base2}_mask_${n2}`);
+    }
+    used.add(name2.toLowerCase());
+    return name2;
+  }
+  function channelIdsFromGroups(channelGroups) {
+    const ids = /* @__PURE__ */ new Set();
+    for (const g2 of channelGroups) {
+      for (const row2 of g2.channels) {
+        ids.add(row2.channelId);
+      }
+    }
+    return ids;
+  }
+  function channelsOfKind(image2, kind) {
+    return (image2.channels ?? []).filter((ch2) => effectiveChannelKind(ch2) === kind).slice().sort((a2, b2) => a2.index - b2.index);
+  }
+  function groupChannelsForOmeExport(image2, channelGroups, kind) {
+    const wanted = channelIdsFromGroups(channelGroups);
+    if (wanted.size === 0) return [];
+    return channelsOfKind(image2, kind).filter((ch2) => wanted.has(ch2.id));
+  }
+  function groupIntensityChannelsForOmeExport(image2, channelGroups) {
+    const all2 = channelsOfKind(image2, "channel");
+    if (all2.length === 0) return [];
+    if (isRgbDisplayImage(image2)) return all2;
+    const grouped = groupChannelsForOmeExport(image2, channelGroups, "channel");
+    return grouped.length > 0 ? grouped : all2;
+  }
+  function groupMaskChannelsForOmeExport(image2, channelGroups) {
+    const grouped = groupChannelsForOmeExport(image2, channelGroups, "mask");
+    return grouped.length > 0 ? grouped : channelsOfKind(image2, "mask");
+  }
+  function contrastLimitsForExportedChannel(channel, channelGroups) {
+    var _a2, _b2;
+    for (const g2 of channelGroups) {
+      for (const row2 of g2.channels) {
+        if (row2.channelId !== channel.id) continue;
+        return {
+          lowerLimit: row2.lowerLimit,
+          upperLimit: row2.upperLimit
+        };
+      }
+    }
+    const max2 = ((_a2 = channel.floatRange) == null ? void 0 : _a2.max) ?? sourceDtypeMax(channel.sourceDataTypeId);
+    return {
+      lowerLimit: channel.lowerLimit ?? ((_b2 = channel.floatRange) == null ? void 0 : _b2.min) ?? 0,
+      upperLimit: channel.upperLimit ?? max2
+    };
+  }
+  function imageOwningChannel(images, channelId2) {
+    for (const image2 of images) {
+      const channel = (image2.channels ?? []).find((ch2) => ch2.id === channelId2);
+      if (channel) return {
+        image: image2,
+        channel
+      };
+    }
+    return null;
+  }
+  function jpegPyramidExportChannels(images, channelGroups, storyTransfer) {
+    if (!channelGroups.some((g2) => g2.channels.length > 0)) {
+      const out2 = [];
+      for (const image2 of images) {
+        const transfer = exportTransferForImage(image2, storyTransfer);
+        const channels2 = [
+          ...groupIntensityChannelsForOmeExport(image2, channelGroups),
+          ...groupMaskChannelsForOmeExport(image2, channelGroups)
+        ];
+        for (const ch2 of channels2) {
+          const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
+          const limits = folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
+          out2.push({
+            channelId: ch2.id,
+            sourceImageId: image2.id,
+            index: ch2.index,
+            lowerLimit: limits.lowerLimit,
+            upperLimit: limits.upperLimit,
+            transfer
+          });
+        }
+      }
+      return out2;
+    }
+    const out = [];
+    const seenGroupChannelIds = /* @__PURE__ */ new Set();
+    for (const g2 of channelGroups) {
+      for (const row2 of g2.channels) {
+        const loc = imageOwningChannel(images, row2.channelId);
+        if (!loc) continue;
+        const transfer = exportTransferForImage(loc.image, storyTransfer);
+        const limits = folderLimitsForTransfer(transfer, row2.lowerLimit, row2.upperLimit);
+        out.push({
+          channelId: row2.channelId,
+          sourceImageId: loc.image.id,
+          index: loc.channel.index,
+          lowerLimit: limits.lowerLimit,
+          upperLimit: limits.upperLimit,
+          transfer
+        });
+        seenGroupChannelIds.add(row2.channelId);
+      }
+    }
+    for (const image2 of images) {
+      if (!isRgbDisplayImage(image2)) continue;
+      const transfer = exportTransferForImage(image2, storyTransfer);
+      for (const ch2 of groupIntensityChannelsForOmeExport(image2, channelGroups)) {
+        if (seenGroupChannelIds.has(ch2.id)) continue;
+        const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
+        const limits = folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
+        out.push({
+          channelId: ch2.id,
+          sourceImageId: image2.id,
+          index: ch2.index,
+          lowerLimit: limits.lowerLimit,
+          upperLimit: limits.upperLimit,
+          transfer
+        });
+      }
+    }
+    return out;
+  }
+  function allocateOmeTiffExportFileNames(intensityImages, maskImages) {
+    const used = /* @__PURE__ */ new Set();
+    return {
+      intensityFileNames: intensityImages.map((im) => omeTiffExportFileName(im, used)),
+      maskFileNames: maskImages.map((im) => omeTiffMaskExportFileName(im, used))
+    };
+  }
+  function stitchOmeTiffExportImages(images, remappedById, insertedAfter, dropIds) {
+    return images.flatMap((im) => {
+      if (dropIds.has(im.id)) return insertedAfter.get(im.id) ?? [];
+      const main2 = remappedById.get(im.id) ?? im;
+      return [
+        main2,
+        ...insertedAfter.get(im.id) ?? []
+      ];
+    });
+  }
+  function remappedImageForOmeTiffExport(image2, exportedChannels, fileName) {
+    return {
+      ...image2,
+      sizeC: exportedChannels.length,
+      channels: exportedChannels.map((ch2, i2) => ({
+        ...ch2,
+        index: i2
+      })),
+      source: {
+        kind: "url",
+        url: fileName
+      }
+    };
+  }
+  const EXPORT_TILE_SIZE = 1024;
+  function exportPlaneLevels(loaderData) {
+    return loaderData.map((plane) => {
+      const { width, height } = getImageSize(plane);
+      return {
+        width,
+        height,
+        tileSize: EXPORT_TILE_SIZE
+      };
+    });
+  }
+  function tileCountForLevels(levels, channelCount) {
+    let n2 = 0;
+    for (const level of levels) {
+      n2 += Math.ceil(level.width / level.tileSize) * Math.ceil(level.height / level.tileSize) * channelCount;
+    }
+    return n2;
+  }
+  function loaderPlanesOrUndef(entry) {
+    const data2 = entry.loader.data;
+    return (data2 == null ? void 0 : data2.length) ? data2 : void 0;
   }
   function imageHandleStorageKey(storyId, imageId) {
     return storyId ? `story:${storyId}:image:${imageId}` : `image:${imageId}`;
@@ -174336,33 +174892,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   }
   async function neededJpegPyramidFolderNames(channelGroups, images, transfer = "contrast") {
-    var _a2, _b2;
     const names = /* @__PURE__ */ new Set();
+    if (images && images.length > 0) {
+      const exported = jpegPyramidExportChannels(images, [
+        ...channelGroups
+      ], transfer);
+      await Promise.all(exported.map(async (ch2) => {
+        names.add(await jpegPyramidFolderName(ch2.channelId, ch2.lowerLimit, ch2.upperLimit));
+      }));
+      return names;
+    }
     await Promise.all(channelGroups.flatMap((g2) => g2.channels.map(async (ch2) => {
       const { lowerLimit, upperLimit } = folderLimitsForTransfer(transfer, ch2.lowerLimit, ch2.upperLimit);
       names.add(await jpegPyramidFolderName(ch2.channelId, lowerLimit, upperLimit));
     })));
-    if (names.size === 0 && images) {
-      for (const im of images) {
-        if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "jpeg" && ((_b2 = im.source) == null ? void 0 : _b2.kind) !== "local") continue;
-        const channelIndexById = Object.fromEntries(im.channels.map((ch2) => [
-          ch2.id,
-          ch2.index
-        ]));
-        const folders = await folderByChannelIndexFromGroup({
-          channels: im.channels.map((ch2) => {
-            const { lowerLimit, upperLimit } = folderLimitsForTransfer(transfer, ch2.lowerLimit ?? JPEG_BAKED_CONTRAST_LIMIT[0], ch2.upperLimit ?? JPEG_BAKED_CONTRAST_LIMIT[1]);
-            return {
-              channelId: ch2.id,
-              lowerLimit,
-              upperLimit
-            };
-          }),
-          channelIndexById
-        });
-        for (const name2 of Object.values(folders)) names.add(name2);
-      }
-    }
     return names;
   }
   async function listExistingPyramidFolders(root2) {
@@ -174414,7 +174957,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       throw e2;
     }
     const file = await fh2.getFile();
-    return validateDocumentData(JSON.parse(await file.text()));
+    const raw2 = JSON.parse(await file.text());
+    if (!looksLikeStoryJson(raw2)) {
+      throw new Error("document.json is not a Minerva story.");
+    }
+    return validateDocumentData(raw2);
   }
   function portableImportImages(data2) {
     const keep = data2.metadata.imageSource === "remote-url" || data2.images.some((im) => {
@@ -174505,13 +175052,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   async function importStoryJsonFromPicker() {
     const file = await n$1({
-      description: "Minerva story JSON",
-      mimeTypes: [
-        "application/json"
-      ],
-      extensions: [
-        ".json"
-      ],
+      ...importFilePickerOptions([
+        "story"
+      ]),
       multiple: false
     });
     return importStoryJsonFile(file);
@@ -174524,12 +175067,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     "groups",
     "channels"
   ];
+  function isPlainObject$2(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  }
   function looksLikeStoryJson(raw2) {
-    if (raw2 === null || typeof raw2 !== "object" || Array.isArray(raw2)) {
-      return false;
-    }
-    const o2 = raw2;
-    return STORY_JSON_KEYS.some((k2) => Array.isArray(o2[k2]));
+    if (!isPlainObject$2(raw2)) return false;
+    if (raw2.version === "1" || raw2.version === "2") return true;
+    if (isPlainObject$2(raw2.metadata)) return true;
+    return STORY_JSON_KEYS.some((key2) => {
+      const value = raw2[key2];
+      return Array.isArray(value) && value.some(isPlainObject$2);
+    });
   }
   async function importStoryJsonFile(file) {
     const raw2 = JSON.parse(await file.text());
@@ -174627,8 +175175,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   };
   const APP_TAB_TITLE_PREFIX$1 = getDemoDocumentTitle();
   let pendingLibraryImport = null;
+  let libraryImportTookAutoload = false;
   function hasPendingLibraryImport() {
     return pendingLibraryImport != null;
+  }
+  function libraryImportSuppressesDemo() {
+    return libraryImportTookAutoload;
   }
   function ConsumePendingLibraryImport({ importOme, importDicomWeb, onSettled }) {
     const importOmeRef = reactExports.useRef(importOme);
@@ -174822,6 +175374,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setBusyId(id2);
       setError(null);
       try {
+        libraryImportTookAutoload = false;
         useAppStore.getState().resetStoryViewerSession();
         await switchStory(id2);
         goToStory(id2);
@@ -174844,6 +175397,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setAddOpen(false);
       setShelfBusy(true);
       setError(null);
+      libraryImportTookAutoload = false;
       try {
         goToStory(await openNewStory());
       } catch (e2) {
@@ -174860,6 +175414,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       try {
         const id2 = await openNewStory();
         pendingLibraryImport = pending2;
+        libraryImportTookAutoload = true;
         goToStory(id2);
         return {
           ok: true
@@ -174880,6 +175435,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setAddOpen(false);
       setShelfBusy(true);
       setError(null);
+      libraryImportTookAutoload = false;
       try {
         useAppStore.getState().resetStoryViewerSession();
         goToStory(await importStory());
@@ -249004,7 +249560,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const { viewOnly } = props;
     const canEdit = !viewOnly;
     const waypoints = useDocumentStore((s2) => s2.waypoints);
-    const shapes = useDocumentStore((s2) => s2.shapes);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
     const featureTables = useDocumentStore((s2) => s2.featureTables);
@@ -249023,7 +249578,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
     const imageWidth = frame2.pixelWidth;
     const imageHeight = frame2.pixelHeight;
-    const { activeStoryIndex, setActiveStory, showOnlyChannelGroup, addStory, updateStory, reorderStories, importWaypointShapes, persistImportedShapesToStory, setTargetWaypointCamera, captureSquareViewportThumbnail, removeStory, setShowSquareViewportOverlay, setAuthoringWaypointEditorOpen, setAuthoringWaypointShapesIndex, handleToolChange, setImageSelectionMaskFromWaypoint, layersPanelSelectedShapeIds, editWaypointOnOpen, setEditWaypointOnOpen } = useAppStore();
+    const { activeStoryIndex, setActiveStory, showOnlyChannelGroup, addStory, updateStory, reorderStories, persistImportedShapesToStory, setTargetWaypointCamera, captureSquareViewportThumbnail, removeStory, setShowSquareViewportOverlay, setAuthoringWaypointEditorOpen, setAuthoringWaypointShapesIndex, setOpenWaypointId, handleToolChange, setImageSelectionMaskFromWaypoint, layersPanelSelectedShapeIds, editWaypointOnOpen, setEditWaypointOnOpen } = useAppStore();
     const previousDetailStoryIdRef = reactExports.useRef(null);
     const detailBodyRef = reactExports.useRef(null);
     const detailTitleFieldId = reactExports.useId();
@@ -249040,6 +249595,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }, [
       detailStoryId,
       setAuthoringWaypointEditorOpen
+    ]);
+    reactExports.useEffect(() => {
+      setOpenWaypointId(detailStoryId);
+    }, [
+      detailStoryId,
+      setOpenWaypointId
     ]);
     reactExports.useEffect(() => {
       const prev = previousDetailStoryIdRef.current;
@@ -249087,7 +249648,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const [dropTargetStoryId, setDropTargetStoryId] = reactExports.useState(null);
     const pendingThumbnailCaptureTimeoutRef = reactExports.useRef(null);
     const overlayFlashTimeoutRef = reactExports.useRef(null);
-    const previousImportStoryIndexRef = reactExports.useRef(null);
     const detailStoryIndex = detailStoryId ? waypoints.findIndex((s2) => s2.id === detailStoryId) : -1;
     const detailStory = detailStoryIndex >= 0 ? waypoints[detailStoryIndex] : null;
     reactExports.useEffect(() => {
@@ -249101,32 +249661,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       detailStoryId,
       detailStoryIndex,
       setAuthoringWaypointShapesIndex
-    ]);
-    reactExports.useEffect(() => {
-      if (waypoints.length === 0) return;
-      if (imageWidth === 0 || imageHeight === 0) return;
-      const storyIndex = detailStoryId != null && detailStoryIndex >= 0 ? detailStoryIndex : activeStoryIndex ?? 0;
-      const story = waypoints[storyIndex];
-      if (!story) {
-        useAppStore.getState().clearShapes();
-        return;
-      }
-      const prev = previousImportStoryIndexRef.current;
-      const store = useAppStore.getState();
-      if (prev !== null && prev !== storyIndex) {
-        store.persistImportedShapesToStory(prev);
-      }
-      previousImportStoryIndexRef.current = storyIndex;
-      importWaypointShapes(story, true, shapes);
-    }, [
-      waypoints,
-      activeStoryIndex,
-      detailStoryId,
-      detailStoryIndex,
-      imageWidth,
-      imageHeight,
-      shapes,
-      importWaypointShapes
     ]);
     const shownWaypoint = activeStoryIndex == null ? void 0 : waypoints[activeStoryIndex];
     const activeWaypointId = shownWaypoint == null ? void 0 : shownWaypoint.id;
@@ -249177,16 +249711,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         if (overlayFlashTimeoutRef.current !== null) {
           window.clearTimeout(overlayFlashTimeoutRef.current);
           useAppStore.getState().setShowSquareViewportOverlay(false);
-        }
-        const p2 = previousImportStoryIndexRef.current;
-        if (p2 !== null) {
-          const doc = useDocumentStore.getState();
-          const st = useAppStore.getState();
-          const im = doc.images[0];
-          const f2 = effectiveWorldFrame(st.viewerWorldFrame, (im == null ? void 0 : im.sizeX) ?? 0, (im == null ? void 0 : im.sizeY) ?? 0);
-          if (f2.worldWidth > 0 && f2.worldHeight > 0) {
-            useAppStore.getState().persistImportedShapesToStory(p2);
-          }
         }
       };
     }, []);
@@ -249357,11 +249881,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const handleOverwriteView = (index2, event) => {
       event.stopPropagation();
       event.preventDefault();
-      setActiveStory(index2);
       const saved = saveCurrentViewToStory(index2, "handleOverwriteView");
+      if (!saved) return;
+      const app = useAppStore.getState();
+      const openIndex = waypoints.findIndex((w2) => w2.id === app.openWaypointId);
+      const canvasIndex = openIndex >= 0 ? openIndex : activeStoryIndex ?? 0;
+      setActiveStory(index2);
       flashSquareOverlay();
       scheduleThumbnailCaptureForStory(index2, true, true, 150);
-      if (saved) {
+      if (canvasIndex === index2) {
         persistImportedShapesToStory(index2);
       }
     };
@@ -250355,14 +250883,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...capVis,
       ...next2
     });
-    const applyRgbUnit = (imageId, visible, groupId) => {
+    const applyRgbUnit = (imageId, visible, groupId2) => {
       const next2 = visibilitiesForRgbUnit({
         rgbChannels: imageIntensityChannels(sourceChannels, imageId),
         channelGroups,
         groupRowVisibilities: channelGroupRowVisibilities,
         stackVisibilities,
         visible,
-        groupId
+        groupId: groupId2
       });
       if (visible && !fitsImage(imageId, {
         stackVisibilities: next2.channelVisibilities,
@@ -250413,8 +250941,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const validRowIds = new Set(channelGroups.flatMap((g2) => g2.channels.map((gc2) => gc2.id)));
         let changed = false;
         const next2 = /* @__PURE__ */ new Map();
-        for (const [groupId, rowIds] of prev) {
-          if (!validGroupIds.has(groupId)) {
+        for (const [groupId2, rowIds] of prev) {
+          if (!validGroupIds.has(groupId2)) {
             changed = true;
             continue;
           }
@@ -250422,24 +250950,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ...rowIds
           ].filter((rowId) => validRowIds.has(rowId)));
           if (filtered.size !== rowIds.size) changed = true;
-          if (filtered.size > 0) next2.set(groupId, filtered);
+          if (filtered.size > 0) next2.set(groupId2, filtered);
         }
         return changed ? next2 : prev;
       });
     }, [
       channelGroups
     ]);
-    const lockedIdsForGroup = reactExports.useCallback((groupId) => lockedColorRowIdsByGroup.get(groupId) ?? EMPTY_LOCKED_ROW_IDS, [
+    const lockedIdsForGroup = reactExports.useCallback((groupId2) => lockedColorRowIdsByGroup.get(groupId2) ?? EMPTY_LOCKED_ROW_IDS, [
       lockedColorRowIdsByGroup
     ]);
-    const toggleColorLock = reactExports.useCallback((groupId, rowId) => {
+    const toggleColorLock = reactExports.useCallback((groupId2, rowId) => {
       setLockedColorRowIdsByGroup((prev) => {
         const next2 = new Map(prev);
-        const set2 = new Set(next2.get(groupId) ?? []);
+        const set2 = new Set(next2.get(groupId2) ?? []);
         if (set2.has(rowId)) set2.delete(rowId);
         else set2.add(rowId);
-        if (set2.size === 0) next2.delete(groupId);
-        else next2.set(groupId, set2);
+        if (set2.size === 0) next2.delete(groupId2);
+        else next2.set(groupId2, set2);
         return next2;
       });
     }, []);
@@ -250463,32 +250991,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setGroupNames,
       setChannelGroupRowVisibilities
     ]);
-    const activateGroup = reactExports.useCallback((groupId) => {
-      if (useAppStore.getState().activeChannelGroupId === groupId) {
-        setActiveChannelGroup(groupId);
+    const activateGroup = reactExports.useCallback((groupId2) => {
+      if (useAppStore.getState().activeChannelGroupId === groupId2) {
+        setActiveChannelGroup(groupId2);
       } else {
-        showOnlyChannelGroup(groupId);
+        showOnlyChannelGroup(groupId2);
       }
       const groups = useDocumentStore.getState().channelGroups;
       syncGroupState(groups.map((g2) => ({
         ...g2,
-        expanded: g2.id === groupId
+        expanded: g2.id === groupId2
       })));
     }, [
       setActiveChannelGroup,
       showOnlyChannelGroup,
       syncGroupState
     ]);
-    const renameSourceChannelDisplayName = reactExports.useCallback((channelId, rawName) => {
+    const renameSourceChannelDisplayName = reactExports.useCallback((channelId2, rawName) => {
       const trimmed = rawName.trim();
       if (!trimmed) return;
       const doc = useDocumentStore.getState();
       const flatBefore = flattenImageChannelsInDocumentOrder(doc.images);
-      const prev = findSourceChannel(flatBefore, channelId);
+      const prev = findSourceChannel(flatBefore, channelId2);
       if (!prev || prev.name === trimmed) return;
       const nextImages = doc.images.map((im) => ({
         ...im,
-        channels: im.channels.map((ch2) => ch2.id === channelId ? {
+        channels: im.channels.map((ch2) => ch2.id === channelId2 ? {
           ...ch2,
           name: trimmed
         } : ch2)
@@ -250538,17 +251066,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         });
       }
     };
-    const deleteGroup = (groupId) => {
+    const deleteGroup = (groupId2) => {
       var _a2;
-      const newGroups = channelGroups.filter(({ id: id2 }) => id2 !== groupId);
+      const newGroups = channelGroups.filter(({ id: id2 }) => id2 !== groupId2);
       syncGroupState(newGroups);
       setLockedColorRowIdsByGroup((prev) => {
-        if (!prev.has(groupId)) return prev;
+        if (!prev.has(groupId2)) return prev;
         const next2 = new Map(prev);
-        next2.delete(groupId);
+        next2.delete(groupId2);
         return next2;
       });
-      if (activeChannelGroupId === groupId) {
+      if (activeChannelGroupId === groupId2) {
         const next2 = (_a2 = newGroups[0]) == null ? void 0 : _a2.id;
         if (next2) activateGroup(next2);
         else useAppStore.setState({
@@ -250556,17 +251084,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         });
       }
     };
-    const renameGroup = (groupId, newName) => {
+    const renameGroup = (groupId2, newName) => {
       const groups = useDocumentStore.getState().channelGroups;
-      syncGroupState(groups.map((g2) => g2.id === groupId ? {
+      syncGroupState(groups.map((g2) => g2.id === groupId2 ? {
         ...g2,
         name: newName
       } : g2));
     };
-    const toggleGroupExpanded = (groupId) => {
+    const toggleGroupExpanded = (groupId2) => {
       const groups = useDocumentStore.getState().channelGroups;
       syncGroupState(groups.map((g2, i2) => {
-        if (g2.id !== groupId) return g2;
+        if (g2.id !== groupId2) return g2;
         const currentlyExpanded = g2.expanded ?? i2 === 0;
         return {
           ...g2,
@@ -250649,9 +251177,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fitBusy: sc2 ? refittingContrastIds.has(sc2.id) : false,
       onRemoveFromGroup
     });
-    const addChannelToGroup = reactExports.useCallback(async (groupId, sourceChannelUUID) => {
+    const addChannelToGroup = reactExports.useCallback(async (groupId2, sourceChannelUUID) => {
       if (optimizePaletteBusy) return;
-      const group2 = channelGroups.find((g2) => g2.id === groupId);
+      const group2 = channelGroups.find((g2) => g2.id === groupId2);
       if (!group2) return;
       if (group2.channels.some((gc2) => gc2.channelId === sourceChannelUUID)) {
         return;
@@ -250685,14 +251213,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         newRows[0].lowerLimit = fittedLimits.lower;
         newRows[0].upperLimit = fittedLimits.upper;
       }
-      const newGroups = channelGroups.map((g2) => g2.id !== groupId ? g2 : {
+      const newGroups = channelGroups.map((g2) => g2.id !== groupId2 ? g2 : {
         ...g2,
         channels: [
           ...g2.channels,
           ...newRows
         ]
       });
-      const updatedGroup = newGroups.find((g2) => g2.id === groupId);
+      const updatedGroup = newGroups.find((g2) => g2.id === groupId2);
       setChannelGroupRowVisibilities({
         ...channelGroupRowVisibilities,
         ...Object.fromEntries(newRows.map((gc2) => [
@@ -250710,7 +251238,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       useAppStore.getState().clearChannelRendering();
       try {
         const colors = await optimizeChannelGroupWithLocks(updatedGroup, sourceChannels, lockedIds);
-        syncGroupState(applyOptimizedColorsToChannelGroup(newGroups, groupId, colors, {
+        syncGroupState(applyOptimizedColorsToChannelGroup(newGroups, groupId2, colors, {
           lockedChannelRowIds: lockedIds
         }));
       } catch {
@@ -250727,18 +251255,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setChannelGroupRowVisibilities,
       channelGroupRowVisibilities
     ]);
-    const removeChannelFromGroup = (groupId, rowId) => {
+    const removeChannelFromGroup = (groupId2, rowId) => {
       var _a2;
       const groups = useDocumentStore.getState().channelGroups;
-      const removedRow = (_a2 = groups.find((g2) => g2.id === groupId)) == null ? void 0 : _a2.channels.find((gc2) => gc2.id === rowId);
+      const removedRow = (_a2 = groups.find((g2) => g2.id === groupId2)) == null ? void 0 : _a2.channels.find((gc2) => gc2.id === rowId);
       const removedSc = removedRow ? findSourceChannel(sourceChannels, removedRow.channelId) : void 0;
       const unitIds = removedSc && isRgbDisplayChannel(removedSc, sourceChannels) ? new Set(imageIntensityChannels(sourceChannels, removedSc.imageId).map((c2) => c2.id)) : null;
-      syncGroupState(groups.map((g2) => g2.id !== groupId ? g2 : {
+      syncGroupState(groups.map((g2) => g2.id !== groupId2 ? g2 : {
         ...g2,
         channels: g2.channels.filter((gc2) => unitIds ? !unitIds.has(gc2.channelId) : gc2.id !== rowId)
       }));
     };
-    const syncMaskVisualization = (sourceId, viz, groupId, rowId) => {
+    const syncMaskVisualization = (sourceId, viz, groupId2, rowId) => {
       const doc = useDocumentStore.getState();
       const nextImages = patchSourceChannelOnImages(doc.images, sourceId, {
         maskVisualization: viz
@@ -250746,8 +251274,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const nextGroups = doc.channelGroups.map((g2) => ({
         ...g2,
         channels: g2.channels.map((gc2) => {
-          if (groupId != null && rowId != null) {
-            return g2.id === groupId && gc2.id === rowId ? {
+          if (groupId2 != null && rowId != null) {
+            return g2.id === groupId2 && gc2.id === rowId ? {
               ...gc2,
               maskVisualization: viz
             } : gc2;
@@ -250760,20 +251288,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }));
       setImagesAndChannelGroups(nextImages, nextGroups);
     };
-    const runOptimizePaletteForGroup = async (groupId) => {
+    const runOptimizePaletteForGroup = async (groupId2) => {
       if (optimizePaletteBusy) return;
-      const group2 = channelGroups.find((g2) => g2.id === groupId);
+      const group2 = channelGroups.find((g2) => g2.id === groupId2);
       if (!group2 || !isGroupEligibleForPsudoOptimize(group2, sourceChannels)) {
         return;
       }
-      const lockedIds = lockedIdsForGroup(groupId);
+      const lockedIds = lockedIdsForGroup(groupId2);
       const pendingIds = groupOptimizePendingSourceIds(group2, sourceChannels, lockedIds);
       setOptimizePaletteBusy(true);
       setStackPalettePendingMany(pendingIds, true);
       useAppStore.getState().clearChannelRendering();
       try {
         const colors = await optimizeChannelGroupWithLocks(group2, sourceChannels, lockedIds);
-        syncGroupState(applyOptimizedColorsToChannelGroup(useDocumentStore.getState().channelGroups, groupId, colors, {
+        syncGroupState(applyOptimizedColorsToChannelGroup(useDocumentStore.getState().channelGroups, groupId2, colors, {
           lockedChannelRowIds: lockedIds
         }));
       } catch {
@@ -250782,13 +251310,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         setOptimizePaletteBusy(false);
       }
     };
-    const handleDropOnGroup = (groupId, e2) => {
+    const handleDropOnGroup = (groupId2, e2) => {
       e2.preventDefault();
       e2.stopPropagation();
       setDragOverGroupId(null);
       const payload = readDragPayload(e2);
       if (!(payload == null ? void 0 : payload.sourceId)) return;
-      void addChannelToGroup(groupId, payload.sourceId);
+      void addChannelToGroup(groupId2, payload.sourceId);
     };
     const handleDropRemoveFromGroup = (e2) => {
       e2.preventDefault();
@@ -251374,19 +251902,86 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       })
     });
   }
-  const sidebarHost = "_sidebarHost_1mdmf_1";
-  const sidebarHostCollapsed = "_sidebarHostCollapsed_1mdmf_18";
-  const panelOuter = "_panelOuter_1mdmf_23";
-  const tabRow = "_tabRow_1mdmf_33";
-  const stripActions = "_stripActions_1mdmf_41";
-  const expandControl = "_expandControl_1mdmf_50";
-  const expandControlExpanded = "_expandControlExpanded_1mdmf_60";
-  const panelContent = "_panelContent_1mdmf_66";
-  const viewport = "_viewport_1mdmf_76";
-  const viewportCollapsed = "_viewportCollapsed_1mdmf_88";
-  const viewportPreview = "_viewportPreview_1mdmf_93";
-  const previewNav = "_previewNav_1mdmf_97";
-  const viewerRegion = "_viewerRegion_1mdmf_111";
+  function useWaypointCanvasShapes(storyTabOpen) {
+    const waypoints = useDocumentStore((s2) => s2.waypoints);
+    const shapes = useDocumentStore((s2) => s2.shapes);
+    const docImageWidth = useDocumentStore((s2) => {
+      var _a2;
+      return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeX) ?? 0;
+    });
+    const docImageHeight = useDocumentStore((s2) => {
+      var _a2;
+      return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
+    });
+    const viewerWorldFrame = useAppStore((s2) => s2.viewerWorldFrame);
+    const activeStoryIndex = useAppStore((s2) => s2.activeStoryIndex);
+    const openWaypointId = useAppStore((s2) => s2.openWaypointId);
+    const importWaypointShapes = useAppStore((s2) => s2.importWaypointShapes);
+    const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
+    const imageWidth = frame2.pixelWidth;
+    const imageHeight = frame2.pixelHeight;
+    const previousImportStoryIdRef = reactExports.useRef(null);
+    reactExports.useEffect(() => {
+      if (waypoints.length === 0) {
+        if (previousImportStoryIdRef.current !== null) {
+          previousImportStoryIdRef.current = null;
+          useAppStore.getState().clearShapes();
+        }
+        return;
+      }
+      if (imageWidth === 0 || imageHeight === 0) return;
+      const openIndex = waypoints.findIndex((w2) => w2.id === openWaypointId);
+      const storyIndex = openIndex >= 0 ? openIndex : activeStoryIndex ?? 0;
+      const story = waypoints[storyIndex];
+      if (!story) {
+        useAppStore.getState().clearShapes();
+        return;
+      }
+      const prevId = previousImportStoryIdRef.current;
+      const store = useAppStore.getState();
+      if (prevId !== null && prevId !== story.id) {
+        const prevIndex = waypoints.findIndex((w2) => w2.id === prevId);
+        if (prevIndex >= 0) store.persistImportedShapesToStory(prevIndex);
+      }
+      previousImportStoryIdRef.current = story.id;
+      importWaypointShapes(story, prevId !== story.id, shapes);
+    }, [
+      waypoints,
+      activeStoryIndex,
+      openWaypointId,
+      imageWidth,
+      imageHeight,
+      shapes,
+      importWaypointShapes
+    ]);
+    reactExports.useEffect(() => {
+      if (!storyTabOpen) return;
+      return () => {
+        const doc = useDocumentStore.getState();
+        const prevId = previousImportStoryIdRef.current;
+        const p2 = doc.waypoints.findIndex((w2) => w2.id === prevId);
+        if (p2 < 0) return;
+        useAppStore.getState().persistImportedShapesToStory(p2);
+      };
+    }, [
+      storyTabOpen
+    ]);
+  }
+  const sidebarHost = "_sidebarHost_2do94_1";
+  const sidebarHostCollapsed = "_sidebarHostCollapsed_2do94_18";
+  const panelOuter = "_panelOuter_2do94_23";
+  const tabRow = "_tabRow_2do94_33";
+  const stripActions = "_stripActions_2do94_41";
+  const expandControl = "_expandControl_2do94_50";
+  const expandControlExpanded = "_expandControlExpanded_2do94_60";
+  const panelContent = "_panelContent_2do94_66";
+  const imagesMount = "_imagesMount_2do94_76";
+  const viewport = "_viewport_2do94_88";
+  const viewportCollapsed = "_viewportCollapsed_2do94_100";
+  const viewportPreview = "_viewportPreview_2do94_105";
+  const previewNav = "_previewNav_2do94_109";
+  const previewNavParked = "_previewNavParked_2do94_123";
+  const viewerRegion = "_viewerRegion_2do94_127";
   const styles$d = {
     sidebarHost,
     sidebarHostCollapsed,
@@ -251396,10 +251991,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     expandControl,
     expandControlExpanded,
     panelContent,
+    imagesMount,
     viewport,
     viewportCollapsed,
     viewportPreview,
     previewNav,
+    previewNavParked,
     viewerRegion
   };
   const TAB_ORDER = [
@@ -251419,11 +252016,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function AuthorSidebar(props) {
     const [activeTab, setActiveTab] = reactExports.useState(() => useAppStore.getState().editWaypointOnOpen ? "story" : "images");
     const { expanded } = props;
+    useWaypointCanvasShapes(activeTab === "story");
+    const editWaypointOnOpen = useAppStore((s2) => s2.editWaypointOnOpen);
+    reactExports.useEffect(() => {
+      if (editWaypointOnOpen) setActiveTab("story");
+    }, [
+      editWaypointOnOpen
+    ]);
     reactExports.useEffect(() => {
       if (activeTab === "images") return;
       const onFileDrag = (e2) => {
         if (!dragHasFiles(e2)) return;
-        e2.preventDefault();
         setActiveTab("images");
       };
       const types2 = [
@@ -251443,10 +252046,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }), [
       props.ensureChannelHistograms
     ]);
-    const activePanel = activeTab === "images" ? props.imagesPanel : activeTab === "channels" ? jsxRuntimeExports.jsx(ChannelGroupsMasterDetail, {
+    const otherPanel = activeTab === "channels" ? jsxRuntimeExports.jsx(ChannelGroupsMasterDetail, {
       noLoader: props.noLoader,
       contrastEditable: props.contrastEditable
-    }) : jsxRuntimeExports.jsx(WaypointsList, {});
+    }) : activeTab === "story" ? jsxRuntimeExports.jsx(WaypointsList, {}) : null;
     return jsxRuntimeExports.jsx(AuthorChannelNavProvider, {
       value: channelNav,
       children: jsxRuntimeExports.jsx(SidebarStripSlotProvider, {
@@ -251472,10 +252075,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                   })
                 ]
               }),
-              jsxRuntimeExports.jsx("div", {
+              jsxRuntimeExports.jsxs("div", {
                 className: styles$d.panelContent,
                 role: "tabpanel",
-                children: activePanel
+                children: [
+                  jsxRuntimeExports.jsx("div", {
+                    className: styles$d.imagesMount,
+                    hidden: activeTab !== "images",
+                    children: props.imagesPanel
+                  }),
+                  otherPanel
+                ]
               })
             ]
           })
@@ -251505,15 +252115,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function AuthorView(props) {
     const [expanded, setExpanded] = reactExports.useState(true);
-    const previewing = props.previewNav != null;
+    const hasPreview = props.previewNav != null;
+    const previewing = hasPreview && !props.previewNavHidden;
     return jsxRuntimeExports.jsxs(AuthorViewport, {
       collapsed: !expanded,
       className: previewing ? styles$d.viewportPreview : void 0,
       children: [
-        previewing ? jsxRuntimeExports.jsx("div", {
-          className: styles$d.previewNav,
+        hasPreview ? jsxRuntimeExports.jsx("div", {
+          className: previewing ? styles$d.previewNav : styles$d.previewNavParked,
           children: props.previewNav
-        }) : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+        }) : null,
+        previewing ? null : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
           children: [
             jsxRuntimeExports.jsx(AuthorSidebar, {
               imagesPanel: props.imagesPanel,
@@ -252956,286 +253568,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       y: y2,
       signal
     });
-  }
-  function bitsPerSampleFromDtype(dtype) {
-    if (dtype === "Uint8" || dtype === "Int8") return 8;
-    if (dtype === "Uint16" || dtype === "Int16") return 16;
-    if (dtype === "Uint32" || dtype === "Int32") return 32;
-    throw new Error(`Unsupported mask dtype ${dtype}`);
-  }
-  function omeTypeFromDtype(dtype) {
-    switch (dtype) {
-      case "Uint8":
-        return "uint8";
-      case "Uint16":
-        return "uint16";
-      case "Uint32":
-        return "uint32";
-      case "Int8":
-        return "int8";
-      case "Int16":
-        return "int16";
-      case "Int32":
-        return "int32";
-      default:
-        throw new Error(`Unsupported mask dtype ${dtype}`);
-    }
-  }
-  function assertUnsignedLabelDtype(dtype) {
-    if (dtype === "Uint8" || dtype === "Uint16" || dtype === "Uint32") {
-      return dtype;
-    }
-    throw new Error(`Mask OME-TIFF export requires unsigned integer pixels (got ${dtype})`);
-  }
-  function escapeXmlAttr(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
-  function omeColorInt(color2) {
-    const view = new DataView(new ArrayBuffer(4));
-    view.setUint8(0, color2.r & 255);
-    view.setUint8(1, color2.g & 255);
-    view.setUint8(2, color2.b & 255);
-    view.setUint8(3, 255);
-    return view.getInt32(0, false);
-  }
-  function optionalNumberAttr(name2, value) {
-    if (typeof value !== "number" || !Number.isFinite(value)) return "";
-    return ` ${name2}="${value}"`;
-  }
-  function optionalStringAttr(name2, value) {
-    if (typeof value !== "string" || !value.trim()) return "";
-    return ` ${name2}="${escapeXmlAttr(value)}"`;
-  }
-  function buildOmeTiffXml(opts) {
-    const { imageName, channels: channels2, width, height, fileName, pixelType, significantBits, pixels, samplesPerPixel = 1 } = opts;
-    const sizeC = channels2.length * samplesPerPixel;
-    const channelXml = channels2.map((ch2, i2) => {
-      var _a2;
-      const id2 = escapeXmlAttr(ch2.id || `Channel:0:${i2}`);
-      const chName = escapeXmlAttr(((_a2 = ch2.name) == null ? void 0 : _a2.trim()) || `Channel ${i2}`);
-      const colorAttr = ch2.color && typeof ch2.color.r === "number" && typeof ch2.color.g === "number" && typeof ch2.color.b === "number" ? ` Color="${omeColorInt({
-        r: ch2.color.r,
-        g: ch2.color.g,
-        b: ch2.color.b
-      })}"` : "";
-      return `<Channel ID="${id2}" Name="${chName}" SamplesPerPixel="${samplesPerPixel}"${colorAttr}/>`;
-    }).join("");
-    const tiffDataXml = channels2.map((_2, i2) => {
-      const uuid = escapeXmlAttr(fileName);
-      return `<TiffData FirstC="${i2}" FirstT="0" FirstZ="0" IFD="${i2}" PlaneCount="1"><UUID FileName="${uuid}">${uuid}</UUID></TiffData>`;
-    }).join("");
-    const physicalAttrs = optionalNumberAttr("PhysicalSizeX", pixels == null ? void 0 : pixels.PhysicalSizeX) + optionalNumberAttr("PhysicalSizeY", pixels == null ? void 0 : pixels.PhysicalSizeY) + optionalNumberAttr("PhysicalSizeZ", pixels == null ? void 0 : pixels.PhysicalSizeZ) + optionalStringAttr("PhysicalSizeXUnit", pixels == null ? void 0 : pixels.PhysicalSizeXUnit) + optionalStringAttr("PhysicalSizeYUnit", pixels == null ? void 0 : pixels.PhysicalSizeYUnit) + optionalStringAttr("PhysicalSizeZUnit", pixels == null ? void 0 : pixels.PhysicalSizeZUnit);
-    return `<?xml version="1.0" encoding="UTF-8"?><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"><Image ID="Image:0" Name="${escapeXmlAttr(imageName)}"><Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="${escapeXmlAttr(pixelType)}" SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1" SignificantBits="${significantBits}" Interleaved="${samplesPerPixel > 1}" BigEndian="false"${physicalAttrs}>${channelXml}${tiffDataXml}</Pixels></Image></OME>`;
-  }
-  function omeTiffExportBaseName(image2) {
-    var _a2;
-    const raw2 = ((_a2 = image2.basename) == null ? void 0 : _a2.replace(/\.(ome\.)?(tif|tiff)$/i, "")) || image2.id || "image";
-    const cleaned = raw2.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
-    return cleaned.replace(/-minerva$/i, "") || "image";
-  }
-  function omeTiffExportDiskName(stem2) {
-    return `${stem2}-minerva.ome.tif`;
-  }
-  function omeTiffExportFileName(image2, used) {
-    const base2 = omeTiffExportBaseName(image2);
-    let name2 = omeTiffExportDiskName(base2);
-    let n2 = 2;
-    while (used.has(name2.toLowerCase())) {
-      name2 = omeTiffExportDiskName(`${base2}_${n2}`);
-      n2 += 1;
-    }
-    used.add(name2.toLowerCase());
-    return name2;
-  }
-  function omeTiffMaskExportFileName(image2, used) {
-    const base2 = omeTiffExportBaseName(image2);
-    for (const candidate of [
-      omeTiffExportDiskName(base2),
-      omeTiffExportDiskName(`${base2}_mask`)
-    ]) {
-      if (!used.has(candidate.toLowerCase())) {
-        used.add(candidate.toLowerCase());
-        return candidate;
-      }
-    }
-    let n2 = 2;
-    let name2 = omeTiffExportDiskName(`${base2}_mask_${n2}`);
-    while (used.has(name2.toLowerCase())) {
-      n2 += 1;
-      name2 = omeTiffExportDiskName(`${base2}_mask_${n2}`);
-    }
-    used.add(name2.toLowerCase());
-    return name2;
-  }
-  function channelIdsFromGroups(channelGroups) {
-    const ids = /* @__PURE__ */ new Set();
-    for (const g2 of channelGroups) {
-      for (const row2 of g2.channels) {
-        ids.add(row2.channelId);
-      }
-    }
-    return ids;
-  }
-  function channelsOfKind(image2, kind) {
-    return (image2.channels ?? []).filter((ch2) => effectiveChannelKind(ch2) === kind).slice().sort((a2, b2) => a2.index - b2.index);
-  }
-  function groupChannelsForOmeExport(image2, channelGroups, kind) {
-    const wanted = channelIdsFromGroups(channelGroups);
-    if (wanted.size === 0) return [];
-    return channelsOfKind(image2, kind).filter((ch2) => wanted.has(ch2.id));
-  }
-  function groupIntensityChannelsForOmeExport(image2, channelGroups) {
-    const all2 = channelsOfKind(image2, "channel");
-    if (all2.length === 0) return [];
-    if (isRgbDisplayImage(image2)) return all2;
-    const grouped = groupChannelsForOmeExport(image2, channelGroups, "channel");
-    return grouped.length > 0 ? grouped : all2;
-  }
-  function groupMaskChannelsForOmeExport(image2, channelGroups) {
-    const grouped = groupChannelsForOmeExport(image2, channelGroups, "mask");
-    return grouped.length > 0 ? grouped : channelsOfKind(image2, "mask");
-  }
-  function contrastLimitsForExportedChannel(channel, channelGroups) {
-    var _a2, _b2;
-    for (const g2 of channelGroups) {
-      for (const row2 of g2.channels) {
-        if (row2.channelId !== channel.id) continue;
-        return {
-          lowerLimit: row2.lowerLimit,
-          upperLimit: row2.upperLimit
-        };
-      }
-    }
-    const max2 = ((_a2 = channel.floatRange) == null ? void 0 : _a2.max) ?? sourceDtypeMax(channel.sourceDataTypeId);
-    return {
-      lowerLimit: channel.lowerLimit ?? ((_b2 = channel.floatRange) == null ? void 0 : _b2.min) ?? 0,
-      upperLimit: channel.upperLimit ?? max2
-    };
-  }
-  function imageOwningChannel(images, channelId) {
-    for (const image2 of images) {
-      const channel = (image2.channels ?? []).find((ch2) => ch2.id === channelId);
-      if (channel) return {
-        image: image2,
-        channel
-      };
-    }
-    return null;
-  }
-  function jpegPyramidExportChannels(images, channelGroups, storyTransfer) {
-    if (!channelGroups.some((g2) => g2.channels.length > 0)) {
-      const out2 = [];
-      for (const image2 of images) {
-        const transfer = exportTransferForImage(image2, storyTransfer);
-        const channels2 = [
-          ...groupIntensityChannelsForOmeExport(image2, channelGroups),
-          ...groupMaskChannelsForOmeExport(image2, channelGroups)
-        ];
-        for (const ch2 of channels2) {
-          const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
-          const limits = folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
-          out2.push({
-            channelId: ch2.id,
-            sourceImageId: image2.id,
-            index: ch2.index,
-            lowerLimit: limits.lowerLimit,
-            upperLimit: limits.upperLimit,
-            transfer
-          });
-        }
-      }
-      return out2;
-    }
-    const out = [];
-    const seenGroupChannelIds = /* @__PURE__ */ new Set();
-    for (const g2 of channelGroups) {
-      for (const row2 of g2.channels) {
-        const loc = imageOwningChannel(images, row2.channelId);
-        if (!loc) continue;
-        const transfer = exportTransferForImage(loc.image, storyTransfer);
-        const limits = folderLimitsForTransfer(transfer, row2.lowerLimit, row2.upperLimit);
-        out.push({
-          channelId: row2.channelId,
-          sourceImageId: loc.image.id,
-          index: loc.channel.index,
-          lowerLimit: limits.lowerLimit,
-          upperLimit: limits.upperLimit,
-          transfer
-        });
-        seenGroupChannelIds.add(row2.channelId);
-      }
-    }
-    for (const image2 of images) {
-      if (!isRgbDisplayImage(image2)) continue;
-      const transfer = exportTransferForImage(image2, storyTransfer);
-      for (const ch2 of groupIntensityChannelsForOmeExport(image2, channelGroups)) {
-        if (seenGroupChannelIds.has(ch2.id)) continue;
-        const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
-        const limits = folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
-        out.push({
-          channelId: ch2.id,
-          sourceImageId: image2.id,
-          index: ch2.index,
-          lowerLimit: limits.lowerLimit,
-          upperLimit: limits.upperLimit,
-          transfer
-        });
-      }
-    }
-    return out;
-  }
-  function allocateOmeTiffExportFileNames(intensityImages, maskImages) {
-    const used = /* @__PURE__ */ new Set();
-    return {
-      intensityFileNames: intensityImages.map((im) => omeTiffExportFileName(im, used)),
-      maskFileNames: maskImages.map((im) => omeTiffMaskExportFileName(im, used))
-    };
-  }
-  function stitchOmeTiffExportImages(images, remappedById, insertedAfter, dropIds) {
-    return images.flatMap((im) => {
-      if (dropIds.has(im.id)) return insertedAfter.get(im.id) ?? [];
-      const main2 = remappedById.get(im.id) ?? im;
-      return [
-        main2,
-        ...insertedAfter.get(im.id) ?? []
-      ];
-    });
-  }
-  function remappedImageForOmeTiffExport(image2, exportedChannels, fileName) {
-    return {
-      ...image2,
-      sizeC: exportedChannels.length,
-      channels: exportedChannels.map((ch2, i2) => ({
-        ...ch2,
-        index: i2
-      })),
-      source: {
-        kind: "url",
-        url: fileName
-      }
-    };
-  }
-  const EXPORT_TILE_SIZE = 1024;
-  function exportPlaneLevels(loaderData) {
-    return loaderData.map((plane) => {
-      const { width, height } = getImageSize(plane);
-      return {
-        width,
-        height,
-        tileSize: EXPORT_TILE_SIZE
-      };
-    });
-  }
-  function tileCountForLevels(levels, channelCount) {
-    let n2 = 0;
-    for (const level of levels) {
-      n2 += Math.ceil(level.width / level.tileSize) * Math.ceil(level.height / level.tileSize) * channelCount;
-    }
-    return n2;
-  }
-  function loaderPlanesOrUndef(entry) {
-    const data2 = entry.loader.data;
-    return (data2 == null ? void 0 : data2.length) ? data2 : void 0;
   }
   const MASK_EXPORT_CONCURRENCY = Math.min(8, ((_h = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _h.hardwareConcurrency) ?? 4);
   function labelArrayCtor(dtype) {
@@ -257564,7 +257896,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       name: "White"
     }
   ];
-  function legendChannelFromLayer(sc2, gc2, groupId) {
+  function legendChannelFromLayer(sc2, gc2, groupId2) {
     const { r: r2, g: g2, b: b2 } = gc2.color;
     const hex_color = rgbToHex$1(gc2.color);
     return {
@@ -257575,7 +257907,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       upper_range: gc2.upperLimit,
       name: sc2.name,
       color: hex_color,
-      group_uuid: groupId,
+      group_uuid: groupId2,
       source_uuid: sc2.id,
       channel_uuid: gc2.id,
       mask: isMaskChannel(sc2)
@@ -257878,9 +258210,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             };
             if (colorPickerChannel !== null) {
               const channel = colorPickerChannel;
-              const groupId = channel.group_uuid;
-              const channelId = channel.source_uuid;
-              (_a2 = props.updateChannel) == null ? void 0 : _a2.call(props, groupId, channelId, {
+              const groupId2 = channel.group_uuid;
+              const channelId2 = channel.source_uuid;
+              (_a2 = props.updateChannel) == null ? void 0 : _a2.call(props, groupId2, channelId2, {
                 color: color2
               });
             }
@@ -258139,16 +258471,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setChannelGroups,
       setGroupNames
     ]);
-    const updateChannel = reactExports.useCallback((groupId, channelId, newChannel) => {
+    const updateChannel = reactExports.useCallback((groupId2, channelId2, newChannel) => {
       const copy_name = (g2) => `${g2.name} copy`;
       const is_copied = (g2) => " copy" === g2.name.slice(-5);
-      const id_group = groups.find(({ id: id2 }) => groupId === id2);
+      const id_group = groups.find(({ id: id2 }) => groupId2 === id2);
       if (!id_group) return;
       const existingCopy = groups.find(({ name: name2 }) => name2 === copy_name(id_group));
       const group2 = existingCopy || id_group;
       const withColor = (g2) => ({
         ...g2,
-        channels: g2.channels.map((gc2) => gc2.channelId === channelId ? {
+        channels: g2.channels.map((gc2) => gc2.channelId === channelId2 ? {
           ...gc2,
           ...newChannel
         } : gc2)
@@ -258254,7 +258586,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx(ClassLegend, {
               sections: classSections,
-              onToggle: (channelId, name2) => toggleLegendClass(activeWaypoint == null ? void 0 : activeWaypoint.id, channelId, name2)
+              onToggle: (channelId2, name2) => toggleLegendClass(activeWaypoint == null ? void 0 : activeWaypoint.id, channelId2, name2)
             })
           ]
         })
@@ -258290,6 +258622,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   };
   const PlaybackModeView = (props) => {
     const { presenting } = props;
+    const hideNavPane = usePresentationNavHidden();
     const exporting = props.ioState === "EXPORTING";
     const folderPrompt2 = props.exportFolderPrompt;
     const sourcePrompt = props.exportSourcePrompt;
@@ -258325,6 +258658,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 previewNav: presenting ? jsxRuntimeExports.jsx(PresentationNav, {
                   showStoryName: false
                 }) : void 0,
+                previewNavHidden: hideNavPane,
                 viewer: jsxRuntimeExports.jsxs(ChannelPanel, {
                   hiddenChannel: !presenting && props.hiddenChannel,
                   noLoader: props.noLoader,
@@ -258490,7 +258824,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const newHandles = await toFile(kinds);
       if (newHandles.length > 0 && importFileKind(newHandles[0].name) === "image") {
         setHandles(newHandles);
-        if (isPersistableFileHandle(newHandles[0])) {
+        if (isPersistableFileHandle(newHandles[0]) && /\.tiff?$/i.test(newHandles[0].name)) {
           await putFileHandle(storageKey2, newHandles[0]);
           setHasRecent(true);
         }
@@ -259992,8 +260326,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-27T13:51:38.235Z";
-    const sha = "38124a190885d1ed6bf1d8e7cdf719959fee2cd7";
+    const iso = "2026-10-27T14:14:51.108Z";
+    const sha = "88ff28d02dd0b15a66b13fed9a91ea1b22b4f339";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -260288,6 +260622,7 @@ uniform classStyleUniforms {
       resizeObserverRef.current = resizeObserver;
     }, []);
     const setViewerWorldFrame = useAppStore((s2) => s2.setViewerWorldFrame);
+    const setViewerImageFrames = useAppStore((s2) => s2.setViewerImageFrames);
     const firstLoader = reactExports.useMemo(() => loaderList.length > 0 ? loaderList[0] : null, [
       loaderList
     ]);
@@ -260340,6 +260675,16 @@ uniform classStyleUniforms {
     }, [
       frame2,
       setViewerWorldFrame
+    ]);
+    reactExports.useEffect(() => {
+      setViewerImageFrames(loaderList.map((item2) => ({
+        ...worldFrameFromLoader(item2.loader),
+        sourceImageId: item2.sourceImageId
+      })));
+      return () => setViewerImageFrames([]);
+    }, [
+      loaderList,
+      setViewerImageFrames
     ]);
     const maskDisplayLayers = reactExports.useMemo(() => {
       if (omeLoaderEntries.length === 0) return [];
@@ -261840,7 +262185,7 @@ uniform classStyleUniforms {
   const hasAuthoritativeBounds = (s2) => s2.Bounds != null && typeof s2.Bounds.x0 === "number" && typeof s2.Bounds.x1 === "number" && typeof s2.Bounds.y0 === "number" && typeof s2.Bounds.y1 === "number";
   const needsPanMigration = (s2) => (s2.Pan != null || s2.Zoom != null) && !hasAuthoritativeBounds(s2);
   function planWaypointConfigSeedTick(args) {
-    var _a2;
+    var _a2, _b2, _c2, _d, _e;
     const { mirror, viewportWidth: cw, viewportHeight: ch2, imageWidth, imageHeight } = args;
     const configStories = mirror.Stories;
     const storeWaypoints = documentWaypoints(useDocumentStore.getState());
@@ -261850,7 +262195,8 @@ uniform classStyleUniforms {
     if (!cw || !ch2) return {
       type: "noop"
     };
-    if (storeWaypoints.length === 0) {
+    const lonePlaceholder = storeWaypoints.length === 1 && (((_b2 = (_a2 = storeWaypoints[0]) == null ? void 0 : _a2.shapeIds) == null ? void 0 : _b2.length) ?? 0) === 0 && !(((_c2 = storeWaypoints[0]) == null ? void 0 : _c2.content) ?? "").trim() && ((_d = storeWaypoints[0]) == null ? void 0 : _d.title) === "Waypoint 1";
+    if (storeWaypoints.length === 0 || lonePlaceholder && configStories.length > 1) {
       if (imageWidth <= 0 || imageHeight <= 0) return {
         type: "noop"
       };
@@ -261864,7 +262210,7 @@ uniform classStyleUniforms {
         shapes: mergedShapes
       };
     }
-    if ((((_a2 = mirror.Shapes) == null ? void 0 : _a2.length) ?? 0) > 0 && documentShapes(useDocumentStore.getState()).length === 0) {
+    if ((((_e = mirror.Shapes) == null ? void 0 : _e.length) ?? 0) > 0 && documentShapes(useDocumentStore.getState()).length === 0) {
       return {
         type: "setShapes",
         shapes: mirror.Shapes ?? []
@@ -261946,30 +262292,9 @@ uniform classStyleUniforms {
       title: name2
     });
   }
-  function ensureDefaultWaypointForImageImport() {
-    var _a2;
-    const doc = useDocumentStore.getState();
-    if (doc.waypoints.length > 0) return;
-    const groupId = (_a2 = doc.channelGroups[0]) == null ? void 0 : _a2.id;
-    const raw2 = {
-      id: crypto.randomUUID(),
-      State: {
-        Expanded: true
-      },
-      Name: "Waypoint 1",
-      Content: "",
-      shapeIds: [],
-      ...groupId !== void 0 ? {
-        groupId
-      } : {}
-    };
-    const app = useAppStore.getState();
-    app.addStory(hydrateConfigWaypoint(raw2, doc.channelGroups));
-    app.setActiveStory(0);
-  }
   function afterImageImportDocumentEffects() {
     maybeDefaultStoryTitleFromFirstImage();
-    ensureDefaultWaypointForImageImport();
+    ensureDefaultWaypoint();
   }
   function reconcileLoaderEntries(current, expectedIds, incoming = []) {
     const incomingIds = new Set(incoming.map((entry) => entry.sourceImageId));
@@ -262682,10 +263007,10 @@ uniform classStyleUniforms {
           const entry = entries[i2];
           const handle2 = handles[i2];
           if (!entry || !handle2) continue;
-          const { loader } = entry;
+          const { loader, sourceImageId } = entry;
           const file = await handle2.getFile();
           const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
-          applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+          applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
         }
       }
       setFileName(handles.length === 1 ? in_f : handles.map((h2) => h2.name).join(", ") || in_f);
@@ -262775,6 +263100,18 @@ uniform classStyleUniforms {
         transition: visibilityTransition
       });
       maybeDefaultStoryTitleFromFirstImage();
+      if (role !== "segmentation") {
+        for (let i2 = 0; i2 < newEntries.length; i2++) {
+          const entry = newEntries[i2];
+          const handle2 = handles[i2];
+          if (!entry || !handle2 || !nextImages.some((im) => im.id === entry.sourceImageId)) {
+            continue;
+          }
+          const file = await handle2.getFile();
+          const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
+          applyOmeRoisFromLoaderToWaypoint(entry.loader, entry.sourceImageId, omeXml);
+        }
+      }
       return {
         ok: true
       };
@@ -262824,6 +263161,8 @@ uniform classStyleUniforms {
     const onStartOmeTiffUrl = async (url, role = "intensity", rgbDisplay, channelNames) => {
       omeTiffUrlLoadGenerationRef.current += 1;
       const loadGeneration = omeTiffUrlLoadGenerationRef.current;
+      const storyIdAtStart = useDocumentStore.getState().activeStoryId;
+      const superseded = () => loadGeneration !== omeTiffUrlLoadGenerationRef.current || useDocumentStore.getState().activeStoryId !== storyIdAtStart;
       clearOmeDerivedCaches();
       setDicomIndexList([]);
       const loader = await loadOmeLoaderForRole(role, {
@@ -262832,9 +263171,7 @@ uniform classStyleUniforms {
         pool: sharedOmeDecodePool(),
         rgbDisplay
       });
-      if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
-        return;
-      }
+      if (superseded()) return;
       const relevant_groups = props.demo_url != null && url === props.demo_url ? (props.exhibit_config.Groups ?? []).filter(({ Image: Image2 }) => Image2.Method === "Colorimetric") : [];
       const sourceImageId = crypto.randomUUID();
       const basename2 = url.split("/").pop() || "remote.ome.tif";
@@ -262862,6 +263199,7 @@ uniform classStyleUniforms {
         kind: "url",
         url
       });
+      if (superseded()) return;
       skipLoaderHydrateRef.current = true;
       setOmeLoaderEntries([
         {
@@ -262879,7 +263217,8 @@ uniform classStyleUniforms {
       afterImageImportDocumentEffects();
       if (role !== "segmentation") {
         const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
-        applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+        if (superseded()) return;
+        applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
       }
       setLastOmeTiffUrl(url);
       setFileName(basename2);
@@ -262939,6 +263278,12 @@ uniform classStyleUniforms {
         newChannelIds,
         newGroupRowIds
       };
+      if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
+        return {
+          ok: false,
+          error: "Import was superseded by a newer request."
+        };
+      }
       skipLoaderHydrateRef.current = true;
       setOmeLoaderEntries((prev) => [
         ...prev,
@@ -262953,6 +263298,16 @@ uniform classStyleUniforms {
         transition: visibilityTransition
       });
       maybeDefaultStoryTitleFromFirstImage();
+      if (role !== "segmentation") {
+        const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
+        if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
+          return {
+            ok: false,
+            error: "Import was superseded by a newer request."
+          };
+        }
+        applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
+      }
       return {
         ok: true
       };
@@ -263306,6 +263661,7 @@ uniform classStyleUniforms {
     const onStartRef = reactExports.useRef(onStart);
     onStartRef.current = onStart;
     reactExports.useEffect(() => {
+      if (libraryImportSuppressesDemo()) return;
       if (!props.demo_url) return;
       if (useDocumentStore.getState().images.length > 0) {
         clearImageLoading();
@@ -263591,7 +263947,10 @@ uniform classStyleUniforms {
     reactExports.useEffect(() => {
       if (!(viewerViewportSize == null ? void 0 : viewerViewportSize.width) || !(viewerViewportSize == null ? void 0 : viewerViewportSize.height)) return;
       const action = planWaypointConfigSeedTick({
-        mirror: waypointMirror,
+        mirror: {
+          ...waypointMirror,
+          Stories: props.configWaypoints.length > 0 ? cloneConfigWaypoints(props.configWaypoints) : waypointMirror.Stories
+        },
         viewportWidth: viewerViewportSize.width,
         viewportHeight: viewerViewportSize.height,
         imageWidth,
@@ -263607,7 +263966,8 @@ uniform classStyleUniforms {
       imageWidth,
       imageHeight,
       setStories,
-      setItems
+      setItems,
+      props.configWaypoints
     ]);
     reactExports.useEffect(() => {
       const unsub = useDocumentStore.subscribe((state, prevState) => {
