@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-D2OpUhbi.js","./pako.esm-KbdoS3Oq.js","./lerc-WGlS0_8n.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-COddgXzb.js","./pako.esm-KbdoS3Oq.js","./lerc-BQvgUFUD.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18515,7 +18515,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "7ec44abbac5f9cc00be704db6ff1db2cfcf69534",
+    "VITE_APP_GIT_SHA": "b9b921068b71cee69a6779cf5d8591563495bd86",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -79252,26 +79252,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BxBFgnvJ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BKpSskPY.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-C-8ijJ42.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DW0ozdkz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-xXOXzSdg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-Dz5grW67.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-D2OpUhbi.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CrFFFYnb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-WGlS0_8n.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-COddgXzb.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-sX4MxhHK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BQvgUFUD.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Cuoq-qu1.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BWbCRAw-.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BCCZ4yfd.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-ClYdxkBF.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -251805,20 +251805,21 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       storyTabOpen
     ]);
   }
-  const sidebarHost = "_sidebarHost_1ay59_1";
-  const sidebarHostCollapsed = "_sidebarHostCollapsed_1ay59_18";
-  const panelOuter = "_panelOuter_1ay59_23";
-  const tabRow = "_tabRow_1ay59_33";
-  const stripActions = "_stripActions_1ay59_41";
-  const expandControl = "_expandControl_1ay59_50";
-  const expandControlExpanded = "_expandControlExpanded_1ay59_60";
-  const panelContent = "_panelContent_1ay59_66";
-  const imagesMount = "_imagesMount_1ay59_76";
-  const viewport = "_viewport_1ay59_88";
-  const viewportCollapsed = "_viewportCollapsed_1ay59_100";
-  const viewportPreview = "_viewportPreview_1ay59_105";
-  const previewNav = "_previewNav_1ay59_109";
-  const viewerRegion = "_viewerRegion_1ay59_123";
+  const sidebarHost = "_sidebarHost_2do94_1";
+  const sidebarHostCollapsed = "_sidebarHostCollapsed_2do94_18";
+  const panelOuter = "_panelOuter_2do94_23";
+  const tabRow = "_tabRow_2do94_33";
+  const stripActions = "_stripActions_2do94_41";
+  const expandControl = "_expandControl_2do94_50";
+  const expandControlExpanded = "_expandControlExpanded_2do94_60";
+  const panelContent = "_panelContent_2do94_66";
+  const imagesMount = "_imagesMount_2do94_76";
+  const viewport = "_viewport_2do94_88";
+  const viewportCollapsed = "_viewportCollapsed_2do94_100";
+  const viewportPreview = "_viewportPreview_2do94_105";
+  const previewNav = "_previewNav_2do94_109";
+  const previewNavParked = "_previewNavParked_2do94_123";
+  const viewerRegion = "_viewerRegion_2do94_127";
   const styles$d = {
     sidebarHost,
     sidebarHostCollapsed,
@@ -251833,6 +251834,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     viewportCollapsed,
     viewportPreview,
     previewNav,
+    previewNavParked,
     viewerRegion
   };
   const TAB_ORDER = [
@@ -251951,15 +251953,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function AuthorView(props) {
     const [expanded, setExpanded] = reactExports.useState(true);
-    const previewing = props.previewNav != null;
+    const hasPreview = props.previewNav != null;
+    const previewing = hasPreview && !props.previewNavHidden;
     return jsxRuntimeExports.jsxs(AuthorViewport, {
       collapsed: !expanded,
       className: previewing ? styles$d.viewportPreview : void 0,
       children: [
-        previewing ? jsxRuntimeExports.jsx("div", {
-          className: styles$d.previewNav,
+        hasPreview ? jsxRuntimeExports.jsx("div", {
+          className: previewing ? styles$d.previewNav : styles$d.previewNavParked,
           children: props.previewNav
-        }) : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+        }) : null,
+        previewing ? null : jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
           children: [
             jsxRuntimeExports.jsx(AuthorSidebar, {
               imagesPanel: props.imagesPanel,
@@ -258456,6 +258460,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   };
   const PlaybackModeView = (props) => {
     const { presenting } = props;
+    const hideNavPane = usePresentationNavHidden();
     const exporting = props.ioState === "EXPORTING";
     const folderPrompt2 = props.exportFolderPrompt;
     const sourcePrompt = props.exportSourcePrompt;
@@ -258491,6 +258496,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
                 previewNav: presenting ? jsxRuntimeExports.jsx(PresentationNav, {
                   showStoryName: false
                 }) : void 0,
+                previewNavHidden: hideNavPane,
                 viewer: jsxRuntimeExports.jsxs(ChannelPanel, {
                   hiddenChannel: !presenting && props.hiddenChannel,
                   noLoader: props.noLoader,
@@ -260158,8 +260164,8 @@ uniform classStyleUniforms {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-27T14:03:50.142Z";
-    const sha = "7ec44abbac5f9cc00be704db6ff1db2cfcf69534";
+    const iso = "2026-10-27T14:08:34.771Z";
+    const sha = "b9b921068b71cee69a6779cf5d8591563495bd86";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
