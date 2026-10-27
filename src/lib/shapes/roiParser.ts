@@ -7,7 +7,6 @@ import type {
   Shape,
   TextShape,
 } from "./shapeModel";
-import { lineToPolygon } from "./shapeModel";
 
 // Type definitions for ROI shapes from loader metadata (OME-XML compatible)
 export interface Transform {
@@ -78,16 +77,6 @@ interface RoiLabelShape extends BaseRoiShape {
   Y: number;
   Text: string;
 }
-
-type Group = {
-  id: string;
-  name: string;
-  shapeIds: string[];
-  isExpanded: boolean;
-  metadata?: {
-    createdAt?: Date;
-  };
-};
 
 export type RoiShape =
   | RoiRectangleShape
@@ -175,17 +164,14 @@ const getColors = (
   };
 };
 
-/** Rectangle corners, each passed through `transform` (which may rotate or shear). */
-const rectangleCorners = (
-  shape: RoiRectangleShape,
-  transform?: Transform,
-): [number, number][] => {
-  const { X, Y, Width, Height } = shape;
+/** Rectangle corners, each passed through the shape transform (which may rotate or shear). */
+const rectangleCorners = (shape: RoiRectangleShape): [number, number][] => {
+  const { X, Y, Width, Height, Transform } = shape;
   return [
-    applyTransform(X, Y, transform),
-    applyTransform(X + Width, Y, transform),
-    applyTransform(X + Width, Y + Height, transform),
-    applyTransform(X, Y + Height, transform),
+    applyTransform(X, Y, Transform),
+    applyTransform(X + Width, Y, Transform),
+    applyTransform(X + Width, Y + Height, Transform),
+    applyTransform(X, Y + Height, Transform),
   ];
 };
 
@@ -196,9 +182,9 @@ const rectangleShapeToViewerShape = (
   shape: RoiRectangleShape,
   roi: Roi,
 ): PolygonShape => {
-  const { Transform, ID, Text, Name } = shape;
+  const { ID, Text, Name } = shape;
 
-  const corners = rectangleCorners(shape, Transform);
+  const corners = rectangleCorners(shape);
   const polygon = [...corners, corners[0]];
 
   const colors = getColors(shape, [255, 0, 0, 50], [255, 0, 0, 255]);
@@ -255,7 +241,7 @@ const lineShapeToViewerShape = (shape: RoiLineShape, roi: Roi): LineShape => {
   const end = applyTransform(X2, Y2, Transform);
 
   const lineWidth = shape.StrokeWidth || 3;
-  const polygon = lineToPolygon(start, end, lineWidth);
+  const polygon: [number, number][] = [start, end];
 
   const lineColor = shape.StrokeColor || [0, 255, 255, 255];
   const fillColor = shape.FillColor || [0, 255, 255, 255];
@@ -264,7 +250,7 @@ const lineShapeToViewerShape = (shape: RoiLineShape, roi: Roi): LineShape => {
     id: `roi-${roi.ID}-${ID}`,
     type: "line",
     polygon,
-    hasArrowHead: false, // lineToPolygon creates rectangular geometry; arrows expect degenerate polygon
+    hasArrowHead: false,
     style: {
       fillColor,
       lineColor,
@@ -404,7 +390,7 @@ function collectRoiShapeWorldPoints(shape: RoiShape): [number, number][] {
   const T = shape.Transform;
   switch (shape.type) {
     case "rectangle":
-      return rectangleCorners(shape, T);
+      return rectangleCorners(shape);
     case "ellipse":
       return ellipseToPolygon(
         shape.X,
@@ -491,12 +477,11 @@ function makeImportCentroidTextShape(
 /** Convert structured ROI data (e.g. from OME-XML or Viv metadata) to viewer shapes. */
 export const parseRoisFromRoiList = (
   rois: Roi[] | null | undefined,
-): { shapes: Shape[]; groups: Group[] } => {
+): Shape[] => {
   const shapes: Shape[] = [];
-  const groups: Group[] = [];
 
   if (!rois || rois.length === 0) {
-    return { shapes, groups };
+    return shapes;
   }
 
   console.log(`Found ${rois.length} ROIs in ROI list`);
@@ -507,9 +492,7 @@ export const parseRoisFromRoiList = (
       `Processing ROI ${roi.ID} (${roi.Name || "unnamed"}) with ${roi.shapes.length} shapes`,
     );
 
-    // Create a group for this ROI
-    const groupId = `roi-group-${roi.ID}`;
-    const roiShapeIds: string[] = [];
+    let drewShape = false;
 
     // Process each shape in the ROI
     roi.shapes.forEach((shape) => {
@@ -558,7 +541,7 @@ export const parseRoisFromRoiList = (
 
         if (viewerShape) {
           shapes.push(viewerShape);
-          roiShapeIds.push(viewerShape.id);
+          drewShape = true;
         }
       } catch (error) {
         console.error(
@@ -570,45 +553,28 @@ export const parseRoisFromRoiList = (
 
     const labelOnlyRoi =
       roi.shapes.length > 0 && roi.shapes.every((s) => s.type === "label");
-    if (roiShapeIds.length > 0 && !labelOnlyRoi) {
+    if (drewShape && !labelOnlyRoi) {
       const centroidPos = importRoiCentroidPosition(roi);
       if (centroidPos) {
-        const centroidShape = makeImportCentroidTextShape(roi, centroidPos);
-        shapes.push(centroidShape);
-        roiShapeIds.push(centroidShape.id);
+        shapes.push(makeImportCentroidTextShape(roi, centroidPos));
       }
-    }
-
-    // Create a group for this ROI if it has any shapes
-    if (roiShapeIds.length > 0) {
-      const group = {
-        id: groupId,
-        name: roi.Name || `ROI ${roi.ID}`,
-        shapeIds: roiShapeIds,
-        isExpanded: true,
-      };
-      groups.push(group);
-      console.log(
-        `Created group for ROI ${roi.ID} with ${roiShapeIds.length} shapes`,
-      );
     }
   });
 
   console.log(`Total shapes created from ROIs: ${shapes.length}`);
-  console.log(`Total groups created from ROIs: ${groups.length}`);
-  return { shapes, groups };
+  return shapes;
 };
 
 /**
- * Parse ROIs from loader metadata and convert to viewer shapes and groups.
+ * Parse ROIs from loader metadata and convert to viewer shapes.
  * Accepts a structural loader shape so this module does not import viv (cycle).
  */
 export const parseRoisFromLoader = (
   loader: { metadata?: { ROIs?: Roi[] | null } } | null | undefined,
-): { shapes: Shape[]; groups: Group[] } => {
+): Shape[] => {
   if (!loader || !loader.metadata || !loader.metadata.ROIs) {
     console.log("No ROIs found in loader metadata");
-    return { shapes: [], groups: [] };
+    return [];
   }
   return parseRoisFromRoiList(loader.metadata.ROIs);
 };

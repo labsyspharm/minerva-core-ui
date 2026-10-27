@@ -1,5 +1,4 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { useWaypointCanvasShapes } from "@/components/authoring/waypoints/useWaypointCanvasShapes";
 import { WaypointsList } from "@/components/authoring/waypoints/WaypointsList";
 import {
   type AuthorChannelNav,
@@ -16,6 +15,7 @@ import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import { TabBar } from "@/components/shared/TabBar";
 import { dragHasFiles } from "@/lib/imaging/importFileKind";
 import { useAppStore } from "@/lib/stores/appStore";
+import { useWaypointCanvasShapes } from "@/lib/waypoints/useWaypointCanvasShapes";
 import styles from "./AuthorSidebar.module.css";
 
 type AuthorTab = "images" | "channels" | "story";
@@ -77,17 +77,15 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
     [props.ensureChannelHistograms],
   );
 
-  const activePanel =
-    activeTab === "images" ? (
-      props.imagesPanel
-    ) : activeTab === "channels" ? (
+  const otherPanel =
+    activeTab === "channels" ? (
       <ChannelGroupsMasterDetail
         noLoader={props.noLoader}
         contrastEditable={props.contrastEditable}
       />
-    ) : (
+    ) : activeTab === "story" ? (
       <WaypointsList />
-    );
+    ) : null;
 
   return (
     <AuthorChannelNavProvider value={channelNav}>
@@ -111,7 +109,14 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
               <SidebarStripSlot className={styles.stripActions} />
             </div>
             <div className={styles.panelContent} role="tabpanel">
-              {activePanel}
+              {/* Stay mounted on other tabs so a drop there still reaches Upload. */}
+              <div
+                className={styles.imagesMount}
+                hidden={activeTab !== "images"}
+              >
+                {props.imagesPanel}
+              </div>
+              {otherPanel}
             </div>
           </div>
         </div>
@@ -166,25 +171,33 @@ export type AuthorViewProps = {
   noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
   contrastEditable?: boolean;
-  /**
-   * Story preview pane shown instead of the sidebar; the viewer stays mounted.
-   * When the pane renders nothing, its column collapses and the viewer fills the width.
-   */
+  /** Story preview pane shown instead of the sidebar; the viewer stays mounted. */
   previewNav?: ReactNode;
+  /**
+   * Keep `previewNav` mounted (playback effects) but show the sidebar.
+   * Used when the pane renders nothing, e.g. one waypoint and no content.
+   */
+  previewNavHidden?: boolean;
 };
 
 export function AuthorView(props: AuthorViewProps) {
   const [expanded, setExpanded] = useState(true);
-  const previewing = props.previewNav != null;
+  const hasPreview = props.previewNav != null;
+  const previewing = hasPreview && !props.previewNavHidden;
 
   return (
     <AuthorViewport
       collapsed={!expanded}
       className={previewing ? styles.viewportPreview : undefined}
     >
-      {previewing ? (
-        <div className={styles.previewNav}>{props.previewNav}</div>
-      ) : (
+      {hasPreview ? (
+        <div
+          className={previewing ? styles.previewNav : styles.previewNavParked}
+        >
+          {props.previewNav}
+        </div>
+      ) : null}
+      {previewing ? null : (
         <>
           <AuthorSidebar
             imagesPanel={props.imagesPanel}

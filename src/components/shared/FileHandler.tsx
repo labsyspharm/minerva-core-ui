@@ -112,7 +112,12 @@ export const FileHandler = ({
       importFileKind(newHandles[0].name) === "image"
     ) {
       setHandles(newHandles);
-      if (isPersistableFileHandle(newHandles[0])) {
+      // Unknown extensions stay in memory so OME-TIFF detection can run, but
+      // they must not replace the saved TIFF before that open succeeds.
+      if (
+        isPersistableFileHandle(newHandles[0]) &&
+        /\.tiff?$/i.test(newHandles[0].name)
+      ) {
         await putFileHandle(storageKey, newHandles[0]);
         setHasRecent(true);
       }

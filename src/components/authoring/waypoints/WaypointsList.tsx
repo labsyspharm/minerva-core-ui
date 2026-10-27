@@ -478,11 +478,17 @@ const WaypointsList = (props: WaypointsListProps) => {
   ) => {
     event.stopPropagation();
     event.preventDefault();
-    setActiveStory(index);
     const saved = saveCurrentViewToStory(index, "handleOverwriteView");
+    if (!saved) return;
+    const app = useAppStore.getState();
+    const openIndex = waypoints.findIndex((w) => w.id === app.openWaypointId);
+    const canvasIndex = openIndex >= 0 ? openIndex : (activeStoryIndex ?? 0);
+    setActiveStory(index);
     flashSquareOverlay();
     scheduleThumbnailCaptureForStory(index, true, true, 150);
-    if (saved) {
+    // The canvas still shows `canvasIndex` until the effect runs. Persisting
+    // any other row would copy those shapes onto it.
+    if (canvasIndex === index) {
       persistImportedShapesToStory(index);
     }
   };

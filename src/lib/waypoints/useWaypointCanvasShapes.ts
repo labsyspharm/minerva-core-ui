@@ -59,7 +59,9 @@ export function useWaypointCanvasShapes(storyTabOpen: boolean): void {
     }
     previousImportStoryIdRef.current = story.id;
 
-    importWaypointShapes(story, true, shapes);
+    // Reload only when the waypoint changes. A later edit to the same row
+    // (title, group) must not wipe unsaved canvas shapes.
+    importWaypointShapes(story, prevId !== story.id, shapes);
   }, [
     waypoints,
     activeStoryIndex,
@@ -78,16 +80,7 @@ export function useWaypointCanvasShapes(storyTabOpen: boolean): void {
       const prevId = previousImportStoryIdRef.current;
       const p = doc.waypoints.findIndex((w) => w.id === prevId);
       if (p < 0) return;
-      const st = useAppStore.getState();
-      const im = doc.images[0];
-      const f = effectiveWorldFrame(
-        st.viewerWorldFrame,
-        im?.sizeX ?? 0,
-        im?.sizeY ?? 0,
-      );
-      if (f.worldWidth > 0 && f.worldHeight > 0) {
-        st.persistImportedShapesToStory(p);
-      }
+      useAppStore.getState().persistImportedShapesToStory(p);
     };
   }, [storyTabOpen]);
 }

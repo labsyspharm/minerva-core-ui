@@ -463,7 +463,6 @@ function ephemeralFileHandleFromFile(file: File): Handle.File {
     createWritable: async () => {
       throw new DOMException("Ephemeral file handle", "NotSupportedError");
     },
-    isSameEntry: async () => false,
     queryPermission: async () => "granted" as PermissionState,
     requestPermission: async () => "granted" as PermissionState,
   };
@@ -477,6 +476,8 @@ async function fileHandleFromDataTransferItem(
   item: DataTransferItem,
 ): Promise<Handle.File | null> {
   if (item.kind !== "file") return null;
+  // `getAsFile` only works during the drop event. Read it before any await.
+  const file = item.getAsFile();
   const withHandle = item as DataTransferItem & {
     getAsFileSystemHandle?: () => Promise<FileSystemHandle | null>;
   };
@@ -490,7 +491,6 @@ async function fileHandleFromDataTransferItem(
       // fall through to File
     }
   }
-  const file = item.getAsFile();
   if (!file) return null;
   return ephemeralFileHandleFromFile(file);
 }

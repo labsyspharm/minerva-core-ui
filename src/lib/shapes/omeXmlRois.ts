@@ -70,17 +70,29 @@ const parseOmeColor = (
   return undefined;
 };
 
+/** OME defaults: identity scale, no shear, no translation. */
+const transformCoeff = (
+  el: Element,
+  name: string,
+  fallback: number,
+): number => {
+  const s = attr(el, name);
+  if (s == null) return fallback;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : Number.NaN;
+};
+
 /** Shape `<Transform A00…A12>` child: maps shape coordinates to image pixels. */
 const parseTransform = (el: Element): Transform | undefined => {
   const t = Array.from(el.children).find((ch) => ch.localName === "Transform");
   if (!t) return undefined;
   const m: Transform = {
-    A00: num(t, "A00"),
-    A01: num(t, "A01"),
-    A02: num(t, "A02"),
-    A10: num(t, "A10"),
-    A11: num(t, "A11"),
-    A12: num(t, "A12"),
+    A00: transformCoeff(t, "A00", 1),
+    A01: transformCoeff(t, "A01", 0),
+    A02: transformCoeff(t, "A02", 0),
+    A10: transformCoeff(t, "A10", 0),
+    A11: transformCoeff(t, "A11", 1),
+    A12: transformCoeff(t, "A12", 0),
   };
   return Object.values(m).every(Number.isFinite) ? m : undefined;
 };
@@ -140,7 +152,7 @@ function elementToRoiShape(el: Element, index: number): RoiShape | null {
     const y = num(el, "Y", "y");
     const w = num(el, "Width", "width", "W", "w");
     const h = num(el, "Height", "height", "H", "h");
-    if ([x, y, w, h].some((n) => Number.isNaN(n)) || w <= 0 || h <= 0) {
+    if ([x, y, w, h].some((n) => Number.isNaN(n)) || w === 0 || h === 0) {
       return null;
     }
     return common({

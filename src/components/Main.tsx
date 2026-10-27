@@ -4,6 +4,7 @@ import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
 import {
   ConsumePendingLibraryImport,
   hasPendingLibraryImport,
+  libraryImportSuppressesDemo,
   MinervaLibraryPage,
 } from "@/components/library/MinervaLibraryPage";
 import { PlaybackModeView } from "@/components/playback/PlaybackModeView";
@@ -1157,6 +1158,26 @@ const Content = (props: Props) => {
       transition: visibilityTransition,
     });
     maybeDefaultStoryTitleFromFirstImage();
+    if (role !== "segmentation") {
+      for (let i = 0; i < newEntries.length; i++) {
+        const entry = newEntries[i];
+        const handle = handles[i];
+        if (
+          !entry ||
+          !handle ||
+          !nextImages.some((im) => im.id === entry.sourceImageId)
+        ) {
+          continue;
+        }
+        const file = await handle.getFile();
+        const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
+        applyOmeRoisFromLoaderToWaypoint(
+          entry.loader,
+          entry.sourceImageId,
+          omeXml,
+        );
+      }
+    }
     return { ok: true };
   };
 
@@ -1218,6 +1239,10 @@ const Content = (props: Props) => {
   ) => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
+    const storyIdAtStart = useDocumentStore.getState().activeStoryId;
+    const superseded = () =>
+      loadGeneration !== omeTiffUrlLoadGenerationRef.current ||
+      useDocumentStore.getState().activeStoryId !== storyIdAtStart;
     clearOmeDerivedCaches();
     setDicomIndexList([]);
     const loader = await loadOmeLoaderForRole(role, {
@@ -1226,9 +1251,7 @@ const Content = (props: Props) => {
       pool: sharedOmeDecodePool(),
       rgbDisplay,
     });
-    if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
-      return;
-    }
+    if (superseded()) return;
     const relevant_groups =
       props.demo_url != null && url === props.demo_url
         ? (props.exhibit_config.Groups ?? []).filter(
@@ -1264,6 +1287,7 @@ const Content = (props: Props) => {
       kind: "url",
       url,
     });
+    if (superseded()) return;
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries([{ loader, sourceImageId }]);
     setDeniedHandleKeys([]);
@@ -1274,6 +1298,7 @@ const Content = (props: Props) => {
     afterImageImportDocumentEffects();
     if (role !== "segmentation") {
       const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
+      if (superseded()) return;
       applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
     }
     setLastOmeTiffUrl(url);
@@ -1333,6 +1358,9 @@ const Content = (props: Props) => {
       role === "segmentation"
         ? { kind: "appendMask", newChannelIds }
         : { kind: "appendIntensity", newChannelIds, newGroupRowIds };
+    if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
+      return { ok: false, error: "Import was superseded by a newer request." };
+    }
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries((prev) => [...prev, { loader, sourceImageId }]);
     const activeId = useAppStore.getState().activeChannelGroupId;
@@ -1341,6 +1369,16 @@ const Content = (props: Props) => {
       transition: visibilityTransition,
     });
     maybeDefaultStoryTitleFromFirstImage();
+    if (role !== "segmentation") {
+      const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
+      if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
+        return {
+          ok: false,
+          error: "Import was superseded by a newer request.",
+        };
+      }
+      applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
+    }
     return { ok: true };
   };
 
@@ -1813,6 +1851,7 @@ const Content = (props: Props) => {
   onStartRef.current = onStart;
 
   useEffect(() => {
+    if (libraryImportSuppressesDemo()) return;
     if (!props.demo_url) return;
     if (useDocumentStore.getState().images.length > 0) {
       // Persisted story already has image metadata (e.g. after refresh); do not
@@ -2152,7 +2191,13 @@ const Content = (props: Props) => {
   useEffect(() => {
     if (!viewerViewportSize?.width || !viewerViewportSize?.height) return;
     const action = planWaypointConfigSeedTick({
-      mirror: waypointMirror,
+      mirror: {
+        ...waypointMirror,
+        Stories:
+          props.configWaypoints.length > 0
+            ? cloneConfigWaypoints(props.configWaypoints)
+            : waypointMirror.Stories,
+      },
       viewportWidth: viewerViewportSize.width,
       viewportHeight: viewerViewportSize.height,
       imageWidth,
@@ -2169,6 +2214,7 @@ const Content = (props: Props) => {
     imageHeight,
     setStories,
     setItems,
+    props.configWaypoints,
   ]);
 
   // Keep the Stories/Shapes mirror warm for Strict Mode / legacy-marker checks.

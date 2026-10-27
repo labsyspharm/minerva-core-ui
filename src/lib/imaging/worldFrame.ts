@@ -190,28 +190,20 @@ export function inheritUnitlessPhysicalSize(loaders: readonly Loader[]): void {
 }
 
 /**
- * Frame for an OME `<Pixels>` element's pixel space (e.g. an ROI file): its own
- * physical size if it has one, else the viewer image with the same pixel size.
+ * Viewer frame whose pixel size matches an annotation `<Pixels>` element.
+ * ROI pixels are placed with that image's world matrix, not the XML's own
+ * physical size. No match returns undefined so the caller can use another frame.
  */
 export function omePixelsWorldFrame(
   pixels: Element,
   imageFrames: readonly WorldFrame[],
 ): WorldFrame | undefined {
-  const n = (name: string) => Number(pixels.getAttribute(name)) || null;
-  const scale = parsePhysicalScale({
-    PhysicalSizeX: n("PhysicalSizeX"),
-    PhysicalSizeY: n("PhysicalSizeY"),
-    PhysicalSizeXUnit: pixels.getAttribute("PhysicalSizeXUnit"),
-    PhysicalSizeYUnit: pixels.getAttribute("PhysicalSizeYUnit"),
-  });
-  const declared = frameFromPixels(n("SizeX") ?? 0, n("SizeY") ?? 0, scale);
-  const match = imageFrames.find(
-    (f) =>
-      f.pixelWidth === declared.pixelWidth &&
-      f.pixelHeight === declared.pixelHeight,
+  const width = Number(pixels.getAttribute("SizeX")) || 0;
+  const height = Number(pixels.getAttribute("SizeY")) || 0;
+  if (width <= 0 || height <= 0) return undefined;
+  return imageFrames.find(
+    (f) => f.pixelWidth === width && f.pixelHeight === height,
   );
-  if (isIdentityScale(scale)) return match;
-  return { ...declared, sourceImageId: match?.sourceImageId };
 }
 
 export function worldFrameFromPixelCounts(
@@ -279,7 +271,13 @@ function isIdentityScale(scale: PhysicalScale): boolean {
 }
 
 function isCalibratedScale(loader: Loader): boolean {
-  return !isIdentityScale(parsePhysicalScale(loader.metadata?.Pixels));
+  const pixels = loader.metadata?.Pixels;
+  const present = (value: number | null | undefined) => {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0;
+  };
+  // 1 µm/px is a real calibration. Identity is only the fallback for a missing size.
+  return present(pixels?.PhysicalSizeX) || present(pixels?.PhysicalSizeY);
 }
 
 export function pixelViewRectFromWorld(

@@ -1,11 +1,30 @@
 /** What a dropped or browsed file is, judged by its extension. */
 export type ImportFileKind = "image" | "annotations" | "featureTable" | "story";
 
-const KINDS: Record<ImportFileKind, { label: string; extensions: string[] }> = {
-  image: { label: "OME-TIFF images", extensions: [".tif", ".tiff"] },
-  annotations: { label: "OME-XML annotations", extensions: [".xml"] },
-  featureTable: { label: "CSV feature tables", extensions: [".csv"] },
-  story: { label: "Minerva story JSON", extensions: [".json"] },
+const KINDS: Record<
+  ImportFileKind,
+  { label: string; extensions: string[]; mimeTypes: string[] }
+> = {
+  image: {
+    label: "OME-TIFF images",
+    extensions: [".tif", ".tiff"],
+    mimeTypes: ["image/tiff"],
+  },
+  annotations: {
+    label: "OME-XML annotations",
+    extensions: [".xml"],
+    mimeTypes: ["text/xml", "application/xml"],
+  },
+  featureTable: {
+    label: "CSV feature tables",
+    extensions: [".csv"],
+    mimeTypes: ["text/csv"],
+  },
+  story: {
+    label: "Minerva story JSON",
+    extensions: [".json"],
+    mimeTypes: ["application/json"],
+  },
 };
 
 /** Unknown extensions count as images so OME-TIFF detection decides. */
@@ -28,9 +47,11 @@ export function dragHasFiles(e: DragEvent): boolean {
 export function importFilePickerOptions(kinds: readonly ImportFileKind[]): {
   description: string;
   extensions: string[];
+  mimeTypes: string[];
 } {
   return {
     description: kinds.map((k) => KINDS[k].label).join(", "),
     extensions: kinds.flatMap((k) => KINDS[k].extensions),
+    mimeTypes: kinds.flatMap((k) => KINDS[k].mimeTypes),
   };
 }
