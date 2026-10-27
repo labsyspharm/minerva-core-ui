@@ -110,7 +110,7 @@ export function tileFetcherForDirectory(
  * Folder names jpeg-pyramid export would write. With images, this matches
  * `jpegPyramidExportChannels` (per-image transfer, including ungrouped RGB).
  */
-export async function neededJpegPyramidFolderNames(
+async function neededJpegPyramidFolderNames(
   channelGroups: ReadonlyArray<DocumentData["channelGroups"][number]>,
   images?: DocumentData["images"],
   transfer: JpegExportTransfer = "contrast",

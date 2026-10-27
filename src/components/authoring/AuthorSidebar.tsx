@@ -59,8 +59,6 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
     if (activeTab === "images") return;
     const onFileDrag = (e: DragEvent) => {
       if (!dragHasFiles(e)) return;
-      // Keep the browser from opening a file dropped before the panel mounts.
-      e.preventDefault();
       setActiveTab("images");
     };
     const types = ["dragenter", "dragover", "drop"] as const;

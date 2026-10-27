@@ -49,7 +49,7 @@ type FindFileIn = {
   handle: Handle.File;
 };
 type FindFile = (i: FindFileIn) => Promise<boolean>;
-type ToFiles = (kinds?: readonly ImportFileKind[]) => Promise<Handle.File[]>;
+type ToFiles = (kinds: readonly ImportFileKind[]) => Promise<Handle.File[]>;
 
 /** Viv's published OME metadata types are looser than our app `Loader` shape. */
 function asAppLoader(image: Awaited<ReturnType<typeof loadOmeTiff>>): Loader {
@@ -555,8 +555,8 @@ const findFile: FindFile = async (opts) => {
   }
 };
 
-/** Single-file picker for `kinds`; defaults to OME-TIFF images. */
-const toFile: ToFiles = async (kinds = ["image"]) => {
+/** Single-file picker for `kinds`. */
+const toFile: ToFiles = async (kinds) => {
   try {
     const file = await fileOpen({
       ...importFilePickerOptions(kinds),
@@ -737,6 +737,5 @@ export {
   ensureFileHandlePermission,
   findFile,
   toFile,
-  ephemeralFileHandleFromFile,
   fileHandleFromDataTransferItem,
 };

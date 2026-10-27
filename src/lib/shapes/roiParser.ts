@@ -24,9 +24,6 @@ interface BaseRoiShape {
   FillColor?: [number, number, number, number];
   StrokeColor?: [number, number, number, number];
   StrokeWidth?: number;
-  TheC?: number;
-  TheT?: number;
-  TheZ?: number;
   Text?: string;
   Transform?: Transform;
 }
@@ -484,17 +481,9 @@ export const parseRoisFromRoiList = (
     return shapes;
   }
 
-  console.log(`Found ${rois.length} ROIs in ROI list`);
-
-  // Process each ROI
   rois.forEach((roi) => {
-    console.log(
-      `Processing ROI ${roi.ID} (${roi.Name || "unnamed"}) with ${roi.shapes.length} shapes`,
-    );
-
     let drewShape = false;
 
-    // Process each shape in the ROI
     roi.shapes.forEach((shape) => {
       try {
         let viewerShape: Shape | null = null;
@@ -502,37 +491,30 @@ export const parseRoisFromRoiList = (
         switch (shape.type) {
           case "rectangle":
             viewerShape = rectangleShapeToViewerShape(shape, roi);
-            console.log(`Created rectangle shape: ${viewerShape.id}`);
             break;
 
           case "ellipse":
             viewerShape = ellipseShapeToViewerShape(shape, roi);
-            console.log(`Created ellipse shape: ${viewerShape.id}`);
             break;
 
           case "line":
             viewerShape = lineShapeToViewerShape(shape, roi);
-            console.log(`Created line shape: ${viewerShape.id}`);
             break;
 
           case "point":
             viewerShape = pointShapeToViewerShape(shape, roi);
-            console.log(`Created point shape: ${viewerShape.id}`);
             break;
 
           case "polygon":
             viewerShape = polygonShapeToViewerShape(shape, roi);
-            console.log(`Created polygon shape: ${viewerShape.id}`);
             break;
 
           case "polyline":
             viewerShape = polylineShapeToViewerShape(shape, roi);
-            console.log(`Created polyline shape: ${viewerShape.id}`);
             break;
 
           case "label":
             viewerShape = labelShapeToViewerShape(shape, roi);
-            console.log(`Created text shape: ${viewerShape.id}`);
             break;
 
           default:
@@ -561,7 +543,6 @@ export const parseRoisFromRoiList = (
     }
   });
 
-  console.log(`Total shapes created from ROIs: ${shapes.length}`);
   return shapes;
 };
 
@@ -573,7 +554,6 @@ export const parseRoisFromLoader = (
   loader: { metadata?: { ROIs?: Roi[] | null } } | null | undefined,
 ): Shape[] => {
   if (!loader || !loader.metadata || !loader.metadata.ROIs) {
-    console.log("No ROIs found in loader metadata");
     return [];
   }
   return parseRoisFromRoiList(loader.metadata.ROIs);

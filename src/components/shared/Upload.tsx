@@ -110,7 +110,7 @@ export type OmeImportRequest = {
 };
 
 type UploadProps = {
-  onAllow: (kinds?: readonly ImportFileKind[]) => Promise<Handle.File[]>;
+  onAllow: (kinds: readonly ImportFileKind[]) => Promise<Handle.File[]>;
   /**
    * Drop / Browse route by extension. Images open the import dialog. With this
    * (Library), `.json` stories are accepted; without it (a story), `.xml` OME

@@ -100,9 +100,6 @@ const parseTransform = (el: Element): Transform | undefined => {
 const shapeCommon = (el: Element, id: string) => {
   const name = attr(el, "Name", "name");
   const text = attr(el, "Text", "text", "Value");
-  const theC = num(el, "TheC", "theC");
-  const theT = num(el, "TheT", "theT");
-  const theZ = num(el, "TheZ", "theZ");
   const sw = num(el, "StrokeWidth", "strokeWidth");
   const base: {
     ID: string;
@@ -111,9 +108,6 @@ const shapeCommon = (el: Element, id: string) => {
     FillColor?: [number, number, number, number];
     StrokeColor?: [number, number, number, number];
     StrokeWidth?: number;
-    TheC?: number;
-    TheT?: number;
-    TheZ?: number;
     Transform?: Transform;
   } = { ID: id };
   if (name) base.Name = name;
@@ -127,9 +121,6 @@ const shapeCommon = (el: Element, id: string) => {
   if (fill) base.FillColor = fill;
   if (stroke) base.StrokeColor = stroke;
   if (!Number.isNaN(sw) && sw > 0) base.StrokeWidth = sw;
-  if (!Number.isNaN(theC) && theC >= 0) base.TheC = Math.floor(theC);
-  if (!Number.isNaN(theT) && theT >= 0) base.TheT = Math.floor(theT);
-  if (!Number.isNaN(theZ) && theZ >= 0) base.TheZ = Math.floor(theZ);
   const transform = parseTransform(el);
   if (transform) base.Transform = transform;
   return base;

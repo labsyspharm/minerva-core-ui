@@ -35,7 +35,7 @@ export type FileHandlerProps = {
   useLaunchQueue?: boolean;
   children: (props: {
     handles: Handle.File[];
-    onAllow: (kinds?: readonly ImportFileKind[]) => Promise<Handle.File[]>;
+    onAllow: (kinds: readonly ImportFileKind[]) => Promise<Handle.File[]>;
     onRecall: (options?: {
       notifyRestored?: boolean;
     }) => Promise<Handle.File[]>;
@@ -103,7 +103,7 @@ export const FileHandler = ({
   );
 
   const onAllow = async (
-    kinds?: readonly ImportFileKind[],
+    kinds: readonly ImportFileKind[],
   ): Promise<Handle.File[]> => {
     const newHandles = await toFile(kinds);
     // Annotation / CSV / story picks must not replace the recent image handle.
