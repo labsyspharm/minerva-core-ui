@@ -21,7 +21,7 @@ import { normalizeWaypointToBounds } from "@/lib/waypoints/waypoint";
 import { getStoryRecord, saveStoryDocument } from "./storyPersistence";
 
 /** Stable Dexie row id so `pnpm run demo` always has one spine on the library shelf. */
-export const DEMO_SHELF_STORY_ID = "018fd3a0-0000-7000-8000-00000000de11";
+const DEMO_SHELF_STORY_ID = "018fd3a0-0000-7000-8000-00000000de11";
 
 export const DEMO_CRC_OME_TIFF_URL =
   "https://lsp-public-data.s3.amazonaws.com/lin-2021-crc-atlas/CRC01-096-097.ome.tif";

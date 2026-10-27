@@ -532,6 +532,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }, []);
 
   const setViewerWorldFrame = useAppStore((s) => s.setViewerWorldFrame);
+  const setViewerImageFrames = useAppStore((s) => s.setViewerImageFrames);
 
   const firstLoader = useMemo(
     () => (loaderList.length > 0 ? loaderList[0] : null),
@@ -582,6 +583,16 @@ export const ImageViewer = (props: ImageViewerProps) => {
     setViewerWorldFrame(frame);
     return () => setViewerWorldFrame(null);
   }, [frame, setViewerWorldFrame]);
+
+  useEffect(() => {
+    setViewerImageFrames(
+      loaderList.map((item) => ({
+        ...worldFrameFromLoader(item.loader),
+        sourceImageId: item.sourceImageId,
+      })),
+    );
+    return () => setViewerImageFrames([]);
+  }, [loaderList, setViewerImageFrames]);
 
   const maskDisplayLayers = useMemo(() => {
     void featureTableLutEpoch;

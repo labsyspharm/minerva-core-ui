@@ -49,7 +49,7 @@ type FindFileIn = {
   handle: Handle.File;
 };
 type FindFile = (i: FindFileIn) => Promise<boolean>;
-type ToFiles = (kinds?: readonly ImportFileKind[]) => Promise<Handle.File[]>;
+type ToFiles = (kinds: readonly ImportFileKind[]) => Promise<Handle.File[]>;
 
 /** Viv's published OME metadata types are looser than our app `Loader` shape. */
 function asAppLoader(image: Awaited<ReturnType<typeof loadOmeTiff>>): Loader {
@@ -463,7 +463,6 @@ function ephemeralFileHandleFromFile(file: File): Handle.File {
     createWritable: async () => {
       throw new DOMException("Ephemeral file handle", "NotSupportedError");
     },
-    isSameEntry: async () => false,
     queryPermission: async () => "granted" as PermissionState,
     requestPermission: async () => "granted" as PermissionState,
   };
@@ -477,6 +476,8 @@ async function fileHandleFromDataTransferItem(
   item: DataTransferItem,
 ): Promise<Handle.File | null> {
   if (item.kind !== "file") return null;
+  // `getAsFile` only works during the drop event. Read it before any await.
+  const file = item.getAsFile();
   const withHandle = item as DataTransferItem & {
     getAsFileSystemHandle?: () => Promise<FileSystemHandle | null>;
   };
@@ -490,7 +491,6 @@ async function fileHandleFromDataTransferItem(
       // fall through to File
     }
   }
-  const file = item.getAsFile();
   if (!file) return null;
   return ephemeralFileHandleFromFile(file);
 }
@@ -555,8 +555,8 @@ const findFile: FindFile = async (opts) => {
   }
 };
 
-/** Single-file picker for `kinds`; defaults to OME-TIFF images. */
-const toFile: ToFiles = async (kinds = ["image"]) => {
+/** Single-file picker for `kinds`. */
+const toFile: ToFiles = async (kinds) => {
   try {
     const file = await fileOpen({
       ...importFilePickerOptions(kinds),
@@ -737,6 +737,5 @@ export {
   ensureFileHandlePermission,
   findFile,
   toFile,
-  ephemeralFileHandleFromFile,
   fileHandleFromDataTransferItem,
 };

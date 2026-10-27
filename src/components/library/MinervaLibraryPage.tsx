@@ -29,9 +29,15 @@ type PendingLibraryImport =
   | { kind: "dicomWeb"; url: string };
 
 let pendingLibraryImport: PendingLibraryImport | null = null;
+/** Stays set across the story mount so the demo effect does not also download. */
+let libraryImportTookAutoload = false;
 
 export function hasPendingLibraryImport(): boolean {
   return pendingLibraryImport != null;
+}
+
+export function libraryImportSuppressesDemo(): boolean {
+  return libraryImportTookAutoload;
 }
 
 /** Runs once on story mount when the library stashed an image import. */
@@ -271,6 +277,7 @@ export function MinervaLibraryPage() {
       setBusyId(id);
       setError(null);
       try {
+        libraryImportTookAutoload = false;
         useAppStore.getState().resetStoryViewerSession();
         await switchStory(id);
         goToStory(id);
@@ -292,6 +299,7 @@ export function MinervaLibraryPage() {
     setAddOpen(false);
     setShelfBusy(true);
     setError(null);
+    libraryImportTookAutoload = false;
     try {
       goToStory(await openNewStory());
     } catch (e: unknown) {
@@ -307,6 +315,7 @@ export function MinervaLibraryPage() {
       try {
         const id = await openNewStory();
         pendingLibraryImport = pending;
+        libraryImportTookAutoload = true;
         goToStory(id);
         return { ok: true };
       } catch (e: unknown) {
@@ -323,6 +332,7 @@ export function MinervaLibraryPage() {
       setAddOpen(false);
       setShelfBusy(true);
       setError(null);
+      libraryImportTookAutoload = false;
       try {
         useAppStore.getState().resetStoryViewerSession();
         goToStory(await importStory());

@@ -1,31 +1,85 @@
+import type { Matrix4 } from "@math.gl/core";
+import { orientationForImage } from "@/lib/imaging/imageOrientation";
+import { omePixelsElement, parseOmeXml } from "@/lib/imaging/omeXml";
 import type { Loader } from "@/lib/imaging/viv";
+import {
+  frameModelMatrix,
+  layerModelMatrix,
+  omePixelsWorldFrame,
+} from "@/lib/imaging/worldFrame";
+import { useAppStore } from "@/lib/stores/appStore";
 import type { StoryShape } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { viewerShapesToStoryShapes } from "@/lib/stores/storeUtils";
+import { ensureDefaultWaypoint } from "@/lib/waypoints/ensureDefaultWaypoint";
 import { parseOmeXmlStringToRois } from "./omeXmlRois";
 import type { Roi } from "./roiParser";
 import { parseRoisFromLoader, parseRoisFromRoiList } from "./roiParser";
+import { mapShapePoints, type Shape } from "./shapeModel";
 
 /**
- * Append imported OME ROI story shapes to the first waypoint, skipping ids already
- * present in `document.shapes` or on that waypoint (re-import / double loader path).
+ * ROI coordinates (after each shape's own `<Transform>`) are image pixels;
+ * story shapes are in world µm. `toWorld` is the image's pixel → world matrix.
  */
-function appendImportedStoryShapesDeduped(storyShapes: StoryShape[]): number {
-  if (storyShapes.length === 0) return 0;
+function roiShapesToWorld(shapes: Shape[], toWorld: Matrix4): StoryShape[] {
+  return viewerShapesToStoryShapes(
+    shapes.map((shape) =>
+      mapShapePoints(shape, ([x, y]) => {
+        const [wx, wy] = toWorld.transformAsPoint([x, y, 0]);
+        return [wx, wy];
+      }),
+    ),
+  );
+}
 
+const imageOrientation = (imageId: string | undefined) =>
+  orientationForImage(useDocumentStore.getState().images, imageId, null);
+
+/** Same ROI ids in two files must not collapse. Re-import of one image still does. */
+function scopeImportedShapeIds(
+  shapes: StoryShape[],
+  imageId: string | undefined,
+): StoryShape[] {
+  if (!imageId) return shapes;
+  return shapes.map((shape) => ({ ...shape, id: `${imageId}:${shape.id}` }));
+}
+
+/**
+ * Waypoint that imported annotations attach to: the one open in the Story tab,
+ * else the active row, else the first. Adds "Waypoint 1" when the story has none.
+ */
+function importTargetWaypointIndex(): number {
+  ensureDefaultWaypoint();
+  const { openWaypointId, activeStoryIndex } = useAppStore.getState();
+  const { waypoints } = useDocumentStore.getState();
+  const openIndex = waypoints.findIndex((w) => w.id === openWaypointId);
+  if (openIndex >= 0) return openIndex;
+  if (
+    activeStoryIndex != null &&
+    activeStoryIndex >= 0 &&
+    activeStoryIndex < waypoints.length
+  ) {
+    return activeStoryIndex;
+  }
+  return 0;
+}
+
+/**
+ * Append imported OME ROI story shapes to the {@link importTargetWaypointIndex} waypoint,
+ * skipping ids already present in `document.shapes` or on that waypoint (re-import / double
+ * loader path). Returns how many were added, and to which waypoint.
+ */
+function appendImportedStoryShapesDeduped(storyShapes: StoryShape[]): {
+  added: number;
+  waypointId: string | null;
+} {
+  if (storyShapes.length === 0) return { added: 0, waypointId: null };
+
+  const idx = importTargetWaypointIndex();
   const doc = useDocumentStore.getState();
   const { waypoints, shapes } = doc;
-  if (waypoints.length === 0) {
-    if (import.meta.env.DEV) {
-      console.info(
-        "[ome-roi] OME has embedded ROIs but the story has no waypoints; add a waypoint, then re-open the file or import ROIs manually when supported.",
-      );
-    }
-    return 0;
-  }
-
-  const idx = 0;
   const wp = waypoints[idx];
+  if (!wp) return { added: 0, waypointId: null };
   const docIds = new Set(shapes.map((s) => s.id));
   const wpIds = new Set(wp.shapeIds ?? []);
 
@@ -37,38 +91,40 @@ function appendImportedStoryShapesDeduped(storyShapes: StoryShape[]): number {
     if (docIds.has(s.id) || wpIds.has(s.id)) {
       if (import.meta.env.DEV) {
         console.info(
-          `[ome-roi] skip duplicate shape id (already in document or waypoint 0): ${s.id}`,
+          `[ome-roi] skip duplicate shape id (already in document or waypoint ${idx}): ${s.id}`,
         );
       }
       continue;
     }
     deduped.push(s);
   }
-  if (deduped.length === 0) return 0;
+  if (deduped.length === 0) return { added: 0, waypointId: wp.id };
 
   const newIds = deduped.map((s) => s.id);
-  doc.setShapes([...shapes, ...deduped]);
-  doc.setWaypoints(
+  doc.setWaypointsAndShapes(
     waypoints.map((w, i) =>
       i === idx ? { ...w, shapeIds: [...(w.shapeIds ?? []), ...newIds] } : w,
     ),
+    [...shapes, ...deduped],
   );
-  return deduped.length;
+  return { added: deduped.length, waypointId: wp.id };
 }
 
 /**
  * If the loader carries ROIs, or the raw OME-XML in `imageDescriptionOmeXml` does (e.g. when Viv
- * metadata dropped them), convert to story shapes and attach them to the **first** waypoint.
+ * metadata dropped them), convert to story shapes placed on image `imageId` and attach them to
+ * the open waypoint, else the active row, else the first.
  */
-export function applyOmeRoisFromLoaderToFirstWaypoint(
+export function applyOmeRoisFromLoaderToWaypoint(
   loader: Loader,
+  imageId: string,
   imageDescriptionOmeXml: string | null = null,
 ): void {
-  let { shapes: viewerRoiShapes } = parseRoisFromLoader(loader);
+  let viewerRoiShapes = parseRoisFromLoader(loader);
   if (viewerRoiShapes.length === 0 && imageDescriptionOmeXml) {
     try {
       const rois = parseOmeXmlStringToRois(imageDescriptionOmeXml);
-      viewerRoiShapes = parseRoisFromRoiList(rois).shapes;
+      viewerRoiShapes = parseRoisFromRoiList(rois);
     } catch (e) {
       if (import.meta.env.DEV) {
         console.warn(
@@ -78,25 +134,28 @@ export function applyOmeRoisFromLoaderToFirstWaypoint(
       }
     }
   }
-  const storyShapes = viewerShapesToStoryShapes(viewerRoiShapes);
-  appendImportedStoryShapesDeduped(storyShapes);
+  const storyShapes = roiShapesToWorld(
+    viewerRoiShapes,
+    layerModelMatrix(loader, imageOrientation(imageId)),
+  );
+  appendImportedStoryShapesDeduped(scopeImportedShapeIds(storyShapes, imageId));
 }
 
 /**
- * Import annotations from an OME-XML file (e.g. companion to the image) and attach to the first waypoint.
+ * Import annotations from an OME-XML file (e.g. companion to the image) and attach to the open
+ * waypoint, else the active row, else the first. ROI pixels are placed by {@link omePixelsWorldFrame}, else on the
+ * viewer's first image. On success, `waypointId` is the waypoint they were added to.
  */
 export function applyOmeRoisFromAnnotationXmlString(
   xml: string,
 ):
-  | { success: true; shapeCount: number }
+  | { success: true; shapeCount: number; waypointId: string }
   | { success: false; error: string; shapeCount: number } {
-  const doc = useDocumentStore.getState();
-  const { waypoints } = doc;
-  if (waypoints.length === 0) {
+  const { viewerImageFrames } = useAppStore.getState();
+  if (viewerImageFrames.length === 0) {
     return {
       success: false,
-      error:
-        "Add a waypoint in the story first, then import annotations to attach them.",
+      error: "Load an image before importing annotations.",
       shapeCount: 0,
     };
   }
@@ -117,8 +176,16 @@ export function applyOmeRoisFromAnnotationXmlString(
       shapeCount: 0,
     };
   }
-  const { shapes: viewerRoiShapes } = parseRoisFromRoiList(rois);
-  const storyShapes = viewerShapesToStoryShapes(viewerRoiShapes);
+  const viewerRoiShapes = parseRoisFromRoiList(rois);
+  const omeDoc = parseOmeXml(xml);
+  const pixels = omeDoc && omePixelsElement(omeDoc);
+  const frame =
+    (pixels && omePixelsWorldFrame(pixels, viewerImageFrames)) ??
+    viewerImageFrames[0];
+  const storyShapes = roiShapesToWorld(
+    viewerRoiShapes,
+    frameModelMatrix(frame, imageOrientation(frame.sourceImageId)),
+  );
   if (storyShapes.length === 0) {
     return {
       success: false,
@@ -126,8 +193,10 @@ export function applyOmeRoisFromAnnotationXmlString(
       shapeCount: 0,
     };
   }
-  const added = appendImportedStoryShapesDeduped(storyShapes);
-  if (added === 0) {
+  const { added, waypointId } = appendImportedStoryShapesDeduped(
+    scopeImportedShapeIds(storyShapes, frame.sourceImageId),
+  );
+  if (added === 0 || waypointId === null) {
     return {
       success: false,
       error:
@@ -135,5 +204,5 @@ export function applyOmeRoisFromAnnotationXmlString(
       shapeCount: 0,
     };
   }
-  return { success: true, shapeCount: added };
+  return { success: true, shapeCount: added, waypointId };
 }

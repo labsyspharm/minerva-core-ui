@@ -110,7 +110,7 @@ export type OmeImportRequest = {
 };
 
 type UploadProps = {
-  onAllow: (kinds?: readonly ImportFileKind[]) => Promise<Handle.File[]>;
+  onAllow: (kinds: readonly ImportFileKind[]) => Promise<Handle.File[]>;
   /**
    * Drop / Browse route by extension. Images open the import dialog. With this
    * (Library), `.json` stories are accepted; without it (a story), `.xml` OME
@@ -690,6 +690,8 @@ const Upload = (props: UploadProps) => {
       else {
         const n = r.shapeCount;
         setNotice(`Imported ${n} annotation${n === 1 ? "" : "s"}.`);
+        // Show them: the Story tab opens the waypoint they were added to.
+        useAppStore.getState().setEditWaypointOnOpen(r.waypointId);
       }
     } else {
       const doc = useDocumentStore.getState();

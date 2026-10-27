@@ -11,6 +11,8 @@ export type WorldFrame = {
   umPerPixelY: number;
   worldWidth: number;
   worldHeight: number;
+  /** Document image this frame belongs to, when known. */
+  sourceImageId?: string;
 };
 
 export const WORLD_MICRON = "µm";
@@ -187,6 +189,23 @@ export function inheritUnitlessPhysicalSize(loaders: readonly Loader[]): void {
   }
 }
 
+/**
+ * Viewer frame whose pixel size matches an annotation `<Pixels>` element.
+ * ROI pixels are placed with that image's world matrix, not the XML's own
+ * physical size. No match returns undefined so the caller can use another frame.
+ */
+export function omePixelsWorldFrame(
+  pixels: Element,
+  imageFrames: readonly WorldFrame[],
+): WorldFrame | undefined {
+  const width = Number(pixels.getAttribute("SizeX")) || 0;
+  const height = Number(pixels.getAttribute("SizeY")) || 0;
+  if (width <= 0 || height <= 0) return undefined;
+  return imageFrames.find(
+    (f) => f.pixelWidth === width && f.pixelHeight === height,
+  );
+}
+
 export function worldFrameFromPixelCounts(
   width: number,
   height: number,
@@ -218,7 +237,14 @@ export function layerModelMatrix(
   loader: Loader,
   orientation?: Partial<ImageOrientation> | null,
 ): Matrix4 {
-  const frame = worldFrameFromLoader(loader);
+  return frameModelMatrix(worldFrameFromLoader(loader), orientation);
+}
+
+/** {@link layerModelMatrix} from a frame: maps an image's pixels to world µm. */
+export function frameModelMatrix(
+  frame: WorldFrame,
+  orientation?: Partial<ImageOrientation> | null,
+): Matrix4 {
   const o = effectiveOrientation(orientation);
   const { pixelWidth, pixelHeight } = frame;
   const umPerPixelX = o.umPerPixel ?? frame.umPerPixelX;
@@ -245,7 +271,13 @@ function isIdentityScale(scale: PhysicalScale): boolean {
 }
 
 function isCalibratedScale(loader: Loader): boolean {
-  return !isIdentityScale(parsePhysicalScale(loader.metadata?.Pixels));
+  const pixels = loader.metadata?.Pixels;
+  const present = (value: number | null | undefined) => {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0;
+  };
+  // 1 µm/px is a real calibration. Identity is only the fallback for a missing size.
+  return present(pixels?.PhysicalSizeX) || present(pixels?.PhysicalSizeY);
 }
 
 export function pixelViewRectFromWorld(

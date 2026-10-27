@@ -1,4 +1,4 @@
-import type { Roi, RoiShape } from "./roiParser";
+import type { Roi, RoiShape, Transform } from "./roiParser";
 
 const attr = (el: Element, ...keys: string[]): string | null => {
   for (const k of keys) {
@@ -70,12 +70,36 @@ const parseOmeColor = (
   return undefined;
 };
 
+/** OME defaults: identity scale, no shear, no translation. */
+const transformCoeff = (
+  el: Element,
+  name: string,
+  fallback: number,
+): number => {
+  const s = attr(el, name);
+  if (s == null) return fallback;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : Number.NaN;
+};
+
+/** Shape `<Transform A00…A12>` child: maps shape coordinates to image pixels. */
+const parseTransform = (el: Element): Transform | undefined => {
+  const t = Array.from(el.children).find((ch) => ch.localName === "Transform");
+  if (!t) return undefined;
+  const m: Transform = {
+    A00: transformCoeff(t, "A00", 1),
+    A01: transformCoeff(t, "A01", 0),
+    A02: transformCoeff(t, "A02", 0),
+    A10: transformCoeff(t, "A10", 0),
+    A11: transformCoeff(t, "A11", 1),
+    A12: transformCoeff(t, "A12", 0),
+  };
+  return Object.values(m).every(Number.isFinite) ? m : undefined;
+};
+
 const shapeCommon = (el: Element, id: string) => {
   const name = attr(el, "Name", "name");
   const text = attr(el, "Text", "text", "Value");
-  const theC = num(el, "TheC", "theC");
-  const theT = num(el, "TheT", "theT");
-  const theZ = num(el, "TheZ", "theZ");
   const sw = num(el, "StrokeWidth", "strokeWidth");
   const base: {
     ID: string;
@@ -84,9 +108,7 @@ const shapeCommon = (el: Element, id: string) => {
     FillColor?: [number, number, number, number];
     StrokeColor?: [number, number, number, number];
     StrokeWidth?: number;
-    TheC?: number;
-    TheT?: number;
-    TheZ?: number;
+    Transform?: Transform;
   } = { ID: id };
   if (name) base.Name = name;
   if (text) base.Text = text;
@@ -99,9 +121,8 @@ const shapeCommon = (el: Element, id: string) => {
   if (fill) base.FillColor = fill;
   if (stroke) base.StrokeColor = stroke;
   if (!Number.isNaN(sw) && sw > 0) base.StrokeWidth = sw;
-  if (!Number.isNaN(theC) && theC >= 0) base.TheC = Math.floor(theC);
-  if (!Number.isNaN(theT) && theT >= 0) base.TheT = Math.floor(theT);
-  if (!Number.isNaN(theZ) && theZ >= 0) base.TheZ = Math.floor(theZ);
+  const transform = parseTransform(el);
+  if (transform) base.Transform = transform;
   return base;
 };
 
@@ -122,7 +143,7 @@ function elementToRoiShape(el: Element, index: number): RoiShape | null {
     const y = num(el, "Y", "y");
     const w = num(el, "Width", "width", "W", "w");
     const h = num(el, "Height", "height", "H", "h");
-    if ([x, y, w, h].some((n) => Number.isNaN(n)) || w <= 0 || h <= 0) {
+    if ([x, y, w, h].some((n) => Number.isNaN(n)) || w === 0 || h === 0) {
       return null;
     }
     return common({
@@ -194,11 +215,11 @@ function elementToRoiShape(el: Element, index: number): RoiShape | null {
 function unionShapeElements(roiEl: Element): Element[] {
   const out: Element[] = [];
   const ns = (name: string) => roiEl.getElementsByTagNameNS("*", name);
-  const unions = [
+  const unions = new Set([
     ...Array.from(ns("Union")),
     ...Array.from(roiEl.getElementsByTagName("Union")),
-  ];
-  if (unions.length > 0) {
+  ]);
+  if (unions.size > 0) {
     for (const u of unions) {
       for (const ch of u.children) {
         if (ch.nodeType === Node.ELEMENT_NODE) out.push(ch as Element);

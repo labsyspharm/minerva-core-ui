@@ -95,6 +95,8 @@ export type DocumentStore = DocumentState & {
 
   setWaypoints: (waypoints: Waypoint[]) => void;
   setShapes: (shapes: Shape[]) => void;
+  /** One undo step for edits that change both (e.g. deleting a waypoint and its shapes). */
+  setWaypointsAndShapes: (waypoints: Waypoint[], shapes: Shape[]) => void;
   setChannelGroups: (channelGroups: ChannelGroup[]) => void;
   setImages: (images: Image[]) => void;
   setFeatureTables: (featureTables: FeatureTable[]) => void;
@@ -343,6 +345,9 @@ export const useDocumentStore = create<DocumentStore>()(
         setWaypoints: (waypoints) => set(() => ({ waypoints: [...waypoints] })),
 
         setShapes: (shapes) => set(() => ({ shapes: [...shapes] })),
+
+        setWaypointsAndShapes: (waypoints, shapes) =>
+          set(() => ({ waypoints: [...waypoints], shapes: [...shapes] })),
 
         setChannelGroups: (channelGroups) =>
           set(() => ({ channelGroups: [...channelGroups] })),
