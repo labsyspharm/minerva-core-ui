@@ -1,4 +1,4 @@
-import { B as BaseDecoder } from "./index-Chv4oqDx.js";
+import { B as BaseDecoder } from "./index-12ybckcf.js";
 class RawDecoder extends BaseDecoder {
   decodeBlock(buffer) {
     return buffer;
