@@ -633,6 +633,9 @@ function configWaypointToExportWaypoint(
   if (wp.ThumbnailDataUrl) {
     out.thumbnail = wp.ThumbnailDataUrl;
   }
+  if (wp.View3d) {
+    out.view3d = wp.View3d;
+  }
   return out;
 }
 
@@ -688,6 +691,9 @@ export function waypointToConfigWaypoint(
   }
   if (wp.thumbnail !== undefined) {
     out.ThumbnailDataUrl = wp.thumbnail;
+  }
+  if (wp.view3d !== undefined) {
+    out.View3d = wp.view3d;
   }
   return out;
 }

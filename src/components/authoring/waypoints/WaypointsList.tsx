@@ -33,6 +33,7 @@ import {
   getViewerViewportSnapshotFromStore,
   orthographicZoomToNumber,
 } from "@/lib/viewer/viewerViewport";
+import { getActiveVolumeView } from "@/lib/volume/volumeViewerBridge";
 import { WAYPOINT_THUMBNAIL_PIXEL_SIZE } from "@/lib/waypoints/waypointThumbnail";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
@@ -309,6 +310,12 @@ const WaypointsList = (props: WaypointsListProps) => {
   };
 
   const saveCurrentViewToStory = (index: number, source: string): boolean => {
+    const volumeView = getActiveVolumeView();
+    if (volumeView) {
+      updateStory(index, { View3d: volumeView.capture() });
+      saveThumbnailOnlyToStory(index);
+      return true;
+    }
     const snap = getViewerViewportSnapshotFromStore();
     const bounds = snap ? getViewerBoundsFromSnapshot(snap) : null;
     const zoom = snap ? orthographicZoomToNumber(snap.viewState.zoom) : null;

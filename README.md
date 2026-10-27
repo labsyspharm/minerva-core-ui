@@ -29,3 +29,18 @@ pnpm build
 ```
 pnpm lint && pnpm format
 ```
+
+## 3D volumes (experimental)
+
+Stories can also be built on a 3D Imaris volume: paste an `.ims` URL (served
+with CORS and HTTP `Range` support) into **Image URL**, e.g.
+`https://lsp-public-data.s3.amazonaws.com/yapp-2023-3d-melanoma/LSP22408.ims`.
+[kiln-render](https://github.com/simonwarchol/kiln-render) renders it with
+WebGPU. Waypoints save the 3D view (camera, clip box, render mode, density,
+depth fade), and exporting a 3D story can train Gaussian splats (one PLY per
+channel in `splats/`) that the published story plays without streaming voxels.
+
+kiln-render is linked from a sibling checkout (`link:../kiln-render`; run
+`pnpm build:lib` there after changing it). The 3D story player isn't on npm
+yet, so exports copy this build's player (`bundle/`, set by
+`VITE_STORY_BUNDLE_URL` in `.env`): run `pnpm run pages` after changing the app.

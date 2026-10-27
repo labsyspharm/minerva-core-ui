@@ -1,0 +1,135 @@
+.root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.status {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: min(32rem, calc(100% - 2 * var(--minerva-inset)));
+  padding: 8px 12px;
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
+  color: var(--minerva-ink);
+  font-size: var(--minerva-size);
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+/* Same placement and frame as ImageArrangeToolbar. */
+.toolbar {
+  composes: toolbar from "./ImageArrangeToolbar.module.css";
+  color: var(--minerva-quiet);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.group {
+  composes: group from "./ImageArrangeToolbar.module.css";
+  gap: 4px;
+}
+
+.prefix {
+  composes: prefix from "./ImageArrangeToolbar.module.css";
+}
+
+.chip {
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--minerva-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: var(--minerva-wash);
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--minerva-blue);
+  color: var(--minerva-blue);
+}
+
+.clipAxis {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.axis {
+  width: 1em;
+  text-align: right;
+}
+
+.clipAxis input[type="range"] {
+  width: 56px;
+}
+
+.group input[type="range"] {
+  accent-color: var(--minerva-blue);
+}
+
+/* Viewing preferences (not saved in waypoints): loading, display, detail. */
+.viewPanel {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  row-gap: 4px;
+  max-width: calc(100% - 20px);
+  padding: 4px 6px;
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
+  color: var(--minerva-quiet);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.viewPanel > * + * {
+  margin-left: 6px;
+  padding-left: 6px;
+  border-left: 1px solid var(--minerva-edge);
+}
+
+.loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--minerva-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.auto {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--minerva-ink);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.autoRange {
+  opacity: 0.6;
+}
+
+.value {
+  min-width: 2.6em;
+  color: var(--minerva-ink);
+  font-variant-numeric: tabular-nums;
+}

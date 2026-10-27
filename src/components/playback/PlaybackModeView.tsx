@@ -7,11 +7,13 @@ import {
   PresentationRibbon,
   usePresentationNavHidden,
 } from "@/components/playback/Presentation";
+import { VolumeStoryExporter } from "@/components/playback/VolumeStoryExporter";
 import { ChannelPanel } from "@/components/shared/channel/ChannelPanel";
 import type { DicomIndex } from "@/lib/imaging/dicomIndex";
 import type { OmeLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Image } from "@/lib/stores/documentStore";
 import type { StoryExportMode } from "@/lib/storyExport/storyBundle";
+import { useVolumeImage } from "@/lib/volume/imsVolume";
 import styles from "./PlaybackModeView.module.css";
 
 export type PlaybackModeViewProps = {
@@ -52,6 +54,7 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
   const exporting = props.ioState === "EXPORTING";
   const folderPrompt = props.exportFolderPrompt;
   const overlayOpen = exporting || !!folderPrompt;
+  const hasVolume = !!useVolumeImage();
   const exporterProps = {
     stopExport: props.stopExport,
     dicomIndexList: props.dicomIndexList,
@@ -136,7 +139,14 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
         </div>
       ) : exporting ? (
         <div className={styles.exportOverlay}>
-          <ImageExporter {...exporterProps} />
+          {hasVolume ? (
+            <VolumeStoryExporter
+              directory_handle={exporterProps.directory_handle}
+              stopExport={exporterProps.stopExport}
+            />
+          ) : (
+            <ImageExporter {...exporterProps} />
+          )}
         </div>
       ) : null}
     </div>

@@ -78,6 +78,16 @@
   color: var(--minerva-quiet);
 }
 
+/* One option per line (3D export: splat training, size). */
+.exportOption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  margin-top: 0.6em;
+  font-size: 0.9em;
+}
+
 .transferToggle {
   display: flex;
   gap: 0.5em;

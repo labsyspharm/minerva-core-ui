@@ -18,6 +18,7 @@ import type {
   ChannelGroup,
   ClassView,
   StoryShape,
+  View3d,
 } from "../stores/documentSchema";
 
 export type {
@@ -129,6 +130,8 @@ export type ConfigWaypoint = WaypointProperties & {
   name?: string;
   /** Story `waypoints[].classViews`. */
   classViews?: ClassView[];
+  /** Story `waypoints[].view3d`: camera + render settings on a 3D volume. */
+  View3d?: View3d;
 };
 
 type ExtractDistributions = (

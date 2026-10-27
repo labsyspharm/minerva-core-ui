@@ -164,6 +164,9 @@ importers:
       idb-keyval:
         specifier: ^6.2.1
         version: 6.2.2
+      kiln-render:
+        specifier: link:../kiln-render
+        version: link:../kiln-render
       lefthook:
         specifier: ^2.1.1
         version: 2.1.1
@@ -240,6 +243,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.3.1
         version: 4.5.1(vite@5.4.19(@types/node@20.17.57))
+      '@webgpu/types':
+        specifier: 0.1.69
+        version: 0.1.69
       eslint:
         specifier: ^9.7.0
         version: 9.28.0
@@ -1735,6 +1741,9 @@ packages:
       '@luma.gl/engine': 9.3.3
       '@luma.gl/shadertools': 9.3.3
       '@luma.gl/webgl': 9.3.3
+
+  '@webgpu/types@0.1.69':
+    resolution: {integrity: sha512-RPmm6kgRbI8e98zSD3RVACvnuktIja5+yLgDAkTmxLr90BEwdTXRQWNLF3ETTTyH/8mKhznZuN5AveXYFEsMGQ==}
 
   '@zarrita/storage@0.1.4':
     resolution: {integrity: sha512-qURfJAQcQGRfDQ4J9HaCjGaj3jlJKc66bnRk6G/IeLUsM7WKyG7Bzsuf1EZurSXyc0I4LVcu6HaeQQ4d3kZ16g==}
@@ -5669,6 +5678,8 @@ snapshots:
     transitivePeerDependencies:
       - '@deck.gl/geo-layers'
       - '@luma.gl/constants'
+
+  '@webgpu/types@0.1.69': {}
 
   '@zarrita/storage@0.1.4':
     dependencies:

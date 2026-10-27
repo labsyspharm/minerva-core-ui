@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import react from "@vitejs/plugin-react";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import svgr from "vite-plugin-svgr";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
@@ -12,10 +12,14 @@ import { gitSha } from "./vite.gitSha.js";
  * can copy them into the story folder (`storyBundle.ts`).
  */
 function writeBundleManifest(): Plugin {
+  // Also from `.env` (3D-volume builds self-host their player).
+  const selfHosted =
+    process.env.VITE_STORY_BUNDLE_URL ??
+    loadEnv("production", __dirname).VITE_STORY_BUNDLE_URL;
   return {
     name: "minerva-bundle-manifest",
     writeBundle(options, bundle) {
-      if (!process.env.VITE_STORY_BUNDLE_URL || !options.dir) return;
+      if (!selfHosted || !options.dir) return;
       const files = Object.keys(bundle);
       fs.writeFileSync(
         path.join(options.dir, "manifest.json"),
@@ -108,6 +112,15 @@ export default defineConfig({
           "./src/lib/featureTable/cdnStubs/duckdbBundles.ts",
         ),
       },
+      // Splat training is authoring-only — drop Brush's ~40MB wasm (kiln
+      // imports it as ./brush-js/brush_js.js).
+      {
+        find: /(?:^|\/)brush-js(?:\/brush_js\.js)?$/,
+        replacement: path.resolve(
+          __dirname,
+          "./src/lib/volume/cdnStubs/brushJs.ts",
+        ),
+      },
       {
         find: "@",
         replacement: path.resolve(__dirname, "./src"),
@@ -140,9 +153,17 @@ export default defineConfig({
       fileName: () => "minerva.js",
     },
     rollupOptions: {
+      // minerva.js holds the code itself, not a facade re-exporting a chunk.
+      preserveEntrySignatures: "allow-extension",
       output: {
         exports: "named",
-        inlineDynamicImports: true,
+        // Everything stays in minerva.js but kiln-render (~2 MB, with its
+        // codecs and trainer stub), imported on demand into its own chunks.
+        manualChunks: (id) =>
+          /[\\/]kiln-render[\\/]|[\\/]cdnStubs[\\/]brushJs\.ts$/.test(id)
+            ? undefined
+            : "minerva",
+        chunkFileNames: "assets/[name]-[hash].js",
         // Keep CSS as minerva.css; hash other assets (fonts, workers).
         assetFileNames: (info) => {
           const name = info.names?.[0] ?? info.name ?? "asset";

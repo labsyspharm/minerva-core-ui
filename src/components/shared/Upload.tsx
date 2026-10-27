@@ -120,6 +120,10 @@ type UploadProps = {
   onImportDicomWeb?: (req: {
     url: string;
   }) => Promise<OmeImportResult | undefined> | OmeImportResult | undefined;
+  /** 3D volume (Imaris `.ims` URL); replaces the story's images. */
+  onImportVolume?: (req: {
+    url: string;
+  }) => Promise<OmeImportResult | undefined> | OmeImportResult | undefined;
   /** Local handles present but Chrome revoked access after reload. */
   needsFileAccess?: boolean;
   onRequestFileAccess?: () => void | Promise<void>;
@@ -161,11 +165,12 @@ type PendingLocal = {
 type PendingUrl = { kind: "url"; url: string };
 type PendingSource = PendingLocal | PendingUrl;
 
-type OverlayFormat = "ome-tiff" | "dicomweb";
+type OverlayFormat = "ome-tiff" | "dicomweb" | "volume";
 
 const FORMAT_OPTIONS: { format: OverlayFormat; label: string }[] = [
   { format: "ome-tiff", label: "OME-TIFF" },
   { format: "dicomweb", label: "DICOMweb" },
+  { format: "volume", label: "3D volume (Imaris)" },
 ];
 
 function FormatChip({
@@ -323,6 +328,7 @@ const Upload = (props: UploadProps) => {
     lastOmeTiffUrl = null,
     onImportOme,
     onImportDicomWeb,
+    onImportVolume,
     needsFileAccess = false,
     onRequestFileAccess,
     missingHandleKeys = [],
@@ -696,6 +702,20 @@ const Upload = (props: UploadProps) => {
         !dicomAllowed && overlayFormat === "dicomweb"
           ? "ome-tiff"
           : overlayFormat;
+
+      if (format === "volume") {
+        if (pending.kind !== "url") {
+          setImportError("3D volumes are opened from an http(s) URL.");
+          return;
+        }
+        if (!onImportVolume) {
+          setImportError("3D volume import is unavailable.");
+          return;
+        }
+        const result = await onImportVolume({ url: pending.url });
+        if (result && result.ok === false) setImportError(result.error);
+        return;
+      }
 
       if (format === "dicomweb") {
         if (pending.kind !== "url") {

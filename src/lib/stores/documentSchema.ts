@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DEFAULT_DENSITY } from "@/lib/volume/view3d";
 import {
   normalizeFeatureTableSource,
   normalizeWaypointRecord,
@@ -161,11 +162,44 @@ export const ImageSourceDicomWebSchema = z.object({
   modality: z.string(),
 });
 
+/** How a 3D volume is drawn: volume rendering, maximum projection, surface. */
+export const RenderModeSchema = z.enum(["dvr", "mip", "iso"]);
+
+/**
+ * Gaussian splats trained from the volume for one channel group in one render
+ * mode (written by story export). With `channelId`, the entry holds that one
+ * channel, trained in white and tinted with the live channel colour, so the
+ * look is the set of its channels' entries; without, the look is this one
+ * entry: the whole group in its colours. `url` is relative to `document.json`
+ * or absolute.
+ */
+export const VolumeSplatsSchema = z.object({
+  groupId: IdSchema,
+  channelId: IdSchema.optional(),
+  /** Render mode the splats reproduce. */
+  renderMode: RenderModeSchema,
+  /** Density the volume rendering used (it changes the look in "dvr"). */
+  density: z.number().positive().optional(),
+  url: z.string().min(1),
+  count: z.number().int().positive(),
+  /** Held-out PSNR (dB) of the splats against the volume render. */
+  psnr: z.number().optional(),
+});
+
+/** 3D volume rendered by kiln-render (WebGPU); never read by the 2D viewer. */
+export const ImageSourceVolumeSchema = z.object({
+  kind: z.literal("volume"),
+  url: z.string().min(1),
+  format: z.literal("ims"),
+  splats: z.array(VolumeSplatsSchema).optional(),
+});
+
 export const ImageSourceSchema = z.discriminatedUnion("kind", [
   ImageSourceJpegSchema,
   ImageSourceUrlSchema,
   ImageSourceLocalSchema,
   ImageSourceDicomWebSchema,
+  ImageSourceVolumeSchema,
 ]);
 
 export const ImageSchema = z.object({
@@ -280,6 +314,41 @@ const ClassViewSchema = z.object({
     .default([]),
 });
 
+const Vec3Schema = z.tuple([z.number(), z.number(), z.number()]);
+
+/** See {@link View3dSchema}. Spelled out: zod infers open tuples here. */
+export type View3d = {
+  camera: [number, number, number, number, number, number];
+  clipMin: [number, number, number];
+  clipMax: [number, number, number];
+  renderMode: "dvr" | "mip" | "iso";
+  density: number;
+  depthCue: number;
+};
+
+/**
+ * Camera and render settings of a waypoint on a 3D volume. `camera` is the
+ * orbit [rotX, rotY, distance, targetX, targetY, targetZ] in the renderer's
+ * normalized volume space; clip bounds are fractions of each axis.
+ */
+export const View3dSchema = z.object({
+  camera: z.tuple([
+    z.number(),
+    z.number(),
+    z.number(),
+    z.number(),
+    z.number(),
+    z.number(),
+  ]),
+  // Stories saved by early 3D builds stored only the camera.
+  clipMin: Vec3Schema.default([0, 0, 0]),
+  clipMax: Vec3Schema.default([1, 1, 1]),
+  renderMode: RenderModeSchema.default("dvr"),
+  density: z.number().positive().default(DEFAULT_DENSITY),
+  /** Depth fade, 0 (off) to 1: colour dims with distance from the camera. */
+  depthCue: z.number().min(0).max(1).default(0),
+}) as unknown as z.ZodType<View3d>;
+
 const waypointObjectZ = z.object({
   id: IdSchema,
   groupId: IdSchema.optional(),
@@ -291,6 +360,8 @@ const waypointObjectZ = z.object({
   shapeIds: z.array(IdSchema),
   /** No entry for a mask means every class in the table palette. */
   classViews: z.array(ClassViewSchema).default([]),
+  /** Set when the waypoint was saved on a 3D volume. */
+  view3d: View3dSchema.optional(),
 });
 
 export const WaypointSchema = z.preprocess((raw) => {
@@ -401,6 +472,8 @@ export type Shape = z.infer<typeof ShapeSchema>;
 
 export type Image = z.infer<typeof ImageSchema>;
 export type ImageSource = z.infer<typeof ImageSourceSchema>;
+export type VolumeSplats = z.infer<typeof VolumeSplatsSchema>;
+export type ImageSourceVolume = z.infer<typeof ImageSourceVolumeSchema>;
 /** Resolved placement. Pose fields are always set. `umPerPixel` is omitted to use the file. */
 export type ImageOrientation = {
   rotationDegrees: number;

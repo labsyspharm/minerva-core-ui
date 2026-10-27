@@ -25,7 +25,8 @@ const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
 /** One-shot handoff: library stash → story page consumes after navigate. */
 type PendingLibraryImport =
   | ({ kind: "ome" } & Omit<OmeImportRequest, "append">)
-  | { kind: "dicomWeb"; url: string };
+  | { kind: "dicomWeb"; url: string }
+  | { kind: "volume"; url: string };
 
 let pendingLibraryImport: PendingLibraryImport | null = null;
 
@@ -37,16 +38,20 @@ export function hasPendingLibraryImport(): boolean {
 export function ConsumePendingLibraryImport({
   importOme,
   importDicomWeb,
+  importVolume,
   onSettled,
 }: {
   importOme: (req: OmeImportRequest) => Promise<OmeImportResult>;
   importDicomWeb: (req: { url: string }) => Promise<OmeImportResult>;
+  importVolume: (req: { url: string }) => Promise<OmeImportResult>;
   onSettled: () => void;
 }) {
   const importOmeRef = React.useRef(importOme);
   importOmeRef.current = importOme;
   const importDicomWebRef = React.useRef(importDicomWeb);
   importDicomWebRef.current = importDicomWeb;
+  const importVolumeRef = React.useRef(importVolume);
+  importVolumeRef.current = importVolume;
 
   React.useEffect(() => {
     const pending = pendingLibraryImport;
@@ -58,13 +63,15 @@ export function ConsumePendingLibraryImport({
     const imported =
       pending.kind === "dicomWeb"
         ? importDicomWebRef.current({ url: pending.url })
-        : importOmeRef.current({
-            role: pending.role,
-            append: false,
-            rgbDisplay: pending.rgbDisplay,
-            channelNames: pending.channelNames,
-            source: pending.source,
-          });
+        : pending.kind === "volume"
+          ? importVolumeRef.current({ url: pending.url })
+          : importOmeRef.current({
+              role: pending.role,
+              append: false,
+              rgbDisplay: pending.rgbDisplay,
+              channelNames: pending.channelNames,
+              source: pending.source,
+            });
     // Always settle — Strict Mode remounts this effect after pending is already
     // taken; skipping onSettled leaves the story "Loading…" overlay stuck.
     void imported
@@ -440,6 +447,12 @@ export function MinervaLibraryPage() {
                   onImportDicomWeb={(req) =>
                     startStoryWithPendingImport({
                       kind: "dicomWeb",
+                      url: req.url,
+                    })
+                  }
+                  onImportVolume={(req) =>
+                    startStoryWithPendingImport({
+                      kind: "volume",
                       url: req.url,
                     })
                   }
