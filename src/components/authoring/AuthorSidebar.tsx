@@ -169,33 +169,25 @@ export type AuthorViewProps = {
   noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
   contrastEditable?: boolean;
-  /** Story preview pane shown instead of the sidebar; the viewer stays mounted. */
-  previewNav?: ReactNode;
   /**
-   * Keep `previewNav` mounted (playback effects) but show the sidebar.
-   * Used when the pane renders nothing, e.g. one waypoint and no content.
+   * Story preview pane shown instead of the sidebar; the viewer stays mounted.
+   * When the pane renders nothing, its column collapses and the viewer fills the width.
    */
-  previewNavHidden?: boolean;
+  previewNav?: ReactNode;
 };
 
 export function AuthorView(props: AuthorViewProps) {
   const [expanded, setExpanded] = useState(true);
-  const hasPreview = props.previewNav != null;
-  const previewing = hasPreview && !props.previewNavHidden;
+  const previewing = props.previewNav != null;
 
   return (
     <AuthorViewport
       collapsed={!expanded}
       className={previewing ? styles.viewportPreview : undefined}
     >
-      {hasPreview ? (
-        <div
-          className={previewing ? styles.previewNav : styles.previewNavParked}
-        >
-          {props.previewNav}
-        </div>
-      ) : null}
-      {previewing ? null : (
+      {previewing ? (
+        <div className={styles.previewNav}>{props.previewNav}</div>
+      ) : (
         <>
           <AuthorSidebar
             imagesPanel={props.imagesPanel}
