@@ -157,19 +157,10 @@ class MozJpegDecoder extends BaseDecoder {
 }
 
 let pakoDeflateDecoder!: Promise<
-  new (
-    fileDirectory: FileDirectory,
-  ) => { decodeBlock(buffer: ArrayBuffer): ArrayBuffer }
+  new () => { decodeBlock(buffer: ArrayBuffer): ArrayBuffer }
 >;
 
 class NativeDeflateDecoder extends BaseDecoder {
-  fileDirectory: FileDirectory;
-
-  constructor(fileDirectory: FileDirectory) {
-    super();
-    this.fileDirectory = fileDirectory;
-  }
-
   async decodeBlock(buffer: ArrayBuffer): Promise<ArrayBuffer> {
     try {
       const inflated = new Blob([buffer])
@@ -178,7 +169,7 @@ class NativeDeflateDecoder extends BaseDecoder {
       return await new Response(inflated).arrayBuffer();
     } catch {
       const Fallback = await pakoDeflateDecoder;
-      return new Fallback(this.fileDirectory).decodeBlock(buffer);
+      return new Fallback().decodeBlock(buffer);
     }
   }
 }

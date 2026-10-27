@@ -7,6 +7,10 @@ import {
   toFile,
 } from "@/lib/imaging/filesystem";
 import {
+  type ImportFileKind,
+  importFileKind,
+} from "@/lib/imaging/importFileKind";
+import {
   getPersistedFileHandle,
   putFileHandle,
 } from "@/lib/persistence/fileHandles";
@@ -31,7 +35,7 @@ export type FileHandlerProps = {
   useLaunchQueue?: boolean;
   children: (props: {
     handles: Handle.File[];
-    onAllow: () => Promise<Handle.File[]>;
+    onAllow: (kinds?: readonly ImportFileKind[]) => Promise<Handle.File[]>;
     onRecall: (options?: {
       notifyRestored?: boolean;
     }) => Promise<Handle.File[]>;
@@ -98,9 +102,15 @@ export const FileHandler = ({
     [storageKey],
   );
 
-  const onAllow = async (): Promise<Handle.File[]> => {
-    const newHandles = await toFile();
-    if (newHandles.length > 0) {
+  const onAllow = async (
+    kinds?: readonly ImportFileKind[],
+  ): Promise<Handle.File[]> => {
+    const newHandles = await toFile(kinds);
+    // Annotation / CSV / story picks must not replace the recent image handle.
+    if (
+      newHandles.length > 0 &&
+      importFileKind(newHandles[0].name) === "image"
+    ) {
       setHandles(newHandles);
       if (isPersistableFileHandle(newHandles[0])) {
         await putFileHandle(storageKey, newHandles[0]);

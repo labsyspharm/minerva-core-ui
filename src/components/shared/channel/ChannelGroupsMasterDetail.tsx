@@ -631,15 +631,18 @@ export const ChannelGroupsMasterDetail = (
   const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] =
     React.useState<Map<string, Set<string>>>(() => new Map());
   const [channelNameFilter, setChannelNameFilter] = React.useState("");
+  const channelSearch = uniqueSourceChannels.length > 1;
   const filteredAllChannels = React.useMemo(() => {
-    const matched = uniqueSourceChannels.filter((sc) =>
-      channelNameMatchesQuery(sc.name, channelNameFilter),
-    );
+    const matched = channelSearch
+      ? uniqueSourceChannels.filter((sc) =>
+          channelNameMatchesQuery(sc.name, channelNameFilter),
+        )
+      : uniqueSourceChannels;
     if (!isRgbDisplaySource(uniqueSourceChannels)) return matched;
     const first = matched.find((sc) => isImageChannel(sc));
     const rest = matched.filter((sc) => !isImageChannel(sc));
     return first ? [first, ...rest] : matched;
-  }, [uniqueSourceChannels, channelNameFilter]);
+  }, [uniqueSourceChannels, channelNameFilter, channelSearch]);
   const showAllChannelsList = uniqueSourceChannels.length > 0;
 
   React.useEffect(() => {
@@ -1073,21 +1076,6 @@ export const ChannelGroupsMasterDetail = (
       }),
     }));
     setImagesAndChannelGroups(nextImages, nextGroups);
-    useAppStore.getState().setMaskVisualizationPreview(null);
-  };
-
-  const previewMaskVisualization = (
-    sourceId: string,
-    viz: MaskVisualization | null,
-  ) => {
-    useAppStore.getState().setMaskVisualizationPreview(
-      viz
-        ? {
-            sourceChannelId: sourceId,
-            visualization: viz,
-          }
-        : null,
-    );
   };
 
   const runOptimizePaletteForGroup = async (groupId: string) => {
@@ -1490,9 +1478,6 @@ export const ChannelGroupsMasterDetail = (
                                   group.id,
                                   gc.id,
                                 ),
-                              onMaskVisualizationPreview: (viz) => {
-                                previewMaskVisualization(gc.channelId, viz);
-                              },
                             }
                           : !rgbDisplay
                             ? {
@@ -1760,8 +1745,6 @@ export const ChannelGroupsMasterDetail = (
                   ...featureTableRowExtras(sc.id, featureTables),
                   onMaskVisualizationChange: (viz) =>
                     syncMaskVisualization(sc.id, viz),
-                  onMaskVisualizationPreview: (viz) =>
-                    previewMaskVisualization(sc.id, viz),
                 }
               : colorSwatch)}
             trailing={
@@ -1808,18 +1791,20 @@ export const ChannelGroupsMasterDetail = (
           <>
             <div className={styles.treeSeparator}>
               <span className={styles.treeSeparatorLabel}>All channels</span>
-              <input
-                className={styles.channelFilter}
-                type="text"
-                value={channelNameFilter}
-                placeholder="Search..."
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                aria-label="Filter channels by name"
-                onChange={(e) => setChannelNameFilter(e.target.value)}
-              />
+              {channelSearch ? (
+                <input
+                  className={styles.channelFilter}
+                  type="text"
+                  value={channelNameFilter}
+                  placeholder="Search..."
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  aria-label="Filter channels by name"
+                  onChange={(e) => setChannelNameFilter(e.target.value)}
+                />
+              ) : null}
             </div>
             {filteredAllChannels.length === 0 ? (
               <div className={styles.filterEmpty}>No matching channels</div>
@@ -1858,13 +1843,7 @@ export const ChannelGroupsMasterDetail = (
               imageSelectionMask.maskVisualization ?? DEFAULT_MASK_VISUALIZATION
             }
             maskAriaLabel="Selection mask display"
-            onMaskVisualizationChange={(viz) => {
-              setImageSelectionMaskVisualization(viz);
-              previewMaskVisualization(SELECTION_MASK_CHANNEL_KEY, null);
-            }}
-            onMaskVisualizationPreview={(viz) =>
-              previewMaskVisualization(SELECTION_MASK_CHANNEL_KEY, viz)
-            }
+            onMaskVisualizationChange={setImageSelectionMaskVisualization}
             fixedColorHex="ffcc00"
             trailing={
               <button

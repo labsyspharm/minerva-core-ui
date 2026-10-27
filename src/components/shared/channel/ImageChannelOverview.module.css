@@ -168,4 +168,5 @@
   min-width: 0;
   box-sizing: border-box;
   border: 1px solid #fff;
+  padding-inline: 10px;
 }

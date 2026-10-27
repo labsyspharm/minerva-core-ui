@@ -248,7 +248,6 @@ type ChannelRowProps = {
   isMask?: boolean;
   maskVisualization?: MaskVisualization;
   onMaskVisualizationChange?: (viz: MaskVisualization) => void;
-  onMaskVisualizationPreview?: (viz: MaskVisualization | null) => void;
   maskFooter?: ReactNode;
   maskAction?: ReactNode;
   maskAriaLabel?: string;
@@ -327,7 +326,6 @@ export function ChannelRow(props: ChannelRowProps) {
     isMask,
     maskVisualization,
     onMaskVisualizationChange,
-    onMaskVisualizationPreview,
     maskFooter,
     maskAction,
     maskAriaLabel,
@@ -415,20 +413,6 @@ export function ChannelRow(props: ChannelRowProps) {
           />
         ) : null}
         <div className={styles.channelRowTrailing}>{trailing}</div>
-        {showMask && onMaskVisualizationChange ? (
-          <OpacitySlider
-            value={maskVisualization.opacity}
-            onCommit={(opacity) =>
-              onMaskVisualizationChange({ ...maskVisualization, opacity })
-            }
-            onPreview={(opacity) =>
-              onMaskVisualizationPreview?.(
-                opacity === null ? null : { ...maskVisualization, opacity },
-              )
-            }
-            ariaLabel={maskAriaLabel ?? name.name}
-          />
-        ) : null}
         {showMask ? maskAction : null}
       </div>
       {showMask && maskFooter ? (

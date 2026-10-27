@@ -1,6 +1,7 @@
 import { loadOmeTiff, TiffPixelSource } from "@hms-dbmi/viv";
 import { fileOpen } from "browser-fs-access";
 import { fromBlob, fromUrl, GeoTIFFImage } from "geotiff";
+import { type ImportFileKind, importFilePickerOptions } from "./importFileKind";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
 import type { DecodePool } from "./omeDecodePool";
 import { omeChannelElements, omePixelsElement, parseOmeXml } from "./omeXml";
@@ -48,7 +49,7 @@ type FindFileIn = {
   handle: Handle.File;
 };
 type FindFile = (i: FindFileIn) => Promise<boolean>;
-type ToFiles = () => Promise<Handle.File[]>;
+type ToFiles = (kinds?: readonly ImportFileKind[]) => Promise<Handle.File[]>;
 
 /** Viv's published OME metadata types are looser than our app `Loader` shape. */
 function asAppLoader(image: Awaited<ReturnType<typeof loadOmeTiff>>): Loader {
@@ -554,12 +555,11 @@ const findFile: FindFile = async (opts) => {
   }
 };
 
-const toFile: ToFiles = async () => {
+/** Single-file picker for `kinds`; defaults to OME-TIFF images. */
+const toFile: ToFiles = async (kinds = ["image"]) => {
   try {
     const file = await fileOpen({
-      description: "OME-TIFF images",
-      mimeTypes: ["image/tiff"],
-      extensions: [".tif", ".tiff", ".ome.tif", ".ome.tiff"],
+      ...importFilePickerOptions(kinds),
       multiple: false,
     });
     if (file.handle) return [file.handle];
