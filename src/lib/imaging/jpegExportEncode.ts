@@ -50,10 +50,34 @@ function clampPixelsToRgba(
   }
 }
 
+const HOST_LITTLE_ENDIAN = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1;
+
+let cubeRootRgbaLut: Uint32Array | null = null;
+
 function cubeRootPixelsToRgba(
   out: Uint8ClampedArray,
   pixels: ArrayLike<number>,
 ): void {
+  if (
+    HOST_LITTLE_ENDIAN &&
+    out.byteOffset % 4 === 0 &&
+    (pixels instanceof Uint16Array ||
+      pixels instanceof Uint8Array ||
+      pixels instanceof Uint8ClampedArray)
+  ) {
+    if (!cubeRootRgbaLut) {
+      cubeRootRgbaLut = new Uint32Array(65536);
+      for (let p = 0; p < 65536; p++) {
+        const v = encodeCubeRootU16ToU8(p);
+        // Little-endian RGBA word: A in the high byte, R = G = B = v.
+        cubeRootRgbaLut[p] = (0xff000000 | (v * 0x010101)) >>> 0;
+      }
+    }
+    const out32 = new Uint32Array(out.buffer, out.byteOffset, pixels.length);
+    for (let i = 0; i < pixels.length; i++)
+      out32[i] = cubeRootRgbaLut[pixels[i]];
+    return;
+  }
   for (let i = 0; i < pixels.length; i++) {
     const v = encodeCubeRootU16ToU8(pixels[i]);
     const o = i * 4;
@@ -133,6 +157,18 @@ async function encodeRgbaToJpeg(
   });
 }
 
+const constantTileJpegs = new Map<string, ArrayBuffer>();
+const MAX_CONSTANT_TILE_JPEGS = 64;
+
+function constantPixel(pixels: ArrayLike<number>): number | null {
+  if (pixels.length === 0) return null;
+  const v = pixels[0];
+  for (let i = 1; i < pixels.length; i++) {
+    if (pixels[i] !== v) return null;
+  }
+  return v;
+}
+
 /** Encode grayscale pixels to JPEG (contrast-windowed or cube-root transfer). */
 export async function encodeGrayscaleJpeg(
   width: number,
@@ -142,6 +178,52 @@ export async function encodeGrayscaleJpeg(
   upperLimit: number,
   quality = JPEG_EXPORT_QUALITY,
   transfer: JpegExportTransfer = "contrast",
+  padTileSize?: number,
+): Promise<ArrayBuffer> {
+  const encode = () =>
+    encodeGrayscalePixels(
+      width,
+      height,
+      pixels,
+      lowerLimit,
+      upperLimit,
+      quality,
+      transfer,
+      padTileSize,
+    );
+  const value = constantPixel(pixels);
+  if (value === null) return encode();
+  const key = [
+    transfer,
+    lowerLimit,
+    upperLimit,
+    quality,
+    width,
+    height,
+    padTileSize,
+    value,
+  ].join();
+  let jpeg = constantTileJpegs.get(key);
+  if (!jpeg) {
+    jpeg = await encode();
+    if (constantTileJpegs.size >= MAX_CONSTANT_TILE_JPEGS) {
+      const oldest = constantTileJpegs.keys().next().value;
+      if (oldest !== undefined) constantTileJpegs.delete(oldest);
+    }
+    constantTileJpegs.set(key, jpeg);
+  }
+  // Callers transfer the buffer they receive.
+  return jpeg.slice(0);
+}
+
+async function encodeGrayscalePixels(
+  width: number,
+  height: number,
+  pixels: ArrayLike<number>,
+  lowerLimit: number,
+  upperLimit: number,
+  quality: number,
+  transfer: JpegExportTransfer,
   padTileSize?: number,
 ): Promise<ArrayBuffer> {
   const rgba = new Uint8ClampedArray(

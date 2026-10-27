@@ -10,16 +10,14 @@ import {
   fileInDirectory,
   hasDirectoryPickerAccess,
 } from "@/lib/imaging/filesystem";
+import { importFilePickerOptions } from "@/lib/imaging/importFileKind";
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
-import {
-  folderByChannelIndexFromGroup,
-  JPEG_BAKED_CONTRAST_LIMIT,
-  jpegPyramidFolderName,
-} from "@/lib/imaging/jpegPyramid";
+import { jpegPyramidFolderName } from "@/lib/imaging/jpegPyramid";
 import {
   isRelativeOmeTiffUrl,
   jpegSourceNeedsLocalRoot,
 } from "@/lib/imaging/loadJpegFromDocument";
+import { jpegPyramidExportChannels } from "@/lib/imaging/omeTiffExport";
 import { isAbsoluteUrl } from "@/lib/imaging/sourceUrl";
 import { putBlob } from "@/lib/persistence/db";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
@@ -33,7 +31,6 @@ import type { DocumentData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
 import { fetchStoryDocument } from "@/lib/story/loadStoryDocument";
-import { withHostedSources } from "./hostedStory";
 import { withPortableJpegSources } from "./storyBundle";
 
 export { jpegSourceNeedsLocalRoot };
@@ -110,15 +107,34 @@ export function tileFetcherForDirectory(
 }
 
 /**
- * Folder names jpeg-pyramid export would write. Prefer channel groups; if none
- * contribute folders, fall back to image-level channels (same as import checks).
+ * Folder names jpeg-pyramid export would write. With images, this matches
+ * `jpegPyramidExportChannels` (per-image transfer, including ungrouped RGB).
  */
-export async function neededJpegPyramidFolderNames(
+async function neededJpegPyramidFolderNames(
   channelGroups: ReadonlyArray<DocumentData["channelGroups"][number]>,
   images?: DocumentData["images"],
   transfer: JpegExportTransfer = "contrast",
 ): Promise<Set<string>> {
   const names = new Set<string>();
+  if (images && images.length > 0) {
+    const exported = jpegPyramidExportChannels(
+      images,
+      [...channelGroups],
+      transfer,
+    );
+    await Promise.all(
+      exported.map(async (ch) => {
+        names.add(
+          await jpegPyramidFolderName(
+            ch.channelId,
+            ch.lowerLimit,
+            ch.upperLimit,
+          ),
+        );
+      }),
+    );
+    return names;
+  }
   await Promise.all(
     channelGroups.flatMap((g) =>
       g.channels.map(async (ch) => {
@@ -133,26 +149,6 @@ export async function neededJpegPyramidFolderNames(
       }),
     ),
   );
-  if (names.size === 0 && images) {
-    for (const im of images) {
-      if (im.source?.kind !== "jpeg" && im.source?.kind !== "local") continue;
-      const channelIndexById = Object.fromEntries(
-        im.channels.map((ch) => [ch.id, ch.index]),
-      );
-      const folders = await folderByChannelIndexFromGroup({
-        channels: im.channels.map((ch) => {
-          const { lowerLimit, upperLimit } = folderLimitsForTransfer(
-            transfer,
-            ch.lowerLimit ?? JPEG_BAKED_CONTRAST_LIMIT[0],
-            ch.upperLimit ?? JPEG_BAKED_CONTRAST_LIMIT[1],
-          );
-          return { channelId: ch.id, lowerLimit, upperLimit };
-        }),
-        channelIndexById,
-      });
-      for (const name of Object.values(folders)) names.add(name);
-    }
-  }
   return names;
 }
 
@@ -224,7 +220,11 @@ async function readDocumentJson(
     throw e;
   }
   const file = await fh.getFile();
-  return validateDocumentData(JSON.parse(await file.text()) as unknown);
+  const raw = JSON.parse(await file.text()) as unknown;
+  if (!looksLikeStoryJson(raw)) {
+    throw new Error("document.json is not a Minerva story.");
+  }
+  return validateDocumentData(raw);
 }
 
 /**
@@ -324,15 +324,86 @@ async function persistImportedStory(
 /** Pick a story JSON and open it. Image files are located from the story, one at a time. */
 export async function importStoryJsonFromPicker(): Promise<string> {
   const file = await fileOpen({
-    description: "Minerva story JSON",
-    mimeTypes: ["application/json"],
-    extensions: [".json"],
+    ...importFilePickerOptions(["story"]),
     multiple: false,
   });
-  const data = validateDocumentData(JSON.parse(await file.text()) as unknown);
+  return importStoryJsonFile(file);
+}
+
+/** Story arrays `validateDocumentData` reads; it defaults every missing one. */
+const STORY_JSON_KEYS = [
+  "waypoints",
+  "shapes",
+  "images",
+  "channelGroups",
+  "groups",
+  "channels",
+];
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * A Minerva story has `version` 1 or 2, a `metadata` object, or at least one
+ * story array that contains an object. An empty array is not enough.
+ */
+function looksLikeStoryJson(raw: unknown): boolean {
+  if (!isPlainObject(raw)) return false;
+  if (raw.version === "1" || raw.version === "2") return true;
+  if (isPlainObject(raw.metadata)) return true;
+  return STORY_JSON_KEYS.some((key) => {
+    const value = raw[key];
+    return Array.isArray(value) && value.some(isPlainObject);
+  });
+}
+
+/** Open a story JSON (picked or dropped) and return the new story id. */
+export async function importStoryJsonFile(file: File): Promise<string> {
+  const raw = JSON.parse(await file.text()) as unknown;
+  if (!looksLikeStoryJson(raw)) {
+    throw new Error(`${file.name} is not a Minerva story.`);
+  }
+  const data = validateDocumentData(raw);
   const base = file.name.replace(/\.json$/i, "").trim();
   const fallback = /^(document|story)$/i.test(base) ? "Imported Story" : base;
   return persistImportedStory(data, fallback);
+}
+
+/**
+ * Point every relative pixel and feature-table path at the published copy
+ * beside `documentUrl`, so the story keeps reading the hosted files.
+ * Absolute URLs stay; `//host` takes the document's scheme.
+ */
+function withHostedSources(
+  data: DocumentData,
+  documentUrl: string,
+): DocumentData {
+  const hosted = (url: string) => new URL(url.trim() || ".", documentUrl).href;
+  return {
+    ...data,
+    images: data.images.map((im) => {
+      const source = im.source;
+      if (source?.kind === "jpeg") {
+        // The pyramid root is a folder; loaders join tile paths onto it.
+        const url = hosted(source.url).replace(/\/$/, "");
+        return { ...im, source: { kind: "jpeg" as const, url } };
+      }
+      if (source?.kind === "url") {
+        const url = hosted(source.url);
+        return { ...im, source: { kind: "url" as const, url } };
+      }
+      return im;
+    }),
+    featureTables: data.featureTables.map((table) =>
+      table.source.kind === "url"
+        ? {
+            ...table,
+            source: { kind: "url" as const, url: hosted(table.source.url) },
+          }
+        : table,
+    ),
+  };
 }
 
 /**

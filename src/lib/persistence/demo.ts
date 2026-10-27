@@ -21,7 +21,7 @@ import { normalizeWaypointToBounds } from "@/lib/waypoints/waypoint";
 import { getStoryRecord, saveStoryDocument } from "./storyPersistence";
 
 /** Stable Dexie row id so `pnpm run demo` always has one spine on the library shelf. */
-export const DEMO_SHELF_STORY_ID = "018fd3a0-0000-7000-8000-00000000de11";
+const DEMO_SHELF_STORY_ID = "018fd3a0-0000-7000-8000-00000000de11";
 
 export const DEMO_CRC_OME_TIFF_URL =
   "https://lsp-public-data.s3.amazonaws.com/lin-2021-crc-atlas/CRC01-096-097.ome.tif";
@@ -36,6 +36,9 @@ export const DEMO_SHELF_TITLE =
 /** Pixel size of CRC01-096-097.ome.tif (from OME metadata). */
 const CRC_SIZE_X = 26139;
 const CRC_SIZE_Y = 27120;
+
+/** PhysicalSizeX/Y of CRC01-096-097.ome.tif. Shapes are stored in µm. */
+const CRC_UM_PER_PIXEL = 0.325;
 
 /** Nominal authoring viewport used only to bake Pan/Zoom → bounds at seed time. */
 const SEED_VIEWPORT_W = 1280;
@@ -196,8 +199,8 @@ export function buildDemoCrcDocumentData(): DocumentData {
   const { stories: migrated, shapes } = migrateLegacyWaypointShapes(
     structuredClone(configWaypoints),
     [],
-    CRC_SIZE_X,
-    CRC_SIZE_Y,
+    CRC_SIZE_X * CRC_UM_PER_PIXEL,
+    CRC_SIZE_Y * CRC_UM_PER_PIXEL,
   );
 
   const waypoints = migrated.map((story) => {

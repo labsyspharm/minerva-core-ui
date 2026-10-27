@@ -64,7 +64,6 @@ const WaypointsList = (props: WaypointsListProps) => {
   const canEdit = !viewOnly;
 
   const waypoints = useDocumentStore((s) => s.waypoints);
-  const shapes = useDocumentStore((s) => s.shapes);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const featureTables = useDocumentStore((s) => s.featureTables);
@@ -89,7 +88,6 @@ const WaypointsList = (props: WaypointsListProps) => {
     addStory,
     updateStory,
     reorderStories,
-    importWaypointShapes,
     persistImportedShapesToStory,
     setTargetWaypointCamera,
     captureSquareViewportThumbnail,
@@ -97,9 +95,12 @@ const WaypointsList = (props: WaypointsListProps) => {
     setShowSquareViewportOverlay,
     setAuthoringWaypointEditorOpen,
     setAuthoringWaypointShapesIndex,
+    setOpenWaypointId,
     handleToolChange,
     setImageSelectionMaskFromWaypoint,
     layersPanelSelectedShapeIds,
+    editWaypointOnOpen,
+    setEditWaypointOnOpen,
   } = useAppStore();
 
   const previousDetailStoryIdRef = React.useRef<string | null>(null);
@@ -125,6 +126,12 @@ const WaypointsList = (props: WaypointsListProps) => {
     setAuthoringWaypointEditorOpen(detailStoryId != null);
     return () => setAuthoringWaypointEditorOpen(false);
   }, [detailStoryId, setAuthoringWaypointEditorOpen]);
+
+  // No cleanup: the open waypoint is remembered while another tab is showing, so the
+  // canvas keeps it (see useWaypointCanvasShapes) and imports target it.
+  React.useEffect(() => {
+    setOpenWaypointId(detailStoryId);
+  }, [detailStoryId, setOpenWaypointId]);
 
   React.useEffect(() => {
     const prev = previousDetailStoryIdRef.current;
@@ -173,8 +180,6 @@ const WaypointsList = (props: WaypointsListProps) => {
   >(null);
   const pendingThumbnailCaptureTimeoutRef = React.useRef<number | null>(null);
   const overlayFlashTimeoutRef = React.useRef<number | null>(null);
-  /** Last waypoint index we ran import for (persist this before switching). */
-  const previousImportStoryIndexRef = React.useRef<number | null>(null);
 
   const detailStoryIndex = detailStoryId
     ? waypoints.findIndex((s) => s.id === detailStoryId)
@@ -192,40 +197,6 @@ const WaypointsList = (props: WaypointsListProps) => {
     setAuthoringWaypointShapesIndex(detailStoryIndex);
     return () => setAuthoringWaypointShapesIndex(null);
   }, [detailStoryId, detailStoryIndex, setAuthoringWaypointShapesIndex]);
-
-  // Auto-import shapes for the waypoint in detail (if open), else the active list row.
-  React.useEffect(() => {
-    if (waypoints.length === 0) return;
-    if (imageWidth === 0 || imageHeight === 0) return;
-
-    const storyIndex =
-      detailStoryId != null && detailStoryIndex >= 0
-        ? detailStoryIndex
-        : (activeStoryIndex ?? 0);
-    const story = waypoints[storyIndex];
-    if (!story) {
-      useAppStore.getState().clearShapes();
-      return;
-    }
-
-    const prev = previousImportStoryIndexRef.current;
-    const store = useAppStore.getState();
-    if (prev !== null && prev !== storyIndex) {
-      store.persistImportedShapesToStory(prev);
-    }
-    previousImportStoryIndexRef.current = storyIndex;
-
-    importWaypointShapes(story, true, shapes);
-  }, [
-    waypoints,
-    activeStoryIndex,
-    detailStoryId,
-    detailStoryIndex,
-    imageWidth,
-    imageHeight,
-    shapes,
-    importWaypointShapes,
-  ]);
 
   // A class edit changes the picture, so retake a thumbnail that is already
   // set. The capture rides on the edit's undo step instead of adding one.
@@ -280,20 +251,8 @@ const WaypointsList = (props: WaypointsListProps) => {
       }
       if (overlayFlashTimeoutRef.current !== null) {
         window.clearTimeout(overlayFlashTimeoutRef.current);
-      }
-      const p = previousImportStoryIndexRef.current;
-      if (p !== null) {
-        const doc = useDocumentStore.getState();
-        const st = useAppStore.getState();
-        const im = doc.images[0];
-        const f = effectiveWorldFrame(
-          st.viewerWorldFrame,
-          im?.sizeX ?? 0,
-          im?.sizeY ?? 0,
-        );
-        if (f.worldWidth > 0 && f.worldHeight > 0) {
-          useAppStore.getState().persistImportedShapesToStory(p);
-        }
+        // Unmounting mid-flash (e.g. a tab switch) would leave the square up.
+        useAppStore.getState().setShowSquareViewportOverlay(false);
       }
     };
   }, []);
@@ -441,28 +400,44 @@ const WaypointsList = (props: WaypointsListProps) => {
     }, delayMs);
   };
 
+  const showStoryIndex = React.useCallback(
+    (index: number) => {
+      const priorActive = useAppStore.getState().activeStoryIndex;
+      if (
+        priorActive !== null &&
+        priorActive !== index &&
+        pendingThumbnailCaptureTimeoutRef.current !== null
+      ) {
+        window.clearTimeout(pendingThumbnailCaptureTimeoutRef.current);
+        pendingThumbnailCaptureTimeoutRef.current = null;
+      }
+
+      setActiveStory(index);
+
+      const storyForNav = documentWaypoints(useDocumentStore.getState())[index];
+      applyStoryChannelGroup(storyForNav);
+      if (storyForNav && imageWidth > 0 && imageHeight > 0) {
+        const auth = useAppStore
+          .getState()
+          .waypointAuthoring.get(storyForNav.id);
+        setTargetWaypointCamera(waypointToConfigWaypoint(storyForNav, auth));
+      }
+      return storyForNav;
+    },
+    [
+      applyStoryChannelGroup,
+      imageHeight,
+      imageWidth,
+      setActiveStory,
+      setTargetWaypointCamera,
+    ],
+  );
+
   const activateStoryIndex = (
     index: number,
     shouldCaptureThumbnail = false,
   ) => {
-    const priorActive = useAppStore.getState().activeStoryIndex;
-    if (
-      priorActive !== null &&
-      priorActive !== index &&
-      pendingThumbnailCaptureTimeoutRef.current !== null
-    ) {
-      window.clearTimeout(pendingThumbnailCaptureTimeoutRef.current);
-      pendingThumbnailCaptureTimeoutRef.current = null;
-    }
-
-    setActiveStory(index);
-
-    const storyForNav = documentWaypoints(useDocumentStore.getState())[index];
-    applyStoryChannelGroup(storyForNav);
-    if (storyForNav && imageWidth > 0 && imageHeight > 0) {
-      const auth = useAppStore.getState().waypointAuthoring.get(storyForNav.id);
-      setTargetWaypointCamera(waypointToConfigWaypoint(storyForNav, auth));
-    }
+    const storyForNav = showStoryIndex(index);
     // Only grab the preview image after the camera settles — never rewrite
     // Bounds/ViewState on row select (use save-view control on the row to persist camera).
     if (shouldCaptureThumbnail && !storyForNav?.thumbnail) {
@@ -470,20 +445,39 @@ const WaypointsList = (props: WaypointsListProps) => {
     }
   };
 
-  const openDetailForStoryId = (storyId: string) => {
-    if (!canEdit) return;
+  const openDetailForStoryId = React.useCallback(
+    (storyId: string) => {
+      if (!canEdit) return;
 
-    const index = waypoints.findIndex((s) => s.id === storyId);
-    if (index === -1) return;
+      const index = waypoints.findIndex((s) => s.id === storyId);
+      if (index === -1) return;
 
-    activateStoryIndex(index);
-    setDetailStoryId(storyId);
+      showStoryIndex(index);
+      setDetailStoryId(storyId);
 
-    // Slide-to-top behavior: ensure detail scroll starts at the top.
-    requestAnimationFrame(() => {
-      detailBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
-    });
-  };
+      // Slide-to-top behavior: ensure detail scroll starts at the top.
+      requestAnimationFrame(() => {
+        detailBodyRef.current?.scrollTo({ top: 0, behavior: "auto" });
+      });
+    },
+    [canEdit, showStoryIndex, waypoints],
+  );
+
+  // From the player's "Edit this story" or an annotation import: once the
+  // story and its image are loaded, open that waypoint (the camera needs the image).
+  React.useEffect(() => {
+    if (!editWaypointOnOpen || imageWidth <= 0 || imageHeight <= 0) return;
+    if (!waypoints.some((s) => s.id === editWaypointOnOpen)) return;
+    setEditWaypointOnOpen(null);
+    openDetailForStoryId(editWaypointOnOpen);
+  }, [
+    editWaypointOnOpen,
+    imageHeight,
+    imageWidth,
+    openDetailForStoryId,
+    setEditWaypointOnOpen,
+    waypoints,
+  ]);
 
   const handleOverwriteView = (
     index: number,
@@ -491,11 +485,17 @@ const WaypointsList = (props: WaypointsListProps) => {
   ) => {
     event.stopPropagation();
     event.preventDefault();
-    setActiveStory(index);
     const saved = saveCurrentViewToStory(index, "handleOverwriteView");
+    if (!saved) return;
+    const app = useAppStore.getState();
+    const openIndex = waypoints.findIndex((w) => w.id === app.openWaypointId);
+    const canvasIndex = openIndex >= 0 ? openIndex : (activeStoryIndex ?? 0);
+    setActiveStory(index);
     flashSquareOverlay();
     scheduleThumbnailCaptureForStory(index, true, true, 150);
-    if (saved) {
+    // The canvas still shows `canvasIndex` until the effect runs. Persisting
+    // any other row would copy those shapes onto it.
+    if (canvasIndex === index) {
       persistImportedShapesToStory(index);
     }
   };
@@ -726,12 +726,12 @@ const WaypointsList = (props: WaypointsListProps) => {
                   </PanelIconButton>
                   <PanelIconButton
                     variant="row"
-                    title="Save waypoint view to story and download story.json"
+                    title="Update viewport"
                     onClick={(event) => handleOverwriteView(index, event)}
                   >
                     <OverwriteViewIcon width={14} height={14} aria-hidden />
                     <span className={styles.visuallyHidden}>
-                      Save waypoint view
+                      Update viewport
                     </span>
                   </PanelIconButton>
                 </div>

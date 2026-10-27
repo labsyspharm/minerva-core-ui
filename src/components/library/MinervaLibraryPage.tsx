@@ -15,12 +15,15 @@ import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   importStoryFolderFromPicker,
+  importStoryJsonFile,
   importStoryJsonFromPicker,
 } from "@/lib/storyExport/importStoryFolder";
+import { buildStamp } from "@/lib/version/buildStamp";
 import { rootRouteApi } from "@/router/appRouter";
 import styles from "./MinervaLibraryPage.module.css";
 
 const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
+const BUILD_STAMP = buildStamp();
 
 /** One-shot handoff: library stash → story page consumes after navigate. */
 type PendingLibraryImport =
@@ -29,9 +32,15 @@ type PendingLibraryImport =
   | { kind: "volume"; url: string };
 
 let pendingLibraryImport: PendingLibraryImport | null = null;
+/** Stays set across the story mount so the demo effect does not also download. */
+let libraryImportTookAutoload = false;
 
 export function hasPendingLibraryImport(): boolean {
   return pendingLibraryImport != null;
+}
+
+export function libraryImportSuppressesDemo(): boolean {
+  return libraryImportTookAutoload;
 }
 
 /** Runs once on story mount when the library stashed an image import. */
@@ -226,6 +235,36 @@ function buildBays(summaries: StorySummary[] | null): BaySlot[] {
   return out;
 }
 
+function LibraryBuildInfo() {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  useClickOutside(open, () => setOpen(false), [ref]);
+  if (!BUILD_STAMP) return null;
+  return (
+    <div className={styles.buildInfo} ref={ref}>
+      {open ? (
+        <div className={styles.buildInfoStamp} title={BUILD_STAMP.title}>
+          {BUILD_STAMP.text}
+        </div>
+      ) : null}
+      <button
+        type="button"
+        className={`${minervaTheme.focusRing} ${styles.buildInfoButton}`}
+        aria-label="Build information"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <g fill="none" stroke="currentColor" strokeLinecap="round">
+            <circle cx="8" cy="8" r="6.25" strokeWidth="1.25" />
+            <path d="M8 7.2v4.2M8 4.6v.6" strokeWidth="1.4" />
+          </g>
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 export function MinervaLibraryPage() {
   const navigate = rootRouteApi.useNavigate();
   const switchStory = useDocumentStore((s) => s.switchStory);
@@ -277,6 +316,7 @@ export function MinervaLibraryPage() {
       setBusyId(id);
       setError(null);
       try {
+        libraryImportTookAutoload = false;
         useAppStore.getState().resetStoryViewerSession();
         await switchStory(id);
         goToStory(id);
@@ -298,6 +338,7 @@ export function MinervaLibraryPage() {
     setAddOpen(false);
     setShelfBusy(true);
     setError(null);
+    libraryImportTookAutoload = false;
     try {
       goToStory(await openNewStory());
     } catch (e: unknown) {
@@ -313,6 +354,7 @@ export function MinervaLibraryPage() {
       try {
         const id = await openNewStory();
         pendingLibraryImport = pending;
+        libraryImportTookAutoload = true;
         goToStory(id);
         return { ok: true };
       } catch (e: unknown) {
@@ -329,6 +371,7 @@ export function MinervaLibraryPage() {
       setAddOpen(false);
       setShelfBusy(true);
       setError(null);
+      libraryImportTookAutoload = false;
       try {
         useAppStore.getState().resetStoryViewerSession();
         goToStory(await importStory());
@@ -441,6 +484,9 @@ export function MinervaLibraryPage() {
                   row
                   onAllow={toFile}
                   disabled={shelfBusy}
+                  onImportStory={(file) =>
+                    handleImport(() => importStoryJsonFile(file))
+                  }
                   onImportOme={(req) =>
                     startStoryWithPendingImport({ ...req, kind: "ome" })
                   }
@@ -528,6 +574,7 @@ export function MinervaLibraryPage() {
           })}
         </div>
       </section>
+      <LibraryBuildInfo />
     </div>
   );
 }

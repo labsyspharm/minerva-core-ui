@@ -1,6 +1,10 @@
 /**
  * Expanded waypoint: natural height + no inner scroll so `.detailBody` scrolls.
  * Fixes live/split mode where the library uses absolute preview + overflow:auto.
+ *
+ * `.w-md-editor-text-input` is position:absolute inside `.w-md-editor-text`.
+ * That node has to fill the box; otherwise the gap under the first line is a
+ * non-editable parent (default cursor, clicks do not focus).
  */
 .waypointMarkdownEditorDetail .w-md-editor {
   height: auto !important;
@@ -11,26 +15,38 @@
 .waypointMarkdownEditorDetail .w-md-editor-content {
   height: auto !important;
   min-height: 0;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
   overflow: visible !important;
 }
 
 .waypointMarkdownEditorDetail .w-md-editor-area {
   overflow: visible !important;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .waypointMarkdownEditorDetail .w-md-editor-input {
   height: auto !important;
-  align-self: flex-start;
 }
 
 .waypointMarkdownEditorDetail .w-md-editor-text {
-  min-height: 0 !important;
+  flex: 1 0 auto;
+}
+
+/* Library height:100% does not track a flex-grown box. Stretch to its padding box. */
+.waypointMarkdownEditorDetail .w-md-editor-text-input {
+  top: 0;
+  bottom: 0;
+  height: auto;
+  cursor: text;
 }
 
 .waypointMarkdownEditorDetail .w-md-editor-show-live .w-md-editor-content {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
 }
 
 .waypointMarkdownEditorDetail .w-md-editor-show-live .w-md-editor-input {

@@ -596,11 +596,6 @@ export type ChannelRendering =
       b: number;
     };
 
-type MaskVisualizationPreview = {
-  sourceChannelId: string;
-  visualization: MaskVisualization;
-};
-
 /** In-flight image placement while dragging on the canvas; committed on pointerup. */
 export type ImageOrientationPreview = {
   imageId: string;
@@ -660,6 +655,13 @@ export interface AppStore {
   authoringWaypointShapesIndex: number | null;
   setAuthoringWaypointShapesIndex: (index: number | null) => void;
 
+  /**
+   * Waypoint open in the Story tab's detail view. Unlike `authoringWaypointShapesIndex` it
+   * survives switching tabs (a file drag jumps to Images), so imports can target it.
+   */
+  openWaypointId: string | null;
+  setOpenWaypointId: (waypointId: string | null) => void;
+
   activeChannelGroupId: string | null;
 
   /**
@@ -672,6 +674,12 @@ export interface AppStore {
   /** Authoring: viewer annotation pick/hover/drag only while a waypoint detail editor is open. */
   authoringWaypointEditorOpen: boolean;
   setAuthoringWaypointEditorOpen: (open: boolean) => void;
+  /**
+   * One-shot: the editor opens this waypoint on the Story tab (set by the player's "Edit this
+   * story" and by annotation import).
+   */
+  editWaypointOnOpen: string | null;
+  setEditWaypointOnOpen: (waypointId: string | null) => void;
 
   /** Layers panel: selected annotation ids (multi-select) for copy / keyboard shortcuts. */
   layersPanelSelectedShapeIds: string[];
@@ -772,6 +780,9 @@ export interface AppStore {
   setViewerViewportSize: (size: ViewportSize) => void;
   viewerWorldFrame: WorldFrame | null;
   setViewerWorldFrame: (frame: WorldFrame | null) => void;
+  /** One frame per loaded image, tagged with its `sourceImageId` (ROI file placement). */
+  viewerImageFrames: WorldFrame[];
+  setViewerImageFrames: (frames: WorldFrame[]) => void;
   /** True when OME-TIFF / DICOM tile stack layers all report `isLoaded` (see ImageViewer). */
   viewerImageLayersLoaded: boolean;
   setViewerImageLayersLoaded: (loaded: boolean) => void;
@@ -798,11 +809,6 @@ export interface AppStore {
   channelRendering: ChannelRendering | null;
   setChannelRendering: (rendering: ChannelRendering) => void;
   clearChannelRendering: () => void;
-  /** In-flight mask styling; committed values live in the document store. */
-  maskVisualizationPreview: MaskVisualizationPreview | null;
-  setMaskVisualizationPreview: (
-    preview: MaskVisualizationPreview | null,
-  ) => void;
   /** In-flight move / resize / rotate; committed on pointerup. */
   imageOrientationPreview: ImageOrientationPreview | null;
   setImageOrientationPreview: (preview: ImageOrientationPreview | null) => void;
@@ -969,9 +975,9 @@ const overlayInitialState = {
   activeStoryIndex: null,
   waypointAuthoring: new Map<string, AuthoringWaypointExtra>(),
   authoringWaypointShapesIndex: null as number | null,
+  openWaypointId: null as string | null,
   activeChannelGroupId: null, // No channel group initially
   channelRendering: null,
-  maskVisualizationPreview: null,
   imageOrientationPreview: null,
   imageOpacityPreview: null,
   arrangeImageId: null,
@@ -981,6 +987,7 @@ const overlayInitialState = {
   hiddenLegendClasses: {} as Record<string, string[]>,
   targetWaypointCamera: null,
   authoringWaypointEditorOpen: false,
+  editWaypointOnOpen: null,
   layersPanelSelectedShapeIds: [] as string[],
   layersPanelSelectedGroupId: null as string | null,
   layersPanelSelectionFlash: null,
@@ -993,6 +1000,7 @@ const overlayInitialState = {
   viewerViewState: null,
   viewerViewportSize: null,
   viewerWorldFrame: null,
+  viewerImageFrames: [],
   viewerImageLayersLoaded: false,
   squareViewportThumbnailCapture: null,
   editingViewstateWaypointIndex: null,
@@ -1262,12 +1270,12 @@ export const useAppStore = create<AppStore>()(
           brushMaskVersion: 0,
           brushLastScreenCoord: null,
           imageSelectionMask: null,
-          maskVisualizationPreview: null,
           channelVisibilities: vis,
           hiddenLegendClasses: {},
           activeStoryIndex: null,
           waypointAuthoring: new Map(),
           authoringWaypointShapesIndex: null,
+          openWaypointId: null,
           authoringWaypointEditorOpen: false,
           targetWaypointCamera: null,
           layersPanelSelectedShapeIds: [],
@@ -1615,7 +1623,6 @@ export const useAppStore = create<AppStore>()(
         delete vis[SELECTION_MASK_CHANNEL_KEY];
         set({
           imageSelectionMask: null,
-          maskVisualizationPreview: null,
           channelVisibilities: vis,
         });
       },
@@ -2005,8 +2012,16 @@ export const useAppStore = create<AppStore>()(
         }
       },
 
+      setEditWaypointOnOpen: (waypointId) => {
+        set({ editWaypointOnOpen: waypointId });
+      },
+
       setAuthoringWaypointShapesIndex: (index: number | null) => {
         set({ authoringWaypointShapesIndex: index });
+      },
+
+      setOpenWaypointId: (waypointId) => {
+        set({ openWaypointId: waypointId });
       },
 
       setLayersPanelSelectedShapeIds: (ids: string[]) => {
@@ -2176,7 +2191,13 @@ export const useAppStore = create<AppStore>()(
         const doc = useDocumentStore.getState();
         const removedId = doc.waypoints[index]?.id;
         if (index >= 0 && index < doc.waypoints.length) {
-          doc.setWaypoints(doc.waypoints.filter((_, i) => i !== index));
+          // Shapes live only on waypoints: keep those another waypoint still lists.
+          const waypoints = doc.waypoints.filter((_, i) => i !== index);
+          const listed = new Set(waypoints.flatMap((w) => w.shapeIds ?? []));
+          doc.setWaypointsAndShapes(
+            waypoints,
+            documentShapes(doc).filter((s) => listed.has(s.id)),
+          );
         }
         set((state) => {
           const next = new Map(state.waypointAuthoring);
@@ -2268,6 +2289,10 @@ export const useAppStore = create<AppStore>()(
         set({ viewerWorldFrame: frame });
       },
 
+      setViewerImageFrames: (frames) => {
+        set({ viewerImageFrames: frames });
+      },
+
       setViewerImageLayersLoaded: (loaded) => {
         set({ viewerImageLayersLoaded: loaded });
       },
@@ -2307,10 +2332,6 @@ export const useAppStore = create<AppStore>()(
 
       clearChannelRendering: () => {
         set({ channelRendering: null });
-      },
-
-      setMaskVisualizationPreview: (preview) => {
-        set({ maskVisualizationPreview: preview });
       },
 
       setImageOrientationPreview: (preview) => {
