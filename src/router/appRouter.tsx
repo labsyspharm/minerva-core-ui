@@ -10,50 +10,45 @@ import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { classifyViewerLaunchUrl } from "@/lib/viewer/launchUrl";
 
-const storySearchSchema = z.object({
-  storyid: z.string().uuid().optional(),
-});
+/**
+ * The app's whole query: `?storyid=<uuid>` names a library story; `?src=<url>`
+ * opens a story JSON, OME-TIFF or DICOMweb series (and becomes a `storyid`).
+ */
+type RootSearch = { storyid?: string; src?: string };
 
-type RootSearch = {
-  storyid?: string;
-  /**
-   * Image URL (OME-TIFF or a DICOMweb series) or a story JSON URL
-   * (`config.json` / `document.json`).
-   */
-  src?: string;
-};
+const uuidSchema = z.string().uuid();
 
-/** Root route search: optional `storyid`, optional launch `src`. Each is kept on its own. */
-export function parseRootSearch(raw: Record<string, unknown>): RootSearch {
+/**
+ * `src` is everything after `src=`, verbatim, so the address bar reads
+ * `?src=https://…/document.json` and a signed URL keeps its own `&…`.
+ * Invalid values are dropped.
+ */
+export function parseRootSearch(search: string): RootSearch {
+  const query = search.replace(/^\?/, "");
+  const srcAt = /(?:^|&)src=/.exec(query);
   const out: RootSearch = {};
-  const story = storySearchSchema.safeParse(raw);
-  if (story.success && story.data.storyid) out.storyid = story.data.storyid;
-  if (typeof raw.src === "string") {
-    const src = raw.src.trim();
-    if (src && classifyViewerLaunchUrl(src)) out.src = src;
-  }
+  const storyid = new URLSearchParams(
+    srcAt ? query.slice(0, srcAt.index) : query,
+  ).get("storyid");
+  if (storyid && uuidSchema.safeParse(storyid).success) out.storyid = storyid;
+  const src = srcAt ? query.slice(srcAt.index + srcAt[0].length).trim() : "";
+  if (src && classifyViewerLaunchUrl(src)) out.src = src;
   return out;
 }
 
-const uuidParamSchema = z.string().uuid();
-
-/**
- * Reads optional `storyid` (Dexie story UUID) from the current location search params.
- * Invalid values are treated as absent.
- */
-export function parsePreferredStoryIdFromLocation(): string | null {
-  if (typeof window === "undefined") return null;
-  const raw = new URLSearchParams(window.location.search).get("storyid");
-  if (raw === null || raw === "") return null;
-  const r = uuidParamSchema.safeParse(raw);
-  return r.success ? r.data : null;
+/** Inverse of {@link parseRootSearch}: `src` goes last, as written. */
+function stringifyRootSearch({ storyid, src }: RootSearch): string {
+  const parts: string[] = [];
+  if (storyid) parts.push(`storyid=${storyid}`);
+  if (src) parts.push(`src=${src}`);
+  return parts.length ? `?${parts.join("&")}` : "";
 }
 
 export const rootRouteApi = getRouteApi("__root__");
 
 /**
- * Keeps `?storyid=<Dexie story uuid>` in sync with {@link useDocumentStore}'s `activeStoryId`
- * while a story is open. Does **not** write `storyid` when `activeStoryId` is null (Minerva Library).
+ * Keeps `?storyid=` in sync with {@link useDocumentStore}'s `activeStoryId` while a
+ * story is open, and opens the story the URL names (back/forward, edited URL).
  */
 export function StoryIdUrlSync() {
   const search = rootRouteApi.useSearch();
@@ -63,22 +58,11 @@ export function StoryIdUrlSync() {
 
   React.useEffect(() => {
     const sid = search.storyid;
-    if (sid === undefined) return;
-    if (activeStoryId === sid) return;
-    /**
-     * Library / cleared document: store has no active story but the URL still has
-     * `?storyid=` (e.g. right after "Return to Library" before navigate). Strip the
-     * param — do not call `switchStory`, which would reload the story we left.
-     */
+    if (sid === undefined || activeStoryId === sid) return;
+    // Back in the library (e.g. right after "Return to Library"): drop the
+    // stale id rather than reopen the story we just left.
     if (activeStoryId === null) {
-      navigate({
-        search: (prev: { storyid?: string }) => {
-          const next = { ...prev };
-          delete next.storyid;
-          return next;
-        },
-        replace: true,
-      } as never);
+      navigate({ search: {}, replace: true } as never);
       return;
     }
     void (async () => {
@@ -86,14 +70,7 @@ export function StoryIdUrlSync() {
       try {
         await switchStory(sid);
       } catch {
-        navigate({
-          search: (prev: { storyid?: string }) => {
-            const next = { ...prev };
-            delete next.storyid;
-            return next;
-          },
-          replace: true,
-        } as never);
+        navigate({ search: {}, replace: true } as never);
       }
     })();
   }, [search.storyid, activeStoryId, switchStory, navigate]);
@@ -101,14 +78,7 @@ export function StoryIdUrlSync() {
   React.useEffect(() => {
     if (activeStoryId === null) return;
     if (search.storyid === activeStoryId && search.src === undefined) return;
-    navigate({
-      search: (prev: RootSearch) => {
-        const next: RootSearch = { ...prev, storyid: activeStoryId };
-        delete next.src;
-        return next;
-      },
-      replace: true,
-    } as never);
+    navigate({ search: { storyid: activeStoryId }, replace: true } as never);
   }, [activeStoryId, navigate, search.storyid, search.src]);
 
   return null;
@@ -166,7 +136,6 @@ export function createAppRouter<P extends object>(
   mainProps: P,
 ) {
   const rootRoute = createRootRoute({
-    validateSearch: parseRootSearch,
     component: function RootLayout() {
       return <MainComponent {...mainProps} />;
     },
@@ -175,5 +144,7 @@ export function createAppRouter<P extends object>(
   return createRouter({
     routeTree: rootRoute,
     basepath: routerBasepath(),
+    parseSearch: parseRootSearch,
+    stringifySearch: stringifyRootSearch,
   } as never);
 }

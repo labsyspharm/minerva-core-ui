@@ -308,14 +308,7 @@ export function MinervaLibraryPage() {
 
   const goToStory = React.useCallback(
     (id: string) => {
-      navigate({
-        search: (prev: { storyid?: string; src?: string }) => {
-          const next = { ...prev, storyid: id };
-          delete next.src;
-          return next;
-        },
-        replace: true,
-      } as never);
+      navigate({ search: { storyid: id }, replace: true } as never);
     },
     [navigate],
   );
@@ -467,7 +460,7 @@ export function MinervaLibraryPage() {
           <p className={styles.tagline}>a microscopy viewer for non-experts</p>
           <a
             className={`${minervaTheme.focusRing} ${styles.exampleLink}`}
-            href={`?src=${encodeURIComponent(DEMO_STORY_URL)}`}
+            href={`?src=${DEMO_STORY_URL}`}
             onClick={(event) => {
               if (
                 event.metaKey ||

@@ -154,7 +154,7 @@ import {
   type WaypointSeedMirror,
 } from "@/lib/waypoints/seedWaypointConfig";
 import {
-  parsePreferredStoryIdFromLocation,
+  parseRootSearch,
   rootRouteApi,
   StoryIdUrlSync,
 } from "@/router/appRouter";
@@ -224,8 +224,8 @@ const cloneConfigWaypoints = (
 const StoryPersistenceRoot = ({ children }: { children: React.ReactNode }) => {
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    const preferred = parsePreferredStoryIdFromLocation();
-    void bootstrapStoryPersistence(preferred).then(() => setReady(true));
+    const { storyid } = parseRootSearch(window.location.search);
+    void bootstrapStoryPersistence(storyid).then(() => setReady(true));
   }, []);
   /** Minerva Library mounts without `Content` (no FileHandler); the HTML shell loader must still be cleared. */
   useEffect(() => {
@@ -367,15 +367,7 @@ const Content = (props: Props) => {
       await setActiveStoryId(null);
       useAppStore.getState().resetStoryViewerSession();
       s.clearForLibraryView();
-      navigate({
-        search: (prev: { storyid?: string; src?: string }) => {
-          const next = { ...prev };
-          delete next.storyid;
-          delete next.src;
-          return next;
-        },
-        replace: true,
-      } as never);
+      navigate({ search: {}, replace: true } as never);
     })();
   }, [navigate]);
   const storyTitleForTab = useDocumentStore((s) => s.metadata.title ?? "");

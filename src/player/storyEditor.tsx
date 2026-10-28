@@ -7,10 +7,7 @@ import { getStoryRecord } from "@/lib/persistence/storyPersistence";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { importStoryFromUrl } from "@/lib/storyExport/importStoryFolder";
-import {
-  createAppRouter,
-  parsePreferredStoryIdFromLocation,
-} from "@/router/appRouter";
+import { createAppRouter, parseRootSearch } from "@/router/appRouter";
 
 // Stable array reference, as in index.tsx (FileHandler restore effect deps).
 const OME_TIFF_HANDLE_KEYS = ["img-1"];
@@ -36,7 +33,7 @@ export async function beginEditing(documentUrl: string): Promise<void> {
 
 /** True when `?storyid=` names a story in this site's library (a reload while editing). */
 export async function isEditingOnThisPage(): Promise<boolean> {
-  const storyId = parsePreferredStoryIdFromLocation();
+  const storyId = parseRootSearch(window.location.search).storyid;
   if (!storyId) return false;
   try {
     return !!(await getStoryRecord(storyId));
