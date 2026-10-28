@@ -12,7 +12,6 @@ import type {
   VivLoaderPlane,
 } from "../imaging/loaderTypes";
 import type { Loader } from "../imaging/viv";
-import type { ConfigGroup as LegacyConfigGroup } from "../legacy/exhibit";
 import type {
   Channel,
   ChannelGroup,
@@ -137,7 +136,6 @@ type ExtractDistributions = (
 type ExtractChannels = (
   loader: Loader,
   modality: string,
-  groups: LegacyConfigGroup[],
   /** OME: stable document `Image.id` for flat channels; defaults to `modality` (DICOM / legacy). */
   sourceImageId?: string,
   /** Default persisted kind for every extracted channel (import-only). */
@@ -145,54 +143,6 @@ type ExtractChannels = (
 ) => {
   SourceChannels: Channel[];
   ChannelGroups: ChannelGroup[];
-};
-
-const hex_to_rgb = (c: string) => {
-  const n = parseInt(c, 16);
-  return {
-    r: (n >> 16) & 255,
-    g: (n >> 8) & 255,
-    b: n & 255,
-  };
-};
-
-/** Path → OME channel indices for the Lin 2021 CRC01 demo exhibit groups. */
-export const GROUP_CHANNELS_CRC01 = {
-  "Histology_40__HE-r--41__HE-g--42__HE-b": [40, 41, 42],
-  "Tissue-Structure_0__DNA1--14__PanCK--15__ASMA--35__CD31--18__CD45": [
-    0, 14, 15, 35, 18,
-  ],
-  "Immune-Populations_0__DNA1--18__CD45--23__CD8a--17__CD4--21__CD20--22__CD68--25__CD163":
-    [0, 18, 23, 17, 21, 22],
-  "Lymphocytes_0__DNA1--23__CD8a--17__CD4--21__CD20--26__FOXP3": [
-    0, 23, 17, 21, 26,
-  ],
-  "Macrophages_0__DNA1--22__CD68--25__CD163": [0, 22, 25],
-  "Proliferation_0__DNA1--37__PCNA--14__PanCK--18__CD45--13__Ki67": [
-    0, 37, 14, 18, 13,
-  ],
-  "PD1-Immune-Checkpoint_0__DNA1--14__PanCK--27__PDL1--19__PD1": [
-    0, 14, 27, 19,
-  ],
-  "Helper-and-Regulatory-T-Cells_0__DNA1--17__CD4--26__FOXP3": [0, 17, 26],
-  "CD8-Cytotoxic-T-Cells_0__DNA1--23__CD8a--19__PD1": [0, 23, 19],
-  "FOXP3-CD8-T-Cells_0__DNA1--23__CD8a--26__FOXP3": [0, 23, 26],
-  "NaK-ATPase_0__DNA1--14__PanCK--10__Na-K-ATPase": [0, 14, 10],
-  "E-Cadherin_0__DNA1--14__PanCK--29__Ecadherin": [0, 14, 29],
-  "Stroma_0__DNA1--15__ASMA--34__Desmin--39__Collagen--30__Vimentin": [
-    0, 15, 34, 39, 30,
-  ],
-  "PDL1-Positive-Immune-Cells_0__DNA1--17__CD4--22__CD68--25__CD163--27__PDL1":
-    [0, 17, 22, 25, 27],
-  "PDL1-CD8-Interaction_0__DNA1--27__PDL1--23__CD8a--19__PD1": [0, 27, 23, 19],
-  "Tumor-Budding-Epithelial_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA": [
-    0, 14, 29, 37,
-  ],
-  "Tumor-Budding-Immune-Modulation_0__DNA1--14__PanCK--27__PDL1--26__FOXP3--23__CD8a--19__PD1--22__CD68":
-    [0, 14, 27, 26, 23, 19],
-  "Nuclear-Lamina_0__DNA1--33__LaminABC": [0, 33],
-  "DAPI-Cycle-Correlation_0__DNA1--36__DNA10": [0, 36],
-  "Transitions_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA": [0, 14, 29, 37],
 };
 
 const asID = (k: string): ID => ({ ID: k });
@@ -409,7 +359,6 @@ const extractDistributions: ExtractDistributions = async (loader) => {
 const extractChannels: ExtractChannels = (
   loader,
   modality,
-  groups,
   sourceImageId,
   defaultChannelKind = "channel",
 ) => {
@@ -428,76 +377,6 @@ const extractChannels: ExtractChannels = (
       imageId: channelImageId,
     };
   });
-  // Match hard-coded groups to existing channels. GROUP_CHANNELS_CRC01 maps Path →
-  // indices into OME Pixels.Channels (same order as SourceChannels), not "Channel N" strings.
-  const hardcoded_crc01 = groups.reduce(
-    ({ name_map, ChannelGroups }, g) => {
-      if (!(g.Path in GROUP_CHANNELS_CRC01)) {
-        return { name_map, ChannelGroups };
-      }
-      const channel_indices = GROUP_CHANNELS_CRC01[g.Path];
-      if (g.Channels.length !== channel_indices.length) {
-        return { name_map, ChannelGroups };
-      }
-      const outOfRange = channel_indices.filter(
-        (idx) => idx < 0 || idx >= SourceChannels.length,
-      );
-      if (outOfRange.length > 0) {
-        return { name_map, ChannelGroups };
-      }
-      const new_name_map = { ...name_map };
-      for (let i = 0; i < channel_indices.length; i++) {
-        const idx = channel_indices[i];
-        new_name_map[g.Channels[i]] = SourceChannels[idx].id;
-      }
-      const new_group_uuid = crypto.randomUUID();
-      const new_group: ChannelGroup = {
-        id: new_group_uuid,
-        expanded: ChannelGroups.length === 0,
-        name: g.Name,
-        channels: g.Channels.reduce(
-          (new_group_channels, name, index) => {
-            if (!(name in new_name_map)) {
-              return new_group_channels;
-            }
-            const color = g.Colors[index];
-            return new_group_channels.concat({
-              id: crypto.randomUUID(),
-              channelId: new_name_map[name],
-              color: hex_to_rgb(color),
-              lowerLimit: g.Lows[index],
-              upperLimit: g.Highs[index],
-            });
-          },
-          [] as ChannelGroup["channels"],
-        ),
-      };
-      return {
-        name_map: new_name_map,
-        ChannelGroups: ChannelGroups.concat([new_group]),
-      };
-    },
-    {
-      ChannelGroups: [] as ChannelGroup[],
-      name_map: {} as Record<string, string>,
-    },
-  );
-  const name_map = hardcoded_crc01.name_map;
-  const reverse_name_map = Object.fromEntries(
-    Object.entries(name_map).map(([k, v]) => [v, k]),
-  );
-  if (Object.keys(name_map).length) {
-    SourceChannels.forEach((sourceChannel) => {
-      if (sourceChannel.id in reverse_name_map) {
-        sourceChannel.name = reverse_name_map[sourceChannel.id];
-      }
-    });
-    const { ChannelGroups } = hardcoded_crc01;
-    return {
-      SourceChannels,
-      ChannelGroups,
-    };
-  }
   if (
     SourceChannels.length === 1 &&
     SourceChannels[0].samples === 3 &&

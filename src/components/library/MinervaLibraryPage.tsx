@@ -8,7 +8,6 @@ import type {
 import { Upload } from "@/components/shared/Upload";
 import { useClickOutside } from "@/components/shared/useClickOutside";
 import { hasDirectoryPickerAccess, toFile } from "@/lib/imaging/filesystem";
-import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
 import { useAppStore } from "@/lib/stores/appStore";
@@ -24,7 +23,7 @@ import { classifyViewerLaunchUrl } from "@/lib/viewer/launchUrl";
 import { rootRouteApi } from "@/router/appRouter";
 import styles from "./MinervaLibraryPage.module.css";
 
-const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
+const APP_TAB_TITLE_PREFIX = "Minerva";
 const BUILD_STAMP = buildStamp();
 
 /**
@@ -40,8 +39,6 @@ type PendingLibraryImport =
   | { kind: "dicomWeb"; url: string };
 
 let pendingLibraryImport: PendingLibraryImport | null = null;
-/** Stays set across the story mount so the demo effect does not also download. */
-let libraryImportTookAutoload = false;
 /**
  * One open per `?src=` value. Cleared when that param leaves, so View example
  * can be opened again. React Strict Mode remounts the library effect.
@@ -50,10 +47,6 @@ let claimedLaunchUrl: string | null = null;
 
 export function hasPendingLibraryImport(): boolean {
   return pendingLibraryImport != null;
-}
-
-export function libraryImportSuppressesDemo(): boolean {
-  return libraryImportTookAutoload;
 }
 
 /** Runs once on story mount when the library stashed an image import. */
@@ -318,7 +311,6 @@ export function MinervaLibraryPage() {
       setBusyId(id);
       setError(null);
       try {
-        libraryImportTookAutoload = false;
         useAppStore.getState().resetStoryViewerSession();
         await switchStory(id);
         goToStory(id);
@@ -340,7 +332,6 @@ export function MinervaLibraryPage() {
     setAddOpen(false);
     setShelfBusy(true);
     setError(null);
-    libraryImportTookAutoload = false;
     try {
       goToStory(await openNewStory());
     } catch (e: unknown) {
@@ -356,7 +347,6 @@ export function MinervaLibraryPage() {
       try {
         const id = await openNewStory();
         pendingLibraryImport = pending;
-        libraryImportTookAutoload = true;
         goToStory(id);
         return { ok: true };
       } catch (e: unknown) {
@@ -373,7 +363,6 @@ export function MinervaLibraryPage() {
       setAddOpen(false);
       setShelfBusy(true);
       setError(null);
-      libraryImportTookAutoload = false;
       try {
         useAppStore.getState().resetStoryViewerSession();
         goToStory(await importStory());
@@ -401,11 +390,9 @@ export function MinervaLibraryPage() {
     if (launch.kind === "story") {
       void (async () => {
         try {
-          libraryImportTookAutoload = true;
           useAppStore.getState().resetStoryViewerSession();
           goToStory(await importStoryFromUrl(launch.url));
         } catch (e: unknown) {
-          libraryImportTookAutoload = false;
           setError(
             e instanceof Error ? e.message : "Could not open config.json",
           );

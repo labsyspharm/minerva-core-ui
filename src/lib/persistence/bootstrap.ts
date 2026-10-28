@@ -1,5 +1,4 @@
 import { useDocumentStore } from "@/lib/stores/documentStore";
-import { ensureDemoShelfStory } from "./demo";
 import {
   getStoryRecord,
   listStorySummaries,
@@ -32,8 +31,6 @@ async function runAuthorBootstrap(preferredStoryId: string): Promise<void> {
 }
 
 async function runBootstrap(preferredStoryId: string | null): Promise<void> {
-  // Seed/upgrade before hydrate so a deep-linked demo story gets full CRC data.
-  await ensureDemoShelfStory();
   if (preferredStoryId !== null && preferredStoryId !== "") {
     await runAuthorBootstrap(preferredStoryId);
     return;
@@ -45,7 +42,6 @@ async function runBootstrap(preferredStoryId: string | null): Promise<void> {
  * Load persisted state for {@link useDocumentStore}.
  * - No `storyid` in the URL → Minerva Library: clear active story and document slices.
  * - With `storyid` → hydrate that story from Dexie (or fall back to Library if missing).
- * - Demo shelf seeding lives in {@link ensureDemoShelfStory} (`./demo`).
  *
  * Call once before the main UI mounts. Concurrent callers share one run
  * (avoids duplicate work under React Strict Mode).

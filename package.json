@@ -5,8 +5,7 @@
   "scripts": {
     "prepare": "lefthook install",
     "dev": "vite --mode development",
-    "jpeg": "vite --mode demo-jpeg",
-    "demo": "vite --mode demo",
+    "demo": "vite --mode development --open '/?src=https://lsp-private-data.s3.amazonaws.com/Minerva/CRC01/document.json'",
     "pages": "tsc && vite build && vite build --config vite.bundle.config.ts",
     "schema": "typescript-json-schema -o 'schema/generic.schema.json' 'src/config/generic.ts' Config",
     "format": "prettier --ignore-path .eslintignore --write .",

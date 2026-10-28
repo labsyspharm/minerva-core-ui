@@ -7,7 +7,6 @@ import {
 import { loadOmeLoaderForRole } from "@/lib/imaging/filesystem";
 import type { DecodePool } from "@/lib/imaging/omeDecodePool";
 import type { Loader } from "@/lib/imaging/viv";
-import type { ConfigGroup } from "@/lib/legacy/exhibit";
 import type { Image } from "@/lib/stores/documentSchema";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
 import { flattenImageChannelsInDocumentOrder } from "@/lib/stores/documentStore";
@@ -71,7 +70,6 @@ export function buildOmeImportSlice(args: {
   basename: string;
   sourceImageId: string;
   existingImages: Image[];
-  relevantGroups?: ConfigGroup[];
   /** Persist when import dialog asked RGB vs separate channels. */
   rgbDisplay?: boolean;
   /** 0-based channel index → marker name from an optional markers.csv. */
@@ -83,7 +81,6 @@ export function buildOmeImportSlice(args: {
     basename,
     sourceImageId,
     existingImages,
-    relevantGroups = [],
     rgbDisplay,
     channelNames,
   } = args;
@@ -91,7 +88,6 @@ export function buildOmeImportSlice(args: {
   const extracted = extractChannels(
     loader,
     "Colorimetric",
-    relevantGroups,
     sourceImageId,
     defaultKind,
   );
