@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CTpAQdiw.js","./pako.esm-KbdoS3Oq.js","./lerc-CClYLAJ_.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CHsm8GoA.js","./pako.esm-KbdoS3Oq.js","./lerc-Cg3SfjCl.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18512,10 +18512,10 @@ let __tla = (async () => {
   const __vite_import_meta_env__ = {
     "BASE_URL": "./",
     "DEV": false,
-    "MODE": "production",
+    "MODE": "demo",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "c2844da2319dcc4eaaa3ef4fab3c1080c84e0838"
+    "VITE_APP_GIT_SHA": "28cd57520bf9f8a8ecadbdc9502d96f2bbf845e6"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -18574,7 +18574,7 @@ let __tla = (async () => {
     const { enabled: enabled2, anonymousActionType, store, ...options } = devtoolsOptions;
     let extensionConnector;
     try {
-      extensionConnector = (enabled2 != null ? enabled2 : (__vite_import_meta_env__ ? "production" : void 0) !== "production") && window.__REDUX_DEVTOOLS_EXTENSION__;
+      extensionConnector = (enabled2 != null ? enabled2 : (__vite_import_meta_env__ ? "demo" : void 0) !== "production") && window.__REDUX_DEVTOOLS_EXTENSION__;
     } catch (e2) {
     }
     if (!extensionConnector) {
@@ -18631,7 +18631,7 @@ let __tla = (async () => {
       let didWarnAboutReservedActionType = false;
       const originalDispatch = api.dispatch;
       api.dispatch = (...args) => {
-        if ((__vite_import_meta_env__ ? "production" : void 0) !== "production" && args[0].type === "__setState" && !didWarnAboutReservedActionType) {
+        if ((__vite_import_meta_env__ ? "demo" : void 0) !== "production" && args[0].type === "__setState" && !didWarnAboutReservedActionType) {
           console.warn('[zustand devtools middleware] "__setState" action type is reserved to set state from the devtools. Avoid using it.');
           didWarnAboutReservedActionType = true;
         }
@@ -37635,7 +37635,7 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     }
     addChannel(props) {
       const { delay = 0, duration = Number.POSITIVE_INFINITY, rate = 1, repeat = 1 } = props;
-      const channelId = channelHandles++;
+      const channelId2 = channelHandles++;
       const channel = {
         time: 0,
         delay,
@@ -37644,29 +37644,29 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
         repeat
       };
       this._setChannelTime(channel, this.time);
-      this.channels.set(channelId, channel);
-      return channelId;
+      this.channels.set(channelId2, channel);
+      return channelId2;
     }
-    removeChannel(channelId) {
-      this.channels.delete(channelId);
+    removeChannel(channelId2) {
+      this.channels.delete(channelId2);
       for (const [animationHandle, animation] of this.animations) {
-        if (animation.channel === channelId) {
+        if (animation.channel === channelId2) {
           this.detachAnimation(animationHandle);
         }
       }
     }
-    isFinished(channelId) {
-      const channel = this.channels.get(channelId);
+    isFinished(channelId2) {
+      const channel = this.channels.get(channelId2);
       if (channel === void 0) {
         return false;
       }
       return this.time >= channel.delay + channel.duration * channel.repeat;
     }
-    getTime(channelId) {
-      if (channelId === void 0) {
+    getTime(channelId2) {
+      if (channelId2 === void 0) {
         return this.time;
       }
-      const channel = this.channels.get(channelId);
+      const channel = this.channels.get(channelId2);
       if (channel === void 0) {
         return -1;
       }
@@ -37703,8 +37703,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       animation.setTime(this.getTime(channelHandle));
       return animationHandle;
     }
-    detachAnimation(channelId) {
-      this.animations.delete(channelId);
+    detachAnimation(channelId2) {
+      this.animations.delete(channelId2);
     }
     update(engineTime) {
       if (this.playing) {
@@ -68956,7 +68956,7 @@ in vec2 mask_texCoords;
     if (lower === 0 && upper === 255) return true;
     return false;
   }
-  function hexToRgb(hex) {
+  function hexToRgb$1(hex) {
     const n2 = Number.parseInt(hex.replace("#", ""), 16);
     return {
       r: n2 >> 16 & 255,
@@ -79251,26 +79251,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BhGXVMWF.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Cr7oY-G6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DJVylt9V.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-9_KwW06u.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DicC7450.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DsU2R9A_.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CTpAQdiw.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-D1hmm1kT.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CClYLAJ_.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-CHsm8GoA.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BcyD2ik4.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Cg3SfjCl.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BiBFNo-a.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-iKP-2Ey_.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-xHqDNUfR.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-DrGB2NQM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -87564,8 +87564,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return out;
   }
-  function findSourceChannel(channels2, channelId) {
-    return channels2.find((c2) => c2.id === channelId);
+  function findSourceChannel(channels2, channelId2) {
+    return channels2.find((c2) => c2.id === channelId2);
   }
   function applySourceChannelsToImages(currentImages, flatChannels) {
     const byImage = /* @__PURE__ */ new Map();
@@ -87893,9 +87893,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function applyGroupChannelRange(channelGroups, raw2) {
     const lower = raw2.LowerRange;
     const upper = raw2.UpperRange;
-    const groupId = "groupId" in raw2 && raw2.groupId !== void 0 ? raw2.groupId : raw2.group_uuid;
+    const groupId2 = "groupId" in raw2 && raw2.groupId !== void 0 ? raw2.groupId : raw2.group_uuid;
     const channelEntryId = "channelId" in raw2 && raw2.channelId !== void 0 ? raw2.channelId : raw2.channel_uuid;
-    return channelGroups.map((group2) => group2.id !== groupId ? group2 : {
+    return channelGroups.map((group2) => group2.id !== groupId2 ? group2 : {
       ...group2,
       channels: group2.channels.map((e2) => e2.id === channelEntryId ? {
         ...e2,
@@ -87909,17 +87909,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const anyWp = wp;
     const id2 = anyWp.id ?? anyWp.UUID ?? "";
     const shapeIds = anyWp.shapeIds ?? anyWp.ShapeIds ?? [];
-    let groupId = anyWp.groupId;
+    let groupId2 = anyWp.groupId;
     const legacyGroup = anyWp.Group;
-    if (groupId === void 0 && legacyGroup !== void 0 && legacyGroup !== "") {
-      groupId = isUuid(legacyGroup) ? legacyGroup : ((_a2 = channelGroups.find((g2) => g2.name === legacyGroup)) == null ? void 0 : _a2.id) ?? legacyGroup;
+    if (groupId2 === void 0 && legacyGroup !== void 0 && legacyGroup !== "") {
+      groupId2 = isUuid(legacyGroup) ? legacyGroup : ((_a2 = channelGroups.find((g2) => g2.name === legacyGroup)) == null ? void 0 : _a2.id) ?? legacyGroup;
     }
     const next2 = {
       ...wp,
       id: id2,
       shapeIds,
-      ...groupId !== void 0 ? {
-        groupId
+      ...groupId2 !== void 0 ? {
+        groupId: groupId2
       } : {}
     };
     delete next2.UUID;
@@ -88825,14 +88825,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const groupIds = new Set(channelGroups.map((g2) => g2.id));
     const shapeIds = new Set(data2.shapes.map((s2) => s2.id));
     const waypoints = data2.waypoints.map((wp) => {
-      const groupId = wp.groupId != null && !groupIds.has(wp.groupId) ? void 0 : wp.groupId;
+      const groupId2 = wp.groupId != null && !groupIds.has(wp.groupId) ? void 0 : wp.groupId;
       const shapeIdsFiltered = wp.shapeIds.filter((id2) => shapeIds.has(id2));
-      if (groupId === wp.groupId && shapeIdsFiltered.length === wp.shapeIds.length) {
+      if (groupId2 === wp.groupId && shapeIdsFiltered.length === wp.shapeIds.length) {
         return wp;
       }
       return {
         ...wp,
-        groupId,
+        groupId: groupId2,
         shapeIds: shapeIdsFiltered
       };
     });
@@ -89909,8 +89909,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     get2().persistImportedShapesToStory(resolved);
   }
-  function legendClassKey(waypointId, channelId) {
-    return `${waypointId ?? ""}:${channelId}`;
+  function legendClassKey(waypointId, channelId2) {
+    return `${waypointId ?? ""}:${channelId2}`;
   }
   const overlayInitialState = {
     overlayLayers: [],
@@ -90212,8 +90212,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         shapes: []
       });
     },
-    toggleLegendClass: (waypointId, channelId, name2) => {
-      const key2 = legendClassKey(waypointId, channelId);
+    toggleLegendClass: (waypointId, channelId2, name2) => {
+      const key2 = legendClassKey(waypointId, channelId2);
       const prev = get2().hiddenLegendClasses;
       const names = prev[key2] ?? [];
       const next2 = names.includes(name2) ? names.filter((n2) => n2 !== name2) : [
@@ -90951,14 +90951,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         ]
       }));
     },
-    deleteGroup: (groupId) => {
+    deleteGroup: (groupId2) => {
       set2((state) => ({
-        shapeGroups: state.shapeGroups.filter((g2) => g2.id !== groupId)
+        shapeGroups: state.shapeGroups.filter((g2) => g2.id !== groupId2)
       }));
     },
-    addShapeToGroup: (groupId, shapeId) => {
+    addShapeToGroup: (groupId2, shapeId) => {
       set2((state) => ({
-        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId ? {
+        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId2 ? {
           ...group2,
           shapeIds: [
             ...group2.shapeIds,
@@ -90967,17 +90967,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         } : group2)
       }));
     },
-    removeShapeFromGroup: (groupId, shapeId) => {
+    removeShapeFromGroup: (groupId2, shapeId) => {
       set2((state) => ({
-        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId ? {
+        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId2 ? {
           ...group2,
           shapeIds: group2.shapeIds.filter((id2) => id2 !== shapeId)
         } : group2)
       }));
     },
-    toggleGroupExpanded: (groupId) => {
+    toggleGroupExpanded: (groupId2) => {
       set2((state) => ({
-        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId ? {
+        shapeGroups: state.shapeGroups.map((group2) => group2.id === groupId2 ? {
           ...group2,
           isExpanded: !group2.isExpanded
         } : group2)
@@ -91075,16 +91075,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         };
       });
     },
-    setWaypointClassView: (waypointId, channelId, next2) => {
+    setWaypointClassView: (waypointId, channelId2, next2) => {
       const doc = useDocumentStore.getState();
       const index2 = doc.waypoints.findIndex((w2) => w2.id === waypointId);
       const wp = doc.waypoints[index2];
       if (!wp) return;
-      const rest2 = (wp.classViews ?? []).filter((v2) => v2.channelId !== channelId);
+      const rest2 = (wp.classViews ?? []).filter((v2) => v2.channelId !== channelId2);
       const classViews = next2 ? [
         ...rest2,
         {
-          channelId,
+          channelId: channelId2,
           ...next2
         }
       ] : rest2;
@@ -92052,13 +92052,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       floatRange: channelFloatRange(sc2)
     };
   }
-  function contrastEditorPropsForGroupRow(channelRendering, groupId, gc2, sc2) {
+  function contrastEditorPropsForGroupRow(channelRendering, groupId2, gc2, sc2) {
     const sourceId = (sc2 == null ? void 0 : sc2.id) ?? gc2.channelId;
     const liveColor = renderingForSource(channelRendering, sourceId, "color");
     const c2 = liveColor ?? gc2.color;
     const liveContrast = renderingForSource(channelRendering, sourceId, "contrast");
     return {
-      groupId,
+      groupId: groupId2,
       channelId: gc2.id,
       sourceChannelId: sourceId,
       channelLabel: (sc2 == null ? void 0 : sc2.name) ?? "Channel",
@@ -94115,7 +94115,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
   }
   const STACK_SEED_COLORS = [
-    ...IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb(hex)),
+    ...IMPORT_DEFAULT_SEED_HEX.map((hex) => hexToRgb$1(hex)),
     {
       r: 255,
       g: 255,
@@ -94262,7 +94262,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return imageChannelCount >= 2;
   }
   function seedRgbForGroupChannelIndex(index2) {
-    return hexToRgb(IMPORT_DEFAULT_SEED_HEX[index2 % IMPORT_DEFAULT_SEED_HEX.length]);
+    return hexToRgb$1(IMPORT_DEFAULT_SEED_HEX[index2 % IMPORT_DEFAULT_SEED_HEX.length]);
   }
   function currentGroupColors(group2) {
     return (group2.channels ?? []).map((gc2) => ({
@@ -94284,10 +94284,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return optimizePaletteSlots(slots, lockedChannelRowIds);
   }
-  function applyOptimizedColorsToChannelGroup(channelGroups, groupId, colors, options) {
+  function applyOptimizedColorsToChannelGroup(channelGroups, groupId2, colors, options) {
     const locked = options == null ? void 0 : options.lockedChannelRowIds;
     return channelGroups.map((g2) => {
-      if (g2.id !== groupId) return g2;
+      if (g2.id !== groupId2) return g2;
       const channels2 = g2.channels.map((gc2, i2) => {
         if (locked == null ? void 0 : locked.has(gc2.id)) return gc2;
         const c2 = colors[i2];
@@ -95130,11 +95130,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     classColorPreview = null;
     noteLut();
   }
-  function classViewFor(waypoint, channelId) {
+  function classViewFor(waypoint, channelId2) {
     var _a2;
-    return (_a2 = waypoint == null ? void 0 : waypoint.classViews) == null ? void 0 : _a2.find((v2) => v2.channelId === channelId);
+    return (_a2 = waypoint == null ? void 0 : waypoint.classViews) == null ? void 0 : _a2.find((v2) => v2.channelId === channelId2);
   }
-  function withHiddenClasses(view, channelId, hidden) {
+  function withHiddenClasses(view, channelId2, hidden) {
     if (!(hidden == null ? void 0 : hidden.length)) return view;
     const vis = (view == null ? void 0 : view.visibility) ?? visibilityAllOn();
     const visibility = vis.mode === "show" ? {
@@ -95150,7 +95150,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     };
     return {
-      channelId,
+      channelId: channelId2,
       colors: (view == null ? void 0 : view.colors) ?? [],
       visibility
     };
@@ -95318,12 +95318,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     dropClassViews(sourceChannelId);
   }
-  function dropClassViews(channelId) {
+  function dropClassViews(channelId2) {
     const doc = useDocumentStore.getState();
-    if (!doc.waypoints.some((w2) => classViewFor(w2, channelId))) return;
-    doc.setWaypoints(doc.waypoints.map((w2) => classViewFor(w2, channelId) ? {
+    if (!doc.waypoints.some((w2) => classViewFor(w2, channelId2))) return;
+    doc.setWaypoints(doc.waypoints.map((w2) => classViewFor(w2, channelId2) ? {
       ...w2,
-      classViews: (w2.classViews ?? []).filter((v2) => v2.channelId !== channelId)
+      classViews: (w2.classViews ?? []).filter((v2) => v2.channelId !== channelId2)
     } : w2));
   }
   function detachRemovedFeatureTables(previous2, remaining) {
@@ -95340,10 +95340,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const featureTable = doc.featureTables.find((c2) => c2.id === featureTableId);
     const waypoint = doc.waypoints.find((w2) => w2.id === waypointId);
     if (!featureTable || !waypoint) return void 0;
-    const channelId = featureTable.sourceChannelId;
+    const channelId2 = featureTable.sourceChannelId;
     return {
-      channelId,
-      view: classViewFor(waypoint, channelId)
+      channelId: channelId2,
+      view: classViewFor(waypoint, channelId2)
     };
   }
   function updateClassView(waypointId, featureTableId, update) {
@@ -96313,8 +96313,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     };
     for (const listener of listeners) listener();
   }
-  function readChannel(channelId) {
-    return documentChannels().find((sc2) => sc2.id === channelId);
+  function readChannel(channelId2) {
+    return documentChannels().find((sc2) => sc2.id === channelId2);
   }
   function removeFromQueues(key2) {
     const idx = queue.indexOf(key2);
@@ -96581,10 +96581,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       intern(job);
     }
   }
-  function attachChannel(job, channelId, guard) {
-    const prev = job.guards.get(channelId);
+  function attachChannel(job, channelId2, guard) {
+    const prev = job.guards.get(channelId2);
     if (!((prev == null ? void 0 : prev.kind) === "unchanged" && guard.kind === "still-missing")) {
-      job.guards.set(channelId, guard);
+      job.guards.set(channelId2, guard);
     }
   }
   function upsertJob(args) {
@@ -96616,9 +96616,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     enqueue(job);
     return job;
   }
-  function targetFor(channelId) {
+  function targetFor(channelId2) {
     const all2 = documentChannels();
-    const sc2 = all2.find((c2) => c2.id === channelId);
+    const sc2 = all2.find((c2) => c2.id === channelId2);
     if (!sc2 || !isGmmEligible(sc2, all2)) return null;
     const loader = loadersByImageId.get(sc2.imageId);
     if (!loader) return null;
@@ -96664,12 +96664,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   async function ensureGmm(channelIds) {
     const result = /* @__PURE__ */ new Map();
     const waits = [];
-    for (const channelId of channelIds) {
-      const target = targetFor(channelId);
+    for (const channelId2 of channelIds) {
+      const target = targetFor(channelId2);
       if (!target) continue;
       const current = asWindow(target.sc.gmmContrastLimits);
       if (current) {
-        result.set(channelId, {
+        result.set(channelId2, {
           lower: current.lower,
           upper: current.upper
         });
@@ -96685,9 +96685,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       });
       if (!job) continue;
       waits.push(intern(job).then(() => {
-        const sc2 = readChannel(channelId);
+        const sc2 = readChannel(channelId2);
         const limits = asWindow(sc2 == null ? void 0 : sc2.gmmContrastLimits);
-        if (limits) result.set(channelId, {
+        if (limits) result.set(channelId2, {
           lower: limits.lower,
           upper: limits.upper
         });
@@ -96698,13 +96698,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     await Promise.all(waits);
     return result;
   }
-  async function refitGmm(channelId) {
-    const target = targetFor(channelId);
+  async function refitGmm(channelId2) {
+    const target = targetFor(channelId2);
     if (!target) return null;
     const key2 = rasterKey(target.sc.imageId, target.sc.index);
     const running = inFlight.get(key2);
     if (running) await running;
-    const latest = targetFor(channelId);
+    const latest = targetFor(channelId2);
     if (!latest) return null;
     const expected = asWindow(latest.sc.gmmContrastLimits);
     const guard = expected ? {
@@ -96726,7 +96726,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     notify();
     const outcome = await intern(job);
     if (outcome.kind !== "fitted") return null;
-    const sc2 = readChannel(channelId);
+    const sc2 = readChannel(channelId2);
     if (!limitsEqual(sc2 == null ? void 0 : sc2.gmmContrastLimits, outcome.window)) return null;
     return {
       lower: outcome.window.lower,
@@ -98054,14 +98054,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...capVis,
       ...next2
     });
-    const applyRgbUnit = (visible, groupId) => {
+    const applyRgbUnit = (visible, groupId2) => {
       const next2 = visibilitiesForRgbUnit({
         rgbChannels,
         channelGroups,
         groupRowVisibilities: filledGroupVis,
         stackVisibilities: filledStackVis,
         visible,
-        groupId
+        groupId: groupId2
       });
       if (visible && !fits({
         stackVisibilities: next2.channelVisibilities,
@@ -168882,9 +168882,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     0,
     65535
   ];
-  async function jpegPyramidFolderName(channelId, lowerLimit, upperLimit) {
+  async function jpegPyramidFolderName(channelId2, lowerLimit, upperLimit) {
     const encoded = stableHash({
-      channelId,
+      channelId: channelId2,
       lowerLimit,
       upperLimit
     });
@@ -169367,10 +169367,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (jpegLoaderEntries.length === 0) return;
       const group2 = activeChannelGroupId ? channelGroups.find((g2) => g2.id === activeChannelGroupId) : channelGroups[0];
       const channels2 = (group2 == null ? void 0 : group2.channels) ?? [];
-      const groupId = (group2 == null ? void 0 : group2.id) ?? activeChannelGroupId;
+      const groupId2 = (group2 == null ? void 0 : group2.id) ?? activeChannelGroupId;
       let cancelled = false;
       void (async () => {
-        const next2 = await syncJpegEntryChannelFolders(jpegLoaderEntries, images, channels2, groupId);
+        const next2 = await syncJpegEntryChannelFolders(jpegLoaderEntries, images, channels2, groupId2);
         if (cancelled) return;
         setJpegLoaderEntries((prev) => prev.length === next2.length && prev.every((e2, i2) => e2 === next2[i2]) ? prev : next2);
       })();
@@ -169559,7 +169559,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     var _a2;
     const doc = useDocumentStore.getState();
     if (doc.waypoints.length > 0) return;
-    const groupId = (_a2 = doc.channelGroups[0]) == null ? void 0 : _a2.id;
+    const groupId2 = (_a2 = doc.channelGroups[0]) == null ? void 0 : _a2.id;
     const raw2 = {
       id: crypto.randomUUID(),
       State: {
@@ -169568,8 +169568,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       Name: "Waypoint 1",
       Content: "",
       shapeIds: [],
-      ...groupId !== void 0 ? {
-        groupId
+      ...groupId2 !== void 0 ? {
+        groupId: groupId2
       } : {}
     };
     const app = useAppStore.getState();
@@ -173770,25 +173770,191 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     ]
   };
+  const DEMO_SHELF_STORY_ID = "018fd3a0-0000-7000-8000-00000000de11";
   const DEMO_CRC_OME_TIFF_URL = "https://lsp-public-data.s3.amazonaws.com/lin-2021-crc-atlas/CRC01-096-097.ome.tif";
   const DEMO_JPEG_URL = "crc-export";
-  exhibit_config.Name ?? "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer";
+  const DEMO_SHELF_TITLE = exhibit_config.Name ?? "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer";
+  const CRC_SIZE_X = 26139;
+  const CRC_SIZE_Y = 27120;
+  const CRC_UM_PER_PIXEL = 0.325;
+  const SEED_VIEWPORT_W = 1280;
+  const SEED_VIEWPORT_H = 800;
+  const DEMO_IMAGE_ID = "018fd3a0-0000-7000-8000-00000000c001";
   const EMPTY_EXHIBIT_CONFIG = {
     Name: "",
     Stories: [],
     Groups: []
   };
+  const CRC_CHANNEL_NAMES = [
+    "DNA1",
+    "CYCIF_AF488",
+    "CYCIF_AF555",
+    "CYCIF_AF647",
+    "CYCIF_DNA2",
+    "CYCIF_CTRL488",
+    "CYCIF_CTRL555",
+    "CYCIF_CTRL647",
+    "CYCIF_DNA3",
+    "CYCIF_CD3",
+    "Na_K_ATPase",
+    "CYCIF_CD45RO",
+    "CYCIF_DNA4",
+    "Ki67",
+    "PanCK",
+    "ASMA",
+    "CYCIF_DNA5",
+    "CD4",
+    "CD45",
+    "PD1",
+    "CYCIF_DNA6",
+    "CD20",
+    "CD68",
+    "CD8a",
+    "CYCIF_DNA7",
+    "CD163",
+    "FOXP3",
+    "PDL1",
+    "CYCIF_DNA8",
+    "Ecadherin",
+    "Vimentin",
+    "CYCIF_CDX2",
+    "CYCIF_DNA9",
+    "LaminABC",
+    "Desmin",
+    "CD31",
+    "DNA10",
+    "PCNA",
+    "CYCIF_Ki67_2",
+    "Collagen",
+    "HE_r",
+    "HE_g",
+    "HE_b"
+  ];
+  function hexToRgb(c2) {
+    const n2 = Number.parseInt(c2, 16);
+    return {
+      r: n2 >> 16 & 255,
+      g: n2 >> 8 & 255,
+      b: n2 & 255
+    };
+  }
+  function channelId(index2) {
+    return `018fd3a0-0000-7000-8100-${index2.toString(16).padStart(12, "0")}`;
+  }
+  function groupId(index2) {
+    return `018fd3a0-0000-7000-8200-${index2.toString(16).padStart(12, "0")}`;
+  }
+  function groupChannelRowId(groupIndex, rowIndex) {
+    const n2 = groupIndex * 256 + rowIndex;
+    return `018fd3a0-0000-7000-8300-${n2.toString(16).padStart(12, "0")}`;
+  }
   function isJpegDemoMode() {
     return false;
   }
   function isDemoContentEnabled() {
-    return false;
+    return true;
   }
   function getDemoDocumentTitle() {
-    return "Minerva";
+    return "Minerva 2.0 Demo";
+  }
+  function buildDemoCrcDocumentData() {
+    const channels2 = CRC_CHANNEL_NAMES.map((name2, index2) => ({
+      id: channelId(index2),
+      index: index2,
+      name: name2,
+      kind: "channel",
+      samples: 1,
+      sourceDataTypeId: "uint16"
+    }));
+    const nameByExhibitChannel = {};
+    const channelGroups = [];
+    const groups = (exhibit_config.Groups ?? []).filter((g2) => {
+      var _a2;
+      return ((_a2 = g2.Image) == null ? void 0 : _a2.Method) === "Colorimetric" && g2.Path in GROUP_CHANNELS_CRC01;
+    });
+    for (let gi2 = 0; gi2 < groups.length; gi2++) {
+      const g2 = groups[gi2];
+      const indices = GROUP_CHANNELS_CRC01[g2.Path];
+      if (!indices || indices.length !== g2.Channels.length) continue;
+      for (let i2 = 0; i2 < indices.length; i2++) {
+        const idx = indices[i2];
+        const exhibitName = g2.Channels[i2];
+        nameByExhibitChannel[exhibitName] = channelId(idx);
+        const ch2 = channels2[idx];
+        if (ch2) ch2.name = exhibitName;
+      }
+      channelGroups.push({
+        id: groupId(gi2),
+        name: g2.Name,
+        expanded: gi2 === 0,
+        channels: g2.Channels.map((name2, i2) => ({
+          id: groupChannelRowId(gi2, i2),
+          channelId: nameByExhibitChannel[name2],
+          color: hexToRgb(g2.Colors[i2]),
+          lowerLimit: g2.Lows[i2],
+          upperLimit: g2.Highs[i2]
+        }))
+      });
+    }
+    const image2 = {
+      id: DEMO_IMAGE_ID,
+      sizeX: CRC_SIZE_X,
+      sizeY: CRC_SIZE_Y,
+      sizeC: CRC_CHANNEL_NAMES.length,
+      omeXmlHash: "",
+      basename: "CRC01-096-097.ome.tif",
+      contentRole: "intensity",
+      rotationDegrees: 0,
+      flipHorizontal: false,
+      flipVertical: false,
+      channels: channels2,
+      source: {
+        kind: "url",
+        url: DEMO_CRC_OME_TIFF_URL
+      }
+    };
+    const { stories: migrated, shapes } = migrateLegacyWaypointShapes(structuredClone(configWaypoints), [], CRC_SIZE_X * CRC_UM_PER_PIXEL, CRC_SIZE_Y * CRC_UM_PER_PIXEL);
+    const waypoints = migrated.map((story) => {
+      const hydrated = hydrateConfigWaypoint(story, channelGroups);
+      const normalized = normalizeWaypointToBounds(hydrated, CRC_SIZE_X, CRC_SIZE_Y, SEED_VIEWPORT_W, SEED_VIEWPORT_H);
+      const { waypoint } = configWaypointToWaypoint(normalized, CRC_SIZE_X, CRC_SIZE_Y, SEED_VIEWPORT_W, SEED_VIEWPORT_H);
+      return {
+        ...waypoint,
+        thumbnail: waypoint.thumbnail ?? ""
+      };
+    });
+    return {
+      metadata: {
+        title: DEMO_SHELF_TITLE,
+        imageSource: DEMO_CRC_OME_TIFF_URL
+      },
+      waypoints,
+      shapes,
+      channelGroups,
+      images: [
+        image2
+      ]
+    };
   }
   async function ensureDemoShelfStory() {
-    return;
+    const existing = await getStoryRecord(DEMO_SHELF_STORY_ID);
+    if (existing && existing.data.images.length > 0) return;
+    const seed = buildDemoCrcDocumentData();
+    if (!existing) {
+      await saveStoryDocument(DEMO_SHELF_STORY_ID, seed);
+      return;
+    }
+    await saveStoryDocument(DEMO_SHELF_STORY_ID, {
+      ...seed,
+      waypoints: existing.data.waypoints.length > 0 ? existing.data.waypoints : seed.waypoints,
+      shapes: existing.data.shapes.length > 0 ? existing.data.shapes : seed.shapes,
+      metadata: {
+        ...seed.metadata,
+        ...existing.data.metadata,
+        title: seed.metadata.title,
+        imageSource: seed.metadata.imageSource
+      }
+    });
   }
   function getDemoMainProps() {
     const jpeg = isJpegDemoMode();
@@ -173956,9 +174122,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       upperLimit: channel.upperLimit ?? max2
     };
   }
-  function imageOwningChannel(images, channelId) {
+  function imageOwningChannel(images, channelId2) {
     for (const image2 of images) {
-      const channel = (image2.channels ?? []).find((ch2) => ch2.id === channelId);
+      const channel = (image2.channels ?? []).find((ch2) => ch2.id === channelId2);
       if (channel) return {
         image: image2,
         channel
@@ -174362,6 +174528,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       loaderErrors
     };
   }
+  async function fetchStoryDocument(documentUrl) {
+    const res = await fetch(documentUrl);
+    if (!res.ok) {
+      throw new Error(`Failed to load ${documentUrl} (${res.status})`);
+    }
+    return validateDocumentData(await res.json());
+  }
   const minervaMarkSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="3.9 0.5 162 162">\n  <polygon fill="#00A5DF" points="84.9,125.15 74.67,101.74 61.02,109.33 54.73,141.49 66.91,150.34 71.24,125.99 84.9,156.83 98.55,125.99 102.88,150.34 115.07,141.49 108.77,109.33 95.12,101.74"/>\n  <polygon fill="#00A5DF" points="98.18,94.75 105.77,94 103.52,82.52"/>\n  <polygon fill="#00A5DF" points="64.02,94 71.62,94.75 66.27,82.52"/>\n  <polygon fill="#963CBD" points="161.32,101.3 136.22,78.79 160.71,82.19 156.07,67.87 123.52,63.92 112.09,74.55 131.19,91.51 105.77,94 108.77,109.33 137.41,125.25 149.6,116.4 127.78,104.76"/>\n  <polygon fill="#963CBD" points="95.12,101.74 98.18,94.75 84.9,96.05"/>\n  <polygon fill="#963CBD" points="106.39,69.49 108.02,62.04 96.41,60.63"/>\n  <polygon fill="#004EA8" points="98.18,94.75 95.12,101.74 108.77,109.33 105.77,94"/>\n  <polygon fill="#93C90F" points="113.51,37.09 108.02,62.04 123.52,63.92 147.52,41.6 142.87,27.28 125.05,44.43 132.13,11.46 102.96,28.38 113.77,6.13 98.71,6.13 84.9,35.85 91.48,50.01"/>\n  <polygon fill="#93C90F" points="73.39,60.63 84.9,53.87 78.32,50.01"/>\n  <polygon fill="#93C90F" points="103.52,82.52 112.09,74.55 106.39,69.49"/>\n  <polygon fill="#007749" points="106.39,69.49 112.09,74.55 123.52,63.92 108.02,62.04"/>\n  <polygon fill="#D00070" points="91.48,50.01 84.9,53.87 96.41,60.63"/>\n  <polygon fill="#D00070" points="63.41,69.49 57.7,74.55 66.27,82.52"/>\n  <polygon fill="#D00070" points="56.28,37.09 78.32,50.01 84.9,35.85 71.09,6.13 56.03,6.13 66.83,28.38 37.66,11.46 44.74,44.43 26.92,27.28 22.27,41.6 46.27,63.92 61.77,62.04"/>\n  <polygon fill="#890C58" points="84.9,53.87 91.48,50.01 84.9,35.85 78.32,50.01"/>\n  <polygon fill="#FF6720" points="71.62,94.75 74.67,101.74 84.9,96.05"/>\n  <polygon fill="#FF6720" points="73.39,60.63 61.77,62.04 63.41,69.49"/>\n  <polygon fill="#FF6720" points="38.6,91.51 57.7,74.55 46.27,63.92 13.69,67.87 9.08,82.19 33.58,78.79 8.47,101.3 42.02,104.76 20.2,116.4 32.38,125.25 61.02,109.33 64.02,94"/>\n  <polygon fill="#00778B" points="71.62,94.75 64.02,94 61.02,109.33 74.67,101.74"/>\n  <polygon fill="#AB2328" points="63.41,69.49 61.77,62.04 46.27,63.92 57.7,74.55"/>\n</svg>\n';
   function storedTableFormat(bytes) {
     const parquet = bytes.byteLength >= 4 && bytes[0] === 80 && bytes[1] === 65 && bytes[2] === 82 && bytes[3] === 49;
@@ -174389,15 +174562,46 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     await write.write(data2);
     await write.close();
   }
+  function classifyViewerLaunchUrl(raw2) {
+    const trimmed = raw2.trim();
+    let parsed;
+    try {
+      parsed = new URL(trimmed);
+    } catch {
+      return null;
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    const pathUrl = `${parsed.origin}${parsed.pathname}`;
+    if (isDicomWebSeriesUrl(pathUrl)) {
+      return {
+        kind: "dicomWeb",
+        url: normalizeDicomWebSeriesUrl(pathUrl)
+      };
+    }
+    const path2 = parsed.pathname.replace(/\/+$/, "");
+    if (path2.toLowerCase().endsWith(".json")) {
+      return {
+        kind: "story",
+        url: trimmed
+      };
+    }
+    return {
+      kind: "image",
+      url: trimmed
+    };
+  }
   const storySearchSchema = objectType({
     storyid: stringType().uuid().optional()
   });
   function parseRootSearch(raw2) {
-    const r2 = storySearchSchema.safeParse(raw2);
-    if (!r2.success) return {};
-    return {
-      storyid: r2.data.storyid
-    };
+    const out = {};
+    const story = storySearchSchema.safeParse(raw2);
+    if (story.success && story.data.storyid) out.storyid = story.data.storyid;
+    if (typeof raw2.src === "string") {
+      const src = raw2.src.trim();
+      if (src && classifyViewerLaunchUrl(src)) out.src = src;
+    }
+    return out;
   }
   const uuidParamSchema = stringType().uuid();
   function parsePreferredStoryIdFromLocation() {
@@ -174455,18 +174659,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     reactExports.useEffect(() => {
       if (activeStoryId === null) return;
-      if (search2.storyid === activeStoryId) return;
+      if (search2.storyid === activeStoryId && search2.src === void 0) return;
       navigate({
-        search: (prev) => ({
-          ...prev,
-          storyid: activeStoryId
-        }),
+        search: (prev) => {
+          const next2 = {
+            ...prev,
+            storyid: activeStoryId
+          };
+          delete next2.src;
+          return next2;
+        },
         replace: true
       });
     }, [
       activeStoryId,
       navigate,
-      search2.storyid
+      search2.storyid,
+      search2.src
     ]);
     return null;
   }
@@ -174923,6 +175132,51 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const fallback = /^(document|story)$/i.test(base2) ? "Imported Story" : base2;
     return persistImportedStory(data2, fallback);
   }
+  function withHostedSources(data2, documentUrl) {
+    const hosted = (url) => new URL(url.trim() || ".", documentUrl).href;
+    return {
+      ...data2,
+      images: data2.images.map((im) => {
+        const source2 = im.source;
+        if ((source2 == null ? void 0 : source2.kind) === "jpeg") {
+          const url = hosted(source2.url).replace(/\/$/, "");
+          return {
+            ...im,
+            source: {
+              kind: "jpeg",
+              url
+            }
+          };
+        }
+        if ((source2 == null ? void 0 : source2.kind) === "url") {
+          const url = hosted(source2.url);
+          return {
+            ...im,
+            source: {
+              kind: "url",
+              url
+            }
+          };
+        }
+        return im;
+      }),
+      featureTables: data2.featureTables.map((table2) => table2.source.kind === "url" ? {
+        ...table2,
+        source: {
+          kind: "url",
+          url: hosted(table2.source.url)
+        }
+      } : table2)
+    };
+  }
+  async function importStoryFromUrl(documentUrl) {
+    const data2 = await fetchStoryDocument(documentUrl);
+    const hosted = withHostedSources({
+      ...data2,
+      images: portableImportImages(data2)
+    }, documentUrl);
+    return persistImportedStory(hosted, "");
+  }
   async function importStoryFolderFromPicker() {
     if (!hasDirectoryPickerAccess()) {
       throw new Error("Importing a story folder needs the File System Access API (Chrome or Edge).");
@@ -174959,8 +175213,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-27T15:50:16.279Z";
-    const sha = "c2844da2319dcc4eaaa3ef4fab3c1080c84e0838";
+    const iso = "2026-10-28T14:38:36.580Z";
+    const sha = "28cd57520bf9f8a8ecadbdc9502d96f2bbf845e6";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -174976,35 +175230,36 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ].filter(Boolean).join("\n")
     };
   }
-  const root$8 = "_root_gmkzm_6";
-  const masthead = "_masthead_gmkzm_19";
-  const addWrap = "_addWrap_gmkzm_30";
-  const addMenu = "_addMenu_gmkzm_38";
-  const intakeRow = "_intakeRow_gmkzm_44";
-  const addTrigger = "_addTrigger_gmkzm_54";
-  const tagline = "_tagline_gmkzm_80";
-  const error = "_error_gmkzm_88";
-  const whisper = "_whisper_gmkzm_97";
-  const bookcase = "_bookcase_gmkzm_105";
-  const bookcaseInner = "_bookcaseInner_gmkzm_117";
-  const shelfBay = "_shelfBay_gmkzm_122";
-  const bayContent = "_bayContent_gmkzm_128";
-  const bayContentEmpty = "_bayContentEmpty_gmkzm_137";
-  const ghostShelf = "_ghostShelf_gmkzm_143";
-  const ghostBook = "_ghostBook_gmkzm_155";
-  const storyRow = "_storyRow_gmkzm_159";
-  const shelfBoard = "_shelfBoard_gmkzm_170";
-  const rowOpen = "_rowOpen_gmkzm_179";
-  const rowThumb = "_rowThumb_gmkzm_205";
-  const rowThumbImg = "_rowThumbImg_gmkzm_215";
-  const rowThumbBlank = "_rowThumbBlank_gmkzm_223";
-  const rowText = "_rowText_gmkzm_230";
-  const rowTitle$1 = "_rowTitle_gmkzm_239";
-  const rowDate = "_rowDate_gmkzm_249";
-  const scrap = "_scrap_gmkzm_258";
-  const buildInfo = "_buildInfo_gmkzm_297";
-  const buildInfoButton = "_buildInfoButton_gmkzm_308";
-  const buildInfoStamp = "_buildInfoStamp_gmkzm_331";
+  const root$8 = "_root_1nhe6_6";
+  const masthead = "_masthead_1nhe6_19";
+  const addWrap = "_addWrap_1nhe6_30";
+  const addMenu = "_addMenu_1nhe6_38";
+  const intakeRow = "_intakeRow_1nhe6_44";
+  const addTrigger = "_addTrigger_1nhe6_54";
+  const tagline = "_tagline_1nhe6_80";
+  const exampleLink = "_exampleLink_1nhe6_88";
+  const error = "_error_1nhe6_102";
+  const whisper = "_whisper_1nhe6_111";
+  const bookcase = "_bookcase_1nhe6_119";
+  const bookcaseInner = "_bookcaseInner_1nhe6_131";
+  const shelfBay = "_shelfBay_1nhe6_136";
+  const bayContent = "_bayContent_1nhe6_142";
+  const bayContentEmpty = "_bayContentEmpty_1nhe6_151";
+  const ghostShelf = "_ghostShelf_1nhe6_157";
+  const ghostBook = "_ghostBook_1nhe6_169";
+  const storyRow = "_storyRow_1nhe6_173";
+  const shelfBoard = "_shelfBoard_1nhe6_184";
+  const rowOpen = "_rowOpen_1nhe6_193";
+  const rowThumb = "_rowThumb_1nhe6_219";
+  const rowThumbImg = "_rowThumbImg_1nhe6_229";
+  const rowThumbBlank = "_rowThumbBlank_1nhe6_237";
+  const rowText = "_rowText_1nhe6_244";
+  const rowTitle$1 = "_rowTitle_1nhe6_253";
+  const rowDate = "_rowDate_1nhe6_263";
+  const scrap = "_scrap_1nhe6_272";
+  const buildInfo = "_buildInfo_1nhe6_311";
+  const buildInfoButton = "_buildInfoButton_1nhe6_322";
+  const buildInfoStamp = "_buildInfoStamp_1nhe6_345";
   const styles$n = {
     root: root$8,
     masthead,
@@ -175013,6 +175268,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     intakeRow,
     addTrigger,
     tagline,
+    exampleLink,
     error,
     whisper,
     bookcase,
@@ -175038,8 +175294,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   };
   const APP_TAB_TITLE_PREFIX$1 = getDemoDocumentTitle();
   const BUILD_STAMP$1 = buildStamp();
+  const DEMO_STORY_URL = "https://lsp-private-data.s3.amazonaws.com/Minerva/CRC01/document.json";
   let pendingLibraryImport = null;
   let libraryImportTookAutoload = false;
+  let claimedLaunchUrl = null;
   function hasPendingLibraryImport() {
     return pendingLibraryImport != null;
   }
@@ -175243,6 +175501,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function MinervaLibraryPage() {
     const navigate = rootRouteApi.useNavigate();
+    const launchUrl = rootRouteApi.useSearch().src;
     const switchStory = useDocumentStore((s2) => s2.switchStory);
     const createStory = useDocumentStore((s2) => s2.createStory);
     const deleteStory = useDocumentStore((s2) => s2.deleteStory);
@@ -175272,10 +175531,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     const goToStory = reactExports.useCallback((id2) => {
       navigate({
-        search: (prev) => ({
-          ...prev,
-          storyid: id2
-        }),
+        search: (prev) => {
+          const next2 = {
+            ...prev,
+            storyid: id2
+          };
+          delete next2.src;
+          return next2;
+        },
         replace: true
       });
     }, [
@@ -175360,6 +175623,44 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }, [
       goToStory
     ]);
+    reactExports.useEffect(() => {
+      if (!launchUrl) {
+        claimedLaunchUrl = null;
+        return;
+      }
+      if (claimedLaunchUrl === launchUrl) return;
+      claimedLaunchUrl = launchUrl;
+      const launch = classifyViewerLaunchUrl(launchUrl);
+      if (!launch) return;
+      if (launch.kind === "story") {
+        void (async () => {
+          try {
+            libraryImportTookAutoload = true;
+            useAppStore.getState().resetStoryViewerSession();
+            goToStory(await importStoryFromUrl(launch.url));
+          } catch (e2) {
+            libraryImportTookAutoload = false;
+            setError(e2 instanceof Error ? e2.message : "Could not open config.json");
+          }
+        })();
+        return;
+      }
+      void startStoryWithPendingImport(launch.kind === "dicomWeb" ? {
+        kind: "dicomWeb",
+        url: launch.url
+      } : {
+        kind: "ome",
+        role: "intensity",
+        source: {
+          kind: "url",
+          url: launch.url
+        }
+      });
+    }, [
+      launchUrl,
+      goToStory,
+      startStoryWithPendingImport
+    ]);
     const handleDelete2 = reactExports.useCallback((id2, title7) => {
       if (!window.confirm(`Remove \u201C${title7}\u201D from the shelf?`)) return;
       setBusyId(id2);
@@ -175381,6 +175682,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     const bays = reactExports.useMemo(() => buildBays(summaries), [
       summaries
     ]);
+    const openingLaunch = Boolean(launchUrl) && error2 === null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$n.root,
       children: [
@@ -175388,7 +175690,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           className: styles$n.error,
           children: error2
         }) : null,
-        jsxRuntimeExports.jsxs("header", {
+        openingLaunch ? null : jsxRuntimeExports.jsxs("header", {
           className: styles$n.masthead,
           children: [
             jsxRuntimeExports.jsx("h1", {
@@ -175398,12 +175700,29 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             jsxRuntimeExports.jsx("p", {
               className: styles$n.tagline,
               children: "a microscopy viewer for non-experts"
+            }),
+            jsxRuntimeExports.jsx("a", {
+              className: `${minervaTheme.focusRing} ${styles$n.exampleLink}`,
+              href: `?src=${encodeURIComponent(DEMO_STORY_URL)}`,
+              onClick: (event) => {
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                  return;
+                }
+                event.preventDefault();
+                navigate({
+                  search: () => ({
+                    src: DEMO_STORY_URL
+                  })
+                });
+              },
+              children: "View example"
             })
           ]
         }),
         jsxRuntimeExports.jsx("section", {
           className: styles$n.bookcase,
           "aria-label": "Library",
+          hidden: openingLaunch,
           children: jsxRuntimeExports.jsxs("div", {
             className: styles$n.bookcaseInner,
             children: [
@@ -250795,14 +251114,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ...capVis,
       ...next2
     });
-    const applyRgbUnit = (imageId, visible, groupId) => {
+    const applyRgbUnit = (imageId, visible, groupId2) => {
       const next2 = visibilitiesForRgbUnit({
         rgbChannels: imageIntensityChannels(sourceChannels, imageId),
         channelGroups,
         groupRowVisibilities: channelGroupRowVisibilities,
         stackVisibilities,
         visible,
-        groupId
+        groupId: groupId2
       });
       if (visible && !fitsImage(imageId, {
         stackVisibilities: next2.channelVisibilities,
@@ -250853,8 +251172,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         const validRowIds = new Set(channelGroups.flatMap((g2) => g2.channels.map((gc2) => gc2.id)));
         let changed = false;
         const next2 = /* @__PURE__ */ new Map();
-        for (const [groupId, rowIds] of prev) {
-          if (!validGroupIds.has(groupId)) {
+        for (const [groupId2, rowIds] of prev) {
+          if (!validGroupIds.has(groupId2)) {
             changed = true;
             continue;
           }
@@ -250862,24 +251181,24 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             ...rowIds
           ].filter((rowId) => validRowIds.has(rowId)));
           if (filtered.size !== rowIds.size) changed = true;
-          if (filtered.size > 0) next2.set(groupId, filtered);
+          if (filtered.size > 0) next2.set(groupId2, filtered);
         }
         return changed ? next2 : prev;
       });
     }, [
       channelGroups
     ]);
-    const lockedIdsForGroup = reactExports.useCallback((groupId) => lockedColorRowIdsByGroup.get(groupId) ?? EMPTY_LOCKED_ROW_IDS, [
+    const lockedIdsForGroup = reactExports.useCallback((groupId2) => lockedColorRowIdsByGroup.get(groupId2) ?? EMPTY_LOCKED_ROW_IDS, [
       lockedColorRowIdsByGroup
     ]);
-    const toggleColorLock = reactExports.useCallback((groupId, rowId) => {
+    const toggleColorLock = reactExports.useCallback((groupId2, rowId) => {
       setLockedColorRowIdsByGroup((prev) => {
         const next2 = new Map(prev);
-        const set2 = new Set(next2.get(groupId) ?? []);
+        const set2 = new Set(next2.get(groupId2) ?? []);
         if (set2.has(rowId)) set2.delete(rowId);
         else set2.add(rowId);
-        if (set2.size === 0) next2.delete(groupId);
-        else next2.set(groupId, set2);
+        if (set2.size === 0) next2.delete(groupId2);
+        else next2.set(groupId2, set2);
         return next2;
       });
     }, []);
@@ -250903,32 +251222,32 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setGroupNames,
       setChannelGroupRowVisibilities
     ]);
-    const activateGroup = reactExports.useCallback((groupId) => {
-      if (useAppStore.getState().activeChannelGroupId === groupId) {
-        setActiveChannelGroup(groupId);
+    const activateGroup = reactExports.useCallback((groupId2) => {
+      if (useAppStore.getState().activeChannelGroupId === groupId2) {
+        setActiveChannelGroup(groupId2);
       } else {
-        showOnlyChannelGroup(groupId);
+        showOnlyChannelGroup(groupId2);
       }
       const groups = useDocumentStore.getState().channelGroups;
       syncGroupState(groups.map((g2) => ({
         ...g2,
-        expanded: g2.id === groupId
+        expanded: g2.id === groupId2
       })));
     }, [
       setActiveChannelGroup,
       showOnlyChannelGroup,
       syncGroupState
     ]);
-    const renameSourceChannelDisplayName = reactExports.useCallback((channelId, rawName) => {
+    const renameSourceChannelDisplayName = reactExports.useCallback((channelId2, rawName) => {
       const trimmed = rawName.trim();
       if (!trimmed) return;
       const doc = useDocumentStore.getState();
       const flatBefore = flattenImageChannelsInDocumentOrder(doc.images);
-      const prev = findSourceChannel(flatBefore, channelId);
+      const prev = findSourceChannel(flatBefore, channelId2);
       if (!prev || prev.name === trimmed) return;
       const nextImages = doc.images.map((im) => ({
         ...im,
-        channels: im.channels.map((ch2) => ch2.id === channelId ? {
+        channels: im.channels.map((ch2) => ch2.id === channelId2 ? {
           ...ch2,
           name: trimmed
         } : ch2)
@@ -250978,17 +251297,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         });
       }
     };
-    const deleteGroup = (groupId) => {
+    const deleteGroup = (groupId2) => {
       var _a2;
-      const newGroups = channelGroups.filter(({ id: id2 }) => id2 !== groupId);
+      const newGroups = channelGroups.filter(({ id: id2 }) => id2 !== groupId2);
       syncGroupState(newGroups);
       setLockedColorRowIdsByGroup((prev) => {
-        if (!prev.has(groupId)) return prev;
+        if (!prev.has(groupId2)) return prev;
         const next2 = new Map(prev);
-        next2.delete(groupId);
+        next2.delete(groupId2);
         return next2;
       });
-      if (activeChannelGroupId === groupId) {
+      if (activeChannelGroupId === groupId2) {
         const next2 = (_a2 = newGroups[0]) == null ? void 0 : _a2.id;
         if (next2) activateGroup(next2);
         else useAppStore.setState({
@@ -250996,17 +251315,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         });
       }
     };
-    const renameGroup = (groupId, newName) => {
+    const renameGroup = (groupId2, newName) => {
       const groups = useDocumentStore.getState().channelGroups;
-      syncGroupState(groups.map((g2) => g2.id === groupId ? {
+      syncGroupState(groups.map((g2) => g2.id === groupId2 ? {
         ...g2,
         name: newName
       } : g2));
     };
-    const toggleGroupExpanded = (groupId) => {
+    const toggleGroupExpanded = (groupId2) => {
       const groups = useDocumentStore.getState().channelGroups;
       syncGroupState(groups.map((g2, i2) => {
-        if (g2.id !== groupId) return g2;
+        if (g2.id !== groupId2) return g2;
         const currentlyExpanded = g2.expanded ?? i2 === 0;
         return {
           ...g2,
@@ -251089,9 +251408,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       fitBusy: sc2 ? refittingContrastIds.has(sc2.id) : false,
       onRemoveFromGroup
     });
-    const addChannelToGroup = reactExports.useCallback(async (groupId, sourceChannelUUID) => {
+    const addChannelToGroup = reactExports.useCallback(async (groupId2, sourceChannelUUID) => {
       if (optimizePaletteBusy) return;
-      const group2 = channelGroups.find((g2) => g2.id === groupId);
+      const group2 = channelGroups.find((g2) => g2.id === groupId2);
       if (!group2) return;
       if (group2.channels.some((gc2) => gc2.channelId === sourceChannelUUID)) {
         return;
@@ -251125,14 +251444,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         newRows[0].lowerLimit = fittedLimits.lower;
         newRows[0].upperLimit = fittedLimits.upper;
       }
-      const newGroups = channelGroups.map((g2) => g2.id !== groupId ? g2 : {
+      const newGroups = channelGroups.map((g2) => g2.id !== groupId2 ? g2 : {
         ...g2,
         channels: [
           ...g2.channels,
           ...newRows
         ]
       });
-      const updatedGroup = newGroups.find((g2) => g2.id === groupId);
+      const updatedGroup = newGroups.find((g2) => g2.id === groupId2);
       setChannelGroupRowVisibilities({
         ...channelGroupRowVisibilities,
         ...Object.fromEntries(newRows.map((gc2) => [
@@ -251150,7 +251469,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       useAppStore.getState().clearChannelRendering();
       try {
         const colors = await optimizeChannelGroupWithLocks(updatedGroup, sourceChannels, lockedIds);
-        syncGroupState(applyOptimizedColorsToChannelGroup(newGroups, groupId, colors, {
+        syncGroupState(applyOptimizedColorsToChannelGroup(newGroups, groupId2, colors, {
           lockedChannelRowIds: lockedIds
         }));
       } catch {
@@ -251167,18 +251486,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setChannelGroupRowVisibilities,
       channelGroupRowVisibilities
     ]);
-    const removeChannelFromGroup = (groupId, rowId) => {
+    const removeChannelFromGroup = (groupId2, rowId) => {
       var _a2;
       const groups = useDocumentStore.getState().channelGroups;
-      const removedRow = (_a2 = groups.find((g2) => g2.id === groupId)) == null ? void 0 : _a2.channels.find((gc2) => gc2.id === rowId);
+      const removedRow = (_a2 = groups.find((g2) => g2.id === groupId2)) == null ? void 0 : _a2.channels.find((gc2) => gc2.id === rowId);
       const removedSc = removedRow ? findSourceChannel(sourceChannels, removedRow.channelId) : void 0;
       const unitIds = removedSc && isRgbDisplayChannel(removedSc, sourceChannels) ? new Set(imageIntensityChannels(sourceChannels, removedSc.imageId).map((c2) => c2.id)) : null;
-      syncGroupState(groups.map((g2) => g2.id !== groupId ? g2 : {
+      syncGroupState(groups.map((g2) => g2.id !== groupId2 ? g2 : {
         ...g2,
         channels: g2.channels.filter((gc2) => unitIds ? !unitIds.has(gc2.channelId) : gc2.id !== rowId)
       }));
     };
-    const syncMaskVisualization = (sourceId, viz, groupId, rowId) => {
+    const syncMaskVisualization = (sourceId, viz, groupId2, rowId) => {
       const doc = useDocumentStore.getState();
       const nextImages = patchSourceChannelOnImages(doc.images, sourceId, {
         maskVisualization: viz
@@ -251186,8 +251505,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const nextGroups = doc.channelGroups.map((g2) => ({
         ...g2,
         channels: g2.channels.map((gc2) => {
-          if (groupId != null && rowId != null) {
-            return g2.id === groupId && gc2.id === rowId ? {
+          if (groupId2 != null && rowId != null) {
+            return g2.id === groupId2 && gc2.id === rowId ? {
               ...gc2,
               maskVisualization: viz
             } : gc2;
@@ -251200,20 +251519,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }));
       setImagesAndChannelGroups(nextImages, nextGroups);
     };
-    const runOptimizePaletteForGroup = async (groupId) => {
+    const runOptimizePaletteForGroup = async (groupId2) => {
       if (optimizePaletteBusy) return;
-      const group2 = channelGroups.find((g2) => g2.id === groupId);
+      const group2 = channelGroups.find((g2) => g2.id === groupId2);
       if (!group2 || !isGroupEligibleForPsudoOptimize(group2, sourceChannels)) {
         return;
       }
-      const lockedIds = lockedIdsForGroup(groupId);
+      const lockedIds = lockedIdsForGroup(groupId2);
       const pendingIds = groupOptimizePendingSourceIds(group2, sourceChannels, lockedIds);
       setOptimizePaletteBusy(true);
       setStackPalettePendingMany(pendingIds, true);
       useAppStore.getState().clearChannelRendering();
       try {
         const colors = await optimizeChannelGroupWithLocks(group2, sourceChannels, lockedIds);
-        syncGroupState(applyOptimizedColorsToChannelGroup(useDocumentStore.getState().channelGroups, groupId, colors, {
+        syncGroupState(applyOptimizedColorsToChannelGroup(useDocumentStore.getState().channelGroups, groupId2, colors, {
           lockedChannelRowIds: lockedIds
         }));
       } catch {
@@ -251222,13 +251541,13 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         setOptimizePaletteBusy(false);
       }
     };
-    const handleDropOnGroup = (groupId, e2) => {
+    const handleDropOnGroup = (groupId2, e2) => {
       e2.preventDefault();
       e2.stopPropagation();
       setDragOverGroupId(null);
       const payload = readDragPayload(e2);
       if (!(payload == null ? void 0 : payload.sourceId)) return;
-      void addChannelToGroup(groupId, payload.sourceId);
+      void addChannelToGroup(groupId2, payload.sourceId);
     };
     const handleDropRemoveFromGroup = (e2) => {
       e2.preventDefault();
@@ -257808,7 +258127,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       name: "White"
     }
   ];
-  function legendChannelFromLayer(sc2, gc2, groupId) {
+  function legendChannelFromLayer(sc2, gc2, groupId2) {
     const { r: r2, g: g2, b: b2 } = gc2.color;
     const hex_color = rgbToHex$1(gc2.color);
     return {
@@ -257819,7 +258138,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       upper_range: gc2.upperLimit,
       name: sc2.name,
       color: hex_color,
-      group_uuid: groupId,
+      group_uuid: groupId2,
       source_uuid: sc2.id,
       channel_uuid: gc2.id,
       mask: isMaskChannel(sc2)
@@ -258122,9 +258441,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             };
             if (colorPickerChannel !== null) {
               const channel = colorPickerChannel;
-              const groupId = channel.group_uuid;
-              const channelId = channel.source_uuid;
-              (_a2 = props.updateChannel) == null ? void 0 : _a2.call(props, groupId, channelId, {
+              const groupId2 = channel.group_uuid;
+              const channelId2 = channel.source_uuid;
+              (_a2 = props.updateChannel) == null ? void 0 : _a2.call(props, groupId2, channelId2, {
                 color: color2
               });
             }
@@ -258383,16 +258702,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       setChannelGroups,
       setGroupNames
     ]);
-    const updateChannel = reactExports.useCallback((groupId, channelId, newChannel) => {
+    const updateChannel = reactExports.useCallback((groupId2, channelId2, newChannel) => {
       const copy_name = (g2) => `${g2.name} copy`;
       const is_copied = (g2) => " copy" === g2.name.slice(-5);
-      const id_group = groups.find(({ id: id2 }) => groupId === id2);
+      const id_group = groups.find(({ id: id2 }) => groupId2 === id2);
       if (!id_group) return;
       const existingCopy = groups.find(({ name: name2 }) => name2 === copy_name(id_group));
       const group2 = existingCopy || id_group;
       const withColor = (g2) => ({
         ...g2,
-        channels: g2.channels.map((gc2) => gc2.channelId === channelId ? {
+        channels: g2.channels.map((gc2) => gc2.channelId === channelId2 ? {
           ...gc2,
           ...newChannel
         } : gc2)
@@ -258498,7 +258817,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             }),
             jsxRuntimeExports.jsx(ClassLegend, {
               sections: classSections,
-              onToggle: (channelId, name2) => toggleLegendClass(activeWaypoint == null ? void 0 : activeWaypoint.id, channelId, name2)
+              onToggle: (channelId2, name2) => toggleLegendClass(activeWaypoint == null ? void 0 : activeWaypoint.id, channelId2, name2)
             })
           ]
         })
@@ -262323,6 +262642,7 @@ uniform classStyleUniforms {
               ...prev
             };
             delete next2.storyid;
+            delete next2.src;
             return next2;
           },
           replace: true
