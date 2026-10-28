@@ -3,8 +3,10 @@ import { createPortal } from "react-dom";
 import { colorPickerAnchorPosition } from "@/components/shared/ColorPickerPopover";
 import { useAuthorChannelNav } from "@/components/shared/channel/AuthorChannelNav";
 import {
+  type ChannelContrastEditorProps,
   contrastEditorPropsForGroupRow,
   contrastEditorPropsForSource,
+  renderingForSource,
 } from "@/components/shared/channel/ChannelContrastEditor";
 import {
   ChannelColorPicker,
@@ -54,6 +56,15 @@ import {
   subscribeGmmFit,
 } from "@/lib/imaging/gmmScheduler";
 import {
+  defaultHeDeconvSplit,
+  HE_CONTRAST_SCALE,
+  HE_DECONV_COMPONENTS,
+  HE_DECONV_LABELS,
+  type HeDeconvComponent,
+  type HeStainView,
+} from "@/lib/imaging/heDeconvView";
+import { stainInverseKey } from "@/lib/imaging/heStainFit";
+import {
   scheduleBackgroundTask,
   sourceDistributionYValuesLength,
 } from "@/lib/imaging/histogramLazy";
@@ -75,7 +86,7 @@ import {
   effectiveSourceLimits,
   rgbToHex,
 } from "@/lib/imaging/sourceChannelStyle";
-import { useAppStore } from "@/lib/stores/appStore";
+import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
 import type {
   Channel,
   ChannelGroup,
@@ -93,6 +104,57 @@ import {
 import styles from "./ChannelGroupsMasterDetail.module.css";
 
 const CHANNEL_DRAG_MIME = "application/x-minerva-channel-ref";
+
+/** H&E stain sliders run over concentration × HE_CONTRAST_SCALE, not a dtype. */
+const HE_CONTRAST_DISTRIBUTION = {
+  id: "",
+  YValues: [] as number[],
+  XScale: "linear" as const,
+  YScale: "linear" as const,
+  LowerRange: 0,
+  UpperRange: HE_CONTRAST_SCALE,
+};
+
+function heStainColor(
+  stain: HeStainView,
+  live: ChannelRendering | null,
+  sourceChannelId: string,
+  component: HeDeconvComponent,
+): { r: number; g: number; b: number } {
+  const liveColor = renderingForSource(
+    live,
+    sourceChannelId,
+    "color",
+    component,
+  );
+  if (liveColor) return { r: liveColor.r, g: liveColor.g, b: liveColor.b };
+  return { r: stain.color[0], g: stain.color[1], b: stain.color[2] };
+}
+
+function heDeconvContrastEditorProps(
+  sc: Channel,
+  component: HeDeconvComponent,
+  stain: HeStainView,
+  live: ChannelRendering | null,
+  yValues: number[],
+): ChannelContrastEditorProps {
+  const c = heStainColor(stain, live, sc.id, component);
+  const liveContrast = renderingForSource(live, sc.id, "contrast", component);
+  return {
+    groupId: "",
+    channelId: `${sc.id}:${component}`,
+    sourceChannelId: sc.id,
+    channelLabel: HE_DECONV_LABELS[component],
+    r: c.r,
+    g: c.g,
+    b: c.b,
+    lowerLimit: liveContrast ? liveContrast.lower : stain.lower,
+    upperLimit: liveContrast ? liveContrast.upper : stain.upper,
+    distribution: { ...HE_CONTRAST_DISTRIBUTION, YValues: yValues },
+    dtypeMax: HE_CONTRAST_SCALE,
+    heComponent: component,
+  };
+}
 
 function toggleWithScrollOnShow(
   event: React.MouseEvent<HTMLButtonElement>,
@@ -519,6 +581,11 @@ export const ChannelGroupsMasterDetail = (
   );
   const setGroupNames = useAppStore((s) => s.setGroupNames);
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
+  const heDeconvByChannelId = useAppStore((s) => s.heDeconvByChannelId);
+  const heHistogramByChannelId = useAppStore((s) => s.heHistogramByChannelId);
+  const heStainFitByChannelId = useAppStore((s) => s.heStainFitByChannelId);
+  const setHeDeconv = useAppStore((s) => s.setHeDeconv);
+  const patchHeDeconv = useAppStore((s) => s.patchHeDeconv);
 
   const sourceChannels = React.useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
@@ -1206,6 +1273,79 @@ export const ChannelGroupsMasterDetail = (
     setColorPickerPos(colorPickerAnchorPosition(rect));
   };
 
+  // The stain shader reads one packed RGB channel; planar RGB images get none.
+  const heSplitProps = (sc: Channel | undefined) =>
+    sc && sc.samples === 3 && isRgbDisplayChannel(sc, sourceChannels)
+      ? {
+          heSplit: Boolean(heDeconvByChannelId[sc.id]),
+          onHeSplitChange: (split: boolean) =>
+            setHeDeconv(sc.id, split ? defaultHeDeconvSplit() : null),
+        }
+      : {};
+
+  const renderHeStainRows = (sc: Channel) => {
+    const split = heDeconvByChannelId[sc.id];
+    if (!split) return null;
+    const fit = heStainFitByChannelId[sc.id];
+    const histogram = heHistogramByChannelId[sc.id];
+    const histogramLoading =
+      !fit || histogram?.fitKey !== stainInverseKey(fit.glslInverse);
+    return (
+      <ul className={styles.heStainList}>
+        {HE_DECONV_COMPONENTS.map((component) => {
+          const stain = split[component];
+          const label = HE_DECONV_LABELS[component];
+          const c = heStainColor(stain, channelRendering, sc.id, component);
+          return (
+            <li key={component} className={styles.heStainBlock}>
+              <ChannelRow
+                visible={stain.visible}
+                visibilityTitle={
+                  stain.visible ? `Hide ${label}` : `Show ${label}`
+                }
+                visibilityAriaLabel={`Toggle visibility for ${label}`}
+                onToggleVisibility={() =>
+                  patchHeDeconv(sc.id, component, { visible: !stain.visible })
+                }
+                name={{
+                  mode: "label",
+                  name: label,
+                  title: label,
+                  className: styles.groupChildName,
+                }}
+                colorHex={rgbToHex(c)}
+                colorTitle={`Pick color for ${label}`}
+                onColorClick={(e) => {
+                  e.stopPropagation();
+                  openColorPicker(
+                    { scope: "he", sourceId: sc.id, component },
+                    e.currentTarget.getBoundingClientRect(),
+                  );
+                }}
+                contrast={
+                  props.contrastEditable && stain.visible
+                    ? {
+                        ...heDeconvContrastEditorProps(
+                          sc,
+                          component,
+                          stain,
+                          channelRendering,
+                          histogram?.[component] ?? [],
+                        ),
+                        histogramLoading,
+                        onCommitRange: (lower, upper) =>
+                          patchHeDeconv(sc.id, component, { lower, upper }),
+                      }
+                    : undefined
+                }
+              />
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
+
   const showImageBadge = images.length > 1;
   const imageLabels = React.useMemo(
     () => uniqueImageDisplayLabels(images),
@@ -1465,6 +1605,7 @@ export const ChannelGroupsMasterDetail = (
                         imageSubtitle={imageSubtitle}
                         contrast={contrast}
                         locked={colorLocked}
+                        {...(rgbDisplay ? heSplitProps(sc) : {})}
                         {...(!rgbDisplay && sc && isMaskChannel(sc)
                           ? {
                               isMask: true,
@@ -1550,6 +1691,9 @@ export const ChannelGroupsMasterDetail = (
                         }
                       />
                     </DraggableChannelRow>
+                    {rgbDisplay && visible && sc && heSplitProps(sc).heSplit
+                      ? renderHeStainRows(sc)
+                      : null}
                   </li>
                 );
               })}
@@ -1737,6 +1881,7 @@ export const ChannelGroupsMasterDetail = (
             }}
             imageSubtitle={imageSubtitle}
             contrast={contrast}
+            {...(expanded && rgbDisplay ? heSplitProps(sc) : {})}
             {...(expanded && !rgbDisplay && isMaskChannel(sc)
               ? {
                   isMask: true,
@@ -1752,6 +1897,9 @@ export const ChannelGroupsMasterDetail = (
             }
           />
         </DraggableChannelRow>
+        {expanded && rgbDisplay && heSplitProps(sc).heSplit
+          ? renderHeStainRows(sc)
+          : null}
       </li>
     );
   };

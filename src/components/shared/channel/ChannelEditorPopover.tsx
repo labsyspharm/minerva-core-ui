@@ -29,6 +29,10 @@ import {
   type MaskVisualization,
 } from "@/lib/imaging/channelKind";
 import { getGmmPendingIds, subscribeGmmFit } from "@/lib/imaging/gmmScheduler";
+import type {
+  HeDeconvComponent,
+  HeDeconvSplit,
+} from "@/lib/imaging/heDeconvView";
 import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
 import type { ImageChannelChip } from "@/lib/imaging/imageChannelOverview";
 import {
@@ -54,13 +58,28 @@ import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
 
 export type ChannelColorTarget =
   | { scope: "source"; sourceId: string }
-  | { scope: "group"; groupId: string; rowId: string };
+  | { scope: "group"; groupId: string; rowId: string }
+  /** One stain of an H&E-split RGB channel (session state, not the document). */
+  | { scope: "he"; sourceId: string; component: HeDeconvComponent };
 
 export function commitChannelColorTarget(target: ChannelColorTarget | null) {
   if (!target) return;
-  const live = useAppStore.getState().channelRendering;
+  const app = useAppStore.getState();
+  const live = app.channelRendering;
   const doc = useDocumentStore.getState();
-  if (target.scope === "source") {
+  if (target.scope === "he") {
+    const colorLive = renderingForSource(
+      live,
+      target.sourceId,
+      "color",
+      target.component,
+    );
+    if (colorLive) {
+      app.patchHeDeconv(target.sourceId, target.component, {
+        color: [colorLive.r, colorLive.g, colorLive.b],
+      });
+    }
+  } else if (target.scope === "source") {
     const colorLive = renderingForSource(live, target.sourceId, "color");
     if (colorLive) {
       doc.setImages(
@@ -108,7 +127,21 @@ function hexForColorTarget(
   channelRendering: ChannelRendering | null,
   sourceChannels: Channel[],
   channelGroups: readonly ChannelGroup[],
+  heDeconvByChannelId: Record<string, HeDeconvSplit>,
 ): string | null {
+  if (target.scope === "he") {
+    const live = renderingForSource(
+      channelRendering,
+      target.sourceId,
+      "color",
+      target.component,
+    );
+    if (live) return rgbToHex(live);
+    const stain = heDeconvByChannelId[target.sourceId]?.[target.component];
+    if (!stain) return null;
+    const [r, g, b] = stain.color;
+    return rgbToHex({ r, g, b });
+  }
   if (target.scope === "source") {
     const live = renderingForSource(channelRendering, target.sourceId, "color");
     if (live) return rgbToHex(live);
@@ -136,7 +169,7 @@ function previewLiveColor(target: ChannelColorTarget, hex: string) {
   if ([r, g, b].some((n) => Number.isNaN(n))) return;
   const doc = useDocumentStore.getState();
   const sourceId =
-    target.scope === "source"
+    target.scope === "source" || target.scope === "he"
       ? target.sourceId
       : doc.channelGroups
           .find((group) => group.id === target.groupId)
@@ -148,6 +181,7 @@ function previewLiveColor(target: ChannelColorTarget, hex: string) {
     r,
     g,
     b,
+    ...(target.scope === "he" ? { heComponent: target.component } : {}),
   });
 }
 
@@ -160,6 +194,7 @@ export function ChannelColorPicker(props: {
   const images = useDocumentStore((s) => s.images);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const channelRendering = useAppStore((s) => s.channelRendering);
+  const heDeconvByChannelId = useAppStore((s) => s.heDeconvByChannelId);
   const targetRef = React.useRef(target);
   targetRef.current = target;
 
@@ -168,7 +203,13 @@ export function ChannelColorPicker(props: {
     [images],
   );
   const hex = target
-    ? hexForColorTarget(target, channelRendering, sourceChannels, channelGroups)
+    ? hexForColorTarget(
+        target,
+        channelRendering,
+        sourceChannels,
+        channelGroups,
+        heDeconvByChannelId,
+      )
     : null;
 
   React.useEffect(
