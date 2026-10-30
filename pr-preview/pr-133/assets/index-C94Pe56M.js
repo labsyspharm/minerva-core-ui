@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BySxDBnz.js","./pako.esm-KbdoS3Oq.js","./lerc-Cc08HMkk.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BGgnc4sD.js","./pako.esm-KbdoS3Oq.js","./lerc-DWq4croS.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -17705,13 +17705,12 @@ let __tla = (async () => {
     const intensity = channels2.filter(isImageChannel);
     if (intensity.length === 0) return false;
     const override = (_a2 = intensity.find((c2) => c2.rgbDisplay != null)) == null ? void 0 : _a2.rgbDisplay;
-    if (override != null && intensity.every((c2) => c2.rgbDisplay === override)) {
-      return override;
-    }
-    if (intensity.length === 1 && intensity[0].samples === 3) {
-      return override !== false;
-    }
+    const packed = intensity.length === 1 && intensity[0].samples === 3;
     const planar = intensity.filter((c2) => (c2.samples ?? 1) === 1);
+    if (override != null && intensity.every((c2) => c2.rgbDisplay === override)) {
+      return override && (packed || planar.length === 3);
+    }
+    if (packed) return true;
     if (planar.length !== 3) return false;
     if (override != null) return override;
     if (planar.every((c2) => planarRgbSlotFromName(c2.name ?? "") != null)) {
@@ -18515,7 +18514,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "7b141b781adf247d7cc83819c4d22eca885efc55",
+    "VITE_APP_GIT_SHA": "9bae3b006c4ac8321d7d57d9ec2397ebd3bc4346",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -79252,26 +79251,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CwWW4lIG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-DC1oN_Nb.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-kQkjJlTf.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Bwf494-e.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DAkKrdsp.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-Ds8kB9uv.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BySxDBnz.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-D-zERNcq.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Cc08HMkk.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BGgnc4sD.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CNKNJxUq.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DWq4croS.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-2MrjG3ZD.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BkNse7QD.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BtIWt1VA.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CwByIN4g.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -169474,6 +169473,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }) === "segmentation") {
       return null;
     }
+    if (image2.rgbDisplay === true) return "contrast";
     return exportTransferForImage(image2, storyTransfer);
   }
   const JPEG_PYRAMID_TILE_SIZE = 1024;
@@ -171563,7 +171563,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           setImportError("Image import is unavailable.");
           return;
         }
-        const rgbDisplay = detectedRgbDisplay != null && role === "intensity" ? overlayRgbDisplay : void 0;
+        const rgbDisplay = role === "intensity" && (detectedRgbDisplay != null || rgbDisplayChosenByUserRef.current) ? overlayRgbDisplay : void 0;
         const attachCsv = role === "segmentation" ? featureCsvFile : null;
         const attachMarkers = role === "intensity" && !overlayRgbDisplay ? featureCsvFile : null;
         let channelNames;
@@ -173141,8 +173141,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-10-30T18:20:03.662Z";
-    const sha = "7b141b781adf247d7cc83819c4d22eca885efc55";
+    const iso = "2026-10-30T20:56:33.356Z";
+    const sha = "9bae3b006c4ac8321d7d57d9ec2397ebd3bc4346";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -251459,6 +251459,79 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   }
+  const TIFF_COMPRESSION_JPEG = 7;
+  const TIFF_BLACK_IS_ZERO = 1;
+  const TIFF_YCBCR = 6;
+  const JPEG_SOF0 = 192;
+  const gamma3Profiles = /* @__PURE__ */ new WeakMap();
+  function hasGamma3Profile(image2) {
+    const fd2 = image2.fileDirectory;
+    let gamma3 = gamma3Profiles.get(fd2);
+    if (gamma3 === void 0) {
+      const icc = fd2[GEOTIFF_ICC_PROFILE_KEY];
+      gamma3 = !!icc && iccGrayU8ToU16Lut(Uint8Array.from(icc)) !== null;
+      gamma3Profiles.set(fd2, gamma3);
+    }
+    return gamma3;
+  }
+  function holdsExportTiles(image2, level, copy2) {
+    const fd2 = image2.fileDirectory;
+    const bits = fd2.BitsPerSample ?? [];
+    const sameTiling = image2.isTiled && image2.getTileWidth() === level.tileSize && image2.getTileHeight() === level.tileSize && image2.getWidth() === level.width && image2.getHeight() === level.height && fd2.Compression === TIFF_COMPRESSION_JPEG && !fd2.JPEGTables && Array.from(bits).every((b2) => b2 === 8);
+    if (!sameTiling) return false;
+    if (copy2.kind === "rgb") {
+      const sub2 = fd2.YCbCrSubSampling ?? [
+        2,
+        2
+      ];
+      return image2.getSamplesPerPixel() === 3 && image2.planarConfiguration === 1 && fd2.PhotometricInterpretation === TIFF_YCBCR && sub2[0] === 2 && sub2[1] === 2;
+    }
+    return image2.getSamplesPerPixel() === 1 && fd2.PhotometricInterpretation === TIFF_BLACK_IS_ZERO && (copy2.profileless || hasGamma3Profile(image2));
+  }
+  function framedLikeExportTile(jpeg, tileSize, copy2) {
+    if (jpeg[0] !== 255 || jpeg[1] !== 216) return false;
+    let i2 = 2;
+    while (i2 + 9 < jpeg.length) {
+      if (jpeg[i2] !== 255) return false;
+      const marker = jpeg[i2 + 1];
+      if (marker === 255) {
+        i2++;
+        continue;
+      }
+      if (marker === 218 || marker === 217) return false;
+      if (marker >= 192 && marker <= 207 && marker !== 196 && marker !== 200 && marker !== 204) {
+        const height = jpeg[i2 + 5] << 8 | jpeg[i2 + 6];
+        const width = jpeg[i2 + 7] << 8 | jpeg[i2 + 8];
+        const components = jpeg[i2 + 9];
+        const sampling = (k2) => jpeg[i2 + 11 + k2 * 3];
+        const framed = marker === JPEG_SOF0 && jpeg[i2 + 4] === 8 && width === tileSize && height === tileSize;
+        return copy2.kind === "rgb" ? framed && components === 3 && sampling(0) === 34 && sampling(1) === 17 && sampling(2) === 17 : framed && components === 1;
+      }
+      i2 += 2 + (jpeg[i2 + 2] << 8 | jpeg[i2 + 3]);
+    }
+    return false;
+  }
+  async function readCopyableJpegTile(plane, selection, x2, y2, level, copy2, signal) {
+    var _a2, _b2;
+    const indexer = plane._indexer;
+    if (!indexer) return null;
+    const image2 = await indexer(selection);
+    if (!holdsExportTiles(image2, level, copy2)) return null;
+    const fd2 = image2.fileDirectory;
+    const index2 = y2 * Math.ceil(level.width / level.tileSize) + x2;
+    const offset = Number((_a2 = fd2.TileOffsets) == null ? void 0 : _a2[index2]);
+    const length2 = Number((_b2 = fd2.TileByteCounts) == null ? void 0 : _b2[index2]);
+    if (!length2) return null;
+    const source2 = uncachedTiffImage(image2).source;
+    const [buffer2] = await source2.fetch([
+      {
+        offset,
+        length: length2
+      }
+    ], signal);
+    const jpeg = new Uint8Array(buffer2);
+    return framedLikeExportTile(jpeg, level.tileSize, copy2) ? jpeg : null;
+  }
   const WRITE_CHUNK_BYTES = 8 * 1024 * 1024;
   function bufferedSink(sink) {
     const buffer2 = new Uint8Array(WRITE_CHUNK_BYTES);
@@ -254006,6 +254079,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         image: image2
       };
     }
+    const asRgb = image2.rgbDisplay === true ? image2 : {
+      ...image2,
+      rgbDisplay: true
+    };
+    if (!rgbExportChannels(asRgb, channels2)) {
+      return {
+        transfer,
+        image: image2
+      };
+    }
     if (!await planesLookBrightfield(planes, channels2, signal)) {
       return {
         transfer,
@@ -254014,15 +254097,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return {
       transfer: "contrast",
-      image: image2.rgbDisplay === true ? image2 : {
-        ...image2,
-        rgbDisplay: true
-      }
+      image: asRgb
     };
   }
   async function exportJpegOmeTiffImage(opts) {
     var _a2, _b2;
-    const { directory, layoutPlanes, image: image2, channelSources, channelGroups, fileName, transfer, signal, onProgress, rgb, pixels } = opts;
+    const { directory, layoutPlanes, image: image2, channelSources, channelGroups, fileName, transfer, signal, onProgress, rgb, pixels, sourceCubeRoot = false } = opts;
     const channels2 = channelSources.map((s2) => s2.channel);
     if (channels2.length === 0) {
       throw new Error(`No intensity channels to export for ${image2.basename || image2.id}`);
@@ -254048,6 +254128,17 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         lim.upperLimit
       ];
     });
+    let tileCopy = null;
+    if (!rgb && transfer === "cube-root") {
+      tileCopy = {
+        kind: "cube-root",
+        profileless: sourceCubeRoot
+      };
+    } else if ((rgb == null ? void 0 : rgb.length) === 1 && sourceDtypeMax(layoutPlanes[0].dtype) === 255) {
+      tileCopy = {
+        kind: "rgb"
+      };
+    }
     const omeXml = buildOmeTiffXml({
       imageName: image2.basename || image2.id || "image",
       channels: fileChannels,
@@ -254120,6 +254211,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const levelIndex = Math.min(job.levelIndex, source2.planes.length - 1);
       const plane = source2.planes[levelIndex];
       const tileSize = levels[job.levelIndex].tileSize;
+      if (tileCopy) {
+        const copied = await readCopyableJpegTile(plane, {
+          t: 0,
+          z: 0,
+          c: source2.channel.index
+        }, job.x, job.y, levels[job.levelIndex], tileCopy, workSignal);
+        if (workSignal.aborted) return;
+        if (copied) {
+          await queueWrite(job, copied);
+          return;
+        }
+      }
       const limits = channelLimits[job.channelIndex];
       const readTile2 = (channel) => readExportTile(plane, tileSize, {
         t: 0,
@@ -254266,7 +254369,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         signal,
         onProgress: bump,
         rgb: decided.rgb,
-        pixels: (_a2 = item2.entry.loader.metadata) == null ? void 0 : _a2.Pixels
+        pixels: (_a2 = item2.entry.loader.metadata) == null ? void 0 : _a2.Pixels,
+        sourceCubeRoot: item2.entry.transfer === "cube-root"
       });
       await writeTiffOffsetsJson(directory, intensityFileNames[i2]);
       if (item2.masks.length > 0) {
