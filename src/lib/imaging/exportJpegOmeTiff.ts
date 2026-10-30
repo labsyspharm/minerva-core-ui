@@ -7,6 +7,7 @@ import {
   planPyramid,
   tiffTag,
 } from "tiffwriter";
+import { GAMMA3_ICC_PROFILE, TIFF_ICC_PROFILE_TAG } from "@/lib/icc";
 import type {
   ChannelGroup,
   Image,
@@ -84,6 +85,13 @@ const RGB_JPEG_TAGS = [
   tiffTag(530, "SHORT", [2, 2]), // YCbCrSubSampling
   tiffTag("SampleFormat", "SHORT", [1, 1, 1]),
 ];
+
+/** Cube-root grayscale: the gamma-3 profile on every IFD. Must match `encodeCubeRootU16ToU8`. */
+const CUBE_ROOT_ICC_TAG = tiffTag(
+  TIFF_ICC_PROFILE_TAG,
+  "UNDEFINED",
+  GAMMA3_ICC_PROFILE,
+);
 
 /**
  * Tiles in flight. Reads dominate (a network share takes ~20 ms each), so this
@@ -319,7 +327,11 @@ async function exportJpegOmeTiffImage(
   const { layouts, jobs } = planPyramid({
     levels,
     channelCount: fileChannels.length,
-    baseTags: rgb ? RGB_JPEG_TAGS : grayscaleJpegTags(),
+    baseTags: rgb
+      ? RGB_JPEG_TAGS
+      : transfer === "cube-root"
+        ? [...grayscaleJpegTags(), CUBE_ROOT_ICC_TAG]
+        : grayscaleJpegTags(),
     imageDescription: omeXml,
   });
 
