@@ -832,7 +832,8 @@ const Upload = (props: UploadProps) => {
         return;
       }
       const rgbDisplay =
-        detectedRgbDisplay != null && role === "intensity"
+        role === "intensity" &&
+        (detectedRgbDisplay != null || rgbDisplayChosenByUserRef.current)
           ? overlayRgbDisplay
           : undefined;
       const attachCsv = role === "segmentation" ? featureCsvFile : null;

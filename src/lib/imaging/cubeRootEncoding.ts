@@ -135,5 +135,8 @@ export function hydrateJpegTransferForImage(
   ) {
     return null;
   }
+  // Older exports flagged a single gray plane Brightfield and wrote it
+  // contrast; the flag no longer draws it as RGB but still says how it was written.
+  if (image.rgbDisplay === true) return "contrast";
   return exportTransferForImage(image, storyTransfer);
 }
