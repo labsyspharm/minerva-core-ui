@@ -20,6 +20,7 @@ import {
   isJpegOmeTiffImageSource,
   type JpegExportTransfer,
   jpegTransferFromImageSource,
+  u8ToU16Lut,
 } from "./cubeRootEncoding";
 import type { JpegLoaderEntry, OmeLoaderEntry } from "./loaderEntries";
 import { type DecodePool, sharedOmeDecodePool } from "./omeDecodePool";
@@ -75,8 +76,9 @@ function omeLoaderForHydrate(
   wrapOmeJpeg: boolean,
   storyTransfer: JpegExportTransfer,
 ): Pick<OmeLoaderEntry, "loader" | "transfer"> {
-  // Only the export's own 8-bit files: a 16-bit source located or imported
-  // into an exported story must not be widened through the 8-bit table.
+  // A gray ICC profile is already applied in `loadOmeLoaderForRole`. Only the
+  // export's own 8-bit files still widen through the story transfer: a 16-bit
+  // source located or imported into an exported story must not.
   const jpegTransfer =
     wrapOmeJpeg && loader.data?.[0]?.dtype === "Uint8"
       ? hydrateJpegTransferForImage(im, storyTransfer)
@@ -85,7 +87,7 @@ function omeLoaderForHydrate(
     return { loader };
   }
   return {
-    loader: wrapOmeLoaderJpegExport(loader, jpegTransfer),
+    loader: wrapOmeLoaderJpegExport(loader, u8ToU16Lut(jpegTransfer)),
     transfer: jpegTransfer,
   };
 }

@@ -1,6 +1,6 @@
 import { SIGNAL_ABORTED } from "@hms-dbmi/viv";
 import type { GeoTIFFImage } from "geotiff";
-import { type JpegExportTransfer, u8ToU16Lut } from "./cubeRootEncoding";
+import { GEOTIFF_ICC_PROFILE_KEY, iccGrayU8ToU16Lut } from "@/lib/icc";
 import { expandThroughLut } from "./expandThroughLut";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
 import { OmeDecodePool } from "./omeDecodePool";
@@ -135,14 +135,43 @@ async function readWindowThroughLut(
 }
 
 /**
- * Wrap Viv OME planes so JPEG-decoded uint8 tiles become uint16 for display.
- * Cube-root: inverse transfer. Contrast: `byte << 8` (baked window already applied).
+ * Widening table from the gray ICC profile on an 8-bit, one-sample TIFF's
+ * first IFD. `null` when the file has no such profile.
+ */
+async function iccLutForLoader(loader: Loader): Promise<Uint16Array | null> {
+  const plane = loader.data?.[0];
+  const indexer = (plane as unknown as TiffPlaneInternals | undefined)
+    ?._indexer;
+  if (plane?.dtype !== "Uint8" || !indexer) return null;
+  const image = await indexer({ t: 0, z: 0, c: 0 });
+  const icc = image.fileDirectory?.[GEOTIFF_ICC_PROFILE_KEY];
+  if (!icc || image.getSamplesPerPixel() !== 1) return null;
+  return iccGrayU8ToU16Lut(Uint8Array.from(icc));
+}
+
+/** Apply that table when the file has one. Pixels are then linear uint16. */
+export async function applyGrayIccProfile(loader: Loader): Promise<Loader> {
+  const lut = await iccLutForLoader(loader).catch(() => null);
+  if (!lut) return loader;
+  const wrapped = wrapOmeLoaderJpegExport(loader, lut);
+  return {
+    ...wrapped,
+    metadata: {
+      ...wrapped.metadata,
+      Pixels: { ...wrapped.metadata.Pixels, Type: "uint16" },
+    },
+  };
+}
+
+/**
+ * Wrap Viv OME planes so JPEG-decoded uint8 tiles become uint16 for display,
+ * through `lut`: the file's ICC profile, the cube-root inverse, or
+ * `byte << 8` for a baked contrast window.
  */
 export function wrapOmeLoaderJpegExport(
   loader: Loader,
-  transfer: JpegExportTransfer,
+  lut: Uint16Array,
 ): Loader {
-  const lut = u8ToU16Lut(transfer);
   const data = loader.data?.map((plane) => {
     const getTile = plane.getTile?.bind(plane);
     if (!getTile) return plane;
