@@ -11407,7 +11407,7 @@ async function ensureConn() {
 }
 async function uniqueNames(c, table) {
   const result = await c.query(
-    `SELECT class_name FROM ${table} GROUP BY class_name ORDER BY class_name`
+    `SELECT class_name FROM ${table} GROUP BY class_name ORDER BY MIN(rowid)`
   );
   const col = result.getChildAt(0);
   const names = [];
@@ -11454,7 +11454,7 @@ async function exportParquet(duck, c, table) {
   await duck.registerEmptyFileBuffer(out);
   try {
     await c.query(
-      `COPY (SELECT class_id, class_name FROM ${table} ORDER BY class_id) TO ${sqlString(out)} (FORMAT parquet, COMPRESSION zstd)`
+      `COPY (SELECT class_id, class_name FROM ${table} ORDER BY rowid) TO ${sqlString(out)} (FORMAT parquet, COMPRESSION zstd)`
     );
     const buf = await duck.copyFileToBuffer(out);
     return buf.slice();
@@ -11527,7 +11527,7 @@ async function ingest(featureTableId, source, columns) {
       throw new Error(`Duplicate classID ${Number(dupId)}`);
     }
     await c.query(
-      `CREATE TABLE ${staging} AS SELECT CAST(class_id AS UINTEGER) AS class_id, class_name FROM ${raw} WHERE ${valid}`
+      `CREATE TABLE ${staging} AS SELECT CAST(class_id AS UINTEGER) AS class_id, class_name FROM ${raw} WHERE ${valid} ORDER BY rowid`
     );
     await c.query(`DROP TABLE IF EXISTS ${raw}`);
     const stats = await c.query(
@@ -11568,7 +11568,7 @@ async function page(featureTableId, query, offset, limit) {
   );
   const total = Number(totalTable.getChildAt(0)?.get(0) ?? 0);
   const result = await c.query(
-    `SELECT class_name FROM ${table} ${where} GROUP BY class_name ORDER BY class_name LIMIT ${Math.max(0, limit | 0)} OFFSET ${Math.max(0, offset | 0)}`
+    `SELECT class_name FROM ${table} ${where} GROUP BY class_name ORDER BY MIN(rowid) LIMIT ${Math.max(0, limit | 0)} OFFSET ${Math.max(0, offset | 0)}`
   );
   const names = result.getChildAt(0);
   const rows = [];

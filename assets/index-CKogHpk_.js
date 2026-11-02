@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Ctfs_p77.js","./pako.esm-KbdoS3Oq.js","./lerc-CMDbyARh.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Bly4nvkI.js","./pako.esm-KbdoS3Oq.js","./lerc-DC7vTg8j.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18514,7 +18514,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "aae572ed22bd8e5d4af000ec93e2608251694432"
+    "VITE_APP_GIT_SHA": "cd74386f5d3fe5c875000066e35b1123ffa3cf32"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79250,26 +79250,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DmFb93e4.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-CnmACBwc.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BykR2R2Y.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-C1nCDE8A.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-GBj2RL0R.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DntBVaU1.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-Ctfs_p77.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-EkLoLHCt.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CMDbyARh.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-Bly4nvkI.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-s-0ilfEE.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DC7vTg8j.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-B8hewwGm.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CGRwbf0R.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BaEsfRa6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BdQLxNVH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -95510,7 +95510,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return ((_a2 = path2.split(/[/\\]/).pop()) == null ? void 0 : _a2.trim()) ?? "";
   }
   function WorkerWrapper$3(options) {
-    return new Worker("" + new URL("worker-fsJuxFmL.js", import.meta.url).href, {
+    return new Worker("" + new URL("worker-D49gK7gt.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -172338,7 +172338,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   async function hydrateDocumentLoaders(images, opts = {}) {
     var _a2;
     const jpegLoaderEntries = [];
-    const omeLoaderEntries = [];
     const dicomIndexList = [];
     const deniedHandleKeys = [];
     const missingHandleKeys = [];
@@ -172364,27 +172363,55 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         existingPyramidFolders: opts.existingPyramidFolders
       } : {}
     }));
-    const loadLocalFile = async (im, handle2) => {
+    const omeSlots = images.map((im) => {
+      var _a3, _b2;
+      return ((_a3 = im.source) == null ? void 0 : _a3.kind) === "url" || ((_b2 = im.source) == null ? void 0 : _b2.kind) === "local" ? void 0 : null;
+    });
+    const readyOme = () => omeSlots.filter((slot) => slot != null);
+    const onLoaders = images.some((im) => {
+      var _a3;
+      return ((_a3 = im.source) == null ? void 0 : _a3.kind) === "dicomWeb";
+    }) ? void 0 : opts.onLoaders;
+    let publishedCount = 0;
+    const settle = (index2, entry) => {
+      omeSlots[index2] = entry;
+      const first = omeSlots.findIndex((slot) => slot !== null);
+      if (!onLoaders || first < 0 || omeSlots[first] === void 0) return;
+      const ready = readyOme();
+      if (ready.length === publishedCount) return;
+      publishedCount = ready.length;
+      onLoaders({
+        jpegLoaderEntries,
+        omeLoaderEntries: ready,
+        dicomIndexList
+      });
+    };
+    const openOme = async (index2, im, source2) => {
+      let entry = null;
       try {
-        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-          kind: "local",
-          handle: handle2,
-          ...pool ? {
-            pool
-          } : {},
-          rgbDisplay: im.rgbDisplay
-        });
-        omeLoaderEntries.push({
+        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), source2);
+        entry = {
           ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
           sourceImageId: im.id
-        });
+        };
       } catch (e2) {
         loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
       }
+      settle(index2, entry);
     };
-    for (const im of images) {
+    const loadLocalFile = (index2, im, handle2) => openOme(index2, im, {
+      kind: "local",
+      handle: handle2,
+      ...pool ? {
+        pool
+      } : {},
+      rgbDisplay: im.rgbDisplay
+    });
+    const remoteOpens = [];
+    for (const [index2, im] of images.entries()) {
       if (!im.source) continue;
       if (im.source.kind === "jpeg") continue;
+      const opening2 = remoteOpens.length;
       switch (im.source.kind) {
         case "url": {
           if (includeLocal && isRelativeOmeTiffUrl(im.source.url)) {
@@ -172403,26 +172430,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
             if (await findFile({
               handle: resolved.handle
             })) {
-              await loadLocalFile(im, resolved.handle);
+              await loadLocalFile(index2, im, resolved.handle);
             }
             break;
           }
-          try {
-            const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-              kind: "url",
-              url: resolveOmeSourceUrl(documentUrl, im.source.url),
-              ...pool ? {
-                pool
-              } : {},
-              rgbDisplay: im.rgbDisplay
-            });
-            omeLoaderEntries.push({
-              ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
-              sourceImageId: im.id
-            });
-          } catch (e2) {
-            loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
-          }
+          remoteOpens.push(openOme(index2, im, {
+            kind: "url",
+            url: resolveOmeSourceUrl(documentUrl, im.source.url),
+            ...pool ? {
+              pool
+            } : {},
+            rgbDisplay: im.rgbDisplay
+          }));
           break;
         }
         case "local": {
@@ -172440,7 +172459,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           if (!await findFile({
             handle: handle2
           })) break;
-          await loadLocalFile(im, handle2);
+          await loadLocalFile(index2, im, handle2);
           break;
         }
         case "dicomWeb": {
@@ -172463,10 +172482,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           break;
         }
       }
+      if (omeSlots[index2] === void 0 && remoteOpens.length === opening2) {
+        settle(index2, null);
+      }
     }
+    await Promise.all(remoteOpens);
     return {
       jpegLoaderEntries,
-      omeLoaderEntries,
+      omeLoaderEntries: readyOme(),
       dicomIndexList,
       deniedHandleKeys,
       missingHandleKeys,
@@ -173137,8 +173160,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-11-02T17:15:42.236Z";
-    const sha = "aae572ed22bd8e5d4af000ec93e2608251694432";
+    const iso = "2026-11-02T19:50:16.721Z";
+    const sha = "cd74386f5d3fe5c875000066e35b1123ffa3cf32";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
