@@ -1,4 +1,4 @@
-import { B as BaseDecoder } from './decoder.worker-DskuWaKT.js';
+import { B as BaseDecoder } from './decoder.worker-C5_45Yb3.js';
 
 /**
  * Some C structs for reference:

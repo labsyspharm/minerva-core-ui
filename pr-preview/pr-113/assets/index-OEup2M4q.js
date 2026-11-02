@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Cf5BkHH6.js","./pako.esm-KbdoS3Oq.js","./lerc-D8Cz3NsD.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BReDEn-C.js","./pako.esm-KbdoS3Oq.js","./lerc-C3PRUCVO.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -475,7 +475,7 @@ let __tla = (async () => {
     if (_depth > 500) return _next;
     const next2 = _next;
     const array = isPlainArray(prev) && isPlainArray(next2);
-    if (!array && !(isPlainObject$3(prev) && isPlainObject$3(next2))) return next2;
+    if (!array && !(isPlainObject$4(prev) && isPlainObject$4(next2))) return next2;
     const prevItems = array ? prev : getEnumerableOwnKeys(prev);
     if (!prevItems) return next2;
     const nextItems = array ? next2 : getEnumerableOwnKeys(next2);
@@ -515,7 +515,7 @@ let __tla = (async () => {
     }
     return keys2;
   }
-  function isPlainObject$3(o2) {
+  function isPlainObject$4(o2) {
     if (!hasObjectPrototype(o2)) return false;
     const ctor = o2.constructor;
     if (typeof ctor === "undefined") return true;
@@ -538,7 +538,7 @@ let __tla = (async () => {
       for (let i2 = 0, l2 = a2.length; i2 < l2; i2++) if (!deepEqual$3(a2[i2], b2[i2], opts)) return false;
       return true;
     }
-    if (isPlainObject$3(a2) && isPlainObject$3(b2)) {
+    if (isPlainObject$4(a2) && isPlainObject$4(b2)) {
       const ignoreUndefined = (opts == null ? void 0 : opts.ignoreUndefined) ?? true;
       if (opts == null ? void 0 : opts.partial) {
         for (const k2 in b2) if (!ignoreUndefined || b2[k2] !== void 0) {
@@ -1623,7 +1623,7 @@ let __tla = (async () => {
     let state = {};
     try {
       const parsed = JSON.parse(safeSessionStorage.getItem("tsr-scroll-restoration-v1_3") || "{}");
-      if (isPlainObject$3(parsed)) state = parsed;
+      if (isPlainObject$4(parsed)) state = parsed;
     } catch {
     }
     const persist = () => {
@@ -1725,7 +1725,7 @@ let __tla = (async () => {
         let restored = false;
         if (elementEntries) for (const elementSelector in elementEntries) {
           const entry = elementEntries[elementSelector];
-          if (!isPlainObject$3(entry)) continue;
+          if (!isPlainObject$4(entry)) continue;
           const { scrollX, scrollY } = entry;
           if (!Number.isFinite(scrollX) || !Number.isFinite(scrollY)) continue;
           if (elementSelector === windowScrollTarget) {
@@ -17705,13 +17705,12 @@ let __tla = (async () => {
     const intensity = channels2.filter(isImageChannel);
     if (intensity.length === 0) return false;
     const override = (_a2 = intensity.find((c2) => c2.rgbDisplay != null)) == null ? void 0 : _a2.rgbDisplay;
-    if (override != null && intensity.every((c2) => c2.rgbDisplay === override)) {
-      return override;
-    }
-    if (intensity.length === 1 && intensity[0].samples === 3) {
-      return override !== false;
-    }
+    const packed = intensity.length === 1 && intensity[0].samples === 3;
     const planar = intensity.filter((c2) => (c2.samples ?? 1) === 1);
+    if (override != null && intensity.every((c2) => c2.rgbDisplay === override)) {
+      return override && (packed || planar.length === 3);
+    }
+    if (packed) return true;
     if (planar.length !== 3) return false;
     if (override != null) return override;
     if (planar.every((c2) => planarRgbSlotFromName(c2.name ?? "") != null)) {
@@ -17773,6 +17772,16 @@ let __tla = (async () => {
     if (sawMask && sawChannel) return "mixed";
     if (sawMask) return "segmentation";
     return "intensity";
+  }
+  function mapShapePoints(shape, f2) {
+    if ("polygon" in shape) return {
+      ...shape,
+      polygon: shape.polygon.map(f2)
+    };
+    return {
+      ...shape,
+      position: f2(shape.position)
+    };
   }
   const rectangleToPolygon = (start, end) => {
     const [startX, startY] = start;
@@ -18505,7 +18514,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "3b4f37f9cbb52ea5c2f995f48b01cea77f586961",
+    "VITE_APP_GIT_SHA": "424c13e50e1433f1d3dc0632165e1a6cfd82b79b",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -53885,12 +53894,12 @@ void main(void) {
     if (Number.isFinite(container2.length)) {
       return container2.length;
     }
-    if (isPlainObject$2(container2)) {
+    if (isPlainObject$3(container2)) {
       return Object.keys(container2).length;
     }
     throw new Error(ERR_NOT_CONTAINER);
   }
-  function isPlainObject$2(value) {
+  function isPlainObject$3(value) {
     return value !== null && typeof value === "object" && value.constructor === Object;
   }
   function isObject(value) {
@@ -59898,26 +59907,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-D-Ctfhei.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BJaUDe2X.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DPaOLUL0.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-ClRYeoEz.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-FdsxSdUs.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-mqT86dn6.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-Cf5BkHH6.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DlxebA0k.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-D8Cz3NsD.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BReDEn-C.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-C80NceTe.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-C3PRUCVO.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DfyLd0J2.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-KOeuXw0x.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DqycB_Os.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BseFb76I.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -80106,6 +80115,12 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       pixels.PhysicalSizeYUnit = WORLD_MICRON;
     }
   }
+  function omePixelsWorldFrame(pixels, imageFrames) {
+    const width = Number(pixels.getAttribute("SizeX")) || 0;
+    const height = Number(pixels.getAttribute("SizeY")) || 0;
+    if (width <= 0 || height <= 0) return void 0;
+    return imageFrames.find((f2) => f2.pixelWidth === width && f2.pixelHeight === height);
+  }
   function worldFrameFromPixelCounts(width, height) {
     return frameFromPixels(width, height, {
       umPerPixelX: IDENTITY_UM,
@@ -80119,7 +80134,9 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     return worldFrameFromPixelCounts(docWidth, docHeight);
   }
   function layerModelMatrix(loader, orientation) {
-    const frame2 = worldFrameFromLoader(loader);
+    return frameModelMatrix(worldFrameFromLoader(loader), orientation);
+  }
+  function frameModelMatrix(frame2, orientation) {
     const o2 = effectiveOrientation(orientation);
     const { pixelWidth, pixelHeight } = frame2;
     const umPerPixelX = o2.umPerPixel ?? frame2.umPerPixelX;
@@ -80167,7 +80184,12 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   }
   function isCalibratedScale(loader) {
     var _a2;
-    return !isIdentityScale(parsePhysicalScale((_a2 = loader.metadata) == null ? void 0 : _a2.Pixels));
+    const pixels = (_a2 = loader.metadata) == null ? void 0 : _a2.Pixels;
+    const present = (value) => {
+      const n2 = Number(value);
+      return Number.isFinite(n2) && n2 > 0;
+    };
+    return present(pixels == null ? void 0 : pixels.PhysicalSizeX) || present(pixels == null ? void 0 : pixels.PhysicalSizeY);
   }
   function pixelViewRectFromWorld(rect, scale2) {
     if (isIdentityScale(scale2)) return rect;
@@ -86594,6 +86616,63 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     __proto__: null,
     default: P
   };
+  const KINDS = {
+    image: {
+      label: "OME-TIFF images",
+      extensions: [
+        ".tif",
+        ".tiff"
+      ],
+      mimeTypes: [
+        "image/tiff"
+      ]
+    },
+    annotations: {
+      label: "OME-XML annotations",
+      extensions: [
+        ".xml"
+      ],
+      mimeTypes: [
+        "text/xml",
+        "application/xml"
+      ]
+    },
+    featureTable: {
+      label: "CSV feature tables",
+      extensions: [
+        ".csv"
+      ],
+      mimeTypes: [
+        "text/csv"
+      ]
+    },
+    story: {
+      label: "Minerva story JSON",
+      extensions: [
+        ".json"
+      ],
+      mimeTypes: [
+        "application/json"
+      ]
+    }
+  };
+  function importFileKind(name2) {
+    const lower = name2.toLowerCase();
+    const kinds = Object.keys(KINDS);
+    return kinds.find((k2) => KINDS[k2].extensions.some((e2) => lower.endsWith(e2))) ?? "image";
+  }
+  function dragHasFiles(e2) {
+    var _a2;
+    const types2 = (_a2 = e2.dataTransfer) == null ? void 0 : _a2.types;
+    return types2 != null && Array.from(types2).includes("Files");
+  }
+  function importFilePickerOptions(kinds) {
+    return {
+      description: kinds.map((k2) => KINDS[k2].label).join(", "),
+      extensions: kinds.flatMap((k2) => KINDS[k2].extensions),
+      mimeTypes: kinds.flatMap((k2) => KINDS[k2].mimeTypes)
+    };
+  }
   function sanitizeOmeXml(raw2) {
     let s2 = raw2.replaceAll("\0", "").trim();
     if (!s2) return s2;
@@ -86708,6 +86787,814 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   }
   function registerLzwDecoder() {
     addDecoder(5, () => Promise.resolve(LZWDecoder));
+  }
+  const EMPTY_VALUE = "\0\0\0\0";
+  function removeNullTermination(string2) {
+    while (string2.endsWith("\0")) string2 = string2.slice(0, -1);
+    return string2;
+  }
+  function normalizeString$1(string2) {
+    string2 = removeNullTermination(string2).trim();
+    return string2 === "" ? void 0 : string2;
+  }
+  const arrayToCharCode = (arr) => String.fromCharCode.apply(null, arr);
+  const utf8decoder = new TextDecoder("utf-8");
+  function uint8ArrayToUtf8String(uint8array) {
+    return utf8decoder.decode(uint8array);
+  }
+  class BufferView {
+    constructor(arg, offset = 0, length2) {
+      if (length2 === void 0) length2 = arg.byteLength - offset;
+      offset += arg.byteOffset;
+      if (offset + length2 > arg.byteOffset + arg.byteLength) throw new Error("Creating view outside of available memory in ArrayBuffer");
+      const dataView = new DataView(arg.buffer, offset, length2);
+      this.dataView = dataView;
+      this.buffer = dataView.buffer;
+      this.byteOffset = dataView.byteOffset;
+      this.byteLength = dataView.byteLength;
+    }
+    getUint8Array(offset, length2) {
+      return new Uint8Array(this.buffer, this.byteOffset + offset, length2);
+    }
+    getString(offset = 0, length2 = this.byteLength) {
+      const arr = this.getUint8Array(offset, length2);
+      return uint8ArrayToUtf8String(arr);
+    }
+    getUnicodeString(offset = 0, length2 = this.byteLength) {
+      const chars = [];
+      for (let i2 = 0; i2 < length2 && offset + i2 < this.byteLength; i2 += 2) chars.push(this.getUint16(offset + i2));
+      return arrayToCharCode(chars);
+    }
+    getInt8(offset) {
+      return this.dataView.getInt8(offset);
+    }
+    getUint8(offset) {
+      return this.dataView.getUint8(offset);
+    }
+    getInt16(offset) {
+      return this.dataView.getInt16(offset, false);
+    }
+    getInt32(offset) {
+      return this.dataView.getInt32(offset, false);
+    }
+    getUint16(offset) {
+      return this.dataView.getUint16(offset, false);
+    }
+    getUint32(offset) {
+      return this.dataView.getUint32(offset, false);
+    }
+  }
+  class IccParser {
+    constructor(chunk) {
+      __publicField(this, "raw");
+      __publicField(this, "chunk");
+      this.chunk = new BufferView(chunk);
+    }
+    parse() {
+      this.raw = /* @__PURE__ */ new Map();
+      this.parseHeader();
+      this.parseTags();
+      const output = this.translate();
+      if (output.ProfileFileSignature !== "acsp") {
+        throw new Error("ICC profile signature is not acsp");
+      }
+      return output;
+    }
+    parseHeader() {
+      const { raw: raw2 } = this;
+      if (this.chunk.byteLength < 84) throw new Error("ICC header is too short");
+      for (const [offsetKey, parse2] of Object.entries(headerParsers)) {
+        const offset = parseInt(offsetKey, 10);
+        const val = parse2(this.chunk, offset);
+        if (val === EMPTY_VALUE) continue;
+        raw2.set(offset, val);
+      }
+    }
+    parseTags() {
+      const { raw: raw2 } = this;
+      let tagCount = this.chunk.getUint32(128);
+      let offset = 132;
+      const chunkLength = this.chunk.byteLength;
+      while (tagCount--) {
+        const code2 = this.chunk.getString(offset, 4);
+        const valueOffset = this.chunk.getUint32(offset + 4);
+        const valueLength = this.chunk.getUint32(offset + 8);
+        const ttype = this.chunk.getString(valueOffset, 4);
+        if (valueOffset + valueLength > chunkLength) {
+          throw new Error("Corrupt ICC profile data");
+        }
+        raw2.set(code2, this.parseTag(ttype, valueOffset));
+        offset += 12;
+      }
+    }
+    parseTag(ttype, offset) {
+      switch (ttype) {
+        case "mluc":
+          return this.parseMluc(offset);
+        case "para":
+          return this.parsePara(offset);
+      }
+      throw new Error(`Unhandled ICC tag data type: "${ttype}"`);
+    }
+    parseMluc(tagOffset) {
+      const { chunk } = this;
+      const entryCount = chunk.getUint32(tagOffset + 8);
+      const entrySize = chunk.getUint32(tagOffset + 12);
+      let entryOffset = tagOffset + 16;
+      const values = [];
+      for (let i2 = 0; i2 < entryCount; i2++) {
+        const lang2 = chunk.getString(entryOffset + 0, 2);
+        const country = chunk.getString(entryOffset + 2, 2);
+        const length2 = chunk.getUint32(entryOffset + 4);
+        const offset = chunk.getUint32(entryOffset + 8) + tagOffset;
+        const text2 = normalizeString$1(chunk.getUnicodeString(offset, length2));
+        values.push({
+          lang: lang2,
+          country,
+          text: text2
+        });
+        entryOffset += entrySize;
+      }
+      if (entryCount === 1) return values[0].text;
+      else return values;
+    }
+    parsePara(offset) {
+      const { chunk } = this;
+      const functionType = chunk.getUint16(offset + 8);
+      const g2 = parseS15Fixed16Number(chunk, offset + 12);
+      let a2 = 0, b2 = 0, c2 = 0, d2 = 0, e2 = 0, f2 = 0;
+      if (functionType >= 1) {
+        a2 = parseS15Fixed16Number(chunk, offset + 16);
+        b2 = parseS15Fixed16Number(chunk, offset + 20);
+      }
+      if (functionType >= 2) {
+        c2 = parseS15Fixed16Number(chunk, offset + 24);
+      }
+      if (functionType >= 3) {
+        d2 = parseS15Fixed16Number(chunk, offset + 28);
+      }
+      if (functionType >= 4) {
+        e2 = parseS15Fixed16Number(chunk, offset + 32);
+        f2 = parseS15Fixed16Number(chunk, offset + 36);
+      }
+      const values = {
+        functionType,
+        g: g2,
+        a: a2,
+        b: b2,
+        c: c2,
+        d: d2,
+        e: e2,
+        f: f2
+      };
+      return values;
+    }
+    translate() {
+      const { raw: raw2 } = this;
+      const output = {};
+      for (const [key2, val] of raw2) {
+        if (!headerAndTagNames.has(key2)) {
+          throw new Error(`Unsupported ICC tag: ${key2}`);
+        }
+        output[headerAndTagNames.get(key2)] = val;
+      }
+      return output;
+    }
+  }
+  const headerAndTagNames = /* @__PURE__ */ new Map([
+    [
+      4,
+      "ProfileCMMType"
+    ],
+    [
+      8,
+      "ProfileVersion"
+    ],
+    [
+      12,
+      "ProfileClass"
+    ],
+    [
+      16,
+      "ColorSpaceData"
+    ],
+    [
+      20,
+      "ProfileConnectionSpace"
+    ],
+    [
+      24,
+      "ProfileDateTime"
+    ],
+    [
+      36,
+      "ProfileFileSignature"
+    ],
+    [
+      40,
+      "PrimaryPlatform"
+    ],
+    [
+      44,
+      "CMMFlags"
+    ],
+    [
+      48,
+      "DeviceManufacturer"
+    ],
+    [
+      52,
+      "DeviceModel"
+    ],
+    [
+      56,
+      "DeviceAttributes"
+    ],
+    [
+      64,
+      "RenderingIntent"
+    ],
+    [
+      68,
+      "ConnectionSpaceIlluminant"
+    ],
+    [
+      80,
+      "ProfileCreator"
+    ],
+    [
+      84,
+      "ProfileID"
+    ],
+    [
+      "desc",
+      "ProfileDescription"
+    ],
+    [
+      "cprt",
+      "ProfileCopyright"
+    ],
+    [
+      "kTRC",
+      "GrayTRC"
+    ]
+  ]);
+  const headerParsers = {
+    4: parseString,
+    8: parseVersion,
+    12: parseString,
+    16: parseString,
+    20: parseString,
+    24: parseDate,
+    36: parseString,
+    40: parseString,
+    48: parseString,
+    52: parseString,
+    64: (view, offset) => view.getUint32(offset),
+    80: parseString
+  };
+  function parseString(view, offset) {
+    return normalizeString$1(view.getString(offset, 4));
+  }
+  function parseVersion(view, offset) {
+    return [
+      view.getUint8(offset),
+      view.getUint8(offset + 1) >> 4,
+      view.getUint8(offset + 1) % 16
+    ];
+  }
+  function parseDate(view, offset) {
+    const year = view.getUint16(offset);
+    const month = view.getUint16(offset + 2) - 1;
+    const day = view.getUint16(offset + 4);
+    const hours = view.getUint16(offset + 6);
+    const minutes = view.getUint16(offset + 8);
+    const seconds = view.getUint16(offset + 10);
+    return new Date(Date.UTC(year, month, day, hours, minutes, seconds));
+  }
+  function parseS15Fixed16Number(view, offset) {
+    const integer = view.getInt16(offset);
+    const fractional = view.getUint16(offset + 2);
+    return integer + fractional / 65536;
+  }
+  function parseIccProfile(content2) {
+    const parser2 = new IccParser(content2);
+    return parser2.parse();
+  }
+  const TIFF_ICC_PROFILE_TAG = 34675;
+  const GEOTIFF_ICC_PROFILE_KEY = "ICC Profile";
+  const GAMMA3_ICC_PROFILE = new Uint8Array([
+    0,
+    0,
+    1,
+    60,
+    108,
+    99,
+    109,
+    115,
+    4,
+    64,
+    0,
+    0,
+    109,
+    110,
+    116,
+    114,
+    71,
+    82,
+    65,
+    89,
+    88,
+    89,
+    90,
+    32,
+    7,
+    234,
+    0,
+    10,
+    0,
+    27,
+    0,
+    15,
+    0,
+    24,
+    0,
+    50,
+    97,
+    99,
+    115,
+    112,
+    65,
+    80,
+    80,
+    76,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    246,
+    214,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    211,
+    45,
+    108,
+    99,
+    109,
+    115,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    3,
+    100,
+    101,
+    115,
+    99,
+    0,
+    0,
+    0,
+    168,
+    0,
+    0,
+    0,
+    54,
+    99,
+    112,
+    114,
+    116,
+    0,
+    0,
+    0,
+    224,
+    0,
+    0,
+    0,
+    76,
+    107,
+    84,
+    82,
+    67,
+    0,
+    0,
+    1,
+    44,
+    0,
+    0,
+    0,
+    16,
+    109,
+    108,
+    117,
+    99,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    12,
+    101,
+    110,
+    85,
+    83,
+    0,
+    0,
+    0,
+    26,
+    0,
+    0,
+    0,
+    28,
+    0,
+    103,
+    0,
+    114,
+    0,
+    97,
+    0,
+    121,
+    0,
+    32,
+    0,
+    98,
+    0,
+    117,
+    0,
+    105,
+    0,
+    108,
+    0,
+    116,
+    0,
+    45,
+    0,
+    105,
+    0,
+    110,
+    0,
+    0,
+    109,
+    108,
+    117,
+    99,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    12,
+    101,
+    110,
+    85,
+    83,
+    0,
+    0,
+    0,
+    48,
+    0,
+    0,
+    0,
+    28,
+    0,
+    78,
+    0,
+    111,
+    0,
+    32,
+    0,
+    99,
+    0,
+    111,
+    0,
+    112,
+    0,
+    121,
+    0,
+    114,
+    0,
+    105,
+    0,
+    103,
+    0,
+    104,
+    0,
+    116,
+    0,
+    44,
+    0,
+    32,
+    0,
+    117,
+    0,
+    115,
+    0,
+    101,
+    0,
+    32,
+    0,
+    102,
+    0,
+    114,
+    0,
+    101,
+    0,
+    101,
+    0,
+    108,
+    0,
+    121,
+    112,
+    97,
+    114,
+    97,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    3,
+    0,
+    0
+  ]);
+  function iccGrayU8ToU16Lut(icc) {
+    var _a2, _b2, _c2;
+    try {
+      const parsed = parseIccProfile(icc);
+      const gamma = (_a2 = parsed.GrayTRC) == null ? void 0 : _a2.g;
+      if (((_b2 = parsed.ProfileVersion) == null ? void 0 : _b2[0]) !== 4 || parsed.ColorSpaceData !== "GRAY" || ((_c2 = parsed.GrayTRC) == null ? void 0 : _c2.functionType) !== 0 || gamma !== 3) {
+        return null;
+      }
+      return Uint16Array.from({
+        length: 256
+      }, (_2, b2) => Math.round((b2 / 255) ** gamma * 65535));
+    } catch {
+      return null;
+    }
+  }
+  function expandThroughLut(data2, lut) {
+    const out = new Uint16Array(data2.length);
+    for (let i2 = 0; i2 < data2.length; i2++) {
+      out[i2] = lut[data2[i2] & 255];
+    }
+    return out;
+  }
+  function WorkerWrapper$4(options) {
+    return new Worker("" + new URL("decoder.worker-C5_45Yb3.js", import.meta.url).href, {
+      type: "module",
+      name: options == null ? void 0 : options.name
+    });
+  }
+  const decoderTags = /* @__PURE__ */ new WeakMap();
+  function withoutBlockTables(fileDirectory) {
+    let tags = decoderTags.get(fileDirectory);
+    if (!tags) {
+      tags = {
+        ...fileDirectory,
+        TileOffsets: fileDirectory.TileOffsets && [],
+        TileByteCounts: fileDirectory.TileByteCounts && [],
+        StripOffsets: fileDirectory.StripOffsets && [],
+        StripByteCounts: fileDirectory.StripByteCounts && [],
+        ImageDescription: void 0
+      };
+      decoderTags.set(fileDirectory, tags);
+    }
+    return tags;
+  }
+  class OmeDecodePool extends Pool {
+    decode(fileDirectory, buffer2) {
+      return super.decode(withoutBlockTables(fileDirectory), buffer2);
+    }
+    decodeWidened(fileDirectory, buffer2, lut) {
+      return super.decode({
+        ...withoutBlockTables(fileDirectory),
+        MinervaWidenLut: lut
+      }, buffer2);
+    }
+  }
+  let sharedPool = null;
+  function sharedOmeDecodePool() {
+    sharedPool ?? (sharedPool = new OmeDecodePool(void 0, () => new WorkerWrapper$4()));
+    return sharedPool;
+  }
+  function cropTile(full2, stride, width, height) {
+    if (width === stride && height === stride) return full2;
+    const out = new Uint16Array(width * height);
+    for (let row2 = 0; row2 < height; row2++) {
+      out.set(full2.subarray(row2 * stride, row2 * stride + width), row2 * width);
+    }
+    return out;
+  }
+  async function readTileThroughLut(plane, args, lut, uncached = false) {
+    var _a2;
+    const source2 = plane;
+    const pool = source2.pool;
+    if (!source2._indexer || !source2._getTileExtent || !(pool instanceof OmeDecodePool)) {
+      return null;
+    }
+    try {
+      const indexed = await source2._indexer(args.selection);
+      const image2 = uncached ? uncachedTiffImage(indexed) : indexed;
+      if (!image2.isTiled || image2.getTileWidth() !== source2.tileSize || image2.getTileHeight() !== source2.tileSize || image2.getSamplesPerPixel() !== 1 || image2.getBitsPerSample(0) !== 8) {
+        return null;
+      }
+      const { width, height } = source2._getTileExtent(args.x, args.y);
+      const stride = source2.tileSize;
+      const decoder = {
+        decode: (fileDirectory, buffer2) => {
+          var _a3;
+          if ((_a3 = args.signal) == null ? void 0 : _a3.aborted) throw SIGNAL_ABORTED;
+          return pool.decodeWidened(fileDirectory, buffer2, lut);
+        }
+      };
+      const tile = await image2.getTileOrStrip(args.x, args.y, 0, decoder);
+      if ((_a2 = args.signal) == null ? void 0 : _a2.aborted) throw SIGNAL_ABORTED;
+      const bytes = tile.data;
+      const full2 = bytes.byteLength === stride * stride * 2 ? new Uint16Array(bytes) : expandThroughLut(new Uint8Array(bytes), lut);
+      return {
+        data: cropTile(full2, stride, width, height),
+        width,
+        height
+      };
+    } catch (err2) {
+      if (err2 === SIGNAL_ABORTED) throw err2;
+      return null;
+    }
+  }
+  async function readWindowThroughLut(plane, { selection, window: window2, signal }, lut) {
+    const [x0, y0, x1, y1] = window2;
+    const width = x1 - x0;
+    const height = y1 - y0;
+    const size = plane.tileSize;
+    if (x0 % size === 0 && y0 % size === 0 && width <= size && height <= size) {
+      const args = {
+        selection,
+        x: x0 / size,
+        y: y0 / size,
+        signal
+      };
+      const tile = await readTileThroughLut(plane, args, lut, true);
+      if ((tile == null ? void 0 : tile.width) === width && tile.height === height) return tile;
+    }
+    const source2 = plane;
+    const image2 = uncachedTiffImage(await source2._indexer(selection));
+    const options = {
+      window: window2,
+      width,
+      height,
+      pool: source2.pool
+    };
+    const raster = await image2.readRasters(options);
+    if (signal == null ? void 0 : signal.aborted) throw SIGNAL_ABORTED;
+    const [samples] = raster;
+    return {
+      data: expandThroughLut(samples, lut),
+      width,
+      height
+    };
+  }
+  async function iccLutForLoader(loader) {
+    var _a2, _b2;
+    const plane = (_a2 = loader.data) == null ? void 0 : _a2[0];
+    const indexer = plane == null ? void 0 : plane._indexer;
+    if ((plane == null ? void 0 : plane.dtype) !== "Uint8" || !indexer) return null;
+    const image2 = await indexer({
+      t: 0,
+      z: 0,
+      c: 0
+    });
+    const icc = (_b2 = image2.fileDirectory) == null ? void 0 : _b2[GEOTIFF_ICC_PROFILE_KEY];
+    if (!icc || image2.getSamplesPerPixel() !== 1) return null;
+    return iccGrayU8ToU16Lut(Uint8Array.from(icc));
+  }
+  async function applyGrayIccProfile(loader) {
+    const lut = await iccLutForLoader(loader).catch(() => null);
+    if (!lut) return loader;
+    const wrapped = wrapOmeLoaderJpegExport(loader, lut);
+    return {
+      ...wrapped,
+      metadata: {
+        ...wrapped.metadata,
+        Pixels: {
+          ...wrapped.metadata.Pixels,
+          Type: "uint16"
+        }
+      }
+    };
+  }
+  function wrapOmeLoaderJpegExport(loader, lut) {
+    var _a2;
+    const data2 = (_a2 = loader.data) == null ? void 0 : _a2.map((plane) => {
+      var _a3, _b2;
+      const getTile = (_a3 = plane.getTile) == null ? void 0 : _a3.bind(plane);
+      if (!getTile) return plane;
+      const wrapped = {
+        ...plane,
+        dtype: "Uint16",
+        onTileError: (_b2 = plane.onTileError) == null ? void 0 : _b2.bind(plane),
+        getTile: async (args) => {
+          const fast = await readTileThroughLut(plane, args, lut);
+          if (fast) return fast;
+          const tile = await getTile(args);
+          return {
+            ...tile,
+            data: expandThroughLut(tile.data, lut)
+          };
+        },
+        ...plane._indexer ? {
+          readWindow: (args) => readWindowThroughLut(plane, args, lut)
+        } : {}
+      };
+      return wrapped;
+    });
+    return data2 ? {
+      ...loader,
+      data: data2
+    } : loader;
   }
   registerLzwDecoder();
   function asAppLoader(image2) {
@@ -87023,7 +87910,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       createWritable: async () => {
         throw new DOMException("Ephemeral file handle", "NotSupportedError");
       },
-      isSameEntry: async () => false,
       queryPermission: async () => "granted",
       requestPermission: async () => "granted"
     };
@@ -87031,6 +87917,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   }
   async function fileHandleFromDataTransferItem(item2) {
     if (item2.kind !== "file") return null;
+    const file = item2.getAsFile();
     const withHandle = item2;
     if (typeof withHandle.getAsFileSystemHandle === "function") {
       try {
@@ -87041,7 +87928,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       } catch {
       }
     }
-    const file = item2.getAsFile();
     if (!file) return null;
     return ephemeralFileHandleFromFile(file);
   }
@@ -87084,19 +87970,10 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       throw e2;
     }
   };
-  const toFile = async () => {
+  const toFile = async (kinds) => {
     try {
       const file = await n$1({
-        description: "OME-TIFF images",
-        mimeTypes: [
-          "image/tiff"
-        ],
-        extensions: [
-          ".tif",
-          ".tiff",
-          ".ome.tif",
-          ".ome.tiff"
-        ],
+        ...importFilePickerOptions(kinds),
         multiple: false
       });
       if (file.handle) return [
@@ -87190,17 +88067,16 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   }
   async function loadOmeLoaderForRole(role, source2) {
     const packedRgb = source2.rgbDisplay === false ? "planar" : void 0;
+    let loader;
     if (source2.kind === "local") {
       const file = await source2.handle.getFile();
-      if (role === "segmentation") {
-        return maskLoader(file);
-      }
-      return finishOmeIntensityLoader(asAppLoader(await loadOmeTiff(file, vivLoadOpts(source2.pool, packedRgb))), file, source2.pool);
+      loader = role === "segmentation" ? await maskLoader(file) : await finishOmeIntensityLoader(asAppLoader(await loadOmeTiff(file, vivLoadOpts(source2.pool, packedRgb))), file, source2.pool);
+    } else if (role === "segmentation") {
+      loader = await maskLoader(source2.url);
+    } else {
+      loader = await finishOmeIntensityLoader(asAppLoader(await loadOmeTiff(source2.url, vivLoadOpts(source2.pool, packedRgb))), source2.url, source2.pool);
     }
-    if (role === "segmentation") {
-      return maskLoader(source2.url);
-    }
-    return finishOmeIntensityLoader(asAppLoader(await loadOmeTiff(source2.url, vivLoadOpts(source2.pool, packedRgb))), source2.url, source2.pool);
+    return applyGrayIccProfile(loader);
   }
   const sessionHandles = /* @__PURE__ */ new Map();
   async function putFileHandle(id2, handle2) {
@@ -89428,6 +90304,14 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         ...shapes
       ]
     })),
+    setWaypointsAndShapes: (waypoints, shapes) => set2(() => ({
+      waypoints: [
+        ...waypoints
+      ],
+      shapes: [
+        ...shapes
+      ]
+    })),
     setChannelGroups: (channelGroups) => set2(() => ({
       channelGroups: [
         ...channelGroups
@@ -90037,9 +90921,9 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     activeStoryIndex: null,
     waypointAuthoring: /* @__PURE__ */ new Map(),
     authoringWaypointShapesIndex: null,
+    openWaypointId: null,
     activeChannelGroupId: null,
     channelRendering: null,
-    maskVisualizationPreview: null,
     imageOrientationPreview: null,
     imageOpacityPreview: null,
     arrangeImageId: null,
@@ -90066,6 +90950,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     viewerViewState: null,
     viewerViewportSize: null,
     viewerWorldFrame: null,
+    viewerImageFrames: [],
     viewerImageLayersLoaded: false,
     squareViewportThumbnailCapture: null,
     editingViewstateWaypointIndex: null
@@ -90334,12 +91219,12 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         brushMaskVersion: 0,
         brushLastScreenCoord: null,
         imageSelectionMask: null,
-        maskVisualizationPreview: null,
         channelVisibilities: vis,
         hiddenLegendClasses: {},
         activeStoryIndex: null,
         waypointAuthoring: /* @__PURE__ */ new Map(),
         authoringWaypointShapesIndex: null,
+        openWaypointId: null,
         authoringWaypointEditorOpen: false,
         targetWaypointCamera: null,
         layersPanelSelectedShapeIds: [],
@@ -90670,7 +91555,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       delete vis[SELECTION_MASK_CHANNEL_KEY];
       set2({
         imageSelectionMask: null,
-        maskVisualizationPreview: null,
         channelVisibilities: vis
       });
     },
@@ -90983,6 +91867,11 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         authoringWaypointShapesIndex: index2
       });
     },
+    setOpenWaypointId: (waypointId) => {
+      set2({
+        openWaypointId: waypointId
+      });
+    },
     setLayersPanelSelectedShapeIds: (ids) => {
       set2({
         layersPanelSelectedShapeIds: [
@@ -91064,12 +91953,12 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         } : group2)
       }));
     },
-    setStories: (configWaypoints2) => {
+    setStories: (configWaypoints) => {
       const doc = useDocumentStore.getState();
       const frame2 = referenceWorldFrameForActions(get2);
       const vp = authoringViewportForDoc(get2);
       const nextAuthoring = /* @__PURE__ */ new Map();
-      const waypoints = configWaypoints2.map((w2) => {
+      const waypoints = configWaypoints.map((w2) => {
         const { waypoint, authoring } = configWaypointToWaypoint(hydrateConfigWaypoint(w2, doc.channelGroups), frame2.pixelWidth, frame2.pixelHeight, vp.width, vp.height);
         nextAuthoring.set(waypoint.id, authoring);
         return waypoint;
@@ -91143,7 +92032,9 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       const doc = useDocumentStore.getState();
       const removedId = (_a2 = doc.waypoints[index2]) == null ? void 0 : _a2.id;
       if (index2 >= 0 && index2 < doc.waypoints.length) {
-        doc.setWaypoints(doc.waypoints.filter((_2, i2) => i2 !== index2));
+        const waypoints = doc.waypoints.filter((_2, i2) => i2 !== index2);
+        const listed = new Set(waypoints.flatMap((w2) => w2.shapeIds ?? []));
+        doc.setWaypointsAndShapes(waypoints, documentShapes(doc).filter((s2) => listed.has(s2.id)));
       }
       set2((state) => {
         const next2 = new Map(state.waypointAuthoring);
@@ -91245,6 +92136,11 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         viewerWorldFrame: frame2
       });
     },
+    setViewerImageFrames: (frames) => {
+      set2({
+        viewerImageFrames: frames
+      });
+    },
     setViewerImageLayersLoaded: (loaded) => {
       set2({
         viewerImageLayersLoaded: loaded
@@ -91280,9 +92176,9 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         };
       });
     },
-    setContourLevels: (levels) => {
+    setContourLevels: (contourLevels) => {
       set2({
-        contourLevels: Math.min(CONTOUR_LEVELS_MAX, Math.max(1, Math.round(levels)))
+        contourLevels
       });
     },
     setContourSmoothing: (contourSmoothing) => {
@@ -91291,18 +92187,14 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       });
     },
     setContourSmoothingSteps: (steps) => {
-      const usable = steps.length > 0 ? steps : CONTOUR_SMOOTHING_STEPS;
       const current = get2().contourSmoothing;
-      let contourSmoothing = usable[0];
-      for (const step of usable) {
-        if (step <= current) contourSmoothing = step;
-      }
+      const contourSmoothing = steps.findLast((step) => step <= current) ?? steps[0];
       const prev = get2().contourSmoothingSteps;
-      if (contourSmoothing === current && prev.length === usable.length && prev.every((step, i2) => step === usable[i2])) {
+      if (contourSmoothing === current && prev.length === steps.length && prev.every((step, i2) => step === steps[i2])) {
         return;
       }
       set2({
-        contourSmoothingSteps: usable,
+        contourSmoothingSteps: steps,
         contourSmoothing
       });
     },
@@ -91327,11 +92219,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     clearChannelRendering: () => {
       set2({
         channelRendering: null
-      });
-    },
-    setMaskVisualizationPreview: (preview) => {
-      set2({
-        maskVisualizationPreview: preview
       });
     },
     setImageOrientationPreview: (preview) => {
@@ -91548,7 +92435,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   function syncAppStoreFromDocument() {
     useAppStore.getState().clearChannelRendering();
     useAppStore.setState({
-      maskVisualizationPreview: null,
       imageOrientationPreview: null,
       imageOpacityPreview: null
     });
@@ -91575,14 +92461,14 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     return useStore(useDocumentStore.temporal, (s2) => s2.futureStates.length > 0);
   }
   const clusterFieldset = "_clusterFieldset_18uri_1";
-  const styles$y = {
+  const styles$x = {
     clusterFieldset
   };
   function DocumentUndoControls() {
     const canUndo = useCanDocumentUndo();
     const canRedo = useCanDocumentRedo();
     return jsxRuntimeExports.jsxs("fieldset", {
-      className: styles$y.clusterFieldset,
+      className: styles$x.clusterFieldset,
       "aria-label": "Document undo and redo",
       children: [
         jsxRuntimeExports.jsx(PanelIconButton, {
@@ -91638,845 +92524,11 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       armed
     ]);
   }
-  const attr = (el2, ...keys2) => {
-    for (const k2 of keys2) {
-      const v2 = el2.getAttribute(k2);
-      if (v2 != null && v2 !== "") return v2;
-    }
-    return null;
-  };
-  const num = (el2, ...keys2) => {
-    const s2 = attr(el2, ...keys2);
-    if (s2 == null) return Number.NaN;
-    return Number(s2);
-  };
-  const parseOmeColor = (s2) => {
-    if (s2 == null || s2 === "") return void 0;
-    const t2 = s2.trim();
-    if (/^-?\d+$/.test(t2)) {
-      const int = Number.parseInt(t2, 10);
-      if (!Number.isNaN(int)) {
-        const buffer2 = new ArrayBuffer(4);
-        const view = new DataView(buffer2);
-        view.setInt32(0, int, false);
-        const b2 = new Uint8Array(buffer2);
-        if (b2.length < 4) return void 0;
-        return [
-          b2[0],
-          b2[1],
-          b2[2],
-          b2[3]
-        ];
-      }
-    }
-    if (t2.startsWith("rgba(") || t2.startsWith("rgb(")) {
-      const parts = t2.replace(/^rgba\(/, "").replace(/^rgb\(/, "").replace(/\)\s*$/, "").split(/[,\s]+/).map(Number);
-      if (parts.length >= 3 && parts.every((n2) => !Number.isNaN(n2))) {
-        const r0 = parts[0];
-        const r1 = parts[1];
-        const r2 = parts[2];
-        if (r0 === void 0 || r1 === void 0 || r2 === void 0) {
-          return void 0;
-        }
-        const aRaw = parts[3];
-        const a2 = aRaw === void 0 ? 255 : aRaw <= 1 ? aRaw * 255 : aRaw;
-        return [
-          r0,
-          r1,
-          r2,
-          a2
-        ];
-      }
-    }
-    let hex = t2.replace("#", "");
-    if (hex.length === 8) {
-      const a2 = parseInt(hex.slice(0, 2), 16);
-      hex = hex.slice(2);
-      const r2 = parseInt(hex.slice(0, 2), 16);
-      const g2 = parseInt(hex.slice(2, 4), 16);
-      const b2 = parseInt(hex.slice(4, 6), 16);
-      if ([
-        a2,
-        r2,
-        g2,
-        b2
-      ].some((n2) => Number.isNaN(n2))) return void 0;
-      return [
-        r2,
-        g2,
-        b2,
-        a2
-      ];
-    }
-    if (hex.length === 6) {
-      const r2 = parseInt(hex.slice(0, 2), 16);
-      const g2 = parseInt(hex.slice(2, 4), 16);
-      const b2 = parseInt(hex.slice(4, 6), 16);
-      if ([
-        r2,
-        g2,
-        b2
-      ].some((n2) => Number.isNaN(n2))) return void 0;
-      return [
-        r2,
-        g2,
-        b2,
-        255
-      ];
-    }
-    return void 0;
-  };
-  const shapeCommon = (el2, id2) => {
-    const name2 = attr(el2, "Name", "name");
-    const text2 = attr(el2, "Text", "text", "Value");
-    const theC = num(el2, "TheC", "theC");
-    const theT = num(el2, "TheT", "theT");
-    const theZ = num(el2, "TheZ", "theZ");
-    const sw = num(el2, "StrokeWidth", "strokeWidth");
-    const base2 = {
-      ID: id2
-    };
-    if (name2) base2.Name = name2;
-    if (text2) base2.Text = text2;
-    const fill = parseOmeColor(attr(el2, "FillColor", "fillColor", "Fill", "fill"));
-    const stroke = parseOmeColor(attr(el2, "StrokeColor", "strokeColor", "Stroke", "stroke"));
-    if (fill) base2.FillColor = fill;
-    if (stroke) base2.StrokeColor = stroke;
-    if (!Number.isNaN(sw) && sw > 0) base2.StrokeWidth = sw;
-    if (!Number.isNaN(theC) && theC >= 0) base2.TheC = Math.floor(theC);
-    if (!Number.isNaN(theT) && theT >= 0) base2.TheT = Math.floor(theT);
-    if (!Number.isNaN(theZ) && theZ >= 0) base2.TheZ = Math.floor(theZ);
-    return base2;
-  };
-  const shapeIdFor = (el2, fallback) => attr(el2, "ID", "id", "Name", "name") || fallback;
-  function elementToRoiShape(el2, index2) {
-    var _a2;
-    const id2 = shapeIdFor(el2, `Shape:${index2}`);
-    const common2 = (extra) => {
-      return {
-        ...shapeCommon(el2, id2),
-        ...extra
-      };
-    };
-    const tag = el2.localName;
-    const lower = tag.toLowerCase();
-    if (lower === "rectangle") {
-      const x2 = num(el2, "X", "x");
-      const y2 = num(el2, "Y", "y");
-      const w2 = num(el2, "Width", "width", "W", "w");
-      const h2 = num(el2, "Height", "height", "H", "h");
-      if ([
-        x2,
-        y2,
-        w2,
-        h2
-      ].some((n2) => Number.isNaN(n2)) || w2 <= 0 || h2 <= 0) {
-        return null;
-      }
-      return common2({
-        type: "rectangle",
-        X: x2,
-        Y: y2,
-        Width: w2,
-        Height: h2
-      });
-    }
-    if (lower === "ellipse") {
-      const x2 = num(el2, "X", "x", "cx");
-      const y2 = num(el2, "Y", "y", "cy");
-      const rx = num(el2, "RadiusX", "radiusX", "rx", "Radius", "r");
-      let ry = num(el2, "RadiusY", "radiusY", "ry");
-      if (Number.isNaN(ry) && !Number.isNaN(rx)) ry = rx;
-      if ([
-        x2,
-        y2,
-        rx,
-        ry
-      ].some((n2) => Number.isNaN(n2)) || rx <= 0 || ry <= 0) {
-        return null;
-      }
-      return common2({
-        type: "ellipse",
-        X: x2,
-        Y: y2,
-        RadiusX: rx,
-        RadiusY: ry
-      });
-    }
-    if (lower === "line") {
-      const x1 = num(el2, "X1", "x1", "X");
-      const y1 = num(el2, "Y1", "y1", "Y");
-      const x2 = num(el2, "X2", "x2");
-      const y2 = num(el2, "Y2", "y2");
-      if ([
-        x1,
-        y1,
-        x2,
-        y2
-      ].some((n2) => Number.isNaN(n2))) {
-        return null;
-      }
-      return common2({
-        type: "line",
-        X1: x1,
-        Y1: y1,
-        X2: x2,
-        Y2: y2
-      });
-    }
-    if (lower === "point") {
-      const x2 = num(el2, "X", "x", "px");
-      const y2 = num(el2, "Y", "y", "py");
-      if (Number.isNaN(x2) || Number.isNaN(y2)) return null;
-      return common2({
-        type: "point",
-        X: x2,
-        Y: y2
-      });
-    }
-    if (lower === "polygon" || lower === "polyline") {
-      const pts = attr(el2, "Points", "points", "Point", "Path");
-      if (!pts || !pts.trim()) return null;
-      if (lower === "polygon") {
-        return common2({
-          type: "polygon",
-          Points: pts.trim()
-        });
-      }
-      return common2({
-        type: "polyline",
-        Points: pts.trim()
-      });
-    }
-    if (lower === "label") {
-      const x2 = num(el2, "X", "x", "px");
-      const y2 = num(el2, "Y", "y", "py");
-      const t2 = attr(el2, "Text", "text", "Value", "name") || ((_a2 = el2.textContent) == null ? void 0 : _a2.trim()) || "";
-      if (Number.isNaN(x2) || Number.isNaN(y2) || t2 === "") return null;
-      return common2({
-        type: "label",
-        X: x2,
-        Y: y2,
-        Text: t2
-      });
-    }
-    return null;
-  }
-  function unionShapeElements(roiEl) {
-    const out = [];
-    const ns = (name2) => roiEl.getElementsByTagNameNS("*", name2);
-    const unions = [
-      ...Array.from(ns("Union")),
-      ...Array.from(roiEl.getElementsByTagName("Union"))
-    ];
-    if (unions.length > 0) {
-      for (const u2 of unions) {
-        for (const ch2 of u2.children) {
-          if (ch2.nodeType === Node.ELEMENT_NODE) out.push(ch2);
-        }
-      }
-      return out;
-    }
-    for (const ch2 of roiEl.children) {
-      if (ch2.localName === "Name" || ch2.localName === "Description") continue;
-      if (ch2.nodeType === Node.ELEMENT_NODE) out.push(ch2);
-    }
-    return out;
-  }
-  function collectRoiElements(doc) {
-    const a2 = Array.from(doc.getElementsByTagNameNS("*", "ROI"));
-    const b2 = Array.from(doc.getElementsByTagName("ROI"));
-    return Array.from(/* @__PURE__ */ new Set([
-      ...a2,
-      ...b2
-    ]));
-  }
-  function parseOmeXmlStringToRois(xml2) {
-    var _a2;
-    if (typeof DOMParser === "undefined") {
-      throw new Error("XML parsing is not available in this environment.");
-    }
-    const parser2 = new DOMParser();
-    const doc = parser2.parseFromString(xml2, "application/xml");
-    const perr = doc.getElementsByTagName("parsererror")[0];
-    if ((_a2 = perr == null ? void 0 : perr.textContent) == null ? void 0 : _a2.trim()) {
-      throw new Error("The file is not well-formed XML.");
-    }
-    const roiEls = collectRoiElements(doc);
-    const rois = [];
-    for (const roiEl of roiEls) {
-      const id2 = attr(roiEl, "ID", "id");
-      if (!id2) continue;
-      let roiName;
-      for (const ch2 of Array.from(roiEl.children)) {
-        if (ch2.localName === "Name" && ch2.textContent) {
-          roiName = ch2.textContent.trim();
-          break;
-        }
-      }
-      if (!roiName) roiName = attr(roiEl, "Name", "name") || void 0;
-      let desc;
-      for (const ch2 of Array.from(roiEl.children)) {
-        if (ch2.localName === "Description" && ch2.textContent) {
-          desc = ch2.textContent.trim();
-          break;
-        }
-      }
-      const shapeEls = unionShapeElements(roiEl);
-      const shapes = [];
-      shapeEls.forEach((shapeEl, i2) => {
-        const s2 = elementToRoiShape(shapeEl, i2);
-        if (s2) shapes.push(s2);
-      });
-      if (shapes.length > 0) {
-        rois.push({
-          ID: id2,
-          Name: roiName,
-          Description: desc,
-          shapes
-        });
-      }
-    }
-    return rois;
-  }
-  const applyTransform = (x2, y2, transform) => {
-    if (!transform) return [
-      x2,
-      y2
-    ];
-    const newX = transform.A00 * x2 + transform.A01 * y2 + transform.A02;
-    const newY = transform.A10 * x2 + transform.A11 * y2 + transform.A12;
-    return [
-      newX,
-      newY
-    ];
-  };
-  const parsePoints = (pointsStr, transform) => {
-    const points = pointsStr.trim().split(/\s+/).map((point2) => {
-      const [x2, y2] = point2.split(",").map(Number);
-      return applyTransform(x2, y2, transform);
-    });
-    return points;
-  };
-  const ellipseToPolygon = (centerX, centerY, radiusX, radiusY, transform, segments = 32) => {
-    const points = [];
-    for (let i2 = 0; i2 <= segments; i2++) {
-      const angle2 = i2 / segments * 2 * Math.PI;
-      const x2 = centerX + radiusX * Math.cos(angle2);
-      const y2 = centerY + radiusY * Math.sin(angle2);
-      points.push(applyTransform(x2, y2, transform));
-    }
-    return points;
-  };
-  const getColors = (shape, defaultFill, defaultStroke) => {
-    return {
-      fillColor: shape.FillColor || defaultFill,
-      lineColor: shape.StrokeColor || defaultStroke,
-      lineWidth: shape.StrokeWidth || 3
-    };
-  };
-  const rectangleShapeToViewerShape = (shape, roi) => {
-    const { X: X2, Y: Y2, Width, Height, Transform, ID, Text, Name } = shape;
-    const topLeft = applyTransform(X2, Y2, Transform);
-    const bottomRight = applyTransform(X2 + Width, Y2 + Height, Transform);
-    const polygon = rectangleToPolygon(topLeft, bottomRight);
-    const colors = getColors(shape, [
-      255,
-      0,
-      0,
-      50
-    ], [
-      255,
-      0,
-      0,
-      255
-    ]);
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "polygon",
-      polygon,
-      style: colors,
-      text: Text,
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  const ellipseShapeToViewerShape = (shape, roi) => {
-    const { X: X2, Y: Y2, RadiusX, RadiusY, Transform, ID, Text, Name } = shape;
-    const polygon = ellipseToPolygon(X2, Y2, RadiusX, RadiusY, Transform);
-    const colors = getColors(shape, [
-      0,
-      255,
-      0,
-      50
-    ], [
-      0,
-      255,
-      0,
-      255
-    ]);
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "polygon",
-      polygon,
-      style: colors,
-      text: Text,
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  const lineShapeToViewerShape = (shape, roi) => {
-    const { X1, Y1, X2, Y2, Transform, ID, Text, Name } = shape;
-    const start = applyTransform(X1, Y1, Transform);
-    const end = applyTransform(X2, Y2, Transform);
-    const lineWidth = shape.StrokeWidth || 3;
-    const polygon = lineToPolygon(start, end, lineWidth);
-    const lineColor = shape.StrokeColor || [
-      0,
-      255,
-      255,
-      255
-    ];
-    const fillColor = shape.FillColor || [
-      0,
-      255,
-      255,
-      255
-    ];
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "line",
-      polygon,
-      hasArrowHead: false,
-      style: {
-        fillColor,
-        lineColor,
-        lineWidth
-      },
-      text: Text,
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  const pointShapeToViewerShape = (shape, roi) => {
-    const { X: X2, Y: Y2, Transform, ID, Text, Name } = shape;
-    const position2 = applyTransform(X2, Y2, Transform);
-    const fillColor = shape.FillColor || [
-      255,
-      140,
-      0,
-      255
-    ];
-    const strokeColor = shape.StrokeColor || [
-      255,
-      255,
-      255,
-      255
-    ];
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "point",
-      position: position2,
-      style: {
-        fillColor,
-        strokeColor,
-        radius: 5
-      },
-      text: Text,
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  const polygonShapeToViewerShape = (shape, roi) => {
-    const { Points, Transform, ID, Text, Name } = shape;
-    const polygon = parsePoints(Points, Transform);
-    const colors = getColors(shape, [
-      255,
-      165,
-      0,
-      50
-    ], [
-      255,
-      165,
-      0,
-      255
-    ]);
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "polygon",
-      polygon,
-      style: colors,
-      text: Text,
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  const polylineShapeToViewerShape = (shape, roi) => {
-    const { Points, Transform, ID, Text, Name } = shape;
-    const polygon = parsePoints(Points, Transform);
-    const lineColor = shape.StrokeColor || [
-      0,
-      255,
-      0,
-      255
-    ];
-    const lineWidth = shape.StrokeWidth || 3;
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "polyline",
-      polygon,
-      style: {
-        lineColor,
-        lineWidth
-      },
-      text: Text,
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  const labelShapeToViewerShape = (shape, roi) => {
-    const { X: X2, Y: Y2, Text, ID, Name, Transform } = shape;
-    const position2 = applyTransform(X2, Y2, Transform);
-    const fontColor = shape.StrokeColor || [
-      255,
-      255,
-      0,
-      255
-    ];
-    const backgroundColor = shape.FillColor || [
-      0,
-      0,
-      0,
-      150
-    ];
-    return {
-      id: `roi-${roi.ID}-${ID}`,
-      type: "text",
-      position: position2,
-      text: Text,
-      style: {
-        fontSize: 14,
-        fontColor,
-        backgroundColor,
-        padding: 4
-      },
-      metadata: {
-        label: Name || ID,
-        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
-        isImported: true
-      }
-    };
-  };
-  function collectRoiShapeWorldPoints(shape) {
-    const T2 = shape.Transform;
-    switch (shape.type) {
-      case "rectangle": {
-        const { X: X2, Y: Y2, Width, Height } = shape;
-        return [
-          applyTransform(X2, Y2, T2),
-          applyTransform(X2 + Width, Y2, T2),
-          applyTransform(X2 + Width, Y2 + Height, T2),
-          applyTransform(X2, Y2 + Height, T2)
-        ];
-      }
-      case "ellipse":
-        return ellipseToPolygon(shape.X, shape.Y, shape.RadiusX, shape.RadiusY, T2, 24);
-      case "line":
-        return [
-          applyTransform(shape.X1, shape.Y1, T2),
-          applyTransform(shape.X2, shape.Y2, T2)
-        ];
-      case "point":
-        return [
-          applyTransform(shape.X, shape.Y, T2)
-        ];
-      case "polygon":
-      case "polyline":
-        return parsePoints(shape.Points, T2);
-      case "label":
-        return [
-          applyTransform(shape.X, shape.Y, T2)
-        ];
-      default:
-        return [];
-    }
-  }
-  function importRoiCentroidPosition(roi) {
-    const hasNonLabel = roi.shapes.some((s2) => s2.type !== "label");
-    const pts = [];
-    for (const s2 of roi.shapes) {
-      if (hasNonLabel && s2.type === "label") continue;
-      pts.push(...collectRoiShapeWorldPoints(s2));
-    }
-    if (pts.length === 0) return null;
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (const [x2, y2] of pts) {
-      if (x2 < minX) minX = x2;
-      if (y2 < minY) minY = y2;
-      if (x2 > maxX) maxX = x2;
-      if (y2 > maxY) maxY = y2;
-    }
-    return [
-      (minX + maxX) / 2,
-      (minY + maxY) / 2
-    ];
-  }
-  function importRoiCentroidLabelText(roi) {
-    var _a2, _b2, _c2;
-    const name2 = (_a2 = roi.Name) == null ? void 0 : _a2.trim();
-    if (name2) return name2;
-    const desc = (_b2 = roi.Description) == null ? void 0 : _b2.trim();
-    if (desc) {
-      const line = ((_c2 = desc.split(/\r?\n/)[0]) == null ? void 0 : _c2.trim()) ?? "";
-      if (line) return line.length > 120 ? `${line.slice(0, 117)}\u2026` : line;
-    }
-    const id2 = roi.ID.trim();
-    if (id2.includes(":")) {
-      const tail = id2.split(":").pop();
-      if (tail) return tail;
-    }
-    return id2 || "ROI";
-  }
-  function makeImportCentroidTextShape(roi, position2) {
-    const text2 = importRoiCentroidLabelText(roi);
-    return {
-      id: `roi-${roi.ID}__import-centroid-label`,
-      type: "text",
-      position: position2,
-      text: text2,
-      style: {
-        ...importedTextStyle
-      },
-      metadata: {
-        label: text2,
-        description: `Auto centroid label for imported ROI ${roi.ID}`,
-        isImported: true
-      }
-    };
-  }
-  const parseRoisFromRoiList = (rois) => {
-    const shapes = [];
-    const groups = [];
-    if (!rois || rois.length === 0) {
-      return {
-        shapes,
-        groups
-      };
-    }
-    console.log(`Found ${rois.length} ROIs in ROI list`);
-    rois.forEach((roi) => {
-      console.log(`Processing ROI ${roi.ID} (${roi.Name || "unnamed"}) with ${roi.shapes.length} shapes`);
-      const groupId = `roi-group-${roi.ID}`;
-      const roiShapeIds = [];
-      roi.shapes.forEach((shape) => {
-        try {
-          let viewerShape = null;
-          switch (shape.type) {
-            case "rectangle":
-              viewerShape = rectangleShapeToViewerShape(shape, roi);
-              console.log(`Created rectangle shape: ${viewerShape.id}`);
-              break;
-            case "ellipse":
-              viewerShape = ellipseShapeToViewerShape(shape, roi);
-              console.log(`Created ellipse shape: ${viewerShape.id}`);
-              break;
-            case "line":
-              viewerShape = lineShapeToViewerShape(shape, roi);
-              console.log(`Created line shape: ${viewerShape.id}`);
-              break;
-            case "point":
-              viewerShape = pointShapeToViewerShape(shape, roi);
-              console.log(`Created point shape: ${viewerShape.id}`);
-              break;
-            case "polygon":
-              viewerShape = polygonShapeToViewerShape(shape, roi);
-              console.log(`Created polygon shape: ${viewerShape.id}`);
-              break;
-            case "polyline":
-              viewerShape = polylineShapeToViewerShape(shape, roi);
-              console.log(`Created polyline shape: ${viewerShape.id}`);
-              break;
-            case "label":
-              viewerShape = labelShapeToViewerShape(shape, roi);
-              console.log(`Created text shape: ${viewerShape.id}`);
-              break;
-            default:
-              console.warn(`Unknown shape: ${shape}`);
-          }
-          if (viewerShape) {
-            shapes.push(viewerShape);
-            roiShapeIds.push(viewerShape.id);
-          }
-        } catch (error2) {
-          console.error(`Error processing shape ${shape.ID} in ROI ${roi.ID}:`, error2);
-        }
-      });
-      const labelOnlyRoi = roi.shapes.length > 0 && roi.shapes.every((s2) => s2.type === "label");
-      if (roiShapeIds.length > 0 && !labelOnlyRoi) {
-        const centroidPos = importRoiCentroidPosition(roi);
-        if (centroidPos) {
-          const centroidShape = makeImportCentroidTextShape(roi, centroidPos);
-          shapes.push(centroidShape);
-          roiShapeIds.push(centroidShape.id);
-        }
-      }
-      if (roiShapeIds.length > 0) {
-        const group2 = {
-          id: groupId,
-          name: roi.Name || `ROI ${roi.ID}`,
-          shapeIds: roiShapeIds,
-          isExpanded: true
-        };
-        groups.push(group2);
-        console.log(`Created group for ROI ${roi.ID} with ${roiShapeIds.length} shapes`);
-      }
-    });
-    console.log(`Total shapes created from ROIs: ${shapes.length}`);
-    console.log(`Total groups created from ROIs: ${groups.length}`);
-    return {
-      shapes,
-      groups
-    };
-  };
-  const parseRoisFromLoader = (loader) => {
-    if (!loader || !loader.metadata || !loader.metadata.ROIs) {
-      console.log("No ROIs found in loader metadata");
-      return {
-        shapes: [],
-        groups: []
-      };
-    }
-    return parseRoisFromRoiList(loader.metadata.ROIs);
-  };
-  function appendImportedStoryShapesDeduped(storyShapes) {
-    if (storyShapes.length === 0) return 0;
-    const doc = useDocumentStore.getState();
-    const { waypoints, shapes } = doc;
-    if (waypoints.length === 0) {
-      return 0;
-    }
-    const idx = 0;
-    const wp = waypoints[idx];
-    const docIds = new Set(shapes.map((s2) => s2.id));
-    const wpIds = new Set(wp.shapeIds ?? []);
-    const seenInBatch = /* @__PURE__ */ new Set();
-    const deduped = [];
-    for (const s2 of storyShapes) {
-      if (seenInBatch.has(s2.id)) continue;
-      seenInBatch.add(s2.id);
-      if (docIds.has(s2.id) || wpIds.has(s2.id)) {
-        continue;
-      }
-      deduped.push(s2);
-    }
-    if (deduped.length === 0) return 0;
-    const newIds = deduped.map((s2) => s2.id);
-    doc.setShapes([
-      ...shapes,
-      ...deduped
-    ]);
-    doc.setWaypoints(waypoints.map((w2, i2) => i2 === idx ? {
-      ...w2,
-      shapeIds: [
-        ...w2.shapeIds ?? [],
-        ...newIds
-      ]
-    } : w2));
-    return deduped.length;
-  }
-  function applyOmeRoisFromLoaderToFirstWaypoint(loader, imageDescriptionOmeXml = null) {
-    let { shapes: viewerRoiShapes } = parseRoisFromLoader(loader);
-    if (viewerRoiShapes.length === 0 && imageDescriptionOmeXml) {
-      try {
-        const rois = parseOmeXmlStringToRois(imageDescriptionOmeXml);
-        viewerRoiShapes = parseRoisFromRoiList(rois).shapes;
-      } catch (e2) {
-      }
-    }
-    const storyShapes = viewerShapesToStoryShapes(viewerRoiShapes);
-    appendImportedStoryShapesDeduped(storyShapes);
-  }
-  function applyOmeRoisFromAnnotationXmlString(xml2) {
-    const doc = useDocumentStore.getState();
-    const { waypoints } = doc;
-    if (waypoints.length === 0) {
-      return {
-        success: false,
-        error: "Add a waypoint in the story first, then import annotations to attach them.",
-        shapeCount: 0
-      };
-    }
-    let rois;
-    try {
-      rois = parseOmeXmlStringToRois(xml2);
-    } catch (e2) {
-      return {
-        success: false,
-        error: e2 instanceof Error ? e2.message : String(e2),
-        shapeCount: 0
-      };
-    }
-    if (rois.length === 0) {
-      return {
-        success: false,
-        error: "No ROIs with drawable shapes were found in the XML.",
-        shapeCount: 0
-      };
-    }
-    const { shapes: viewerRoiShapes } = parseRoisFromRoiList(rois);
-    const storyShapes = viewerShapesToStoryShapes(viewerRoiShapes);
-    if (storyShapes.length === 0) {
-      return {
-        success: false,
-        error: "No valid annotations could be built from the XML.",
-        shapeCount: 0
-      };
-    }
-    const added = appendImportedStoryShapesDeduped(storyShapes);
-    if (added === 0) {
-      return {
-        success: false,
-        error: "All annotations from this file are already present (duplicate import skipped).",
-        shapeCount: 0
-      };
-    }
-    return {
-      success: true,
-      shapeCount: added
-    };
-  }
-  const menuWrap = "_menuWrap_14ty9_1";
-  const menuItemGap = "_menuItemGap_14ty9_9";
-  const hiddenFileInput = "_hiddenFileInput_14ty9_14";
-  const xmlFeedbackOk = "_xmlFeedbackOk_14ty9_25";
-  const xmlFeedbackErr = "_xmlFeedbackErr_14ty9_26";
-  const styles$x = {
+  const menuWrap = "_menuWrap_doy1a_1";
+  const exportChoice = "_exportChoice_doy1a_9";
+  const styles$w = {
     menuWrap,
-    menuItemGap,
-    hiddenFileInput,
-    xmlFeedbackOk,
-    xmlFeedbackErr
+    exportChoice
   };
   function downloadStoryJsonExport(data2, filename2 = "document.json") {
     const clone2 = JSON.parse(JSON.stringify(data2));
@@ -92496,42 +92548,18 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   function StoryAuthorOverflowMenu(props) {
     const { onReturnToLibrary, onExport } = props;
     const [open, setOpen] = reactExports.useState(false);
-    const [xmlFeedback, setXmlFeedback] = reactExports.useState(null);
+    const [exportChoice2, setExportChoice] = reactExports.useState(false);
     const wrapRef = reactExports.useRef(null);
-    const xmlInputRef = reactExports.useRef(null);
     const waypointsOk = useDocumentStore((s2) => s2.waypoints.length > 0);
-    const close = () => setOpen(false);
+    const close = () => {
+      setOpen(false);
+      setExportChoice(false);
+    };
     useClickOutside(open, close, [
       wrapRef
     ]);
-    const onAnnotationXmlSelected = (e2) => {
-      var _a2;
-      const file = (_a2 = e2.target.files) == null ? void 0 : _a2[0];
-      e2.target.value = "";
-      if (!file) return;
-      file.text().then((text2) => {
-        const r2 = applyOmeRoisFromAnnotationXmlString(text2);
-        if (r2.success === false) {
-          setXmlFeedback({
-            type: "err",
-            text: r2.error
-          });
-          return;
-        }
-        setXmlFeedback({
-          type: "ok",
-          text: `Imported ${r2.shapeCount} annotation${r2.shapeCount === 1 ? "" : "s"}.`
-        });
-        close();
-      }).catch((err2) => {
-        setXmlFeedback({
-          type: "err",
-          text: err2 instanceof Error ? err2.message : "Could not read the file."
-        });
-      });
-    };
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$x.menuWrap,
+      className: styles$w.menuWrap,
       ref: wrapRef,
       children: [
         jsxRuntimeExports.jsx(PanelIconButton, {
@@ -92541,6 +92569,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
           "aria-haspopup": "menu",
           onClick: (e2) => {
             e2.stopPropagation();
+            setExportChoice(false);
             setOpen((v2) => !v2);
           },
           children: jsxRuntimeExports.jsx(SvgMenu, {
@@ -92565,55 +92594,43 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
             jsxRuntimeExports.jsx("button", {
               type: "button",
               role: "menuitem",
-              className: `${minervaTheme.menuItem} ${styles$x.menuItemGap}`,
-              disabled: !waypointsOk,
-              onClick: (e2) => {
-                e2.stopPropagation();
-                if (!waypointsOk) return;
-                close();
-                downloadStoryJsonExport(useDocumentStore.getState().toDocumentData());
-              },
-              children: "Save Config"
-            }),
-            jsxRuntimeExports.jsx("button", {
-              type: "button",
-              role: "menuitem",
               className: minervaTheme.menuItem,
               disabled: !waypointsOk,
-              title: waypointsOk ? "Save a playable story folder (index.html + images)" : "Add a waypoint before exporting",
+              "aria-expanded": exportChoice2,
               onClick: (e2) => {
                 e2.stopPropagation();
                 if (!waypointsOk) return;
-                close();
-                onExport();
+                setExportChoice((v2) => !v2);
               },
               children: "Export Story"
             }),
-            jsxRuntimeExports.jsx("button", {
-              type: "button",
-              role: "menuitem",
-              className: `${minervaTheme.menuItem} ${styles$x.menuItemGap}`,
-              onClick: (e2) => {
-                var _a2;
-                e2.stopPropagation();
-                setXmlFeedback(null);
-                (_a2 = xmlInputRef.current) == null ? void 0 : _a2.click();
-              },
-              children: "Upload annotations (OME-XML)"
-            })
+            exportChoice2 ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
+              children: [
+                jsxRuntimeExports.jsx("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: `${minervaTheme.menuItem} ${styles$w.exportChoice}`,
+                  onClick: (e2) => {
+                    e2.stopPropagation();
+                    close();
+                    onExport();
+                  },
+                  children: "Full Export"
+                }),
+                jsxRuntimeExports.jsx("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: `${minervaTheme.menuItem} ${styles$w.exportChoice}`,
+                  onClick: (e2) => {
+                    e2.stopPropagation();
+                    close();
+                    downloadStoryJsonExport(useDocumentStore.getState().toDocumentData());
+                  },
+                  children: "Save Config JSON"
+                })
+              ]
+            }) : null
           ]
-        }) : null,
-        jsxRuntimeExports.jsx("input", {
-          ref: xmlInputRef,
-          className: styles$x.hiddenFileInput,
-          type: "file",
-          accept: ".xml,application/xml,text/xml",
-          "aria-label": "OME-XML annotations file",
-          onChange: onAnnotationXmlSelected
-        }),
-        xmlFeedback ? jsxRuntimeExports.jsx("output", {
-          className: xmlFeedback.type === "ok" ? styles$x.xmlFeedbackOk : styles$x.xmlFeedbackErr,
-          children: xmlFeedback.text
         }) : null
       ]
     });
@@ -92630,7 +92647,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   }));
   const volume = "_volume_drqkm_1";
   const spine = "_spine_drqkm_9";
-  const styles$w = {
+  const styles$v = {
     volume,
     spine
   };
@@ -92646,10 +92663,10 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   ];
   function StorySpines() {
     return jsxRuntimeExports.jsx("span", {
-      className: styles$w.volume,
+      className: styles$v.volume,
       "aria-hidden": true,
       children: SPINE_HEIGHTS.map((frac, i2) => jsxRuntimeExports.jsx("span", {
-        className: styles$w.spine,
+        className: styles$v.spine,
         style: {
           height: `${frac * 100}%`,
           background: `var(--cloth-${SPINE_CLOTH[i2]})`
@@ -92665,7 +92682,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   const titleDisplay = "_titleDisplay_1juq2_52";
   const titleInput = "_titleInput_1juq2_53";
   const titlePlaceholder = "_titlePlaceholder_1juq2_67";
-  const styles$v = {
+  const styles$u = {
     banner,
     leading,
     play,
@@ -92694,32 +92711,32 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       editing
     ]);
     return jsxRuntimeExports.jsxs("section", {
-      className: `${minervaTheme.bar} ${styles$v.banner}`,
+      className: `${minervaTheme.bar} ${styles$u.banner}`,
       "aria-label": "Story title",
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$v.leading,
+          className: styles$u.leading,
           children: [
             onExport ? jsxRuntimeExports.jsx(StoryAuthorOverflowMenu, {
               onReturnToLibrary,
               onExport
             }) : null,
             jsxRuntimeExports.jsx("span", {
-              className: `${minervaTheme.wordmark} ${styles$v.wordmark}`,
+              className: `${minervaTheme.wordmark} ${styles$u.wordmark}`,
               children: "Minerva"
             }),
             jsxRuntimeExports.jsx(DocumentUndoControls, {})
           ]
         }),
         jsxRuntimeExports.jsxs("label", {
-          className: styles$v.titleFieldWrap,
+          className: styles$u.titleFieldWrap,
           htmlFor: editing ? fieldId : void 0,
           children: [
             jsxRuntimeExports.jsx(StorySpines, {}),
             editing ? jsxRuntimeExports.jsx("input", {
               ref: inputRef,
               id: fieldId,
-              className: `${minervaTheme.field} ${styles$v.titleInput}`,
+              className: `${minervaTheme.field} ${styles$u.titleInput}`,
               type: "text",
               value: draftTitle,
               placeholder: "Untitled story",
@@ -92744,21 +92761,21 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
               spellCheck: false
             }) : jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.field} ${styles$v.titleDisplay}`,
+              className: `${minervaTheme.field} ${styles$u.titleDisplay}`,
               "aria-label": "Story title",
               onClick: () => {
                 setDraftTitle(titleText);
                 setEditing(true);
               },
               children: titleText.trim() ? titleText : jsxRuntimeExports.jsx("span", {
-                className: styles$v.titlePlaceholder,
+                className: styles$u.titlePlaceholder,
                 children: "Untitled story"
               })
             })
           ]
         }),
         onEnterPlaybackPreview ? jsxRuntimeExports.jsx(PanelIconButton, {
-          className: styles$v.play,
+          className: styles$u.play,
           onClick: onEnterPlaybackPreview,
           disabled: playbackPreviewDisabled,
           title: playbackPreviewDisabled ? "Add a waypoint to preview" : "Preview playback",
@@ -92911,7 +92928,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   const rangeInputMin = "_rangeInputMin_1sovl_138";
   const rangeInputMax = "_rangeInputMax_1sovl_145";
   const limitInput = "_limitInput_1sovl_183";
-  const styles$u = {
+  const styles$t = {
     wrap: wrap$2,
     histogramHost,
     histogramPlot,
@@ -93297,11 +93314,11 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
     const trimmed = chart.startBin > 0;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$u.wrap,
+      className: styles$t.wrap,
       children: [
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$u.limitInput}`,
+          className: `${minervaTheme.input} ${styles$t.limitInput}`,
           value: minInput,
           "aria-label": `${props.channelLabel} contrast minimum value`,
           min: scale2.dtypeMin,
@@ -93320,23 +93337,23 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
           }
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$u.histogramHost,
+          className: styles$t.histogramHost,
           style: props.r != null && props.g != null && props.b != null ? {
             "--histogram-color": `rgb(${props.r},${props.g},${props.b})`
           } : void 0,
           children: jsxRuntimeExports.jsxs("div", {
-            className: trimmed ? `${styles$u.histogramPlot} ${styles$u.histogramPlotTrimmed}` : styles$u.histogramPlot,
+            className: trimmed ? `${styles$t.histogramPlot} ${styles$t.histogramPlotTrimmed}` : styles$t.histogramPlot,
             children: [
               trimmed ? jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$u.axisBreak}`,
+                className: `${minervaTheme.focusRing} ${styles$t.axisBreak}`,
                 title: "Full range",
                 "aria-label": `${props.channelLabel} full histogram range`,
                 onClick: () => setExpanded(true),
                 children: jsxRuntimeExports.jsx(SvgAxisBreak, {})
               }) : null,
               jsxRuntimeExports.jsxs("svg", {
-                className: styles$u.histogramSvg,
+                className: styles$t.histogramSvg,
                 viewBox: "1.15 0 96.7 11",
                 preserveAspectRatio: "none",
                 role: "img",
@@ -93368,22 +93385,22 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                     clipPath: `url(#${histogramClipId}-frame)`,
                     children: [
                       jsxRuntimeExports.jsx("path", {
-                        className: `${styles$u.histogramFill} ${styles$u.histogramOutOfRange}`,
+                        className: `${styles$t.histogramFill} ${styles$t.histogramOutOfRange}`,
                         d: histFillPath
                       }),
                       jsxRuntimeExports.jsx("path", {
-                        className: `${styles$u.histogramLine} ${styles$u.histogramOutOfRange}`,
+                        className: `${styles$t.histogramLine} ${styles$t.histogramOutOfRange}`,
                         d: histLinePath
                       }),
                       jsxRuntimeExports.jsxs("g", {
                         clipPath: `url(#${histogramClipId})`,
                         children: [
                           jsxRuntimeExports.jsx("path", {
-                            className: styles$u.histogramFill,
+                            className: styles$t.histogramFill,
                             d: histFillPath
                           }),
                           jsxRuntimeExports.jsx("path", {
-                            className: styles$u.histogramLine,
+                            className: styles$t.histogramLine,
                             d: histLinePath
                           })
                         ]
@@ -93393,18 +93410,18 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: `${styles$u.histogramLoading}${props.histogramLoading ? ` ${styles$u.histogramLoadingVisible}` : ""}`,
+                className: `${styles$t.histogramLoading}${props.histogramLoading ? ` ${styles$t.histogramLoadingVisible}` : ""}`,
                 title: "Loading histogram",
                 children: jsxRuntimeExports.jsx("div", {
                   className: minervaTheme.spinnerSm
                 })
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$u.sliderRow,
+                className: styles$t.sliderRow,
                 children: [
                   jsxRuntimeExports.jsx("input", {
                     type: "range",
-                    className: `${styles$u.rangeInput} ${styles$u.rangeInputMin}`,
+                    className: `${styles$t.rangeInput} ${styles$t.rangeInputMin}`,
                     min: 0,
                     max: scale2.sliderSteps,
                     value: sliderMin,
@@ -93419,7 +93436,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                   }),
                   jsxRuntimeExports.jsx("input", {
                     type: "range",
-                    className: `${styles$u.rangeInput} ${styles$u.rangeInputMax}`,
+                    className: `${styles$t.rangeInput} ${styles$t.rangeInputMax}`,
                     min: 0,
                     max: scale2.sliderSteps,
                     value: sliderMax,
@@ -93438,7 +93455,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         }),
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$u.limitInput}`,
+          className: `${minervaTheme.input} ${styles$t.limitInput}`,
           value: maxInput,
           "aria-label": `${props.channelLabel} contrast maximum value`,
           min: scale2.dtypeMin,
@@ -93459,192 +93476,56 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       ]
     });
   }
-  const channelNameInput = "_channelNameInput_103qu_3";
-  const channelRowMain = "_channelRowMain_103qu_12";
-  const channelRowTitle = "_channelRowTitle_103qu_19";
-  const contourLevel = "_contourLevel_103qu_29";
-  const contourStepper = "_contourStepper_103qu_38";
-  const menuCheckItem = "_menuCheckItem_103qu_74";
-  const menuCheck = "_menuCheck_103qu_74";
-  const channelRowMid = "_channelRowMid_103qu_86";
-  const channelRowMainMask = "_channelRowMainMask_103qu_94";
-  const channelNameSlot = "_channelNameSlot_103qu_102";
-  const moreButton = "_moreButton_103qu_117";
-  const channelRowTrailing = "_channelRowTrailing_103qu_134";
-  const channelImageSubtitle = "_channelImageSubtitle_103qu_150";
-  const maskModeControls = "_maskModeControls_103qu_163";
-  const maskModeGroup = "_maskModeGroup_103qu_172";
-  const maskModeGroupLabel = "_maskModeGroupLabel_103qu_181";
-  const maskOpacityLabel = "_maskOpacityLabel_103qu_182";
-  const maskControlsPanel = "_maskControlsPanel_103qu_190";
-  const maskVizToggle = "_maskVizToggle_103qu_195";
-  const maskOpacityControl = "_maskOpacityControl_103qu_207";
-  const maskOpacityInputRow = "_maskOpacityInputRow_103qu_216";
-  const maskOpacitySlider = "_maskOpacitySlider_103qu_228";
-  const maskOpacityValue = "_maskOpacityValue_103qu_296";
-  const cursorHintHost = "_cursorHintHost_103qu_306";
-  const cursorHint = "_cursorHint_103qu_306";
-  const channelVisibilityButton = "_channelVisibilityButton_103qu_333";
-  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_103qu_357";
-  const channelColorSwatch = "_channelColorSwatch_103qu_361";
-  const channelColorSwatchStatic = "_channelColorSwatchStatic_103qu_362";
-  const channelColorSwatchUnfilled = "_channelColorSwatchUnfilled_103qu_375";
-  const detailChannelRowLocked = "_detailChannelRowLocked_103qu_393";
-  const maskVizOption = "_maskVizOption_103qu_397";
-  const maskVizOptionActive = "_maskVizOptionActive_103qu_422";
-  const maskVizIconOutline = "_maskVizIconOutline_103qu_427";
-  const maskVizIconFull = "_maskVizIconFull_103qu_428";
-  const maskVizSwatchWhite = "_maskVizSwatchWhite_103qu_429";
-  const maskVizSwatchRandom = "_maskVizSwatchRandom_103qu_430";
-  const channelRow = "_channelRow_103qu_12";
-  const styles$t = {
-    channelNameInput,
-    channelRowMain,
-    channelRowTitle,
-    contourLevel,
-    contourStepper,
-    menuCheckItem,
-    menuCheck,
-    channelRowMid,
-    channelRowMainMask,
-    channelNameSlot,
-    moreButton,
-    channelRowTrailing,
-    channelImageSubtitle,
-    maskModeControls,
-    maskModeGroup,
-    maskModeGroupLabel,
-    maskOpacityLabel,
-    maskControlsPanel,
-    maskVizToggle,
-    maskOpacityControl,
-    maskOpacityInputRow,
-    maskOpacitySlider,
-    maskOpacityValue,
-    cursorHintHost,
-    cursorHint,
-    channelVisibilityButton,
-    channelVisibilityButtonHidden,
-    channelColorSwatch,
-    channelColorSwatchStatic,
-    channelColorSwatchUnfilled,
-    detailChannelRowLocked,
-    maskVizOption,
-    maskVizOptionActive,
-    maskVizIconOutline,
-    maskVizIconFull,
-    maskVizSwatchWhite,
-    maskVizSwatchRandom,
-    channelRow
-  };
-  const EyeIcon = () => jsxRuntimeExports.jsxs("svg", {
-    "aria-hidden": true,
-    width: "14",
-    height: "14",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "2",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    children: [
-      jsxRuntimeExports.jsx("title", {
-        children: "Visible"
-      }),
-      jsxRuntimeExports.jsx("path", {
-        d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-      }),
-      jsxRuntimeExports.jsx("circle", {
-        cx: "12",
-        cy: "12",
-        r: "3"
-      })
-    ]
-  });
-  const EyeOffIcon = () => jsxRuntimeExports.jsxs("svg", {
-    "aria-hidden": true,
-    width: "14",
-    height: "14",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "2",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    children: [
-      jsxRuntimeExports.jsx("title", {
-        children: "Hidden"
-      }),
-      jsxRuntimeExports.jsx("path", {
-        d: "M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
-      }),
-      jsxRuntimeExports.jsx("path", {
-        d: "M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
-      }),
-      jsxRuntimeExports.jsx("path", {
-        d: "M14.12 14.12a3 3 0 1 1-4.24-4.24"
-      }),
-      jsxRuntimeExports.jsx("line", {
-        x1: "1",
-        y1: "1",
-        x2: "23",
-        y2: "23"
-      })
-    ]
-  });
-  function CursorHint(props) {
-    const [pos, setPos] = reactExports.useState(null);
-    const track = (e2) => {
-      setPos({
-        x: e2.clientX,
-        y: e2.clientY
+  function useAnchoredMenu(opts) {
+    const { align, estimateHeight } = opts;
+    const [open, setOpen] = reactExports.useState(false);
+    const wrapRef = reactExports.useRef(null);
+    const menuRef = reactExports.useRef(null);
+    const [menuStyle, setMenuStyle] = reactExports.useState({});
+    const close = () => setOpen(false);
+    const toggleFromButton = (btn) => {
+      if (open) {
+        close();
+        return;
+      }
+      const rect = btn.getBoundingClientRect();
+      const openUp = rect.bottom + estimateHeight + 8 > window.innerHeight && rect.top > estimateHeight;
+      const vertical = openUp ? {
+        bottom: window.innerHeight - rect.top + 4
+      } : {
+        top: rect.bottom + 4
+      };
+      setMenuStyle(align === "end" ? {
+        ...vertical,
+        right: Math.max(8, window.innerWidth - rect.right)
+      } : {
+        ...vertical,
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - 188))
       });
+      setOpen(true);
     };
-    return jsxRuntimeExports.jsxs("span", {
-      className: [
-        styles$t.cursorHintHost,
-        props.className
-      ].filter(Boolean).join(" "),
-      onPointerEnter: track,
-      onPointerMove: track,
-      onPointerLeave: () => setPos(null),
-      children: [
-        props.children,
-        props.enabled && pos ? reactDomExports.createPortal(jsxRuntimeExports.jsx("output", {
-          className: styles$t.cursorHint,
-          style: {
-            "--hint-x": `${pos.x}px`,
-            "--hint-y": `${pos.y}px`
-          },
-          children: props.label
-        }), document.body) : null
-      ]
-    });
-  }
-  function ChannelVisibilitySwatch(props) {
-    const { visible, title: title7, ariaLabel, blocked, disabled: disabled2, onClick } = props;
-    return jsxRuntimeExports.jsx(CursorHint, {
-      enabled: Boolean(blocked),
-      label: VIEWER_INTENSITY_LIMIT_HINT,
-      children: jsxRuntimeExports.jsx("button", {
-        type: "button",
-        className: [
-          minervaTheme.focusRing,
-          styles$t.channelVisibilityButton,
-          visible ? "" : styles$t.channelVisibilityButtonHidden
-        ].filter(Boolean).join(" "),
-        title: blocked ? void 0 : title7,
-        "aria-label": blocked ? VIEWER_INTENSITY_LIMIT_HINT : ariaLabel,
-        "aria-pressed": visible,
-        "aria-disabled": blocked || void 0,
-        disabled: disabled2,
-        onClick: (e2) => {
-          if (blocked) return;
-          onClick(e2);
-        },
-        children: visible ? jsxRuntimeExports.jsx(EyeIcon, {}) : jsxRuntimeExports.jsx(EyeOffIcon, {})
-      })
-    });
+    useClickOutside(open, close, [
+      wrapRef,
+      menuRef
+    ]);
+    reactExports.useEffect(() => {
+      if (!open) return;
+      const onKey = (e2) => {
+        if (e2.key === "Escape") setOpen(false);
+      };
+      document.addEventListener("keydown", onKey);
+      return () => document.removeEventListener("keydown", onKey);
+    }, [
+      open
+    ]);
+    return {
+      open,
+      wrapRef,
+      menuRef,
+      menuStyle,
+      toggleFromButton,
+      close
+    };
   }
   const DEFAULT_LUMINANCE = new Uint16Array([
     60,
@@ -94792,6 +94673,25 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       upper: outcome.window.upper
     };
   }
+  async function refitGroupContrast(channelId) {
+    const limits = await refitGmm(channelId);
+    if (!limits) return;
+    const { channelGroups, setChannelGroups } = useDocumentStore.getState();
+    let changed = false;
+    const nextGroups = channelGroups.map((g2) => ({
+      ...g2,
+      channels: g2.channels.map((gc2) => {
+        if (gc2.channelId !== channelId) return gc2;
+        changed = true;
+        return {
+          ...gc2,
+          lowerLimit: limits.lower,
+          upperLimit: limits.upper
+        };
+      })
+    }));
+    if (changed) setChannelGroups(nextGroups);
+  }
   function subscribeGmmFit(onStoreChange) {
     listeners.add(onStoreChange);
     return () => {
@@ -94812,293 +94712,102 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     snapshot = emptySnapshot;
     for (const listener of listeners) listener();
   }
-  function ChannelColorSwatchButton(props) {
-    const { hex, title: title7, ariaLabel, busy, filled = true, onClick } = props;
-    const fill = Boolean(hex) && filled;
-    return jsxRuntimeExports.jsx("button", {
-      type: "button",
-      className: [
-        minervaTheme.focusRing,
-        styles$t.channelColorSwatch,
-        fill ? null : styles$t.channelColorSwatchUnfilled,
-        busy ? minervaTheme.busyOverlay : null
-      ].filter(Boolean).join(" "),
-      style: fill ? {
-        backgroundColor: `#${hex}`
-      } : hex ? {
-        "--swatch-color": `#${hex}`
-      } : void 0,
-      title: busy ? "Optimizing color" : title7,
-      "aria-label": busy ? "Optimizing color" : ariaLabel,
-      "aria-busy": busy || void 0,
-      onClick
-    });
-  }
-  function MaskVizButton(props) {
-    return jsxRuntimeExports.jsx("button", {
-      type: "button",
-      className: `${minervaTheme.focusRing} ${styles$t.maskVizOption}${props.active ? ` ${styles$t.maskVizOptionActive}` : ""}`,
-      "aria-pressed": props.active,
-      title: props.title ?? props.label,
-      "aria-label": props.label,
-      onClick: props.onClick,
-      children: jsxRuntimeExports.jsx("span", {
-        className: props.iconClass,
-        "aria-hidden": true
-      })
-    });
-  }
-  function OpacitySlider(props) {
-    const { value, onCommit, onPreview, ariaLabel, className: className2 } = props;
-    const committedPct = Math.round(value * 100);
-    const [pct, setPct] = reactExports.useState(committedPct);
-    const pctRef = reactExports.useRef(committedPct);
-    const lastCommittedPct = reactExports.useRef(committedPct);
-    const onPreviewRef = reactExports.useRef(onPreview);
-    onPreviewRef.current = onPreview;
-    reactExports.useEffect(() => {
-      pctRef.current = committedPct;
-      setPct(committedPct);
-      lastCommittedPct.current = committedPct;
-    }, [
-      committedPct
-    ]);
-    reactExports.useEffect(() => () => {
-      var _a2;
-      return (_a2 = onPreviewRef.current) == null ? void 0 : _a2.call(onPreviewRef, null);
-    }, []);
-    const show = (nextPct) => {
-      pctRef.current = nextPct;
-      setPct(nextPct);
-    };
-    const commit = () => {
-      const nextPct = pctRef.current;
-      if (nextPct !== lastCommittedPct.current) {
-        lastCommittedPct.current = nextPct;
-        onCommit(nextPct / 100);
-      }
-      onPreview == null ? void 0 : onPreview(null);
-    };
-    return jsxRuntimeExports.jsxs("label", {
-      className: [
-        styles$t.maskOpacityControl,
-        className2
-      ].filter(Boolean).join(" "),
-      title: `Opacity ${pct}%`,
-      style: {
-        ["--mask-opacity-pct"]: `${pct}%`
-      },
-      children: [
-        jsxRuntimeExports.jsxs("span", {
-          className: styles$t.maskOpacityInputRow,
-          children: [
-            jsxRuntimeExports.jsx("input", {
-              type: "range",
-              className: styles$t.maskOpacitySlider,
-              min: 0,
-              max: 100,
-              step: 1,
-              value: pct,
-              "aria-label": `${ariaLabel} opacity`,
-              onChange: (e2) => {
-                const nextPct = Number(e2.target.value);
-                show(nextPct);
-                onPreview == null ? void 0 : onPreview(nextPct / 100);
-              },
-              onPointerUp: commit,
-              onPointerCancel: () => {
-                show(committedPct);
-                onPreview == null ? void 0 : onPreview(null);
-              },
-              onKeyUp: commit,
-              onBlur: commit
-            }),
-            jsxRuntimeExports.jsxs("span", {
-              className: styles$t.maskOpacityValue,
-              children: [
-                pct,
-                "%"
-              ]
-            })
-          ]
-        }),
-        jsxRuntimeExports.jsx("span", {
-          className: styles$t.maskOpacityLabel,
-          children: "Opacity"
-        })
-      ]
-    });
-  }
-  function MaskModeControls(props) {
-    const { value, onChange, ariaLabel, classColors } = props;
-    const colored = value.color === "random";
-    let colorLabel = "Random colors";
-    let colorTitle = "Random colors";
-    if (classColors) {
-      colorLabel = "Colored";
-      colorTitle = "Class colors";
-    } else if (colored) {
-      colorLabel = "Random colors, re-seed";
-      colorTitle = "Random colors (click to re-seed)";
-    }
-    return jsxRuntimeExports.jsxs("div", {
-      className: styles$t.maskModeControls,
-      children: [
-        jsxRuntimeExports.jsxs("div", {
-          className: styles$t.maskModeGroup,
-          children: [
-            jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$t.maskVizToggle,
-              "aria-label": `${ariaLabel} fill`,
-              children: [
-                jsxRuntimeExports.jsx(MaskVizButton, {
-                  active: value.style === "outline",
-                  label: "Outline",
-                  iconClass: styles$t.maskVizIconOutline,
-                  onClick: () => onChange({
-                    ...value,
-                    style: "outline"
-                  })
-                }),
-                jsxRuntimeExports.jsx(MaskVizButton, {
-                  active: value.style === "full",
-                  label: "Full",
-                  iconClass: styles$t.maskVizIconFull,
-                  onClick: () => onChange({
-                    ...value,
-                    style: "full"
-                  })
-                })
-              ]
-            }),
-            jsxRuntimeExports.jsx("span", {
-              className: styles$t.maskModeGroupLabel,
-              children: "Fill"
-            })
-          ]
-        }),
-        jsxRuntimeExports.jsxs("div", {
-          className: styles$t.maskModeGroup,
-          children: [
-            jsxRuntimeExports.jsxs("fieldset", {
-              className: styles$t.maskVizToggle,
-              "aria-label": `${ariaLabel} color`,
-              children: [
-                jsxRuntimeExports.jsx(MaskVizButton, {
-                  active: value.color === "white",
-                  label: "White",
-                  iconClass: styles$t.maskVizSwatchWhite,
-                  onClick: () => onChange({
-                    ...value,
-                    color: "white"
-                  })
-                }),
-                jsxRuntimeExports.jsx(MaskVizButton, {
-                  active: colored,
-                  label: colorLabel,
-                  title: colorTitle,
-                  iconClass: styles$t.maskVizSwatchRandom,
-                  onClick: () => onChange(classColors ? {
-                    ...value,
-                    color: "random"
-                  } : withReseededRandomColors(value))
-                })
-              ]
-            }),
-            jsxRuntimeExports.jsx("span", {
-              className: styles$t.maskModeGroupLabel,
-              children: "Color"
-            })
-          ]
-        })
-      ]
-    });
-  }
-  function useAnchoredMenu(opts) {
-    const { align, estimateHeight } = opts;
-    const [open, setOpen] = reactExports.useState(false);
-    const wrapRef = reactExports.useRef(null);
-    const menuRef = reactExports.useRef(null);
-    const [menuStyle, setMenuStyle] = reactExports.useState({});
-    const close = () => setOpen(false);
-    const toggleFromButton = (btn) => {
-      if (open) {
-        close();
-        return;
-      }
-      const rect = btn.getBoundingClientRect();
-      const openUp = rect.bottom + estimateHeight + 8 > window.innerHeight && rect.top > estimateHeight;
-      const top2 = openUp ? rect.top - 4 - estimateHeight : rect.bottom + 4;
-      setMenuStyle(align === "end" ? {
-        top: top2,
-        right: Math.max(8, window.innerWidth - rect.right)
-      } : {
-        top: top2,
-        left: Math.max(8, Math.min(rect.left, window.innerWidth - 188))
-      });
-      setOpen(true);
-    };
-    useClickOutside(open, close, [
-      wrapRef,
-      menuRef
-    ]);
-    reactExports.useEffect(() => {
-      if (!open) return;
-      const onKey = (e2) => {
-        if (e2.key === "Escape") setOpen(false);
-      };
-      document.addEventListener("keydown", onKey);
-      return () => document.removeEventListener("keydown", onKey);
-    }, [
-      open
-    ]);
-    return {
-      open,
-      wrapRef,
-      menuRef,
-      menuStyle,
-      toggleFromButton,
-      close
-    };
-  }
-  function RowMoreMenu(props) {
-    const { sourceChannel, channelName: channelName2, allowContrast, fitBusy, onRemoveFromGroup, contourChannelId } = props;
+  const channelNameInput = "_channelNameInput_7exc4_3";
+  const channelRowMain = "_channelRowMain_7exc4_12";
+  const channelRowTitle = "_channelRowTitle_7exc4_19";
+  const contourLevel = "_contourLevel_7exc4_29";
+  const contourStepper = "_contourStepper_7exc4_38";
+  const menuCheckItem = "_menuCheckItem_7exc4_75";
+  const menuCheck = "_menuCheck_7exc4_75";
+  const channelRowMid = "_channelRowMid_7exc4_87";
+  const channelRowMainMask = "_channelRowMainMask_7exc4_95";
+  const channelNameSlot = "_channelNameSlot_7exc4_104";
+  const channelActionButton = "_channelActionButton_7exc4_120";
+  const channelActionButtonOn = "_channelActionButtonOn_7exc4_138";
+  const channelRowTrailing = "_channelRowTrailing_7exc4_143";
+  const channelImageSubtitle = "_channelImageSubtitle_7exc4_159";
+  const maskModeControls = "_maskModeControls_7exc4_172";
+  const maskModeGroup = "_maskModeGroup_7exc4_181";
+  const maskModeGroupLabel = "_maskModeGroupLabel_7exc4_190";
+  const maskOpacityLabel = "_maskOpacityLabel_7exc4_191";
+  const maskControlsPanel = "_maskControlsPanel_7exc4_199";
+  const maskVizToggle = "_maskVizToggle_7exc4_204";
+  const maskOpacityControl = "_maskOpacityControl_7exc4_216";
+  const maskOpacityInputRow = "_maskOpacityInputRow_7exc4_225";
+  const maskOpacitySlider = "_maskOpacitySlider_7exc4_237";
+  const maskOpacityValue = "_maskOpacityValue_7exc4_305";
+  const cursorHintHost = "_cursorHintHost_7exc4_315";
+  const cursorHint = "_cursorHint_7exc4_315";
+  const channelVisibilityButton = "_channelVisibilityButton_7exc4_342";
+  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_7exc4_366";
+  const channelColorSwatch = "_channelColorSwatch_7exc4_370";
+  const channelColorSwatchStatic = "_channelColorSwatchStatic_7exc4_371";
+  const channelColorSwatchUnfilled = "_channelColorSwatchUnfilled_7exc4_384";
+  const detailChannelRowLocked = "_detailChannelRowLocked_7exc4_402";
+  const maskVizOption = "_maskVizOption_7exc4_406";
+  const maskVizOptionActive = "_maskVizOptionActive_7exc4_431";
+  const maskVizIconOutline = "_maskVizIconOutline_7exc4_436";
+  const maskVizIconFull = "_maskVizIconFull_7exc4_437";
+  const maskVizSwatchWhite = "_maskVizSwatchWhite_7exc4_438";
+  const maskVizSwatchRandom = "_maskVizSwatchRandom_7exc4_439";
+  const channelRow = "_channelRow_7exc4_12";
+  const rowStyles = {
+    channelNameInput,
+    channelRowMain,
+    channelRowTitle,
+    contourLevel,
+    contourStepper,
+    menuCheckItem,
+    menuCheck,
+    channelRowMid,
+    channelRowMainMask,
+    channelNameSlot,
+    channelActionButton,
+    channelActionButtonOn,
+    channelRowTrailing,
+    channelImageSubtitle,
+    maskModeControls,
+    maskModeGroup,
+    maskModeGroupLabel,
+    maskOpacityLabel,
+    maskControlsPanel,
+    maskVizToggle,
+    maskOpacityControl,
+    maskOpacityInputRow,
+    maskOpacitySlider,
+    maskOpacityValue,
+    cursorHintHost,
+    cursorHint,
+    channelVisibilityButton,
+    channelVisibilityButtonHidden,
+    channelColorSwatch,
+    channelColorSwatchStatic,
+    channelColorSwatchUnfilled,
+    detailChannelRowLocked,
+    maskVizOption,
+    maskVizOptionActive,
+    maskVizIconOutline,
+    maskVizIconFull,
+    maskVizSwatchWhite,
+    maskVizSwatchRandom,
+    channelRow
+  };
+  function ChannelRowMoreMenu(props) {
+    const { fitContrastId, onRemoveFromGroup, channelName: channelName2, fitBusy, contourChannelId } = props;
     const contourOn = useAppStore((s2) => contourChannelId ? Boolean(s2.contourChannelIds[contourChannelId]) : false);
     const menu2 = useAnchoredMenu({
       align: "end",
       estimateHeight: 140
     });
-    if (!allowContrast && !onRemoveFromGroup && !contourChannelId) return null;
-    const refitContrast = () => {
-      if (!sourceChannel) return;
-      menu2.close();
-      useAppStore.getState().clearChannelRendering();
-      void refitGmm(sourceChannel.id).then((limits) => {
-        if (!limits) return;
-        const { channelGroups, setChannelGroups } = useDocumentStore.getState();
-        let changed = false;
-        const nextGroups = channelGroups.map((g2) => ({
-          ...g2,
-          channels: g2.channels.map((gc2) => {
-            if (gc2.channelId !== sourceChannel.id) return gc2;
-            changed = true;
-            return {
-              ...gc2,
-              lowerLimit: limits.lower,
-              upperLimit: limits.upper
-            };
-          })
-        }));
-        if (changed) setChannelGroups(nextGroups);
-      });
-    };
+    if (!fitContrastId && !onRemoveFromGroup && !contourChannelId) return null;
     return jsxRuntimeExports.jsxs("div", {
       ref: menu2.wrapRef,
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$t.moreButton,
-          "aria-label": `More actions for ${channelName2}`,
+          className: `${rowStyles.channelActionButton}${contourOn ? ` ${rowStyles.channelActionButtonOn}` : ""}`,
+          title: contourOn ? "Drawn as contour lines" : void 0,
+          "aria-label": `More actions for ${channelName2}${contourOn ? " (contour lines on)" : ""}`,
           "aria-expanded": menu2.open,
           "aria-haspopup": "menu",
           onClick: (e2) => {
@@ -95114,14 +94823,16 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
           "data-channel-row-menu": true,
           style: menu2.menuStyle,
           children: [
-            allowContrast ? jsxRuntimeExports.jsx("button", {
+            fitContrastId ? jsxRuntimeExports.jsx("button", {
               type: "button",
               role: "menuitem",
               className: minervaTheme.menuItem,
               disabled: fitBusy,
               onClick: (e2) => {
                 e2.stopPropagation();
-                refitContrast();
+                menu2.close();
+                useAppStore.getState().clearChannelRendering();
+                void refitGroupContrast(fitContrastId);
               },
               children: fitBusy ? "Fitting contrast\u2026" : "Fit contrast"
             }) : null,
@@ -95129,7 +94840,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
               type: "button",
               role: "menuitemcheckbox",
               "aria-checked": contourOn,
-              className: `${minervaTheme.menuItem} ${styles$t.menuCheckItem}`,
+              className: `${minervaTheme.menuItem} ${rowStyles.menuCheckItem}`,
               title: "Draw this channel as isolines across its contrast range instead of a color fill",
               onClick: (e2) => {
                 e2.stopPropagation();
@@ -95138,7 +94849,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
               children: [
                 "Show as contour lines",
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$t.menuCheck,
+                  className: rowStyles.menuCheck,
                   "aria-hidden": true,
                   children: contourOn ? "\u2713" : ""
                 })
@@ -95188,6 +94899,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
           increase: "More contour smoothing",
           steps: smoothingSteps,
           value: smoothing,
+          unit: "px",
           onChange: setContourSmoothing
         })
       ]
@@ -95198,14 +94910,14 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const at = Math.max(0, steps.indexOf(props.value));
     const step = (delta) => props.onChange(steps[Math.min(steps.length - 1, Math.max(0, at + delta))]);
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$t.contourLevel,
+      className: rowStyles.contourLevel,
       title: props.title,
       children: [
         jsxRuntimeExports.jsx("span", {
           children: props.label
         }),
         jsxRuntimeExports.jsxs("span", {
-          className: styles$t.contourStepper,
+          className: rowStyles.contourStepper,
           children: [
             jsxRuntimeExports.jsx("button", {
               type: "button",
@@ -95217,7 +94929,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
             }),
             jsxRuntimeExports.jsx("output", {
               "aria-live": "polite",
-              children: props.value
+              children: props.unit ? `${props.value} ${props.unit}` : props.value
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
@@ -95226,6 +94938,317 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
               disabled: at >= steps.length - 1,
               onClick: () => step(1),
               children: "+"
+            })
+          ]
+        })
+      ]
+    });
+  }
+  const EyeIcon = () => jsxRuntimeExports.jsxs("svg", {
+    "aria-hidden": true,
+    width: "14",
+    height: "14",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    children: [
+      jsxRuntimeExports.jsx("title", {
+        children: "Visible"
+      }),
+      jsxRuntimeExports.jsx("path", {
+        d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+      }),
+      jsxRuntimeExports.jsx("circle", {
+        cx: "12",
+        cy: "12",
+        r: "3"
+      })
+    ]
+  });
+  const EyeOffIcon = () => jsxRuntimeExports.jsxs("svg", {
+    "aria-hidden": true,
+    width: "14",
+    height: "14",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    children: [
+      jsxRuntimeExports.jsx("title", {
+        children: "Hidden"
+      }),
+      jsxRuntimeExports.jsx("path", {
+        d: "M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
+      }),
+      jsxRuntimeExports.jsx("path", {
+        d: "M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
+      }),
+      jsxRuntimeExports.jsx("path", {
+        d: "M14.12 14.12a3 3 0 1 1-4.24-4.24"
+      }),
+      jsxRuntimeExports.jsx("line", {
+        x1: "1",
+        y1: "1",
+        x2: "23",
+        y2: "23"
+      })
+    ]
+  });
+  function CursorHint(props) {
+    const [pos, setPos] = reactExports.useState(null);
+    const track = (e2) => {
+      setPos({
+        x: e2.clientX,
+        y: e2.clientY
+      });
+    };
+    return jsxRuntimeExports.jsxs("span", {
+      className: [
+        rowStyles.cursorHintHost,
+        props.className
+      ].filter(Boolean).join(" "),
+      onPointerEnter: track,
+      onPointerMove: track,
+      onPointerLeave: () => setPos(null),
+      children: [
+        props.children,
+        props.enabled && pos ? reactDomExports.createPortal(jsxRuntimeExports.jsx("output", {
+          className: rowStyles.cursorHint,
+          style: {
+            "--hint-x": `${pos.x}px`,
+            "--hint-y": `${pos.y}px`
+          },
+          children: props.label
+        }), document.body) : null
+      ]
+    });
+  }
+  function ChannelVisibilitySwatch(props) {
+    const { visible, title: title7, ariaLabel, blocked, disabled: disabled2, onClick } = props;
+    return jsxRuntimeExports.jsx(CursorHint, {
+      enabled: Boolean(blocked),
+      label: VIEWER_INTENSITY_LIMIT_HINT,
+      children: jsxRuntimeExports.jsx("button", {
+        type: "button",
+        className: [
+          minervaTheme.focusRing,
+          rowStyles.channelVisibilityButton,
+          visible ? "" : rowStyles.channelVisibilityButtonHidden
+        ].filter(Boolean).join(" "),
+        title: blocked ? void 0 : title7,
+        "aria-label": blocked ? VIEWER_INTENSITY_LIMIT_HINT : ariaLabel,
+        "aria-pressed": visible,
+        "aria-disabled": blocked || void 0,
+        disabled: disabled2,
+        onClick: (e2) => {
+          if (blocked) return;
+          onClick(e2);
+        },
+        children: visible ? jsxRuntimeExports.jsx(EyeIcon, {}) : jsxRuntimeExports.jsx(EyeOffIcon, {})
+      })
+    });
+  }
+  function ChannelColorSwatchButton(props) {
+    const { hex, title: title7, ariaLabel, busy, filled = true, onClick } = props;
+    const fill = Boolean(hex) && filled;
+    return jsxRuntimeExports.jsx("button", {
+      type: "button",
+      className: [
+        minervaTheme.focusRing,
+        rowStyles.channelColorSwatch,
+        fill ? null : rowStyles.channelColorSwatchUnfilled,
+        busy ? minervaTheme.busyOverlay : null
+      ].filter(Boolean).join(" "),
+      style: fill ? {
+        backgroundColor: `#${hex}`
+      } : hex ? {
+        "--swatch-color": `#${hex}`
+      } : void 0,
+      title: busy ? "Optimizing color" : title7,
+      "aria-label": busy ? "Optimizing color" : ariaLabel,
+      "aria-busy": busy || void 0,
+      onClick
+    });
+  }
+  function MaskVizButton(props) {
+    return jsxRuntimeExports.jsx("button", {
+      type: "button",
+      className: `${minervaTheme.focusRing} ${rowStyles.maskVizOption}${props.active ? ` ${rowStyles.maskVizOptionActive}` : ""}`,
+      "aria-pressed": props.active,
+      title: props.title ?? props.label,
+      "aria-label": props.label,
+      onClick: props.onClick,
+      children: jsxRuntimeExports.jsx("span", {
+        className: props.iconClass,
+        "aria-hidden": true
+      })
+    });
+  }
+  function OpacitySlider(props) {
+    const { value, onCommit, onPreview, ariaLabel, className: className2 } = props;
+    const committedPct = Math.round(value * 100);
+    const [pct, setPct] = reactExports.useState(committedPct);
+    const pctRef = reactExports.useRef(committedPct);
+    const lastCommittedPct = reactExports.useRef(committedPct);
+    const onPreviewRef = reactExports.useRef(onPreview);
+    onPreviewRef.current = onPreview;
+    reactExports.useEffect(() => {
+      pctRef.current = committedPct;
+      setPct(committedPct);
+      lastCommittedPct.current = committedPct;
+    }, [
+      committedPct
+    ]);
+    reactExports.useEffect(() => () => {
+      var _a2;
+      return (_a2 = onPreviewRef.current) == null ? void 0 : _a2.call(onPreviewRef, null);
+    }, []);
+    const show = (nextPct) => {
+      pctRef.current = nextPct;
+      setPct(nextPct);
+    };
+    const commit = () => {
+      const nextPct = pctRef.current;
+      if (nextPct !== lastCommittedPct.current) {
+        lastCommittedPct.current = nextPct;
+        onCommit(nextPct / 100);
+      }
+      onPreview == null ? void 0 : onPreview(null);
+    };
+    return jsxRuntimeExports.jsxs("label", {
+      className: [
+        rowStyles.maskOpacityControl,
+        className2
+      ].filter(Boolean).join(" "),
+      title: `Opacity ${pct}%`,
+      style: {
+        ["--mask-opacity-pct"]: `${pct}%`
+      },
+      children: [
+        jsxRuntimeExports.jsxs("span", {
+          className: rowStyles.maskOpacityInputRow,
+          children: [
+            jsxRuntimeExports.jsx("input", {
+              type: "range",
+              className: rowStyles.maskOpacitySlider,
+              min: 0,
+              max: 100,
+              step: 1,
+              value: pct,
+              "aria-label": `${ariaLabel} opacity`,
+              onChange: (e2) => {
+                const nextPct = Number(e2.target.value);
+                show(nextPct);
+                onPreview == null ? void 0 : onPreview(nextPct / 100);
+              },
+              onPointerUp: commit,
+              onPointerCancel: () => {
+                show(committedPct);
+                onPreview == null ? void 0 : onPreview(null);
+              },
+              onKeyUp: commit,
+              onBlur: commit
+            }),
+            jsxRuntimeExports.jsxs("span", {
+              className: rowStyles.maskOpacityValue,
+              children: [
+                pct,
+                "%"
+              ]
+            })
+          ]
+        }),
+        jsxRuntimeExports.jsx("span", {
+          className: rowStyles.maskOpacityLabel,
+          children: "Opacity"
+        })
+      ]
+    });
+  }
+  function MaskModeControls(props) {
+    const { value, onChange, ariaLabel, classColors } = props;
+    const colored = value.color === "random";
+    let colorLabel = "Random colors";
+    let colorTitle = "Random colors";
+    if (classColors) {
+      colorLabel = "Colored";
+      colorTitle = "Class colors";
+    } else if (colored) {
+      colorLabel = "Random colors, re-seed";
+      colorTitle = "Random colors (click to re-seed)";
+    }
+    return jsxRuntimeExports.jsxs("div", {
+      className: rowStyles.maskModeControls,
+      children: [
+        jsxRuntimeExports.jsxs("div", {
+          className: rowStyles.maskModeGroup,
+          children: [
+            jsxRuntimeExports.jsxs("fieldset", {
+              className: rowStyles.maskVizToggle,
+              "aria-label": `${ariaLabel} fill`,
+              children: [
+                jsxRuntimeExports.jsx(MaskVizButton, {
+                  active: value.style === "outline",
+                  label: "Outline",
+                  iconClass: rowStyles.maskVizIconOutline,
+                  onClick: () => onChange({
+                    ...value,
+                    style: "outline"
+                  })
+                }),
+                jsxRuntimeExports.jsx(MaskVizButton, {
+                  active: value.style === "full",
+                  label: "Full",
+                  iconClass: rowStyles.maskVizIconFull,
+                  onClick: () => onChange({
+                    ...value,
+                    style: "full"
+                  })
+                })
+              ]
+            }),
+            jsxRuntimeExports.jsx("span", {
+              className: rowStyles.maskModeGroupLabel,
+              children: "Fill"
+            })
+          ]
+        }),
+        jsxRuntimeExports.jsxs("div", {
+          className: rowStyles.maskModeGroup,
+          children: [
+            jsxRuntimeExports.jsxs("fieldset", {
+              className: rowStyles.maskVizToggle,
+              "aria-label": `${ariaLabel} color`,
+              children: [
+                jsxRuntimeExports.jsx(MaskVizButton, {
+                  active: value.color === "white",
+                  label: "White",
+                  iconClass: rowStyles.maskVizSwatchWhite,
+                  onClick: () => onChange({
+                    ...value,
+                    color: "white"
+                  })
+                }),
+                jsxRuntimeExports.jsx(MaskVizButton, {
+                  active: colored,
+                  label: colorLabel,
+                  title: colorTitle,
+                  iconClass: rowStyles.maskVizSwatchRandom,
+                  onClick: () => onChange(classColors ? {
+                    ...value,
+                    color: "random"
+                  } : withReseededRandomColors(value))
+                })
+              ]
+            }),
+            jsxRuntimeExports.jsx("span", {
+              className: rowStyles.maskModeGroupLabel,
+              children: "Color"
             })
           ]
         })
@@ -95255,7 +95278,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       props.onBlur(trimmed);
     };
     return jsxRuntimeExports.jsx("input", {
-      className: `${minervaTheme.field} ${styles$t.channelNameInput}`,
+      className: `${minervaTheme.field} ${rowStyles.channelNameInput}`,
       type: "text",
       value: draft,
       title: props.name,
@@ -95277,20 +95300,20 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     });
   }
   function ChannelRow(props) {
-    const { visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, contrast, trailing, locked, isMask, maskVisualization, onMaskVisualizationChange, onMaskVisualizationPreview, maskFooter, maskAction, maskAriaLabel, fixedColorHex, colorHex, colorTitle, busy, fitting, visibilityBlocked, onColorClick, more } = props;
+    const { visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, contrast, trailing, locked, isMask, maskVisualization, onMaskVisualizationChange, maskFooter, maskAction, maskAriaLabel, fixedColorHex, colorHex, colorTitle, busy, fitting, visibilityBlocked, onColorClick, more } = props;
     const showMask = isMask && maskVisualization;
     const showColor = !isMask && onColorClick;
     return jsxRuntimeExports.jsxs("div", {
       className: [
-        styles$t.channelRow,
-        locked ? styles$t.detailChannelRowLocked : null,
+        rowStyles.channelRow,
+        locked ? rowStyles.detailChannelRowLocked : null,
         fitting ? minervaTheme.busyOverlay : null
       ].filter(Boolean).join(" "),
       "aria-busy": fitting || void 0,
       title: fitting ? "Fitting contrast\u2026" : void 0,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: `${styles$t.channelRowMain}${showMask ? ` ${styles$t.channelRowMainMask}` : ""}`,
+          className: `${rowStyles.channelRowMain}${showMask ? ` ${rowStyles.channelRowMainMask}` : ""}`,
           children: [
             jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible,
@@ -95300,10 +95323,10 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
               onClick: onToggleVisibility
             }),
             jsxRuntimeExports.jsxs("div", {
-              className: styles$t.channelRowTitle,
+              className: rowStyles.channelRowTitle,
               children: [
                 jsxRuntimeExports.jsx("div", {
-                  className: styles$t.channelNameSlot,
+                  className: rowStyles.channelNameSlot,
                   children: name2.mode === "label" ? jsxRuntimeExports.jsx("span", {
                     className: name2.className,
                     title: name2.title ?? name2.name,
@@ -95313,14 +95336,14 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                   })
                 }),
                 imageSubtitle ? jsxRuntimeExports.jsx("span", {
-                  className: styles$t.channelImageSubtitle,
+                  className: rowStyles.channelImageSubtitle,
                   title: `From ${imageSubtitle}`,
                   children: imageSubtitle
                 }) : null
               ]
             }),
             jsxRuntimeExports.jsxs("div", {
-              className: styles$t.channelRowMid,
+              className: rowStyles.channelRowMid,
               children: [
                 contrast ? jsxRuntimeExports.jsx(ChannelContrastEditor, {
                   ...contrast
@@ -95334,7 +95357,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
               ]
             }),
             showMask && fixedColorHex ? jsxRuntimeExports.jsx("span", {
-              className: styles$t.channelColorSwatchStatic,
+              className: rowStyles.channelColorSwatchStatic,
               style: {
                 backgroundColor: `#${fixedColorHex}`
               },
@@ -95349,10 +95372,10 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
               onClick: onColorClick
             }) : null,
             jsxRuntimeExports.jsxs("div", {
-              className: styles$t.channelRowTrailing,
+              className: rowStyles.channelRowTrailing,
               children: [
                 trailing,
-                more || contrast ? jsxRuntimeExports.jsx(RowMoreMenu, {
+                more || contrast ? jsxRuntimeExports.jsx(ChannelRowMoreMenu, {
                   channelName: name2.name,
                   fitBusy: fitting,
                   contourChannelId: contrast == null ? void 0 : contrast.sourceChannelId,
@@ -95360,23 +95383,11 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                 }) : null
               ]
             }),
-            showMask && onMaskVisualizationChange ? jsxRuntimeExports.jsx(OpacitySlider, {
-              value: maskVisualization.opacity,
-              onCommit: (opacity) => onMaskVisualizationChange({
-                ...maskVisualization,
-                opacity
-              }),
-              onPreview: (opacity) => onMaskVisualizationPreview == null ? void 0 : onMaskVisualizationPreview(opacity === null ? null : {
-                ...maskVisualization,
-                opacity
-              }),
-              ariaLabel: maskAriaLabel ?? name2.name
-            }) : null,
             showMask ? maskAction : null
           ]
         }),
         showMask && maskFooter ? jsxRuntimeExports.jsx("div", {
-          className: styles$t.maskControlsPanel,
+          className: rowStyles.maskControlsPanel,
           children: maskFooter
         }) : null
       ]
@@ -96334,47 +96345,47 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       ]
     });
   }
-  const stack = "_stack_eiqoz_1";
-  const panelDropActive = "_panelDropActive_eiqoz_11";
-  const addStrip = "_addStrip_eiqoz_16";
-  const addStripRow = "_addStripRow_eiqoz_27";
-  const dropZone = "_dropZone_eiqoz_41";
-  const dropZoneTitle = "_dropZoneTitle_eiqoz_51";
-  const orDivider = "_orDivider_eiqoz_57";
-  const urlRow = "_urlRow_eiqoz_68";
-  const urlField = "_urlField_eiqoz_77";
-  const urlInput = "_urlInput_eiqoz_83";
-  const urlAdd = "_urlAdd_eiqoz_91";
-  const dropZoneActive = "_dropZoneActive_eiqoz_121";
-  const importError = "_importError_eiqoz_175";
-  const fieldLabel = "_fieldLabel_eiqoz_188";
-  const typeOverlay = "_typeOverlay_eiqoz_202";
-  const typeOverlayBackdrop = "_typeOverlayBackdrop_eiqoz_214";
-  const typeOverlayCard = "_typeOverlayCard_eiqoz_220";
-  const typeOverlayFields = "_typeOverlayFields_eiqoz_234";
-  const typeOverlayFile = "_typeOverlayFile_eiqoz_244";
-  const typeRow = "_typeRow_eiqoz_253";
-  const typeChipActive = "_typeChipActive_eiqoz_261";
-  const typeChipSuggested = "_typeChipSuggested_eiqoz_265";
-  const typeChipMuted = "_typeChipMuted_eiqoz_270";
-  const typeFooter = "_typeFooter_eiqoz_284";
-  const typeImport = "_typeImport_eiqoz_293";
-  const typeSection = "_typeSection_eiqoz_300";
-  const imageCard = "_imageCard_eiqoz_308";
-  const fileAccessOverlay = "_fileAccessOverlay_eiqoz_320";
-  const fileAccessName = "_fileAccessName_eiqoz_339";
-  const fileAccessAction = "_fileAccessAction_eiqoz_347";
-  const pointBackdrop = "_pointBackdrop_eiqoz_355";
-  const pointPopup = "_pointPopup_eiqoz_366";
-  const imageCardHeader = "_imageCardHeader_eiqoz_374";
-  const imageCardText = "_imageCardText_eiqoz_382";
-  const imageCardTitle = "_imageCardTitle_eiqoz_390";
-  const imageCardMeta = "_imageCardMeta_eiqoz_398";
-  const imageCardActions = "_imageCardActions_eiqoz_404";
-  const imageOpacity = "_imageOpacity_eiqoz_413";
+  const stack = "_stack_173h0_1";
+  const panelDock = "_panelDock_173h0_11";
+  const addStrip = "_addStrip_173h0_18";
+  const addStripRow = "_addStripRow_173h0_29";
+  const dropZone = "_dropZone_173h0_43";
+  const dropZoneTitle = "_dropZoneTitle_173h0_53";
+  const orDivider = "_orDivider_173h0_59";
+  const urlRow = "_urlRow_173h0_70";
+  const urlField = "_urlField_173h0_79";
+  const urlInput = "_urlInput_173h0_85";
+  const urlAdd = "_urlAdd_173h0_93";
+  const windowDrop = "_windowDrop_173h0_127";
+  const importError = "_importError_173h0_186";
+  const fieldLabel = "_fieldLabel_173h0_199";
+  const typeOverlay = "_typeOverlay_173h0_213";
+  const typeOverlayBackdrop = "_typeOverlayBackdrop_173h0_225";
+  const typeOverlayCard = "_typeOverlayCard_173h0_231";
+  const typeOverlayFields = "_typeOverlayFields_173h0_245";
+  const typeOverlayFile = "_typeOverlayFile_173h0_255";
+  const typeRow = "_typeRow_173h0_264";
+  const typeChipActive = "_typeChipActive_173h0_272";
+  const typeChipSuggested = "_typeChipSuggested_173h0_276";
+  const typeChipMuted = "_typeChipMuted_173h0_281";
+  const typeFooter = "_typeFooter_173h0_295";
+  const typeImport = "_typeImport_173h0_304";
+  const typeSection = "_typeSection_173h0_311";
+  const imageCard = "_imageCard_173h0_319";
+  const fileAccessOverlay = "_fileAccessOverlay_173h0_331";
+  const fileAccessName = "_fileAccessName_173h0_350";
+  const fileAccessAction = "_fileAccessAction_173h0_358";
+  const pointBackdrop = "_pointBackdrop_173h0_366";
+  const pointPopup = "_pointPopup_173h0_377";
+  const imageCardHeader = "_imageCardHeader_173h0_385";
+  const imageCardText = "_imageCardText_173h0_393";
+  const imageCardTitle = "_imageCardTitle_173h0_401";
+  const imageCardMeta = "_imageCardMeta_173h0_409";
+  const imageCardActions = "_imageCardActions_173h0_415";
+  const imageOpacity = "_imageOpacity_173h0_424";
   const styles$q = {
     stack,
-    panelDropActive,
+    panelDock,
     addStrip,
     addStripRow,
     dropZone,
@@ -96384,7 +96395,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     urlField,
     urlInput,
     urlAdd,
-    dropZoneActive,
+    windowDrop,
     importError,
     fieldLabel,
     typeOverlay,
@@ -96504,8 +96515,8 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const path2 = url.trim().split(/[?#]/)[0];
     return ((_a2 = path2.split(/[/\\]/).pop()) == null ? void 0 : _a2.trim()) ?? "";
   }
-  function WorkerWrapper$4(options) {
-    return new Worker("" + new URL("worker-fsJuxFmL.js", import.meta.url).href, {
+  function WorkerWrapper$3(options) {
+    return new Worker("" + new URL("worker-D49gK7gt.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -96550,7 +96561,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   }
   function ensureWorker() {
     if (worker) return worker;
-    worker = new WorkerWrapper$4();
+    worker = new WorkerWrapper$3();
     worker.onmessage = (e2) => {
       const waiter = pending.get(e2.data.id);
       if (!waiter) return;
@@ -97250,24 +97261,24 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const activeStoryIndex = useAppStore((s2) => s2.activeStoryIndex);
     return useDocumentStore((s2) => activeStoryIndex == null ? void 0 : s2.waypoints[activeStoryIndex]);
   }
-  const attach = "_attach_mykh6_1";
-  const attachBtn = "_attachBtn_mykh6_9";
-  const attachLabel = "_attachLabel_mykh6_34";
-  const root$a = "_root_mykh6_42";
-  const waypointClasses = "_waypointClasses_mykh6_50";
-  const toolbar$2 = "_toolbar_mykh6_58";
-  const viewTitle = "_viewTitle_mykh6_65";
-  const readOnlyNote = "_readOnlyNote_mykh6_66";
-  const field$2 = "_field_mykh6_82";
-  const textBtn = "_textBtn_mykh6_104";
-  const colPick = "_colPick_mykh6_125";
-  const scroller = "_scroller_mykh6_148";
-  const accessPrompt = "_accessPrompt_mykh6_156";
-  const loading = "_loading_mykh6_166";
-  const row = "_row_mykh6_180";
-  const swatch$1 = "_swatch_mykh6_192";
-  const swatchPending = "_swatchPending_mykh6_207";
-  const name$3 = "_name_mykh6_212";
+  const attach = "_attach_1qjry_1";
+  const attachBtn = "_attachBtn_1qjry_9";
+  const attachLabel = "_attachLabel_1qjry_34";
+  const root$a = "_root_1qjry_43";
+  const waypointClasses = "_waypointClasses_1qjry_51";
+  const toolbar$2 = "_toolbar_1qjry_59";
+  const viewTitle = "_viewTitle_1qjry_66";
+  const readOnlyNote = "_readOnlyNote_1qjry_67";
+  const field$2 = "_field_1qjry_83";
+  const textBtn = "_textBtn_1qjry_105";
+  const colPick = "_colPick_1qjry_126";
+  const scroller = "_scroller_1qjry_149";
+  const accessPrompt = "_accessPrompt_1qjry_157";
+  const loading = "_loading_1qjry_167";
+  const row = "_row_1qjry_181";
+  const swatch$1 = "_swatch_1qjry_193";
+  const swatchPending = "_swatchPending_1qjry_208";
+  const name$3 = "_name_1qjry_213";
   const styles$p = {
     attach,
     attachBtn,
@@ -97322,7 +97333,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       "aria-hidden": true,
       children: [
         jsxRuntimeExports.jsx("title", {
-          children: "Table"
+          children: "Class Table"
         }),
         jsxRuntimeExports.jsx("rect", {
           x: "1",
@@ -97548,7 +97559,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         }),
         jsxRuntimeExports.jsx("span", {
           className: styles$p.attachLabel,
-          children: "Table"
+          children: "Class Table"
         })
       ]
     });
@@ -97568,67 +97579,99 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   }
   function FeatureTableAttach(props) {
     const pendingIds = reactExports.useSyncExternalStore(subscribeFeatureTablePending, getFeatureTablePendingSourceIds, getFeatureTablePendingSourceIds);
-    const [busy, setBusy] = reactExports.useState(false);
-    const wait2 = busy || pendingIds.includes(props.sourceChannelId);
-    const [pendingCsv, setPendingCsv] = reactExports.useState(null);
-    const [error2, setError] = reactExports.useState(null);
-    const closePending = () => {
-      setPendingCsv(null);
-      setError(null);
-    };
-    const attachFile = async (file, columns2) => {
-      setPendingCsv(null);
-      setError(null);
-      setBusy(true);
-      try {
-        const result = await completeFeatureTableIngest(props.sourceChannelId, ingestFeatureCsvFile(file, columns2));
-        if (result.ok === false) setError(result.error);
-      } finally {
-        setBusy(false);
-      }
-    };
-    const pickAndAttach = async () => {
-      const file = await pickFeatureCsv();
-      if (!file) return;
-      const peek = await peekFeatureCsv(file);
-      setError(null);
-      setPendingCsv({
-        file,
-        headers: (peek == null ? void 0 : peek.headers) ?? [],
-        id: (peek == null ? void 0 : peek.id) ?? "",
-        name: (peek == null ? void 0 : peek.name) ?? ""
-      });
-    };
-    const columns = pendingCsv && pendingCsv.headers.length >= 2 ? {
-      id: pendingCsv.id,
-      name: pendingCsv.name
-    } : void 0;
+    const [file, setFile] = reactExports.useState(null);
+    const wait2 = pendingIds.includes(props.sourceChannelId);
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         jsxRuntimeExports.jsx(FeatureTableGlyph, {
           wait: wait2,
-          title: error2 ?? "Attach feature table",
+          title: "Attach feature table",
           ariaLabel: wait2 ? "Loading feature table" : "Attach feature table",
-          onClick: () => void pickAndAttach()
+          onClick: () => void pickFeatureCsv().then((f2) => f2 && setFile(f2))
         }),
-        pendingCsv ? jsxRuntimeExports.jsx(ImportOverlay, {
-          title: pendingCsv.file.name,
-          titleId: "feature-table-import-dialog-title",
-          onCancel: closePending,
-          onImport: () => void attachFile(pendingCsv.file, columns),
-          children: pendingCsv.headers.length >= 2 ? jsxRuntimeExports.jsx(FeatureCsvColumnPick, {
-            headers: pendingCsv.headers,
-            id: pendingCsv.id,
-            name: pendingCsv.name,
-            onId: (id2) => setPendingCsv({
-              ...pendingCsv,
-              id: id2
-            }),
-            onName: (name2) => setPendingCsv({
-              ...pendingCsv,
-              name: name2
-            })
-          }) : null
+        file ? jsxRuntimeExports.jsx(FeatureCsvAttachDialog, {
+          file,
+          masks: [
+            {
+              id: props.sourceChannelId
+            }
+          ],
+          onClose: () => setFile(null)
+        }) : null
+      ]
+    });
+  }
+  function FeatureCsvAttachDialog(props) {
+    var _a2;
+    const { file, masks, onClose, onAttached } = props;
+    const [maskId, setMaskId] = reactExports.useState(((_a2 = masks[0]) == null ? void 0 : _a2.id) ?? "");
+    const [cols, setCols] = reactExports.useState(null);
+    const [busy, setBusy] = reactExports.useState(false);
+    const [error2, setError] = reactExports.useState(null);
+    reactExports.useEffect(() => {
+      void peekFeatureCsv(file).then(setCols);
+    }, [
+      file
+    ]);
+    const attach2 = async () => {
+      setBusy(true);
+      setError(null);
+      try {
+        const result = await completeFeatureTableIngest(maskId, ingestFeatureCsvFile(file, cols ? {
+          id: cols.id,
+          name: cols.name
+        } : void 0));
+        if (result.ok === false) {
+          setError(result.error);
+          return;
+        }
+        onAttached == null ? void 0 : onAttached();
+        onClose();
+      } finally {
+        setBusy(false);
+      }
+    };
+    return jsxRuntimeExports.jsxs(ImportOverlay, {
+      title: file.name,
+      titleId: "feature-table-import-dialog-title",
+      error: error2,
+      busy,
+      busyLabel: "Loading feature table\u2026",
+      cancelDisabled: busy,
+      importDisabled: busy,
+      onCancel: onClose,
+      onImport: () => void attach2(),
+      children: [
+        masks.length > 1 ? jsxRuntimeExports.jsx("div", {
+          className: styles$p.colPick,
+          children: jsxRuntimeExports.jsxs("label", {
+            children: [
+              "Mask",
+              jsxRuntimeExports.jsx("select", {
+                className: styles$p.field,
+                value: maskId,
+                "aria-label": "Mask",
+                onChange: (e2) => setMaskId(e2.target.value),
+                children: masks.map((m2) => jsxRuntimeExports.jsx("option", {
+                  value: m2.id,
+                  children: m2.name || "Mask"
+                }, m2.id))
+              })
+            ]
+          })
+        }) : null,
+        cols ? jsxRuntimeExports.jsx(FeatureCsvColumnPick, {
+          headers: cols.headers,
+          id: cols.id,
+          name: cols.name,
+          onId: (id2) => setCols({
+            ...cols,
+            id: id2
+          }),
+          onName: (name2) => setCols({
+            ...cols,
+            name: name2
+          })
         }) : null
       ]
     });
@@ -97993,7 +98036,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     }
     return counts;
   }
-  function WorkerWrapper$3(options) {
+  function WorkerWrapper$2(options) {
     return new Worker("" + new URL("histogram.worker-D54kmtrr.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
@@ -98010,7 +98053,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       __publicField(this, "nextId", 1);
       __publicField(this, "rr", 0);
       for (let i2 = 0; i2 < size; i2++) {
-        const w2 = new WorkerWrapper$3();
+        const w2 = new WorkerWrapper$2();
         w2.onmessage = (ev) => {
           const { jobId, y: y2, error: error2 } = ev.data;
           const p2 = this.pending.get(jobId);
@@ -98067,134 +98110,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     }
     return histogramBinFromPixels(bits, width, data2, range2);
   }
-  const hex_to_rgb = (c2) => {
-    const n2 = parseInt(c2, 16);
-    return {
-      r: n2 >> 16 & 255,
-      g: n2 >> 8 & 255,
-      b: n2 & 255
-    };
-  };
-  const GROUP_CHANNELS_CRC01 = {
-    "Histology_40__HE-r--41__HE-g--42__HE-b": [
-      40,
-      41,
-      42
-    ],
-    "Tissue-Structure_0__DNA1--14__PanCK--15__ASMA--35__CD31--18__CD45": [
-      0,
-      14,
-      15,
-      35,
-      18
-    ],
-    "Immune-Populations_0__DNA1--18__CD45--23__CD8a--17__CD4--21__CD20--22__CD68--25__CD163": [
-      0,
-      18,
-      23,
-      17,
-      21,
-      22
-    ],
-    "Lymphocytes_0__DNA1--23__CD8a--17__CD4--21__CD20--26__FOXP3": [
-      0,
-      23,
-      17,
-      21,
-      26
-    ],
-    "Macrophages_0__DNA1--22__CD68--25__CD163": [
-      0,
-      22,
-      25
-    ],
-    "Proliferation_0__DNA1--37__PCNA--14__PanCK--18__CD45--13__Ki67": [
-      0,
-      37,
-      14,
-      18,
-      13
-    ],
-    "PD1-Immune-Checkpoint_0__DNA1--14__PanCK--27__PDL1--19__PD1": [
-      0,
-      14,
-      27,
-      19
-    ],
-    "Helper-and-Regulatory-T-Cells_0__DNA1--17__CD4--26__FOXP3": [
-      0,
-      17,
-      26
-    ],
-    "CD8-Cytotoxic-T-Cells_0__DNA1--23__CD8a--19__PD1": [
-      0,
-      23,
-      19
-    ],
-    "FOXP3-CD8-T-Cells_0__DNA1--23__CD8a--26__FOXP3": [
-      0,
-      23,
-      26
-    ],
-    "NaK-ATPase_0__DNA1--14__PanCK--10__Na-K-ATPase": [
-      0,
-      14,
-      10
-    ],
-    "E-Cadherin_0__DNA1--14__PanCK--29__Ecadherin": [
-      0,
-      14,
-      29
-    ],
-    "Stroma_0__DNA1--15__ASMA--34__Desmin--39__Collagen--30__Vimentin": [
-      0,
-      15,
-      34,
-      39,
-      30
-    ],
-    "PDL1-Positive-Immune-Cells_0__DNA1--17__CD4--22__CD68--25__CD163--27__PDL1": [
-      0,
-      17,
-      22,
-      25,
-      27
-    ],
-    "PDL1-CD8-Interaction_0__DNA1--27__PDL1--23__CD8a--19__PD1": [
-      0,
-      27,
-      23,
-      19
-    ],
-    "Tumor-Budding-Epithelial_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA": [
-      0,
-      14,
-      29,
-      37
-    ],
-    "Tumor-Budding-Immune-Modulation_0__DNA1--14__PanCK--27__PDL1--26__FOXP3--23__CD8a--19__PD1--22__CD68": [
-      0,
-      14,
-      27,
-      26,
-      23,
-      19
-    ],
-    "Nuclear-Lamina_0__DNA1--33__LaminABC": [
-      0,
-      33
-    ],
-    "DAPI-Cycle-Correlation_0__DNA1--36__DNA10": [
-      0,
-      36
-    ],
-    "Transitions_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA": [
-      0,
-      14,
-      29,
-      37
-    ]
-  };
   const asID = (k2) => ({
     ID: k2
   });
@@ -98384,7 +98299,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     });
     return new Map(entries);
   };
-  const extractChannels = (loader, modality, groups, sourceImageId, defaultChannelKind = "channel") => {
+  const extractChannels = (loader, modality, sourceImageId, defaultChannelKind = "channel") => {
     const init2 = initialize$1({
       planes: loader.data
     });
@@ -98402,80 +98317,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         imageId: channelImageId
       };
     });
-    const hardcoded_crc01 = groups.reduce(({ name_map: name_map2, ChannelGroups: ChannelGroups2 }, g2) => {
-      if (!(g2.Path in GROUP_CHANNELS_CRC01)) {
-        return {
-          name_map: name_map2,
-          ChannelGroups: ChannelGroups2
-        };
-      }
-      const channel_indices = GROUP_CHANNELS_CRC01[g2.Path];
-      if (g2.Channels.length !== channel_indices.length) {
-        return {
-          name_map: name_map2,
-          ChannelGroups: ChannelGroups2
-        };
-      }
-      const outOfRange = channel_indices.filter((idx) => idx < 0 || idx >= SourceChannels.length);
-      if (outOfRange.length > 0) {
-        return {
-          name_map: name_map2,
-          ChannelGroups: ChannelGroups2
-        };
-      }
-      const new_name_map = {
-        ...name_map2
-      };
-      for (let i2 = 0; i2 < channel_indices.length; i2++) {
-        const idx = channel_indices[i2];
-        new_name_map[g2.Channels[i2]] = SourceChannels[idx].id;
-      }
-      const new_group_uuid = crypto.randomUUID();
-      const new_group = {
-        id: new_group_uuid,
-        expanded: ChannelGroups2.length === 0,
-        name: g2.Name,
-        channels: g2.Channels.reduce((new_group_channels, name2, index2) => {
-          if (!(name2 in new_name_map)) {
-            return new_group_channels;
-          }
-          const color2 = g2.Colors[index2];
-          return new_group_channels.concat({
-            id: crypto.randomUUID(),
-            channelId: new_name_map[name2],
-            color: hex_to_rgb(color2),
-            lowerLimit: g2.Lows[index2],
-            upperLimit: g2.Highs[index2]
-          });
-        }, [])
-      };
-      return {
-        name_map: new_name_map,
-        ChannelGroups: ChannelGroups2.concat([
-          new_group
-        ])
-      };
-    }, {
-      ChannelGroups: [],
-      name_map: {}
-    });
-    const name_map = hardcoded_crc01.name_map;
-    const reverse_name_map = Object.fromEntries(Object.entries(name_map).map(([k2, v2]) => [
-      v2,
-      k2
-    ]));
-    if (Object.keys(name_map).length) {
-      SourceChannels.forEach((sourceChannel) => {
-        if (sourceChannel.id in reverse_name_map) {
-          sourceChannel.name = reverse_name_map[sourceChannel.id];
-        }
-      });
-      const { ChannelGroups: ChannelGroups2 } = hardcoded_crc01;
-      return {
-        SourceChannels,
-        ChannelGroups: ChannelGroups2
-      };
-    }
     if (SourceChannels.length === 1 && SourceChannels[0].samples === 3 && SourceChannels[0].sourceDataTypeId === "Uint8") {
       SourceChannels[0].name = "H&E";
     }
@@ -98728,9 +98569,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       sc2,
       sourceChannels
     ]);
-    reactExports.useEffect(() => () => {
-      useAppStore.getState().setMaskVisualizationPreview(null);
-    }, []);
     if (!sc2) return null;
     const rgbDisplay = isRgbDisplayChannel(sc2, sourceChannels);
     const visible = gc2 ? isGroupRowVisible(groupRowVisibilities, gc2.id) : isStackVisible(stackVisibilities, sc2.id);
@@ -98829,14 +98667,14 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         })
       }));
       setImagesAndChannelGroups(nextImages, nextGroups);
-      useAppStore.getState().setMaskVisualizationPreview(null);
     };
     const openColor = (el2) => {
       commitChannelColorTarget(colorTarget);
       setColorTarget(colorTargetForRow);
       setColorPos(colorPickerAnchorPosition(el2.getBoundingClientRect()));
     };
-    const contrast = showHistogram && (nav == null ? void 0 : nav.contrastEditable) ? gc2 && chip2.groupId ? {
+    const contrastEditable = showHistogram && Boolean(nav == null ? void 0 : nav.contrastEditable);
+    const contrast = contrastEditable ? gc2 && chip2.groupId ? {
       ...contrastEditorPropsForGroupRow(channelRendering, chip2.groupId, gc2, sc2),
       histogramLoading: histogramLoading2
     } : {
@@ -98859,22 +98697,15 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
             onBlur: rename
           },
           contrast,
-          more: showHistogram && (nav == null ? void 0 : nav.contrastEditable) ? {
-            sourceChannel: sc2,
-            allowContrast: true
+          more: contrastEditable ? {
+            fitContrastId: sc2.id
           } : void 0,
           ...!rgbDisplay && isMaskChannel(sc2) ? {
             isMask: true,
             maskVisualization: effectiveMaskVisualization(gc2 ?? sc2),
             maskAriaLabel: `Mask display for ${sc2.name}`,
             ...featureTableRowExtras(sc2.id, featureTables),
-            onMaskVisualizationChange: syncMask,
-            onMaskVisualizationPreview: (viz) => {
-              useAppStore.getState().setMaskVisualizationPreview(viz ? {
-                sourceChannelId: sc2.id,
-                visualization: viz
-              } : null);
-            }
+            onMaskVisualizationChange: syncMask
           } : !rgbDisplay ? {
             busy: palettePending,
             colorHex: hex,
@@ -98981,22 +98812,22 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       allChannels
     };
   }
-  const root$9 = "_root_1ya2t_1";
-  const groupCard = "_groupCard_1ya2t_9";
-  const groupHeader = "_groupHeader_1ya2t_16";
-  const channelFilter$1 = "_channelFilter_1ya2t_23";
-  const groupLabel = "_groupLabel_1ya2t_28";
-  const filterEmpty$1 = "_filterEmpty_1ya2t_70";
-  const chipWrap = "_chipWrap_1ya2t_76";
-  const chipCell = "_chipCell_1ya2t_83";
-  const chipOn = "_chipOn_1ya2t_94";
-  const chipOutlined = "_chipOutlined_1ya2t_100";
-  const chipUnassigned = "_chipUnassigned_1ya2t_105";
-  const chip = "_chip_1ya2t_76";
-  const chipMenu = "_chipMenu_1ya2t_111";
-  const chipHint = "_chipHint_1ya2t_121";
-  const chipDim = "_chipDim_1ya2t_160";
-  const editor = "_editor_1ya2t_164";
+  const root$9 = "_root_stc7x_1";
+  const groupCard = "_groupCard_stc7x_9";
+  const groupHeader = "_groupHeader_stc7x_16";
+  const channelFilter$1 = "_channelFilter_stc7x_23";
+  const groupLabel = "_groupLabel_stc7x_28";
+  const filterEmpty$1 = "_filterEmpty_stc7x_70";
+  const chipWrap = "_chipWrap_stc7x_76";
+  const chipCell = "_chipCell_stc7x_83";
+  const chipOn = "_chipOn_stc7x_94";
+  const chipOutlined = "_chipOutlined_stc7x_100";
+  const chipUnassigned = "_chipUnassigned_stc7x_105";
+  const chip = "_chip_stc7x_76";
+  const chipMenu = "_chipMenu_stc7x_111";
+  const chipHint = "_chipHint_stc7x_121";
+  const chipDim = "_chipDim_stc7x_160";
+  const editor = "_editor_stc7x_164";
   const styles$o = {
     root: root$9,
     groupCard,
@@ -99029,7 +98860,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     return chip2.visible ? `Hide ${chip2.name}` : `Show ${chip2.name}`;
   }
   function ChipButton(props) {
-    const { chip: chip2, open, dim, colorPending, gmmPending, shown, showBlocked, onClick, onOpenEditor } = props;
+    const { chip: chip2, open, dim, colorPending, gmmPending, shown, showBlocked, onClick, onOpenEditor, onDismiss } = props;
     const pending2 = colorPending || gmmPending;
     const pendingLabel2 = gmmPending ? `Fitting contrast for ${chip2.name}` : `Assigning color to ${chip2.name}`;
     const showEditor = !chip2.key.endsWith(":rgb");
@@ -99046,6 +98877,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         "--ch": `#${chip2.hex}`
       } : void 0,
       "aria-busy": pending2 || void 0,
+      "data-open-channel-card": open ? "" : void 0,
       children: [
         jsxRuntimeExports.jsx(CursorHint, {
           enabled: showBlocked,
@@ -99060,6 +98892,10 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
             "aria-disabled": showBlocked || void 0,
             onClick: () => {
               if (showBlocked) return;
+              if (dim) {
+                onDismiss();
+                return;
+              }
               onClick(chip2);
             },
             children: chip2.name
@@ -99083,49 +98919,12 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     });
   }
   const CHIP_COLS = 5;
-  function pointerInEditor(e2, root2) {
-    const t2 = e2.target;
-    if (t2 instanceof Node && root2.contains(t2)) return true;
-    if (t2 instanceof Element && t2.closest("[data-minerva-color-picker]")) {
-      return true;
-    }
-    const r2 = root2.getBoundingClientRect();
-    return e2.clientX >= r2.left && e2.clientX <= r2.right && e2.clientY >= r2.top && e2.clientY <= r2.bottom;
-  }
   function ChipGrid(props) {
-    const { chips, openChip, shownIds, blockedIds, onDismissEditor } = props;
-    const editorRef = reactExports.useRef(null);
+    const { chips, openChip, shownIds, blockedIds } = props;
     const pendingIds = reactExports.useSyncExternalStore(subscribeStackPalettePending, getStackPalettePendingIds, getStackPalettePendingIds);
     const gmmPendingIds = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmPendingIds, getGmmPendingIds);
     const openIndex = openChip ? chips.findIndex((c2) => c2.key === openChip.key) : -1;
     const rowEnd = openIndex < 0 ? -1 : Math.min(chips.length - 1, openIndex - openIndex % CHIP_COLS + CHIP_COLS - 1);
-    reactExports.useEffect(() => {
-      if (openIndex < 0) return;
-      let downInside = false;
-      const onDown = (e2) => {
-        const root2 = editorRef.current;
-        const menuOpen = document.querySelector("[data-channel-row-menu]") != null;
-        downInside = menuOpen || root2 != null && pointerInEditor(e2, root2);
-      };
-      const onDoc = (e2) => {
-        if (downInside) {
-          downInside = false;
-          return;
-        }
-        const root2 = editorRef.current;
-        if (!root2 || pointerInEditor(e2, root2)) return;
-        onDismissEditor();
-      };
-      document.addEventListener("mousedown", onDown);
-      document.addEventListener("click", onDoc);
-      return () => {
-        document.removeEventListener("mousedown", onDown);
-        document.removeEventListener("click", onDoc);
-      };
-    }, [
-      openIndex,
-      onDismissEditor
-    ]);
     return jsxRuntimeExports.jsx("div", {
       className: styles$o.chipWrap,
       children: chips.map((chip2, i2) => jsxRuntimeExports.jsxs(reactExports.Fragment, {
@@ -99139,11 +98938,12 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
             shown: shownIds.has(chip2.sourceId),
             showBlocked: blockedIds.has(chip2.sourceId),
             onClick: props.onChip,
-            onOpenEditor: props.onOpenEditor
+            onOpenEditor: props.onOpenEditor,
+            onDismiss: props.onDismiss
           }),
           i2 === rowEnd && openChip ? jsxRuntimeExports.jsx("div", {
-            ref: editorRef,
             className: styles$o.editor,
+            "data-channel-editor": "",
             children: jsxRuntimeExports.jsx(ChannelEditor, {
               chip: openChip
             })
@@ -99155,7 +98955,28 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   function GroupStrip(props) {
     const visLabel = props.allVisible ? `Hide every channel in ${props.name}` : `Show every channel in ${props.name}`;
     const filtering = props.onNameFilterChange != null;
+    const cardRef = reactExports.useRef(null);
+    const dismiss = props.onDismiss;
+    reactExports.useEffect(() => {
+      const card = cardRef.current;
+      if (!props.openChip || !card) return;
+      const onPointerDown = (event) => {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        if (target.closest("[data-channel-editor], [data-open-channel-card], button, input")) {
+          return;
+        }
+        if (document.querySelector("[data-channel-row-menu]")) return;
+        dismiss();
+      };
+      card.addEventListener("pointerdown", onPointerDown);
+      return () => card.removeEventListener("pointerdown", onPointerDown);
+    }, [
+      props.openChip,
+      dismiss
+    ]);
     return jsxRuntimeExports.jsxs("div", {
+      ref: cardRef,
       className: styles$o.groupCard,
       children: [
         jsxRuntimeExports.jsxs("div", {
@@ -99199,7 +99020,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
           blockedIds: props.blockedIds,
           onChip: props.onChip,
           onOpenEditor: props.onOpenEditor,
-          onDismissEditor: props.onDismissEditor
+          onDismiss: props.onDismiss
         })
       ]
     });
@@ -99246,9 +99067,11 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       activeChannelGroupId,
       channelRendering
     ]);
-    const filteredAllChannels = reactExports.useMemo(() => model.allChannels.filter((chip2) => channelNameMatchesQuery(chip2.name, channelNameFilter)), [
+    const channelSearch = model.allChannels.length > 1;
+    const filteredAllChannels = reactExports.useMemo(() => channelSearch ? model.allChannels.filter((chip2) => channelNameMatchesQuery(chip2.name, channelNameFilter)) : model.allChannels, [
       model.allChannels,
-      channelNameFilter
+      channelNameFilter,
+      channelSearch
     ]);
     const rgbDisplay = isRgbDisplayImage(image2);
     const rgbChannels = flattenImageChannelsInDocumentOrder([
@@ -99410,7 +99233,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
             showAllBlocked,
             onChip: onGroupChip,
             onOpenEditor,
-            onDismissEditor: dismissEditor,
+            onDismiss: dismissEditor,
             onToggleVisibility: () => {
               if (rgbDisplay) {
                 applyRgbUnit(!group2.allVisible, group2.id);
@@ -99441,9 +99264,9 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
           blockedIds,
           onChip: onAllChannelsChip,
           onOpenEditor,
-          onDismissEditor: dismissEditor,
+          onDismiss: dismissEditor,
           nameFilter: channelNameFilter,
-          onNameFilterChange: setChannelNameFilter
+          onNameFilterChange: channelSearch ? setChannelNameFilter : void 0
         }) : null
       ]
     });
@@ -170067,11 +169890,11 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   }
   function encodeCubeRootU16ToU8(pixel) {
     if (!Number.isFinite(pixel) || pixel <= 0) return 0;
-    return Math.min(255, Math.max(0, Math.round((pixel / 65536) ** (1 / 3) * 256)));
+    return Math.min(255, Math.max(0, Math.round((pixel / 65535) ** (1 / 3) * 255)));
   }
   function decodeCubeRootU8ToU16(byte) {
     if (!Number.isFinite(byte) || byte <= 0) return 0;
-    return Math.min(65535, Math.max(0, Math.round((byte / 256) ** 3 * 65536)));
+    return Math.min(65535, Math.max(0, Math.round((byte / 255) ** 3 * 65535)));
   }
   const CUBE_ROOT_U8_TO_U16 = Uint16Array.from({
     length: 256
@@ -170097,14 +169920,8 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     }) === "segmentation") {
       return null;
     }
+    if (image2.rgbDisplay === true) return "contrast";
     return exportTransferForImage(image2, storyTransfer);
-  }
-  function expandThroughLut(data2, lut) {
-    const out = new Uint16Array(data2.length);
-    for (let i2 = 0; i2 < data2.length; i2++) {
-      out[i2] = lut[data2[i2] & 255];
-    }
-    return out;
   }
   const JPEG_PYRAMID_TILE_SIZE = 1024;
   const JPEG_BAKED_CONTRAST_LIMIT = [
@@ -170149,44 +169966,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     return Array.from({
       length: n2
     }, (_2, i2) => i2);
-  }
-  function WorkerWrapper$2(options) {
-    return new Worker("" + new URL("decoder.worker-DskuWaKT.js", import.meta.url).href, {
-      type: "module",
-      name: options == null ? void 0 : options.name
-    });
-  }
-  const decoderTags = /* @__PURE__ */ new WeakMap();
-  function withoutBlockTables(fileDirectory) {
-    let tags = decoderTags.get(fileDirectory);
-    if (!tags) {
-      tags = {
-        ...fileDirectory,
-        TileOffsets: fileDirectory.TileOffsets && [],
-        TileByteCounts: fileDirectory.TileByteCounts && [],
-        StripOffsets: fileDirectory.StripOffsets && [],
-        StripByteCounts: fileDirectory.StripByteCounts && [],
-        ImageDescription: void 0
-      };
-      decoderTags.set(fileDirectory, tags);
-    }
-    return tags;
-  }
-  class OmeDecodePool extends Pool {
-    decode(fileDirectory, buffer2) {
-      return super.decode(withoutBlockTables(fileDirectory), buffer2);
-    }
-    decodeWidened(fileDirectory, buffer2, lut) {
-      return super.decode({
-        ...withoutBlockTables(fileDirectory),
-        MinervaWidenLut: lut
-      }, buffer2);
-    }
-  }
-  let sharedPool = null;
-  function sharedOmeDecodePool() {
-    sharedPool ?? (sharedPool = new OmeDecodePool(void 0, () => new WorkerWrapper$2()));
-    return sharedPool;
   }
   class JpegImage {
     constructor(opts) {
@@ -170784,6 +170563,886 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       applied
     };
   }
+  function ensureDefaultWaypoint() {
+    var _a2;
+    const doc = useDocumentStore.getState();
+    if (doc.waypoints.length > 0) return;
+    const groupId = (_a2 = doc.channelGroups[0]) == null ? void 0 : _a2.id;
+    const raw2 = {
+      id: crypto.randomUUID(),
+      State: {
+        Expanded: true
+      },
+      Name: "Waypoint 1",
+      Content: "",
+      shapeIds: [],
+      ...groupId !== void 0 ? {
+        groupId
+      } : {}
+    };
+    const app = useAppStore.getState();
+    app.addStory(raw2);
+    app.setActiveStory(0);
+  }
+  const attr = (el2, ...keys2) => {
+    for (const k2 of keys2) {
+      const v2 = el2.getAttribute(k2);
+      if (v2 != null && v2 !== "") return v2;
+    }
+    return null;
+  };
+  const num = (el2, ...keys2) => {
+    const s2 = attr(el2, ...keys2);
+    if (s2 == null) return Number.NaN;
+    return Number(s2);
+  };
+  const parseOmeColor = (s2) => {
+    if (s2 == null || s2 === "") return void 0;
+    const t2 = s2.trim();
+    if (/^-?\d+$/.test(t2)) {
+      const int = Number.parseInt(t2, 10);
+      if (!Number.isNaN(int)) {
+        const buffer2 = new ArrayBuffer(4);
+        const view = new DataView(buffer2);
+        view.setInt32(0, int, false);
+        const b2 = new Uint8Array(buffer2);
+        if (b2.length < 4) return void 0;
+        return [
+          b2[0],
+          b2[1],
+          b2[2],
+          b2[3]
+        ];
+      }
+    }
+    if (t2.startsWith("rgba(") || t2.startsWith("rgb(")) {
+      const parts = t2.replace(/^rgba\(/, "").replace(/^rgb\(/, "").replace(/\)\s*$/, "").split(/[,\s]+/).map(Number);
+      if (parts.length >= 3 && parts.every((n2) => !Number.isNaN(n2))) {
+        const r0 = parts[0];
+        const r1 = parts[1];
+        const r2 = parts[2];
+        if (r0 === void 0 || r1 === void 0 || r2 === void 0) {
+          return void 0;
+        }
+        const aRaw = parts[3];
+        const a2 = aRaw === void 0 ? 255 : aRaw <= 1 ? aRaw * 255 : aRaw;
+        return [
+          r0,
+          r1,
+          r2,
+          a2
+        ];
+      }
+    }
+    let hex = t2.replace("#", "");
+    if (hex.length === 8) {
+      const a2 = parseInt(hex.slice(0, 2), 16);
+      hex = hex.slice(2);
+      const r2 = parseInt(hex.slice(0, 2), 16);
+      const g2 = parseInt(hex.slice(2, 4), 16);
+      const b2 = parseInt(hex.slice(4, 6), 16);
+      if ([
+        a2,
+        r2,
+        g2,
+        b2
+      ].some((n2) => Number.isNaN(n2))) return void 0;
+      return [
+        r2,
+        g2,
+        b2,
+        a2
+      ];
+    }
+    if (hex.length === 6) {
+      const r2 = parseInt(hex.slice(0, 2), 16);
+      const g2 = parseInt(hex.slice(2, 4), 16);
+      const b2 = parseInt(hex.slice(4, 6), 16);
+      if ([
+        r2,
+        g2,
+        b2
+      ].some((n2) => Number.isNaN(n2))) return void 0;
+      return [
+        r2,
+        g2,
+        b2,
+        255
+      ];
+    }
+    return void 0;
+  };
+  const transformCoeff = (el2, name2, fallback) => {
+    const s2 = attr(el2, name2);
+    if (s2 == null) return fallback;
+    const n2 = Number(s2);
+    return Number.isFinite(n2) ? n2 : Number.NaN;
+  };
+  const parseTransform = (el2) => {
+    const t2 = Array.from(el2.children).find((ch2) => ch2.localName === "Transform");
+    if (!t2) return void 0;
+    const m2 = {
+      A00: transformCoeff(t2, "A00", 1),
+      A01: transformCoeff(t2, "A01", 0),
+      A02: transformCoeff(t2, "A02", 0),
+      A10: transformCoeff(t2, "A10", 0),
+      A11: transformCoeff(t2, "A11", 1),
+      A12: transformCoeff(t2, "A12", 0)
+    };
+    return Object.values(m2).every(Number.isFinite) ? m2 : void 0;
+  };
+  const shapeCommon = (el2, id2) => {
+    const name2 = attr(el2, "Name", "name");
+    const text2 = attr(el2, "Text", "text", "Value");
+    const sw = num(el2, "StrokeWidth", "strokeWidth");
+    const base2 = {
+      ID: id2
+    };
+    if (name2) base2.Name = name2;
+    if (text2) base2.Text = text2;
+    const fill = parseOmeColor(attr(el2, "FillColor", "fillColor", "Fill", "fill"));
+    const stroke = parseOmeColor(attr(el2, "StrokeColor", "strokeColor", "Stroke", "stroke"));
+    if (fill) base2.FillColor = fill;
+    if (stroke) base2.StrokeColor = stroke;
+    if (!Number.isNaN(sw) && sw > 0) base2.StrokeWidth = sw;
+    const transform = parseTransform(el2);
+    if (transform) base2.Transform = transform;
+    return base2;
+  };
+  const shapeIdFor = (el2, fallback) => attr(el2, "ID", "id", "Name", "name") || fallback;
+  function elementToRoiShape(el2, index2) {
+    var _a2;
+    const id2 = shapeIdFor(el2, `Shape:${index2}`);
+    const common2 = (extra) => {
+      return {
+        ...shapeCommon(el2, id2),
+        ...extra
+      };
+    };
+    const tag = el2.localName;
+    const lower = tag.toLowerCase();
+    if (lower === "rectangle") {
+      const x2 = num(el2, "X", "x");
+      const y2 = num(el2, "Y", "y");
+      const w2 = num(el2, "Width", "width", "W", "w");
+      const h2 = num(el2, "Height", "height", "H", "h");
+      if ([
+        x2,
+        y2,
+        w2,
+        h2
+      ].some((n2) => Number.isNaN(n2)) || w2 === 0 || h2 === 0) {
+        return null;
+      }
+      return common2({
+        type: "rectangle",
+        X: x2,
+        Y: y2,
+        Width: w2,
+        Height: h2
+      });
+    }
+    if (lower === "ellipse") {
+      const x2 = num(el2, "X", "x", "cx");
+      const y2 = num(el2, "Y", "y", "cy");
+      const rx = num(el2, "RadiusX", "radiusX", "rx", "Radius", "r");
+      let ry = num(el2, "RadiusY", "radiusY", "ry");
+      if (Number.isNaN(ry) && !Number.isNaN(rx)) ry = rx;
+      if ([
+        x2,
+        y2,
+        rx,
+        ry
+      ].some((n2) => Number.isNaN(n2)) || rx <= 0 || ry <= 0) {
+        return null;
+      }
+      return common2({
+        type: "ellipse",
+        X: x2,
+        Y: y2,
+        RadiusX: rx,
+        RadiusY: ry
+      });
+    }
+    if (lower === "line") {
+      const x1 = num(el2, "X1", "x1", "X");
+      const y1 = num(el2, "Y1", "y1", "Y");
+      const x2 = num(el2, "X2", "x2");
+      const y2 = num(el2, "Y2", "y2");
+      if ([
+        x1,
+        y1,
+        x2,
+        y2
+      ].some((n2) => Number.isNaN(n2))) {
+        return null;
+      }
+      return common2({
+        type: "line",
+        X1: x1,
+        Y1: y1,
+        X2: x2,
+        Y2: y2
+      });
+    }
+    if (lower === "point") {
+      const x2 = num(el2, "X", "x", "px");
+      const y2 = num(el2, "Y", "y", "py");
+      if (Number.isNaN(x2) || Number.isNaN(y2)) return null;
+      return common2({
+        type: "point",
+        X: x2,
+        Y: y2
+      });
+    }
+    if (lower === "polygon" || lower === "polyline") {
+      const pts = attr(el2, "Points", "points", "Point", "Path");
+      if (!pts || !pts.trim()) return null;
+      if (lower === "polygon") {
+        return common2({
+          type: "polygon",
+          Points: pts.trim()
+        });
+      }
+      return common2({
+        type: "polyline",
+        Points: pts.trim()
+      });
+    }
+    if (lower === "label") {
+      const x2 = num(el2, "X", "x", "px");
+      const y2 = num(el2, "Y", "y", "py");
+      const t2 = attr(el2, "Text", "text", "Value", "name") || ((_a2 = el2.textContent) == null ? void 0 : _a2.trim()) || "";
+      if (Number.isNaN(x2) || Number.isNaN(y2) || t2 === "") return null;
+      return common2({
+        type: "label",
+        X: x2,
+        Y: y2,
+        Text: t2
+      });
+    }
+    return null;
+  }
+  function unionShapeElements(roiEl) {
+    const out = [];
+    const ns = (name2) => roiEl.getElementsByTagNameNS("*", name2);
+    const unions = /* @__PURE__ */ new Set([
+      ...Array.from(ns("Union")),
+      ...Array.from(roiEl.getElementsByTagName("Union"))
+    ]);
+    if (unions.size > 0) {
+      for (const u2 of unions) {
+        for (const ch2 of u2.children) {
+          if (ch2.nodeType === Node.ELEMENT_NODE) out.push(ch2);
+        }
+      }
+      return out;
+    }
+    for (const ch2 of roiEl.children) {
+      if (ch2.localName === "Name" || ch2.localName === "Description") continue;
+      if (ch2.nodeType === Node.ELEMENT_NODE) out.push(ch2);
+    }
+    return out;
+  }
+  function collectRoiElements(doc) {
+    const a2 = Array.from(doc.getElementsByTagNameNS("*", "ROI"));
+    const b2 = Array.from(doc.getElementsByTagName("ROI"));
+    return Array.from(/* @__PURE__ */ new Set([
+      ...a2,
+      ...b2
+    ]));
+  }
+  function parseOmeXmlStringToRois(xml2) {
+    var _a2;
+    if (typeof DOMParser === "undefined") {
+      throw new Error("XML parsing is not available in this environment.");
+    }
+    const parser2 = new DOMParser();
+    const doc = parser2.parseFromString(xml2, "application/xml");
+    const perr = doc.getElementsByTagName("parsererror")[0];
+    if ((_a2 = perr == null ? void 0 : perr.textContent) == null ? void 0 : _a2.trim()) {
+      throw new Error("The file is not well-formed XML.");
+    }
+    const roiEls = collectRoiElements(doc);
+    const rois = [];
+    for (const roiEl of roiEls) {
+      const id2 = attr(roiEl, "ID", "id");
+      if (!id2) continue;
+      let roiName;
+      for (const ch2 of Array.from(roiEl.children)) {
+        if (ch2.localName === "Name" && ch2.textContent) {
+          roiName = ch2.textContent.trim();
+          break;
+        }
+      }
+      if (!roiName) roiName = attr(roiEl, "Name", "name") || void 0;
+      let desc;
+      for (const ch2 of Array.from(roiEl.children)) {
+        if (ch2.localName === "Description" && ch2.textContent) {
+          desc = ch2.textContent.trim();
+          break;
+        }
+      }
+      const shapeEls = unionShapeElements(roiEl);
+      const shapes = [];
+      shapeEls.forEach((shapeEl, i2) => {
+        const s2 = elementToRoiShape(shapeEl, i2);
+        if (s2) shapes.push(s2);
+      });
+      if (shapes.length > 0) {
+        rois.push({
+          ID: id2,
+          Name: roiName,
+          Description: desc,
+          shapes
+        });
+      }
+    }
+    return rois;
+  }
+  const applyTransform = (x2, y2, transform) => {
+    if (!transform) return [
+      x2,
+      y2
+    ];
+    const newX = transform.A00 * x2 + transform.A01 * y2 + transform.A02;
+    const newY = transform.A10 * x2 + transform.A11 * y2 + transform.A12;
+    return [
+      newX,
+      newY
+    ];
+  };
+  const parsePoints = (pointsStr, transform) => {
+    const points = pointsStr.trim().split(/\s+/).map((point2) => {
+      const [x2, y2] = point2.split(",").map(Number);
+      return applyTransform(x2, y2, transform);
+    });
+    return points;
+  };
+  const ellipseToPolygon = (centerX, centerY, radiusX, radiusY, transform, segments = 32) => {
+    const points = [];
+    for (let i2 = 0; i2 <= segments; i2++) {
+      const angle2 = i2 / segments * 2 * Math.PI;
+      const x2 = centerX + radiusX * Math.cos(angle2);
+      const y2 = centerY + radiusY * Math.sin(angle2);
+      points.push(applyTransform(x2, y2, transform));
+    }
+    return points;
+  };
+  const getColors = (shape, defaultFill, defaultStroke) => {
+    return {
+      fillColor: shape.FillColor || defaultFill,
+      lineColor: shape.StrokeColor || defaultStroke,
+      lineWidth: shape.StrokeWidth || 3
+    };
+  };
+  const rectangleCorners = (shape) => {
+    const { X: X2, Y: Y2, Width, Height, Transform } = shape;
+    return [
+      applyTransform(X2, Y2, Transform),
+      applyTransform(X2 + Width, Y2, Transform),
+      applyTransform(X2 + Width, Y2 + Height, Transform),
+      applyTransform(X2, Y2 + Height, Transform)
+    ];
+  };
+  const rectangleShapeToViewerShape = (shape, roi) => {
+    const { ID, Text, Name } = shape;
+    const corners = rectangleCorners(shape);
+    const polygon = [
+      ...corners,
+      corners[0]
+    ];
+    const colors = getColors(shape, [
+      255,
+      0,
+      0,
+      50
+    ], [
+      255,
+      0,
+      0,
+      255
+    ]);
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "polygon",
+      polygon,
+      style: colors,
+      text: Text,
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  const ellipseShapeToViewerShape = (shape, roi) => {
+    const { X: X2, Y: Y2, RadiusX, RadiusY, Transform, ID, Text, Name } = shape;
+    const polygon = ellipseToPolygon(X2, Y2, RadiusX, RadiusY, Transform);
+    const colors = getColors(shape, [
+      0,
+      255,
+      0,
+      50
+    ], [
+      0,
+      255,
+      0,
+      255
+    ]);
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "polygon",
+      polygon,
+      style: colors,
+      text: Text,
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  const lineShapeToViewerShape = (shape, roi) => {
+    const { X1, Y1, X2, Y2, Transform, ID, Text, Name } = shape;
+    const start = applyTransform(X1, Y1, Transform);
+    const end = applyTransform(X2, Y2, Transform);
+    const lineWidth = shape.StrokeWidth || 3;
+    const polygon = [
+      start,
+      end
+    ];
+    const lineColor = shape.StrokeColor || [
+      0,
+      255,
+      255,
+      255
+    ];
+    const fillColor = shape.FillColor || [
+      0,
+      255,
+      255,
+      255
+    ];
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "line",
+      polygon,
+      hasArrowHead: false,
+      style: {
+        fillColor,
+        lineColor,
+        lineWidth
+      },
+      text: Text,
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  const pointShapeToViewerShape = (shape, roi) => {
+    const { X: X2, Y: Y2, Transform, ID, Text, Name } = shape;
+    const position2 = applyTransform(X2, Y2, Transform);
+    const fillColor = shape.FillColor || [
+      255,
+      140,
+      0,
+      255
+    ];
+    const strokeColor = shape.StrokeColor || [
+      255,
+      255,
+      255,
+      255
+    ];
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "point",
+      position: position2,
+      style: {
+        fillColor,
+        strokeColor,
+        radius: 5
+      },
+      text: Text,
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  const polygonShapeToViewerShape = (shape, roi) => {
+    const { Points, Transform, ID, Text, Name } = shape;
+    const polygon = parsePoints(Points, Transform);
+    const colors = getColors(shape, [
+      255,
+      165,
+      0,
+      50
+    ], [
+      255,
+      165,
+      0,
+      255
+    ]);
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "polygon",
+      polygon,
+      style: colors,
+      text: Text,
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  const polylineShapeToViewerShape = (shape, roi) => {
+    const { Points, Transform, ID, Text, Name } = shape;
+    const polygon = parsePoints(Points, Transform);
+    const lineColor = shape.StrokeColor || [
+      0,
+      255,
+      0,
+      255
+    ];
+    const lineWidth = shape.StrokeWidth || 3;
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "polyline",
+      polygon,
+      style: {
+        lineColor,
+        lineWidth
+      },
+      text: Text,
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  const labelShapeToViewerShape = (shape, roi) => {
+    const { X: X2, Y: Y2, Text, ID, Name, Transform } = shape;
+    const position2 = applyTransform(X2, Y2, Transform);
+    const fontColor = shape.StrokeColor || [
+      255,
+      255,
+      0,
+      255
+    ];
+    const backgroundColor = shape.FillColor || [
+      0,
+      0,
+      0,
+      150
+    ];
+    return {
+      id: `roi-${roi.ID}-${ID}`,
+      type: "text",
+      position: position2,
+      text: Text,
+      style: {
+        fontSize: 14,
+        fontColor,
+        backgroundColor,
+        padding: 4
+      },
+      metadata: {
+        label: Name || ID,
+        description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
+        isImported: true
+      }
+    };
+  };
+  function collectRoiShapeWorldPoints(shape) {
+    const T2 = shape.Transform;
+    switch (shape.type) {
+      case "rectangle":
+        return rectangleCorners(shape);
+      case "ellipse":
+        return ellipseToPolygon(shape.X, shape.Y, shape.RadiusX, shape.RadiusY, T2, 24);
+      case "line":
+        return [
+          applyTransform(shape.X1, shape.Y1, T2),
+          applyTransform(shape.X2, shape.Y2, T2)
+        ];
+      case "point":
+        return [
+          applyTransform(shape.X, shape.Y, T2)
+        ];
+      case "polygon":
+      case "polyline":
+        return parsePoints(shape.Points, T2);
+      case "label":
+        return [
+          applyTransform(shape.X, shape.Y, T2)
+        ];
+      default:
+        return [];
+    }
+  }
+  function importRoiCentroidPosition(roi) {
+    const hasNonLabel = roi.shapes.some((s2) => s2.type !== "label");
+    const pts = [];
+    for (const s2 of roi.shapes) {
+      if (hasNonLabel && s2.type === "label") continue;
+      pts.push(...collectRoiShapeWorldPoints(s2));
+    }
+    if (pts.length === 0) return null;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const [x2, y2] of pts) {
+      if (x2 < minX) minX = x2;
+      if (y2 < minY) minY = y2;
+      if (x2 > maxX) maxX = x2;
+      if (y2 > maxY) maxY = y2;
+    }
+    return [
+      (minX + maxX) / 2,
+      (minY + maxY) / 2
+    ];
+  }
+  function importRoiCentroidLabelText(roi) {
+    var _a2, _b2, _c2;
+    const name2 = (_a2 = roi.Name) == null ? void 0 : _a2.trim();
+    if (name2) return name2;
+    const desc = (_b2 = roi.Description) == null ? void 0 : _b2.trim();
+    if (desc) {
+      const line = ((_c2 = desc.split(/\r?\n/)[0]) == null ? void 0 : _c2.trim()) ?? "";
+      if (line) return line.length > 120 ? `${line.slice(0, 117)}\u2026` : line;
+    }
+    const id2 = roi.ID.trim();
+    if (id2.includes(":")) {
+      const tail = id2.split(":").pop();
+      if (tail) return tail;
+    }
+    return id2 || "ROI";
+  }
+  function makeImportCentroidTextShape(roi, position2) {
+    const text2 = importRoiCentroidLabelText(roi);
+    return {
+      id: `roi-${roi.ID}__import-centroid-label`,
+      type: "text",
+      position: position2,
+      text: text2,
+      style: {
+        ...importedTextStyle
+      },
+      metadata: {
+        label: text2,
+        description: `Auto centroid label for imported ROI ${roi.ID}`,
+        isImported: true
+      }
+    };
+  }
+  const parseRoisFromRoiList = (rois) => {
+    const shapes = [];
+    if (!rois || rois.length === 0) {
+      return shapes;
+    }
+    rois.forEach((roi) => {
+      let drewShape = false;
+      roi.shapes.forEach((shape) => {
+        try {
+          let viewerShape = null;
+          switch (shape.type) {
+            case "rectangle":
+              viewerShape = rectangleShapeToViewerShape(shape, roi);
+              break;
+            case "ellipse":
+              viewerShape = ellipseShapeToViewerShape(shape, roi);
+              break;
+            case "line":
+              viewerShape = lineShapeToViewerShape(shape, roi);
+              break;
+            case "point":
+              viewerShape = pointShapeToViewerShape(shape, roi);
+              break;
+            case "polygon":
+              viewerShape = polygonShapeToViewerShape(shape, roi);
+              break;
+            case "polyline":
+              viewerShape = polylineShapeToViewerShape(shape, roi);
+              break;
+            case "label":
+              viewerShape = labelShapeToViewerShape(shape, roi);
+              break;
+            default:
+              console.warn(`Unknown shape: ${shape}`);
+          }
+          if (viewerShape) {
+            shapes.push(viewerShape);
+            drewShape = true;
+          }
+        } catch (error2) {
+          console.error(`Error processing shape ${shape.ID} in ROI ${roi.ID}:`, error2);
+        }
+      });
+      const labelOnlyRoi = roi.shapes.length > 0 && roi.shapes.every((s2) => s2.type === "label");
+      if (drewShape && !labelOnlyRoi) {
+        const centroidPos = importRoiCentroidPosition(roi);
+        if (centroidPos) {
+          shapes.push(makeImportCentroidTextShape(roi, centroidPos));
+        }
+      }
+    });
+    return shapes;
+  };
+  const parseRoisFromLoader = (loader) => {
+    if (!loader || !loader.metadata || !loader.metadata.ROIs) {
+      return [];
+    }
+    return parseRoisFromRoiList(loader.metadata.ROIs);
+  };
+  function roiShapesToWorld(shapes, toWorld) {
+    return viewerShapesToStoryShapes(shapes.map((shape) => mapShapePoints(shape, ([x2, y2]) => {
+      const [wx, wy] = toWorld.transformAsPoint([
+        x2,
+        y2,
+        0
+      ]);
+      return [
+        wx,
+        wy
+      ];
+    })));
+  }
+  const imageOrientation = (imageId) => orientationForImage(useDocumentStore.getState().images, imageId, null);
+  function scopeImportedShapeIds(shapes, imageId) {
+    if (!imageId) return shapes;
+    return shapes.map((shape) => ({
+      ...shape,
+      id: `${imageId}:${shape.id}`
+    }));
+  }
+  function importTargetWaypointIndex() {
+    ensureDefaultWaypoint();
+    const { openWaypointId, activeStoryIndex } = useAppStore.getState();
+    const { waypoints } = useDocumentStore.getState();
+    const openIndex = waypoints.findIndex((w2) => w2.id === openWaypointId);
+    if (openIndex >= 0) return openIndex;
+    if (activeStoryIndex != null && activeStoryIndex >= 0 && activeStoryIndex < waypoints.length) {
+      return activeStoryIndex;
+    }
+    return 0;
+  }
+  function appendImportedStoryShapesDeduped(storyShapes) {
+    if (storyShapes.length === 0) return {
+      added: 0,
+      waypointId: null
+    };
+    const idx = importTargetWaypointIndex();
+    const doc = useDocumentStore.getState();
+    const { waypoints, shapes } = doc;
+    const wp = waypoints[idx];
+    if (!wp) return {
+      added: 0,
+      waypointId: null
+    };
+    const docIds = new Set(shapes.map((s2) => s2.id));
+    const wpIds = new Set(wp.shapeIds ?? []);
+    const seenInBatch = /* @__PURE__ */ new Set();
+    const deduped = [];
+    for (const s2 of storyShapes) {
+      if (seenInBatch.has(s2.id)) continue;
+      seenInBatch.add(s2.id);
+      if (docIds.has(s2.id) || wpIds.has(s2.id)) {
+        continue;
+      }
+      deduped.push(s2);
+    }
+    if (deduped.length === 0) return {
+      added: 0,
+      waypointId: wp.id
+    };
+    const newIds = deduped.map((s2) => s2.id);
+    doc.setWaypointsAndShapes(waypoints.map((w2, i2) => i2 === idx ? {
+      ...w2,
+      shapeIds: [
+        ...w2.shapeIds ?? [],
+        ...newIds
+      ]
+    } : w2), [
+      ...shapes,
+      ...deduped
+    ]);
+    return {
+      added: deduped.length,
+      waypointId: wp.id
+    };
+  }
+  function applyOmeRoisFromLoaderToWaypoint(loader, imageId, imageDescriptionOmeXml = null) {
+    let viewerRoiShapes = parseRoisFromLoader(loader);
+    if (viewerRoiShapes.length === 0 && imageDescriptionOmeXml) {
+      try {
+        const rois = parseOmeXmlStringToRois(imageDescriptionOmeXml);
+        viewerRoiShapes = parseRoisFromRoiList(rois);
+      } catch (e2) {
+      }
+    }
+    const storyShapes = roiShapesToWorld(viewerRoiShapes, layerModelMatrix(loader, imageOrientation(imageId)));
+    appendImportedStoryShapesDeduped(scopeImportedShapeIds(storyShapes, imageId));
+  }
+  function applyOmeRoisFromAnnotationXmlString(xml2) {
+    const { viewerImageFrames } = useAppStore.getState();
+    if (viewerImageFrames.length === 0) {
+      return {
+        success: false,
+        error: "Load an image before importing annotations.",
+        shapeCount: 0
+      };
+    }
+    let rois;
+    try {
+      rois = parseOmeXmlStringToRois(xml2);
+    } catch (e2) {
+      return {
+        success: false,
+        error: e2 instanceof Error ? e2.message : String(e2),
+        shapeCount: 0
+      };
+    }
+    if (rois.length === 0) {
+      return {
+        success: false,
+        error: "No ROIs with drawable shapes were found in the XML.",
+        shapeCount: 0
+      };
+    }
+    const viewerRoiShapes = parseRoisFromRoiList(rois);
+    const omeDoc = parseOmeXml(xml2);
+    const pixels = omeDoc && omePixelsElement(omeDoc);
+    const frame2 = (pixels && omePixelsWorldFrame(pixels, viewerImageFrames)) ?? viewerImageFrames[0];
+    const storyShapes = roiShapesToWorld(viewerRoiShapes, frameModelMatrix(frame2, imageOrientation(frame2.sourceImageId)));
+    if (storyShapes.length === 0) {
+      return {
+        success: false,
+        error: "No valid annotations could be built from the XML.",
+        shapeCount: 0
+      };
+    }
+    const { added, waypointId } = appendImportedStoryShapesDeduped(scopeImportedShapeIds(storyShapes, frame2.sourceImageId));
+    if (added === 0 || waypointId === null) {
+      return {
+        success: false,
+        error: "All annotations from this file are already present (duplicate import skipped).",
+        shapeCount: 0
+      };
+    }
+    return {
+      success: true,
+      shapeCount: added,
+      waypointId
+    };
+  }
   function BrowseIcon({ title: title7, size = 14 }) {
     const label2 = title7 ?? "Browse for image";
     return jsxRuntimeExports.jsxs("svg", {
@@ -170897,11 +171556,10 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   const IDLE_STRIP = {
     draft: "",
     dropError: null,
-    urlError: null,
-    dragging: false
+    urlError: null
   };
   const Upload = (props) => {
-    const { onAllow, importRevision = 0, imageLoaded = false, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, onImportDicomWeb, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], loadedImageIds, onLocateImage, needsStoryRootReconnect = false, onReconnectStoryRoot, onRemoveImage, onReplaceImage, row: row2 = false, disabled: disabled2 = false } = props;
+    const { onAllow, onImportStory, importRevision = 0, imageLoaded = false, loadedSource, fileName = "", lastOmeTiffUrl = null, onImportOme, onImportDicomWeb, needsFileAccess = false, onRequestFileAccess, missingHandleKeys = [], loadedImageIds, onLocateImage, needsStoryRootReconnect = false, onReconnectStoryRoot, onRemoveImage, onReplaceImage, row: row2 = false, disabled: disabled2 = false } = props;
     const [pointTarget, setPointTarget] = reactExports.useState(null);
     const togglePoint = (imageId, mode, el2) => {
       setPointTarget((pointTarget == null ? void 0 : pointTarget.imageId) === imageId && pointTarget.mode === mode ? null : {
@@ -170974,9 +171632,75 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       featureCsvFile,
       overlayRole
     ]);
+    const [csvDrop, setCsvDrop] = reactExports.useState(null);
+    const [notice, setNotice] = reactExports.useState(null);
+    reactExports.useEffect(() => {
+      if (!notice) return;
+      const t2 = window.setTimeout(() => setNotice(null), 4e3);
+      return () => window.clearTimeout(t2);
+    }, [
+      notice
+    ]);
     const [dragging, setDragging] = reactExports.useState(false);
-    const dragDepthRef = reactExports.useRef(0);
+    const acceptDroppedFilesRef = reactExports.useRef(async () => {
+    });
     const localPickInFlightRef = reactExports.useRef(false);
+    reactExports.useEffect(() => {
+      let depth = 0;
+      let hideTimer = 0;
+      const end = () => {
+        window.clearTimeout(hideTimer);
+        depth = 0;
+        setDragging(false);
+      };
+      const onDragEnter = (e2) => {
+        if (!dragHasFiles(e2) || disabled2) return;
+        e2.preventDefault();
+        depth += 1;
+        setDragging(true);
+      };
+      const onDragLeave = (e2) => {
+        if (!dragHasFiles(e2) || disabled2) return;
+        depth = Math.max(0, depth - 1);
+        if (depth === 0) setDragging(false);
+      };
+      const onDragOver = (e2) => {
+        if (!dragHasFiles(e2)) return;
+        e2.preventDefault();
+        e2.stopPropagation();
+        if (e2.dataTransfer) {
+          e2.dataTransfer.dropEffect = disabled2 ? "none" : "copy";
+        }
+        if (disabled2) return;
+        depth = Math.max(depth, 1);
+        window.clearTimeout(hideTimer);
+        hideTimer = window.setTimeout(end, 1e3);
+        setDragging(true);
+      };
+      const onDrop = (e2) => {
+        if (!dragHasFiles(e2)) return;
+        e2.preventDefault();
+        e2.stopPropagation();
+        end();
+        if (disabled2 || !e2.dataTransfer) return;
+        void acceptDroppedFilesRef.current(e2.dataTransfer);
+      };
+      window.addEventListener("dragenter", onDragEnter, true);
+      window.addEventListener("dragleave", onDragLeave, true);
+      window.addEventListener("dragover", onDragOver, true);
+      window.addEventListener("drop", onDrop, true);
+      window.addEventListener("dragend", end, true);
+      return () => {
+        end();
+        window.removeEventListener("dragenter", onDragEnter, true);
+        window.removeEventListener("dragleave", onDragLeave, true);
+        window.removeEventListener("dragover", onDragOver, true);
+        window.removeEventListener("drop", onDrop, true);
+        window.removeEventListener("dragend", end, true);
+      };
+    }, [
+      disabled2
+    ]);
     const prevImportRev = reactExports.useRef(importRevision);
     const formatDetectAbortRef = reactExports.useRef(null);
     const formatChosenByUserRef = reactExports.useRef(false);
@@ -171120,19 +171844,72 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       onReplaceImage,
       onLocateImage
     ]);
-    const acceptLocalHandles = reactExports.useCallback(async (handles) => {
-      if (handles.length === 0) return;
-      const handle2 = handles[0];
+    const acceptedKinds = pointTarget ? [
+      "image"
+    ] : onImportStory ? [
+      "image",
+      "story"
+    ] : [
+      "image",
+      "annotations",
+      "featureTable"
+    ];
+    const failDrop = (message2) => {
+      setStripErrorAt("drop");
+      setImportError(message2);
+    };
+    const importOtherFile = async (kind, file) => {
+      if (kind === "story") {
+        await (onImportStory == null ? void 0 : onImportStory(file));
+      } else if (kind === "annotations") {
+        const r2 = applyOmeRoisFromAnnotationXmlString(await file.text());
+        if (r2.success === false) failDrop(r2.error);
+        else {
+          const n2 = r2.shapeCount;
+          setNotice(`Imported ${n2} annotation${n2 === 1 ? "" : "s"}.`);
+          useAppStore.getState().setEditWaypointOnOpen(r2.waypointId);
+        }
+      } else {
+        const doc = useDocumentStore.getState();
+        const hasTable = new Set(doc.featureTables.map((t2) => t2.sourceChannelId));
+        const masks = flattenImageChannelsInDocumentOrder(doc.images).filter(isMaskChannel);
+        const free = masks.flatMap(({ id: id2, name: name2 }) => id2 && !hasTable.has(id2) ? [
+          {
+            id: id2,
+            name: name2
+          }
+        ] : []);
+        if (free.length > 0) setCsvDrop({
+          file,
+          masks: free
+        });
+        else failDrop(masks.length > 0 ? "Every mask already has a feature table." : "Add a segmentation mask before attaching a feature table.");
+      }
+    };
+    const acceptLocalHandle = async (handle2) => {
+      setImportError(null);
+      setNotice(null);
+      const kind = importFileKind(handle2.name);
+      if (!acceptedKinds.includes(kind)) {
+        failDrop(pointTarget ? "Choose an image file." : onImportStory ? "Open a story to add this file." : "Import story files from the Library.");
+        return;
+      }
       if (!await ensureFileHandlePermission(handle2)) {
-        setStripErrorAt("drop");
-        setImportError("Allow file access to load this image.");
+        failDrop("Allow file access to read this file.");
         return;
       }
       if (!await findFile({
         handle: handle2
       })) {
-        setStripErrorAt("drop");
-        setImportError("Could not read the selected file.");
+        failDrop("Could not read the selected file.");
+        return;
+      }
+      if (kind !== "image") {
+        try {
+          await importOtherFile(kind, await handle2.getFile());
+        } catch (e2) {
+          failDrop(e2 instanceof Error ? e2.message : "Could not read the selected file.");
+        }
         return;
       }
       if (await applyPointedSource({
@@ -171146,26 +171923,18 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         ],
         label: handle2.name || "image.ome.tif"
       });
-    }, [
-      applyPointedSource,
-      openPending
-    ]);
-    const browseLocal = reactExports.useCallback(async () => {
+    };
+    const browseLocal = async () => {
       if (disabled2 || localPickInFlightRef.current) return;
       localPickInFlightRef.current = true;
       setImportError(null);
       try {
-        const picked = await onAllow();
-        if (picked.length === 0) return;
-        await acceptLocalHandles(picked);
+        const [handle2] = await onAllow(acceptedKinds);
+        if (handle2) await acceptLocalHandle(handle2);
       } finally {
         localPickInFlightRef.current = false;
       }
-    }, [
-      acceptLocalHandles,
-      disabled2,
-      onAllow
-    ]);
+    };
     const acceptUrlDraft = reactExports.useCallback(() => {
       if (disabled2) return;
       const url = urlDraft.trim();
@@ -171193,48 +171962,21 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       pointTarget,
       urlDraft
     ]);
-    const onDragEnter = (e2) => {
-      e2.preventDefault();
-      e2.stopPropagation();
-      dragDepthRef.current += 1;
-      if (e2.dataTransfer.types.includes("Files")) setDragging(true);
-    };
-    const onDragLeave = (e2) => {
-      e2.preventDefault();
-      e2.stopPropagation();
-      dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
-      if (dragDepthRef.current === 0) setDragging(false);
-    };
-    const onDragOver = (e2) => {
-      e2.preventDefault();
-      e2.stopPropagation();
-      if (e2.dataTransfer.types.includes("Files")) {
-        e2.dataTransfer.dropEffect = "copy";
-      }
-    };
-    const onDrop = async (e2) => {
-      e2.preventDefault();
-      e2.stopPropagation();
-      dragDepthRef.current = 0;
-      setDragging(false);
+    acceptDroppedFilesRef.current = async (dt2) => {
       if (disabled2) return;
       const items = [
-        ...e2.dataTransfer.items
+        ...dt2.items
       ].filter((i2) => i2.kind === "file");
       if (items.length === 0) {
-        setStripErrorAt("drop");
-        setImportError("Drop an image file to add it.");
+        failDrop("Drop a file to add it.");
         return;
       }
       const handle2 = await fileHandleFromDataTransferItem(items[0]);
       if (!handle2) {
-        setStripErrorAt("drop");
-        setImportError("Could not read the dropped file.");
+        failDrop("Could not read the dropped file.");
         return;
       }
-      await acceptLocalHandles([
-        handle2
-      ]);
+      await acceptLocalHandle(handle2);
     };
     const runImport = async () => {
       var _a2;
@@ -171268,7 +172010,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
           setImportError("Image import is unavailable.");
           return;
         }
-        const rgbDisplay = detectedRgbDisplay != null && role === "intensity" ? overlayRgbDisplay : void 0;
+        const rgbDisplay = role === "intensity" && (detectedRgbDisplay != null || rgbDisplayChosenByUserRef.current) ? overlayRgbDisplay : void 0;
         const attachCsv = role === "segmentation" ? featureCsvFile : null;
         const attachMarkers = role === "intensity" && !overlayRgbDisplay ? featureCsvFile : null;
         let channelNames;
@@ -171467,35 +172209,20 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         })
       }, "loaded-source")
     ] : [];
-    const dropHandlers = {
-      onDragEnter,
-      onDragLeave,
-      onDragOver,
-      onDrop: (e2) => void onDrop(e2)
-    };
     const stripError = importError2 && !pending2 ? importError2 : null;
     const liveStrip = {
       draft: urlDraft,
       dropError: stripErrorAt === "drop" ? stripError : null,
-      urlError: stripErrorAt === "url" ? stripError : null,
-      dragging
+      urlError: stripErrorAt === "url" ? stripError : null
     };
     const renderAddStrip = (popup) => {
       const strip2 = popup || !pointTarget ? liveStrip : IDLE_STRIP;
       return jsxRuntimeExports.jsxs("div", {
-        className: [
-          styles$q.addStrip,
-          row2 && !popup ? styles$q.addStripRow : "",
-          (row2 || popup) && strip2.dragging ? styles$q.panelDropActive : ""
-        ].filter(Boolean).join(" "),
-        ...row2 || popup ? dropHandlers : {},
+        className: popup ? styles$q.addStrip : `${styles$q.addStrip} ${styles$q.addStripRow}`,
         children: [
           jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: [
-              styles$q.dropZone,
-              strip2.dragging ? styles$q.dropZoneActive : ""
-            ].join(" "),
+            className: styles$q.dropZone,
             disabled: disabled2,
             "aria-invalid": strip2.dropError ? true : void 0,
             onClick: () => void browseLocal(),
@@ -171504,8 +172231,8 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                 styles$q.dropZoneTitle,
                 strip2.dropError ? styles$q.importError : ""
               ].filter(Boolean).join(" "),
-              role: strip2.dropError ? "alert" : void 0,
-              children: strip2.dropError ?? "Drop or Browse Image File"
+              role: strip2.dropError ? "alert" : notice ? "status" : void 0,
+              children: strip2.dropError ?? (popup ? "Drop or Browse Image File" : notice ?? "Drop or Browse File")
             })
           }),
           jsxRuntimeExports.jsx("div", {
@@ -171524,7 +172251,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                     id: popup ? void 0 : "upload-add-url",
                     type: "url",
                     className: `${minervaTheme.input} ${styles$q.urlInput}`,
-                    placeholder: "Image URL (OME-TIFF or DICOMweb)",
+                    placeholder: "Image URL",
                     "aria-label": "Image URL",
                     "aria-invalid": strip2.urlError ? true : void 0,
                     value: strip2.draft,
@@ -171567,6 +172294,10 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const addStrip2 = renderAddStrip(false);
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
+        dragging ? reactDomExports.createPortal(jsxRuntimeExports.jsx("output", {
+          className: styles$q.windowDrop,
+          children: pointTarget ? "Drop image file" : "Drop file"
+        }), document.body) : null,
         pointTarget ? reactDomExports.createPortal(jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
           children: [
             jsxRuntimeExports.jsx("button", {
@@ -171588,25 +172319,24 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
             })
           ]
         }), document.body) : null,
-        row2 ? addStrip2 : jsxRuntimeExports.jsx("div", {
-          className: [
-            panel$1.authorPanel,
-            dragging ? styles$q.panelDropActive : ""
-          ].join(" "),
-          ...dropHandlers,
-          children: jsxRuntimeExports.jsx("div", {
-            className: [
-              panel$1.authorPanelBody,
-              panel$1.thinScrollbar
-            ].join(" "),
-            children: jsxRuntimeExports.jsxs("div", {
-              className: styles$q.stack,
-              children: [
-                imageCards,
-                addStrip2
-              ]
+        row2 ? addStrip2 : jsxRuntimeExports.jsxs("div", {
+          className: panel$1.authorPanel,
+          children: [
+            jsxRuntimeExports.jsx("div", {
+              className: styles$q.panelDock,
+              children: addStrip2
+            }),
+            jsxRuntimeExports.jsx("div", {
+              className: [
+                panel$1.authorPanelBody,
+                panel$1.thinScrollbar
+              ].join(" "),
+              children: imageCards.length > 0 ? jsxRuntimeExports.jsx("div", {
+                className: styles$q.stack,
+                children: imageCards
+              }) : null
             })
-          })
+          ]
         }),
         pending2 ? jsxRuntimeExports.jsxs(ImportOverlay, {
           title: pendingLabel(pending2),
@@ -171727,2351 +172457,295 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
               })
             }) : null
           ]
+        }) : null,
+        csvDrop ? jsxRuntimeExports.jsx(FeatureCsvAttachDialog, {
+          file: csvDrop.file,
+          masks: csvDrop.masks,
+          onClose: () => setCsvDrop(null),
+          onAttached: () => setNotice("Attached feature table.")
         }) : null
       ]
     });
   };
-  const configWaypoints = [
-    {
-      UUID: "8320f08c-9456-49a3-a104-8ab3d5daab2a",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABAAEADASIAAhEBAxEB/8QAGgAAAwEBAQEAAAAAAAAAAAAABQYHCAQCCf/EADIQAAIBAwMDAwMCBgIDAAAAAAECAwQFEQYSIQAHEyIxQQgUURUyCRYkQmFxIzNSgZH/xAAZAQEBAQEBAQAAAAAAAAAAAAAEBQIGAQP/xAAoEQACAgIBAgUEAwAAAAAAAAABAgADBBEhEjEFEyJBUWFx8PGBseH/2gAMAwEAAhEDEQA/AK43029l7ItJVUPbs3SuhdTCk9wqXjkkUbgZQ0hj2kjkFSpzjaRx0Zvlv0Roivp/5T0Tpe2ajkQg1NDbIUakj25kO5EDH0n2xjGC2BgM2dw9Tpp6yysBLHWSlkpP24chQS/zwCcYI5Ixjbz1KxcFnuMNVWVSPNVMk7KGiKqd7MCfQxbALExLjdvxuVhgJpp6h1ER+Nj9S+Yw4/v/AAQzQXK93O7FIbjfBJFEJEKlypVig9cYYL7q4HJyQQCPUeiVrm1LT2qq/UtTp4FRy/28pllh+VYsVJXgcncVAGfYnaNOsrPp6xLSQwqLy0fIDCR03LnczAY5Gw8fu+AowQhRXmpr5aqsvFXULQsBvEZKeQYx4woGCSvyR88kngqWov7aEp1Yb2oWYaH27/aWzSVxjo6moav1NJXvLIVdJWXbFLuBdQc4XYGUEDABYDk4AdEZWyUcMM4ODnkHB/8AfWU5tZVs1C8NtZqFI4444aamjC5AOWckDIICgkAjJ/IyOj/bjUF3sdlnpqaqmWnkeKXMgTfHJ5FQ5DMC4JwDnaWAI3A5xizDbXVuGyvDLFBcnn4/XE0cc/GD/vr5u/XbaK22/UfeayqRVhutJSVdKQwJaMQrASR8HfDIMf4B+et36C1vHqTxqI1KSZ8ciBj7AHDEArnB5O4csvpG4dZN/iUWI0+udJ6l+5DCvtktD4NmNn28u/duzzu+5xjHGz5zwF0KHRkhlKnRmi+7dG9RqQ19X9pTUsFOIo3mmMbz7cOQoBJJBdQCFwGPP4M31PqS1U00tPZYKmlTMZqRMqvPLKgK7pDj0kbsfkkZJ3Zxy9+7ytb3JuqwtKy0oSmDyZITaq7wisMqNxPtwTkj3z0gUG+rrf6qV90rkO7cls859sn855+OreNR6AWnUYFA8tbLT2HA+kYrVVk1v6vU1nheN8LM86Bw/BBxkMFGcEj4/wDnXFqG6yV92mpYKt5KeIGODaqop9bEyFVG3+5x/jdgHAB6J1EFqjgjjkmaCV0IZXjxK+cFXwW+QwxjgAe5OSRNnRZaooRO6QqHqFiByBuRcZwdq5IXJ+cDPPSABvcoDJVz1D2hUU0dnsbXO4s0lGT41hkcqXqMLj2VgNpYHkruHGVBwfEdut90tscmpL9Dp2hepYMksUk2zjKrEisGYKWC8nK7ictltjdWwS6i7cVNuVbdUNQT/eUzyOQcFXLxRkHgEBDheQ2CRjJSN326yyCjiki8NXTqWMu6XdJIxQZYFyuQEA3gZIByWG1h5Xt9/MiZd1ljGaH7fdvbMdU23UuidX/fUVNJE8tA8zwzRU7b8l9uclpFYgMihxuGcc9JX8SOzUtR240zqGTzCrobw1FCAw2NHPCzuSPfOaeMA5H93ByOkTQGuKzR14p7nHUVBBCPNSiuKpIgxtztOCCNw2kHHHyeKh9UOo9N9w/pQ1BeaeEmstdRSSiCfAmpJjVJDuwDghkeUBvYhj7EECZn0WKQzcj5ka1X36oi67ucdR3K1qsloWseOas8IhXYw2SmPyKcjeVO4t6HztwfSC6g6f8A5KMMryj05RogOVPz/kf6/Hz141otXH3b1dWUlW1NMl6rCjKWRhic/tYA4Y+4zjO0jn2PRLW1EcklTd5f6yeudKl4xlpGZ2LtxhDtOBwcH04Jznqui6Ua+J0GE4rUq/bQnOhuDSt5FhMuCw8xclhjjODyfx7cnk9dFqp6gSSyV9yIWXEqiOUkO49KsyjO0gFsZ554Az0Z0TY59QVdPTxyU4qpZZEjLBwCqwq5JG0nIw4yAckHhcc0Gp0jZ7XDLHcdP22engrvGKgXKX7p1AVwrhIXRQVXJyy4Dg5TIPWLLgp6feKuz6K9EDv9vzvE/TdPUoVR0l/TEjjapaMuisivGxG7kgnOOATvZQASVHS/qq8RXGiWSGKOtqNytVV0TjzySF2ZUdXJEi7EBbCr62TeScZezX0VNUPpm+3i9QPHUpDJUKzqVjiilQAIQwiyGAJUhGXkn07m4NZ0twt1oqJ6+utNLc6jJqIKXY85E0qMTJGuVHCrmQBWEkKFWb0scK3q2RJGRkGx+Rx7SMy1frjeMOYyFy+CGBPqwT+ffjP5/OOr124tdddPp/7j+G21tdWXSz1qx5oJGaskEDiIxPyJWMhkG1MkFV9ictx9s7DprVFaLNJ27jqahYYpahjcpIRIojRRPI5yxDO8j4jCZBT0yYBXS2mNPWbTNs/TLFQRUVLvMhRCSWY+5LEkk4AAyeAABwAOj+IZKlPL1z/En3vvjUw5eLtUVmtLnqGqgipTVVb1ajxAKHZ2KjaQc7se393O4nk9dlpla5QJBfa8UsUVO0ZZwkztHj0mME/vYiNQVxtVR7KGYMfcE6Cu9NFftNao0zFQV8YrzBUXmljnpI3jVhCYM+RWTBTxoWwAqgAg7km6V2no0p6I6gsomgQPMUusMiksBwrhtvCg5A3cseRnCrryKnUaOpSqtQrofqU/QsFno6GtlNBGl3p41SmWKpnDRS+KJWdQR496ze2CcvJ7qqh2Jafq6S66fmty6hno4zioEr0yBw4jkkkf/t3lh4yN+AcFgwPoKTmfU2lILf8AY2nVFjFPIfIWmrI4mypPugkI/wDJfcHBB+TiodnLl22s1bDfK/uNo22vNBg0KXuAgIeQpbzZUghSVYHgLkls7TXWIqlt8zORaqjht/ntFDVkN1t9fdqp6+peqYzW+rEEDbCqMMR+V+QAYuFUsfS4zj3C2SrmppIWht8ElQk7lZSWqW9SOqp4pSYmUtlySmc4OVyMWTvDrnsNWWu3tdO4en4SlYHE1rYV87Da25T4N7IGyCWIwSq5ycdL7fVH2N0VS0dr09HeL3F48zVVvtawkvgKWk8vhLSNsUkgEHjnjHXxHiChO2zCNlKV7cyg9prRr4Xf+Yb1fErKCsVCVeoaQTRNGXDxjGEw5UAYAIL44ALVfrHdx+tuyUFY9Jp3trUT2uPHgknuSUjtkAtmJI5FX1FvZzkc8ZwEC7fWh3Tq6ergo7Tpa3+ZXWGeOkmeaDOQrAvKUZl4PqQgkcrjjqbbZ5jb1Bs3Udz/2Q==",
-        Name: "Introduction",
-        Content: "This Minerva introduction accompanies the analysis in Lin et al 2021 of specimen CRC1, a poorly differentiated stage IIIB adenocarcinoma (pT3N1bM0) with microsatellite instability (MSI-H) and a BRAFV600E (c.1799T>A) mutation. The tumor along with adjacent normal tissue was imaged using 24-plex cyclic immunofluorescence at a nominal resolution of 0.5 micron.",
-        Pan: [
-          0.481913716814159,
-          0.5
-        ],
-        Zoom: 0.518359375,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [],
-      Overlays: []
-    },
-    {
-      UUID: "29180ca9-990e-4eca-8489-4d72db82adee",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "Clinical History",
-        Content: "The tumor is derived from a 69-year old male with a history of cutaneous melanoma and gastric MALT lymphoma associated with helicobacter pylori infection. He presented to medical attention following several syncopal episodes and falls thought to be secondary to anemia and orthostatic hypotension. Colonoscopy revealed a mass in the right ascending colon. He underwent hemicolectomy revealing a 6.2cm exophytic mass involving the ascending colon, cecum, and terminal ileum. \n\nHe underwent right hemicolectomy and the specimen was examined by pathology. \n\nPATHOLOGIC DIAGNOSIS:\n\nINVASIVE ADENOCARCINOMA, high grade (poorly differentiated, grade III), with mucinous and signet ring cell features (6.2cm)\n\nThe tumor resection margins were negative for involvement by adenoma, dysplasia, and adenocarcinoma.\n \nLymphovascular invasion (LVI) was identified at the time of pathologic evaluation of the whole specimen, but is not identified in this tissue section. \n\nPerineural invasion (PNI) was not identified. \n\nNo tumor deposits were present.\n\nThe tumor was associated with a villous adenoma. \n\n3/25 local lymph nodes were positive for involvement by metastatic adenocarcinoma. \n\nMolecular testing was notable for the presence of a BRAF V600E mutation, and microsatellite instability (MSI-H). \n\nAJCC Classification (8th Ediiton) - pT3N1b\n",
-        Pan: [
-          0.481913716814159,
-          0.5
-        ],
-        Zoom: 0.518359375,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [],
-      Overlays: []
-    },
-    {
-      UUID: "dac02fed-dcd8-4e77-829e-57d247c07d18",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "Tissue Organization [Histology]",
-        Content: 'The colorectum is typically conceptually organized into anatomic layers, which are described proceeding from the luminal surface to the serosal surface. \n\nMucosa - The mucosa occupies the luminal surface of the colorectum and accomplishes the primary functions of the bowel including nutrient absorption, facilitation of waste excretion, and regulation of the enteral microbiome. Histologically, the mucosa consists of a surface columnar epithelium bounded by basement membrane and underlying stroma which is densely populated by chronic inflammatory cells including lymphocytes, monocytic cells, and eosinophils with only rare neutrophils in the resting state (see immune populations marker set). The epithelium exhibits regular invaginations into the stroma with a circumferential parallel array of tubular epithelial "crypts" which are arrayed similar to a rack of test tubes, with openings into the bowl lumen. In this section, crypts can be seen in cross-section and in longitudinal profile. The epithelium consists of a mixture of cell types, including prominent mucinous goblet cells which exhibit a clear cytoplasm in standard H&E sections (resulting from a washing out of the mucinous contents during tissue processing), absorptive cells which exhibit a more eosinophilic cytoplasm, and more rarely interspersed neuroendocrine cells. The mucinous goblet cells are more prominent in the colorectum than in the small bowel. The deep aspect of the crypts is hypothesized to harbor stem-like progenitor cells which intermittently generate highly proliferative progenitor cells that terminal differentiate as they approach the luminal surface to continuously regenerate and replace the colorectal epithelial surface. Indeed, examination of the crypts with proliferation markers such as PCNA or Ki-67 shows a much higher degree of cell cycle activity in the deep aspects of the crypts (see proliferation marker set). \n\nMuscularis mucosa - The muscularis mucosa is a thin band of smooth muscle cells which delimits the deep edge of the mucosal compartment. The muscularis mucosa can be identified in this section as a brightly eosinophilic band of spindled cells at the deep surface of the mucosa on H&E. In tumor resections, invasion of atypical cells through the muscularis mucosa into the submucosa represents an important event, as this behavior is the definitive finding defining transition from an "in situ" carcinoma with essentially no metastatic risk (pTis), to an "invasive" carcinoma with associated increased risk of local or distant metastatic spread (pT1) [AJCC 8th Edition]. The muscularis mucosa can be highlighted here by observing the aSMA, desmin, or collagen channels in the Tissue Structure or Stroma marker sets, respectively. \n\nSubmucosa - The submucosa is a loose collagenous connective tissue structure interposed between the muscularis mucosa and muscularis propria. The submucosa contains a rich bed of lymphatic and blood vessels, and lymphovascular invasion (LVI) is often identified at this level if present. Involvement of the submucosa by tumor defines frank invasion in the colorectum (pT1). \n\nMuscularis propria - The muscularis propria is the thick smooth muscular wall of the bowel which is arranged into several distinct layer, principally including the longitudinal and circumferential layers in the colorectum (these can be seen here as the two distinct layers of smooth muscle oriented in different directions on H&E).  The muscularis regulates digestion by controlling peristalsis and moevement of the bowel wall. Invasion of an invasive adenocarcinoma into the muscularis propria represents a more advanced stage of invasion (pT2) with a higher risk of recurrence and metastatic spread (pT2). The muscularis mucosa can be highlighted here by observing the aSMA, desmin, or collagen channels in the Tissue Structure or Stroma marker sets, respectively. \n\nSubserosa - The subserosa is the loose fibroadipose connective tissue associated with the bowl wall which lies deep to the muscularis propria. Invasion of tumor into the subserosal soft tissue denotes a further progression of stage with increased risk of recurrence and metastatis (pT3). \n\nSerosa - The serosa is the final layer of the bowel wall. In the peritoneal cavity it is lined by a single layer of cuboidal mesothelial cells. Mesothelial cells are specialized epithelial cells and may sometimes cause confusion with invasive tumor when they undergo hyperplasia and reactive changes and exhibit clusters of cells with frond-like papillary architecture; however, they may be differentiated from other epithelial tumor cells by molecular markers including the absence of e-cadherin expression, and expression of mesothelial cell markers such as WT1 and calretinin (see Tissue Structure and E-Cadherin marker sets). In the retroperitoneum (some aspects of the right colon including the cecum), the serosal surface is bounded by a fibrous adventitial layer. Invasion of tumor through the serosal surface into the peritoneal cavity or adjacent structures represents the highest grade of local invasion, with the greatest risk of recurrence and metastatic spread (pT4). This section of bowel exhibits some hyperplasia of the mesothelial cell layer, giving it a more complex tufted appearance, but these cells may be confirmed as mesothelial and not surface involvement by morphologic features and marker expression (see E-cadherin marker set).\n\nIn this case, the tumor is present on the bottom aspect of the frame, while the serosal surface is present at the superior aspect. The bowel wall has been cut in an oblique plane, accounting for the convoluted appearance of the muscularis and serosa. \n\nThe tumor exhibits an exophytic (extending into the bowel lumen) growth pattern on the right-hand side of the field, with prominent mucinous pools generated by mucinous tumor cells present inferiorly extending as deeply as the muscularia propria. The tumor exhibits a moderately differentiated glandular appearance on the left-hand and bottom aspects of the field, while on the right side of the field in the exophytic region of tumor there are intermixed regions with a more poorly differentiated solid sheet-like architecture, with focal signet ring cell features and tumor budding. \n\nCollections of immune cells are present associated with the tumor, in addition to the normal immune complement of the bowel mucosa (see immune marker panels, and subsequent discussion).',
-        Pan: [
-          0.481913716814159,
-          0.5
-        ],
-        Zoom: 0.518359375,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [
-        {
-          Angle: 300,
-          HideArrow: false,
-          Point: [
-            0.807627524065269,
-            0.306258334920546
-          ],
-          Text: "Mucosa"
-        },
-        {
-          Angle: 300,
-          HideArrow: false,
-          Point: [
-            0.765761996140962,
-            0.261043564762295
-          ],
-          Text: "Muscularis Mucosa"
-        },
-        {
-          Angle: 300,
-          HideArrow: false,
-          Point: [
-            0.740642679386377,
-            0.214154173487071
-          ],
-          Text: "Submucosa"
-        },
-        {
-          Angle: 315,
-          HideArrow: false,
-          Point: [
-            0.641002722926526,
-            0.155542434393041
-          ],
-          Text: "Muscularis Propria"
-        },
-        {
-          Angle: 325,
-          HideArrow: false,
-          Point: [
-            0.519592691946036,
-            0.0994426269744693
-          ],
-          Text: "Subserosa"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.146989493419702,
-            0.24680928526803
-          ],
-          Text: "Serosa"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.0867031332087,
-            0.567499229168223
-          ],
-          Text: "Invasive Adenocarcinoma, involving Muscularis Propria"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.191366953019468,
-            0.863069856313831
-          ],
-          Text: "Invasive Adenocarcinoma, involving Submucosa"
-        },
-        {
-          Angle: 30,
-          HideArrow: false,
-          Point: [
-            0.398182660965545,
-            0.919169663732403
-          ],
-          Text: "Invasive Adenocarcinoma, Superficial/luminal Surface"
-        },
-        {
-          Angle: 30,
-          HideArrow: false,
-          Point: [
-            0.265050282166248,
-            0.96103519165671
-          ],
-          Text: "Ulcer Bed"
-        },
-        {
-          Angle: 230,
-          HideArrow: false,
-          Point: [
-            0.409905008784351,
-            0.640345247756517
-          ],
-          Text: "Invasive Adenocarcinoma, with Mucinous Features"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.858684481416086,
-            0.531246000270804
-          ],
-          Text: "Invasive Adenocarcinoma, with Solid Architecture"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.743403329861254,
-            0.370787100133673
-          ],
-          Text: "Invasive Adenocarcinoma, with Signet Ring Cell Features"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.718867138820867,
-            0.500478395632859
-          ],
-          Text: "Invasive Adenocarcinoma, Tumor Budding Region"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.844385457582811,
-            0.834212509419744
-          ],
-          Text: "Bowel Lumen"
-        },
-        {
-          Angle: 86,
-          HideArrow: true,
-          Point: [
-            0.0869986737335296,
-            0.0954022705774824
-          ],
-          Text: "Peritoneal Cavity"
-        }
-      ],
-      Overlays: []
-    },
-    {
-      UUID: "7ab327d3-578b-4503-bb34-8dd17ffe847e",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "Tissue Organization [CyCIF]",
-        Content: 'Multiplexed immunofluorescence (CyCIF) effectively highlights the principle anatomic compartments of the tissue specimen. \n\nStroma  - Alpha smooth muscle actin (ASMA) [Red] - ASMA highlights smooth muscle cells and myofibroblasts. The muscularis propria is comprised of thick bundles of smooth muscle cells which stain intensely for ASMA in the center of the specimen. The muscularis mucosa is identifiable as a prominent band of ASMA-positive smooth muscle cells bounding the mucosal compartment on the upper right of the specimen. The smooth muscle layer (tunica media) of large veins and arteries and arterioles are also highlighted by ASMA, most prominently seen here in the submucosa and subserosa. Myofibroblasts are visible as spindled cells with less intense ASMA staining, most prominently in the stroma of the mucosa, submucosa, and subserosa. Note that not all stromal fibroblastic cells express ASMA. Smooth muscle cells are also prominently stained by desmin and vimentin, and associated with collagen bundles (see also Stroma marker set). \n\nEpithelial - Pan-Cytokeratin (PanCK) [White] - Pan-cytokeratin highlights both high and low molecular weight cytokeratin intermediate filaments which are specifically expressed by cells with epithelial differentiation in this tissue setting. Accordingly, PanCK intensely highlights normal mucosal epithelium, tumor epithelial cells, and mesothelial cells. Normal epithelium and tumor cells also express other epithelial adhesion molecules such as e-cadherin, but this protein is not present in serosal mesothelial cells (see also E-cadherin, NaK ATPase marker sets)\n\nVascular  - CD31 [Green] - CD31 (PECAM-1) is a cell adhesion molecule that is most strongly expressed on endothelial cells, though it may also be expressed by platelets, monocytes, neutrophils, and T cells. In this representation, the fluorescence intensity has been optimized to highlight endothelial cells, which line the luminal surface of all vascular structures. \n\nImmune - CD45 [Yellow] - CD45 (PTPRC) encodes a surface membrane protein tyrosine phosphatase that is expressed by nearly all hematolymphoid cell populations, and therefore represents an excellent "pan-immune" tissue marker. Prominent aggregates of immune cells are present both in the peritumoral compartment as well as normal structures. A variety of marker sets are available to identify specific cell populations. \n\n',
-        Pan: [
-          0.481913716814159,
-          0.5
-        ],
-        Zoom: 0.518359375,
-        Group: "Tissue Structure"
-      },
-      Arrows: [
-        {
-          Angle: 300,
-          HideArrow: false,
-          Point: [
-            0.815749436482584,
-            0.316503391107762
-          ],
-          Text: "Mucosa"
-        },
-        {
-          Angle: 300,
-          HideArrow: false,
-          Point: [
-            0.787866994884996,
-            0.269027882441597
-          ],
-          Text: "Muscularis Mucosa"
-        },
-        {
-          Angle: 300,
-          HideArrow: false,
-          Point: [
-            0.745666542737294,
-            0.204973624717408
-          ],
-          Text: "Submucosa"
-        },
-        {
-          Angle: 300,
-          HideArrow: false,
-          Point: [
-            0.641672571373315,
-            0.154483798040693
-          ],
-          Text: "Muscularis Propria"
-        },
-        {
-          Angle: 300,
-          HideArrow: false,
-          Point: [
-            0.524616555296952,
-            0.0864941806916185
-          ],
-          Text: "Subserosa"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.132755213925438,
-            0.260654776856736
-          ],
-          Text: "Serosa"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.0850285120917276,
-            0.553713472326886
-          ],
-          Text: "Invasive Adenocarcinoma, involving Muscularis Propria"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.191366953019468,
-            0.86770493175919
-          ],
-          Text: "Invasive Adenocarcinoma, involving Submucosa"
-        },
-        {
-          Angle: 30,
-          HideArrow: false,
-          Point: [
-            0.418278114369212,
-            0.909570459683497
-          ],
-          Text: "Invasive Adenocarcinoma, superficial/luminal surface"
-        },
-        {
-          Angle: 30,
-          HideArrow: false,
-          Point: [
-            0.276772629985054,
-            0.975717993803902
-          ],
-          Text: "Ulcer Bed"
-        },
-        {
-          Angle: 220,
-          HideArrow: false,
-          Point: [
-            0.397345350407059,
-            0.645817633760362
-          ],
-          Text: "Invasive Adenocarcinoma, with Mucinous Features"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.753202337763669,
-            0.378715565603282
-          ],
-          Text: "Invasive Adenocarcinoma, with Signet Ring Cell Features"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.856443289976337,
-            0.533737010323139
-          ],
-          Text: "Invasive Adenocarcinoma, with Solid Architecture"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.718707533645425,
-            0.504093567653586
-          ],
-          Text: "Invasive Adenocarcinoma, Tumor Budding Region"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.844469188638659,
-            0.910240308130285
-          ],
-          Text: "Bowel Lumen"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.0891690798501797,
-            0.100174053827581
-          ],
-          Text: "Peritoneal Cavity"
-        }
-      ],
-      Overlays: []
-    },
-    {
-      UUID: "a7c25aae-5851-404b-b15f-113e752f8f53",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "Regions of Interest - Overview",
-        Content: "Contemporary pathologic classification of human colorectal adenocarcinomas is principally based on the light microscopic examination of hematoxylin and eosin (H&E) stained tissue sections (Fletcher 2013). The TNM staging system developed by the American Joint Commission on Cancer (AJCC) is the most widely accepted classification schema with high prognostic significance (Amin et al. 2017). Staging of the primary tumor mass is primarily based on the depth of invasion of tumor into the bowel wall (AJCC 8th Edition):\n\nT0 - No evidence of primary tumor\n\nTis - Carcinoma in situ\n\nT1 - Tumor invades submucosa\n\nT2 - Tumor invades muscularis propria\n\nT3 - Tumor invades through the muscularis propria into the pericolorectal tissue\n\nT4 - Tumor invades the visceral peritoneum or invades or adheres to adhacent organs or structures\n\nPrimary tumors may also be independently classified by a variety of morphologic features including grade (low grade vs. high grade), qualitative degree of differentiation (well, moderately, poorly differentiated), type of differentiation (e.g. serous, mucinous, signet ring cell, sarcomatoid), architecture features (glandular, solid, cribriform, budding architecture), \n\nOn histopathologic review this tumor exhibited highly heterogeneous morphologic features with distinct locoregional relationships between tumor region and differentiation. \n\nWe accordingly defined exemplar regions of interest (ROI) to compare tumor compartments with distinctive morphologies as well as different levels of anatomic invasion corresponding to clinicopathologic (AJCC) tumor stages. \n\nROI1 - Normal colonic mucosa\n\nROI2 - Invasive Adenocarvinoma, superficial/luminal\n\nROI3  - Invasive Adenocarcinoma, submucosal\n\nROI4  - Invasive Adenocarcinoma, muscularis\n\nROI5 - Invasive Adenocarcinoma, solid/poorly differentiated\n\nROI6 - Invasive Adenocarcinoma, mucinous\n\nROI7 - Invasive Adenocarcinoma, tumor budding",
-        Pan: [
-          0.481913716814159,
-          0.5
-        ],
-        Zoom: 0.518359375,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.106934423989135,
-            0.673880651886504
-          ],
-          Text: "ROI4"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.240904113346918,
-            0.847622592772379
-          ],
-          Text: "ROI3"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.382549149490824,
-            0.89227915589164
-          ],
-          Text: "ROI2"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.725148719671404,
-            0.287322277385402
-          ],
-          Text: "ROI1"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.855174256062348,
-            0.528461032283529
-          ],
-          Text: "ROI5"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.440007770812969,
-            0.686038227665296
-          ],
-          Text: "ROI6"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.733066466283119,
-            0.517994650302452
-          ],
-          Text: "ROI7"
-        }
-      ],
-      Overlays: []
-    },
-    {
-      UUID: "549b2a20-2541-441e-a6ca-b40323d4929d",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "*ROI1 - Normal Mucosa",
-        Content: "Region of Interest #1 (ROI1) consists of a region of normal colonic mucosa adjacent to the primary tumor mass. No cytologic atypia or adenomatous changes are evident.\n\nOne may appreciate the typical mucosal architecture including parallel test tube-like crypts see here in cross-section and longitudinal profile. The colonic epithelium is well-ordered with columnar absorptive cells and prominent mucinous goblet cells, small basal nuclei, and well-spaced glands with smooth contours. A normal mucosal germinal center responsible for B cell maturation and plasma cell differentiation is present in the top left of the field. The surface of the colorectum is normally a relatively flat surface, but the mucosa is curved and distorted here by the adjacent exophytic tumor mass. One may note the dense lymphocytic infiltrate in the mucosal stromal, which is a normal finding. ",
-        Pan: [
-          0.693199629921585,
-          0.35257607017735
-        ],
-        Zoom: 1.85737536,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [
-        {
-          Angle: 210,
-          HideArrow: false,
-          Point: [
-            0.616983210209847,
-            0.310703307581856
-          ],
-          Text: "Germinal center"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.804453730438995,
-            0.282016995085495
-          ],
-          Text: "Colonic crypts in longitudinal profile"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.577318704807988,
-            0.402104124377444
-          ],
-          Text: "Colonic crypts in cross-section"
-        },
-        {
-          Angle: 60,
-          HideArrow: false,
-          Point: [
-            0.707290413919064,
-            0.310619183498289
-          ],
-          Text: "Mucosal stroma, with prominent immune infiltrate"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.757344243641453,
-            0.256359149597548
-          ],
-          Text: "Muscularis mucosa"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.79435884041095,
-            0.362355494892018
-          ],
-          Text: "Bowel Lumen"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.737364773794281,
-            0.430916622999155
-          ],
-          Text: "Adenocarcinoma, poorly differentiated region"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.710865687470663,
-            0.233645647034448
-          ],
-          Text: "Submucosa"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.451132579457429,
-            0.395163887483164
-          ],
-          Text: "Muscularis Propria"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0878255432439893,
-          width: 0.246567688934993,
-          x: 0.574515254951026,
-          y: 0.252882790684345
-        },
-        {
-          height: 0.160004006944509,
-          width: 0.0782353977173467,
-          x: 0.558363430906155,
-          y: 0.326070743387669
-        }
-      ]
-    },
-    {
-      UUID: "537f9079-6395-4d41-ada6-37f980433294",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "*ROI2 - Adenocarcinoma, Superficial",
-        Content: "Region of Interest #2 (ROI2) consists of a region of invasive adenocarcinoma with a predominantly moderately differentiated glandular appearance and typical cytologic features. ROI2 is defined at the most superifical/luminal region of the tumor, though like ROI3 the tumor in this region predominantly involves the submucosal compartment (pT1 anatomic level). One may appreciate a prominent ulcer bed adjacent to this region, often present in the center of the superficial aspect of the tumor mass in colorectal adenocarcinomas. \n\nCompared to normal colonic mucosa, the adenocarcinomatous epithelium has a disordered arrangement of epithelial glandular structures which exhibit jagged erratic shapes. Cytologically, the tumor cells have an eosinophilic to amphophilic cytoplasm without prominent mucin vacuoles, with cuboidal to pseudo-stratified columnar arrangement. Glands are densely arranged with back to back glandular structures with minimal intervening stroma and focal regions of more disordered cribriform growth (multiple small lumens in a single glandular structure). The tumor cell nuclei are larger and more irregular than those of the normal mucosa, with darker hematoxylin staining of chromatin. \n\nThough less prominent than other tumor regions (ROI6), scattered mucinous cells and intraluminal mucin are present focally. The peritumoral stromal has a prominent lymphocytic inflammatory infiltrate in this region. \n\n[Regions of interest 2-3 (ROI2-4) each exhibit relatively similar morphologic and architectural features, and were selected to compare the molecular and spatial relationships of tumor and tumor-associated cells at different anatomic levels of invasion corresponding to defined AJCC staging criteria.]",
-        Pan: [
-          0.380619559933823,
-          0.900233576549723
-        ],
-        Zoom: 3.20954462208,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.404474190111976,
-            0.941309789228942
-          ],
-          Text: "Bowel Lumen"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.317331765583619,
-            0.916968329863479
-          ],
-          Text: "Adenocarcinoma, with glandular architecture"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.348732248165066,
-            0.933763936825648
-          ],
-          Text: "Peritumoral stroma"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.374534195092457,
-            0.890436139155124
-          ],
-          Text: "Glandular lumen with mucin"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.440621257269689,
-            0.884229067016931
-          ],
-          Text: "Adenocarcinoma with cribriform architecture"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.117082419547876,
-          width: 0.147630951051532,
-          x: 0.305891279681852,
-          y: 0.835424440989178
-        }
-      ]
-    },
-    {
-      UUID: "7b1716ce-6aa9-42b8-9d3a-7cd225968702",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "*ROI3 - Adenocarcinoma, Submucosa",
-        Content: "Region of Interest #3 (ROI3) consists of a region of invasive adenocarcinoma with a predominantly moderately differentiated glandular appearance and typical cytologic features. ROI3 is a well-defined region of invasive adenocarcinoma involving the submucosal compartment (pT1 anatomic level). \n\nCompared to ROI2,  the carcinomatous glands exhibit a more prominent pseudo-stratified columnar cytomorphology with disorganized and crowded back-to-back glandular structures. Regions of cribriform growth are not identified in this region, suggesting that this region of tumor is possibly somewhat more well-differentiated than the superificial tumor in ROI2. The peritumoral stroma is less prominent in this region, and significantly fewer peritumoral immune cells are present. While the tumor in this region exhibits a predominantly typical morphology, some scattered mucinous cells and intraluminal mucin are present.\n\n[Regions of interest 2-3 (ROI2-4) each exhibit relatively similar morphologic and architectural features, and were selected to compare the molecular and spatial relationships of tumor and tumor-associated cells at different anatomic levels of invasion corresponding to defined AJCC staging criteria.]\n",
-        Pan: [
-          0.231668399598117,
-          0.883446929780717
-        ],
-        Zoom: 3.851453546496,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.249824340684316,
-            0.867594646418917
-          ],
-          Text: "Glandular lumen with mucin"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.192419065680766,
-            0.881590985554058
-          ],
-          Text: "Adenocarcinoma, with glandular architecture"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.245767430790072,
-            0.844977373758508
-          ],
-          Text: "Peritumoral stroma"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.332382457032177,
-            0.918914556581101
-          ],
-          Text: "ROI1"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.270514581144959,
-            0.938590569568184
-          ],
-          Text: "Ulcer Bed"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0829638073372858,
-          width: 0.105378234502983,
-          x: 0.179639799513898,
-          y: 0.837877781443581
-        }
-      ]
-    },
-    {
-      UUID: "43ddf397-902a-40be-98d0-16c5cb11ca22",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "*ROI4 - Adenocarcinoma, Muscularis",
-        Content: "Region of Interest #4 (ROI4) consists of a region of invasive adenocarcinoma with a predominantly moderately differentiated glandular appearance and typical cytologic features. ROI4 is a well-defined region of invasive adenocarcinoma involving the muscularis propria, making it a higher stage of invasion than ROI2-3 (pT2 anatomic level). ROI4 also represents the deepest extent of invasion in this tissue section at its superior aspect in this field. \n\nWhile the adenocarcinomatous glands in this region maintain a glandular architecture with predominantly typical cytomorphology and columnar architecture, the glands exhibit somewhat more prominent intraluminal and extracellular mucin, though not to the extent of the mucinous region in ROI6. The tumor region exhibits relatively small amounts of peritumoral stroma and intratumoral immune infiltration, though the deep edges of the mass exhibit collections of lymphohistiocytic inflammation, most prominently around regions of extracellular mucin. \n\n[Regions of interest 2-3 (ROI2-4) each exhibit relatively similar morphologic and architectural features, and were selected to compare the molecular and spatial relationships of tumor and tumor-associated cells at different anatomic levels of invasion corresponding to defined AJCC staging criteria.]\n",
-        Pan: [
-          0.109998223527571,
-          0.624786478173739
-        ],
-        Zoom: 2.228850432,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.0789774677122247,
-            0.590523439970914
-          ],
-          Text: "Adenocarcinoma, with glandular architecture"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.0924723727844373,
-            0.608224549221478
-          ],
-          Text: "Glandular lumen with mucin"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.143297339939524,
-            0.610152392803223
-          ],
-          Text: "Extracellular mucin pool"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.172565510680556,
-            0.631884447724708
-          ],
-          Text: "Peritumoral lymphohistiocytic inflammation"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.104214692782337,
-            0.523048914609851
-          ],
-          Text: "Deepest invasive front of tumor"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.243194689175383,
-            0.609276100266066
-          ],
-          Text: "Muscularis Propria"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.218196841752009,
-          width: 0.105155104458799,
-          x: 0.0639052360731302,
-          y: 0.514461247745715
-        }
-      ]
-    },
-    {
-      UUID: "15dab9ef-a574-4526-a159-24d260fb63fc",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "*ROI5 - Adenocarcinoma, Solid",
-        Content: "Region of Interest #5 (ROI5) consists of a region of adenocarcinoma with near-complete loss of glandular morphology and a solid sheet-like architecture, suggestive of a more poorly differentiated state. \n\nHowever, scattered tumor cells still exhibit intracellular mucin vacuoles, exposing the underlying cytomorphologic differentiation despite the loss of glandular architecture. At the top-right region of the field some cells have become increasingly discohesive with more prominent mucin vacuoles, with focal signet ring cell morphology (cells with a promeint cytoplasmic mucin vacuole and nucleus 'pushed' to the periphery of the cell).\n\nThis region of tumor is present in both the mucosa and submucosa, notice the mucosal glands and stroma adjacent to the solid tumor to the left, and a region of more glandular architecture inferiorly. ",
-        Pan: [
-          0.872849383304825,
-          0.516461979517963
-        ],
-        Zoom: 6.65531172834508,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.90190277447454,
-            0.525471465466552
-          ],
-          Text: "Bowel Lumen"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.856239060676483,
-            0.495185506186607
-          ],
-          Text: "Colonic Mucosa"
-        },
-        {
-          Angle: 60,
-          HideArrow: false,
-          Point: [
-            0.860465008482987,
-            0.532514711810725
-          ],
-          Text: "Adenocarcinoma, with solid architecture"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.856591222993692,
-            0.532045162054447
-          ],
-          Text: "Intracellular mucin vacuole"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.888579300140146,
-            0.504165645275428
-          ],
-          Text: "Discohesive and fragmented adenocarcinoma, with focal signet ring cell features"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0591632692910555,
-          width: 0.0579893949003599,
-          x: 0.840156981523954,
-          y: 0.485207573865695
-        }
-      ]
-    },
-    {
-      UUID: "d84ccda9-ccb3-4f62-aa3a-fc5859efa0bc",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "*ROI6 - Adenocarcinoma, Mucinous",
-        Content: 'Region of interest #6 (ROI) comprises a region of "floating" tumor with prominent extracellular mucin surrounding the tumor epithelium. \n\nIn this tumor, prominent mucinous regions are present at the deep invasive front broadly across the tumor. The tumor in this region exhibits a prominent cribriform architecture with multiple small lumens within a sheet-like structure of tumor epithelium with no intervening stroma. Minimal peritumoral stromal is present immediately adjacent to the tumor epithelium. There is minimal inflammatory cell infiltration into the mucin pools and tumor epithelium, though prominent lymphohistiocytic inflammation is present surrounding the extracellular mucin pools. \n\nMacrophage populations are particularly prominent in this region (see Macrophage marker set), likely at least in part resulting from a phagocytic response of macrophages to extracellular mucinous material. ',
-        Pan: [
-          0.450078708897922,
-          0.675930909892408
-        ],
-        Zoom: 3.0956256,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.413938390261963,
-            0.609300898756441
-          ],
-          Text: "Muscularis propria"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.448311490807455,
-            0.740887790272005
-          ],
-          Text: "Submucosa"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.466305059467286,
-            0.632746047346773
-          ],
-          Text: "Peritumoral inflammation"
-        },
-        {
-          Angle: 200,
-          HideArrow: false,
-          Point: [
-            0.41532586482566,
-            0.637036375608692
-          ],
-          Text: "Invasive Front"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.43576801713245,
-            0.665428253812568
-          ],
-          Text: "Extracellular mucin"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.484980606019168,
-            0.666059184439321
-          ],
-          Text: "Adenocarcinoma, with cribriform architecture"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.39740743502588,
-            0.690917851133381
-          ],
-          Text: "Carcinomatous glandular lumen in cribfriform structure"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0917625503549266,
-          width: 0.155360357531609,
-          x: 0.371994122195437,
-          y: 0.637465641934686
-        }
-      ]
-    },
-    {
-      UUID: "88bb6cc7-5c26-4dac-816d-12c9b8f307cc",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "*ROI7 - Tumor Budding Cells",
-        Content: "Region of Interest #7 (ROI) comprises a region of tumor with clusters of tumor budding cells extending into the peritumoral stroma. \n\nTumor budding is defined as clusters of <=4 tumor cells, typically located at the invasive front of the tumor. A prominent peritumoral lymphohistiocytic inflammatory proliferation is present adjacent to the region of tumor budding. \n\nTumor budding cells may be difficult to appreciate on standard H&E sections, but are highlighted by PanCK (see also, Tumor Budding marker sets, and subsequent discussion).  ",
-        Pan: [
-          0.724133718522389,
-          0.521758434263343
-        ],
-        Zoom: 3.851453546496,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.835703507969231,
-            0.50829264236419
-          ],
-          Text: "Mucosa"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.634815196411141,
-            0.55119592498338
-          ],
-          Text: "Submucosa"
-        },
-        {
-          Angle: 60,
-          HideArrow: false,
-          Point: [
-            0.746363731221035,
-            0.539208243075077
-          ],
-          Text: "Prominent peritumoral lymphohistiocytic inflammation"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.706993660111661,
-            0.521289813275298
-          ],
-          Text: "Adenocaricnoma, with glandular archiecture"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.735125833258095,
-            0.515075052064657
-          ],
-          Text: "Tumor Budding Cell(s)"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.723797945387883,
-            0.502279821206076
-          ],
-          Text: "Tumor Budding Cell(s)"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.714935193738131,
-            0.492419276324233
-          ],
-          Text: "Tumor Budding Cell(s)"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0586765482880101,
-          width: 0.0714213469484165,
-          x: 0.687560996807675,
-          y: 0.489490909686957
-        }
-      ]
-    },
-    {
-      UUID: "fb073470-b7be-45d1-87d0-99897a31d1c4",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABAAEADASIAAhEBAxEB/8QAGwAAAgMBAQEAAAAAAAAAAAAABQYDBAcCAQj/xAAyEAACAgIBAwMCBQMDBQAAAAABAgMEBRESBhMhACIxFCMHMkFCcVFhgRUzQ1KhseHw/8QAGQEAAwEBAQAAAAAAAAAAAAAAAgMEBQAB/8QALREAAQIDBQcEAwEAAAAAAAAAAQIRAAMhBDFBcfASUWGBkaGxEyLR4TJC8cH/2gAMAwEAAhEDEQA/AM361zXT8t1vw+TC37lXA27McklOuolaUFUd0UEhYzIJGCABRy2F93FaHVOdupnDLW+nqV5oMgIRyLLYWTkgcqjPo8mkCLpVViPJUEBdy3UFjIZmaGlBWr3bb9iayIGWR3NlpjIyKN7DdtAwUHjEDxDE+p+g6c2QyCXLtPJ26+zMtiSwyiOZlBaQKoLOS0ZXwfdoBuPkrspQoJBOA68euePLNsllUgirDG88+BeC9DH9W5DpWaOy0FenXrJsdhJGaIKjIPafa6lF470/3HBOuQJOmIMXDXlt5GN8esTIIiixGLtTOO2XZyNDUYchtAsoR3IKvF1P051LkctlYo2uz9uWKDIVEvxxtNri5BQHinkF/BfyQdfqWiGxakgiddDsngbzzHuxqZAqK32yzNuZV5s+yy6I8BRPMXtp2hjuOtdI0lOQwUH87v8AI7wdb/S2SmIsTDSuCWV5cfGCywBmZZ0dVkDApGrAcRrhvRLMoo9VnML1VHl8dOlZaMTSO1iVArqw4kMIgoRZRxBLyFkCnRUpoLvWmTtzSPHjsdJOU5m20tdHQFVd3QOpHgCJC3H4MRPIlmBnfJ2chhMnc6hw/VeVw08jSzz1qvGnXBEcg4qsgVQUEO15+3/I2AIA91+q88dMoSnqpnroN0ixa6sfKUUtrRufRvVWtA7oDZkl8K+7LDSxuoZPkty48UJG/U3SuOu4rrTIWrURP0EaR03jdWiqSRwOqs55Fw0Q2OXkqCrkAcPQ+HqurBgqkuFys30sCrFNWmMcPNBFyKLyLM+mjCclDDi4GtgH0Vxly/WxMVia4IcrkccrxsLSQ/baMmWSQH/j7SBfA0AmzsiQkzNV+rAXdNVd8oIoKmQCADr+wnTnoG70zFUjyox0iIp+peqWkeQKA/IDbHe+WuRA2ypvz6lxmc6ewuDjrW8rdyE7RwzRww1wkKkgcwC6IfHbCk7I2Sw2WYhSs9SQ2bsNo4DBwxV37nZigZYnbR0WHInXlfb8EqNg+eUvQnT8nUtu1XSOftRiLctdAXLO/EKoJAOhzlI17hBxBXfIXTJSUStqYad+P9ua/CEeps+40aHK7+IuetyXo8TDUpRWVjjk+oPCSRSwKKWXiqr7Fbz7Rre/OvQ+HrDOXmloWKFf6mqwjSNkKoJS/HU/NwVG31z/AGsQDoMT6aa+H6cxEsuVy+ZmN6tTgevwx8cUYHlZICYwscfLbMSSCCURjtn2K616XmqT2YMf1DFLcsACaOHHoqs7qrGNZEPec+2Q6MYP2yDst5nE6WujNnlSvbnFQALE35ay+YHtcyWexoFrE4mKnQn7UjVruhb4OCsSjuFT5I4iPzphxI2SxG7Uy+CTO2q+RuzS2aMy5Kx9ZXYSu7nhIRMOT7cKRIBHIrMePuXkyhj7eW6Lt8LK1GWSVecbx8xNuKQfnGmTSTe5Cyn7i80OvGhYO/Pk1yCT5GaSCwZEt4a3AXWpKdt+77rRjinIAIFaSMcv3om0yVJU9+7y1K6aA2wxflCHhs/Tlns3871JmnyInEsr2i1xLMqxyKjMjcdMoYorFiy8yR4+GvprGYLO4FZLqiz3JO+3JQ08a8CqKjxADkBx8aAJJLKNABeo10r4nJTxZam9mC59JchndIpZqo4RosbMS6gkupCjio0XIAXZavkoBiGj6Uq5KWyLc03eTITxIsLpqNWgUBY3TtpIp7rbPEHuDQHkyUUpoH7NrwXhiSCKwu3cRi+qn49O35WyVbGK8tZse6iYxKi/oWEfs58tErtQRxVz226hgF6Tgr4/DX5IZrJ53MvaiEPEcnQIiEh1+26AoeQYufIH5cyx3UkdDMJknxkYljhVFER7SMyxhQftcBrkoY+CW15JJLF1j6+qXsHNJRTHYq5DJJZkhtTTzC2SDpQqwsB+gG5EGypIJ5M1doSlZBC34VNMaGubit91YhCFOBhD5ncZn8FT5i7DVrZWbsY6/Hk4JYWKKo4CII7Scm56Cuuww2p37hgxXU1rKzyHKw1KiZCOav3bqd4Lvy3cMKq0gZePc9q8lO/aQ3oDH19VfG3cRJjcc9mm5anaD8I50V25KkbxoByRpJA0g58whVVYgDjqD8VUuVi1DDyVcghUV7RtORCFG+XbPtO25EAaCnifdxXiiZZ5hUQEm+u7vXdlWkMXtFRJU7+NUiv1pBXfM4eB8wK+NozyVCbKMHgsKxZ147D8PyA8WITZ+CwBD2she6YzYbFWMY1SRlsVxWcyQMnF4w45M0kZYBgQWDDZB8a9BrGTy1nHHH2LszV5LZumLkQhnYAGQjYHIjXz8D48Hzewd36nrLGvf+mjrz3I47KV61SJRHIVSQqsoECHjvRcBFIDEjRPq1UtUupAbdrKHAKBe6IOpcjWvlWrzTSyysZbjyxdsu/kIP8AcYMEXxy4qTybe/QypYtV5N1rbwErpjHtCdfG9H+PVzqarBiM/PUhsyx0pJyh1LWula/JSrd2F+DSHidgFQNAciCdcWqdeC9UrrmsVaWdInf6fukwh0DnmSmuS70wUtoggb16FFol/gx56+Y6o90CO2whQaX3LyQ/AYfz+uiCP5Hz6icTSDREJYt4BGj/AE+fjX/39fW9DF4rL9YthnxlOPqAIa825PrX5oFRpu4QOTl1D7ZNMHADEBybOHwvSlzGQ9PydFYi5JCgibKd+QTyByJA4MJUMAhBVmjQsoT/AKmPofWSpDV41YNhfiKteGrEwW4cDjHz0JZE4BoQuh8oADrX9vVpHPtYOCAPLONEjfj/ALf+PW8xfhh0HmMZOuIyJlyEac3apeBjhUsq+8MjFv3MAoU8QfzEcfSX1F+FuQoYc5TEzw5THE6bszrKxHNl58k2gT2jTMVOzxKhgR6ZZrTKCyhcw13uKhmHi8YMHgfVSSBcYz0zcVHJQB8nRHz4/wDXqwsTyRNJE0QCfmVn4sTyA1onz870P5/QkWYOnM61aa2MdbWKFtSsF06nQO+Pg68qd/5365hw2ZlsqlarJto1nDRgvqNtab273rkN62R/bXqkzUlO1eO/Y/WbUeAomOsHWeSd7l3H279WtxkmiruyNxIYhi4QhF2AST5IPj9SPLMsUlh5o4okk5eUhZm3tjvySfHwvz8a+dk+mAdIZPJzGSzlu/dYj6gNtpNft3yIYsQB4YD4P9PTd030yKFaKtPVlLShO48UYLMpLeGUuiMAQP3ELv58aMirSiUkkl3+9+dKPhxhyJSjVZaP/9k=",
-        Name: "Tumor Budding [Tumor Markers]",
-        Content: "Tumor budding is a phenomenon in which single tumor cells or small clusters of <=4 cells are present in the peri-tumoral stroma, most characteristically at the deep invasive front of a tumor, resulting in an appearance of cells sprouting or budding from the tumor mass [1]. Tumor budding was first conceptually described in 1949 by Imai et al. in their classification of gastric carcinomas [2], and subsequently shown to correlate with clinical outcome in a variety of solid cancers including for colorectal carcinomas, though the concept was only minimally explored until the 1980s [3]. Since that period, a number of studies have explored the possibility of using tumor budding as a novel tumor classifier, and systematic meta-analyses show that tumor budding significantly correlates with poor outcomes in colorectal carcinomas including risk of lymph node metastases, local recurrence, distant metastases, and cancer-related death, independently of tumor TNM stage [4]. The related concept of poorly differentiated clusters (PDCs) refers to similar collections of cells at the invasive front that have lost glandular differentiation, but which form larger clusters and do not meet the definition of tumor budding (>=5 cells) [5]. \n\nPathologic examination of the CRC01 tissue specimen revealed a region of prominent tumor budding near the invasive front of the tumor. Tumor budding cells were annotated by a pathologists using the ITBCC consensus criteria of <=4 cells and were segmented and analyzed for marker expression and neighborhood spatial correlations at a single cell level. Scattered poorly differentiated clusters were also present in the region of tumor budding, and were noted but not included in the training cohort of tumor budding cells. \n\nSingle cell analysis of marker expression in tumor budding cells relative to other tumor cell populations in the main mass (ROI2-6) and normal mucosa (ROI1) showed that these cells exhibit a unique molecular phenotype characterized by reduced expression of characteristic epithelial markers such as E-cadherin and NaK ATPase and reduced proliferative cell cycle activity as assessed by PCNA and Ki-67/MIB-1 staining (highlighted in this field). On the other hand, tumor budding cells at the invasive tumor margin exhibited higher expression of PD-L1 compared to the main tumor mass, indicating that they may suppress local anti-tumor cytotoxic immunity. \n\nInterestingly, these markers exhibited a continuous graded expression profile correlating with tumor cluster size with tumor budding cells representing just one end of a continuous spectrum of molecular differentiation. Larger clusters, including those that would be classified as poorly differentiated clusters (PDCs) also exhibited reduced expression of these markers relative to the main tumor mass, though at an intermediate level to tumor budding cells and the main mass. \n\n3D reconstruction and analysis of tumor budding regions showed that tumor buds in fact rarely represent individual cells or clusters which have completely separated from the main tumor mass, but rather, represent the tips of a contiguous complex network of tendril-like structures connected to the main tumor mass. Poorly differentiated clusters in the region of tumor budding rather than representing distinct tumor nests, instead represent the more proximal aspects of this network. These findings suggest that while tumor budding cells exhibit a migratory molecular program, they have not undergone definitive epithelial-to-mesenchymal differentiation and remain an intrinsic yet specialized epithelial niche of the overall tumor mass. \n\nHere, we highlight tumor budding cells and poorly differentiated clusters (arrows) at the invasive front of the tumor. Tumor budding cells exhibit significantly reduced expression of E-cadherin (green) and PCNA (red) compared to adjacent PDCs or the main tumor mass, while many PDCs exhibit an intermediate expression pattern, though this is more difficult to appreciate qualitatively. \n\n[1] Lugli, A. et al. Recommendations for reporting tumor budding in colorectal cancer based on the International Tumor Budding Consensus Conference (ITBCC) 2016. Mod. Pathol. 30, 1299\u20131311.\n\n[2] Imai T. Histological comparison of cancer of the stomach in autopsy--and operation--cases. Jpn J Cancer Res 1949;40:199-201.\n\n[3] Hayashida K, Isomoto H, Shirouzu K, et aL A study of invasive colorectal carcinoma with reference mainly to vessel invasion and budding. Nippon Dai- cho-komonbyo Gakkai Zasshi 1987;40:119-26.\n\n[4] Rogers, A. C. et al. Systematic review and meta-analysis of the impact of tumour budding in colorectal cancer. Br. J. Cancer 115, 831\u2013840 (2016).\n\n[5] Ueno H, Kajiwara Y, Shimazaki H, Shinto E, Hashiguchi Y, Nakanishi K, et al. New criteria for histologic grading of colorectal cancer. Am J Surg Pathol. 2012;36:193\u2013201. ",
-        Pan: [
-          0.718818138855538,
-          0.513807466249838
-        ],
-        Zoom: 6.65531172834508,
-        Group: "Tumor Budding Epithelial"
-      },
-      Arrows: [
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.727080493256782,
-            0.502476977421495
-          ],
-          Text: "Tumor Budding Cell(s)"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.734417208198629,
-            0.513677695566049
-          ],
-          Text: "Tumor Budding Cell(s)"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.753394844181541,
-            0.522824133526885
-          ],
-          Text: "Tumor Budding Cell(s)"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.754666541438128,
-            0.502183508823822
-          ],
-          Text: "Tumor Budding Cell(s)"
-        },
-        {
-          Angle: 30,
-          HideArrow: false,
-          Point: [
-            0.740266172148522,
-            0.527883887596454
-          ],
-          Text: "Poorly Differentiated Cluster"
-        },
-        {
-          Angle: 330,
-          HideArrow: false,
-          Point: [
-            0.713184751391609,
-            0.493707334464114
-          ],
-          Text: "Poorly Differentiated Cluster"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.703841161573265,
-            0.520988618104842
-          ],
-          Text: "Main Tumor Mass"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.734270285634077,
-            0.491758671346919
-          ],
-          Text: "Main Tumor Mass"
-        },
-        {
-          Angle: 30,
-          HideArrow: false,
-          Point: [
-            0.726825393211973,
-            0.526984504619287
-          ],
-          Text: "Poorly Differentiated Cluster"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.682455833005075,
-            0.54007552350916
-          ],
-          Text: "Submucosa"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0473306154328444,
-          width: 0.0750810060288871,
-          x: 0.6896834716437,
-          y: 0.487993036181762
-        }
-      ]
-    },
-    {
-      UUID: "11d43bd8-9a11-44d3-9818-fb2d1dc91108",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "Tumor Budding [Immune Markers]",
-        Content: "Immune populations were segmented into broad functional categories by lineage-specific marker expression:\n\nCytotoxic T Cell - CD45/CD3/CD8+ \n\nActivated Cytotoxic T Cell - CD45/CD3/CD8/PD-1+\n\nHelper T Cell - CD45/CD3/CD4+\n\nT Regulatory Cells - CD45/CD3/FOXP3+, CD4 or CD8\n\nMacrophages - CD45 or CD163\n\nNearest neighbor analysis and spatial correlation showed that the tumor budding region exhibited a distinctive immune microenvironment. Tumor budding cells at the tumor invasive front exhibited higher levels of PD-L1 staining. There were increased numbers of FOXP3+ Tregs in the budding microenvironment, and an increased number of PD-L1 positive macrophages. There were a reduced number of CD8-positive cytotoxic T cells in the budding niche, and those that were present were negative for PD1 suggesting that they were not activated. Collectively, these results suggest that the tumor budding network exists in an immunosuppressive environment that may facilitate stromal invasion and metastasis. ",
-        Pan: [
-          0.72093301316954,
-          0.512300720047842
-        ],
-        Zoom: 7.9863740740141,
-        Group: "Tumor Budding Immune Modulation"
-      },
-      Arrows: [
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.734314594092866,
-            0.513752814745281
-          ],
-          Text: "Tumor Budding Cell(s)"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.722751931344515,
-            0.500429340410887
-          ],
-          Text: "Tumor Budding Cell(s)"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.711834899511046,
-            0.490157939492301
-          ],
-          Text: "Tumor Budding Cell(s)"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.700683092799439,
-            0.519739574137828
-          ],
-          Text: "Main Tumor Mass"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.740418740924483,
-            0.482175593635571
-          ],
-          Text: "Main Tumor Mass"
-        },
-        {
-          Angle: 120,
-          HideArrow: false,
-          Point: [
-            0.727506122626832,
-            0.508939929743429
-          ],
-          Text: "FOXP3+ Treg"
-        },
-        {
-          Angle: 120,
-          HideArrow: false,
-          Point: [
-            0.735194999885888,
-            0.528367550909441
-          ],
-          Text: "Macrophages (PD-L1 Positive)"
-        },
-        {
-          Angle: 120,
-          HideArrow: false,
-          Point: [
-            0.711893593230581,
-            0.500722809008561
-          ],
-          Text: "FOXP3+ Treg"
-        },
-        {
-          Angle: 310,
-          HideArrow: false,
-          Point: [
-            0.73190815159194,
-            0.506650874681573
-          ],
-          Text: "Sparse CD8+ Cytotoxic T Cells"
-        },
-        {
-          Angle: 310,
-          HideArrow: true,
-          Point: [
-            0.752509647148647,
-            0.541221475487557
-          ],
-          Text: "Lymphocyte Aggregate with abundant CD4 and CD8 T cells"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0474658457626525,
-          width: 0.0799211249166029,
-          x: 0.683685023596169,
-          y: 0.486997982182443
-        }
-      ]
-    },
-    {
-      UUID: "d93d3231-b3f1-4d0e-9aa3-7827739e2953",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "Transitions - Atypical Mucosa/Glandular Adenocarcinoma [Histology]",
-        Content: "Machine-learning based analysis of tumor molecular expression patterns derived from training on exemplar morphologic regions (ROI1-7) revealed regions with atypical expression patterns, as well as those with transitional or indeterminate morphologic and molecular patterns. \n\nHistologic review of the H&E stained sections showed a region of mucosal epithelium without overt adenomatous or high-grade dysplastic changes surrounded by tumor in the exophytic region of the tumor mass, though definitive histologic analysis is challenging in this setting given reactive changes and tissue distortion by tumor mass effect. Molecular clustering analysis showed that while superifical regions of epithelium in this region exhibited an expression pattern typical for normal mucosa (ROI1), the deeper crypt epithelium exhibited a molecular pattern more closely resembling regions of moderately differentiated invasive adenocarcinoma with glandular morphology (ROI2-4). \n\nWhile the molecular expression pattern is informed by the full array of high-plex tissue markers and not easily amenable to reduction to specific markers, the deep epithelium noticably exhibited markedly elevated proliferative cell cycle activity as assessed by PCNA and Ki-67, and reduced expression of E-cadherin, PanCK, and NaK ATPase relative to more superficial regions of epithelium, which may also be noted on surrounding regions of invasive adenocarcinoma. These findings suggest that while the deeper regions of epithelium exhibit no definitive carcinomatous changes, they have acquired an atypical molecular pattern readily identifiable by molecular profiling, and may represent regions of residual adenomatous or pre-neoplastic epithelium associated with the frankly invasive adenocarcinomatous mass. ",
-        Pan: [
-          0.815741853917366,
-          0.506602504369754
-        ],
-        Zoom: 4.6217442557952,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.859131958911064,
-            0.501037051156166
-          ],
-          Text: "Superficial mucosal epithelium with typical mucosal molecular pattern (ROI1-like)"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.825958268630008,
-            0.483358502832291
-          ],
-          Text: "Adenocarcinoma, with glandular architecture"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.853145199518517,
-            0.528223982044675
-          ],
-          Text: "Adenocarcinoma, with solid architecture"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.892728243972771,
-            0.470117199705245
-          ],
-          Text: "Bowel Lumen"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.786269474266984,
-            0.528357505588102
-          ],
-          Text: "Atypical deep mucosal epithelium, with molecular pattern resembling glandular adenocarcinoma (ROI2-4-like)"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0842372262763123,
-          width: 0.100929720112003,
-          x: 0.777496964571449,
-          y: 0.463914768060275
-        }
-      ]
-    },
-    {
-      UUID: "97166d10-c821-4936-a0e2-1468beafeac7",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "Transitions - Atypical Mucosa/Glandular Adenocarcinoma [CyCIF]",
-        Content: "Machine-learning based analysis of tumor molecular expression patterns derived from training on exemplar morphologic regions (ROI1-7) revealed regions with atypical expression patterns, as well as those with transitional or indeterminate morphologic and molecular patterns. \n\nHistologic review of the H&E stained sections showed a region of mucosal epithelium without overt adenomatous or high-grade dysplastic changes surrounded by tumor in the exophytic region of the tumor mass, though definitive histologic analysis is challenging in this setting given reactive changes and tissue distortion by tumor mass effect. Molecular clustering analysis showed that while superifical regions of epithelium in this region exhibited an expression pattern typical for normal mucosa (ROI1), the deeper crypt epithelium exhibited a molecular pattern more closely resembling regions of moderately differentiated invasive adenocarcinoma with glandular morphology (ROI2-4). \n\nWhile the molecular expression pattern is informed by the full array of high-plex tissue markers and not easily amenable to reduction to specific markers, the deep epithelium noticably exhibited markedly elevated proliferative cell cycle activity as assessed by PCNA and Ki-67, and reduced expression of E-cadherin, PanCK, and NaK ATPase relative to more superficial regions of epithelium, which may also be noted on surrounding regions of invasive adenocarcinoma. These findings suggest that while the deeper regions of epithelium exhibit no definitive carcinomatous changes, they have acquired an atypical molecular pattern readily identifiable by molecular profiling, and may represent regions of residual adenomatous or pre-neoplastic epithelium associated with the frankly invasive adenocarcinomatous mass. ",
-        Pan: [
-          0.804047392340123,
-          0.50686721376622
-        ],
-        Zoom: 4.6217442557952,
-        Group: "Transitions"
-      },
-      Arrows: [
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.785798169926556,
-            0.528651051827187
-          ],
-          Text: "Atypical deep mucosal epithelium, with molecular pattern resembling glandular adenocarcinoma (ROI2-4-like)"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.859836775496506,
-            0.49932297405005
-          ],
-          Text: "Superficial mucosal epithelium with typical mucosal molecular pattern (ROI1-like)"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.893137244211757,
-            0.469234225667742
-          ],
-          Text: "Bowel Lumen"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.81081578094106,
-            0.484447637771156
-          ],
-          Text: "Adenocarcinoma, with glandular architecture"
-        },
-        {
-          Angle: 166,
-          HideArrow: true,
-          Point: [
-            0.857892839505514,
-            0.530087874081399
-          ],
-          Text: "Adenocarcinoma, with solid architecture"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0820679064023069,
-          width: 0.101169190487705,
-          x: 0.777847925064133,
-          y: 0.466849325883803
-        }
-      ]
-    },
-    {
-      UUID: "31843b78-61d8-411e-8e09-4fdbbf0297c2",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "Transitions - Glandular/Solid [Histology]",
-        Content: "Analysis of molecular expression clusters derived from ROI analysis revealed that many regions of tumor epithelium exhibit mixed or transitional expression patterns. \n\nSome regions of tumor (including the field shown) smoothly transition, or rapidly oscillate, between regions of solid architecture (ROI5-like) and glandular architecture (ROI3-like) in adjacent epithelium. While broad morphologic changes are observable on visual review of H&E histology, molecular analysis of high dimensional imaging data illuminates the remarkable degree of heterogeneity in differentiation and architecture in even small regions of tumor. Moreover, analysis of transitional regions in high dimensional space reveals a continuous gradient of expression states between exemplars of each morphologic or expression group, suggesting that many cells lie in an intermediate differentiation state not readily identifiable by morphologic review or analysis of small groups of markers. These results further suggest that some tumors may exhibit highly plastic phenotypes, with rapid shift between different molecular and morphologic states in closely contiguous regions of tumor. \n\nHigh-dimensional molecular clusters are informed by the entire panel of markers and are not easily demonstrable by limited sets of markers, though the transitional changes in morphologic features may be highlighted by PanCK which demonstrates the tissue distribution and organization of epithelial cells. ",
-        Pan: [
-          0.794245580827177,
-          0.472953356472153
-        ],
-        Zoom: 5.54609310695424,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.822563231202727,
-            0.479472250295616
-          ],
-          Text: "Adenocarcinoma, with glandular architecture"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.823639282727532,
-            0.456092585347596
-          ],
-          Text: "Adenocarcinoma, with solid and signet ring cell morphology"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0527754361483539,
-          width: 0.0651500286836028,
-          x: 0.777662535758623,
-          y: 0.449293896168151
-        }
-      ]
-    },
-    {
-      UUID: "b130ffec-ff91-4806-99f6-b572819dc720",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "Transitions - Glandular/Solid [CyCIF]",
-        Content: "Analysis of molecular expression clusters derived from ROI analysis revealed that many regions of tumor epithelium exhibit mixed or transitional expression patterns. \n\nSome regions of tumor (including the field shown) smoothly transition, or rapidly oscillate, between regions of solid architecture (ROI5-like) and glandular architecture (ROI3-like) in adjacent epithelium. While broad morphologic changes are observable on visual review of H&E histology, molecular analysis of high dimensional imaging data illuminates the remarkable degree of heterogeneity in differentiation and architecture in even small regions of tumor. Moreover, analysis of transitional regions in high dimensional space reveals a continuous gradient of expression states between exemplars of each morphologic or expression group, suggesting that many cells lie in an intermediate differentiation state not readily identifiable by morphologic review or analysis of small groups of markers. These results further suggest that some tumors may exhibit highly plastic phenotypes, with rapid shift between different molecular and morphologic states in closely contiguous regions of tumor. \n\nHigh-dimensional molecular clusters are informed by the entire panel of markers and are not easily demonstrable by limited sets of markers. However, one many note relatively reduced expression of E-cadherin and PCNA in regions of solid architecture, which is also noted in ROI5.",
-        Pan: [
-          0.784145411215789,
-          0.472389615454898
-        ],
-        Zoom: 4.6217442557952,
-        Group: "Transitions"
-      },
-      Arrows: [
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.837603550886017,
-            0.47612859654803
-          ],
-          Text: "Adenocarcinoma, with glandular architecture"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.798454839956321,
-            0.455761875869462
-          ],
-          Text: "Adenocarcinoma, with solid architecture"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.846348915096699,
-            0.460809535749453
-          ],
-          Text: "Adenocarcinoma, with solid architecture"
-        },
-        {
-          Angle: 180,
-          HideArrow: false,
-          Point: [
-            0.781844517327979,
-            0.489628152041029
-          ],
-          Text: "Adenocarcinoma, with glandular architecture"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0757148981998627,
-          width: 0.0799408460063666,
-          x: 0.76429509518708,
-          y: 0.434397361958803
-        }
-      ]
-    },
-    {
-      UUID: "6b54a970-a0e9-414b-8603-497968daaf35",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "Transitions - Solid/Mucinous [Histology]",
-        Content: "Analysis of molecular expression clusters derived from ROI analysis revealed that many regions of tumor epithelium exhibit mixed or transitional expression patterns. \n\nWhile broad morphologic changes are observable on visual review of H&E histology, molecular analysis of high dimensional imaging data illuminates the remarkable degree of heterogeneity in differentiation and architecture in even small regions of tumor. Moreover, analysis of transitional regions in high dimensional space reveals a continuous gradient of expression states between exemplars of each morphologic or expression group, suggesting that many cells lie in an intermediate differentiation state not readily identifiable by morphologic review or analysis of small groups of markers. \n\nThese results further suggest that some tumors may exhibit highly plastic phenotypes, with rapid shift between different molecular and morphologic states in closely contiguous regions of tumor. ",
-        Pan: [
-          0.686441104293455,
-          0.409558554502176
-        ],
-        Zoom: 5.54609310695424,
-        Group: "Hematoxylin & Eosin"
-      },
-      Arrows: [
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.715086358932731,
-            0.404547739101745
-          ],
-          Text: "Adenocarcinoma, with solid and signet ring cell morphology"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.713032078749014,
-            0.432016399844021
-          ],
-          Text: "Adenocarcinoma, with mucinous morphology"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0655608847203462,
-          width: 0.0609240808770988,
-          x: 0.672474718550482,
-          y: 0.378018177872026
-        }
-      ]
-    },
-    {
-      UUID: "268aee9d-5972-4a23-b3bb-3155ed2d60eb",
-      State: {
-        Expanded: true
-      },
-      Properties: {
-        ThumbnailDataUrl: "data:image/jpeg;base64,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",
-        Name: "Transitions - Solid/Mucinous [CyCIF]",
-        Content: "Analysis of molecular expression clusters derived from ROI analysis revealed that many regions of tumor epithelium exhibit mixed or transitional expression patterns. \n\nWhile broad morphologic changes are observable on visual review of H&E histology, molecular analysis of high dimensional imaging data illuminates the remarkable degree of heterogeneity in differentiation and architecture in even small regions of tumor. Moreover, analysis of transitional regions in high dimensional space reveals a continuous gradient of expression states between exemplars of each morphologic or expression group, suggesting that many cells lie in an intermediate differentiation state not readily identifiable by morphologic review or analysis of small groups of markers. \n\nThese results further suggest that some tumors may exhibit highly plastic phenotypes, with rapid shift between different molecular and morphologic states in closely contiguous regions of tumor. ",
-        Pan: [
-          0.68979329540089,
-          0.409378034033279
-        ],
-        Zoom: 5.54609310695424,
-        Group: "Transitions"
-      },
-      Arrows: [
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.717283333549791,
-            0.396108533420069
-          ],
-          Text: "Adenocarcinoma, with solid and signet ring cell morphology"
-        },
-        {
-          Angle: 360,
-          HideArrow: false,
-          Point: [
-            0.711599065547207,
-            0.430697908925159
-          ],
-          Text: "Adenocarcinoma, with mucinous features"
-        },
-        {
-          Angle: 60,
-          HideArrow: true,
-          Point: [
-            0.649314001263566,
-            0.444122456761051
-          ],
-          Text: "Mucosa"
-        }
-      ],
-      Overlays: [
-        {
-          height: 0.0656714367107122,
-          width: 0.0660947332640962,
-          x: 0.673804730423638,
-          y: 0.376576421028209
-        }
-      ]
+  function bitsPerSampleFromDtype(dtype) {
+    if (dtype === "Uint8" || dtype === "Int8") return 8;
+    if (dtype === "Uint16" || dtype === "Int16") return 16;
+    if (dtype === "Uint32" || dtype === "Int32") return 32;
+    throw new Error(`Unsupported mask dtype ${dtype}`);
+  }
+  function omeTypeFromDtype(dtype) {
+    switch (dtype) {
+      case "Uint8":
+        return "uint8";
+      case "Uint16":
+        return "uint16";
+      case "Uint32":
+        return "uint32";
+      case "Int8":
+        return "int8";
+      case "Int16":
+        return "int16";
+      case "Int32":
+        return "int32";
+      default:
+        throw new Error(`Unsupported mask dtype ${dtype}`);
     }
-  ].map(({ Properties, UUID, State: State2, Arrows, Overlays }) => {
+  }
+  function assertUnsignedLabelDtype(dtype) {
+    if (dtype === "Uint8" || dtype === "Uint16" || dtype === "Uint32") {
+      return dtype;
+    }
+    throw new Error(`Mask OME-TIFF export requires unsigned integer pixels (got ${dtype})`);
+  }
+  function escapeXmlAttr(value) {
+    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function omeColorInt(color2) {
+    const view = new DataView(new ArrayBuffer(4));
+    view.setUint8(0, color2.r & 255);
+    view.setUint8(1, color2.g & 255);
+    view.setUint8(2, color2.b & 255);
+    view.setUint8(3, 255);
+    return view.getInt32(0, false);
+  }
+  function optionalNumberAttr(name2, value) {
+    if (typeof value !== "number" || !Number.isFinite(value)) return "";
+    return ` ${name2}="${value}"`;
+  }
+  function optionalStringAttr(name2, value) {
+    if (typeof value !== "string" || !value.trim()) return "";
+    return ` ${name2}="${escapeXmlAttr(value)}"`;
+  }
+  function buildOmeTiffXml(opts) {
+    const { imageName, channels: channels2, width, height, fileName, pixelType, significantBits, pixels, samplesPerPixel = 1 } = opts;
+    const sizeC = channels2.length * samplesPerPixel;
+    const channelXml = channels2.map((ch2, i2) => {
+      var _a2;
+      const id2 = escapeXmlAttr(ch2.id || `Channel:0:${i2}`);
+      const chName = escapeXmlAttr(((_a2 = ch2.name) == null ? void 0 : _a2.trim()) || `Channel ${i2}`);
+      const colorAttr = ch2.color && typeof ch2.color.r === "number" && typeof ch2.color.g === "number" && typeof ch2.color.b === "number" ? ` Color="${omeColorInt({
+        r: ch2.color.r,
+        g: ch2.color.g,
+        b: ch2.color.b
+      })}"` : "";
+      return `<Channel ID="${id2}" Name="${chName}" SamplesPerPixel="${samplesPerPixel}"${colorAttr}/>`;
+    }).join("");
+    const tiffDataXml = channels2.map((_2, i2) => {
+      const uuid = escapeXmlAttr(fileName);
+      return `<TiffData FirstC="${i2}" FirstT="0" FirstZ="0" IFD="${i2}" PlaneCount="1"><UUID FileName="${uuid}">${uuid}</UUID></TiffData>`;
+    }).join("");
+    const physicalAttrs = optionalNumberAttr("PhysicalSizeX", pixels == null ? void 0 : pixels.PhysicalSizeX) + optionalNumberAttr("PhysicalSizeY", pixels == null ? void 0 : pixels.PhysicalSizeY) + optionalNumberAttr("PhysicalSizeZ", pixels == null ? void 0 : pixels.PhysicalSizeZ) + optionalStringAttr("PhysicalSizeXUnit", pixels == null ? void 0 : pixels.PhysicalSizeXUnit) + optionalStringAttr("PhysicalSizeYUnit", pixels == null ? void 0 : pixels.PhysicalSizeYUnit) + optionalStringAttr("PhysicalSizeZUnit", pixels == null ? void 0 : pixels.PhysicalSizeZUnit);
+    return `<?xml version="1.0" encoding="UTF-8"?><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"><Image ID="Image:0" Name="${escapeXmlAttr(imageName)}"><Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="${escapeXmlAttr(pixelType)}" SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1" SignificantBits="${significantBits}" Interleaved="${samplesPerPixel > 1}" BigEndian="false"${physicalAttrs}>${channelXml}${tiffDataXml}</Pixels></Image></OME>`;
+  }
+  function omeTiffExportBaseName(image2) {
+    var _a2;
+    const raw2 = ((_a2 = image2.basename) == null ? void 0 : _a2.replace(/\.(ome\.)?(tif|tiff)$/i, "")) || image2.id || "image";
+    const cleaned = raw2.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
+    return cleaned.replace(/-minerva$/i, "") || "image";
+  }
+  function omeTiffExportDiskName(stem2) {
+    return `${stem2}-minerva.ome.tif`;
+  }
+  function omeTiffExportFileName(image2, used) {
+    const base2 = omeTiffExportBaseName(image2);
+    let name2 = omeTiffExportDiskName(base2);
+    let n2 = 2;
+    while (used.has(name2.toLowerCase())) {
+      name2 = omeTiffExportDiskName(`${base2}_${n2}`);
+      n2 += 1;
+    }
+    used.add(name2.toLowerCase());
+    return name2;
+  }
+  function omeTiffMaskExportFileName(image2, used) {
+    const base2 = omeTiffExportBaseName(image2);
+    for (const candidate of [
+      omeTiffExportDiskName(base2),
+      omeTiffExportDiskName(`${base2}_mask`)
+    ]) {
+      if (!used.has(candidate.toLowerCase())) {
+        used.add(candidate.toLowerCase());
+        return candidate;
+      }
+    }
+    let n2 = 2;
+    let name2 = omeTiffExportDiskName(`${base2}_mask_${n2}`);
+    while (used.has(name2.toLowerCase())) {
+      n2 += 1;
+      name2 = omeTiffExportDiskName(`${base2}_mask_${n2}`);
+    }
+    used.add(name2.toLowerCase());
+    return name2;
+  }
+  function channelIdsFromGroups(channelGroups) {
+    const ids = /* @__PURE__ */ new Set();
+    for (const g2 of channelGroups) {
+      for (const row2 of g2.channels) {
+        ids.add(row2.channelId);
+      }
+    }
+    return ids;
+  }
+  function channelsOfKind(image2, kind) {
+    return (image2.channels ?? []).filter((ch2) => effectiveChannelKind(ch2) === kind).slice().sort((a2, b2) => a2.index - b2.index);
+  }
+  function groupChannelsForOmeExport(image2, channelGroups, kind) {
+    const wanted = channelIdsFromGroups(channelGroups);
+    if (wanted.size === 0) return [];
+    return channelsOfKind(image2, kind).filter((ch2) => wanted.has(ch2.id));
+  }
+  function groupIntensityChannelsForOmeExport(image2, channelGroups) {
+    const all2 = channelsOfKind(image2, "channel");
+    if (all2.length === 0) return [];
+    if (isRgbDisplayImage(image2)) return all2;
+    const grouped = groupChannelsForOmeExport(image2, channelGroups, "channel");
+    return grouped.length > 0 ? grouped : all2;
+  }
+  function groupMaskChannelsForOmeExport(image2, channelGroups) {
+    const grouped = groupChannelsForOmeExport(image2, channelGroups, "mask");
+    return grouped.length > 0 ? grouped : channelsOfKind(image2, "mask");
+  }
+  function contrastLimitsForExportedChannel(channel, channelGroups) {
     var _a2, _b2;
+    for (const g2 of channelGroups) {
+      for (const row2 of g2.channels) {
+        if (row2.channelId !== channel.id) continue;
+        return {
+          lowerLimit: row2.lowerLimit,
+          upperLimit: row2.upperLimit
+        };
+      }
+    }
+    const max2 = ((_a2 = channel.floatRange) == null ? void 0 : _a2.max) ?? sourceDtypeMax(channel.sourceDataTypeId);
     return {
-      id: UUID,
-      State: State2,
-      ...(Arrows == null ? void 0 : Arrows.length) ? {
-        Arrows
-      } : {},
-      ...(Overlays == null ? void 0 : Overlays.length) ? {
-        Overlays
-      } : {},
-      ...Properties,
-      Pan: [
-        Number((_a2 = Properties.Pan) == null ? void 0 : _a2[0]) || 0,
-        Number((_b2 = Properties.Pan) == null ? void 0 : _b2[1]) || 0
-      ]
+      lowerLimit: channel.lowerLimit ?? ((_b2 = channel.floatRange) == null ? void 0 : _b2.min) ?? 0,
+      upperLimit: channel.upperLimit ?? max2
     };
-  });
-  const exhibit_config = {
-    Name: "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer",
-    Stories: [
-      {
-        Waypoints: configWaypoints.map((wp) => ({
-          Name: wp.Name,
-          Description: wp.Content,
-          Pan: wp.Pan,
-          Zoom: wp.Zoom,
-          Group: wp.Group ?? ""
-        }))
-      }
-    ],
-    Groups: [
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "HE_r",
-          "HE_g",
-          "HE_b"
-        ],
-        Colors: [
-          "ff0000",
-          "00ff00",
-          "0000ff"
-        ],
-        Name: "Hematoxylin & Eosin",
-        Path: "Histology_40__HE-r--41__HE-g--42__HE-b",
-        Highs: [
-          65600,
-          65600,
-          65600
-        ],
-        Lows: [
-          0,
-          0,
-          0
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "PanCK",
-          "ASMA",
-          "CD31",
-          "CD45"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff",
-          "ff0000",
-          "00ff00",
-          "ffff00"
-        ],
-        Name: "Tissue Structure",
-        Path: "Tissue-Structure_0__DNA1--14__PanCK--15__ASMA--35__CD31--18__CD45",
-        Highs: [
-          3e4,
-          4e4,
-          1e4,
-          1e4,
-          12e3
-        ],
-        Lows: [
-          500,
-          500,
-          500,
-          500,
-          1500
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "CD45",
-          "CD8a",
-          "CD4",
-          "CD20",
-          "CD68"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff",
-          "ff0000",
-          "ff00ff",
-          "ffff00",
-          "00ff00"
-        ],
-        Name: "Immune Populations",
-        Path: "Immune-Populations_0__DNA1--18__CD45--23__CD8a--17__CD4--21__CD20--22__CD68--25__CD163",
-        Highs: [
-          3e4,
-          2e4,
-          15e3,
-          8e3,
-          45e3,
-          15e3
-        ],
-        Lows: [
-          500,
-          1500,
-          3e3,
-          3e3,
-          500,
-          3e3
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "CD8a",
-          "CD4",
-          "CD20",
-          "FOXP3"
-        ],
-        Colors: [
-          "0000ff",
-          "00ff00",
-          "ff0000",
-          "ffff00",
-          "ffffff"
-        ],
-        Name: "Lymphocytes",
-        Path: "Lymphocytes_0__DNA1--23__CD8a--17__CD4--21__CD20--26__FOXP3",
-        Highs: [
-          3e4,
-          15e3,
-          8e3,
-          45e3,
-          15e3
-        ],
-        Lows: [
-          500,
-          3e3,
-          3e3,
-          500,
-          500
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "CD68",
-          "CD163"
-        ],
-        Colors: [
-          "0000ff",
-          "00ff00",
-          "ff0000"
-        ],
-        Name: "Macrophages",
-        Path: "Macrophages_0__DNA1--22__CD68--25__CD163",
-        Highs: [
-          3e4,
-          1e4,
-          7e3
-        ],
-        Lows: [
-          500,
-          1e3,
-          2e3
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "PCNA",
-          "PanCK",
-          "CD45",
-          "Ki67"
-        ],
-        Colors: [
-          "0000ff",
-          "ff0000",
-          "ffffff",
-          "00ffff",
-          "00ff00"
-        ],
-        Name: "Proliferation",
-        Path: "Proliferation_0__DNA1--37__PCNA--14__PanCK--18__CD45--13__Ki67",
-        Highs: [
-          3e4,
-          2e4,
-          65e3,
-          15e3,
-          8e3
-        ],
-        Lows: [
-          500,
-          5e3,
-          1e3,
-          1500,
-          4e3
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "PanCK",
-          "PDL1",
-          "PD1"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff",
-          "ff0000",
-          "00ff00"
-        ],
-        Name: "PD1 Immune Checkpoint",
-        Path: "PD1-Immune-Checkpoint_0__DNA1--14__PanCK--27__PDL1--19__PD1",
-        Highs: [
-          3e4,
-          65e3,
-          6e3,
-          6e3
-        ],
-        Lows: [
-          500,
-          1e3,
-          2500,
-          1500
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "CD4",
-          "FOXP3"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff",
-          "ff0000"
-        ],
-        Name: "Helper and Regulatory T Cells",
-        Path: "Helper-and-Regulatory-T-Cells_0__DNA1--17__CD4--26__FOXP3",
-        Highs: [
-          3e4,
-          15e3,
-          1e4
-        ],
-        Lows: [
-          500,
-          3e3,
-          1e3
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "CD8a",
-          "PD1"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff",
-          "00ff00"
-        ],
-        Name: "CD8 Cytotoxic T Cells",
-        Path: "CD8-Cytotoxic-T-Cells_0__DNA1--23__CD8a--19__PD1",
-        Highs: [
-          3e4,
-          25e3,
-          1e4
-        ],
-        Lows: [
-          500,
-          3e3,
-          1500
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "CD8a",
-          "FOXP3"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff",
-          "ff0000"
-        ],
-        Name: "FOXP3 CD8 T Cells",
-        Path: "FOXP3-CD8-T-Cells_0__DNA1--23__CD8a--26__FOXP3",
-        Highs: [
-          3e4,
-          25e3,
-          1e4
-        ],
-        Lows: [
-          500,
-          3e3,
-          1e3
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "PanCK",
-          "Na_K_ATPase"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff",
-          "00ff00"
-        ],
-        Name: "NaK ATPase",
-        Path: "NaK-ATPase_0__DNA1--14__PanCK--10__Na-K-ATPase",
-        Highs: [
-          3e4,
-          65e3,
-          2e4
-        ],
-        Lows: [
-          500,
-          1e3,
-          1e3
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "PanCK",
-          "Ecadherin"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff",
-          "00ff00"
-        ],
-        Name: "E-Cadherin",
-        Path: "E-Cadherin_0__DNA1--14__PanCK--29__Ecadherin",
-        Highs: [
-          3e4,
-          65e3,
-          25e3
-        ],
-        Lows: [
-          500,
-          1e3,
-          1e3
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "ASMA",
-          "Desmin",
-          "Collagen",
-          "Vimentin"
-        ],
-        Colors: [
-          "0000ff",
-          "ff0000",
-          "00ff00",
-          "ffffff",
-          "00ffff"
-        ],
-        Name: "Stroma",
-        Path: "Stroma_0__DNA1--15__ASMA--34__Desmin--39__Collagen--30__Vimentin",
-        Highs: [
-          3e4,
-          3e4,
-          3e4,
-          6e4,
-          5e3
-        ],
-        Lows: [
-          500,
-          1e3,
-          1e3,
-          1e3,
-          1e3
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "CD4",
-          "CD68",
-          "CD163",
-          "PDL1"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff",
-          "00ffff",
-          "00ff00",
-          "ff0000"
-        ],
-        Name: "PDL1-Positive Immune Cells",
-        Path: "PDL1-Positive-Immune-Cells_0__DNA1--17__CD4--22__CD68--25__CD163--27__PDL1",
-        Highs: [
-          3e4,
-          15e3,
-          15e3,
-          1e4,
-          5e3
-        ],
-        Lows: [
-          500,
-          3e3,
-          3e3,
-          2e3,
-          2500
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "PDL1",
-          "CD8a",
-          "PD1"
-        ],
-        Colors: [
-          "0000ff",
-          "ff0000",
-          "ffffff",
-          "00ff00"
-        ],
-        Name: "PDL1-CD8 Interaction",
-        Path: "PDL1-CD8-Interaction_0__DNA1--27__PDL1--23__CD8a--19__PD1",
-        Highs: [
-          3e4,
-          5e3,
-          25e3,
-          1e4
-        ],
-        Lows: [
-          500,
-          2500,
-          3e3,
-          1500
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "PanCK",
-          "Ecadherin",
-          "PCNA"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff",
-          "00ff00",
-          "ff0000"
-        ],
-        Name: "Tumor Budding Epithelial",
-        Path: "Tumor-Budding-Epithelial_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA",
-        Highs: [
-          4e4,
-          65e3,
-          25e3,
-          5e4
-        ],
-        Lows: [
-          500,
-          1e3,
-          1e3,
-          1e3
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "PanCK",
-          "PDL1",
-          "FOXP3",
-          "CD8a",
-          "PD1"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff",
-          "ff0000",
-          "ffff00",
-          "00ff00",
-          "6c00ff"
-        ],
-        Name: "Tumor Budding Immune Modulation",
-        Path: "Tumor-Budding-Immune-Modulation_0__DNA1--14__PanCK--27__PDL1--26__FOXP3--23__CD8a--19__PD1--22__CD68",
-        Highs: [
-          3e4,
-          4e4,
-          5e3,
-          7e3,
-          2e4,
-          6e3
-        ],
-        Lows: [
-          500,
-          500,
-          2500,
-          1e3,
-          1500,
-          1500
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "LaminABC"
-        ],
-        Colors: [
-          "0000ff",
-          "00ff00"
-        ],
-        Name: "Nuclear Lamina",
-        Path: "Nuclear-Lamina_0__DNA1--33__LaminABC",
-        Highs: [
-          3e4,
-          2e4
-        ],
-        Lows: [
-          500,
-          500
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "DNA10"
-        ],
-        Colors: [
-          "0000ff",
-          "ff0000"
-        ],
-        Name: "DAPI Cycle Correlation",
-        Path: "DAPI-Cycle-Correlation_0__DNA1--36__DNA10",
-        Highs: [
-          65e3,
-          5e4
-        ],
-        Lows: [
-          1e3,
-          1e3
-        ]
-      },
-      {
-        Image: {
-          Method: "Colorimetric"
-        },
-        Channels: [
-          "DNA1",
-          "PanCK",
-          "Ecadherin",
-          "PCNA"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff",
-          "00ff00",
-          "ff0000"
-        ],
-        Name: "Transitions",
-        Path: "Transitions_0__DNA1--14__PanCK--29__Ecadherin--37__PCNA",
-        Highs: [
-          32768,
-          5e4,
-          5e4,
-          2e4
-        ],
-        Lows: [
-          0,
-          0,
-          1e3,
-          5e3
-        ]
-      }
-    ]
-  };
-  const jpeg_exhibit_config = {
-    Name: "JPEG demo",
-    Stories: [
-      {
-        Waypoints: configWaypoints.map((wp) => ({
-          Name: wp.Name,
-          Description: wp.Content,
-          Pan: wp.Pan,
-          Zoom: wp.Zoom,
-          Group: wp.Group ?? ""
-        }))
-      }
-    ],
-    Groups: [
-      {
-        Image: {
-          Method: ""
-        },
-        Channels: [
-          "DNA1",
-          "AF488"
-        ],
-        Colors: [
-          "0000ff",
-          "ffffff"
-        ],
-        Name: "DemoGroup",
-        Path: "DemoGroup_0__DNA1--1__AF488",
-        Highs: [
-          3e4,
-          4e4
-        ],
-        Lows: [
-          500,
-          500
-        ]
-      }
-    ]
-  };
-  const DEMO_CRC_OME_TIFF_URL = "https://lsp-public-data.s3.amazonaws.com/lin-2021-crc-atlas/CRC01-096-097.ome.tif";
-  const DEMO_JPEG_URL = "crc-export";
-  exhibit_config.Name ?? "Multiplexed 3D atlas of state transitions and immune interactions in colorectal cancer";
-  const EMPTY_EXHIBIT_CONFIG = {
-    Name: "",
-    Stories: [],
-    Groups: []
-  };
-  function isJpegDemoMode() {
-    return false;
   }
-  function isDemoContentEnabled() {
-    return false;
+  function imageOwningChannel(images, channelId) {
+    for (const image2 of images) {
+      const channel = (image2.channels ?? []).find((ch2) => ch2.id === channelId);
+      if (channel) return {
+        image: image2,
+        channel
+      };
+    }
+    return null;
   }
-  function getDemoDocumentTitle() {
-    return "Minerva";
+  function jpegPyramidExportChannels(images, channelGroups, storyTransfer) {
+    if (!channelGroups.some((g2) => g2.channels.length > 0)) {
+      const out2 = [];
+      for (const image2 of images) {
+        const transfer = exportTransferForImage(image2, storyTransfer);
+        const channels2 = [
+          ...groupIntensityChannelsForOmeExport(image2, channelGroups),
+          ...groupMaskChannelsForOmeExport(image2, channelGroups)
+        ];
+        for (const ch2 of channels2) {
+          const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
+          const limits = folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
+          out2.push({
+            channelId: ch2.id,
+            sourceImageId: image2.id,
+            index: ch2.index,
+            lowerLimit: limits.lowerLimit,
+            upperLimit: limits.upperLimit,
+            transfer
+          });
+        }
+      }
+      return out2;
+    }
+    const out = [];
+    const seenGroupChannelIds = /* @__PURE__ */ new Set();
+    for (const g2 of channelGroups) {
+      for (const row2 of g2.channels) {
+        const loc = imageOwningChannel(images, row2.channelId);
+        if (!loc) continue;
+        const transfer = exportTransferForImage(loc.image, storyTransfer);
+        const limits = folderLimitsForTransfer(transfer, row2.lowerLimit, row2.upperLimit);
+        out.push({
+          channelId: row2.channelId,
+          sourceImageId: loc.image.id,
+          index: loc.channel.index,
+          lowerLimit: limits.lowerLimit,
+          upperLimit: limits.upperLimit,
+          transfer
+        });
+        seenGroupChannelIds.add(row2.channelId);
+      }
+    }
+    for (const image2 of images) {
+      if (!isRgbDisplayImage(image2)) continue;
+      const transfer = exportTransferForImage(image2, storyTransfer);
+      for (const ch2 of groupIntensityChannelsForOmeExport(image2, channelGroups)) {
+        if (seenGroupChannelIds.has(ch2.id)) continue;
+        const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
+        const limits = folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
+        out.push({
+          channelId: ch2.id,
+          sourceImageId: image2.id,
+          index: ch2.index,
+          lowerLimit: limits.lowerLimit,
+          upperLimit: limits.upperLimit,
+          transfer
+        });
+      }
+    }
+    return out;
   }
-  async function ensureDemoShelfStory() {
-    return;
-  }
-  function getDemoMainProps() {
-    const jpeg = isJpegDemoMode();
-    const enabled2 = isDemoContentEnabled();
+  function allocateOmeTiffExportFileNames(intensityImages, maskImages) {
+    const used = /* @__PURE__ */ new Set();
     return {
-      demo_dicom_web: false,
-      demo_jpeg: jpeg,
-      demo_url: enabled2 ? jpeg ? DEMO_JPEG_URL : DEMO_CRC_OME_TIFF_URL : void 0,
-      exhibit_config: enabled2 ? jpeg ? jpeg_exhibit_config : exhibit_config : EMPTY_EXHIBIT_CONFIG,
-      configWaypoints: enabled2 && !jpeg ? configWaypoints : []
+      intensityFileNames: intensityImages.map((im) => omeTiffExportFileName(im, used)),
+      maskFileNames: maskImages.map((im) => omeTiffMaskExportFileName(im, used))
     };
+  }
+  function stitchOmeTiffExportImages(images, remappedById, insertedAfter, dropIds) {
+    return images.flatMap((im) => {
+      if (dropIds.has(im.id)) return insertedAfter.get(im.id) ?? [];
+      const main2 = remappedById.get(im.id) ?? im;
+      return [
+        main2,
+        ...insertedAfter.get(im.id) ?? []
+      ];
+    });
+  }
+  function remappedImageForOmeTiffExport(image2, exportedChannels, fileName) {
+    return {
+      ...image2,
+      sizeC: exportedChannels.length,
+      channels: exportedChannels.map((ch2, i2) => ({
+        ...ch2,
+        index: i2
+      })),
+      source: {
+        kind: "url",
+        url: fileName
+      }
+    };
+  }
+  const EXPORT_TILE_SIZE = 1024;
+  function exportPlaneLevels(loaderData) {
+    return loaderData.map((plane) => {
+      const { width, height } = getImageSize(plane);
+      return {
+        width,
+        height,
+        tileSize: EXPORT_TILE_SIZE
+      };
+    });
+  }
+  function tileCountForLevels(levels, channelCount) {
+    let n2 = 0;
+    for (const level of levels) {
+      n2 += Math.ceil(level.width / level.tileSize) * Math.ceil(level.height / level.tileSize) * channelCount;
+    }
+    return n2;
+  }
+  function loaderPlanesOrUndef(entry) {
+    const data2 = entry.loader.data;
+    return (data2 == null ? void 0 : data2.length) ? data2 : void 0;
   }
   function imageHandleStorageKey(storyId, imageId) {
     return storyId ? `story:${storyId}:image:${imageId}` : `image:${imageId}`;
@@ -174089,113 +172763,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     });
     return next2;
   }
-  function cropTile(full2, stride, width, height) {
-    if (width === stride && height === stride) return full2;
-    const out = new Uint16Array(width * height);
-    for (let row2 = 0; row2 < height; row2++) {
-      out.set(full2.subarray(row2 * stride, row2 * stride + width), row2 * width);
-    }
-    return out;
-  }
-  async function readTileThroughLut(plane, args, lut, uncached = false) {
-    var _a2;
-    const source2 = plane;
-    const pool = source2.pool;
-    if (!source2._indexer || !source2._getTileExtent || !(pool instanceof OmeDecodePool)) {
-      return null;
-    }
-    try {
-      const indexed = await source2._indexer(args.selection);
-      const image2 = uncached ? uncachedTiffImage(indexed) : indexed;
-      if (!image2.isTiled || image2.getTileWidth() !== source2.tileSize || image2.getTileHeight() !== source2.tileSize || image2.getSamplesPerPixel() !== 1 || image2.getBitsPerSample(0) !== 8) {
-        return null;
-      }
-      const { width, height } = source2._getTileExtent(args.x, args.y);
-      const stride = source2.tileSize;
-      const decoder = {
-        decode: (fileDirectory, buffer2) => {
-          var _a3;
-          if ((_a3 = args.signal) == null ? void 0 : _a3.aborted) throw SIGNAL_ABORTED;
-          return pool.decodeWidened(fileDirectory, buffer2, lut);
-        }
-      };
-      const tile = await image2.getTileOrStrip(args.x, args.y, 0, decoder);
-      if ((_a2 = args.signal) == null ? void 0 : _a2.aborted) throw SIGNAL_ABORTED;
-      const bytes = tile.data;
-      const full2 = bytes.byteLength === stride * stride * 2 ? new Uint16Array(bytes) : expandThroughLut(new Uint8Array(bytes), lut);
-      return {
-        data: cropTile(full2, stride, width, height),
-        width,
-        height
-      };
-    } catch (err2) {
-      if (err2 === SIGNAL_ABORTED) throw err2;
-      return null;
-    }
-  }
-  async function readWindowThroughLut(plane, { selection, window: window2, signal }, lut) {
-    const [x0, y0, x1, y1] = window2;
-    const width = x1 - x0;
-    const height = y1 - y0;
-    const size = plane.tileSize;
-    if (x0 % size === 0 && y0 % size === 0 && width <= size && height <= size) {
-      const args = {
-        selection,
-        x: x0 / size,
-        y: y0 / size,
-        signal
-      };
-      const tile = await readTileThroughLut(plane, args, lut, true);
-      if ((tile == null ? void 0 : tile.width) === width && tile.height === height) return tile;
-    }
-    const source2 = plane;
-    const image2 = uncachedTiffImage(await source2._indexer(selection));
-    const options = {
-      window: window2,
-      width,
-      height,
-      pool: source2.pool
-    };
-    const raster = await image2.readRasters(options);
-    if (signal == null ? void 0 : signal.aborted) throw SIGNAL_ABORTED;
-    const [samples] = raster;
-    return {
-      data: expandThroughLut(samples, lut),
-      width,
-      height
-    };
-  }
-  function wrapOmeLoaderJpegExport(loader, transfer) {
-    var _a2;
-    const lut = u8ToU16Lut(transfer);
-    const data2 = (_a2 = loader.data) == null ? void 0 : _a2.map((plane) => {
-      var _a3, _b2;
-      const getTile = (_a3 = plane.getTile) == null ? void 0 : _a3.bind(plane);
-      if (!getTile) return plane;
-      const wrapped = {
-        ...plane,
-        dtype: "Uint16",
-        onTileError: (_b2 = plane.onTileError) == null ? void 0 : _b2.bind(plane),
-        getTile: async (args) => {
-          const fast = await readTileThroughLut(plane, args, lut);
-          if (fast) return fast;
-          const tile = await getTile(args);
-          return {
-            ...tile,
-            data: expandThroughLut(tile.data, lut)
-          };
-        },
-        ...plane._indexer ? {
-          readWindow: (args) => readWindowThroughLut(plane, args, lut)
-        } : {}
-      };
-      return wrapped;
-    });
-    return data2 ? {
-      ...loader,
-      data: data2
-    } : loader;
-  }
   const omeLoaderRole = (im) => resolveImageContentRole({
     contentRole: im.contentRole,
     channels: im.channels ?? []
@@ -174209,7 +172776,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       };
     }
     return {
-      loader: wrapOmeLoaderJpegExport(loader, jpegTransfer),
+      loader: wrapOmeLoaderJpegExport(loader, u8ToU16Lut(jpegTransfer)),
       transfer: jpegTransfer
     };
   }
@@ -174219,7 +172786,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   async function hydrateDocumentLoaders(images, opts = {}) {
     var _a2;
     const jpegLoaderEntries = [];
-    const omeLoaderEntries = [];
     const dicomIndexList = [];
     const deniedHandleKeys = [];
     const missingHandleKeys = [];
@@ -174245,27 +172811,55 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         existingPyramidFolders: opts.existingPyramidFolders
       } : {}
     }));
-    const loadLocalFile = async (im, handle2) => {
+    const omeSlots = images.map((im) => {
+      var _a3, _b2;
+      return ((_a3 = im.source) == null ? void 0 : _a3.kind) === "url" || ((_b2 = im.source) == null ? void 0 : _b2.kind) === "local" ? void 0 : null;
+    });
+    const readyOme = () => omeSlots.filter((slot) => slot != null);
+    const onLoaders = images.some((im) => {
+      var _a3;
+      return ((_a3 = im.source) == null ? void 0 : _a3.kind) === "dicomWeb";
+    }) ? void 0 : opts.onLoaders;
+    let publishedCount = 0;
+    const settle = (index2, entry) => {
+      omeSlots[index2] = entry;
+      const first = omeSlots.findIndex((slot) => slot !== null);
+      if (!onLoaders || first < 0 || omeSlots[first] === void 0) return;
+      const ready = readyOme();
+      if (ready.length === publishedCount) return;
+      publishedCount = ready.length;
+      onLoaders({
+        jpegLoaderEntries,
+        omeLoaderEntries: ready,
+        dicomIndexList
+      });
+    };
+    const openOme = async (index2, im, source2) => {
+      let entry = null;
       try {
-        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-          kind: "local",
-          handle: handle2,
-          ...pool ? {
-            pool
-          } : {},
-          rgbDisplay: im.rgbDisplay
-        });
-        omeLoaderEntries.push({
+        const loader = await loadOmeLoaderForRole(omeLoaderRole(im), source2);
+        entry = {
           ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
           sourceImageId: im.id
-        });
+        };
       } catch (e2) {
         loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
       }
+      settle(index2, entry);
     };
-    for (const im of images) {
+    const loadLocalFile = (index2, im, handle2) => openOme(index2, im, {
+      kind: "local",
+      handle: handle2,
+      ...pool ? {
+        pool
+      } : {},
+      rgbDisplay: im.rgbDisplay
+    });
+    const remoteOpens = [];
+    for (const [index2, im] of images.entries()) {
       if (!im.source) continue;
       if (im.source.kind === "jpeg") continue;
+      const opening2 = remoteOpens.length;
       switch (im.source.kind) {
         case "url": {
           if (includeLocal && isRelativeOmeTiffUrl(im.source.url)) {
@@ -174284,26 +172878,18 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
             if (await findFile({
               handle: resolved.handle
             })) {
-              await loadLocalFile(im, resolved.handle);
+              await loadLocalFile(index2, im, resolved.handle);
             }
             break;
           }
-          try {
-            const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-              kind: "url",
-              url: resolveOmeSourceUrl(documentUrl, im.source.url),
-              ...pool ? {
-                pool
-              } : {},
-              rgbDisplay: im.rgbDisplay
-            });
-            omeLoaderEntries.push({
-              ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
-              sourceImageId: im.id
-            });
-          } catch (e2) {
-            loaderErrors.push(e2 instanceof Error ? e2.message : `Could not load ${im.basename}`);
-          }
+          remoteOpens.push(openOme(index2, im, {
+            kind: "url",
+            url: resolveOmeSourceUrl(documentUrl, im.source.url),
+            ...pool ? {
+              pool
+            } : {},
+            rgbDisplay: im.rgbDisplay
+          }));
           break;
         }
         case "local": {
@@ -174321,7 +172907,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
           if (!await findFile({
             handle: handle2
           })) break;
-          await loadLocalFile(im, handle2);
+          await loadLocalFile(index2, im, handle2);
           break;
         }
         case "dicomWeb": {
@@ -174344,15 +172930,26 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
           break;
         }
       }
+      if (omeSlots[index2] === void 0 && remoteOpens.length === opening2) {
+        settle(index2, null);
+      }
     }
+    await Promise.all(remoteOpens);
     return {
       jpegLoaderEntries,
-      omeLoaderEntries,
+      omeLoaderEntries: readyOme(),
       dicomIndexList,
       deniedHandleKeys,
       missingHandleKeys,
       loaderErrors
     };
+  }
+  async function fetchStoryDocument(documentUrl) {
+    const res = await fetch(documentUrl);
+    if (!res.ok) {
+      throw new Error(`Failed to load ${documentUrl} (${res.status})`);
+    }
+    return validateDocumentData(await res.json());
   }
   const minervaMarkSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="3.9 0.5 162 162">\n  <polygon fill="#00A5DF" points="84.9,125.15 74.67,101.74 61.02,109.33 54.73,141.49 66.91,150.34 71.24,125.99 84.9,156.83 98.55,125.99 102.88,150.34 115.07,141.49 108.77,109.33 95.12,101.74"/>\n  <polygon fill="#00A5DF" points="98.18,94.75 105.77,94 103.52,82.52"/>\n  <polygon fill="#00A5DF" points="64.02,94 71.62,94.75 66.27,82.52"/>\n  <polygon fill="#963CBD" points="161.32,101.3 136.22,78.79 160.71,82.19 156.07,67.87 123.52,63.92 112.09,74.55 131.19,91.51 105.77,94 108.77,109.33 137.41,125.25 149.6,116.4 127.78,104.76"/>\n  <polygon fill="#963CBD" points="95.12,101.74 98.18,94.75 84.9,96.05"/>\n  <polygon fill="#963CBD" points="106.39,69.49 108.02,62.04 96.41,60.63"/>\n  <polygon fill="#004EA8" points="98.18,94.75 95.12,101.74 108.77,109.33 105.77,94"/>\n  <polygon fill="#93C90F" points="113.51,37.09 108.02,62.04 123.52,63.92 147.52,41.6 142.87,27.28 125.05,44.43 132.13,11.46 102.96,28.38 113.77,6.13 98.71,6.13 84.9,35.85 91.48,50.01"/>\n  <polygon fill="#93C90F" points="73.39,60.63 84.9,53.87 78.32,50.01"/>\n  <polygon fill="#93C90F" points="103.52,82.52 112.09,74.55 106.39,69.49"/>\n  <polygon fill="#007749" points="106.39,69.49 112.09,74.55 123.52,63.92 108.02,62.04"/>\n  <polygon fill="#D00070" points="91.48,50.01 84.9,53.87 96.41,60.63"/>\n  <polygon fill="#D00070" points="63.41,69.49 57.7,74.55 66.27,82.52"/>\n  <polygon fill="#D00070" points="56.28,37.09 78.32,50.01 84.9,35.85 71.09,6.13 56.03,6.13 66.83,28.38 37.66,11.46 44.74,44.43 26.92,27.28 22.27,41.6 46.27,63.92 61.77,62.04"/>\n  <polygon fill="#890C58" points="84.9,53.87 91.48,50.01 84.9,35.85 78.32,50.01"/>\n  <polygon fill="#FF6720" points="71.62,94.75 74.67,101.74 84.9,96.05"/>\n  <polygon fill="#FF6720" points="73.39,60.63 61.77,62.04 63.41,69.49"/>\n  <polygon fill="#FF6720" points="38.6,91.51 57.7,74.55 46.27,63.92 13.69,67.87 9.08,82.19 33.58,78.79 8.47,101.3 42.02,104.76 20.2,116.4 32.38,125.25 61.02,109.33 64.02,94"/>\n  <polygon fill="#00778B" points="71.62,94.75 64.02,94 61.02,109.33 74.67,101.74"/>\n  <polygon fill="#AB2328" points="63.41,69.49 61.77,62.04 46.27,63.92 57.7,74.55"/>\n</svg>\n';
   function storedTableFormat(bytes) {
@@ -174381,23 +172978,50 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     await write.write(data2);
     await write.close();
   }
-  const storySearchSchema = objectType({
-    storyid: stringType().uuid().optional()
-  });
-  function parseRootSearch(raw2) {
-    const r2 = storySearchSchema.safeParse(raw2);
-    if (!r2.success) return {};
+  function classifyViewerLaunchUrl(raw2) {
+    const trimmed = raw2.trim();
+    let parsed;
+    try {
+      parsed = new URL(trimmed);
+    } catch {
+      return null;
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    const pathUrl = `${parsed.origin}${parsed.pathname}`;
+    if (isDicomWebSeriesUrl(pathUrl)) {
+      return {
+        kind: "dicomWeb",
+        url: normalizeDicomWebSeriesUrl(pathUrl)
+      };
+    }
+    const path2 = parsed.pathname.replace(/\/+$/, "");
+    if (path2.toLowerCase().endsWith(".json")) {
+      return {
+        kind: "story",
+        url: trimmed
+      };
+    }
     return {
-      storyid: r2.data.storyid
+      kind: "image",
+      url: trimmed
     };
   }
-  const uuidParamSchema = stringType().uuid();
-  function parsePreferredStoryIdFromLocation() {
-    if (typeof window === "undefined") return null;
-    const raw2 = new URLSearchParams(window.location.search).get("storyid");
-    if (raw2 === null || raw2 === "") return null;
-    const r2 = uuidParamSchema.safeParse(raw2);
-    return r2.success ? r2.data : null;
+  const uuidSchema = stringType().uuid();
+  function parseRootSearch(search2) {
+    const query = search2.replace(/^\?/, "");
+    const srcAt = /(?:^|&)src=/.exec(query);
+    const out = {};
+    const storyid = new URLSearchParams(srcAt ? query.slice(0, srcAt.index) : query).get("storyid");
+    if (storyid && uuidSchema.safeParse(storyid).success) out.storyid = storyid;
+    const src = srcAt ? query.slice(srcAt.index + srcAt[0].length).trim() : "";
+    if (src && classifyViewerLaunchUrl(src)) out.src = src;
+    return out;
+  }
+  function stringifyRootSearch({ storyid, src }) {
+    const parts = [];
+    if (storyid) parts.push(`storyid=${storyid}`);
+    if (src) parts.push(`src=${src}`);
+    return parts.length ? `?${parts.join("&")}` : "";
   }
   const rootRouteApi = getRouteApi("__root__");
   function StoryIdUrlSync() {
@@ -174407,17 +173031,10 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const switchStory = useDocumentStore((s2) => s2.switchStory);
     reactExports.useEffect(() => {
       const sid = search2.storyid;
-      if (sid === void 0) return;
-      if (activeStoryId === sid) return;
+      if (sid === void 0 || activeStoryId === sid) return;
       if (activeStoryId === null) {
         navigate({
-          search: (prev) => {
-            const next2 = {
-              ...prev
-            };
-            delete next2.storyid;
-            return next2;
-          },
+          search: {},
           replace: true
         });
         return;
@@ -174428,13 +173045,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
           await switchStory(sid);
         } catch {
           navigate({
-            search: (prev) => {
-              const next2 = {
-                ...prev
-              };
-              delete next2.storyid;
-              return next2;
-            },
+            search: {},
             replace: true
           });
         }
@@ -174447,18 +173058,18 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     ]);
     reactExports.useEffect(() => {
       if (activeStoryId === null) return;
-      if (search2.storyid === activeStoryId) return;
+      if (search2.storyid === activeStoryId && search2.src === void 0) return;
       navigate({
-        search: (prev) => ({
-          ...prev,
+        search: {
           storyid: activeStoryId
-        }),
+        },
         replace: true
       });
     }, [
       activeStoryId,
       navigate,
-      search2.storyid
+      search2.storyid,
+      search2.src
     ]);
     return null;
   }
@@ -174489,7 +173100,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   }
   function createAppRouter(MainComponent, mainProps) {
     const rootRoute = createRootRoute({
-      validateSearch: parseRootSearch,
       component: function RootLayout() {
         return jsxRuntimeExports.jsx(MainComponent, {
           ...mainProps
@@ -174498,10 +173108,12 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     });
     return createRouter({
       routeTree: rootRoute,
-      basepath: routerBasepath()
+      basepath: routerBasepath(),
+      parseSearch: parseRootSearch,
+      stringifySearch: stringifyRootSearch
     });
   }
-  const version = "1.0.0-alpha.11";
+  const version = "1.0.0-alpha.12";
   const LOCAL_PLAYER_DIR = "bundle";
   const FAVICON_HREF = `data:image/svg+xml,${encodeURIComponent(minervaMarkSvg.replace(/\s*\n\s*/g, ""))}`;
   function hostedPlayerBaseUrl() {
@@ -174721,33 +173333,20 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     };
   }
   async function neededJpegPyramidFolderNames(channelGroups, images, transfer = "contrast") {
-    var _a2, _b2;
     const names = /* @__PURE__ */ new Set();
+    if (images && images.length > 0) {
+      const exported = jpegPyramidExportChannels(images, [
+        ...channelGroups
+      ], transfer);
+      await Promise.all(exported.map(async (ch2) => {
+        names.add(await jpegPyramidFolderName(ch2.channelId, ch2.lowerLimit, ch2.upperLimit));
+      }));
+      return names;
+    }
     await Promise.all(channelGroups.flatMap((g2) => g2.channels.map(async (ch2) => {
       const { lowerLimit, upperLimit } = folderLimitsForTransfer(transfer, ch2.lowerLimit, ch2.upperLimit);
       names.add(await jpegPyramidFolderName(ch2.channelId, lowerLimit, upperLimit));
     })));
-    if (names.size === 0 && images) {
-      for (const im of images) {
-        if (((_a2 = im.source) == null ? void 0 : _a2.kind) !== "jpeg" && ((_b2 = im.source) == null ? void 0 : _b2.kind) !== "local") continue;
-        const channelIndexById = Object.fromEntries(im.channels.map((ch2) => [
-          ch2.id,
-          ch2.index
-        ]));
-        const folders = await folderByChannelIndexFromGroup({
-          channels: im.channels.map((ch2) => {
-            const { lowerLimit, upperLimit } = folderLimitsForTransfer(transfer, ch2.lowerLimit ?? JPEG_BAKED_CONTRAST_LIMIT[0], ch2.upperLimit ?? JPEG_BAKED_CONTRAST_LIMIT[1]);
-            return {
-              channelId: ch2.id,
-              lowerLimit,
-              upperLimit
-            };
-          }),
-          channelIndexById
-        });
-        for (const name2 of Object.values(folders)) names.add(name2);
-      }
-    }
     return names;
   }
   async function listExistingPyramidFolders(root2) {
@@ -174799,7 +173398,11 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       throw e2;
     }
     const file = await fh2.getFile();
-    return validateDocumentData(JSON.parse(await file.text()));
+    const raw2 = JSON.parse(await file.text());
+    if (!looksLikeStoryJson(raw2)) {
+      throw new Error("document.json is not a Minerva story.");
+    }
+    return validateDocumentData(raw2);
   }
   function portableImportImages(data2) {
     const keep = data2.metadata.imageSource === "remote-url" || data2.images.some((im) => {
@@ -174890,19 +173493,87 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   }
   async function importStoryJsonFromPicker() {
     const file = await n$1({
-      description: "Minerva story JSON",
-      mimeTypes: [
-        "application/json"
-      ],
-      extensions: [
-        ".json"
-      ],
+      ...importFilePickerOptions([
+        "story"
+      ]),
       multiple: false
     });
-    const data2 = validateDocumentData(JSON.parse(await file.text()));
+    return importStoryJsonFile(file);
+  }
+  const STORY_JSON_KEYS = [
+    "waypoints",
+    "shapes",
+    "images",
+    "channelGroups",
+    "groups",
+    "channels"
+  ];
+  function isPlainObject$2(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  }
+  function looksLikeStoryJson(raw2) {
+    if (!isPlainObject$2(raw2)) return false;
+    if (raw2.version === "1" || raw2.version === "2") return true;
+    if (isPlainObject$2(raw2.metadata)) return true;
+    return STORY_JSON_KEYS.some((key2) => {
+      const value = raw2[key2];
+      return Array.isArray(value) && value.some(isPlainObject$2);
+    });
+  }
+  async function importStoryJsonFile(file) {
+    const raw2 = JSON.parse(await file.text());
+    if (!looksLikeStoryJson(raw2)) {
+      throw new Error(`${file.name} is not a Minerva story.`);
+    }
+    const data2 = validateDocumentData(raw2);
     const base2 = file.name.replace(/\.json$/i, "").trim();
     const fallback = /^(document|story)$/i.test(base2) ? "Imported Story" : base2;
     return persistImportedStory(data2, fallback);
+  }
+  function withHostedSources(data2, documentUrl) {
+    const hosted = (url) => new URL(url.trim() || ".", documentUrl).href;
+    return {
+      ...data2,
+      images: data2.images.map((im) => {
+        const source2 = im.source;
+        if ((source2 == null ? void 0 : source2.kind) === "jpeg") {
+          const url = hosted(source2.url).replace(/\/$/, "");
+          return {
+            ...im,
+            source: {
+              kind: "jpeg",
+              url
+            }
+          };
+        }
+        if ((source2 == null ? void 0 : source2.kind) === "url") {
+          const url = hosted(source2.url);
+          return {
+            ...im,
+            source: {
+              kind: "url",
+              url
+            }
+          };
+        }
+        return im;
+      }),
+      featureTables: data2.featureTables.map((table2) => table2.source.kind === "url" ? {
+        ...table2,
+        source: {
+          kind: "url",
+          url: hosted(table2.source.url)
+        }
+      } : table2)
+    };
+  }
+  async function importStoryFromUrl(documentUrl) {
+    const data2 = await fetchStoryDocument(documentUrl);
+    const hosted = withHostedSources({
+      ...data2,
+      images: portableImportImages(data2)
+    }, documentUrl);
+    return persistImportedStory(hosted, "");
   }
   async function importStoryFolderFromPicker() {
     if (!hasDirectoryPickerAccess()) {
@@ -174934,32 +173605,59 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       return ((_a2 = im.source) == null ? void 0 : _a2.kind) === "jpeg" && jpegSourceNeedsLocalRoot(im.source.url);
     });
   }
-  const root$8 = "_root_la95u_6";
-  const masthead = "_masthead_la95u_19";
-  const addWrap = "_addWrap_la95u_30";
-  const addMenu = "_addMenu_la95u_38";
-  const intakeRow = "_intakeRow_la95u_44";
-  const addTrigger = "_addTrigger_la95u_54";
-  const tagline = "_tagline_la95u_80";
-  const error = "_error_la95u_88";
-  const whisper = "_whisper_la95u_97";
-  const bookcase = "_bookcase_la95u_105";
-  const bookcaseInner = "_bookcaseInner_la95u_117";
-  const shelfBay = "_shelfBay_la95u_122";
-  const bayContent = "_bayContent_la95u_128";
-  const bayContentEmpty = "_bayContentEmpty_la95u_137";
-  const ghostShelf = "_ghostShelf_la95u_143";
-  const ghostBook = "_ghostBook_la95u_155";
-  const storyRow = "_storyRow_la95u_159";
-  const shelfBoard = "_shelfBoard_la95u_170";
-  const rowOpen = "_rowOpen_la95u_179";
-  const rowThumb = "_rowThumb_la95u_205";
-  const rowThumbImg = "_rowThumbImg_la95u_215";
-  const rowThumbBlank = "_rowThumbBlank_la95u_223";
-  const rowText = "_rowText_la95u_230";
-  const rowTitle$1 = "_rowTitle_la95u_239";
-  const rowDate = "_rowDate_la95u_249";
-  const scrap = "_scrap_la95u_258";
+  function utcShort(iso) {
+    const t2 = Date.parse(iso);
+    if (Number.isNaN(t2)) return null;
+    return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
+  }
+  function buildStamp() {
+    const iso = "2026-11-02T21:41:14.577Z";
+    const sha = "424c13e50e1433f1d3dc0632165e1a6cfd82b79b";
+    const label2 = utcShort(iso);
+    const short = sha.slice(0, 7);
+    const text2 = [
+      label2 ? `Updated ${label2} UTC` : "",
+      short
+    ].filter(Boolean).join(" \xB7 ");
+    if (!text2) return null;
+    return {
+      text: text2,
+      title: [
+        iso,
+        sha
+      ].filter(Boolean).join("\n")
+    };
+  }
+  const root$8 = "_root_1nhe6_6";
+  const masthead = "_masthead_1nhe6_19";
+  const addWrap = "_addWrap_1nhe6_30";
+  const addMenu = "_addMenu_1nhe6_38";
+  const intakeRow = "_intakeRow_1nhe6_44";
+  const addTrigger = "_addTrigger_1nhe6_54";
+  const tagline = "_tagline_1nhe6_80";
+  const exampleLink = "_exampleLink_1nhe6_88";
+  const error = "_error_1nhe6_102";
+  const whisper = "_whisper_1nhe6_111";
+  const bookcase = "_bookcase_1nhe6_119";
+  const bookcaseInner = "_bookcaseInner_1nhe6_131";
+  const shelfBay = "_shelfBay_1nhe6_136";
+  const bayContent = "_bayContent_1nhe6_142";
+  const bayContentEmpty = "_bayContentEmpty_1nhe6_151";
+  const ghostShelf = "_ghostShelf_1nhe6_157";
+  const ghostBook = "_ghostBook_1nhe6_169";
+  const storyRow = "_storyRow_1nhe6_173";
+  const shelfBoard = "_shelfBoard_1nhe6_184";
+  const rowOpen = "_rowOpen_1nhe6_193";
+  const rowThumb = "_rowThumb_1nhe6_219";
+  const rowThumbImg = "_rowThumbImg_1nhe6_229";
+  const rowThumbBlank = "_rowThumbBlank_1nhe6_237";
+  const rowText = "_rowText_1nhe6_244";
+  const rowTitle$1 = "_rowTitle_1nhe6_253";
+  const rowDate = "_rowDate_1nhe6_263";
+  const scrap = "_scrap_1nhe6_272";
+  const buildInfo = "_buildInfo_1nhe6_311";
+  const buildInfoButton = "_buildInfoButton_1nhe6_322";
+  const buildInfoStamp = "_buildInfoStamp_1nhe6_345";
   const styles$n = {
     root: root$8,
     masthead,
@@ -174968,6 +173666,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     intakeRow,
     addTrigger,
     tagline,
+    exampleLink,
     error,
     whisper,
     bookcase,
@@ -174986,10 +173685,16 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     rowText,
     rowTitle: rowTitle$1,
     rowDate,
-    scrap
+    scrap,
+    buildInfo,
+    buildInfoButton,
+    buildInfoStamp
   };
-  const APP_TAB_TITLE_PREFIX$1 = getDemoDocumentTitle();
+  const APP_TAB_TITLE_PREFIX$1 = "Minerva";
+  const BUILD_STAMP$1 = buildStamp();
+  const DEMO_STORY_URL = "https://lsp-private-data.s3.amazonaws.com/Minerva/CRC01/document.json";
   let pendingLibraryImport = null;
+  let claimedLaunchUrl = null;
   function hasPendingLibraryImport() {
     return pendingLibraryImport != null;
   }
@@ -175141,8 +173846,56 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     }
     return out;
   }
+  function LibraryBuildInfo() {
+    const [open, setOpen] = reactExports.useState(false);
+    const ref = reactExports.useRef(null);
+    useClickOutside(open, () => setOpen(false), [
+      ref
+    ]);
+    if (!BUILD_STAMP$1) return null;
+    return jsxRuntimeExports.jsxs("div", {
+      className: styles$n.buildInfo,
+      ref,
+      children: [
+        open ? jsxRuntimeExports.jsx("div", {
+          className: styles$n.buildInfoStamp,
+          title: BUILD_STAMP$1.title,
+          children: BUILD_STAMP$1.text
+        }) : null,
+        jsxRuntimeExports.jsx("button", {
+          type: "button",
+          className: `${minervaTheme.focusRing} ${styles$n.buildInfoButton}`,
+          "aria-label": "Build information",
+          "aria-expanded": open,
+          onClick: () => setOpen((v2) => !v2),
+          children: jsxRuntimeExports.jsx("svg", {
+            viewBox: "0 0 16 16",
+            "aria-hidden": "true",
+            children: jsxRuntimeExports.jsxs("g", {
+              fill: "none",
+              stroke: "currentColor",
+              strokeLinecap: "round",
+              children: [
+                jsxRuntimeExports.jsx("circle", {
+                  cx: "8",
+                  cy: "8",
+                  r: "6.25",
+                  strokeWidth: "1.25"
+                }),
+                jsxRuntimeExports.jsx("path", {
+                  d: "M8 7.2v4.2M8 4.6v.6",
+                  strokeWidth: "1.4"
+                })
+              ]
+            })
+          })
+        })
+      ]
+    });
+  }
   function MinervaLibraryPage() {
     const navigate = rootRouteApi.useNavigate();
+    const launchUrl = rootRouteApi.useSearch().src;
     const switchStory = useDocumentStore((s2) => s2.switchStory);
     const createStory = useDocumentStore((s2) => s2.createStory);
     const deleteStory = useDocumentStore((s2) => s2.deleteStory);
@@ -175172,10 +173925,9 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     ]);
     const goToStory = reactExports.useCallback((id2) => {
       navigate({
-        search: (prev) => ({
-          ...prev,
+        search: {
           storyid: id2
-        }),
+        },
         replace: true
       });
     }, [
@@ -175256,6 +174008,42 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     }, [
       goToStory
     ]);
+    reactExports.useEffect(() => {
+      if (!launchUrl) {
+        claimedLaunchUrl = null;
+        return;
+      }
+      if (claimedLaunchUrl === launchUrl) return;
+      claimedLaunchUrl = launchUrl;
+      const launch = classifyViewerLaunchUrl(launchUrl);
+      if (!launch) return;
+      if (launch.kind === "story") {
+        void (async () => {
+          try {
+            useAppStore.getState().resetStoryViewerSession();
+            goToStory(await importStoryFromUrl(launch.url));
+          } catch (e2) {
+            setError(e2 instanceof Error ? e2.message : "Could not open config.json");
+          }
+        })();
+        return;
+      }
+      void startStoryWithPendingImport(launch.kind === "dicomWeb" ? {
+        kind: "dicomWeb",
+        url: launch.url
+      } : {
+        kind: "ome",
+        role: "intensity",
+        source: {
+          kind: "url",
+          url: launch.url
+        }
+      });
+    }, [
+      launchUrl,
+      goToStory,
+      startStoryWithPendingImport
+    ]);
     const handleDelete2 = reactExports.useCallback((id2, title7) => {
       if (!window.confirm(`Remove \u201C${title7}\u201D from the shelf?`)) return;
       setBusyId(id2);
@@ -175277,6 +174065,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const bays = reactExports.useMemo(() => buildBays(summaries), [
       summaries
     ]);
+    const openingLaunch = Boolean(launchUrl) && error2 === null;
     return jsxRuntimeExports.jsxs("div", {
       className: styles$n.root,
       children: [
@@ -175284,7 +174073,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
           className: styles$n.error,
           children: error2
         }) : null,
-        jsxRuntimeExports.jsxs("header", {
+        openingLaunch ? null : jsxRuntimeExports.jsxs("header", {
           className: styles$n.masthead,
           children: [
             jsxRuntimeExports.jsx("h1", {
@@ -175294,12 +174083,29 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
             jsxRuntimeExports.jsx("p", {
               className: styles$n.tagline,
               children: "a microscopy viewer for non-experts"
+            }),
+            jsxRuntimeExports.jsx("a", {
+              className: `${minervaTheme.focusRing} ${styles$n.exampleLink}`,
+              href: `?src=${DEMO_STORY_URL}`,
+              onClick: (event) => {
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                  return;
+                }
+                event.preventDefault();
+                navigate({
+                  search: () => ({
+                    src: DEMO_STORY_URL
+                  })
+                });
+              },
+              children: "View example"
             })
           ]
         }),
         jsxRuntimeExports.jsx("section", {
           className: styles$n.bookcase,
           "aria-label": "Library",
+          hidden: openingLaunch,
           children: jsxRuntimeExports.jsxs("div", {
             className: styles$n.bookcaseInner,
             children: [
@@ -175362,6 +174168,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                           row: true,
                           onAllow: toFile,
                           disabled: shelfBusy,
+                          onImportStory: (file) => handleImport(() => importStoryJsonFile(file)),
                           onImportOme: (req) => startStoryWithPendingImport({
                             ...req,
                             kind: "ome"
@@ -175449,7 +174256,8 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
               })
             ]
           })
-        })
+        }),
+        jsxRuntimeExports.jsx(LibraryBuildInfo, {})
       ]
     });
   }
@@ -203905,7 +202713,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       skipSingleWhitespace();
       return String.fromCharCode(parseInt(hex, 16));
     }
-    function parseString(quote2) {
+    function parseString2(quote2) {
       var result = "";
       pass(quote2);
       while (pos < l2) {
@@ -204101,7 +202909,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         if (quoteChars[chr]) {
           attr2.value = {
             type: "String",
-            value: parseString(chr)
+            value: parseString2(chr)
           };
         } else if (substitutesEnabled && is2("$")) {
           next2();
@@ -249366,7 +248174,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const { viewOnly } = props;
     const canEdit = !viewOnly;
     const waypoints = useDocumentStore((s2) => s2.waypoints);
-    const shapes = useDocumentStore((s2) => s2.shapes);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
     const featureTables = useDocumentStore((s2) => s2.featureTables);
@@ -249385,7 +248192,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
     const imageWidth = frame2.pixelWidth;
     const imageHeight = frame2.pixelHeight;
-    const { activeStoryIndex, setActiveStory, showOnlyChannelGroup, addStory, updateStory, reorderStories, importWaypointShapes, persistImportedShapesToStory, setTargetWaypointCamera, captureSquareViewportThumbnail, removeStory, setShowSquareViewportOverlay, setAuthoringWaypointEditorOpen, setAuthoringWaypointShapesIndex, handleToolChange, setImageSelectionMaskFromWaypoint, layersPanelSelectedShapeIds, editWaypointOnOpen, setEditWaypointOnOpen } = useAppStore();
+    const { activeStoryIndex, setActiveStory, showOnlyChannelGroup, addStory, updateStory, reorderStories, persistImportedShapesToStory, setTargetWaypointCamera, captureSquareViewportThumbnail, removeStory, setShowSquareViewportOverlay, setAuthoringWaypointEditorOpen, setAuthoringWaypointShapesIndex, setOpenWaypointId, handleToolChange, setImageSelectionMaskFromWaypoint, layersPanelSelectedShapeIds, editWaypointOnOpen, setEditWaypointOnOpen } = useAppStore();
     const previousDetailStoryIdRef = reactExports.useRef(null);
     const detailBodyRef = reactExports.useRef(null);
     const detailTitleFieldId = reactExports.useId();
@@ -249402,6 +248209,12 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     }, [
       detailStoryId,
       setAuthoringWaypointEditorOpen
+    ]);
+    reactExports.useEffect(() => {
+      setOpenWaypointId(detailStoryId);
+    }, [
+      detailStoryId,
+      setOpenWaypointId
     ]);
     reactExports.useEffect(() => {
       const prev = previousDetailStoryIdRef.current;
@@ -249449,7 +248262,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const [dropTargetStoryId, setDropTargetStoryId] = reactExports.useState(null);
     const pendingThumbnailCaptureTimeoutRef = reactExports.useRef(null);
     const overlayFlashTimeoutRef = reactExports.useRef(null);
-    const previousImportStoryIndexRef = reactExports.useRef(null);
     const detailStoryIndex = detailStoryId ? waypoints.findIndex((s2) => s2.id === detailStoryId) : -1;
     const detailStory = detailStoryIndex >= 0 ? waypoints[detailStoryIndex] : null;
     reactExports.useEffect(() => {
@@ -249463,32 +248275,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       detailStoryId,
       detailStoryIndex,
       setAuthoringWaypointShapesIndex
-    ]);
-    reactExports.useEffect(() => {
-      if (waypoints.length === 0) return;
-      if (imageWidth === 0 || imageHeight === 0) return;
-      const storyIndex = detailStoryId != null && detailStoryIndex >= 0 ? detailStoryIndex : activeStoryIndex ?? 0;
-      const story = waypoints[storyIndex];
-      if (!story) {
-        useAppStore.getState().clearShapes();
-        return;
-      }
-      const prev = previousImportStoryIndexRef.current;
-      const store = useAppStore.getState();
-      if (prev !== null && prev !== storyIndex) {
-        store.persistImportedShapesToStory(prev);
-      }
-      previousImportStoryIndexRef.current = storyIndex;
-      importWaypointShapes(story, true, shapes);
-    }, [
-      waypoints,
-      activeStoryIndex,
-      detailStoryId,
-      detailStoryIndex,
-      imageWidth,
-      imageHeight,
-      shapes,
-      importWaypointShapes
     ]);
     const shownWaypoint = activeStoryIndex == null ? void 0 : waypoints[activeStoryIndex];
     const activeWaypointId = shownWaypoint == null ? void 0 : shownWaypoint.id;
@@ -249539,16 +248325,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         if (overlayFlashTimeoutRef.current !== null) {
           window.clearTimeout(overlayFlashTimeoutRef.current);
           useAppStore.getState().setShowSquareViewportOverlay(false);
-        }
-        const p2 = previousImportStoryIndexRef.current;
-        if (p2 !== null) {
-          const doc = useDocumentStore.getState();
-          const st = useAppStore.getState();
-          const im = doc.images[0];
-          const f2 = effectiveWorldFrame(st.viewerWorldFrame, (im == null ? void 0 : im.sizeX) ?? 0, (im == null ? void 0 : im.sizeY) ?? 0);
-          if (f2.worldWidth > 0 && f2.worldHeight > 0) {
-            useAppStore.getState().persistImportedShapesToStory(p2);
-          }
         }
       };
     }, []);
@@ -249719,11 +248495,15 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const handleOverwriteView = (index2, event) => {
       event.stopPropagation();
       event.preventDefault();
-      setActiveStory(index2);
       const saved = saveCurrentViewToStory(index2, "handleOverwriteView");
+      if (!saved) return;
+      const app = useAppStore.getState();
+      const openIndex = waypoints.findIndex((w2) => w2.id === app.openWaypointId);
+      const canvasIndex = openIndex >= 0 ? openIndex : activeStoryIndex ?? 0;
+      setActiveStory(index2);
       flashSquareOverlay();
       scheduleThumbnailCaptureForStory(index2, true, true, 150);
-      if (saved) {
+      if (canvasIndex === index2) {
         persistImportedShapesToStory(index2);
       }
     };
@@ -250307,33 +249087,29 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   }, reactExports.createElement("path", {
     d: "M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2 .9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z"
   }));
-  const channelActionButton = "_channelActionButton_1wvsk_3";
-  const colorLockButtonLocked = "_colorLockButtonLocked_1wvsk_20";
-  const dropHint = "_dropHint_1wvsk_29";
-  const groupFolders = "_groupFolders_1wvsk_36";
-  const groupFolder = "_groupFolder_1wvsk_36";
-  const dropTargetActive = "_dropTargetActive_1wvsk_51";
-  const groupFolderHeader = "_groupFolderHeader_1wvsk_56";
-  const groupFolderActivate = "_groupFolderActivate_1wvsk_68";
-  const groupFolderChevron = "_groupFolderChevron_1wvsk_89";
-  const groupFolderName = "_groupFolderName_1wvsk_107";
-  const groupFolderTrailing = "_groupFolderTrailing_1wvsk_114";
-  const groupFolderBody = "_groupFolderBody_1wvsk_121";
-  const groupChildList = "_groupChildList_1wvsk_126";
-  const groupChildBlock = "_groupChildBlock_1wvsk_132";
-  const channelRowWrap = "_channelRowWrap_1wvsk_140";
-  const ungrouping = "_ungrouping_1wvsk_148";
-  const groupChildName = "_groupChildName_1wvsk_165";
-  const dragHandle = "_dragHandle_1wvsk_175";
-  const treeSeparator = "_treeSeparator_1wvsk_198";
-  const treeSeparatorLabel = "_treeSeparatorLabel_1wvsk_212";
-  const channelFilter = "_channelFilter_1wvsk_217";
-  const filterEmpty = "_filterEmpty_1wvsk_240";
-  const rootChannelList = "_rootChannelList_1wvsk_247";
-  const rootChannelBlock = "_rootChannelBlock_1wvsk_255";
+  const dropHint = "_dropHint_hdj39_3";
+  const groupFolders = "_groupFolders_hdj39_10";
+  const groupFolder = "_groupFolder_hdj39_10";
+  const dropTargetActive = "_dropTargetActive_hdj39_25";
+  const groupFolderHeader = "_groupFolderHeader_hdj39_30";
+  const groupFolderActivate = "_groupFolderActivate_hdj39_42";
+  const groupFolderChevron = "_groupFolderChevron_hdj39_63";
+  const groupFolderName = "_groupFolderName_hdj39_81";
+  const groupFolderTrailing = "_groupFolderTrailing_hdj39_88";
+  const groupFolderBody = "_groupFolderBody_hdj39_95";
+  const groupChildList = "_groupChildList_hdj39_100";
+  const groupChildBlock = "_groupChildBlock_hdj39_106";
+  const channelRowWrap = "_channelRowWrap_hdj39_114";
+  const ungrouping = "_ungrouping_hdj39_122";
+  const groupChildName = "_groupChildName_hdj39_139";
+  const dragHandle = "_dragHandle_hdj39_149";
+  const treeSeparator = "_treeSeparator_hdj39_172";
+  const treeSeparatorLabel = "_treeSeparatorLabel_hdj39_186";
+  const channelFilter = "_channelFilter_hdj39_191";
+  const filterEmpty = "_filterEmpty_hdj39_214";
+  const rootChannelList = "_rootChannelList_hdj39_221";
+  const rootChannelBlock = "_rootChannelBlock_hdj39_229";
   const styles$e = {
-    channelActionButton,
-    colorLockButtonLocked,
     dropHint,
     groupFolders,
     groupFolder,
@@ -250642,8 +249418,9 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     }, []);
     const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] = reactExports.useState(() => /* @__PURE__ */ new Map());
     const [channelNameFilter, setChannelNameFilter] = reactExports.useState("");
+    const channelSearch = uniqueSourceChannels.length > 1;
     const filteredAllChannels = reactExports.useMemo(() => {
-      const matched = uniqueSourceChannels.filter((sc2) => channelNameMatchesQuery(sc2.name, channelNameFilter));
+      const matched = channelSearch ? uniqueSourceChannels.filter((sc2) => channelNameMatchesQuery(sc2.name, channelNameFilter)) : uniqueSourceChannels;
       if (!isRgbDisplaySource(uniqueSourceChannels)) return matched;
       const first = matched.find((sc2) => isImageChannel(sc2));
       const rest2 = matched.filter((sc2) => !isImageChannel(sc2));
@@ -250653,7 +249430,8 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       ] : matched;
     }, [
       uniqueSourceChannels,
-      channelNameFilter
+      channelNameFilter,
+      channelSearch
     ]);
     const showAllChannelsList = uniqueSourceChannels.length > 0;
     reactExports.useEffect(() => {
@@ -250958,13 +249736,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         })
       }));
       setImagesAndChannelGroups(nextImages, nextGroups);
-      useAppStore.getState().setMaskVisualizationPreview(null);
-    };
-    const previewMaskVisualization = (sourceId, viz) => {
-      useAppStore.getState().setMaskVisualizationPreview(viz ? {
-        sourceChannelId: sourceId,
-        visualization: viz
-      } : null);
     };
     const runOptimizePaletteForGroup = async (groupId) => {
       if (optimizePaletteBusy) return;
@@ -251271,10 +250042,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                           maskVisualization: effectiveMaskVisualization(gc2),
                           maskAriaLabel: `Mask display for ${name2}`,
                           ...featureTableRowExtras(sc2.id, featureTables),
-                          onMaskVisualizationChange: (viz) => syncMaskVisualization(gc2.channelId, viz, group2.id, gc2.id),
-                          onMaskVisualizationPreview: (viz) => {
-                            previewMaskVisualization(gc2.channelId, viz);
-                          }
+                          onMaskVisualizationChange: (viz) => syncMaskVisualization(gc2.channelId, viz, group2.id, gc2.id)
                         } : !rgbDisplay ? {
                           busy: palettePending,
                           colorHex: hex,
@@ -251288,15 +250056,14 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                           }
                         } : {},
                         more: {
-                          sourceChannel: sc2,
-                          allowContrast: canFitContrast(sc2),
+                          fitContrastId: canFitContrast(sc2) ? sc2.id : void 0,
                           onRemoveFromGroup: () => removeChannelFromGroup(group2.id, gc2.id)
                         },
                         trailing: showColorLock ? jsxRuntimeExports.jsx("button", {
                           type: "button",
                           className: [
-                            styles$e.channelActionButton,
-                            colorLocked ? styles$e.colorLockButtonLocked : ""
+                            rowStyles.channelActionButton,
+                            colorLocked ? rowStyles.channelActionButtonOn : ""
                           ].join(" "),
                           title: colorLocked ? "Unlock color" : "Lock color",
                           "aria-label": colorLocked ? `Unlock color for ${name2}` : `Lock color for ${name2}`,
@@ -251443,12 +250210,10 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
               maskVisualization: effectiveMaskVisualization(sc2),
               maskAriaLabel: `Mask display for ${sc2.name}`,
               ...featureTableRowExtras(sc2.id, featureTables),
-              onMaskVisualizationChange: (viz) => syncMaskVisualization(sc2.id, viz),
-              onMaskVisualizationPreview: (viz) => previewMaskVisualization(sc2.id, viz)
+              onMaskVisualizationChange: (viz) => syncMaskVisualization(sc2.id, viz)
             } : colorSwatch,
             more: expanded && canFitContrast(sc2) ? {
-              sourceChannel: sc2,
-              allowContrast: true
+              fitContrastId: sc2.id
             } : void 0
           })
         })
@@ -251491,7 +250256,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                       className: styles$e.treeSeparatorLabel,
                       children: "All channels"
                     }),
-                    jsxRuntimeExports.jsx("input", {
+                    channelSearch ? jsxRuntimeExports.jsx("input", {
                       className: styles$e.channelFilter,
                       type: "text",
                       value: channelNameFilter,
@@ -251502,7 +250267,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                       spellCheck: false,
                       "aria-label": "Filter channels by name",
                       onChange: (e2) => setChannelNameFilter(e2.target.value)
-                    })
+                    }) : null
                   ]
                 }),
                 filteredAllChannels.length === 0 ? jsxRuntimeExports.jsx("div", {
@@ -251535,15 +250300,11 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
               isMask: true,
               maskVisualization: imageSelectionMask.maskVisualization ?? DEFAULT_MASK_VISUALIZATION,
               maskAriaLabel: "Selection mask display",
-              onMaskVisualizationChange: (viz) => {
-                setImageSelectionMaskVisualization(viz);
-                previewMaskVisualization(SELECTION_MASK_CHANNEL_KEY, null);
-              },
-              onMaskVisualizationPreview: (viz) => previewMaskVisualization(SELECTION_MASK_CHANNEL_KEY, viz),
+              onMaskVisualizationChange: setImageSelectionMaskVisualization,
               fixedColorHex: "ffcc00",
               trailing: jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: styles$e.channelActionButton,
+                className: rowStyles.channelActionButton,
                 title: "Clear selection",
                 "aria-label": "Clear selection",
                 onClick: () => clearImageSelectionMask(),
@@ -251591,20 +250352,86 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       })
     });
   }
-  const sidebarHost = "_sidebarHost_1gyqk_1";
-  const sidebarHostCollapsed = "_sidebarHostCollapsed_1gyqk_18";
-  const panelOuter = "_panelOuter_1gyqk_23";
-  const tabRow = "_tabRow_1gyqk_33";
-  const stripActions = "_stripActions_1gyqk_41";
-  const expandControl = "_expandControl_1gyqk_50";
-  const expandControlExpanded = "_expandControlExpanded_1gyqk_60";
-  const panelContent = "_panelContent_1gyqk_66";
-  const viewport = "_viewport_1gyqk_76";
-  const viewportCollapsed = "_viewportCollapsed_1gyqk_88";
-  const viewportPreview = "_viewportPreview_1gyqk_93";
-  const previewNav = "_previewNav_1gyqk_97";
-  const previewNavParked = "_previewNavParked_1gyqk_111";
-  const viewerRegion = "_viewerRegion_1gyqk_115";
+  function useWaypointCanvasShapes(storyTabOpen) {
+    const waypoints = useDocumentStore((s2) => s2.waypoints);
+    const shapes = useDocumentStore((s2) => s2.shapes);
+    const docImageWidth = useDocumentStore((s2) => {
+      var _a2;
+      return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeX) ?? 0;
+    });
+    const docImageHeight = useDocumentStore((s2) => {
+      var _a2;
+      return ((_a2 = s2.images[0]) == null ? void 0 : _a2.sizeY) ?? 0;
+    });
+    const viewerWorldFrame = useAppStore((s2) => s2.viewerWorldFrame);
+    const activeStoryIndex = useAppStore((s2) => s2.activeStoryIndex);
+    const openWaypointId = useAppStore((s2) => s2.openWaypointId);
+    const importWaypointShapes = useAppStore((s2) => s2.importWaypointShapes);
+    const frame2 = effectiveWorldFrame(viewerWorldFrame, docImageWidth, docImageHeight);
+    const imageWidth = frame2.pixelWidth;
+    const imageHeight = frame2.pixelHeight;
+    const previousImportStoryIdRef = reactExports.useRef(null);
+    reactExports.useEffect(() => {
+      if (waypoints.length === 0) {
+        if (previousImportStoryIdRef.current !== null) {
+          previousImportStoryIdRef.current = null;
+          useAppStore.getState().clearShapes();
+        }
+        return;
+      }
+      if (imageWidth === 0 || imageHeight === 0) return;
+      const openIndex = waypoints.findIndex((w2) => w2.id === openWaypointId);
+      const storyIndex = openIndex >= 0 ? openIndex : activeStoryIndex ?? 0;
+      const story = waypoints[storyIndex];
+      if (!story) {
+        useAppStore.getState().clearShapes();
+        return;
+      }
+      const prevId = previousImportStoryIdRef.current;
+      const store = useAppStore.getState();
+      if (prevId !== null && prevId !== story.id) {
+        const prevIndex = waypoints.findIndex((w2) => w2.id === prevId);
+        if (prevIndex >= 0) store.persistImportedShapesToStory(prevIndex);
+      }
+      previousImportStoryIdRef.current = story.id;
+      importWaypointShapes(story, prevId !== story.id, shapes);
+    }, [
+      waypoints,
+      activeStoryIndex,
+      openWaypointId,
+      imageWidth,
+      imageHeight,
+      shapes,
+      importWaypointShapes
+    ]);
+    reactExports.useEffect(() => {
+      if (!storyTabOpen) return;
+      return () => {
+        const doc = useDocumentStore.getState();
+        const prevId = previousImportStoryIdRef.current;
+        const p2 = doc.waypoints.findIndex((w2) => w2.id === prevId);
+        if (p2 < 0) return;
+        useAppStore.getState().persistImportedShapesToStory(p2);
+      };
+    }, [
+      storyTabOpen
+    ]);
+  }
+  const sidebarHost = "_sidebarHost_2do94_1";
+  const sidebarHostCollapsed = "_sidebarHostCollapsed_2do94_18";
+  const panelOuter = "_panelOuter_2do94_23";
+  const tabRow = "_tabRow_2do94_33";
+  const stripActions = "_stripActions_2do94_41";
+  const expandControl = "_expandControl_2do94_50";
+  const expandControlExpanded = "_expandControlExpanded_2do94_60";
+  const panelContent = "_panelContent_2do94_66";
+  const imagesMount = "_imagesMount_2do94_76";
+  const viewport = "_viewport_2do94_88";
+  const viewportCollapsed = "_viewportCollapsed_2do94_100";
+  const viewportPreview = "_viewportPreview_2do94_105";
+  const previewNav = "_previewNav_2do94_109";
+  const previewNavParked = "_previewNavParked_2do94_123";
+  const viewerRegion = "_viewerRegion_2do94_127";
   const styles$d = {
     sidebarHost,
     sidebarHostCollapsed,
@@ -251614,6 +250441,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     expandControl,
     expandControlExpanded,
     panelContent,
+    imagesMount,
     viewport,
     viewportCollapsed,
     viewportPreview,
@@ -251638,6 +250466,31 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   function AuthorSidebar(props) {
     const [activeTab, setActiveTab] = reactExports.useState(() => useAppStore.getState().editWaypointOnOpen ? "story" : "images");
     const { expanded } = props;
+    useWaypointCanvasShapes(activeTab === "story");
+    const editWaypointOnOpen = useAppStore((s2) => s2.editWaypointOnOpen);
+    reactExports.useEffect(() => {
+      if (editWaypointOnOpen) setActiveTab("story");
+    }, [
+      editWaypointOnOpen
+    ]);
+    reactExports.useEffect(() => {
+      if (activeTab === "images") return;
+      const onFileDrag = (e2) => {
+        if (!dragHasFiles(e2)) return;
+        setActiveTab("images");
+      };
+      const types2 = [
+        "dragenter",
+        "dragover",
+        "drop"
+      ];
+      for (const t2 of types2) window.addEventListener(t2, onFileDrag, true);
+      return () => {
+        for (const t2 of types2) window.removeEventListener(t2, onFileDrag, true);
+      };
+    }, [
+      activeTab
+    ]);
     const channelNav = reactExports.useMemo(() => ({
       ensureChannelHistograms: props.ensureChannelHistograms,
       contrastEditable: props.contrastEditable
@@ -251645,9 +250498,9 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       props.ensureChannelHistograms,
       props.contrastEditable
     ]);
-    const activePanel = activeTab === "images" ? props.imagesPanel : activeTab === "channels" ? jsxRuntimeExports.jsx(ChannelGroupsMasterDetail, {
+    const otherPanel = activeTab === "channels" ? jsxRuntimeExports.jsx(ChannelGroupsMasterDetail, {
       noLoader: props.noLoader
-    }) : jsxRuntimeExports.jsx(WaypointsList, {});
+    }) : activeTab === "story" ? jsxRuntimeExports.jsx(WaypointsList, {}) : null;
     return jsxRuntimeExports.jsx(AuthorChannelNavProvider, {
       value: channelNav,
       children: jsxRuntimeExports.jsx(SidebarStripSlotProvider, {
@@ -251673,10 +250526,17 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
                   })
                 ]
               }),
-              jsxRuntimeExports.jsx("div", {
+              jsxRuntimeExports.jsxs("div", {
                 className: styles$d.panelContent,
                 role: "tabpanel",
-                children: activePanel
+                children: [
+                  jsxRuntimeExports.jsx("div", {
+                    className: styles$d.imagesMount,
+                    hidden: activeTab !== "images",
+                    children: props.imagesPanel
+                  }),
+                  otherPanel
+                ]
               })
             ]
           })
@@ -252906,6 +251766,123 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       }
     };
   }
+  const TIFF_COMPRESSION_JPEG = 7;
+  const TIFF_BLACK_IS_ZERO = 1;
+  const TIFF_YCBCR = 6;
+  const JPEG_SOF0 = 192;
+  const gamma3Profiles = /* @__PURE__ */ new WeakMap();
+  function hasGamma3Profile(image2) {
+    const fd2 = image2.fileDirectory;
+    let gamma3 = gamma3Profiles.get(fd2);
+    if (gamma3 === void 0) {
+      const icc = fd2[GEOTIFF_ICC_PROFILE_KEY];
+      gamma3 = !!icc && iccGrayU8ToU16Lut(Uint8Array.from(icc)) !== null;
+      gamma3Profiles.set(fd2, gamma3);
+    }
+    return gamma3;
+  }
+  function holdsExportTiles(image2, level, copy2) {
+    const fd2 = image2.fileDirectory;
+    const bits = fd2.BitsPerSample ?? [];
+    const sameTiling = image2.isTiled && image2.getTileWidth() === level.tileSize && image2.getTileHeight() === level.tileSize && image2.getWidth() === level.width && image2.getHeight() === level.height && fd2.Compression === TIFF_COMPRESSION_JPEG && !fd2.JPEGTables && Array.from(bits).every((b2) => b2 === 8);
+    if (!sameTiling) return false;
+    if (copy2.kind === "rgb") {
+      const sub2 = fd2.YCbCrSubSampling ?? [
+        2,
+        2
+      ];
+      return image2.getSamplesPerPixel() === 3 && image2.planarConfiguration === 1 && fd2.PhotometricInterpretation === TIFF_YCBCR && sub2[0] === 2 && sub2[1] === 2;
+    }
+    return image2.getSamplesPerPixel() === 1 && fd2.PhotometricInterpretation === TIFF_BLACK_IS_ZERO && (copy2.profileless || hasGamma3Profile(image2));
+  }
+  function framedLikeExportTile(jpeg, tileSize, copy2) {
+    if (jpeg[0] !== 255 || jpeg[1] !== 216) return false;
+    let i2 = 2;
+    while (i2 + 9 < jpeg.length) {
+      if (jpeg[i2] !== 255) return false;
+      const marker = jpeg[i2 + 1];
+      if (marker === 255) {
+        i2++;
+        continue;
+      }
+      if (marker === 218 || marker === 217) return false;
+      if (marker >= 192 && marker <= 207 && marker !== 196 && marker !== 200 && marker !== 204) {
+        const height = jpeg[i2 + 5] << 8 | jpeg[i2 + 6];
+        const width = jpeg[i2 + 7] << 8 | jpeg[i2 + 8];
+        const components = jpeg[i2 + 9];
+        const sampling = (k2) => jpeg[i2 + 11 + k2 * 3];
+        const framed = marker === JPEG_SOF0 && jpeg[i2 + 4] === 8 && width === tileSize && height === tileSize;
+        return copy2.kind === "rgb" ? framed && components === 3 && sampling(0) === 34 && sampling(1) === 17 && sampling(2) === 17 : framed && components === 1;
+      }
+      i2 += 2 + (jpeg[i2 + 2] << 8 | jpeg[i2 + 3]);
+    }
+    return false;
+  }
+  async function readCopyableJpegTile(plane, selection, x2, y2, level, copy2, signal) {
+    var _a2, _b2;
+    const indexer = plane._indexer;
+    if (!indexer) return null;
+    const image2 = await indexer(selection);
+    if (!holdsExportTiles(image2, level, copy2)) return null;
+    const fd2 = image2.fileDirectory;
+    const index2 = y2 * Math.ceil(level.width / level.tileSize) + x2;
+    const offset = Number((_a2 = fd2.TileOffsets) == null ? void 0 : _a2[index2]);
+    const length2 = Number((_b2 = fd2.TileByteCounts) == null ? void 0 : _b2[index2]);
+    if (!length2) return null;
+    const source2 = uncachedTiffImage(image2).source;
+    const [buffer2] = await source2.fetch([
+      {
+        offset,
+        length: length2
+      }
+    ], signal);
+    const jpeg = new Uint8Array(buffer2);
+    return framedLikeExportTile(jpeg, level.tileSize, copy2) ? jpeg : null;
+  }
+  const WRITE_CHUNK_BYTES = 8 * 1024 * 1024;
+  function bufferedSink(sink) {
+    const buffer2 = new Uint8Array(WRITE_CHUNK_BYTES);
+    let start = 0n;
+    let length2 = 0;
+    const flush2 = async () => {
+      if (length2 === 0) return;
+      await sink.writeAt(start, buffer2.subarray(0, length2));
+      length2 = 0;
+    };
+    return {
+      async writeAt(offset, data2) {
+        const follows = length2 > 0 && offset === start + BigInt(length2);
+        if (follows && length2 + data2.byteLength <= buffer2.byteLength) {
+          buffer2.set(data2, length2);
+          length2 += data2.byteLength;
+          return;
+        }
+        await flush2();
+        if (data2.byteLength >= buffer2.byteLength) {
+          await sink.writeAt(offset, data2);
+          return;
+        }
+        buffer2.set(data2);
+        start = offset;
+        length2 = data2.byteLength;
+      },
+      async truncate(size) {
+        var _a2;
+        await flush2();
+        await ((_a2 = sink.truncate) == null ? void 0 : _a2.call(sink, size));
+      },
+      async close() {
+        var _a2;
+        await flush2();
+        await ((_a2 = sink.close) == null ? void 0 : _a2.call(sink));
+      },
+      async abort(reason2) {
+        var _a2;
+        length2 = 0;
+        await ((_a2 = sink.abort) == null ? void 0 : _a2.call(sink, reason2));
+      }
+    };
+  }
   const MERGE_GAP_BYTES = 256 * 1024;
   function mergedBlockRanges(image2, [x0, y0, x1, y1]) {
     const fd2 = image2.fileDirectory;
@@ -253031,6 +252008,50 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       signal.removeEventListener("abort", abort);
     }
   }
+  const HOST_LITTLE_ENDIAN$1 = new Uint8Array(new Uint16Array([
+    1
+  ]).buffer)[0] === 1;
+  async function decodedBlockTile(reader, pool, tileSize, x2, y2, [x0, y0, x1, y1], signal) {
+    if (!pool) return null;
+    let bits;
+    let bytesPerElement;
+    try {
+      if (!reader.isTiled || reader.getTileWidth() !== tileSize || reader.getTileHeight() !== tileSize || reader.getSamplesPerPixel() !== 1) {
+        return null;
+      }
+      bits = reader.getBitsPerSample(0);
+      bytesPerElement = reader.getArrayForSample(0, 0).BYTES_PER_ELEMENT;
+    } catch {
+      return null;
+    }
+    if (bits !== bytesPerElement * 8) return null;
+    if (bytesPerElement > 1 && reader.littleEndian !== HOST_LITTLE_ENDIAN$1) {
+      return null;
+    }
+    const block = await reader.getTileOrStrip(x2, y2, 0, pool, signal);
+    const full2 = reader.getArrayForSample(0, block.data);
+    if (full2.length !== tileSize * tileSize) return null;
+    const width = x1 - x0;
+    const height = y1 - y0;
+    if (width === tileSize && height === tileSize) {
+      return {
+        data: full2,
+        width,
+        height
+      };
+    }
+    const Typed = full2.constructor;
+    const data2 = new Typed(width * height);
+    for (let row2 = 0; row2 < height; row2++) {
+      const from = row2 * tileSize;
+      data2.set(full2.subarray(from, from + width), row2 * width);
+    }
+    return {
+      data: data2,
+      width,
+      height
+    };
+  }
   function readExportTile(plane, tileSize, selection, x2, y2, signal) {
     return withReadSignal(signal, (readSignal) => readTile(plane, tileSize, selection, x2, y2, readSignal));
   }
@@ -253062,6 +252083,8 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const image2 = await indexer(selection);
     const source2 = prefetchedSource(image2.source, mergedBlockRanges(image2, window2), signal);
     const reader = new GeoTIFFImage(image2.fileDirectory, image2.geoKeys, image2.dataView, image2.littleEndian, false, source2);
+    const decoded = await decodedBlockTile(reader, plane.pool, tileSize, x2, y2, window2, signal);
+    if (decoded) return decoded;
     const atTileSize = new TiffPixelSource(async () => reader, plane.dtype, tileSize, plane.shape, plane.labels, plane.meta, plane.pool);
     return atTileSize.getTile({
       selection,
@@ -253069,286 +252092,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       y: y2,
       signal
     });
-  }
-  function bitsPerSampleFromDtype(dtype) {
-    if (dtype === "Uint8" || dtype === "Int8") return 8;
-    if (dtype === "Uint16" || dtype === "Int16") return 16;
-    if (dtype === "Uint32" || dtype === "Int32") return 32;
-    throw new Error(`Unsupported mask dtype ${dtype}`);
-  }
-  function omeTypeFromDtype(dtype) {
-    switch (dtype) {
-      case "Uint8":
-        return "uint8";
-      case "Uint16":
-        return "uint16";
-      case "Uint32":
-        return "uint32";
-      case "Int8":
-        return "int8";
-      case "Int16":
-        return "int16";
-      case "Int32":
-        return "int32";
-      default:
-        throw new Error(`Unsupported mask dtype ${dtype}`);
-    }
-  }
-  function assertUnsignedLabelDtype(dtype) {
-    if (dtype === "Uint8" || dtype === "Uint16" || dtype === "Uint32") {
-      return dtype;
-    }
-    throw new Error(`Mask OME-TIFF export requires unsigned integer pixels (got ${dtype})`);
-  }
-  function escapeXmlAttr(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
-  function omeColorInt(color2) {
-    const view = new DataView(new ArrayBuffer(4));
-    view.setUint8(0, color2.r & 255);
-    view.setUint8(1, color2.g & 255);
-    view.setUint8(2, color2.b & 255);
-    view.setUint8(3, 255);
-    return view.getInt32(0, false);
-  }
-  function optionalNumberAttr(name2, value) {
-    if (typeof value !== "number" || !Number.isFinite(value)) return "";
-    return ` ${name2}="${value}"`;
-  }
-  function optionalStringAttr(name2, value) {
-    if (typeof value !== "string" || !value.trim()) return "";
-    return ` ${name2}="${escapeXmlAttr(value)}"`;
-  }
-  function buildOmeTiffXml(opts) {
-    const { imageName, channels: channels2, width, height, fileName, pixelType, significantBits, pixels, samplesPerPixel = 1 } = opts;
-    const sizeC = channels2.length * samplesPerPixel;
-    const channelXml = channels2.map((ch2, i2) => {
-      var _a2;
-      const id2 = escapeXmlAttr(ch2.id || `Channel:0:${i2}`);
-      const chName = escapeXmlAttr(((_a2 = ch2.name) == null ? void 0 : _a2.trim()) || `Channel ${i2}`);
-      const colorAttr = ch2.color && typeof ch2.color.r === "number" && typeof ch2.color.g === "number" && typeof ch2.color.b === "number" ? ` Color="${omeColorInt({
-        r: ch2.color.r,
-        g: ch2.color.g,
-        b: ch2.color.b
-      })}"` : "";
-      return `<Channel ID="${id2}" Name="${chName}" SamplesPerPixel="${samplesPerPixel}"${colorAttr}/>`;
-    }).join("");
-    const tiffDataXml = channels2.map((_2, i2) => {
-      const uuid = escapeXmlAttr(fileName);
-      return `<TiffData FirstC="${i2}" FirstT="0" FirstZ="0" IFD="${i2}" PlaneCount="1"><UUID FileName="${uuid}">${uuid}</UUID></TiffData>`;
-    }).join("");
-    const physicalAttrs = optionalNumberAttr("PhysicalSizeX", pixels == null ? void 0 : pixels.PhysicalSizeX) + optionalNumberAttr("PhysicalSizeY", pixels == null ? void 0 : pixels.PhysicalSizeY) + optionalNumberAttr("PhysicalSizeZ", pixels == null ? void 0 : pixels.PhysicalSizeZ) + optionalStringAttr("PhysicalSizeXUnit", pixels == null ? void 0 : pixels.PhysicalSizeXUnit) + optionalStringAttr("PhysicalSizeYUnit", pixels == null ? void 0 : pixels.PhysicalSizeYUnit) + optionalStringAttr("PhysicalSizeZUnit", pixels == null ? void 0 : pixels.PhysicalSizeZUnit);
-    return `<?xml version="1.0" encoding="UTF-8"?><OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"><Image ID="Image:0" Name="${escapeXmlAttr(imageName)}"><Pixels ID="Pixels:0" DimensionOrder="XYZCT" Type="${escapeXmlAttr(pixelType)}" SizeX="${width}" SizeY="${height}" SizeZ="1" SizeC="${sizeC}" SizeT="1" SignificantBits="${significantBits}" Interleaved="${samplesPerPixel > 1}" BigEndian="false"${physicalAttrs}>${channelXml}${tiffDataXml}</Pixels></Image></OME>`;
-  }
-  function omeTiffExportBaseName(image2) {
-    var _a2;
-    const raw2 = ((_a2 = image2.basename) == null ? void 0 : _a2.replace(/\.(ome\.)?(tif|tiff)$/i, "")) || image2.id || "image";
-    const cleaned = raw2.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") || "image";
-    return cleaned.replace(/-minerva$/i, "") || "image";
-  }
-  function omeTiffExportDiskName(stem2) {
-    return `${stem2}-minerva.ome.tif`;
-  }
-  function omeTiffExportFileName(image2, used) {
-    const base2 = omeTiffExportBaseName(image2);
-    let name2 = omeTiffExportDiskName(base2);
-    let n2 = 2;
-    while (used.has(name2.toLowerCase())) {
-      name2 = omeTiffExportDiskName(`${base2}_${n2}`);
-      n2 += 1;
-    }
-    used.add(name2.toLowerCase());
-    return name2;
-  }
-  function omeTiffMaskExportFileName(image2, used) {
-    const base2 = omeTiffExportBaseName(image2);
-    for (const candidate of [
-      omeTiffExportDiskName(base2),
-      omeTiffExportDiskName(`${base2}_mask`)
-    ]) {
-      if (!used.has(candidate.toLowerCase())) {
-        used.add(candidate.toLowerCase());
-        return candidate;
-      }
-    }
-    let n2 = 2;
-    let name2 = omeTiffExportDiskName(`${base2}_mask_${n2}`);
-    while (used.has(name2.toLowerCase())) {
-      n2 += 1;
-      name2 = omeTiffExportDiskName(`${base2}_mask_${n2}`);
-    }
-    used.add(name2.toLowerCase());
-    return name2;
-  }
-  function channelIdsFromGroups(channelGroups) {
-    const ids = /* @__PURE__ */ new Set();
-    for (const g2 of channelGroups) {
-      for (const row2 of g2.channels) {
-        ids.add(row2.channelId);
-      }
-    }
-    return ids;
-  }
-  function channelsOfKind(image2, kind) {
-    return (image2.channels ?? []).filter((ch2) => effectiveChannelKind(ch2) === kind).slice().sort((a2, b2) => a2.index - b2.index);
-  }
-  function groupChannelsForOmeExport(image2, channelGroups, kind) {
-    const wanted = channelIdsFromGroups(channelGroups);
-    if (wanted.size === 0) return [];
-    return channelsOfKind(image2, kind).filter((ch2) => wanted.has(ch2.id));
-  }
-  function groupIntensityChannelsForOmeExport(image2, channelGroups) {
-    const all2 = channelsOfKind(image2, "channel");
-    if (all2.length === 0) return [];
-    if (isRgbDisplayImage(image2)) return all2;
-    const grouped = groupChannelsForOmeExport(image2, channelGroups, "channel");
-    return grouped.length > 0 ? grouped : all2;
-  }
-  function groupMaskChannelsForOmeExport(image2, channelGroups) {
-    const grouped = groupChannelsForOmeExport(image2, channelGroups, "mask");
-    return grouped.length > 0 ? grouped : channelsOfKind(image2, "mask");
-  }
-  function contrastLimitsForExportedChannel(channel, channelGroups) {
-    var _a2, _b2;
-    for (const g2 of channelGroups) {
-      for (const row2 of g2.channels) {
-        if (row2.channelId !== channel.id) continue;
-        return {
-          lowerLimit: row2.lowerLimit,
-          upperLimit: row2.upperLimit
-        };
-      }
-    }
-    const max2 = ((_a2 = channel.floatRange) == null ? void 0 : _a2.max) ?? sourceDtypeMax(channel.sourceDataTypeId);
-    return {
-      lowerLimit: channel.lowerLimit ?? ((_b2 = channel.floatRange) == null ? void 0 : _b2.min) ?? 0,
-      upperLimit: channel.upperLimit ?? max2
-    };
-  }
-  function imageOwningChannel(images, channelId) {
-    for (const image2 of images) {
-      const channel = (image2.channels ?? []).find((ch2) => ch2.id === channelId);
-      if (channel) return {
-        image: image2,
-        channel
-      };
-    }
-    return null;
-  }
-  function jpegPyramidExportChannels(images, channelGroups, storyTransfer) {
-    if (!channelGroups.some((g2) => g2.channels.length > 0)) {
-      const out2 = [];
-      for (const image2 of images) {
-        const transfer = exportTransferForImage(image2, storyTransfer);
-        const channels2 = [
-          ...groupIntensityChannelsForOmeExport(image2, channelGroups),
-          ...groupMaskChannelsForOmeExport(image2, channelGroups)
-        ];
-        for (const ch2 of channels2) {
-          const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
-          const limits = folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
-          out2.push({
-            channelId: ch2.id,
-            sourceImageId: image2.id,
-            index: ch2.index,
-            lowerLimit: limits.lowerLimit,
-            upperLimit: limits.upperLimit,
-            transfer
-          });
-        }
-      }
-      return out2;
-    }
-    const out = [];
-    const seenGroupChannelIds = /* @__PURE__ */ new Set();
-    for (const g2 of channelGroups) {
-      for (const row2 of g2.channels) {
-        const loc = imageOwningChannel(images, row2.channelId);
-        if (!loc) continue;
-        const transfer = exportTransferForImage(loc.image, storyTransfer);
-        const limits = folderLimitsForTransfer(transfer, row2.lowerLimit, row2.upperLimit);
-        out.push({
-          channelId: row2.channelId,
-          sourceImageId: loc.image.id,
-          index: loc.channel.index,
-          lowerLimit: limits.lowerLimit,
-          upperLimit: limits.upperLimit,
-          transfer
-        });
-        seenGroupChannelIds.add(row2.channelId);
-      }
-    }
-    for (const image2 of images) {
-      if (!isRgbDisplayImage(image2)) continue;
-      const transfer = exportTransferForImage(image2, storyTransfer);
-      for (const ch2 of groupIntensityChannelsForOmeExport(image2, channelGroups)) {
-        if (seenGroupChannelIds.has(ch2.id)) continue;
-        const lim = contrastLimitsForExportedChannel(ch2, channelGroups);
-        const limits = folderLimitsForTransfer(transfer, lim.lowerLimit, lim.upperLimit);
-        out.push({
-          channelId: ch2.id,
-          sourceImageId: image2.id,
-          index: ch2.index,
-          lowerLimit: limits.lowerLimit,
-          upperLimit: limits.upperLimit,
-          transfer
-        });
-      }
-    }
-    return out;
-  }
-  function allocateOmeTiffExportFileNames(intensityImages, maskImages) {
-    const used = /* @__PURE__ */ new Set();
-    return {
-      intensityFileNames: intensityImages.map((im) => omeTiffExportFileName(im, used)),
-      maskFileNames: maskImages.map((im) => omeTiffMaskExportFileName(im, used))
-    };
-  }
-  function stitchOmeTiffExportImages(images, remappedById, insertedAfter, dropIds) {
-    return images.flatMap((im) => {
-      if (dropIds.has(im.id)) return insertedAfter.get(im.id) ?? [];
-      const main2 = remappedById.get(im.id) ?? im;
-      return [
-        main2,
-        ...insertedAfter.get(im.id) ?? []
-      ];
-    });
-  }
-  function remappedImageForOmeTiffExport(image2, exportedChannels, fileName) {
-    return {
-      ...image2,
-      sizeC: exportedChannels.length,
-      channels: exportedChannels.map((ch2, i2) => ({
-        ...ch2,
-        index: i2
-      })),
-      source: {
-        kind: "url",
-        url: fileName
-      }
-    };
-  }
-  const EXPORT_TILE_SIZE = 1024;
-  function exportPlaneLevels(loaderData) {
-    return loaderData.map((plane) => {
-      const { width, height } = getImageSize(plane);
-      return {
-        width,
-        height,
-        tileSize: EXPORT_TILE_SIZE
-      };
-    });
-  }
-  function tileCountForLevels(levels, channelCount) {
-    let n2 = 0;
-    for (const level of levels) {
-      n2 += Math.ceil(level.width / level.tileSize) * Math.ceil(level.height / level.tileSize) * channelCount;
-    }
-    return n2;
-  }
-  function loaderPlanesOrUndef(entry) {
-    const data2 = entry.loader.data;
-    return (data2 == null ? void 0 : data2.length) ? data2 : void 0;
   }
   const MASK_EXPORT_CONCURRENCY = Math.min(8, ((_h = globalThis == null ? void 0 : globalThis.navigator) == null ? void 0 : _h.hardwareConcurrency) ?? 4);
   function labelArrayCtor(dtype) {
@@ -253608,7 +252351,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const writable = await fh2.createWritable();
     try {
       await writeZlibOmeTiff({
-        sink: browserFileSink(writable),
+        sink: bufferedSink(browserFileSink(writable)),
         image: image2,
         channels: channels2,
         fileName,
@@ -255186,7 +253929,23 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       out[o2 + 3] = 255;
     }
   }
+  const HOST_LITTLE_ENDIAN = new Uint8Array(new Uint16Array([
+    1
+  ]).buffer)[0] === 1;
+  let cubeRootRgbaLut = null;
   function cubeRootPixelsToRgba(out, pixels) {
+    if (HOST_LITTLE_ENDIAN && out.byteOffset % 4 === 0 && (pixels instanceof Uint16Array || pixels instanceof Uint8Array || pixels instanceof Uint8ClampedArray)) {
+      if (!cubeRootRgbaLut) {
+        cubeRootRgbaLut = new Uint32Array(65536);
+        for (let p2 = 0; p2 < 65536; p2++) {
+          const v2 = encodeCubeRootU16ToU8(p2);
+          cubeRootRgbaLut[p2] = (4278190080 | v2 * 65793) >>> 0;
+        }
+      }
+      const out32 = new Uint32Array(out.buffer, out.byteOffset, pixels.length);
+      for (let i2 = 0; i2 < pixels.length; i2++) out32[i2] = cubeRootRgbaLut[pixels[i2]];
+      return;
+    }
     for (let i2 = 0; i2 < pixels.length; i2++) {
       const v2 = encodeCubeRootU16ToU8(pixels[i2]);
       const o2 = i2 * 4;
@@ -255235,7 +253994,42 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       chroma_subsample: 2
     });
   }
+  const constantTileJpegs = /* @__PURE__ */ new Map();
+  const MAX_CONSTANT_TILE_JPEGS = 64;
+  function constantPixel(pixels) {
+    if (pixels.length === 0) return null;
+    const v2 = pixels[0];
+    for (let i2 = 1; i2 < pixels.length; i2++) {
+      if (pixels[i2] !== v2) return null;
+    }
+    return v2;
+  }
   async function encodeGrayscaleJpeg(width, height, pixels, lowerLimit, upperLimit, quality = JPEG_EXPORT_QUALITY, transfer = "contrast", padTileSize) {
+    const encode2 = () => encodeGrayscalePixels(width, height, pixels, lowerLimit, upperLimit, quality, transfer, padTileSize);
+    const value = constantPixel(pixels);
+    if (value === null) return encode2();
+    const key2 = [
+      transfer,
+      lowerLimit,
+      upperLimit,
+      quality,
+      width,
+      height,
+      padTileSize,
+      value
+    ].join();
+    let jpeg = constantTileJpegs.get(key2);
+    if (!jpeg) {
+      jpeg = await encode2();
+      if (constantTileJpegs.size >= MAX_CONSTANT_TILE_JPEGS) {
+        const oldest = constantTileJpegs.keys().next().value;
+        if (oldest !== void 0) constantTileJpegs.delete(oldest);
+      }
+      constantTileJpegs.set(key2, jpeg);
+    }
+    return jpeg.slice(0);
+  }
+  async function encodeGrayscalePixels(width, height, pixels, lowerLimit, upperLimit, quality, transfer, padTileSize) {
     const rgba = new Uint8ClampedArray(new ArrayBuffer(width * height * 4));
     if (transfer === "cube-root") {
       cubeRootPixelsToRgba(rgba, pixels);
@@ -255277,7 +254071,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     return copy2;
   }
   function WorkerWrapper$1(options) {
-    return new Worker("" + new URL("jpegExport.worker-Dad1CIDO.js", import.meta.url).href, {
+    return new Worker("" + new URL("jpegExport.worker-BWQe4CTF.js", import.meta.url).href, {
       type: "module",
       name: options == null ? void 0 : options.name
     });
@@ -255456,6 +254250,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       1
     ])
   ];
+  const CUBE_ROOT_ICC_TAG = tiffTag(TIFF_ICC_PROFILE_TAG, "UNDEFINED", GAMMA3_ICC_PROFILE);
   const TILES_IN_FLIGHT = 32;
   const MAX_PENDING_WRITE_BYTES = 64 * 1024 * 1024;
   function interleavePlanar(planes) {
@@ -255591,6 +254386,16 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         image: image2
       };
     }
+    const asRgb = image2.rgbDisplay === true ? image2 : {
+      ...image2,
+      rgbDisplay: true
+    };
+    if (!rgbExportChannels(asRgb, channels2)) {
+      return {
+        transfer,
+        image: image2
+      };
+    }
     if (!await planesLookBrightfield(planes, channels2, signal)) {
       return {
         transfer,
@@ -255599,15 +254404,12 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     }
     return {
       transfer: "contrast",
-      image: image2.rgbDisplay === true ? image2 : {
-        ...image2,
-        rgbDisplay: true
-      }
+      image: asRgb
     };
   }
   async function exportJpegOmeTiffImage(opts) {
     var _a2, _b2;
-    const { directory, layoutPlanes, image: image2, channelSources, channelGroups, fileName, transfer, signal, onProgress, rgb, pixels } = opts;
+    const { directory, layoutPlanes, image: image2, channelSources, channelGroups, fileName, transfer, signal, onProgress, rgb, pixels, sourceCubeRoot = false } = opts;
     const channels2 = channelSources.map((s2) => s2.channel);
     if (channels2.length === 0) {
       throw new Error(`No intensity channels to export for ${image2.basename || image2.id}`);
@@ -255633,6 +254435,17 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         lim.upperLimit
       ];
     });
+    let tileCopy = null;
+    if (!rgb && transfer === "cube-root") {
+      tileCopy = {
+        kind: "cube-root",
+        profileless: sourceCubeRoot
+      };
+    } else if ((rgb == null ? void 0 : rgb.length) === 1 && sourceDtypeMax(layoutPlanes[0].dtype) === 255) {
+      tileCopy = {
+        kind: "rgb"
+      };
+    }
     const omeXml = buildOmeTiffXml({
       imageName: image2.basename || image2.id || "image",
       channels: fileChannels,
@@ -255647,7 +254460,10 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const { layouts, jobs } = planPyramid({
       levels,
       channelCount: fileChannels.length,
-      baseTags: rgb ? RGB_JPEG_TAGS : grayscaleJpegTags(),
+      baseTags: rgb ? RGB_JPEG_TAGS : transfer === "cube-root" ? [
+        ...grayscaleJpegTags(),
+        CUBE_ROOT_ICC_TAG
+      ] : grayscaleJpegTags(),
       imageDescription: omeXml
     });
     const fh2 = await directory.getFileHandle(fileName, {
@@ -255669,7 +254485,7 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     let writer;
     try {
       writer = await createTiffWriter({
-        sink: browserFileSink(writable),
+        sink: bufferedSink(browserFileSink(writable)),
         signal: workSignal,
         images: layouts
       });
@@ -255702,6 +254518,18 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       const levelIndex = Math.min(job.levelIndex, source2.planes.length - 1);
       const plane = source2.planes[levelIndex];
       const tileSize = levels[job.levelIndex].tileSize;
+      if (tileCopy) {
+        const copied = await readCopyableJpegTile(plane, {
+          t: 0,
+          z: 0,
+          c: source2.channel.index
+        }, job.x, job.y, levels[job.levelIndex], tileCopy, workSignal);
+        if (workSignal.aborted) return;
+        if (copied) {
+          await queueWrite(job, copied);
+          return;
+        }
+      }
       const limits = channelLimits[job.channelIndex];
       const readTile2 = (channel) => readExportTile(plane, tileSize, {
         t: 0,
@@ -255848,7 +254676,8 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         signal,
         onProgress: bump,
         rgb: decided.rgb,
-        pixels: (_a2 = item2.entry.loader.metadata) == null ? void 0 : _a2.Pixels
+        pixels: (_a2 = item2.entry.loader.metadata) == null ? void 0 : _a2.Pixels,
+        sourceCubeRoot: item2.entry.transfer === "cube-root"
       });
       await writeTiffOffsetsJson(directory, intensityFileNames[i2]);
       if (item2.masks.length > 0) {
@@ -255922,13 +254751,14 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const rm = mins % 60;
     return rm > 0 ? `~${h2}h ${rm}m left` : `~${h2}h left`;
   };
-  const RATE_WINDOW_MS = 5e3;
+  const RATE_WINDOW_MS = 6e4;
+  const MIN_ESTIMATE_SHARE = 0.01;
   const estimateRemainingMs = (samples, total, now) => {
     if (samples.length < 2) return null;
     const base2 = samples[0];
     const tip = samples[samples.length - 1];
     const gained = tip.completed - base2.completed;
-    if (tip.at - base2.at < RATE_WINDOW_MS || gained <= 0 || total <= tip.completed) return null;
+    if (tip.at - base2.at < RATE_WINDOW_MS || tip.completed < total * MIN_ESTIMATE_SHARE || gained <= 0 || total <= tip.completed) return null;
     return (total - tip.completed) * (now - base2.at) / gained;
   };
   const toFilename = (index2) => {
@@ -258549,11 +257379,11 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     }, [
       storageKey2
     ]);
-    const onAllow = async () => {
-      const newHandles = await toFile();
-      if (newHandles.length > 0) {
+    const onAllow = async (kinds) => {
+      const newHandles = await toFile(kinds);
+      if (newHandles.length > 0 && importFileKind(newHandles[0].name) === "image") {
         setHandles(newHandles);
-        if (isPersistableFileHandle(newHandles[0])) {
+        if (isPersistableFileHandle(newHandles[0]) && /\.tiff?$/i.test(newHandles[0].name)) {
           await putFileHandle(storageKey2, newHandles[0]);
           setHasRecent(true);
         }
@@ -259301,11 +258131,20 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     }
     return octaves.length - 1;
   }
+  function kernelAt(pyramid, level, smoothing) {
+    const { sizes, octaves } = pyramid;
+    const sampled = sampledLevel(octaves, level, smoothing);
+    const radius = smoothing * sizes[sampled].width / sizes[0].width;
+    return {
+      level: sampled,
+      radius: Math.min(CONTOUR_APRON, Math.max(CONTOUR_MIN_RADIUS, radius))
+    };
+  }
   function contourWindow(pyramid, level, x2, y2, smoothing) {
     const { tileSize, sizes, octaves } = pyramid;
-    const sampled = sampledLevel(octaves, level, smoothing);
+    const kernel = kernelAt(pyramid, level, smoothing);
     const fine = sizes[level];
-    const coarse = sizes[sampled];
+    const coarse = sizes[kernel.level];
     const innerWidth = Math.min(tileSize, fine.width - x2 * tileSize);
     const innerHeight = Math.min(tileSize, fine.height - y2 * tileSize);
     const rx = coarse.width / fine.width;
@@ -259318,12 +258157,11 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
     const y0 = Math.floor(oy);
     const fx = ox - x0;
     const fy = oy - y0;
-    const radius = smoothing * coarse.width / sizes[0].width;
     const scale2 = 2 ** octaves[level];
     const left = x2 * tileSize * scale2;
     const top2 = y2 * tileSize * scale2;
     return {
-      level: sampled,
+      ...kernel,
       left: x0 - CONTOUR_APRON,
       top: y0 - CONTOUR_APRON,
       width: Math.ceil(fx + ex) + 2 * CONTOUR_APRON,
@@ -259334,7 +258172,6 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
         ex,
         ey
       ],
-      radius: Math.min(CONTOUR_APRON, Math.max(CONTOUR_MIN_RADIUS, radius)),
       bounds: [
         left,
         top2 + innerHeight * scale2,
@@ -259456,17 +258293,17 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
       pyramids.push(pyramid);
     }
     if (pyramids.length === 0) return CONTOUR_SMOOTHING_STEPS;
-    const prev = pyramids.map(() => "");
+    let prev = [];
     const steps = [];
     for (const smoothing of CONTOUR_SMOOTHING_STEPS) {
-      let changed = steps.length === 0;
-      for (let i2 = 0; i2 < pyramids.length; i2++) {
-        const win = contourWindow(pyramids[i2], 0, 0, 0, smoothing);
-        const key2 = `${win.level}:${win.radius.toFixed(3)}`;
-        if (key2 !== prev[i2]) changed = true;
-        prev[i2] = key2;
+      const kernels = pyramids.map((pyramid) => kernelAt(pyramid, 0, smoothing));
+      if (kernels.some((k2, i2) => {
+        var _a2, _b2;
+        return k2.level !== ((_a2 = prev[i2]) == null ? void 0 : _a2.level) || k2.radius !== ((_b2 = prev[i2]) == null ? void 0 : _b2.radius);
+      })) {
+        steps.push(smoothing);
       }
-      if (changed) steps.push(smoothing);
+      prev = kernels;
     }
     return steps;
   }
@@ -259515,25 +258352,23 @@ fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
   }
   function withContourLayers(layer2, opts) {
     const { mask: mask2 } = opts;
-    const clip = (extensions) => mask2 ? {
+    const props = layer2.props;
+    const clip = (extensions) => ({
       extensions: [
         ...extensions,
         mask2.extension
       ],
       maskId: mask2.maskId
-    } : {
-      extensions
-    };
-    const props = layer2.props;
+    });
     const contoured = layer2 instanceof MultiscaleImageLayer ? contouredChannels(props, opts.contourChannelIds) : null;
     if (!contoured) {
       return [
-        mask2 ? layer2.clone(clip([])) : layer2
+        layer2.clone(clip(props.extensions))
       ];
     }
     const keep = (values) => (values ?? []).filter((_2, i2) => contoured[i2]);
     const fill = layer2.clone({
-      ...mask2 ? clip([]) : {},
+      ...clip(props.extensions),
       channelsVisible: contoured.map((on, i2) => {
         var _a2;
         return !on && (((_a2 = props.channelsVisible) == null ? void 0 : _a2[i2]) ?? true);
@@ -260326,36 +259161,23 @@ uniform classStyleUniforms {
   const WAYPOINT_FLY_MS = 1400;
   const CAMERA_IDLE_COMMIT_MS = 160;
   const easeInOutCubic = (t2) => t2 < 0.5 ? 4 * t2 * t2 * t2 : 1 - (-2 * t2 + 2) ** 3 / 2;
-  function utcShort(iso) {
-    const t2 = Date.parse(iso);
-    if (Number.isNaN(t2)) return null;
-    return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
-  }
-  function buildStamp() {
-    const iso = "2026-10-21T23:53:18.542Z";
-    const sha = "3b4f37f9cbb52ea5c2f995f48b01cea77f586961";
-    const label2 = utcShort(iso);
-    const short = sha.slice(0, 7);
-    const text2 = [
-      label2 ? `Updated ${label2} UTC` : "",
-      short
-    ].filter(Boolean).join(" \xB7 ");
-    if (!text2) return null;
-    return {
-      text: text2,
-      title: [
-        iso,
-        sha
-      ].filter(Boolean).join("\n")
-    };
-  }
-  function deviceLabel() {
-    const mb2 = TILE_CACHE_PROPS.maxCacheByteSize / 2 ** 20;
-    const cache2 = mb2 > 0 ? `${mb2} MB` : "off";
-    return `${isMobileDevice() ? "Mobile" : "Desktop"} \xB7 tile cache ${cache2}`;
-  }
   const BUILD_STAMP = buildStamp();
-  const DEVICE_LABEL = deviceLabel();
+  class SelectionMaskBitmapLayer extends BitmapLayer$1 {
+    getBounds() {
+      const [minX, minY, maxX, maxY] = this.props.bounds;
+      return [
+        [
+          minX,
+          minY
+        ],
+        [
+          maxX,
+          maxY
+        ]
+      ];
+    }
+  }
+  __publicField(SelectionMaskBitmapLayer, "layerName", "SelectionMaskBitmapLayer");
   function planeWidth(plane) {
     const i2 = plane.labels.indexOf("x");
     return i2 >= 0 ? plane.shape[i2] ?? 0 : 0;
@@ -260581,11 +259403,9 @@ uniform classStyleUniforms {
     const sam2Processing = useAppStore((s2) => s2.sam2Processing);
     const authoringWaypointEditorOpen = useAppStore((s2) => s2.authoringWaypointEditorOpen);
     const imageSelectionMask = useAppStore((s2) => s2.imageSelectionMask);
-    const maskVisualizationPreview = useAppStore((s2) => s2.maskVisualizationPreview);
     const imageOrientationPreview = useAppStore((s2) => s2.imageOrientationPreview);
     const imageOpacityPreview = useAppStore((s2) => s2.imageOpacityPreview);
     const arrangeImageId = useAppStore((s2) => s2.arrangeImageId);
-    const selectionMaskVisualizationPreview = (maskVisualizationPreview == null ? void 0 : maskVisualizationPreview.sourceChannelId) === SELECTION_MASK_CHANNEL_KEY ? maskVisualizationPreview.visualization : null;
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const images = useDocumentStore((s2) => s2.images);
     const featureTables = useDocumentStore((s2) => s2.featureTables);
@@ -260649,6 +259469,7 @@ uniform classStyleUniforms {
       resizeObserverRef.current = resizeObserver;
     }, []);
     const setViewerWorldFrame = useAppStore((s2) => s2.setViewerWorldFrame);
+    const setViewerImageFrames = useAppStore((s2) => s2.setViewerImageFrames);
     const firstLoader = reactExports.useMemo(() => loaderList.length > 0 ? loaderList[0] : null, [
       loaderList
     ]);
@@ -260702,6 +259523,16 @@ uniform classStyleUniforms {
       frame2,
       setViewerWorldFrame
     ]);
+    reactExports.useEffect(() => {
+      setViewerImageFrames(loaderList.map((item2) => ({
+        ...worldFrameFromLoader(item2.loader),
+        sourceImageId: item2.sourceImageId
+      })));
+      return () => setViewerImageFrames([]);
+    }, [
+      loaderList,
+      setViewerImageFrames
+    ]);
     const maskDisplayLayers = reactExports.useMemo(() => {
       if (omeLoaderEntries.length === 0) return [];
       const layers = [];
@@ -260716,7 +259547,7 @@ uniform classStyleUniforms {
         });
         const entry = omeLoaderEntries.find((e2) => e2.sourceImageId === sc2.imageId);
         if (!(entry == null ? void 0 : entry.loader)) continue;
-        const visualization = (maskVisualizationPreview == null ? void 0 : maskVisualizationPreview.sourceChannelId) === sc2.id ? maskVisualizationPreview.visualization : effectiveMaskVisualizationForSource(sc2, channelGroups, activeChannelGroupId);
+        const visualization = effectiveMaskVisualizationForSource(sc2, channelGroups, activeChannelGroupId);
         const imageOpacity2 = opacityForImage(images, sc2.imageId, imageOpacityPreview);
         const paintedVisualization = imageOpacity2 < 1 ? {
           ...visualization,
@@ -260744,7 +259575,6 @@ uniform classStyleUniforms {
       channelGroupRowVisibilities,
       activeChannelGroupId,
       channelGroups,
-      maskVisualizationPreview,
       imageOpacityPreview,
       imageOrientationPreview,
       featureTables,
@@ -261102,9 +259932,9 @@ uniform classStyleUniforms {
         maxX,
         maxY
       ];
-      const visualization = selectionMaskVisualizationPreview ?? imageSelectionMask.maskVisualization ?? DEFAULT_MASK_VISUALIZATION;
+      const visualization = imageSelectionMask.maskVisualization ?? DEFAULT_MASK_VISUALIZATION;
       const layers = [
-        new BitmapLayer$1({
+        new SelectionMaskBitmapLayer({
           id: IMAGE_SELECTION_MASK_LAYER_ID,
           operation: "mask",
           bounds,
@@ -261127,14 +259957,13 @@ uniform classStyleUniforms {
       return layers;
     }, [
       imageSelectionMask,
-      selectionMaskActive,
-      selectionMaskVisualizationPreview
+      selectionMaskActive
     ]);
     const clippedImageLayers = reactExports.useMemo(() => {
-      const mask2 = selectionMaskActive ? {
+      const mask2 = {
         extension: maskExtension,
-        maskId: IMAGE_SELECTION_MASK_LAYER_ID
-      } : void 0;
+        maskId: selectionMaskActive ? IMAGE_SELECTION_MASK_LAYER_ID : ""
+      };
       return imageLayers.flatMap((layer2) => withContourLayers(layer2, {
         contourChannelIds,
         levels: contourLevels,
@@ -261471,20 +260300,15 @@ uniform classStyleUniforms {
                     children: line.text
                   }, line.key))
                 }) : null,
-                jsxRuntimeExports.jsxs("div", {
+                jsxRuntimeExports.jsx("div", {
                   className: styles$1.viewerInfoStamp,
                   title: [
                     BUILD_STAMP == null ? void 0 : BUILD_STAMP.title,
                     navigator.userAgent
                   ].filter(Boolean).join("\n"),
-                  children: [
-                    BUILD_STAMP ? jsxRuntimeExports.jsx("div", {
-                      children: BUILD_STAMP.text
-                    }) : null,
-                    jsxRuntimeExports.jsx("div", {
-                      children: DEVICE_LABEL
-                    })
-                  ]
+                  children: BUILD_STAMP ? jsxRuntimeExports.jsx("div", {
+                    children: BUILD_STAMP.text
+                  }) : null
                 }),
                 props.infoFooter ? jsxRuntimeExports.jsx("div", {
                   className: styles$1.viewerInfoFooter,
@@ -261665,9 +260489,9 @@ uniform classStyleUniforms {
     });
   }
   function buildOmeImportSlice(args) {
-    const { loader, role, basename: basename2, sourceImageId, existingImages, relevantGroups = [], rgbDisplay, channelNames } = args;
+    const { loader, role, basename: basename2, sourceImageId, existingImages, rgbDisplay, channelNames } = args;
     const defaultKind = role === "segmentation" ? "mask" : "channel";
-    const extracted = extractChannels(loader, "Colorimetric", relevantGroups, sourceImageId, defaultKind);
+    const extracted = extractChannels(loader, "Colorimetric", sourceImageId, defaultKind);
     let sourceChannels = prepareImportedSourceChannels(extracted.SourceChannels, role, basename2, existingImages);
     if (role === "intensity" && rgbDisplay === false) {
       sourceChannels = namePackedRgbIfChannels(sourceChannels);
@@ -262124,7 +260948,6 @@ uniform classStyleUniforms {
     useDocumentStore.getState().hydrateFromDocument(rec.data, rec.id);
   }
   async function runBootstrap(preferredStoryId) {
-    await ensureDemoShelfStory();
     if (preferredStoryId !== null && preferredStoryId !== "") {
       await runAuthorBootstrap(preferredStoryId);
       return;
@@ -262196,7 +261019,7 @@ uniform classStyleUniforms {
   const hasAuthoritativeBounds = (s2) => s2.Bounds != null && typeof s2.Bounds.x0 === "number" && typeof s2.Bounds.x1 === "number" && typeof s2.Bounds.y0 === "number" && typeof s2.Bounds.y1 === "number";
   const needsPanMigration = (s2) => (s2.Pan != null || s2.Zoom != null) && !hasAuthoritativeBounds(s2);
   function planWaypointConfigSeedTick(args) {
-    var _a2;
+    var _a2, _b2, _c2, _d, _e;
     const { mirror, viewportWidth: cw, viewportHeight: ch2, imageWidth, imageHeight } = args;
     const configStories = mirror.Stories;
     const storeWaypoints = documentWaypoints(useDocumentStore.getState());
@@ -262206,7 +261029,8 @@ uniform classStyleUniforms {
     if (!cw || !ch2) return {
       type: "noop"
     };
-    if (storeWaypoints.length === 0) {
+    const lonePlaceholder = storeWaypoints.length === 1 && (((_b2 = (_a2 = storeWaypoints[0]) == null ? void 0 : _a2.shapeIds) == null ? void 0 : _b2.length) ?? 0) === 0 && !(((_c2 = storeWaypoints[0]) == null ? void 0 : _c2.content) ?? "").trim() && ((_d = storeWaypoints[0]) == null ? void 0 : _d.title) === "Waypoint 1";
+    if (storeWaypoints.length === 0 || lonePlaceholder && configStories.length > 1) {
       if (imageWidth <= 0 || imageHeight <= 0) return {
         type: "noop"
       };
@@ -262220,7 +261044,7 @@ uniform classStyleUniforms {
         shapes: mergedShapes
       };
     }
-    if ((((_a2 = mirror.Shapes) == null ? void 0 : _a2.length) ?? 0) > 0 && documentShapes(useDocumentStore.getState()).length === 0) {
+    if ((((_e = mirror.Shapes) == null ? void 0 : _e.length) ?? 0) > 0 && documentShapes(useDocumentStore.getState()).length === 0) {
       return {
         type: "setShapes",
         shapes: mirror.Shapes ?? []
@@ -262302,30 +261126,9 @@ uniform classStyleUniforms {
       title: name2
     });
   }
-  function ensureDefaultWaypointForImageImport() {
-    var _a2;
-    const doc = useDocumentStore.getState();
-    if (doc.waypoints.length > 0) return;
-    const groupId = (_a2 = doc.channelGroups[0]) == null ? void 0 : _a2.id;
-    const raw2 = {
-      id: crypto.randomUUID(),
-      State: {
-        Expanded: true
-      },
-      Name: "Waypoint 1",
-      Content: "",
-      shapeIds: [],
-      ...groupId !== void 0 ? {
-        groupId
-      } : {}
-    };
-    const app = useAppStore.getState();
-    app.addStory(hydrateConfigWaypoint(raw2, doc.channelGroups));
-    app.setActiveStory(0);
-  }
   function afterImageImportDocumentEffects() {
     maybeDefaultStoryTitleFromFirstImage();
-    ensureDefaultWaypointForImageImport();
+    ensureDefaultWaypoint();
   }
   function reconcileLoaderEntries(current, expectedIds, incoming = []) {
     const incomingIds = new Set(incoming.map((entry) => entry.sourceImageId));
@@ -262335,17 +261138,11 @@ uniform classStyleUniforms {
     ];
     return next2.length === current.length && next2.every((entry, index2) => entry === current[index2]) ? current : next2;
   }
-  const cloneConfigWaypoints = (stories) => {
-    if (typeof structuredClone === "function") {
-      return structuredClone(stories);
-    }
-    return JSON.parse(JSON.stringify(stories));
-  };
   const StoryPersistenceRoot = ({ children }) => {
     const [ready, setReady] = reactExports.useState(false);
     reactExports.useEffect(() => {
-      const preferred = parsePreferredStoryIdFromLocation();
-      void bootstrapStoryPersistence(preferred).then(() => setReady(true));
+      const { storyid } = parseRootSearch(window.location.search);
+      void bootstrapStoryPersistence(storyid).then(() => setReady(true));
     }, []);
     reactExports.useEffect(() => {
       var _a2;
@@ -262445,7 +261242,7 @@ uniform classStyleUniforms {
     });
     return new Set(layers.filter((l2) => isGmmEligible(l2.sc, channels2)).map((l2) => l2.sc.id));
   }
-  const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
+  const APP_TAB_TITLE_PREFIX = "Minerva";
   async function pickExportFolder() {
     try {
       return await showDirectoryPicker({
@@ -262458,7 +261255,6 @@ uniform classStyleUniforms {
   }
   const Content = (props) => {
     const { handleKeys, useLaunchQueue = false } = props;
-    const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
     useStoryAutoSave();
     const navigate = rootRouteApi.useNavigate();
     const returnToLibrary = reactExports.useCallback(() => {
@@ -262471,13 +261267,7 @@ uniform classStyleUniforms {
         useAppStore.getState().resetStoryViewerSession();
         s2.clearForLibraryView();
         navigate({
-          search: (prev) => {
-            const next2 = {
-              ...prev
-            };
-            delete next2.storyid;
-            return next2;
-          },
+          search: {},
           replace: true
         });
       })();
@@ -262622,7 +261412,7 @@ uniform classStyleUniforms {
     ]);
     const [waypointMirror, setWaypointMirror] = reactExports.useState(() => ({
       Shapes: [],
-      Stories: cloneConfigWaypoints(props.configWaypoints)
+      Stories: []
     }));
     const [ioState, setIoState] = reactExports.useState("IDLE");
     const [exportMode, setExportMode] = reactExports.useState("jpeg-ome-tiff");
@@ -262795,7 +261585,6 @@ uniform classStyleUniforms {
       delete channelVisibilities2[SELECTION_MASK_CHANNEL_KEY];
       useAppStore.setState({
         imageSelectionMask: null,
-        maskVisualizationPreview: null,
         channelVisibilities: channelVisibilities2
       });
       const keys2 = removed.flatMap((im) => {
@@ -262856,9 +261645,9 @@ uniform classStyleUniforms {
       publishChannelState
     ]);
     const omeTiffUrlLoadGenerationRef = reactExports.useRef(0);
-    const jpegUrlLoadGenerationRef = reactExports.useRef(0);
+    reactExports.useRef(0);
     const [importRevision, setImportRevision] = reactExports.useState(0);
-    const [isLoadingImage, setIsLoadingImage] = reactExports.useState(() => hasDemo || hasPendingLibraryImport());
+    const [isLoadingImage, setIsLoadingImage] = reactExports.useState(() => hasPendingLibraryImport());
     const imageLoadEpochRef = reactExports.useRef(0);
     const beginImageLoading = reactExports.useCallback(() => {
       const epoch = ++imageLoadEpochRef.current;
@@ -262980,7 +261769,6 @@ uniform classStyleUniforms {
       clearOmeDerivedCaches();
       setDicomIndexList([]);
       setLastOmeTiffUrl(null);
-      const relevant_groups = [];
       let nextImages = [];
       const entries = [];
       for (let i2 = 0; i2 < handles.length; i2++) {
@@ -262999,7 +261787,6 @@ uniform classStyleUniforms {
           basename: basename2,
           sourceImageId,
           existingImages: nextImages,
-          relevantGroups: relevant_groups,
           rgbDisplay,
           channelNames
         });
@@ -263039,10 +261826,10 @@ uniform classStyleUniforms {
           const entry = entries[i2];
           const handle2 = handles[i2];
           if (!entry || !handle2) continue;
-          const { loader } = entry;
+          const { loader, sourceImageId } = entry;
           const file = await handle2.getFile();
           const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
-          applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+          applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
         }
       }
       setFileName(handles.length === 1 ? in_f : handles.map((h2) => h2.name).join(", ") || in_f);
@@ -263132,55 +261919,27 @@ uniform classStyleUniforms {
         transition: visibilityTransition
       });
       maybeDefaultStoryTitleFromFirstImage();
+      if (role !== "segmentation") {
+        for (let i2 = 0; i2 < newEntries.length; i2++) {
+          const entry = newEntries[i2];
+          const handle2 = handles[i2];
+          if (!entry || !handle2 || !nextImages.some((im) => im.id === entry.sourceImageId)) {
+            continue;
+          }
+          const file = await handle2.getFile();
+          const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
+          applyOmeRoisFromLoaderToWaypoint(entry.loader, entry.sourceImageId, omeXml);
+        }
+      }
       return {
         ok: true
       };
     };
-    const onStartJpegUrl = async (url) => {
-      jpegUrlLoadGenerationRef.current += 1;
-      const loadGeneration = jpegUrlLoadGenerationRef.current;
-      setDicomIndexList([]);
-      setOmeLoaderEntries([]);
-      const storyRoot = url.replace(/\/$/, "");
-      const documentUrl = `${storyRoot}/document.json`;
-      skipLoaderHydrateRef.current = true;
-      try {
-        const res = await fetch(documentUrl);
-        if (!res.ok) {
-          throw new Error(`Failed to load ${documentUrl} (${res.status})`);
-        }
-        const data2 = validateDocumentData(await res.json());
-        if (loadGeneration !== jpegUrlLoadGenerationRef.current) return;
-        const storyId = useDocumentStore.getState().activeStoryId ?? data2.metadata.id ?? crypto.randomUUID();
-        useDocumentStore.getState().hydrateFromDocument(data2, storyId);
-        publishChannelState(data2.images, data2.channelGroups, {
-          resetActiveGroup: data2.channelGroups.length > 0,
-          transition: {
-            kind: "sync"
-          }
-        });
-        afterImageImportDocumentEffects();
-        const jpegEntries = await jpegLoaderEntriesFromImages({
-          images: data2.images,
-          channelGroups: data2.channelGroups,
-          documentUrl,
-          transfer: jpegTransferFromImageSource(data2.metadata.imageSource)
-        });
-        if (loadGeneration !== jpegUrlLoadGenerationRef.current) return;
-        setJpegLoaderEntries(jpegEntries);
-        if (jpegEntries.length === 0) {
-          skipLoaderHydrateRef.current = false;
-        }
-      } catch (e2) {
-        if (loadGeneration === jpegUrlLoadGenerationRef.current) {
-          skipLoaderHydrateRef.current = false;
-        }
-        throw e2;
-      }
-    };
     const onStartOmeTiffUrl = async (url, role = "intensity", rgbDisplay, channelNames) => {
       omeTiffUrlLoadGenerationRef.current += 1;
       const loadGeneration = omeTiffUrlLoadGenerationRef.current;
+      const storyIdAtStart = useDocumentStore.getState().activeStoryId;
+      const superseded = () => loadGeneration !== omeTiffUrlLoadGenerationRef.current || useDocumentStore.getState().activeStoryId !== storyIdAtStart;
       clearOmeDerivedCaches();
       setDicomIndexList([]);
       const loader = await loadOmeLoaderForRole(role, {
@@ -263189,10 +261948,7 @@ uniform classStyleUniforms {
         pool: sharedOmeDecodePool(),
         rgbDisplay
       });
-      if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
-        return;
-      }
-      const relevant_groups = props.demo_url != null && url === props.demo_url ? (props.exhibit_config.Groups ?? []).filter(({ Image: Image2 }) => Image2.Method === "Colorimetric") : [];
+      if (superseded()) return;
       const sourceImageId = crypto.randomUUID();
       const basename2 = url.split("/").pop() || "remote.ome.tif";
       const slice = buildOmeImportSlice({
@@ -263201,7 +261957,6 @@ uniform classStyleUniforms {
         basename: basename2,
         sourceImageId,
         existingImages: [],
-        relevantGroups: relevant_groups,
         rgbDisplay,
         channelNames
       });
@@ -263219,6 +261974,7 @@ uniform classStyleUniforms {
         kind: "url",
         url
       });
+      if (superseded()) return;
       skipLoaderHydrateRef.current = true;
       setOmeLoaderEntries([
         {
@@ -263236,7 +261992,8 @@ uniform classStyleUniforms {
       afterImageImportDocumentEffects();
       if (role !== "segmentation") {
         const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
-        applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+        if (superseded()) return;
+        applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
       }
       setLastOmeTiffUrl(url);
       setFileName(basename2);
@@ -263296,6 +262053,12 @@ uniform classStyleUniforms {
         newChannelIds,
         newGroupRowIds
       };
+      if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
+        return {
+          ok: false,
+          error: "Import was superseded by a newer request."
+        };
+      }
       skipLoaderHydrateRef.current = true;
       setOmeLoaderEntries((prev) => [
         ...prev,
@@ -263310,6 +262073,16 @@ uniform classStyleUniforms {
         transition: visibilityTransition
       });
       maybeDefaultStoryTitleFromFirstImage();
+      if (role !== "segmentation") {
+        const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
+        if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
+          return {
+            ok: false,
+            error: "Import was superseded by a newer request."
+          };
+        }
+        applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
+      }
       return {
         ok: true
       };
@@ -263518,50 +262291,14 @@ uniform classStyleUniforms {
       endImageLoading,
       syncRegistryFromDocument
     ]);
-    const onStart = async (imagePropList, handles) => {
-      var _a2;
-      if (imagePropList.length === 0) {
-        return;
-      }
-      const dicomPropList = imagePropList.filter(([_series, _modality, type]) => type === "DICOM-WEB").map(([series, modality]) => [
-        series,
-        modality
-      ]);
-      const omeTiffPropList = imagePropList.filter(([_path, _modality, type]) => type === "OME-TIFF").map(([path2]) => [
-        path2
-      ]);
-      const jpegUrlList = imagePropList.filter(([_url, _modality, type]) => type === "JPEG-URL").map(([url]) => url);
-      const omeTiffUrlList = imagePropList.filter(([_url, _modality, type]) => type === "OME-TIFF-URL").map(([url]) => url);
-      const willLoad = dicomPropList.length > 0 || omeTiffPropList.length > 0 && handles.length > 0 || omeTiffUrlList.length > 0 || jpegUrlList.length > 0;
-      if (!willLoad) return;
-      setImportRevision((r2) => r2 + 1);
-      const loadEpoch = beginImageLoading();
-      try {
-        if (dicomPropList.length > 0) {
-          await onStartDicomWeb(dicomPropList, props.demo_dicom_web ? props.exhibit_config.Groups ?? [] : []);
-        }
-        if (omeTiffPropList.length > 0 && handles.length > 0) {
-          await onStartOmeTiff(omeTiffPropList[0][0], handles);
-        }
-        if (jpegUrlList.length > 0) {
-          await onStartJpegUrl(jpegUrlList[0]);
-        }
-        if (omeTiffUrlList.length > 0) {
-          await onStartOmeTiffUrl(omeTiffUrlList[0]);
-        }
-      } finally {
-        endImageLoading(loadEpoch);
-        (_a2 = document.getElementById("global-loader")) == null ? void 0 : _a2.remove();
-      }
-    };
-    const onStartDicomWeb = async (imagePropList, groups) => {
+    const onStartDicomWeb = async (imagePropList) => {
       var _a2;
       clearOmeDerivedCaches();
       setLastOmeTiffUrl(null);
       const indexList = await Promise.all(imagePropList.map(async ([series, modalityFallback]) => {
         const { pyramids, displayName, modality: dicomModality } = await loadDicomWeb(series);
         const label2 = displayName || modalityFallback;
-        const modality = groups.length > 0 && modalityFallback ? modalityFallback : dicomModality || label2;
+        const modality = dicomModality || label2;
         const loader = parseDicomWeb({
           pyramids,
           series,
@@ -263582,8 +262319,7 @@ uniform classStyleUniforms {
         ChannelGroups: []
       };
       for (const { loader, modality, sourceImageId } of indexList) {
-        const relevant_groups = groups.filter(({ Image: Image2 }) => Image2.Method === modality);
-        const { SourceChannels: sc2, ChannelGroups: gr } = extractChannels(loader, modality, relevant_groups, sourceImageId);
+        const { SourceChannels: sc2, ChannelGroups: gr } = extractChannels(loader, modality, sourceImageId);
         registry2 = {
           SourceChannels: [
             ...registry2.SourceChannels,
@@ -263660,40 +262396,6 @@ uniform classStyleUniforms {
       detachRemovedFeatureTables(doc.featureTables, nextFeatureTables);
       afterImageImportDocumentEffects();
     };
-    const onStartRef = reactExports.useRef(onStart);
-    onStartRef.current = onStart;
-    reactExports.useEffect(() => {
-      if (!props.demo_url) return;
-      if (useDocumentStore.getState().images.length > 0) {
-        clearImageLoading();
-        return;
-      }
-      if (props.demo_jpeg) {
-        void (async () => {
-          await onStartRef.current([
-            [
-              props.demo_url,
-              "Colorimetric",
-              "JPEG-URL"
-            ]
-          ], []);
-        })();
-        return;
-      }
-      void (async () => {
-        await onStartRef.current([
-          [
-            props.demo_url,
-            "Colorimetric",
-            "OME-TIFF-URL"
-          ]
-        ], []);
-      })();
-    }, [
-      props.demo_url,
-      props.demo_jpeg,
-      clearImageLoading
-    ]);
     const loaderHydrationGenRef = reactExports.useRef(0);
     reactExports.useEffect(() => {
       const expectedIds = new Set(images.map((im) => im.id));
@@ -263758,7 +262460,7 @@ uniform classStyleUniforms {
       beginImageLoading,
       endImageLoading
     ]);
-    const noLoader = jpegLoaderEntries.length === 0 && omeLoaderEntries.length === 0 && dicomIndexList.length === 0 && !hasDemo;
+    const noLoader = jpegLoaderEntries.length === 0 && omeLoaderEntries.length === 0 && dicomIndexList.length === 0;
     useSyncJpegChannelFolders(jpegLoaderEntries, images, activeChannelGroupId, channelGroups, setJpegLoaderEntries);
     const viewerImageKey = reactExports.useMemo(() => {
       if (jpegLoaderEntries.length > 0) {
@@ -264016,9 +262718,8 @@ uniform classStyleUniforms {
     ]);
     return jsxRuntimeExports.jsx(FileHandler, {
       handleKeys: namespacedHandleKeys,
-      autoRestoreOnMount: !hasDemo,
       useLaunchQueue,
-      onRestoredHandles: hasDemo ? void 0 : onRestoredOmeHandles,
+      onRestoredHandles: onRestoredOmeHandles,
       children: ({ handles, onAllow }) => {
         const imageLoaded = !noLoader;
         const handleNamesLabel = handles.map((h2) => h2.name).filter(Boolean).join(", ");
@@ -264117,13 +262818,12 @@ uniform classStyleUniforms {
                 error: duplicateImportError(duplicate)
               };
             }
-            const method = props.demo_dicom_web ? "Colorimetric" : "";
             await onStartDicomWeb([
               [
                 series,
-                method
+                ""
               ]
-            ], props.demo_dicom_web ? props.exhibit_config.Groups ?? [] : []);
+            ]);
             const storyId = useDocumentStore.getState().activeStoryId;
             if (storyId) {
               await saveStoryDocument(storyId, useDocumentStore.getState().toDocumentData());
@@ -264253,7 +262953,7 @@ uniform classStyleUniforms {
       void warmupPsudoPalette().catch((e2) => {
       });
     }, []);
-    if (props.demo_dicom_web || props.demo_url || hasAuthorShellSupport()) {
+    if (hasAuthorShellSupport()) {
       return jsxRuntimeExports.jsx(StoryPersistenceRoot, {
         children: jsxRuntimeExports.jsx(LibraryOrAuthor, {
           ...props
@@ -264272,10 +262972,8 @@ uniform classStyleUniforms {
   const OME_TIFF_HANDLE_KEYS = [
     "img-1"
   ];
-  document.title = getDemoDocumentTitle();
   const appRouter = createAppRouter(Main, {
-    handleKeys: OME_TIFF_HANDLE_KEYS,
-    ...getDemoMainProps()
+    handleKeys: OME_TIFF_HANDLE_KEYS
   });
   root.render(jsxRuntimeExports.jsx(reactExports.StrictMode, {
     children: jsxRuntimeExports.jsx(RouterProvider, {
