@@ -113,6 +113,7 @@ ${perChannel(
   }
 }
 vec3 contourRgb = vec3(0.0);
+float contourCover = 0.0;
 ${perChannel(
   n,
   (i) => `{
@@ -120,10 +121,13 @@ ${perChannel(
   float span = 1.0 / max(0.0005, lim.y - lim.x);
   float raw = contourSv${i} / contourSw;
   vec2 grad = (contourSgv${i} - raw * contourSgw) / contourSw * span;
-  contourRgb += contour_line((raw - lim.x) * span, grad, contourPx) * contourModule.color${i};
+  float line = contour_line((raw - lim.x) * span, grad, contourPx);
+  contourCover = max(contourCover, line);
+  contourRgb += line * contourModule.color${i};
 }`,
 )}
-fragColor = vec4(min(contourRgb, vec3(1.0)), contourModule.opacity);
+// Premultiplied coverage, so an empty pixel leaves the H&E (or anything below) alone.
+fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, contourCover * contourModule.opacity);
 `;
 }
 

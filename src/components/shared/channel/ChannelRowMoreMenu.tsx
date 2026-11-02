@@ -4,9 +4,16 @@ import { useAnchoredMenu } from "@/components/shared/useAnchoredMenu";
 import { CONTOUR_LEVELS_MAX } from "@/lib/imaging/contourExtension";
 import { refitGroupContrast } from "@/lib/imaging/gmmScheduler";
 import { useAppStore } from "@/lib/stores/appStore";
+import { useDocumentStore } from "@/lib/stores/documentStore";
+import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
 import styles from "./ChannelRow.module.css";
 
-/** Row ⋮ actions a caller opts into; contours follow the row's contrast editor. */
+function setChannelStain(channelId: string, stain: true | undefined) {
+  const doc = useDocumentStore.getState();
+  doc.setImages(patchSourceChannelOnImages(doc.images, channelId, { stain }));
+}
+
+/** Row ⋮ actions a caller opts into; draw modes follow the row's contrast editor. */
 export type ChannelRowMore = {
   /** Offers "Fit contrast" for this source channel. */
   fitContrastId?: string;
@@ -17,8 +24,8 @@ export function ChannelRowMoreMenu(
   props: ChannelRowMore & {
     channelName: string;
     fitBusy?: boolean;
-    /** Offers "Show as contour lines" for this source channel. */
-    contourChannelId?: string;
+    /** Offers the draw modes (contour lines, IHC stain) for this source channel. */
+    drawChannelId?: string;
   },
 ) {
   const {
@@ -26,20 +33,28 @@ export function ChannelRowMoreMenu(
     onRemoveFromGroup,
     channelName,
     fitBusy,
-    contourChannelId,
+    drawChannelId,
   } = props;
   const contourOn = useAppStore((s) =>
-    contourChannelId ? Boolean(s.contourChannelIds[contourChannelId]) : false,
+    drawChannelId ? Boolean(s.contourChannelIds[drawChannelId]) : false,
   );
-  const menu = useAnchoredMenu({ align: "end", estimateHeight: 140 });
-  if (!fitContrastId && !onRemoveFromGroup && !contourChannelId) return null;
+  const stainOn = useDocumentStore((s) =>
+    s.images.some((im) =>
+      im.channels.some((ch) => ch.id === drawChannelId && ch.stain),
+    ),
+  );
+  const drawnAs = [contourOn && "contour lines", stainOn && "IHC stain"]
+    .filter(Boolean)
+    .join(" and ");
+  const menu = useAnchoredMenu({ align: "end", estimateHeight: 170 });
+  if (!fitContrastId && !onRemoveFromGroup && !drawChannelId) return null;
   return (
     <div ref={menu.wrapRef}>
       <button
         type="button"
-        className={`${styles.channelActionButton}${contourOn ? ` ${styles.channelActionButtonOn}` : ""}`}
-        title={contourOn ? "Drawn as contour lines" : undefined}
-        aria-label={`More actions for ${channelName}${contourOn ? " (contour lines on)" : ""}`}
+        className={`${styles.channelActionButton}${drawnAs ? ` ${styles.channelActionButtonOn}` : ""}`}
+        title={drawnAs ? `Drawn as ${drawnAs}` : undefined}
+        aria-label={`More actions for ${channelName}${drawnAs ? ` (drawn as ${drawnAs})` : ""}`}
         aria-expanded={menu.open}
         aria-haspopup="menu"
         onClick={(e) => {
@@ -74,7 +89,7 @@ export function ChannelRowMoreMenu(
                   {fitBusy ? "Fitting contrast…" : "Fit contrast"}
                 </button>
               ) : null}
-              {contourChannelId ? (
+              {drawChannelId ? (
                 <button
                   type="button"
                   role="menuitemcheckbox"
@@ -84,9 +99,9 @@ export function ChannelRowMoreMenu(
                   onClick={(e) => {
                     // Stays open so the line count can be set right away.
                     e.stopPropagation();
-                    useAppStore
-                      .getState()
-                      .toggleContourChannel(contourChannelId);
+                    if (!contourOn && stainOn)
+                      setChannelStain(drawChannelId, undefined);
+                    useAppStore.getState().toggleContourChannel(drawChannelId);
                   }}
                 >
                   Show as contour lines
@@ -96,6 +111,29 @@ export function ChannelRowMoreMenu(
                 </button>
               ) : null}
               {contourOn ? <ContourControls /> : null}
+              {drawChannelId ? (
+                <button
+                  type="button"
+                  role="menuitemcheckbox"
+                  aria-checked={stainOn}
+                  className={`${minervaTheme.menuItem} ${styles.menuCheckItem}`}
+                  title="Draw this channel as a brightfield stain that darkens the images below, in its channel color, instead of a glowing fill"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!stainOn && contourOn) {
+                      useAppStore
+                        .getState()
+                        .toggleContourChannel(drawChannelId);
+                    }
+                    setChannelStain(drawChannelId, stainOn ? undefined : true);
+                  }}
+                >
+                  Show as IHC stain
+                  <span className={styles.menuCheck} aria-hidden>
+                    {stainOn ? "✓" : ""}
+                  </span>
+                </button>
+              ) : null}
               {onRemoveFromGroup ? (
                 <button
                   type="button"

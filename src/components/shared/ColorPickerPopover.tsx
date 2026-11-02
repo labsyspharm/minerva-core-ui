@@ -6,10 +6,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import CloseIcon from "@/components/shared/icons/close.svg?react";
-import {
-  STAIN_PREVIEW_BACKGROUNDS,
-  stainOver,
-} from "@/lib/imaging/stainExtension";
+import { stainOver } from "@/lib/imaging/stainExtension";
 import styles from "./ColorPickerPopover.module.css";
 
 /** Clamp popover so it stays on-screen (channel + annotation pickers). */
@@ -31,6 +28,16 @@ type ColorPickerPopoverProps = {
 } & Omit<React.ComponentProps<typeof Chrome>, "ref">;
 
 const STAIN_PREVIEW_STOPS = [0, 0.25, 0.5, 0.75, 1];
+
+/** Brightfield colors a stain lands on. */
+const STAIN_PREVIEW_BACKGROUNDS: {
+  label: string;
+  rgb: readonly [number, number, number];
+}[] = [
+  { label: "Glass", rgb: [255, 255, 255] },
+  { label: "Eosin", rgb: [236, 158, 199] },
+  { label: "Hematoxylin", rgb: [86, 64, 145] },
+];
 
 /** No signal → full signal for `rgb` as a stain over typical H&E colors. */
 function StainPreview({ rgb }: { rgb: [number, number, number] }) {

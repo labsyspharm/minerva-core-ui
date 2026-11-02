@@ -31,7 +31,7 @@ import type { DicomIndex } from "./dicomIndex";
 import { orientationForImage } from "./imageOrientation";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
-import { STAIN_EXTENSIONS, stainLayerParameters } from "./stainExtension";
+import { stainLayerParameters } from "./stainExtension";
 import {
   type Loader,
   PlaceholderTileset2D,
@@ -70,6 +70,33 @@ function applyChannelRendering<S extends MainSettings>(
       : ([triple[0], triple[1], triple[2]] as [number, number, number]),
   );
   return { ...settings, colors };
+}
+
+/**
+ * `settings` split into its fluorescence and its stain channels (either null
+ * when empty), so each half fetches only its own planes.
+ */
+function splitStainChannels(
+  settings: MainSettings,
+  stainChannelIds: ReadonlySet<string>,
+): [MainSettings | null, MainSettings | null] {
+  const ids = settings.sourceChannelIds;
+  if (!ids?.some((id) => stainChannelIds.has(id))) return [settings, null];
+  const part = (stain: boolean): MainSettings | null => {
+    const keep = ids.map((id) => stainChannelIds.has(id) === stain);
+    if (!keep.includes(true)) return null;
+    const pick = <T>(values: readonly T[]) => values.filter((_, i) => keep[i]);
+    return {
+      ...settings,
+      selections: pick(settings.selections),
+      contrastLimits: pick(settings.contrastLimits),
+      colors: pick(settings.colors),
+      channelsVisible:
+        settings.channelsVisible && pick(settings.channelsVisible),
+      sourceChannelIds: pick(ids),
+    };
+  };
+  return [part(false), part(true)];
 }
 
 type ViewerLoaderSources = {
@@ -169,10 +196,7 @@ function createMultiscaleLayer(args: {
           ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
           ...imageFadeParameters(Boolean(args.overlay), args.opacity),
         }
-      : {
-          ...stainLayerParameters(args.stainBelow),
-          extensions: STAIN_EXTENSIONS,
-        }),
+      : stainLayerParameters(args.stainBelow)),
     // Viv draws interleaved (packed RGB) tiles with deck's BitmapLayer.
     opacity: isInterleaved(args.loader.data[0].shape)
       ? bitmapLayerOpacity(args.opacity)
@@ -191,11 +215,12 @@ function createEncodedImageLayer(args: {
   opacity: number;
 }): Layer {
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
+  const stain = args.stainBelow === undefined ? "" : "-stain";
   return createJpegLayers({
     jpegLoader: args.entry.loader.data,
     settings: args.settings,
     transfer: args.entry.transfer ?? "contrast",
-    layerId: `jpeg-${args.entry.sourceImageId}${remount}`,
+    layerId: `jpeg-${args.entry.sourceImageId}${stain}${remount}`,
     modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
     opacity: args.opacity,
     stainBelow: args.stainBelow,
@@ -224,9 +249,11 @@ function buildImageLayers(args: {
   const opacityOf = (sourceImageId: string | undefined) =>
     opacityForImage(images, sourceImageId, opacityPreview);
 
-  const isStain = (sourceImageId: string | undefined) =>
-    !!sourceImageId &&
-    images?.find((im) => im.id === sourceImageId)?.stain === true;
+  const stainChannelIds = new Set(
+    images?.flatMap((im) =>
+      im.channels.filter((ch) => ch.stain).map((ch) => ch.id),
+    ),
+  );
   // Stains multiply what is already drawn, so they paint after everything.
   const stains: ((stainBelow: boolean) => Layer)[] = [];
 
@@ -253,10 +280,9 @@ function buildImageLayers(args: {
       const settings = omeSettingsList[i] as MainSettings | undefined;
       // Mask-only loaders have no intensity selections; painted by createMaskTileLayer.
       if (!settings?.selections?.length) return [];
+      const layerId = `mainLayer-${sourceImageId}`;
       const layerArgs = {
         loader,
-        settings,
-        layerId: `mainLayer-${sourceImageId}`,
         remountKey: args.remountKey,
         orientation: orientationForImage(
           images,
@@ -267,22 +293,36 @@ function buildImageLayers(args: {
         ...(transfer ? { transfer } : {}),
       };
       // Packed RGB draws through deck's BitmapLayer, which has no stain shader.
-      if (isStain(sourceImageId) && !isInterleaved(loader.data[0].shape)) {
+      const [fluorescence, stain] = isInterleaved(loader.data[0].shape)
+        ? [settings, null]
+        : splitStainChannels(settings, stainChannelIds);
+      if (stain) {
         stains.push((stainBelow) =>
-          createMultiscaleLayer({ ...layerArgs, stainBelow }),
+          createMultiscaleLayer({
+            ...layerArgs,
+            settings: stain,
+            layerId: `${layerId}-stain`,
+            stainBelow,
+          }),
         );
-        return [];
       }
+      if (!fluorescence) return [];
       const overlay = omeVisiblePainted > 0;
       omeVisiblePainted += 1;
-      return [createMultiscaleLayer({ ...layerArgs, overlay })];
+      return [
+        createMultiscaleLayer({
+          ...layerArgs,
+          settings: fluorescence,
+          layerId,
+          overlay,
+        }),
+      ];
     }),
     ...jpegLoaderEntries.flatMap((entry, i) => {
       const settings = jpegSettingsList[i] as MainSettings | undefined;
       if (!settings?.selections?.length) return [];
       const layerArgs = {
         entry,
-        settings,
         remountKey: args.remountKey,
         orientation: orientationForImage(
           images,
@@ -291,13 +331,22 @@ function buildImageLayers(args: {
         ),
         opacity: opacityOf(entry.sourceImageId),
       };
-      if (isStain(entry.sourceImageId)) {
+      const [fluorescence, stain] = splitStainChannels(
+        settings,
+        stainChannelIds,
+      );
+      if (stain) {
         stains.push((stainBelow) =>
-          createEncodedImageLayer({ ...layerArgs, stainBelow }),
+          createEncodedImageLayer({
+            ...layerArgs,
+            settings: stain,
+            stainBelow,
+          }),
         );
-        return [];
       }
-      return [createEncodedImageLayer(layerArgs)];
+      return fluorescence
+        ? [createEncodedImageLayer({ ...layerArgs, settings: fluorescence })]
+        : [];
     }),
   ];
   return [

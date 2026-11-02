@@ -420,12 +420,12 @@ export function ChannelRow(props: ChannelRowProps) {
         ) : null}
         <div className={styles.channelRowTrailing}>
           {trailing}
-          {/* Contours are offered wherever the contrast editor is shown. */}
+          {/* Draw modes are offered wherever the contrast editor is shown. */}
           {more || contrast ? (
             <ChannelRowMoreMenu
               channelName={name.name}
               fitBusy={fitting}
-              contourChannelId={contrast?.sourceChannelId}
+              drawChannelId={contrast?.sourceChannelId}
               {...more}
             />
           ) : null}

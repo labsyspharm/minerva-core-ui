@@ -178,10 +178,9 @@ export function ChannelColorPicker(props: {
             .find((g) => g.id === target.groupId)
             ?.channels.find((gc) => gc.id === target.rowId)?.channelId
         : undefined;
-  const targetImageId = targetSourceId
-    ? findSourceChannel(sourceChannels, targetSourceId)?.imageId
-    : undefined;
-  const stain = images.some((im) => im.id === targetImageId && im.stain);
+  const stain = Boolean(
+    targetSourceId && findSourceChannel(sourceChannels, targetSourceId)?.stain,
+  );
 
   React.useEffect(
     () => () => {

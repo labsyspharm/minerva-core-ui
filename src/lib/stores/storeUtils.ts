@@ -140,6 +140,7 @@ export function applySourceChannelsToImages(
       lowerLimit,
       upperLimit,
       maskVisualization,
+      stain,
     } = row;
     const slice: ImageChannel = {
       id: id && id.length > 0 ? id : crypto.randomUUID(),
@@ -155,6 +156,7 @@ export function applySourceChannelsToImages(
       ...(lowerLimit !== undefined ? { lowerLimit } : {}),
       ...(upperLimit !== undefined ? { upperLimit } : {}),
       ...(maskVisualization !== undefined ? { maskVisualization } : {}),
+      ...(stain ? { stain } : {}),
     };
     const list = byImage.get(imageId) ?? [];
     list.push(slice);
@@ -263,20 +265,6 @@ export function setImageOpacity(
   return next;
 }
 
-/** Draw one image's channels as stains (or back to fluorescence); off omits the field. */
-export function setImageStain(
-  images: Image[],
-  imageId: string,
-  stain: boolean,
-): Image[] {
-  const idx = images.findIndex((im) => im.id === imageId);
-  if (idx < 0 || (images[idx].stain === true) === stain) return images;
-  const next = [...images];
-  const { stain: _, ...row } = next[idx];
-  next[idx] = stain ? { ...row, stain: true } : row;
-  return next;
-}
-
 /**
  * Copy stable channel ids (+ persisted styling) from `previous` onto
  * `incoming` by sorted OME index. Channel groups / waypoints keep working
@@ -306,6 +294,7 @@ export function rebindReplacementImageChannels(
       gmmContrastLimits: prev.gmmContrastLimits ?? ch.gmmContrastLimits,
       floatRange: prev.floatRange ?? ch.floatRange,
       maskVisualization: prev.maskVisualization ?? ch.maskVisualization,
+      stain: prev.stain,
     };
   });
   return {
@@ -486,6 +475,7 @@ export function patchSourceChannelOnImages(
       | "lowerLimit"
       | "upperLimit"
       | "maskVisualization"
+      | "stain"
       | "name"
       | "kind"
     >

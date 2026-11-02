@@ -1082,14 +1082,20 @@ export const ImageViewer = (props: ImageViewerProps) => {
       extension: maskExtension,
       maskId: selectionMaskActive ? IMAGE_SELECTION_MASK_LAYER_ID : "",
     };
-    return imageLayers.flatMap((layer) =>
-      withContourLayers(layer, {
+    const bases: Layer[] = [];
+    const lines: Layer[] = [];
+    for (const layer of imageLayers) {
+      const part = withContourLayers(layer, {
         contourChannelIds,
         levels: contourLevels,
         smoothing: contourSmoothing,
         mask,
-      }),
-    );
+      });
+      bases.push(part.base);
+      if (part.lines) lines.push(part.lines);
+    }
+    // After every image, including a brightfield H&E painted later in the list.
+    return [...bases, ...lines];
   }, [
     imageLayers,
     contourChannelIds,

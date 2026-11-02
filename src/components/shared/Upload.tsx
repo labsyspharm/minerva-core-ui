@@ -10,7 +10,6 @@ import { ImageChannelOverviewCard } from "@/components/shared/channel/ImageChann
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import { ImportOverlay } from "@/components/shared/ImportOverlay";
 import MoveIcon from "@/components/shared/icons/move.svg?react";
-import StainIcon from "@/components/shared/icons/stain.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
   PanelActionButton,
@@ -24,7 +23,6 @@ import {
 } from "@/lib/featureTable";
 import {
   isMaskChannel,
-  isRgbDisplayImage,
   resolveImageContentRole,
 } from "@/lib/imaging/channelKind";
 import { detectUrlImageFormat } from "@/lib/imaging/detectImageUrl";
@@ -69,7 +67,7 @@ import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
-import { setImageOpacity, setImageStain } from "@/lib/stores/storeUtils";
+import { setImageOpacity } from "@/lib/stores/storeUtils";
 import styles from "./Upload.module.css";
 
 export type { OmeImportResult };
@@ -910,12 +908,12 @@ const Upload = (props: UploadProps) => {
 
   const renderImageCard = (im: Image, index: number) => {
     const title = imageDisplayLabel(im, index, labelOpts);
-    const contentRole = resolveImageContentRole({
-      contentRole: im.contentRole,
-      channels: im.channels ?? [],
-    });
-    const role = roleBadgeLabel(contentRole);
-    const canStain = contentRole !== "segmentation" && !isRgbDisplayImage(im);
+    const role = roleBadgeLabel(
+      resolveImageContentRole({
+        contentRole: im.contentRole,
+        channels: im.channels ?? [],
+      }),
+    );
     const metaParts = [
       role,
       formatDims(im.sizeX, im.sizeY, im.sizeC ?? im.channels.length),
@@ -971,24 +969,6 @@ const Upload = (props: UploadProps) => {
             >
               <MoveIcon aria-hidden />
             </PanelIconButton>
-            {canStain ? (
-              <PanelIconButton
-                title={
-                  im.stain
-                    ? "Stains over brightfield (click for fluorescence)"
-                    : "Fluorescence (click to draw as stains over brightfield)"
-                }
-                aria-label={`Draw ${title} as stains`}
-                aria-pressed={im.stain === true}
-                active={im.stain === true}
-                onClick={() => {
-                  const doc = useDocumentStore.getState();
-                  doc.setImages(setImageStain(doc.images, im.id, !im.stain));
-                }}
-              >
-                <StainIcon aria-hidden />
-              </PanelIconButton>
-            ) : null}
             {onReplaceImage &&
             im.source?.kind !== "jpeg" &&
             im.source?.kind !== "dicomWeb" ? (

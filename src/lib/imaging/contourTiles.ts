@@ -13,10 +13,6 @@ import {
   CONTOUR_SMOOTHING_STEPS,
   contourExtension,
 } from "./contourExtension";
-import {
-  imageFadeParameters,
-  OME_INTENSITY_OVERLAY_PROPS,
-} from "./imageOpacity";
 import type { HasTile, LoaderPlane, SupportedTypedArray } from "./loaderTypes";
 
 /** Raw tiles kept for stitching edge buffers; neighboring windows share them. */
@@ -369,8 +365,8 @@ function contouredChannels(
 /**
  * The layer with `mask` attached; an empty `maskId` leaves it unclipped. With
  * contoured channels it becomes two layers: the fill with those channels
- * hidden (still fetched, so toggling does not reload it) and their isolines
- * drawn additively above it.
+ * hidden (still fetched, so toggling does not reload it) and their isolines.
+ * The caller paints `lines` after every image so they stay visible on H&E.
  */
 export function withContourLayers(
   layer: Layer,
@@ -380,7 +376,7 @@ export function withContourLayers(
     smoothing: number;
     mask: ContourMask;
   },
-): Layer[] {
+): { base: Layer; lines?: Layer } {
   const { mask } = opts;
   const props = layer.props as ImageLayerProps;
   // Added to, not in place of, the layer's extensions: Viv colors tiles in its
@@ -394,16 +390,17 @@ export function withContourLayers(
       ? contouredChannels(props, opts.contourChannelIds)
       : null;
   if (!contoured) {
-    return [layer.clone(clip(props.extensions) as never)];
+    return { base: layer.clone(clip(props.extensions) as never) };
   }
   const keep = <T>(values: readonly T[] | undefined) =>
     (values ?? []).filter((_, i) => contoured[i]);
-  const fill = layer.clone({
+  const base = layer.clone({
     ...clip(props.extensions),
     channelsVisible: contoured.map(
       (on, i) => !on && (props.channelsVisible?.[i] ?? true),
     ),
   } as never);
+  // Over, not add: additive lines disappear on a bright H&E. Coverage is in alpha.
   const lines = layer.clone({
     id: `${layer.id}-contour`,
     loader: contourLoader(props.loader as LoaderPlane[], opts.smoothing),
@@ -414,9 +411,17 @@ export function withContourLayers(
     renderSubLayers: renderContourSubLayers,
     contourLevels: opts.levels,
     pickable: false,
-    ...OME_INTENSITY_OVERLAY_PROPS,
-    ...imageFadeParameters(true, props.opacity ?? 1),
+    refinementStrategy: "no-overlap",
+    parameters: {
+      blend: true,
+      blendColorOperation: "add",
+      blendAlphaOperation: "add",
+      blendColorSrcFactor: "one",
+      blendColorDstFactor: "one-minus-src-alpha",
+      blendAlphaSrcFactor: "one",
+      blendAlphaDstFactor: "one-minus-src-alpha",
+    },
     ...clip([contourExtension]),
   } as never);
-  return [fill, lines];
+  return { base, lines };
 }
