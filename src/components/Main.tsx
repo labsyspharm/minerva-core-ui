@@ -1892,13 +1892,14 @@ const Content = (props: Props) => {
 
   const onEnsureChannelHistograms = React.useCallback(
     async (channelIds: string[]) => {
-      if (omeLoaderEntries.length === 0 || channelIds.length === 0) return;
+      const loaderEntries = [...omeLoaderEntries, ...dicomIndexList];
+      if (loaderEntries.length === 0 || channelIds.length === 0) return;
       const imageKey = viewerImageKey;
       if (!imageKey) return;
       const doc = useDocumentStore.getState();
       const prevCh = documentSourceChannels(doc);
       const loaderByImageId = new Map(
-        omeLoaderEntries.map((e) => [e.sourceImageId, e.loader] as const),
+        loaderEntries.map((e) => [e.sourceImageId, e.loader] as const),
       );
 
       type Pair = { imageId: string; index: number; channelId: string };
@@ -1956,7 +1957,7 @@ const Content = (props: Props) => {
       if (next === prevChNow) return;
       docNow.setImages(applySourceChannelsToImages(docNow.images, next));
     },
-    [omeLoaderEntries, viewerImageKey],
+    [omeLoaderEntries, dicomIndexList, viewerImageKey],
   );
 
   const storyImageSource = useDocumentStore((s) => s.metadata.imageSource);
