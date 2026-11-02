@@ -3,7 +3,6 @@ import MenuIcon from "@/components/shared/icons/menu.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import { useClickOutside } from "@/components/shared/useClickOutside";
-import { applyOmeRoisFromAnnotationXmlString } from "@/lib/shapes/applyOmeRoisToDocument";
 import type { DocumentData } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { validateDocumentData } from "@/lib/stores/validateDocument";
@@ -34,44 +33,15 @@ export type StoryAuthorOverflowMenuProps = {
 export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
   const { onReturnToLibrary, onExport } = props;
   const [open, setOpen] = React.useState(false);
-  const [xmlFeedback, setXmlFeedback] = React.useState<{
-    type: "ok" | "err";
-    text: string;
-  } | null>(null);
+  const [exportChoice, setExportChoice] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
-  const xmlInputRef = React.useRef<HTMLInputElement>(null);
   const waypointsOk = useDocumentStore((s) => s.waypoints.length > 0);
 
-  const close = () => setOpen(false);
-  useClickOutside(open, close, [wrapRef]);
-
-  const onAnnotationXmlSelected: React.ChangeEventHandler<HTMLInputElement> = (
-    e,
-  ) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    file
-      .text()
-      .then((text) => {
-        const r = applyOmeRoisFromAnnotationXmlString(text);
-        if (r.success === false) {
-          setXmlFeedback({ type: "err", text: r.error });
-          return;
-        }
-        setXmlFeedback({
-          type: "ok",
-          text: `Imported ${r.shapeCount} annotation${r.shapeCount === 1 ? "" : "s"}.`,
-        });
-        close();
-      })
-      .catch((err: unknown) => {
-        setXmlFeedback({
-          type: "err",
-          text: err instanceof Error ? err.message : "Could not read the file.",
-        });
-      });
+  const close = () => {
+    setOpen(false);
+    setExportChoice(false);
   };
+  useClickOutside(open, close, [wrapRef]);
 
   return (
     <div className={styles.menuWrap} ref={wrapRef}>
@@ -82,6 +52,7 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
         aria-haspopup="menu"
         onClick={(e) => {
           e.stopPropagation();
+          setExportChoice(false);
           setOpen((v) => !v);
         }}
       >
@@ -104,70 +75,48 @@ export function StoryAuthorOverflowMenu(props: StoryAuthorOverflowMenuProps) {
           <button
             type="button"
             role="menuitem"
-            className={`${minervaTheme.menuItem} ${styles.menuItemGap}`}
-            disabled={!waypointsOk}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!waypointsOk) return;
-              close();
-              downloadStoryJsonExport(
-                useDocumentStore.getState().toDocumentData(),
-              );
-            }}
-          >
-            Save Config
-          </button>
-          <button
-            type="button"
-            role="menuitem"
             className={minervaTheme.menuItem}
             disabled={!waypointsOk}
-            title={
-              waypointsOk
-                ? "Save a playable story folder (index.html + images)"
-                : "Add a waypoint before exporting"
-            }
+            aria-expanded={exportChoice}
             onClick={(e) => {
               e.stopPropagation();
               if (!waypointsOk) return;
-              close();
-              onExport();
+              setExportChoice((v) => !v);
             }}
           >
             Export Story
           </button>
-          <button
-            type="button"
-            role="menuitem"
-            className={`${minervaTheme.menuItem} ${styles.menuItemGap}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setXmlFeedback(null);
-              xmlInputRef.current?.click();
-            }}
-          >
-            Upload annotations (OME-XML)
-          </button>
+          {exportChoice ? (
+            <>
+              <button
+                type="button"
+                role="menuitem"
+                className={`${minervaTheme.menuItem} ${styles.exportChoice}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  close();
+                  onExport();
+                }}
+              >
+                Full Export
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className={`${minervaTheme.menuItem} ${styles.exportChoice}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  close();
+                  downloadStoryJsonExport(
+                    useDocumentStore.getState().toDocumentData(),
+                  );
+                }}
+              >
+                Save Config JSON
+              </button>
+            </>
+          ) : null}
         </div>
-      ) : null}
-      <input
-        ref={xmlInputRef}
-        className={styles.hiddenFileInput}
-        type="file"
-        accept=".xml,application/xml,text/xml"
-        aria-label="OME-XML annotations file"
-        onChange={onAnnotationXmlSelected}
-      />
-      {xmlFeedback ? (
-        <output
-          className={
-            xmlFeedback.type === "ok"
-              ? styles.xmlFeedbackOk
-              : styles.xmlFeedbackErr
-          }
-        >
-          {xmlFeedback.text}
-        </output>
       ) : null}
     </div>
   );

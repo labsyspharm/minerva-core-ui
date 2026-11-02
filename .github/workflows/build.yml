@@ -42,6 +42,18 @@ jobs:
         run: |
           pnpm run pages
 
+      # The CRC01 demo is the hosted story opened with `?src=`; keep old /crc01/ links working.
+      - name: Redirect /crc01/ to the CRC01 story (main only)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p dist/crc01
+          cat > dist/crc01/index.html <<'EOF'
+          <!doctype html>
+          <meta charset="utf-8">
+          <meta http-equiv="refresh" content="0; url=../?src=https://lsp-private-data.s3.amazonaws.com/Minerva/CRC01/document.json">
+          <title>Minerva</title>
+          EOF
+
       # Package main build for the gh-pages publish job (cannot combine contents: read + git push in one job).
       - name: Upload dist for gh-pages (main only)
         if: github.ref == 'refs/heads/main'

@@ -8,19 +8,30 @@ import type {
 import { Upload } from "@/components/shared/Upload";
 import { useClickOutside } from "@/components/shared/useClickOutside";
 import { hasDirectoryPickerAccess, toFile } from "@/lib/imaging/filesystem";
-import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { listStorySummaries } from "@/lib/persistence/storyPersistence";
 import type { StorySummary } from "@/lib/persistence/types";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import {
   importStoryFolderFromPicker,
+  importStoryFromUrl,
+  importStoryJsonFile,
   importStoryJsonFromPicker,
 } from "@/lib/storyExport/importStoryFolder";
+import { buildStamp } from "@/lib/version/buildStamp";
+import { classifyViewerLaunchUrl } from "@/lib/viewer/launchUrl";
 import { rootRouteApi } from "@/router/appRouter";
 import styles from "./MinervaLibraryPage.module.css";
 
-const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
+const APP_TAB_TITLE_PREFIX = "Minerva";
+const BUILD_STAMP = buildStamp();
+
+/**
+ * s3://lsp-private-data/Minerva/CRC01/document.json
+ * HTTPS so `?src=` fetches it like any other story config.
+ */
+const DEMO_STORY_URL =
+  "https://lsp-private-data.s3.amazonaws.com/Minerva/CRC01/document.json";
 
 /** One-shot handoff: library stash → story page consumes after navigate. */
 type PendingLibraryImport =
@@ -28,6 +39,11 @@ type PendingLibraryImport =
   | { kind: "dicomWeb"; url: string };
 
 let pendingLibraryImport: PendingLibraryImport | null = null;
+/**
+ * One open per `?src=` value. Cleared when that param leaves, so View example
+ * can be opened again. React Strict Mode remounts the library effect.
+ */
+let claimedLaunchUrl: string | null = null;
 
 export function hasPendingLibraryImport(): boolean {
   return pendingLibraryImport != null;
@@ -219,8 +235,39 @@ function buildBays(summaries: StorySummary[] | null): BaySlot[] {
   return out;
 }
 
+function LibraryBuildInfo() {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  useClickOutside(open, () => setOpen(false), [ref]);
+  if (!BUILD_STAMP) return null;
+  return (
+    <div className={styles.buildInfo} ref={ref}>
+      {open ? (
+        <div className={styles.buildInfoStamp} title={BUILD_STAMP.title}>
+          {BUILD_STAMP.text}
+        </div>
+      ) : null}
+      <button
+        type="button"
+        className={`${minervaTheme.focusRing} ${styles.buildInfoButton}`}
+        aria-label="Build information"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <g fill="none" stroke="currentColor" strokeLinecap="round">
+            <circle cx="8" cy="8" r="6.25" strokeWidth="1.25" />
+            <path d="M8 7.2v4.2M8 4.6v.6" strokeWidth="1.4" />
+          </g>
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 export function MinervaLibraryPage() {
   const navigate = rootRouteApi.useNavigate();
+  const launchUrl = rootRouteApi.useSearch().src;
   const switchStory = useDocumentStore((s) => s.switchStory);
   const createStory = useDocumentStore((s) => s.createStory);
   const deleteStory = useDocumentStore((s) => s.deleteStory);
@@ -254,13 +301,7 @@ export function MinervaLibraryPage() {
 
   const goToStory = React.useCallback(
     (id: string) => {
-      navigate({
-        search: (prev: { storyid?: string }) => ({
-          ...prev,
-          storyid: id,
-        }),
-        replace: true,
-      } as never);
+      navigate({ search: { storyid: id }, replace: true } as never);
     },
     [navigate],
   );
@@ -337,6 +378,39 @@ export function MinervaLibraryPage() {
     [goToStory],
   );
 
+  React.useEffect(() => {
+    if (!launchUrl) {
+      claimedLaunchUrl = null;
+      return;
+    }
+    if (claimedLaunchUrl === launchUrl) return;
+    claimedLaunchUrl = launchUrl;
+    const launch = classifyViewerLaunchUrl(launchUrl);
+    if (!launch) return;
+    if (launch.kind === "story") {
+      void (async () => {
+        try {
+          useAppStore.getState().resetStoryViewerSession();
+          goToStory(await importStoryFromUrl(launch.url));
+        } catch (e: unknown) {
+          setError(
+            e instanceof Error ? e.message : "Could not open config.json",
+          );
+        }
+      })();
+      return;
+    }
+    void startStoryWithPendingImport(
+      launch.kind === "dicomWeb"
+        ? { kind: "dicomWeb", url: launch.url }
+        : {
+            kind: "ome",
+            role: "intensity",
+            source: { kind: "url", url: launch.url },
+          },
+    );
+  }, [launchUrl, goToStory, startStoryWithPendingImport]);
+
   const handleDelete = React.useCallback(
     (id: string, title: string) => {
       if (!window.confirm(`Remove “${title}” from the shelf?`)) return;
@@ -357,21 +431,47 @@ export function MinervaLibraryPage() {
   );
 
   const bays = React.useMemo(() => buildBays(summaries), [summaries]);
+  const openingLaunch = Boolean(launchUrl) && error === null;
 
   return (
     <div className={styles.root}>
       {error ? <p className={styles.error}>{error}</p> : null}
 
-      <header className={styles.masthead}>
-        <h1
-          className={`${minervaTheme.wordmark} ${minervaTheme.wordmarkDisplay}`}
-        >
-          Minerva
-        </h1>
-        <p className={styles.tagline}>a microscopy viewer for non-experts</p>
-      </header>
-
-      <section className={styles.bookcase} aria-label="Library">
+      {openingLaunch ? null : (
+        <header className={styles.masthead}>
+          <h1
+            className={`${minervaTheme.wordmark} ${minervaTheme.wordmarkDisplay}`}
+          >
+            Minerva
+          </h1>
+          <p className={styles.tagline}>a microscopy viewer for non-experts</p>
+          <a
+            className={`${minervaTheme.focusRing} ${styles.exampleLink}`}
+            href={`?src=${DEMO_STORY_URL}`}
+            onClick={(event) => {
+              if (
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey
+              ) {
+                return;
+              }
+              event.preventDefault();
+              navigate({
+                search: () => ({ src: DEMO_STORY_URL }),
+              } as never);
+            }}
+          >
+            View example
+          </a>
+        </header>
+      )}
+      <section
+        className={styles.bookcase}
+        aria-label="Library"
+        hidden={openingLaunch}
+      >
         <div className={styles.bookcaseInner}>
           <div className={styles.shelfBay}>
             <div className={styles.bayContent}>
@@ -434,6 +534,9 @@ export function MinervaLibraryPage() {
                   row
                   onAllow={toFile}
                   disabled={shelfBusy}
+                  onImportStory={(file) =>
+                    handleImport(() => importStoryJsonFile(file))
+                  }
                   onImportOme={(req) =>
                     startStoryWithPendingImport({ ...req, kind: "ome" })
                   }
@@ -515,6 +618,7 @@ export function MinervaLibraryPage() {
           })}
         </div>
       </section>
+      <LibraryBuildInfo />
     </div>
   );
 }

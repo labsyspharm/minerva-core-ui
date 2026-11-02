@@ -8,6 +8,9 @@ First, run `pnpm install`. Then run locally or build.
 pnpm demo
 ```
 
+Starts the dev server and opens the CRC01 example story with `?src=`, the same
+story as https://demo.minerva.im/?src=https://lsp-private-data.s3.amazonaws.com/Minerva/CRC01/document.json
+
 ## Building demo
 
 ```

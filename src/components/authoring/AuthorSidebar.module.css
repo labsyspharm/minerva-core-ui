@@ -73,6 +73,18 @@
   flex-direction: column;
 }
 
+.imagesMount {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.imagesMount[hidden] {
+  display: none;
+}
+
 .viewport {
   --author-collapsed-rail: 2.5rem;
   flex: 1;

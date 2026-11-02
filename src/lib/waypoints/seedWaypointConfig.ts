@@ -67,8 +67,17 @@ export function planWaypointConfigSeedTick(args: {
 
   // First paint: fill empty store from config once image dimensions exist so
   // `Arrows` / `Overlays` can be converted to `ShapeIds` + registry (`Shapes`)
-  // before anything enters Zustand.
-  if (storeWaypoints.length === 0) {
+  // before anything enters Zustand. A lone empty "Waypoint 1" is the placeholder
+  // an image import plants before this tick; exhibit stories replace it.
+  const lonePlaceholder =
+    storeWaypoints.length === 1 &&
+    (storeWaypoints[0]?.shapeIds?.length ?? 0) === 0 &&
+    !(storeWaypoints[0]?.content ?? "").trim() &&
+    storeWaypoints[0]?.title === "Waypoint 1";
+  if (
+    storeWaypoints.length === 0 ||
+    (lonePlaceholder && configStories.length > 1)
+  ) {
     if (imageWidth <= 0 || imageHeight <= 0) return { type: "noop" };
     const registry = mirror.Shapes ?? [];
     const {

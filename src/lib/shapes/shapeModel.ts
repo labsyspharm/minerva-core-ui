@@ -88,6 +88,15 @@ export type Shape = (
   color?: [number, number, number, number];
 };
 
+/** Copy of `shape` with every vertex / anchor point passed through `f`. */
+export function mapShapePoints(
+  shape: Shape,
+  f: (p: [number, number]) => [number, number],
+): Shape {
+  if ("polygon" in shape) return { ...shape, polygon: shape.polygon.map(f) };
+  return { ...shape, position: f(shape.position) };
+}
+
 export interface ShapeGroup {
   id: string;
   name: string;

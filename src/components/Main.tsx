@@ -16,10 +16,7 @@ import type {
 } from "@/components/shared/Upload";
 import { Upload } from "@/components/shared/Upload";
 import { ImageViewer } from "@/components/shared/viewer/ImageViewer";
-import type {
-  ConfigSourceDistribution,
-  ConfigWaypoint,
-} from "@/lib/authoring/config";
+import type { ConfigSourceDistribution } from "@/lib/authoring/config";
 import { extractChannels } from "@/lib/authoring/config";
 import {
   detachRemovedFeatureTables,
@@ -96,9 +93,7 @@ import {
 import { urlFileName } from "@/lib/imaging/sourceUrl";
 import { useViewerLayers } from "@/lib/imaging/viewerLayers";
 import { effectiveWorldFrame } from "@/lib/imaging/worldFrame";
-import type { ConfigGroup, ExhibitConfig } from "@/lib/legacy/exhibit";
 import { bootstrapStoryPersistence } from "@/lib/persistence/bootstrap";
-import { getDemoDocumentTitle } from "@/lib/persistence/demo";
 import { getFileHandle, putFileHandle } from "@/lib/persistence/fileHandles";
 import {
   locatedFileStorageKey,
@@ -110,7 +105,7 @@ import {
   setActiveStoryId,
 } from "@/lib/persistence/storyPersistence";
 import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
-import { applyOmeRoisFromLoaderToFirstWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
+import { applyOmeRoisFromLoaderToWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentSchema";
 import type { ChannelGroup } from "@/lib/stores/documentStore";
@@ -125,8 +120,6 @@ import {
   applyLoaderPixelSizeToImage,
   applySourceChannelsToImages,
   firstImageNameForStoryTitle,
-  hydrateConfigWaypoint,
-  type LegacyExhibitWaypoint,
   removeImageFromDocument,
   setImageBasename,
   setImageContentRole,
@@ -150,13 +143,14 @@ import {
   type StoryExportMode,
   writeStoryBundleSidecars,
 } from "@/lib/storyExport/storyBundle";
+import { ensureDefaultWaypoint } from "@/lib/waypoints/ensureDefaultWaypoint";
 import {
   applyWaypointSeedAction,
   planWaypointConfigSeedTick,
   type WaypointSeedMirror,
 } from "@/lib/waypoints/seedWaypointConfig";
 import {
-  parsePreferredStoryIdFromLocation,
+  parseRootSearch,
   rootRouteApi,
   StoryIdUrlSync,
 } from "@/router/appRouter";
@@ -171,29 +165,10 @@ function maybeDefaultStoryTitleFromFirstImage(): void {
   doc.setMetadata({ title: name });
 }
 
-/** When the story has no waypoints yet, add a default row for image import to attach to. */
-function ensureDefaultWaypointForImageImport(): void {
-  const doc = useDocumentStore.getState();
-  if (doc.waypoints.length > 0) return;
-
-  const groupId = doc.channelGroups[0]?.id;
-  const raw: ConfigWaypoint = {
-    id: crypto.randomUUID(),
-    State: { Expanded: true },
-    Name: "Waypoint 1",
-    Content: "",
-    shapeIds: [],
-    ...(groupId !== undefined ? { groupId } : {}),
-  };
-  const app = useAppStore.getState();
-  app.addStory(hydrateConfigWaypoint(raw, doc.channelGroups));
-  app.setActiveStory(0);
-}
-
 /** Shared post-import document side effects after images land in the store. */
 function afterImageImportDocumentEffects(): void {
   maybeDefaultStoryTitleFromFirstImage();
-  ensureDefaultWaypointForImageImport();
+  ensureDefaultWaypoint();
 }
 
 function reconcileLoaderEntries<T extends { sourceImageId: string }>(
@@ -217,36 +192,16 @@ function reconcileLoaderEntries<T extends { sourceImageId: string }>(
 }
 
 type Props = {
-  /** Seed stories; may include legacy `Arrows` / `Overlays` until the image loads and migration runs. */
-  configWaypoints: LegacyExhibitWaypoint[];
-  exhibit_config: ExhibitConfig;
-  /**
-   * When set, auto-loads this remote OME-TIFF on mount (and `hasDemo` loading state).
-   * Omit for `pnpm run dev` — pass only from `pnpm run demo` in `index.tsx`.
-   */
-  demo_dicom_web?: boolean;
-  demo_jpeg?: boolean;
-  demo_url?: string;
   handleKeys: string[];
   /** PWA “Open with” / `launchQueue` (needs manifest `file_handlers`). */
   useLaunchQueue?: boolean;
 };
 
-/** Deep copy so `index.tsx` arrays are never mutated; session edits live in React config + Zustand. */
-const cloneConfigWaypoints = (
-  stories: LegacyExhibitWaypoint[],
-): LegacyExhibitWaypoint[] => {
-  if (typeof structuredClone === "function") {
-    return structuredClone(stories) as LegacyExhibitWaypoint[];
-  }
-  return JSON.parse(JSON.stringify(stories)) as LegacyExhibitWaypoint[];
-};
-
 const StoryPersistenceRoot = ({ children }: { children: React.ReactNode }) => {
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    const preferred = parsePreferredStoryIdFromLocation();
-    void bootstrapStoryPersistence(preferred).then(() => setReady(true));
+    const { storyid } = parseRootSearch(window.location.search);
+    void bootstrapStoryPersistence(storyid).then(() => setReady(true));
   }, []);
   /** Minerva Library mounts without `Content` (no FileHandler); the HTML shell loader must still be cleared. */
   useEffect(() => {
@@ -362,7 +317,7 @@ function visibleGmmIds(images: Image[]): Set<string> {
   );
 }
 
-const APP_TAB_TITLE_PREFIX = getDemoDocumentTitle();
+const APP_TAB_TITLE_PREFIX = "Minerva";
 
 async function pickExportFolder(): Promise<FileSystemDirectoryHandle | null> {
   try {
@@ -375,8 +330,6 @@ async function pickExportFolder(): Promise<FileSystemDirectoryHandle | null> {
 
 const Content = (props: Props) => {
   const { handleKeys, useLaunchQueue = false } = props;
-  /** Remote demo image / DICOM bootstrap from `index.tsx` (`pnpm run demo` only). */
-  const hasDemo = !!props.demo_dicom_web || !!props.demo_url;
   useStoryAutoSave();
   const navigate = rootRouteApi.useNavigate();
   const returnToLibrary = React.useCallback(() => {
@@ -388,14 +341,7 @@ const Content = (props: Props) => {
       await setActiveStoryId(null);
       useAppStore.getState().resetStoryViewerSession();
       s.clearForLibraryView();
-      navigate({
-        search: (prev: { storyid?: string }) => {
-          const next = { ...prev };
-          delete next.storyid;
-          return next;
-        },
-        replace: true,
-      } as never);
+      navigate({ search: {}, replace: true } as never);
     })();
   }, [navigate]);
   const storyTitleForTab = useDocumentStore((s) => s.metadata.title ?? "");
@@ -556,7 +502,7 @@ const Content = (props: Props) => {
   const [waypointMirror, setWaypointMirror] = useState<WaypointSeedMirror>(
     () => ({
       Shapes: [],
-      Stories: cloneConfigWaypoints(props.configWaypoints),
+      Stories: [],
     }),
   );
 
@@ -786,7 +732,6 @@ const Content = (props: Props) => {
     delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
     useAppStore.setState({
       imageSelectionMask: null,
-      maskVisualizationPreview: null,
       channelVisibilities,
     });
     const keys = removed.flatMap((im) =>
@@ -862,8 +807,8 @@ const Content = (props: Props) => {
   const omeTiffUrlLoadGenerationRef = React.useRef(0);
   const jpegUrlLoadGenerationRef = React.useRef(0);
   const [importRevision, setImportRevision] = useState(0);
-  const [isLoadingImage, setIsLoadingImage] = useState(
-    () => hasDemo || hasPendingLibraryImport(),
+  const [isLoadingImage, setIsLoadingImage] = useState(() =>
+    hasPendingLibraryImport(),
   );
   /**
    * Only the latest `beginImageLoading` epoch may clear the overlay. Prevents a
@@ -1026,7 +971,6 @@ const Content = (props: Props) => {
     clearOmeDerivedCaches();
     setDicomIndexList([]);
     setLastOmeTiffUrl(null);
-    const relevant_groups = [] as ConfigGroup[];
     let nextImages: Image[] = [];
     const entries: OmeLoaderEntry[] = [];
 
@@ -1046,7 +990,6 @@ const Content = (props: Props) => {
         basename,
         sourceImageId,
         existingImages: nextImages,
-        relevantGroups: relevant_groups,
         rgbDisplay,
         channelNames,
       });
@@ -1085,10 +1028,10 @@ const Content = (props: Props) => {
         const entry = entries[i];
         const handle = handles[i];
         if (!entry || !handle) continue;
-        const { loader } = entry;
+        const { loader, sourceImageId } = entry;
         const file = await handle.getFile();
         const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
-        applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+        applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
       }
     }
     setFileName(
@@ -1180,6 +1123,26 @@ const Content = (props: Props) => {
       transition: visibilityTransition,
     });
     maybeDefaultStoryTitleFromFirstImage();
+    if (role !== "segmentation") {
+      for (let i = 0; i < newEntries.length; i++) {
+        const entry = newEntries[i];
+        const handle = handles[i];
+        if (
+          !entry ||
+          !handle ||
+          !nextImages.some((im) => im.id === entry.sourceImageId)
+        ) {
+          continue;
+        }
+        const file = await handle.getFile();
+        const omeXml = await getOmeTiffImageDescriptionOmeXml(file);
+        applyOmeRoisFromLoaderToWaypoint(
+          entry.loader,
+          entry.sourceImageId,
+          omeXml,
+        );
+      }
+    }
     return { ok: true };
   };
 
@@ -1241,6 +1204,10 @@ const Content = (props: Props) => {
   ) => {
     omeTiffUrlLoadGenerationRef.current += 1;
     const loadGeneration = omeTiffUrlLoadGenerationRef.current;
+    const storyIdAtStart = useDocumentStore.getState().activeStoryId;
+    const superseded = () =>
+      loadGeneration !== omeTiffUrlLoadGenerationRef.current ||
+      useDocumentStore.getState().activeStoryId !== storyIdAtStart;
     clearOmeDerivedCaches();
     setDicomIndexList([]);
     const loader = await loadOmeLoaderForRole(role, {
@@ -1249,15 +1216,7 @@ const Content = (props: Props) => {
       pool: sharedOmeDecodePool(),
       rgbDisplay,
     });
-    if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
-      return;
-    }
-    const relevant_groups =
-      props.demo_url != null && url === props.demo_url
-        ? (props.exhibit_config.Groups ?? []).filter(
-            ({ Image }) => Image.Method === "Colorimetric",
-          )
-        : ([] as ConfigGroup[]);
+    if (superseded()) return;
     const sourceImageId = crypto.randomUUID();
     const basename = url.split("/").pop() || "remote.ome.tif";
     const slice = buildOmeImportSlice({
@@ -1266,7 +1225,6 @@ const Content = (props: Props) => {
       basename,
       sourceImageId,
       existingImages: [],
-      relevantGroups: relevant_groups,
       rgbDisplay,
       channelNames,
     });
@@ -1287,6 +1245,7 @@ const Content = (props: Props) => {
       kind: "url",
       url,
     });
+    if (superseded()) return;
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries([{ loader, sourceImageId }]);
     setDeniedHandleKeys([]);
@@ -1297,7 +1256,8 @@ const Content = (props: Props) => {
     afterImageImportDocumentEffects();
     if (role !== "segmentation") {
       const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
-      applyOmeRoisFromLoaderToFirstWaypoint(loader, omeXml);
+      if (superseded()) return;
+      applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
     }
     setLastOmeTiffUrl(url);
     setFileName(basename);
@@ -1356,6 +1316,9 @@ const Content = (props: Props) => {
       role === "segmentation"
         ? { kind: "appendMask", newChannelIds }
         : { kind: "appendIntensity", newChannelIds, newGroupRowIds };
+    if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
+      return { ok: false, error: "Import was superseded by a newer request." };
+    }
     skipLoaderHydrateRef.current = true;
     setOmeLoaderEntries((prev) => [...prev, { loader, sourceImageId }]);
     const activeId = useAppStore.getState().activeChannelGroupId;
@@ -1364,6 +1327,16 @@ const Content = (props: Props) => {
       transition: visibilityTransition,
     });
     maybeDefaultStoryTitleFromFirstImage();
+    if (role !== "segmentation") {
+      const omeXml = await getOmeTiffImageDescriptionOmeXml(url);
+      if (loadGeneration !== omeTiffUrlLoadGenerationRef.current) {
+        return {
+          ok: false,
+          error: "Import was superseded by a newer request.",
+        };
+      }
+      applyOmeRoisFromLoaderToWaypoint(loader, sourceImageId, omeXml);
+    }
     return { ok: true };
   };
 
@@ -1655,10 +1628,7 @@ const Content = (props: Props) => {
     const loadEpoch = beginImageLoading();
     try {
       if (dicomPropList.length > 0) {
-        await onStartDicomWeb(
-          dicomPropList,
-          props.demo_dicom_web ? (props.exhibit_config.Groups ?? []) : [],
-        );
+        await onStartDicomWeb(dicomPropList);
       }
       if (omeTiffPropList.length > 0 && handles.length > 0) {
         await onStartOmeTiff(omeTiffPropList[0][0], handles);
@@ -1676,10 +1646,7 @@ const Content = (props: Props) => {
   };
 
   // Dicom Web derived state
-  const onStartDicomWeb = async (
-    imagePropList: [string, string][],
-    groups: ConfigGroup[],
-  ) => {
+  const onStartDicomWeb = async (imagePropList: [string, string][]) => {
     clearOmeDerivedCaches();
     setLastOmeTiffUrl(null);
     const indexList = await Promise.all(
@@ -1690,11 +1657,7 @@ const Content = (props: Props) => {
           modality: dicomModality,
         } = await loadDicomWeb(series);
         const label = displayName || modalityFallback;
-        // Exhibit demos pass Method names (Colorimetric); keep those for group match.
-        const modality =
-          groups.length > 0 && modalityFallback
-            ? modalityFallback
-            : dicomModality || label;
+        const modality = dicomModality || label;
         const loader = parseDicomWeb({
           pyramids,
           series,
@@ -1717,13 +1680,9 @@ const Content = (props: Props) => {
     );
     let registry = { SourceChannels: [], ChannelGroups: [] as ChannelGroup[] };
     for (const { loader, modality, sourceImageId } of indexList) {
-      const relevant_groups = groups.filter(
-        ({ Image }) => Image.Method === modality,
-      );
       const { SourceChannels: sc, ChannelGroups: gr } = extractChannels(
         loader,
         modality,
-        relevant_groups,
         sourceImageId,
       );
       // Skip eager histograms (one WADO frame per channel); paint with defaults.
@@ -1832,35 +1791,6 @@ const Content = (props: Props) => {
     afterImageImportDocumentEffects();
   };
 
-  const onStartRef = React.useRef(onStart);
-  onStartRef.current = onStart;
-
-  useEffect(() => {
-    if (!props.demo_url) return;
-    if (useDocumentStore.getState().images.length > 0) {
-      // Persisted story already has image metadata (e.g. after refresh); do not
-      // re-fetch URL, but clear loading — otherwise `isLoadingImage` stays true
-      // from `useState(hasDemo)` and the global HTML loader never dismisses.
-      clearImageLoading();
-      return;
-    }
-    if (props.demo_jpeg) {
-      void (async () => {
-        await onStartRef.current(
-          [[props.demo_url, "Colorimetric", "JPEG-URL"]],
-          [] as Handle.File[],
-        );
-      })();
-      return;
-    }
-    void (async () => {
-      await onStartRef.current(
-        [[props.demo_url, "Colorimetric", "OME-TIFF-URL"]],
-        [] as Handle.File[],
-      );
-    })();
-  }, [props.demo_url, props.demo_jpeg, clearImageLoading]);
-
   const loaderHydrationGenRef = React.useRef(0);
   useEffect(() => {
     const expectedIds = new Set(images.map((im) => im.id));
@@ -1937,8 +1867,7 @@ const Content = (props: Props) => {
   const noLoader =
     jpegLoaderEntries.length === 0 &&
     omeLoaderEntries.length === 0 &&
-    dicomIndexList.length === 0 &&
-    !hasDemo;
+    dicomIndexList.length === 0;
 
   useSyncJpegChannelFolders(
     jpegLoaderEntries,
@@ -2170,7 +2099,7 @@ const Content = (props: Props) => {
   } = useAppStore();
   const _waypoints = useDocumentStore((s) => s.waypoints);
 
-  // Document waypoint lifecycle: props waypoints seed a thin mirror; documentStore
+  // Document waypoint lifecycle: the mirror seeds migration; documentStore
   // is authoritative after migration. Logic lives in seedWaypointConfig.
   useEffect(() => {
     if (!viewerViewportSize?.width || !viewerViewportSize?.height) return;
@@ -2255,9 +2184,8 @@ const Content = (props: Props) => {
   return (
     <FileHandler
       handleKeys={namespacedHandleKeys}
-      autoRestoreOnMount={!hasDemo}
       useLaunchQueue={useLaunchQueue}
-      onRestoredHandles={hasDemo ? undefined : onRestoredOmeHandles}
+      onRestoredHandles={onRestoredOmeHandles}
     >
       {({ handles, onAllow }) => {
         const imageLoaded = !noLoader;
@@ -2389,12 +2317,7 @@ const Content = (props: Props) => {
             if (duplicate) {
               return { ok: false, error: duplicateImportError(duplicate) };
             }
-            // Method name only for demo exhibit groups; otherwise metadata wins.
-            const method = props.demo_dicom_web ? "Colorimetric" : "";
-            await onStartDicomWeb(
-              [[series, method]],
-              props.demo_dicom_web ? (props.exhibit_config.Groups ?? []) : [],
-            );
+            await onStartDicomWeb([[series, ""]]);
             const storyId = useDocumentStore.getState().activeStoryId;
             if (storyId) {
               await saveStoryDocument(
@@ -2536,7 +2459,7 @@ const Main = (props: Props) => {
     });
   }, []);
 
-  if (props.demo_dicom_web || props.demo_url || hasAuthorShellSupport()) {
+  if (hasAuthorShellSupport()) {
     return (
       <StoryPersistenceRoot>
         <LibraryOrAuthor {...props} />

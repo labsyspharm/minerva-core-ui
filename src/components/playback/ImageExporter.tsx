@@ -71,7 +71,9 @@ const formatMinutesLeft = (ms: number): string => {
 };
 
 /** Recent completions only. Startup and the first tiles are slower than the run. */
-const RATE_WINDOW_MS = 5_000;
+const RATE_WINDOW_MS = 60_000;
+/** No estimate until this share of the tiles is done. */
+const MIN_ESTIMATE_SHARE = 0.01;
 
 type RateSample = { at: number; completed: number };
 
@@ -87,6 +89,7 @@ const estimateRemainingMs = (
   const gained = tip.completed - base.completed;
   if (
     tip.at - base.at < RATE_WINDOW_MS ||
+    tip.completed < total * MIN_ESTIMATE_SHARE ||
     gained <= 0 ||
     total <= tip.completed
   )

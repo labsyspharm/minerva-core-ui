@@ -44,7 +44,7 @@ import {
 } from "@/lib/imaging/maskLayers";
 import { createMaskTileLayer } from "@/lib/imaging/maskTileLayer";
 import { effectiveMaskVisualizationForSource } from "@/lib/imaging/sourceChannelStyle";
-import { type Loader, TILE_CACHE_PROPS } from "@/lib/imaging/viv";
+import type { Loader } from "@/lib/imaging/viv";
 import {
   viewStateToWorld,
   WORLD_MICRON,
@@ -60,7 +60,7 @@ import {
 } from "@/lib/stores/documentStore";
 import { uniqueImageDisplayLabels } from "@/lib/stores/storeUtils";
 import { useActiveWaypoint } from "@/lib/stores/useActiveWaypoint";
-import { isMobileDevice } from "@/lib/viewer/isMobileDevice";
+import { buildStamp } from "@/lib/version/buildStamp";
 import {
   getViewerViewportSnapshotFromDeck,
   orthographicZoomToNumber,
@@ -86,34 +86,8 @@ const CAMERA_IDLE_COMMIT_MS = 160;
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 
-function utcShort(iso: string): string | null {
-  const t = Date.parse(iso);
-  if (Number.isNaN(t)) return null;
-  return new Date(t).toISOString().replace("T", " ").slice(0, 16);
-}
-
-function buildStamp(): { text: string; title: string } | null {
-  const iso = typeof __BUILD_TIME_ISO__ === "string" ? __BUILD_TIME_ISO__ : "";
-  const sha = typeof __BUILD_GIT_SHA__ === "string" ? __BUILD_GIT_SHA__ : "";
-  const label = utcShort(iso);
-  const short = sha.slice(0, 7);
-  const text = [label ? `Updated ${label} UTC` : "", short]
-    .filter(Boolean)
-    .join(" · ");
-  if (!text) return null;
-  return { text, title: [iso, sha].filter(Boolean).join("\n") };
-}
-
-/** Device class and the tile cache it gets, for the info box. */
-function deviceLabel(): string {
-  const mb = TILE_CACHE_PROPS.maxCacheByteSize / 2 ** 20;
-  const cache = mb > 0 ? `${mb} MB` : "off";
-  return `${isMobileDevice() ? "Mobile" : "Desktop"} · tile cache ${cache}`;
-}
-
-// Both are fixed for the life of the page.
+// Fixed for the life of the page.
 const BUILD_STAMP = buildStamp();
-const DEVICE_LABEL = deviceLabel();
 
 /**
  * Deck's BitmapLayer has no data rows, so `getBounds()` is null and the mask
@@ -504,16 +478,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
   );
   // Live contrast/color preview is folded in `useViewerLayers`, not here.
   const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
-  const maskVisualizationPreview = useAppStore(
-    (s) => s.maskVisualizationPreview,
-  );
   const imageOrientationPreview = useAppStore((s) => s.imageOrientationPreview);
   const imageOpacityPreview = useAppStore((s) => s.imageOpacityPreview);
   const arrangeImageId = useAppStore((s) => s.arrangeImageId);
-  const selectionMaskVisualizationPreview =
-    maskVisualizationPreview?.sourceChannelId === SELECTION_MASK_CHANNEL_KEY
-      ? maskVisualizationPreview.visualization
-      : null;
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const images = useDocumentStore((s) => s.images);
   const featureTables = useDocumentStore((s) => s.featureTables);
@@ -576,6 +543,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }, []);
 
   const setViewerWorldFrame = useAppStore((s) => s.setViewerWorldFrame);
+  const setViewerImageFrames = useAppStore((s) => s.setViewerImageFrames);
 
   const firstLoader = useMemo(
     () => (loaderList.length > 0 ? loaderList[0] : null),
@@ -627,6 +595,16 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return () => setViewerWorldFrame(null);
   }, [frame, setViewerWorldFrame]);
 
+  useEffect(() => {
+    setViewerImageFrames(
+      loaderList.map((item) => ({
+        ...worldFrameFromLoader(item.loader),
+        sourceImageId: item.sourceImageId,
+      })),
+    );
+    return () => setViewerImageFrames([]);
+  }, [loaderList, setViewerImageFrames]);
+
   const maskDisplayLayers = useMemo(() => {
     void featureTableLutEpoch;
     if (omeLoaderEntries.length === 0) return [];
@@ -645,14 +623,11 @@ export const ImageViewer = (props: ImageViewerProps) => {
         (e) => e.sourceImageId === sc.imageId,
       );
       if (!entry?.loader) continue;
-      const visualization =
-        maskVisualizationPreview?.sourceChannelId === sc.id
-          ? maskVisualizationPreview.visualization
-          : effectiveMaskVisualizationForSource(
-              sc,
-              channelGroups,
-              activeChannelGroupId,
-            );
+      const visualization = effectiveMaskVisualizationForSource(
+        sc,
+        channelGroups,
+        activeChannelGroupId,
+      );
       const imageOpacity = opacityForImage(
         images,
         sc.imageId,
@@ -705,7 +680,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     channelGroupRowVisibilities,
     activeChannelGroupId,
     channelGroups,
-    maskVisualizationPreview,
     imageOpacityPreview,
     imageOrientationPreview,
     featureTables,
@@ -1073,9 +1047,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     const [minX, minY, maxX, maxY] = imageSelectionMask.bounds;
     const bounds: [number, number, number, number] = [minX, minY, maxX, maxY];
     const visualization =
-      selectionMaskVisualizationPreview ??
-      imageSelectionMask.maskVisualization ??
-      DEFAULT_MASK_VISUALIZATION;
+      imageSelectionMask.maskVisualization ?? DEFAULT_MASK_VISUALIZATION;
     const layers: Layer[] = [
       new SelectionMaskBitmapLayer({
         id: IMAGE_SELECTION_MASK_LAYER_ID,
@@ -1100,11 +1072,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       );
     }
     return layers;
-  }, [
-    imageSelectionMask,
-    selectionMaskActive,
-    selectionMaskVisualizationPreview,
-  ]);
+  }, [imageSelectionMask, selectionMaskActive]);
 
   // MaskExtension registers Deck's mask effect only when a layer is created,
   // not when a clone adds it to a live layer, so image layers always carry it;
@@ -1551,7 +1519,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
                 .join("\n")}
             >
               {BUILD_STAMP ? <div>{BUILD_STAMP.text}</div> : null}
-              <div>{DEVICE_LABEL}</div>
             </div>
             {props.infoFooter ? (
               <div className={styles.viewerInfoFooter}>{props.infoFooter}</div>

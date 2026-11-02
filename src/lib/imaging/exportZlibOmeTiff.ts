@@ -8,6 +8,7 @@ import {
   type RandomAccessSink,
 } from "tiffwriter";
 import type { Image, ImageChannel } from "@/lib/stores/documentSchema";
+import { bufferedSink } from "./exportSink";
 import { readExportTile } from "./exportTileReader";
 import type { OmeLoaderEntry } from "./loaderEntries";
 import type { LoaderPlane } from "./loaderTypes";
@@ -411,7 +412,7 @@ export async function exportZlibOmeTiffImage(
 
   try {
     await writeZlibOmeTiff({
-      sink: browserFileSink(writable),
+      sink: bufferedSink(browserFileSink(writable)),
       image,
       channels,
       fileName,

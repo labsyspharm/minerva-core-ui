@@ -130,14 +130,12 @@ export function isRgbDisplaySource(
   const intensity = channels.filter(isImageChannel);
   if (intensity.length === 0) return false;
   const override = intensity.find((c) => c.rgbDisplay != null)?.rgbDisplay;
-  // Shared Brightfield / Fluorescence flag wins over the 3-channel shape check.
-  if (override != null && intensity.every((c) => c.rgbDisplay === override)) {
-    return override;
-  }
-  if (intensity.length === 1 && intensity[0].samples === 3) {
-    return override !== false;
-  }
+  const packed = intensity.length === 1 && intensity[0].samples === 3;
   const planar = intensity.filter((c) => (c.samples ?? 1) === 1);
+  if (override != null && intensity.every((c) => c.rgbDisplay === override)) {
+    return override && (packed || planar.length === 3);
+  }
+  if (packed) return true;
   if (planar.length !== 3) return false;
   if (override != null) return override;
   if (planar.every((c) => planarRgbSlotFromName(c.name ?? "") != null)) {

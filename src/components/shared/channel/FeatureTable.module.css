@@ -37,6 +37,7 @@
   color: var(--minerva-quiet);
   user-select: none;
   text-align: center;
+  white-space: nowrap;
 }
 
 .root {

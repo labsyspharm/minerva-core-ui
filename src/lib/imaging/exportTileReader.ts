@@ -184,11 +184,67 @@ async function withReadSignal<T>(
   }
 }
 
+const HOST_LITTLE_ENDIAN = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1;
+
+async function decodedBlockTile(
+  reader: GeoTIFFImage,
+  pool: unknown,
+  tileSize: number,
+  x: number,
+  y: number,
+  [x0, y0, x1, y1]: number[],
+  signal: AbortSignal,
+): Promise<HasTile | null> {
+  if (!pool) return null;
+  let bits: number;
+  let bytesPerElement: number;
+  try {
+    if (
+      !reader.isTiled ||
+      reader.getTileWidth() !== tileSize ||
+      reader.getTileHeight() !== tileSize ||
+      reader.getSamplesPerPixel() !== 1
+    ) {
+      return null;
+    }
+    bits = reader.getBitsPerSample(0);
+    bytesPerElement = reader.getArrayForSample(0, 0).BYTES_PER_ELEMENT;
+  } catch {
+    return null;
+  }
+  // Widened or packed samples are not the decoded buffer.
+  if (bits !== bytesPerElement * 8) return null;
+  if (bytesPerElement > 1 && reader.littleEndian !== HOST_LITTLE_ENDIAN) {
+    return null;
+  }
+  const block = await reader.getTileOrStrip(
+    x,
+    y,
+    0,
+    pool as Parameters<GeoTIFFImage["getTileOrStrip"]>[3],
+    signal,
+  );
+  const full = reader.getArrayForSample(0, block.data) as SupportedTypedArray;
+  if (full.length !== tileSize * tileSize) return null;
+  const width = x1 - x0;
+  const height = y1 - y0;
+  if (width === tileSize && height === tileSize) {
+    return { data: full, width, height };
+  }
+  const Typed = full.constructor as new (n: number) => SupportedTypedArray;
+  const data = new Typed(width * height);
+  for (let row = 0; row < height; row++) {
+    const from = row * tileSize;
+    data.set(full.subarray(from, from + width), row * width);
+  }
+  return { data, width, height };
+}
+
 /**
  * Export tile (x, y), `tileSize` px. A TIFF plane reads the source blocks
  * under the tile in a few merged reads (a row of neighboring blocks is
- * usually contiguous on disk), then decodes through Viv as usual. A plane
- * with `readWindow` (masks, JPEG-export wraps) reads the tile's window;
+ * usually contiguous on disk), then decodes that block when it is the tile.
+ * A plane with `readWindow` (masks, JPEG-export wraps) reads the tile's window;
  * other planes are assembled from their own tiles.
  */
 export function readExportTile(
@@ -247,6 +303,16 @@ async function readTile(
     false,
     source as unknown as GeoTIFFImage["source"],
   );
+  const decoded = await decodedBlockTile(
+    reader,
+    plane.pool,
+    tileSize,
+    x,
+    y,
+    window,
+    signal,
+  );
+  if (decoded) return decoded;
   const atTileSize = new TiffPixelSource(
     async () => reader,
     plane.dtype,

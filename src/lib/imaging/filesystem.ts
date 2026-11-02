@@ -1,12 +1,14 @@
 import { loadOmeTiff, TiffPixelSource } from "@hms-dbmi/viv";
 import { fileOpen } from "browser-fs-access";
 import { fromBlob, fromUrl, GeoTIFFImage } from "geotiff";
+import { type ImportFileKind, importFilePickerOptions } from "./importFileKind";
 import type { HasTile, LoaderPlane } from "./loaderTypes";
 import type { DecodePool } from "./omeDecodePool";
 import { omeChannelElements, omePixelsElement, parseOmeXml } from "./omeXml";
 import { uncachedTiffImage } from "./uncachedTiff";
 import type { Loader } from "./viv";
 import { registerLzwDecoder } from "./workers/decoders";
+import { applyGrayIccProfile } from "./wrapOmeLoaderCubeRoot";
 
 // Viv's import registers an LZW decoder that drops SamplesPerPixel. Override it.
 registerLzwDecoder();
@@ -48,7 +50,7 @@ type FindFileIn = {
   handle: Handle.File;
 };
 type FindFile = (i: FindFileIn) => Promise<boolean>;
-type ToFiles = () => Promise<Handle.File[]>;
+type ToFiles = (kinds: readonly ImportFileKind[]) => Promise<Handle.File[]>;
 
 /** Viv's published OME metadata types are looser than our app `Loader` shape. */
 function asAppLoader(image: Awaited<ReturnType<typeof loadOmeTiff>>): Loader {
@@ -462,7 +464,6 @@ function ephemeralFileHandleFromFile(file: File): Handle.File {
     createWritable: async () => {
       throw new DOMException("Ephemeral file handle", "NotSupportedError");
     },
-    isSameEntry: async () => false,
     queryPermission: async () => "granted" as PermissionState,
     requestPermission: async () => "granted" as PermissionState,
   };
@@ -476,6 +477,8 @@ async function fileHandleFromDataTransferItem(
   item: DataTransferItem,
 ): Promise<Handle.File | null> {
   if (item.kind !== "file") return null;
+  // `getAsFile` only works during the drop event. Read it before any await.
+  const file = item.getAsFile();
   const withHandle = item as DataTransferItem & {
     getAsFileSystemHandle?: () => Promise<FileSystemHandle | null>;
   };
@@ -489,7 +492,6 @@ async function fileHandleFromDataTransferItem(
       // fall through to File
     }
   }
-  const file = item.getAsFile();
   if (!file) return null;
   return ephemeralFileHandleFromFile(file);
 }
@@ -554,12 +556,11 @@ const findFile: FindFile = async (opts) => {
   }
 };
 
-const toFile: ToFiles = async () => {
+/** Single-file picker for `kinds`. */
+const toFile: ToFiles = async (kinds) => {
   try {
     const file = await fileOpen({
-      description: "OME-TIFF images",
-      mimeTypes: ["image/tiff"],
-      extensions: [".tif", ".tiff", ".ome.tif", ".ome.tiff"],
+      ...importFilePickerOptions(kinds),
       multiple: false,
     });
     if (file.handle) return [file.handle];
@@ -705,27 +706,31 @@ export async function loadOmeLoaderForRole(
     | { kind: "url"; url: string; pool?: DecodePool; rgbDisplay?: boolean },
 ): Promise<Loader> {
   const packedRgb = source.rgbDisplay === false ? "planar" : undefined;
+  let loader: Loader;
   if (source.kind === "local") {
     const file = await source.handle.getFile();
-    if (role === "segmentation") {
-      return maskLoader(file);
-    }
-    return finishOmeIntensityLoader(
-      asAppLoader(await loadOmeTiff(file, vivLoadOpts(source.pool, packedRgb))),
-      file,
+    loader =
+      role === "segmentation"
+        ? await maskLoader(file)
+        : await finishOmeIntensityLoader(
+            asAppLoader(
+              await loadOmeTiff(file, vivLoadOpts(source.pool, packedRgb)),
+            ),
+            file,
+            source.pool,
+          );
+  } else if (role === "segmentation") {
+    loader = await maskLoader(source.url);
+  } else {
+    loader = await finishOmeIntensityLoader(
+      asAppLoader(
+        await loadOmeTiff(source.url, vivLoadOpts(source.pool, packedRgb)),
+      ),
+      source.url,
       source.pool,
     );
   }
-  if (role === "segmentation") {
-    return maskLoader(source.url);
-  }
-  return finishOmeIntensityLoader(
-    asAppLoader(
-      await loadOmeTiff(source.url, vivLoadOpts(source.pool, packedRgb)),
-    ),
-    source.url,
-    source.pool,
-  );
+  return applyGrayIccProfile(loader);
 }
 
 export {
@@ -737,6 +742,5 @@ export {
   ensureFileHandlePermission,
   findFile,
   toFile,
-  ephemeralFileHandleFromFile,
   fileHandleFromDataTransferItem,
 };
