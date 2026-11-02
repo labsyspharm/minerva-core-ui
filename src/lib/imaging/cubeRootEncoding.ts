@@ -72,17 +72,18 @@ export function folderLimitsForTransfer(
   return { lowerLimit, upperLimit };
 }
 
+/** The gamma-3 ICC curve cube-root OME-TIFFs embed: byte b is (b/255)³ of 65535. */
 export function encodeCubeRootU16ToU8(pixel: number): number {
   if (!Number.isFinite(pixel) || pixel <= 0) return 0;
   return Math.min(
     255,
-    Math.max(0, Math.round((pixel / 65536) ** (1 / 3) * 256)),
+    Math.max(0, Math.round((pixel / 65535) ** (1 / 3) * 255)),
   );
 }
 
 function decodeCubeRootU8ToU16(byte: number): number {
   if (!Number.isFinite(byte) || byte <= 0) return 0;
-  return Math.min(65535, Math.max(0, Math.round((byte / 256) ** 3 * 65536)));
+  return Math.min(65535, Math.max(0, Math.round((byte / 255) ** 3 * 65535)));
 }
 
 const CUBE_ROOT_U8_TO_U16 = Uint16Array.from({ length: 256 }, (_, b) =>
@@ -134,5 +135,8 @@ export function hydrateJpegTransferForImage(
   ) {
     return null;
   }
+  // Older exports flagged a single gray plane Brightfield and wrote it
+  // contrast; the flag no longer draws it as RGB but still says how it was written.
+  if (image.rgbDisplay === true) return "contrast";
   return exportTransferForImage(image, storyTransfer);
 }

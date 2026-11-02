@@ -8,6 +8,7 @@ import { omeChannelElements, omePixelsElement, parseOmeXml } from "./omeXml";
 import { uncachedTiffImage } from "./uncachedTiff";
 import type { Loader } from "./viv";
 import { registerLzwDecoder } from "./workers/decoders";
+import { applyGrayIccProfile } from "./wrapOmeLoaderCubeRoot";
 
 // Viv's import registers an LZW decoder that drops SamplesPerPixel. Override it.
 registerLzwDecoder();
@@ -705,27 +706,31 @@ export async function loadOmeLoaderForRole(
     | { kind: "url"; url: string; pool?: DecodePool; rgbDisplay?: boolean },
 ): Promise<Loader> {
   const packedRgb = source.rgbDisplay === false ? "planar" : undefined;
+  let loader: Loader;
   if (source.kind === "local") {
     const file = await source.handle.getFile();
-    if (role === "segmentation") {
-      return maskLoader(file);
-    }
-    return finishOmeIntensityLoader(
-      asAppLoader(await loadOmeTiff(file, vivLoadOpts(source.pool, packedRgb))),
-      file,
+    loader =
+      role === "segmentation"
+        ? await maskLoader(file)
+        : await finishOmeIntensityLoader(
+            asAppLoader(
+              await loadOmeTiff(file, vivLoadOpts(source.pool, packedRgb)),
+            ),
+            file,
+            source.pool,
+          );
+  } else if (role === "segmentation") {
+    loader = await maskLoader(source.url);
+  } else {
+    loader = await finishOmeIntensityLoader(
+      asAppLoader(
+        await loadOmeTiff(source.url, vivLoadOpts(source.pool, packedRgb)),
+      ),
+      source.url,
       source.pool,
     );
   }
-  if (role === "segmentation") {
-    return maskLoader(source.url);
-  }
-  return finishOmeIntensityLoader(
-    asAppLoader(
-      await loadOmeTiff(source.url, vivLoadOpts(source.pool, packedRgb)),
-    ),
-    source.url,
-    source.pool,
-  );
+  return applyGrayIccProfile(loader);
 }
 
 export {

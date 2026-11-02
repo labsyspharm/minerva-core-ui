@@ -7,6 +7,7 @@ import {
   planPyramid,
   tiffTag,
 } from "tiffwriter";
+import { GAMMA3_ICC_PROFILE, TIFF_ICC_PROFILE_TAG } from "@/lib/icc";
 import type {
   ChannelGroup,
   Image,
@@ -17,6 +18,7 @@ import {
   planarRgbSlotFromName,
   sourceDtypeMax,
 } from "./channelKind";
+import { type JpegTileCopy, readCopyableJpegTile } from "./copyJpegTiles";
 import {
   exportTransferForImage,
   folderLimitsForTransfer,
@@ -72,6 +74,8 @@ type ExportJpegOmeTiffOpts = {
   /** Brightfield source channels in R,G,B order (or one packed channel). */
   rgb: ImageChannel[] | null;
   pixels?: OmePixelsMeta | null;
+  /** The source's 8-bit tiles are cube-root without a profile (an older Minerva export). */
+  sourceCubeRoot?: boolean;
 };
 
 /** Brightfield: one IFD, 4:2:0 YCbCr JPEG tiles (Viv converts to RGB). Must match `encodeRgbJpeg`. */
@@ -84,6 +88,13 @@ const RGB_JPEG_TAGS = [
   tiffTag(530, "SHORT", [2, 2]), // YCbCrSubSampling
   tiffTag("SampleFormat", "SHORT", [1, 1, 1]),
 ];
+
+/** Cube-root grayscale: the gamma-3 profile on every IFD. Must match `encodeCubeRootU16ToU8`. */
+const CUBE_ROOT_ICC_TAG = tiffTag(
+  TIFF_ICC_PROFILE_TAG,
+  "UNDEFINED",
+  GAMMA3_ICC_PROFILE,
+);
 
 /**
  * Tiles in flight. Reads dominate (a network share takes ~20 ms each), so this
@@ -248,13 +259,17 @@ async function transferForBrightfield(
   if (transfer !== "cube-root" || image.rgbDisplay === false) {
     return { transfer, image };
   }
+  // Only a shape that exports as RGB (packed, or a planar triplet). A single
+  // gray plane would be marked H&E but written gray, which cannot be drawn.
+  const asRgb =
+    image.rgbDisplay === true ? image : { ...image, rgbDisplay: true };
+  if (!rgbExportChannels(asRgb, channels)) {
+    return { transfer, image };
+  }
   if (!(await planesLookBrightfield(planes, channels, signal))) {
     return { transfer, image };
   }
-  return {
-    transfer: "contrast",
-    image: image.rgbDisplay === true ? image : { ...image, rgbDisplay: true },
-  };
+  return { transfer: "contrast", image: asRgb };
 }
 
 /**
@@ -276,6 +291,7 @@ async function exportJpegOmeTiffImage(
     onProgress,
     rgb,
     pixels,
+    sourceCubeRoot = false,
   } = opts;
   const channels = channelSources.map((s) => s.channel);
   if (channels.length === 0) {
@@ -303,6 +319,18 @@ async function exportJpegOmeTiffImage(
           const lim = contrastLimitsForExportedChannel(ch, channelGroups);
           return [lim.lowerLimit, lim.upperLimit] as const;
         });
+  // Encodes that change nothing but the compression: cube-root gray (no
+  // contrast window) and packed 8-bit RGB (0–255 limits). Source tiles
+  // already in that form are copied.
+  let tileCopy: JpegTileCopy | null = null;
+  if (!rgb && transfer === "cube-root") {
+    tileCopy = { kind: "cube-root", profileless: sourceCubeRoot };
+  } else if (
+    rgb?.length === 1 &&
+    sourceDtypeMax(layoutPlanes[0].dtype) === 255
+  ) {
+    tileCopy = { kind: "rgb" };
+  }
 
   const omeXml = buildOmeTiffXml({
     imageName: image.basename || image.id || "image",
@@ -319,7 +347,11 @@ async function exportJpegOmeTiffImage(
   const { layouts, jobs } = planPyramid({
     levels,
     channelCount: fileChannels.length,
-    baseTags: rgb ? RGB_JPEG_TAGS : grayscaleJpegTags(),
+    baseTags: rgb
+      ? RGB_JPEG_TAGS
+      : transfer === "cube-root"
+        ? [...grayscaleJpegTags(), CUBE_ROOT_ICC_TAG]
+        : grayscaleJpegTags(),
     imageDescription: omeXml,
   });
 
@@ -387,6 +419,22 @@ async function exportJpegOmeTiffImage(
     const levelIndex = Math.min(job.levelIndex, source.planes.length - 1);
     const plane = source.planes[levelIndex];
     const tileSize = levels[job.levelIndex].tileSize;
+    if (tileCopy) {
+      const copied = await readCopyableJpegTile(
+        plane,
+        { t: 0, z: 0, c: source.channel.index },
+        job.x,
+        job.y,
+        levels[job.levelIndex],
+        tileCopy,
+        workSignal,
+      );
+      if (workSignal.aborted) return;
+      if (copied) {
+        await queueWrite(job, copied);
+        return;
+      }
+    }
     const limits = channelLimits[job.channelIndex];
     const readTile = (channel: ImageChannel) =>
       readExportTile(
@@ -593,6 +641,7 @@ export async function exportJpegOmeTiffStory(
       onProgress: bump,
       rgb: decided.rgb,
       pixels: item.entry.loader.metadata?.Pixels,
+      sourceCubeRoot: item.entry.transfer === "cube-root",
     });
     await writeTiffOffsetsJson(directory, intensityFileNames[i]);
     if (item.masks.length > 0) {
