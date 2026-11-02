@@ -6,7 +6,10 @@ import type {
   JpegLoaderEntry,
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
-import { loadStoryDocument } from "@/lib/story/loadStoryDocument";
+import {
+  type LoadStoryDocumentResult,
+  loadStoryDocument,
+} from "@/lib/story/loadStoryDocument";
 import styles from "./StoryPlayerApp.module.css";
 
 /** CDN story player. Authoring preview reuses the Presentation ribbon and nav. */
@@ -19,6 +22,8 @@ export function StoryPlayerApp({
   onEdit?: () => Promise<void>;
 }) {
   const [documentReady, setDocumentReady] = useState(false);
+  /** First images handed to the viewer; others may still be opening. */
+  const [imagesShown, setImagesShown] = useState(false);
   const [imagesReady, setImagesReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jpegLoaderEntries, setJpegLoaderEntries] = useState<JpegLoaderEntry[]>(
@@ -31,19 +36,30 @@ export function StoryPlayerApp({
 
   useEffect(() => {
     let cancelled = false;
+    let jpegShown = false;
     setDocumentReady(false);
+    setImagesShown(false);
     setImagesReady(false);
     setError(null);
+    const show = (ready: LoadStoryDocumentResult) => {
+      if (cancelled) return;
+      // JPEG entries are complete from the first call, and the viewer swaps
+      // their folders afterwards: setting them again would undo that.
+      if (!jpegShown) setJpegLoaderEntries(ready.jpegLoaderEntries);
+      jpegShown = true;
+      setOmeLoaderEntries(ready.omeLoaderEntries);
+      setDicomIndexList(ready.dicomIndexList);
+      setImagesShown(true);
+    };
     void loadStoryDocument(documentUrl, {
       onDocument: () => {
         if (!cancelled) setDocumentReady(true);
       },
+      onImages: show,
     })
       .then((result) => {
         if (cancelled) return;
-        setJpegLoaderEntries(result.jpegLoaderEntries);
-        setOmeLoaderEntries(result.omeLoaderEntries);
-        setDicomIndexList(result.dicomIndexList);
+        show(result);
         setImagesReady(true);
       })
       .catch((e) => {
@@ -78,7 +94,7 @@ export function StoryPlayerApp({
         setJpegLoaderEntries={setJpegLoaderEntries}
         omeLoaderEntries={omeLoaderEntries}
         dicomIndexList={dicomIndexList}
-        imagesLoading={!imagesReady}
+        imagesLoading={!imagesShown}
         onEdit={onEdit}
       />
     </Presentation>
