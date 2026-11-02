@@ -91,6 +91,7 @@ import {
   uniqueImageDisplayLabels,
 } from "@/lib/stores/storeUtils";
 import styles from "./ChannelGroupsMasterDetail.module.css";
+import rowStyles from "./ChannelRow.module.css";
 
 const CHANNEL_DRAG_MIME = "application/x-minerva-channel-ref";
 
@@ -729,7 +730,7 @@ export const ChannelGroupsMasterDetail = (
   const { ensureChannelHistograms, contrastEditable } =
     useAuthorChannelNav() ?? {};
 
-  const canFitContrast = (sc: Channel | undefined): boolean =>
+  const canFitContrast = (sc: Channel | undefined): sc is Channel =>
     Boolean(
       contrastEditable &&
         sc &&
@@ -1311,8 +1312,7 @@ export const ChannelGroupsMasterDetail = (
                               }
                             : {})}
                         more={{
-                          sourceChannel: sc,
-                          allowContrast: canFitContrast(sc),
+                          fitContrastId: canFitContrast(sc) ? sc.id : undefined,
                           onRemoveFromGroup: () =>
                             removeChannelFromGroup(group.id, gc.id),
                         }}
@@ -1321,8 +1321,10 @@ export const ChannelGroupsMasterDetail = (
                             <button
                               type="button"
                               className={[
-                                styles.channelActionButton,
-                                colorLocked ? styles.colorLockButtonLocked : "",
+                                rowStyles.channelActionButton,
+                                colorLocked
+                                  ? rowStyles.channelActionButtonOn
+                                  : "",
                               ].join(" ")}
                               title={
                                 colorLocked ? "Unlock color" : "Lock color"
@@ -1548,7 +1550,7 @@ export const ChannelGroupsMasterDetail = (
               : colorSwatch)}
             more={
               expanded && canFitContrast(sc)
-                ? { sourceChannel: sc, allowContrast: true }
+                ? { fitContrastId: sc.id }
                 : undefined
             }
           />
@@ -1649,7 +1651,7 @@ export const ChannelGroupsMasterDetail = (
             trailing={
               <button
                 type="button"
-                className={styles.channelActionButton}
+                className={rowStyles.channelActionButton}
                 title="Clear selection"
                 aria-label="Clear selection"
                 onClick={() => clearImageSelectionMask()}

@@ -61,9 +61,25 @@ function sampledLevel(
   return octaves.length - 1;
 }
 
-type ContourWindow = {
-  /** Pyramid level the texture is read from. */
+type Kernel = {
+  /** Pyramid level the kernel samples. */
   level: number;
+  /** Kernel radius in texels of that level. */
+  radius: number;
+};
+
+function kernelAt(pyramid: Pyramid, level: number, smoothing: number): Kernel {
+  const { sizes, octaves } = pyramid;
+  const sampled = sampledLevel(octaves, level, smoothing);
+  const radius = (smoothing * sizes[sampled].width) / sizes[0].width;
+  return {
+    level: sampled,
+    radius: Math.min(CONTOUR_APRON, Math.max(CONTOUR_MIN_RADIUS, radius)),
+  };
+}
+
+/** The texture is read from the kernel's level. */
+type ContourWindow = Kernel & {
   /** Texture origin and size on that level, edge buffer included. */
   left: number;
   top: number;
@@ -71,8 +87,6 @@ type ContourWindow = {
   height: number;
   /** Tile origin and extent inside the texture, in texels. */
   window: [number, number, number, number];
-  /** Kernel radius in texels of the sampled level. */
-  radius: number;
   /** Tile bounds in Viv's world units, as its `renderSubLayers` lays them out. */
   bounds: [number, number, number, number];
 };
@@ -85,9 +99,9 @@ function contourWindow(
   smoothing: number,
 ): ContourWindow {
   const { tileSize, sizes, octaves } = pyramid;
-  const sampled = sampledLevel(octaves, level, smoothing);
+  const kernel = kernelAt(pyramid, level, smoothing);
   const fine = sizes[level];
-  const coarse = sizes[sampled];
+  const coarse = sizes[kernel.level];
   const innerWidth = Math.min(tileSize, fine.width - x * tileSize);
   const innerHeight = Math.min(tileSize, fine.height - y * tileSize);
   const rx = coarse.width / fine.width;
@@ -100,18 +114,16 @@ function contourWindow(
   const y0 = Math.floor(oy);
   const fx = ox - x0;
   const fy = oy - y0;
-  const radius = (smoothing * coarse.width) / sizes[0].width;
   const scale = 2 ** octaves[level];
   const left = x * tileSize * scale;
   const top = y * tileSize * scale;
   return {
-    level: sampled,
+    ...kernel,
     left: x0 - CONTOUR_APRON,
     top: y0 - CONTOUR_APRON,
     width: Math.ceil(fx + ex) + 2 * CONTOUR_APRON,
     height: Math.ceil(fy + ey) + 2 * CONTOUR_APRON,
     window: [fx + CONTOUR_APRON, fy + CONTOUR_APRON, ex, ey],
-    radius: Math.min(CONTOUR_APRON, Math.max(CONTOUR_MIN_RADIUS, radius)),
     bounds: [left, top + innerHeight * scale, left + innerWidth * scale, top],
   };
 }
@@ -250,17 +262,18 @@ export function contourSmoothingStepsFor(
     pyramids.push(pyramid);
   }
   if (pyramids.length === 0) return CONTOUR_SMOOTHING_STEPS;
-  const prev = pyramids.map(() => "");
+  let prev: Kernel[] = [];
   const steps: number[] = [];
   for (const smoothing of CONTOUR_SMOOTHING_STEPS) {
-    let changed = steps.length === 0;
-    for (let i = 0; i < pyramids.length; i++) {
-      const win = contourWindow(pyramids[i], 0, 0, 0, smoothing);
-      const key = `${win.level}:${win.radius.toFixed(3)}`;
-      if (key !== prev[i]) changed = true;
-      prev[i] = key;
+    const kernels = pyramids.map((pyramid) => kernelAt(pyramid, 0, smoothing));
+    if (
+      kernels.some(
+        (k, i) => k.level !== prev[i]?.level || k.radius !== prev[i]?.radius,
+      )
+    ) {
+      steps.push(smoothing);
     }
-    if (changed) steps.push(smoothing);
+    prev = kernels;
   }
   return steps;
 }

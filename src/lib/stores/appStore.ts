@@ -10,7 +10,6 @@ import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
 import {
   CONTOUR_LEVELS_DEFAULT,
-  CONTOUR_LEVELS_MAX,
   CONTOUR_SMOOTHING_DEFAULT,
   CONTOUR_SMOOTHING_STEPS,
 } from "../imaging/contourExtension";
@@ -2345,13 +2344,8 @@ export const useAppStore = create<AppStore>()(
         });
       },
 
-      setContourLevels: (levels) => {
-        set({
-          contourLevels: Math.min(
-            CONTOUR_LEVELS_MAX,
-            Math.max(1, Math.round(levels)),
-          ),
-        });
+      setContourLevels: (contourLevels) => {
+        set({ contourLevels });
       },
 
       setContourSmoothing: (contourSmoothing) => {
@@ -2359,20 +2353,19 @@ export const useAppStore = create<AppStore>()(
       },
 
       setContourSmoothingSteps: (steps) => {
-        const usable = steps.length > 0 ? steps : CONTOUR_SMOOTHING_STEPS;
         const current = get().contourSmoothing;
         // The largest step not above the current one: dropped steps draw the same.
         const contourSmoothing =
-          usable.findLast((step) => step <= current) ?? usable[0];
+          steps.findLast((step) => step <= current) ?? steps[0];
         const prev = get().contourSmoothingSteps;
         if (
           contourSmoothing === current &&
-          prev.length === usable.length &&
-          prev.every((step, i) => step === usable[i])
+          prev.length === steps.length &&
+          prev.every((step, i) => step === steps[i])
         ) {
           return;
         }
-        set({ contourSmoothingSteps: usable, contourSmoothing });
+        set({ contourSmoothingSteps: steps, contourSmoothing });
       },
 
       setChannelVisibilities: (vis: Record<string, boolean>) => {

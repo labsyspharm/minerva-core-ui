@@ -450,11 +450,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
           onBlur: rename,
         }}
         contrast={contrast}
-        more={
-          contrastEditable
-            ? { sourceChannel: sc, allowContrast: true }
-            : undefined
-        }
+        more={contrastEditable ? { fitContrastId: sc.id } : undefined}
         {...(!rgbDisplay && isMaskChannel(sc)
           ? {
               isMask: true as const,

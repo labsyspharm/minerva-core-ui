@@ -116,7 +116,8 @@
   white-space: nowrap;
 }
 
-.moreButton {
+/* Small buttons in the row's trailing slot: color lock, ⋮, clear selection. */
+.channelActionButton {
   background: none;
   border: none;
   color: var(--minerva-quiet);
@@ -128,13 +129,13 @@
   border-radius: 0;
 }
 
-.moreButton:hover {
+.channelActionButton:hover {
   color: var(--minerva-ink);
   background: var(--minerva-wash);
 }
 
-/* Same "on" mark as the color lock. */
-.moreButtonActive {
+/* Locked color, or a channel drawn as contour lines. */
+.channelActionButtonOn {
   color: var(--minerva-ink);
   box-shadow: inset 0 -1px 0 var(--minerva-ink);
 }
