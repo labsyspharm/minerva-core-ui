@@ -263,6 +263,20 @@ export function setImageOpacity(
   return next;
 }
 
+/** Draw one image's channels as stains (or back to fluorescence); off omits the field. */
+export function setImageStain(
+  images: Image[],
+  imageId: string,
+  stain: boolean,
+): Image[] {
+  const idx = images.findIndex((im) => im.id === imageId);
+  if (idx < 0 || (images[idx].stain === true) === stain) return images;
+  const next = [...images];
+  const { stain: _, ...row } = next[idx];
+  next[idx] = stain ? { ...row, stain: true } : row;
+  return next;
+}
+
 /**
  * Copy stable channel ids (+ persisted styling) from `previous` onto
  * `incoming` by sorted OME index. Channel groups / waypoints keep working

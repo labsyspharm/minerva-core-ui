@@ -202,6 +202,12 @@ export const ImageSchema = z.object({
   displayScale: z.number().positive().default(1),
   /** Whole-image alpha (`0…1`). Omitted input parses as 1. */
   opacity: z.number().min(0).max(1).default(1),
+  /**
+   * Draw channels as absorbing stains (Beer–Lambert) over the images below,
+   * e.g. IF over H&E; channel colors are each stain's color on glass.
+   * Omitted → additive fluorescence.
+   */
+  stain: z.boolean().optional(),
   /** µm per pixel on both axes. Omitted uses the file's PhysicalSize. */
   umPerPixel: z.number().positive().optional(),
   channels: z.array(ImageChannelSchema),

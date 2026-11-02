@@ -6,6 +6,10 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import CloseIcon from "@/components/shared/icons/close.svg?react";
+import {
+  STAIN_PREVIEW_BACKGROUNDS,
+  stainOver,
+} from "@/lib/imaging/stainExtension";
 import styles from "./ColorPickerPopover.module.css";
 
 /** Clamp popover so it stays on-screen (channel + annotation pickers). */
@@ -22,12 +26,40 @@ export function colorPickerAnchorPosition(rect: DOMRect): {
 type ColorPickerPopoverProps = {
   position: { top: number; left: number } | null;
   onClose: () => void;
+  /** The color is a stain's color on glass: preview it over H&E. */
+  stainPreview?: boolean;
 } & Omit<React.ComponentProps<typeof Chrome>, "ref">;
+
+const STAIN_PREVIEW_STOPS = [0, 0.25, 0.5, 0.75, 1];
+
+/** No signal → full signal for `rgb` as a stain over typical H&E colors. */
+function StainPreview({ rgb }: { rgb: [number, number, number] }) {
+  return (
+    <div className={styles.stainPreview}>
+      {STAIN_PREVIEW_BACKGROUNDS.map(({ label, rgb: under }) => {
+        const stops = STAIN_PREVIEW_STOPS.map(
+          (c) => `rgb(${stainOver(under, rgb, c).join(" ")})`,
+        );
+        return (
+          <div key={label} className={styles.stainPreviewItem}>
+            <div
+              className={styles.stainPreviewRamp}
+              title={`${label}: no signal → full signal`}
+              style={{ background: `linear-gradient(to right, ${stops})` }}
+            />
+            <span className={styles.stainPreviewLabel}>{label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 /** Fixed popover. Chevron, hue, white, and close share one row. */
 export function ColorPickerPopover({
   position,
   onClose,
+  stainPreview = false,
   ...pickerProps
 }: ColorPickerPopoverProps) {
   React.useEffect(() => {
@@ -126,6 +158,15 @@ export function ColorPickerPopover({
           </div>
           <Saturation {...saturationProps} />
         </div>
+        {stainPreview ? (
+          <StainPreview
+            rgb={[
+              currentColor.rgba.r,
+              currentColor.rgba.g,
+              currentColor.rgba.b,
+            ]}
+          />
+        ) : null}
       </div>
     </>,
     document.body,

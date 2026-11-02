@@ -31,6 +31,7 @@ import type { DicomIndex } from "./dicomIndex";
 import { orientationForImage } from "./imageOrientation";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
+import { STAIN_EXTENSIONS, stainLayerParameters } from "./stainExtension";
 import {
   type Loader,
   PlaceholderTileset2D,
@@ -139,6 +140,8 @@ function createMultiscaleLayer(args: {
    */
   transfer?: JpegExportTransfer;
   overlay?: boolean;
+  /** Stain layer: whether anything is drawn below it to absorb from. */
+  stainBelow?: boolean;
   orientation?: ImageOrientation | null;
   opacity: number;
 }): Layer {
@@ -161,8 +164,15 @@ function createMultiscaleLayer(args: {
     // Viv's overview ImageLayer getRaster()s the full coarsest plane; isLoaded
     // waits on that decode even after tiles have painted.
     excludeBackground: true,
-    ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
-    ...imageFadeParameters(Boolean(args.overlay), args.opacity),
+    ...(args.stainBelow === undefined
+      ? {
+          ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
+          ...imageFadeParameters(Boolean(args.overlay), args.opacity),
+        }
+      : {
+          ...stainLayerParameters(args.stainBelow),
+          extensions: STAIN_EXTENSIONS,
+        }),
     // Viv draws interleaved (packed RGB) tiles with deck's BitmapLayer.
     opacity: isInterleaved(args.loader.data[0].shape)
       ? bitmapLayerOpacity(args.opacity)
@@ -176,6 +186,7 @@ function createEncodedImageLayer(args: {
   entry: JpegLoaderEntry;
   settings: unknown;
   remountKey?: string | number;
+  stainBelow?: boolean;
   orientation?: ImageOrientation | null;
   opacity: number;
 }): Layer {
@@ -187,6 +198,7 @@ function createEncodedImageLayer(args: {
     layerId: `jpeg-${args.entry.sourceImageId}${remount}`,
     modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
     opacity: args.opacity,
+    stainBelow: args.stainBelow,
   });
 }
 
@@ -212,8 +224,14 @@ function buildImageLayers(args: {
   const opacityOf = (sourceImageId: string | undefined) =>
     opacityForImage(images, sourceImageId, opacityPreview);
 
+  const isStain = (sourceImageId: string | undefined) =>
+    !!sourceImageId &&
+    images?.find((im) => im.id === sourceImageId)?.stain === true;
+  // Stains multiply what is already drawn, so they paint after everything.
+  const stains: ((stainBelow: boolean) => Layer)[] = [];
+
   let omeVisiblePainted = 0;
-  return [
+  const painted = [
     ...dicomIndexList.flatMap((entry, i) => {
       const settings = dicomSettingsList[i] as MainSettings | undefined;
       if (!settings?.selections?.length) return [];
@@ -235,42 +253,56 @@ function buildImageLayers(args: {
       const settings = omeSettingsList[i] as MainSettings | undefined;
       // Mask-only loaders have no intensity selections; painted by createMaskTileLayer.
       if (!settings?.selections?.length) return [];
+      const layerArgs = {
+        loader,
+        settings,
+        layerId: `mainLayer-${sourceImageId}`,
+        remountKey: args.remountKey,
+        orientation: orientationForImage(
+          images,
+          sourceImageId,
+          orientationPreview,
+        ),
+        opacity: opacityOf(sourceImageId),
+        ...(transfer ? { transfer } : {}),
+      };
+      // Packed RGB draws through deck's BitmapLayer, which has no stain shader.
+      if (isStain(sourceImageId) && !isInterleaved(loader.data[0].shape)) {
+        stains.push((stainBelow) =>
+          createMultiscaleLayer({ ...layerArgs, stainBelow }),
+        );
+        return [];
+      }
       const overlay = omeVisiblePainted > 0;
       omeVisiblePainted += 1;
-      return [
-        createMultiscaleLayer({
-          loader,
-          settings,
-          layerId: `mainLayer-${sourceImageId}`,
-          remountKey: args.remountKey,
-          overlay,
-          orientation: orientationForImage(
-            images,
-            sourceImageId,
-            orientationPreview,
-          ),
-          opacity: opacityOf(sourceImageId),
-          ...(transfer ? { transfer } : {}),
-        }),
-      ];
+      return [createMultiscaleLayer({ ...layerArgs, overlay })];
     }),
     ...jpegLoaderEntries.flatMap((entry, i) => {
       const settings = jpegSettingsList[i] as MainSettings | undefined;
       if (!settings?.selections?.length) return [];
-      return [
-        createEncodedImageLayer({
-          entry,
-          settings,
-          remountKey: args.remountKey,
-          orientation: orientationForImage(
-            images,
-            entry.sourceImageId,
-            orientationPreview,
-          ),
-          opacity: opacityOf(entry.sourceImageId),
-        }),
-      ];
+      const layerArgs = {
+        entry,
+        settings,
+        remountKey: args.remountKey,
+        orientation: orientationForImage(
+          images,
+          entry.sourceImageId,
+          orientationPreview,
+        ),
+        opacity: opacityOf(entry.sourceImageId),
+      };
+      if (isStain(entry.sourceImageId)) {
+        stains.push((stainBelow) =>
+          createEncodedImageLayer({ ...layerArgs, stainBelow }),
+        );
+        return [];
+      }
+      return [createEncodedImageLayer(layerArgs)];
     }),
+  ];
+  return [
+    ...painted,
+    ...stains.map((make, i) => make(painted.length > 0 || i > 0)),
   ];
 }
 

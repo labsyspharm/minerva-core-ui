@@ -170,6 +170,18 @@ export function ChannelColorPicker(props: {
   const hex = target
     ? hexForColorTarget(target, channelRendering, sourceChannels, channelGroups)
     : null;
+  const targetSourceId =
+    target?.scope === "source"
+      ? target.sourceId
+      : target
+        ? channelGroups
+            .find((g) => g.id === target.groupId)
+            ?.channels.find((gc) => gc.id === target.rowId)?.channelId
+        : undefined;
+  const targetImageId = targetSourceId
+    ? findSourceChannel(sourceChannels, targetSourceId)?.imageId
+    : undefined;
+  const stain = images.some((im) => im.id === targetImageId && im.stain);
 
   React.useEffect(
     () => () => {
@@ -190,6 +202,7 @@ export function ChannelColorPicker(props: {
       onClose={close}
       color={`#${hex ?? "000000"}`}
       showAlpha={false}
+      stainPreview={stain}
       onChange={(c) => {
         if (!target) return;
         previewLiveColor(target, c.hex);

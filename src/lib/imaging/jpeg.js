@@ -7,6 +7,7 @@ import {
   JPEG_PYRAMID_TILE_SIZE,
   jpegPyramidLevels,
 } from "./jpegPyramid";
+import { STAIN_EXTENSIONS, stainLayerParameters } from "./stainExtension";
 import { TILE_CACHE_PROPS } from "./viv";
 
 function createJpegLayers(meta) {
@@ -28,7 +29,12 @@ function createJpegLayers(meta) {
     contrastLimits,
     selections,
     modelMatrix: meta.modelMatrix,
-    ...imageFadeParameters(false, meta.opacity),
+    ...(meta.stainBelow === undefined
+      ? imageFadeParameters(false, meta.opacity)
+      : {
+          ...stainLayerParameters(meta.stainBelow),
+          extensions: STAIN_EXTENSIONS,
+        }),
     opacity: meta.opacity,
   });
 }
