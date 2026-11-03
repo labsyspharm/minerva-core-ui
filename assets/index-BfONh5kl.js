@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-B96gcoGJ.js","./pako.esm-KbdoS3Oq.js","./lerc-CazrtuTl.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DCgRQP7w.js","./pako.esm-KbdoS3Oq.js","./lerc-Ck1N02A7.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18514,7 +18514,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "c1b4cd0f4ff3319015594867c45b3f3527f16c1f"
+    "VITE_APP_GIT_SHA": "1868e598ba7dd71800c8b404792a0c78716378fb"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79250,26 +79250,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BfMe0Fo2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-D5SEq09L.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-D0x06EsK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BmOU-jwy.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-D6CIf590.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-R1N56l_E.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-B96gcoGJ.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-CpZNai1b.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CazrtuTl.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DCgRQP7w.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BGUn4AFg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-Ck1N02A7.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DwxDVxMk.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-EeFs9fKw.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BD6BNJ6B.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-B74_Oa2D.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -97102,6 +97102,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   const fitUsedBox = {
     n: 0
   };
+  const rowsAwaitingFit = /* @__PURE__ */ new Set();
   function rasterKey(sourceImageId, index2) {
     return `${sourceImageId}\0${index2}`;
   }
@@ -97204,15 +97205,16 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     if (changed) {
       doc.setImages(applySourceChannelsToImages(doc.images, next2));
     }
-    let groupsChanged = false;
+    const filledRowIds = [];
     const nextGroups = doc.channelGroups.map((g2) => ({
       ...g2,
       channels: g2.channels.map((gc2) => {
         if (!job.guards.has(gc2.channelId)) return gc2;
+        if (!rowsAwaitingFit.has(gc2.id)) return gc2;
         if (!looksLikeImportDefaultLimits(gc2.lowerLimit, gc2.upperLimit)) {
           return gc2;
         }
-        groupsChanged = true;
+        filledRowIds.push(gc2.id);
         return {
           ...gc2,
           lowerLimit: window2.lower,
@@ -97220,7 +97222,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         };
       })
     }));
-    if (groupsChanged) doc.setChannelGroups(nextGroups);
+    if (filledRowIds.length > 0) {
+      for (const id2 of filledRowIds) rowsAwaitingFit.delete(id2);
+      doc.setChannelGroups(nextGroups);
+    }
   }
   function planeSize$1(plane) {
     const xi2 = plane.labels.indexOf("x");
@@ -97569,6 +97574,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       lower: outcome.window.lower,
       upper: outcome.window.upper
     };
+  }
+  function awaitGroupRowFits(rows2) {
+    const all2 = documentChannels();
+    for (const row2 of rows2) {
+      const sc2 = all2.find((c2) => c2.id === row2.channelId);
+      if (sc2 && !sc2.gmmContrastLimits && isGmmEligible(sc2, all2)) {
+        rowsAwaitingFit.add(row2.id);
+      }
+    }
+  }
+  function isGroupRowAwaitingFit(rowId) {
+    return rowsAwaitingFit.has(rowId);
   }
   function subscribeGmmFit(onStoreChange) {
     listeners.add(onStoreChange);
@@ -173202,8 +173219,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-11-03T18:57:36.837Z";
-    const sha = "c1b4cd0f4ff3319015594867c45b3f3527f16c1f";
+    const iso = "2026-11-03T20:49:59.604Z";
+    const sha = "1868e598ba7dd71800c8b404792a0c78716378fb";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -249261,6 +249278,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         expanded: true,
         channels: seededChannels
       };
+      awaitGroupRowFits(seededChannels);
       syncGroupState([
         ...channelGroups.map((g2) => ({
           ...g2,
@@ -249434,6 +249452,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (fittedLimits) {
         newRows[0].lowerLimit = fittedLimits.lower;
         newRows[0].upperLimit = fittedLimits.upper;
+      } else {
+        awaitGroupRowFits(newRows);
       }
       const newGroups = channelGroups.map((g2) => g2.id !== groupId ? g2 : {
         ...g2,
@@ -260699,7 +260719,7 @@ uniform classStyleUniforms {
       hasVisibilityMap: true,
       requireColor: false
     });
-    return new Set(layers.filter((l2) => isGmmEligible(l2.sc, channels2)).map((l2) => l2.sc.id));
+    return new Set(layers.filter((l2) => isGmmEligible(l2.sc, channels2) && (l2.gc == null || isGroupRowAwaitingFit(l2.gc.id))).map((l2) => l2.sc.id));
   }
   const APP_TAB_TITLE_PREFIX = "Minerva";
   async function pickExportFolder() {
