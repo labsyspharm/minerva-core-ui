@@ -1699,7 +1699,7 @@ packages:
       '@luma.gl/shadertools': 9.3.3
 
   '@vivjs/layers@https://codeload.github.com/simonwarchol/viv/tar.gz/649113d2d93caff82e0bb5cd95bcd7c776572059#path:packages/layers':
-    resolution: {gitHosted: true, integrity: sha512-UhUJV90d2j732ZbLh/sSV1gXaBnmqIiuO7RmZhC97M40QCEfpdc8w4HWJTs1R+OgviJsFNRLfC8qp0W573D96Q==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/649113d2d93caff82e0bb5cd95bcd7c776572059}
+    resolution: {gitHosted: true, path: packages/layers, integrity: sha512-UhUJV90d2j732ZbLh/sSV1gXaBnmqIiuO7RmZhC97M40QCEfpdc8w4HWJTs1R+OgviJsFNRLfC8qp0W573D96Q==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/649113d2d93caff82e0bb5cd95bcd7c776572059}
     version: 0.22.1
     peerDependencies:
       '@deck.gl/core': 9.3.3
@@ -1712,7 +1712,7 @@ packages:
       '@luma.gl/webgl': 9.3.3
 
   '@vivjs/loaders@https://codeload.github.com/simonwarchol/viv/tar.gz/649113d2d93caff82e0bb5cd95bcd7c776572059#path:packages/loaders':
-    resolution: {gitHosted: true, integrity: sha512-UhUJV90d2j732ZbLh/sSV1gXaBnmqIiuO7RmZhC97M40QCEfpdc8w4HWJTs1R+OgviJsFNRLfC8qp0W573D96Q==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/649113d2d93caff82e0bb5cd95bcd7c776572059}
+    resolution: {gitHosted: true, path: packages/loaders, integrity: sha512-UhUJV90d2j732ZbLh/sSV1gXaBnmqIiuO7RmZhC97M40QCEfpdc8w4HWJTs1R+OgviJsFNRLfC8qp0W573D96Q==, tarball: https://codeload.github.com/simonwarchol/viv/tar.gz/649113d2d93caff82e0bb5cd95bcd7c776572059}
     version: 0.22.1
 
   '@vivjs/types@0.22.1':
