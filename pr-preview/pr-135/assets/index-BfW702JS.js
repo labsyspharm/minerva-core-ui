@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-RkzgCZEh.js","./pako.esm-KbdoS3Oq.js","./lerc-B6vYMkM0.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-C5ygxL6k.js","./pako.esm-KbdoS3Oq.js","./lerc-BawkL5s3.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18515,7 +18515,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "b321009fe6fb9138b10719910fae229b424e9771",
+    "VITE_APP_GIT_SHA": "eade1d2ef34176b7fbf6f0523e186b6d9c3ba8e3",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -59908,26 +59908,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DmfB3vSI.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Da4y2m3H.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-AEO1CEMG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BC4o2d3g.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-0mWCB4fv.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CJTc80uq.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-RkzgCZEh.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BpW2YRIE.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-B6vYMkM0.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-C5ygxL6k.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DZ50qzhN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BawkL5s3.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-B1QrJYU6.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-nXw22YC3.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-DWkmZzkC.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-B6J84ILM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -93516,11 +93516,28 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       ]
     });
   }
-  function useAnchoredMenu(opts) {
-    const { align, estimateHeight } = opts;
+  const VIEWPORT_MARGIN = 8;
+  function anchoredMenuPosition(anchor, menu2, opts = {}) {
+    const { gap: gap2 = 4, align = "start" } = opts;
+    const maxTop = window.innerHeight - VIEWPORT_MARGIN - menu2.height;
+    const below = anchor.bottom + gap2;
+    const above = anchor.top - gap2 - menu2.height;
+    let top2 = below;
+    if (below > maxTop) {
+      top2 = above >= VIEWPORT_MARGIN ? above : maxTop;
+    }
+    const left = align === "end" ? anchor.right - menu2.width : anchor.left;
+    const maxLeft = window.innerWidth - VIEWPORT_MARGIN - menu2.width;
+    return {
+      top: Math.max(VIEWPORT_MARGIN, top2),
+      left: Math.max(VIEWPORT_MARGIN, Math.min(left, maxLeft))
+    };
+  }
+  function useAnchoredMenu(align) {
     const [open, setOpen] = reactExports.useState(false);
     const wrapRef = reactExports.useRef(null);
     const menuRef = reactExports.useRef(null);
+    const anchorRef = reactExports.useRef(null);
     const [menuStyle, setMenuStyle] = reactExports.useState({});
     const close = () => setOpen(false);
     const toggleFromButton = (btn) => {
@@ -93528,22 +93545,32 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
         close();
         return;
       }
-      const rect = btn.getBoundingClientRect();
-      const openUp = rect.bottom + estimateHeight + 8 > window.innerHeight && rect.top > estimateHeight;
-      const vertical = openUp ? {
-        bottom: window.innerHeight - rect.top + 4
-      } : {
-        top: rect.bottom + 4
-      };
-      setMenuStyle(align === "end" ? {
-        ...vertical,
-        right: Math.max(8, window.innerWidth - rect.right)
-      } : {
-        ...vertical,
-        left: Math.max(8, Math.min(rect.left, window.innerWidth - 188))
-      });
+      anchorRef.current = btn;
       setOpen(true);
     };
+    reactExports.useLayoutEffect(() => {
+      if (!open || !anchorRef.current || !menuRef.current) return;
+      const anchor = anchorRef.current.getBoundingClientRect();
+      const menu2 = menuRef.current.getBoundingClientRect();
+      const { top: top2, left } = anchoredMenuPosition(anchor, menu2, {
+        align
+      });
+      setMenuStyle({
+        ...top2 + menu2.height <= anchor.top ? {
+          bottom: window.innerHeight - (top2 + menu2.height)
+        } : {
+          top: top2
+        },
+        ...align === "end" ? {
+          right: window.innerWidth - (left + menu2.width)
+        } : {
+          left
+        }
+      });
+    }, [
+      open,
+      align
+    ]);
     useClickOutside(open, close, [
       wrapRef,
       menuRef
@@ -94245,6 +94272,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
   const fitUsedBox = {
     n: 0
   };
+  const rowsAwaitingFit = /* @__PURE__ */ new Set();
   function rasterKey(sourceImageId, index2) {
     return `${sourceImageId}\0${index2}`;
   }
@@ -94347,15 +94375,16 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     if (changed) {
       doc.setImages(applySourceChannelsToImages(doc.images, next2));
     }
-    let groupsChanged = false;
+    const filledRowIds = [];
     const nextGroups = doc.channelGroups.map((g2) => ({
       ...g2,
       channels: g2.channels.map((gc2) => {
         if (!job.guards.has(gc2.channelId)) return gc2;
+        if (!rowsAwaitingFit.has(gc2.id)) return gc2;
         if (!looksLikeImportDefaultLimits(gc2.lowerLimit, gc2.upperLimit)) {
           return gc2;
         }
-        groupsChanged = true;
+        filledRowIds.push(gc2.id);
         return {
           ...gc2,
           lowerLimit: window2.lower,
@@ -94363,7 +94392,10 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
         };
       })
     }));
-    if (groupsChanged) doc.setChannelGroups(nextGroups);
+    if (filledRowIds.length > 0) {
+      for (const id2 of filledRowIds) rowsAwaitingFit.delete(id2);
+      doc.setChannelGroups(nextGroups);
+    }
   }
   function planeSize$1(plane) {
     const xi2 = plane.labels.indexOf("x");
@@ -94732,6 +94764,18 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     }));
     if (changed) setChannelGroups(nextGroups);
   }
+  function awaitGroupRowFits(rows2) {
+    const all2 = documentChannels();
+    for (const row2 of rows2) {
+      const sc2 = all2.find((c2) => c2.id === row2.channelId);
+      if (sc2 && !sc2.gmmContrastLimits && isGmmEligible(sc2, all2)) {
+        rowsAwaitingFit.add(row2.id);
+      }
+    }
+  }
+  function isGroupRowAwaitingFit(rowId) {
+    return rowsAwaitingFit.has(rowId);
+  }
   function subscribeGmmFit(onStoreChange) {
     listeners.add(onStoreChange);
     return () => {
@@ -94846,10 +94890,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       contourOn && "contour lines",
       stainOn && "IHC stain"
     ].filter(Boolean).join(" and ");
-    const menu2 = useAnchoredMenu({
-      align: "end",
-      estimateHeight: 170
-    });
+    const menu2 = useAnchoredMenu("end");
     if (!fitContrastId && !onRemoveFromGroup && !drawChannelId) return null;
     return jsxRuntimeExports.jsxs("div", {
       ref: menu2.wrapRef,
@@ -171039,12 +171080,20 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       ].some((n2) => Number.isNaN(n2))) {
         return null;
       }
+      const markerStart = attr(el2, "MarkerStart", "markerStart");
+      const markerEnd = attr(el2, "MarkerEnd", "markerEnd");
       return common2({
         type: "line",
         X1: x1,
         Y1: y1,
         X2: x2,
-        Y2: y2
+        Y2: y2,
+        ...markerStart ? {
+          MarkerStart: markerStart
+        } : {},
+        ...markerEnd ? {
+          MarkerEnd: markerEnd
+        } : {}
       });
     }
     if (lower === "point") {
@@ -171265,12 +171314,19 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       }
     };
   };
+  const isArrowMarker = (marker) => (marker == null ? void 0 : marker.toLowerCase()) === "arrow";
+  const lineHasArrowHead = (shape) => isArrowMarker(shape.MarkerStart) || isArrowMarker(shape.MarkerEnd);
   const lineShapeToViewerShape = (shape, roi) => {
     const { X1, Y1, X2, Y2, Transform, ID, Text, Name } = shape;
     const start = applyTransform(X1, Y1, Transform);
     const end = applyTransform(X2, Y2, Transform);
     const lineWidth = shape.StrokeWidth || 3;
-    const polygon = [
+    const hasArrowHead = lineHasArrowHead(shape);
+    const tipAtStart = isArrowMarker(shape.MarkerStart) && !isArrowMarker(shape.MarkerEnd);
+    const polygon = tipAtStart ? [
+      end,
+      start
+    ] : [
       start,
       end
     ];
@@ -171290,7 +171346,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       id: `roi-${roi.ID}-${ID}`,
       type: "line",
       polygon,
-      hasArrowHead: false,
+      hasArrowHead,
       style: {
         fillColor,
         lineColor,
@@ -171298,7 +171354,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       },
       text: Text,
       metadata: {
-        label: Name || ID,
+        label: hasArrowHead ? Name : Name || ID,
         description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
         isImported: true
       }
@@ -171481,15 +171537,9 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       const line = ((_c2 = desc.split(/\r?\n/)[0]) == null ? void 0 : _c2.trim()) ?? "";
       if (line) return line.length > 120 ? `${line.slice(0, 117)}\u2026` : line;
     }
-    const id2 = roi.ID.trim();
-    if (id2.includes(":")) {
-      const tail = id2.split(":").pop();
-      if (tail) return tail;
-    }
-    return id2 || "ROI";
+    return null;
   }
-  function makeImportCentroidTextShape(roi, position2) {
-    const text2 = importRoiCentroidLabelText(roi);
+  function makeImportCentroidTextShape(roi, text2, position2) {
     return {
       id: `roi-${roi.ID}__import-centroid-label`,
       type: "text",
@@ -171549,10 +171599,12 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         }
       });
       const labelOnlyRoi = roi.shapes.length > 0 && roi.shapes.every((s2) => s2.type === "label");
-      if (drewShape && !labelOnlyRoi) {
+      const captionedArrowRoi = roi.shapes.every((s2) => s2.type === "line" && lineHasArrowHead(s2) && Boolean(s2.Text || s2.Name));
+      const labelText = importRoiCentroidLabelText(roi);
+      if (drewShape && !labelOnlyRoi && !captionedArrowRoi && labelText) {
         const centroidPos = importRoiCentroidPosition(roi);
         if (centroidPos) {
-          shapes.push(makeImportCentroidTextShape(roi, centroidPos));
+          shapes.push(makeImportCentroidTextShape(roi, labelText, centroidPos));
         }
       }
     });
@@ -172753,11 +172805,11 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         throw new Error(`Unsupported mask dtype ${dtype}`);
     }
   }
-  function assertUnsignedLabelDtype(dtype) {
-    if (dtype === "Uint8" || dtype === "Uint16" || dtype === "Uint32") {
+  function assertLabelDtype(dtype) {
+    if (dtype === "Uint8" || dtype === "Uint16" || dtype === "Uint32" || dtype === "Int8" || dtype === "Int16" || dtype === "Int32") {
       return dtype;
     }
-    throw new Error(`Mask OME-TIFF export requires unsigned integer pixels (got ${dtype})`);
+    throw new Error(`Mask OME-TIFF export requires integer pixels (got ${dtype})`);
   }
   function escapeXmlAttr(value) {
     return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -173873,8 +173925,8 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-11-03T00:26:38.814Z";
-    const sha = "b321009fe6fb9138b10719910fae229b424e9771";
+    const iso = "2026-11-03T22:30:17.333Z";
+    const sha = "eade1d2ef34176b7fbf6f0523e186b6d9c3ba8e3";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -175812,14 +175864,11 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       toggleRef,
       menuRef
     ]);
-    reactExports.useEffect(() => {
-      if (isOpen && toggleRef.current) {
-        const rect = toggleRef.current.getBoundingClientRect();
-        setMenuPos({
-          top: rect.bottom + 3,
-          left: rect.left
-        });
-      }
+    reactExports.useLayoutEffect(() => {
+      if (!isOpen || !toggleRef.current || !menuRef.current) return;
+      setMenuPos(anchoredMenuPosition(toggleRef.current.getBoundingClientRect(), menuRef.current.getBoundingClientRect(), {
+        gap: 3
+      }));
     }, [
       isOpen
     ]);
@@ -177251,6 +177300,9 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     ]);
     return shapeLayers;
   }
+  function isTextField(target) {
+    return target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable]") !== null;
+  }
   const errorToast = "_errorToast_1fd03_1";
   const hintBar = "_hintBar_1fd03_16";
   const hintAdd = "_hintAdd_1fd03_35";
@@ -177602,6 +177654,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     reactExports.useEffect(() => {
       if (activeTool !== "polyline") return;
       const handleKeyDown2 = (event) => {
+        if (isTextField(event.target)) return;
         if (event.key === "Enter" || event.key === "Return" || event.key === "Escape") {
           event.preventDefault();
           finalizeCurrentPolyline();
@@ -177618,6 +177671,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     reactExports.useEffect(() => {
       if (activeTool !== "rectangle") return;
       const handleKeyDown2 = (event) => {
+        if (isTextField(event.target)) return;
         if (event.key === "Escape" && isRectangleClickMode) {
           event.preventDefault();
           setRectangleFirstClick(null);
@@ -177636,6 +177690,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     reactExports.useEffect(() => {
       if (activeTool !== "arrow" && activeTool !== "line") return;
       const handleKeyDown2 = (event) => {
+        if (isTextField(event.target)) return;
         if (event.key === "Escape" && isLineClickMode) {
           event.preventDefault();
           setLineFirstClick(null);
@@ -177654,6 +177709,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     reactExports.useEffect(() => {
       if (activeTool !== "ellipse") return;
       const handleKeyDown2 = (event) => {
+        if (isTextField(event.target)) return;
         if (event.key === "Escape" && isEllipseClickMode) {
           event.preventDefault();
           setEllipseFirstClick(null);
@@ -177672,6 +177728,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     reactExports.useEffect(() => {
       if (activeTool !== "lasso") return;
       const handleKeyDown2 = (event) => {
+        if (isTextField(event.target)) return;
         if ((event.key === "Enter" || event.key === "Return" || event.key === "Escape") && isPolygonClickMode) {
           event.preventDefault();
           if (event.key === "Escape") {
@@ -177703,6 +177760,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     reactExports.useEffect(() => {
       if (activeTool !== "magic_wand") return;
       const handleKeyDown2 = (event) => {
+        if (isTextField(event.target)) return;
         if (event.key === "Enter" || event.key === "Return") {
           event.preventDefault();
           sam2ConfirmSession();
@@ -249515,10 +249573,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   }
   function GroupFolderGearMenu(props) {
     const { groupName, canOptimize, optimizeBusy, onOptimize } = props;
-    const menu2 = useAnchoredMenu({
-      align: "start",
-      estimateHeight: 44
-    });
+    const menu2 = useAnchoredMenu("start");
     return jsxRuntimeExports.jsxs("div", {
       ref: menu2.wrapRef,
       children: [
@@ -249800,6 +249855,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         expanded: true,
         channels: seededChannels
       };
+      awaitGroupRowFits(seededChannels);
       syncGroupState([
         ...channelGroups.map((g2) => ({
           ...g2,
@@ -249923,6 +249979,8 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       if (fittedLimits) {
         newRows[0].lowerLimit = fittedLimits.lower;
         newRows[0].upperLimit = fittedLimits.upper;
+      } else {
+        awaitGroupRowFits(newRows);
       }
       const newGroups = channelGroups.map((g2) => g2.id !== groupId ? g2 : {
         ...g2,
@@ -251985,12 +252043,6 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       bitsPerSample: 8
     });
   }
-  function grayscaleDeflateTags(bits) {
-    return grayscaleTags({
-      compression: TIFF_COMPRESSION.DEFLATE,
-      bitsPerSample: bits
-    });
-  }
   function assertSafeNumberOffset$1(offset) {
     if (offset < 0n || offset > BigInt(Number.MAX_SAFE_INTEGER)) {
       throw new Error(`Sink offset ${offset} exceeds Number.MAX_SAFE_INTEGER; this adapter cannot represent it`);
@@ -252359,7 +252411,10 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   function labelArrayCtor(dtype) {
     if (dtype === "Uint8") return Uint8Array;
     if (dtype === "Uint16") return Uint16Array;
-    return Uint32Array;
+    if (dtype === "Uint32") return Uint32Array;
+    if (dtype === "Int8") return Int8Array;
+    if (dtype === "Int16") return Int16Array;
+    return Int32Array;
   }
   function toLabelArray(data2, dtype) {
     const Ctor = labelArrayCtor(dtype);
@@ -252492,7 +252547,11 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         ...levels
       ],
       channelCount: channels2.length,
-      baseTags: grayscaleDeflateTags(bits),
+      baseTags: grayscaleTags({
+        compression: TIFF_COMPRESSION.DEFLATE,
+        bitsPerSample: bits,
+        sampleFormat: dtype.startsWith("Int") ? 2 : 1
+      }),
       imageDescription: omeXml
     });
     let exportFailed = null;
@@ -252601,7 +252660,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       throw new Error(`No mask channels to export for ${image2.basename || image2.id}`);
     }
     const loaderData = loaderPlanes(entry);
-    const dtype = assertUnsignedLabelDtype(loaderData[0].dtype);
+    const dtype = assertLabelDtype(loaderData[0].dtype);
     const { levels, useLoaderTiles } = planMaskExportLevels(loaderData);
     let generated = null;
     if (!useLoaderTiles) {
@@ -255996,28 +256055,28 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     }
     return "";
   }
-  const presentation = "_presentation_o48fs_6";
-  const frame$1 = "_frame_o48fs_14";
-  const previewRibbon = "_previewRibbon_o48fs_35";
-  const previewRibbonChevron = "_previewRibbonChevron_o48fs_42";
-  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_o48fs_54";
-  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_o48fs_71";
-  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_o48fs_76";
-  const navPane = "_navPane_o48fs_128";
-  const navPaneHasStoryName = "_navPaneHasStoryName_o48fs_141";
-  const storyTitle = "_storyTitle_o48fs_145";
-  const toolbar$1 = "_toolbar_o48fs_152";
-  const contentWrap = "_contentWrap_o48fs_164";
-  const navInactive = "_navInactive_o48fs_201";
-  const heading = "_heading_o48fs_213";
-  const tocButton = "_tocButton_o48fs_229";
-  const navLeft = "_navLeft_o48fs_234";
-  const count = "_count_o48fs_238";
-  const navRight = "_navRight_o48fs_242";
-  const inlineNext = "_inlineNext_o48fs_305";
-  const nextLink = "_nextLink_o48fs_323";
-  const tocWrapper = "_tocWrapper_o48fs_367";
-  const channelName = "_channelName_o48fs_376";
+  const presentation = "_presentation_1uqhi_6";
+  const frame$1 = "_frame_1uqhi_14";
+  const previewRibbon = "_previewRibbon_1uqhi_35";
+  const previewRibbonChevron = "_previewRibbonChevron_1uqhi_42";
+  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_1uqhi_54";
+  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_1uqhi_71";
+  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_1uqhi_76";
+  const navPane = "_navPane_1uqhi_128";
+  const navPaneHasStoryName = "_navPaneHasStoryName_1uqhi_141";
+  const storyTitle = "_storyTitle_1uqhi_145";
+  const toolbar$1 = "_toolbar_1uqhi_152";
+  const contentWrap = "_contentWrap_1uqhi_164";
+  const navInactive = "_navInactive_1uqhi_201";
+  const heading = "_heading_1uqhi_213";
+  const tocButton = "_tocButton_1uqhi_229";
+  const navLeft = "_navLeft_1uqhi_234";
+  const count = "_count_1uqhi_238";
+  const navRight = "_navRight_1uqhi_242";
+  const inlineNext = "_inlineNext_1uqhi_311";
+  const nextLink = "_nextLink_1uqhi_329";
+  const tocWrapper = "_tocWrapper_1uqhi_373";
+  const channelName = "_channelName_1uqhi_382";
   const styles$a = {
     presentation,
     frame: frame$1,
@@ -258061,9 +258120,6 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   function resizeCursor(anchor, handle2) {
     const deg = Math.atan2(handle2[1] - anchor[1], handle2[0] - anchor[0]) * 180 / Math.PI;
     return RESIZE_CURSORS[(Math.round(deg / 45) % 4 + 4) % 4];
-  }
-  function isTextField(target) {
-    return target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable]") !== null;
   }
   function ImageArrangeBox(props) {
     const { imageId, images, loaders, preview, project: project2, unproject, layoutRef, getCanvas } = props;
@@ -261582,7 +261638,7 @@ uniform classStyleUniforms {
       hasVisibilityMap: true,
       requireColor: false
     });
-    return new Set(layers.filter((l2) => isGmmEligible(l2.sc, channels2)).map((l2) => l2.sc.id));
+    return new Set(layers.filter((l2) => isGmmEligible(l2.sc, channels2) && (l2.gc == null || isGroupRowAwaitingFit(l2.gc.id))).map((l2) => l2.sc.id));
   }
   const APP_TAB_TITLE_PREFIX = "Minerva";
   async function pickExportFolder() {
