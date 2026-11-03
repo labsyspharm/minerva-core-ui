@@ -4,7 +4,7 @@ import {
 } from "@/lib/imaging/autoContrast";
 import { isGmmEligible } from "@/lib/imaging/channelKind";
 import { looksLikeImportDefaultLimits } from "@/lib/imaging/sourceChannelStyle";
-import type { Channel } from "@/lib/stores/documentStore";
+import type { Channel, ChannelGroupChannel } from "@/lib/stores/documentStore";
 import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
@@ -65,6 +65,12 @@ const fetchWaiters: (() => void)[] = [];
 const fitWaiters: (() => void)[] = [];
 const fetchUsedBox = { n: 0 };
 const fitUsedBox = { n: 0 };
+/**
+ * Group rows made this session from a channel with no fit yet. Only these
+ * take the fit when it lands; rows loaded with the story keep their saved
+ * limits. Not reset by clearGmmScheduler, which image imports also call.
+ */
+const rowsAwaitingFit = new Set<string>();
 
 function rasterKey(sourceImageId: string, index: number): string {
   return `${sourceImageId}\0${index}`;
@@ -180,15 +186,16 @@ function commitFitted(
     doc.setImages(applySourceChannelsToImages(doc.images, next));
   }
 
-  let groupsChanged = false;
+  const filledRowIds: string[] = [];
   const nextGroups = doc.channelGroups.map((g) => ({
     ...g,
     channels: g.channels.map((gc) => {
       if (!job.guards.has(gc.channelId)) return gc;
+      if (!rowsAwaitingFit.has(gc.id)) return gc;
       if (!looksLikeImportDefaultLimits(gc.lowerLimit, gc.upperLimit)) {
         return gc;
       }
-      groupsChanged = true;
+      filledRowIds.push(gc.id);
       return {
         ...gc,
         lowerLimit: window.lower,
@@ -196,7 +203,10 @@ function commitFitted(
       };
     }),
   }));
-  if (groupsChanged) doc.setChannelGroups(nextGroups);
+  if (filledRowIds.length > 0) {
+    for (const id of filledRowIds) rowsAwaitingFit.delete(id);
+    doc.setChannelGroups(nextGroups);
+  }
 }
 
 function planeSize(plane: Loader["data"][number]): {
@@ -540,6 +550,21 @@ export async function refitGmm(
   const sc = readChannel(channelId);
   if (!limitsEqual(sc?.gmmContrastLimits, outcome.window)) return null;
   return { lower: outcome.window.lower, upper: outcome.window.upper };
+}
+
+/** Let new group rows take their channel's fit once it lands. */
+export function awaitGroupRowFits(rows: readonly ChannelGroupChannel[]): void {
+  const all = documentChannels();
+  for (const row of rows) {
+    const sc = all.find((c) => c.id === row.channelId);
+    if (sc && !sc.gmmContrastLimits && isGmmEligible(sc, all)) {
+      rowsAwaitingFit.add(row.id);
+    }
+  }
+}
+
+export function isGroupRowAwaitingFit(rowId: string): boolean {
+  return rowsAwaitingFit.has(rowId);
 }
 
 export function subscribeGmmFit(onStoreChange: () => void): () => void {

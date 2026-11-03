@@ -51,6 +51,7 @@ import { channelFloatRange } from "@/lib/imaging/floatRange";
 import {
   clearGmmScheduler,
   ensureGmm,
+  isGroupRowAwaitingFit,
   reconcileGmm,
 } from "@/lib/imaging/gmmScheduler";
 import {
@@ -312,8 +313,15 @@ function visibleGmmIds(images: Image[]): Set<string> {
     hasVisibilityMap: true,
     requireColor: false,
   });
+  // Rows loaded with the story draw with their saved limits: no fit needed.
   return new Set(
-    layers.filter((l) => isGmmEligible(l.sc, channels)).map((l) => l.sc.id),
+    layers
+      .filter(
+        (l) =>
+          isGmmEligible(l.sc, channels) &&
+          (l.gc == null || isGroupRowAwaitingFit(l.gc.id)),
+      )
+      .map((l) => l.sc.id),
   );
 }
 
