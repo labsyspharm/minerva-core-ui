@@ -2,10 +2,11 @@ import { getImageSize } from "@hms-dbmi/viv";
 import {
   browserFileSink,
   createTiffWriter,
-  grayscaleDeflateTags,
+  grayscaleTags,
   type PlanPyramidJob,
   planPyramid,
   type RandomAccessSink,
+  TIFF_COMPRESSION,
 } from "tiffwriter";
 import type { Image, ImageChannel } from "@/lib/stores/documentSchema";
 import { bufferedSink } from "./exportSink";
@@ -13,7 +14,7 @@ import { readExportTile } from "./exportTileReader";
 import type { OmeLoaderEntry } from "./loaderEntries";
 import type { LoaderPlane } from "./loaderTypes";
 import {
-  assertUnsignedLabelDtype,
+  assertLabelDtype,
   bitsPerSampleFromDtype,
   buildOmeTiffXml,
   EXPORT_TILE_SIZE,
@@ -27,19 +28,28 @@ import {
 } from "./omeTiffExport";
 
 export type { LabelDtype };
-export type LabelArray = Uint8Array | Uint16Array | Uint32Array;
+export type LabelArray =
+  | Uint8Array
+  | Uint16Array
+  | Uint32Array
+  | Int8Array
+  | Int16Array
+  | Int32Array;
 
 const MASK_EXPORT_CONCURRENCY = Math.min(
   8,
   globalThis?.navigator?.hardwareConcurrency ?? 4,
 );
 
-export { assertUnsignedLabelDtype, bitsPerSampleFromDtype, omeTypeFromDtype };
+export { assertLabelDtype, bitsPerSampleFromDtype, omeTypeFromDtype };
 
 function labelArrayCtor(dtype: LabelDtype): new (n: number) => LabelArray {
   if (dtype === "Uint8") return Uint8Array;
   if (dtype === "Uint16") return Uint16Array;
-  return Uint32Array;
+  if (dtype === "Uint32") return Uint32Array;
+  if (dtype === "Int8") return Int8Array;
+  if (dtype === "Int16") return Int16Array;
+  return Int32Array;
 }
 
 export function toLabelArray(
@@ -246,7 +256,12 @@ export async function writeZlibOmeTiff(
   const { layouts, jobs } = planPyramid({
     levels: [...levels],
     channelCount: channels.length,
-    baseTags: grayscaleDeflateTags(bits),
+    // Labels stay in the source dtype; SampleFormat 2 marks signed integers.
+    baseTags: grayscaleTags({
+      compression: TIFF_COMPRESSION.DEFLATE,
+      bitsPerSample: bits,
+      sampleFormat: dtype.startsWith("Int") ? 2 : 1,
+    }),
     imageDescription: omeXml,
   });
 
@@ -393,7 +408,7 @@ export async function exportZlibOmeTiffImage(
     );
   }
   const loaderData = loaderPlanes(entry);
-  const dtype = assertUnsignedLabelDtype(loaderData[0].dtype);
+  const dtype = assertLabelDtype(loaderData[0].dtype);
   const { levels, useLoaderTiles } = planMaskExportLevels(loaderData);
 
   let generated: LabelArray[][] | null = null;
