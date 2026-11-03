@@ -60,7 +60,18 @@ export type HydrateDocumentLoadersOpts = {
   resolveRelativeFile?: (
     image: Image,
   ) => Promise<{ handle?: Handle.File; key: string } | undefined>;
+  /**
+   * Called as images open, with the loaders ready so far in document order.
+   * Waits for the first OME image so the viewer's first loader (its world
+   * frame) never changes. Not called for stories with DICOM images.
+   */
+  onLoaders?: (ready: ReadyDocumentLoaders) => void;
 };
+
+type ReadyDocumentLoaders = Pick<
+  HydrateDocumentLoadersResult,
+  "jpegLoaderEntries" | "omeLoaderEntries" | "dicomIndexList"
+>;
 
 const omeLoaderRole = (im: Image): "intensity" | "segmentation" =>
   resolveImageContentRole({
@@ -108,7 +119,6 @@ export async function hydrateDocumentLoaders(
   opts: HydrateDocumentLoadersOpts = {},
 ): Promise<HydrateDocumentLoadersResult> {
   const jpegLoaderEntries: JpegLoaderEntry[] = [];
-  const omeLoaderEntries: OmeLoaderEntry[] = [];
   const dicomIndexList: DicomIndex[] = [];
   const deniedHandleKeys: string[] = [];
   const missingHandleKeys: string[] = [];
@@ -139,28 +149,63 @@ export async function hydrateDocumentLoaders(
     })),
   );
 
-  const loadLocalFile = async (im: Image, handle: Handle.File) => {
+  // One slot per image in document order: undefined while an OME image is
+  // opening, null once it is settled without a loader (or is not OME).
+  const omeSlots: (OmeLoaderEntry | null | undefined)[] = images.map((im) =>
+    im.source?.kind === "url" || im.source?.kind === "local" ? undefined : null,
+  );
+  const readyOme = () =>
+    omeSlots.filter((slot): slot is OmeLoaderEntry => slot != null);
+  // DICOM loaders come first in the viewer's list, so one opening late would
+  // change its world frame.
+  const onLoaders = images.some((im) => im.source?.kind === "dicomWeb")
+    ? undefined
+    : opts.onLoaders;
+  let publishedCount = 0;
+  const settle = (index: number, entry: OmeLoaderEntry | null) => {
+    omeSlots[index] = entry;
+    const first = omeSlots.findIndex((slot) => slot !== null);
+    if (!onLoaders || first < 0 || omeSlots[first] === undefined) return;
+    const ready = readyOme();
+    if (ready.length === publishedCount) return;
+    publishedCount = ready.length;
+    onLoaders({ jpegLoaderEntries, omeLoaderEntries: ready, dicomIndexList });
+  };
+
+  const openOme = async (
+    index: number,
+    im: Image,
+    source: Parameters<typeof loadOmeLoaderForRole>[1],
+  ) => {
+    let entry: OmeLoaderEntry | null = null;
     try {
-      const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
-        kind: "local",
-        handle,
-        ...(pool ? { pool } : {}),
-        rgbDisplay: im.rgbDisplay,
-      });
-      omeLoaderEntries.push({
+      const loader = await loadOmeLoaderForRole(omeLoaderRole(im), source);
+      entry = {
         ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
         sourceImageId: im.id,
-      });
+      };
     } catch (e) {
       loaderErrors.push(
         e instanceof Error ? e.message : `Could not load ${im.basename}`,
       );
     }
+    settle(index, entry);
   };
 
-  for (const im of images) {
+  const loadLocalFile = (index: number, im: Image, handle: Handle.File) =>
+    openOme(index, im, {
+      kind: "local",
+      handle,
+      ...(pool ? { pool } : {}),
+      rgbDisplay: im.rgbDisplay,
+    });
+
+  // Remote TIFFs need no permission prompt, so they open side by side.
+  const remoteOpens: Promise<void>[] = [];
+  for (const [index, im] of images.entries()) {
     if (!im.source) continue;
     if (im.source.kind === "jpeg") continue;
+    const opening = remoteOpens.length;
     switch (im.source.kind) {
       case "url": {
         // Authoring has no served story root: a relative TIFF is read from a
@@ -183,26 +228,18 @@ export async function hydrateDocumentLoaders(
             break;
           }
           if (await findFile({ handle: resolved.handle })) {
-            await loadLocalFile(im, resolved.handle);
+            await loadLocalFile(index, im, resolved.handle);
           }
           break;
         }
-        try {
-          const loader = await loadOmeLoaderForRole(omeLoaderRole(im), {
+        remoteOpens.push(
+          openOme(index, im, {
             kind: "url",
             url: resolveOmeSourceUrl(documentUrl, im.source.url),
             ...(pool ? { pool } : {}),
             rgbDisplay: im.rgbDisplay,
-          });
-          omeLoaderEntries.push({
-            ...omeLoaderForHydrate(loader, im, wrapOmeJpeg, transfer),
-            sourceImageId: im.id,
-          });
-        } catch (e) {
-          loaderErrors.push(
-            e instanceof Error ? e.message : `Could not load ${im.basename}`,
-          );
-        }
+          }),
+        );
         break;
       }
       case "local": {
@@ -218,7 +255,7 @@ export async function hydrateDocumentLoaders(
           break;
         }
         if (!(await findFile({ handle }))) break;
-        await loadLocalFile(im, handle);
+        await loadLocalFile(index, im, handle);
         break;
       }
       case "dicomWeb": {
@@ -241,11 +278,16 @@ export async function hydrateDocumentLoaders(
         break;
       }
     }
+    // Skipped here (no file, no permission, not found): settled with nothing.
+    if (omeSlots[index] === undefined && remoteOpens.length === opening) {
+      settle(index, null);
+    }
   }
+  await Promise.all(remoteOpens);
 
   return {
     jpegLoaderEntries,
-    omeLoaderEntries,
+    omeLoaderEntries: readyOme(),
     dicomIndexList,
     deniedHandleKeys,
     missingHandleKeys,

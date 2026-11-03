@@ -46,7 +46,7 @@ export function ChannelRowMoreMenu(
   const drawnAs = [contourOn && "contour lines", stainOn && "IHC stain"]
     .filter(Boolean)
     .join(" and ");
-  const menu = useAnchoredMenu({ align: "end", estimateHeight: 170 });
+  const menu = useAnchoredMenu("end");
   if (!fitContrastId && !onRemoveFromGroup && !drawChannelId) return null;
   return (
     <div ref={menu.wrapRef}>

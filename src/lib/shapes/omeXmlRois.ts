@@ -181,7 +181,17 @@ function elementToRoiShape(el: Element, index: number): RoiShape | null {
     if ([x1, y1, x2, y2].some((n) => Number.isNaN(n))) {
       return null;
     }
-    return common({ type: "line" as const, X1: x1, Y1: y1, X2: x2, Y2: y2 });
+    const markerStart = attr(el, "MarkerStart", "markerStart");
+    const markerEnd = attr(el, "MarkerEnd", "markerEnd");
+    return common({
+      type: "line" as const,
+      X1: x1,
+      Y1: y1,
+      X2: x2,
+      Y2: y2,
+      ...(markerStart ? { MarkerStart: markerStart } : {}),
+      ...(markerEnd ? { MarkerEnd: markerEnd } : {}),
+    });
   }
 
   if (lower === "point") {

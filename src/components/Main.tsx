@@ -51,6 +51,7 @@ import { channelFloatRange } from "@/lib/imaging/floatRange";
 import {
   clearGmmScheduler,
   ensureGmm,
+  isGroupRowAwaitingFit,
   reconcileGmm,
 } from "@/lib/imaging/gmmScheduler";
 import {
@@ -312,8 +313,15 @@ function visibleGmmIds(images: Image[]): Set<string> {
     hasVisibilityMap: true,
     requireColor: false,
   });
+  // Rows loaded with the story draw with their saved limits: no fit needed.
   return new Set(
-    layers.filter((l) => isGmmEligible(l.sc, channels)).map((l) => l.sc.id),
+    layers
+      .filter(
+        (l) =>
+          isGmmEligible(l.sc, channels) &&
+          (l.gc == null || isGroupRowAwaitingFit(l.gc.id)),
+      )
+      .map((l) => l.sc.id),
   );
 }
 
@@ -1892,13 +1900,14 @@ const Content = (props: Props) => {
 
   const onEnsureChannelHistograms = React.useCallback(
     async (channelIds: string[]) => {
-      if (omeLoaderEntries.length === 0 || channelIds.length === 0) return;
+      const loaderEntries = [...omeLoaderEntries, ...dicomIndexList];
+      if (loaderEntries.length === 0 || channelIds.length === 0) return;
       const imageKey = viewerImageKey;
       if (!imageKey) return;
       const doc = useDocumentStore.getState();
       const prevCh = documentSourceChannels(doc);
       const loaderByImageId = new Map(
-        omeLoaderEntries.map((e) => [e.sourceImageId, e.loader] as const),
+        loaderEntries.map((e) => [e.sourceImageId, e.loader] as const),
       );
 
       type Pair = { imageId: string; index: number; channelId: string };
@@ -1956,7 +1965,7 @@ const Content = (props: Props) => {
       if (next === prevChNow) return;
       docNow.setImages(applySourceChannelsToImages(docNow.images, next));
     },
-    [omeLoaderEntries, viewerImageKey],
+    [omeLoaderEntries, dicomIndexList, viewerImageKey],
   );
 
   const storyImageSource = useDocumentStore((s) => s.metadata.imageSource);

@@ -1,20 +1,24 @@
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useClickOutside } from "@/components/shared/useClickOutside";
+import { anchoredMenuPosition } from "@/lib/viewer/anchoredMenuPosition";
 
 /**
- * A `position: fixed` menu opened from a button. It opens below the button, or
- * above when `estimateHeight` does not fit; above, it is pinned by its bottom
- * so a menu that grows while open (or is shorter than the estimate) stays
- * against the button.
+ * A `position: fixed` menu opened from a button. It is measured before paint
+ * and opens below the button, or above when it does not fit. Above, it is
+ * pinned by its bottom, and `align: "end"` pins its right edge, so a menu that
+ * grows while open stays against the button.
  */
-export function useAnchoredMenu(opts: {
-  align: "start" | "end";
-  estimateHeight: number;
-}) {
-  const { align, estimateHeight } = opts;
+export function useAnchoredMenu(align: "start" | "end") {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
   const close = () => setOpen(false);
   const toggleFromButton = (btn: HTMLButtonElement) => {
@@ -22,23 +26,23 @@ export function useAnchoredMenu(opts: {
       close();
       return;
     }
-    const rect = btn.getBoundingClientRect();
-    const openUp =
-      rect.bottom + estimateHeight + 8 > window.innerHeight &&
-      rect.top > estimateHeight;
-    const vertical = openUp
-      ? { bottom: window.innerHeight - rect.top + 4 }
-      : { top: rect.bottom + 4 };
-    setMenuStyle(
-      align === "end"
-        ? { ...vertical, right: Math.max(8, window.innerWidth - rect.right) }
-        : {
-            ...vertical,
-            left: Math.max(8, Math.min(rect.left, window.innerWidth - 188)),
-          },
-    );
+    anchorRef.current = btn;
     setOpen(true);
   };
+  useLayoutEffect(() => {
+    if (!open || !anchorRef.current || !menuRef.current) return;
+    const anchor = anchorRef.current.getBoundingClientRect();
+    const menu = menuRef.current.getBoundingClientRect();
+    const { top, left } = anchoredMenuPosition(anchor, menu, { align });
+    setMenuStyle({
+      ...(top + menu.height <= anchor.top
+        ? { bottom: window.innerHeight - (top + menu.height) }
+        : { top }),
+      ...(align === "end"
+        ? { right: window.innerWidth - (left + menu.width) }
+        : { left }),
+    });
+  }, [open, align]);
   useClickOutside(open, close, [wrapRef, menuRef]);
   useEffect(() => {
     if (!open) return;

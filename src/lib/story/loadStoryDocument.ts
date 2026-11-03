@@ -45,7 +45,11 @@ export async function fetchStoryDocument(
 /** Fetch, hydrate stores, and build CDN-safe loaders for a published story. */
 export async function loadStoryDocument(
   documentUrl: string,
-  opts?: { onDocument?: () => void },
+  opts?: {
+    onDocument?: () => void;
+    /** Images ready so far, while the rest are still opening. */
+    onImages?: (ready: LoadStoryDocumentResult) => void;
+  },
 ): Promise<LoadStoryDocumentResult> {
   const data = await fetchStoryDocument(documentUrl);
   useDocumentStore
@@ -71,6 +75,7 @@ export async function loadStoryDocument(
       pool: omePool,
       includeLocal: false,
       imageSource: data.metadata.imageSource,
+      ...(opts?.onImages ? { onLoaders: opts.onImages } : {}),
     });
 
   return { jpegLoaderEntries, omeLoaderEntries, dicomIndexList };

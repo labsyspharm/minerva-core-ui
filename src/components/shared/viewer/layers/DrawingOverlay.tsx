@@ -13,6 +13,7 @@ import { arrowLineDegeneratePolygon } from "@/lib/shapes/shapeGeometry";
 import { ARROW_ICON_SIZE } from "@/lib/shapes/shapeLayers";
 import { ellipseToPolygon, lineToPolygon } from "@/lib/shapes/shapeModel";
 import { useAppStore } from "@/lib/stores/appStore";
+import { isTextField } from "@/lib/viewer/isTextField";
 import styles from "./DrawingOverlay.module.css";
 
 export type CreatableLayer = PolygonLayer | TextLayer | null;
@@ -402,6 +403,8 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     if (activeTool !== "polyline") return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Enter/Escape typed into a text field (e.g. waypoint markdown) is not for the tool.
+      if (isTextField(event.target)) return;
       // Finalize polyline on Enter, Return, or Escape
       if (
         event.key === "Enter" ||
@@ -427,6 +430,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     if (activeTool !== "rectangle") return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isTextField(event.target)) return;
       // Cancel rectangle drawing on Escape
       if (event.key === "Escape" && isRectangleClickMode) {
         event.preventDefault();
@@ -450,6 +454,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     if (activeTool !== "arrow" && activeTool !== "line") return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isTextField(event.target)) return;
       // Cancel line drawing on Escape
       if (event.key === "Escape" && isLineClickMode) {
         event.preventDefault();
@@ -473,6 +478,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     if (activeTool !== "ellipse") return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isTextField(event.target)) return;
       // Cancel ellipse drawing on Escape
       if (event.key === "Escape" && isEllipseClickMode) {
         event.preventDefault();
@@ -496,6 +502,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
     if (activeTool !== "lasso") return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isTextField(event.target)) return;
       // Finalize polygon on Enter, Return, or Escape
       if (
         (event.key === "Enter" ||
@@ -536,6 +543,7 @@ const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   React.useEffect(() => {
     if (activeTool !== "magic_wand") return;
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isTextField(event.target)) return;
       if (event.key === "Enter" || event.key === "Return") {
         event.preventDefault();
         sam2ConfirmSession();

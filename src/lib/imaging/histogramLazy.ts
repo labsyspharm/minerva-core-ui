@@ -1,9 +1,8 @@
 /**
- * Lazy OME-TIFF histograms: `ChannelGroupsMasterDetail` requests indices →
+ * Lazy OME-TIFF and DICOM histograms: `ChannelGroupsMasterDetail` requests indices →
  * `ensureOmeHistogramDistributions` (tile extract + in-memory cache) →
  * `mergeHistogramsIntoSourceChannelsByChannelId` patches `sourceDistribution`
  * on the store.
- * DICOM still uses eager `extractDistributions` in `main.tsx` (`getDistributions`).
  */
 import type { ConfigSourceDistribution } from "../authoring/config";
 import { extractDistributionsForSourceIndices } from "../authoring/config";

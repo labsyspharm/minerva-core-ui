@@ -50,6 +50,8 @@ interface RoiLineShape extends BaseRoiShape {
   Y1: number;
   X2: number;
   Y2: number;
+  MarkerStart?: string; // OME Marker enum: "Arrow"
+  MarkerEnd?: string;
 }
 
 interface RoiPointShape extends BaseRoiShape {
@@ -228,6 +230,11 @@ const ellipseShapeToViewerShape = (
   };
 };
 
+const isArrowMarker = (marker?: string) => marker?.toLowerCase() === "arrow";
+
+const lineHasArrowHead = (shape: RoiLineShape) =>
+  isArrowMarker(shape.MarkerStart) || isArrowMarker(shape.MarkerEnd);
+
 /**
  * Convert ROI line shape to LineShape
  */
@@ -238,7 +245,11 @@ const lineShapeToViewerShape = (shape: RoiLineShape, roi: Roi): LineShape => {
   const end = applyTransform(X2, Y2, Transform);
 
   const lineWidth = shape.StrokeWidth || 3;
-  const polygon: [number, number][] = [start, end];
+  const hasArrowHead = lineHasArrowHead(shape);
+  // Viewer arrows point at polygon[1], so a start-only marker flips the line.
+  const tipAtStart =
+    isArrowMarker(shape.MarkerStart) && !isArrowMarker(shape.MarkerEnd);
+  const polygon: [number, number][] = tipAtStart ? [end, start] : [start, end];
 
   const lineColor = shape.StrokeColor || [0, 255, 255, 255];
   const fillColor = shape.FillColor || [0, 255, 255, 255];
@@ -247,7 +258,7 @@ const lineShapeToViewerShape = (shape: RoiLineShape, roi: Roi): LineShape => {
     id: `roi-${roi.ID}-${ID}`,
     type: "line",
     polygon,
-    hasArrowHead: false,
+    hasArrowHead,
     style: {
       fillColor,
       lineColor,
@@ -255,7 +266,8 @@ const lineShapeToViewerShape = (shape: RoiLineShape, roi: Roi): LineShape => {
     },
     text: Text, // Include text if present
     metadata: {
-      label: Name || ID,
+      // An arrow's caption falls back to this label, so never the bare shape ID.
+      label: hasArrowHead ? Name : Name || ID,
       description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
       isImported: true,
     },
@@ -436,7 +448,8 @@ function importRoiCentroidPosition(roi: Roi): [number, number] | null {
   return [(minX + maxX) / 2, (minY + maxY) / 2];
 }
 
-function importRoiCentroidLabelText(roi: Roi): string {
+/** ROI name, else first line of its description; null for an unnamed ROI (no label). */
+function importRoiCentroidLabelText(roi: Roi): string | null {
   const name = roi.Name?.trim();
   if (name) return name;
   const desc = roi.Description?.trim();
@@ -444,19 +457,14 @@ function importRoiCentroidLabelText(roi: Roi): string {
     const line = desc.split(/\r?\n/)[0]?.trim() ?? "";
     if (line) return line.length > 120 ? `${line.slice(0, 117)}…` : line;
   }
-  const id = roi.ID.trim();
-  if (id.includes(":")) {
-    const tail = id.split(":").pop();
-    if (tail) return tail;
-  }
-  return id || "ROI";
+  return null;
 }
 
 function makeImportCentroidTextShape(
   roi: Roi,
+  text: string,
   position: [number, number],
 ): TextShape {
-  const text = importRoiCentroidLabelText(roi);
   return {
     id: `roi-${roi.ID}__import-centroid-label`,
     type: "text",
@@ -535,10 +543,16 @@ export const parseRoisFromRoiList = (
 
     const labelOnlyRoi =
       roi.shapes.length > 0 && roi.shapes.every((s) => s.type === "label");
-    if (drewShape && !labelOnlyRoi) {
+    // Captioned arrows draw their own text; a centroid label would repeat it.
+    const captionedArrowRoi = roi.shapes.every(
+      (s) =>
+        s.type === "line" && lineHasArrowHead(s) && Boolean(s.Text || s.Name),
+    );
+    const labelText = importRoiCentroidLabelText(roi);
+    if (drewShape && !labelOnlyRoi && !captionedArrowRoi && labelText) {
       const centroidPos = importRoiCentroidPosition(roi);
       if (centroidPos) {
-        shapes.push(makeImportCentroidTextShape(roi, centroidPos));
+        shapes.push(makeImportCentroidTextShape(roi, labelText, centroidPos));
       }
     }
   });

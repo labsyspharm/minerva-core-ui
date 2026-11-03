@@ -49,6 +49,7 @@ import {
 } from "@/lib/imaging/channelKind";
 import { channelFloatRange, isFloatDtype } from "@/lib/imaging/floatRange";
 import {
+  awaitGroupRowFits,
   ensureGmm,
   getGmmPendingIds,
   subscribeGmmFit,
@@ -250,7 +251,7 @@ type GroupFolderGearMenuProps = {
 
 function GroupFolderGearMenu(props: GroupFolderGearMenuProps) {
   const { groupName, canOptimize, optimizeBusy, onOptimize } = props;
-  const menu = useAnchoredMenu({ align: "start", estimateHeight: 44 });
+  const menu = useAnchoredMenu("start");
 
   return (
     <div ref={menu.wrapRef}>
@@ -646,6 +647,7 @@ export const ChannelGroupsMasterDetail = (
       expanded: true,
       channels: seededChannels,
     };
+    awaitGroupRowFits(seededChannels);
     syncGroupState([
       ...channelGroups.map((g) => ({ ...g, expanded: false })),
       newGroup,
@@ -775,6 +777,8 @@ export const ChannelGroupsMasterDetail = (
       if (fittedLimits) {
         newRows[0].lowerLimit = fittedLimits.lower;
         newRows[0].upperLimit = fittedLimits.upper;
+      } else {
+        awaitGroupRowFits(newRows);
       }
 
       const newGroups = channelGroups.map((g) =>

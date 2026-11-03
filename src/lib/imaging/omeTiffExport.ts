@@ -24,8 +24,14 @@ export type OmeExportLevelSize = {
   tileSize: number;
 };
 
-/** Unsigned label dtypes supported by zlib mask OME-TIFF export. */
-export type LabelDtype = "Uint8" | "Uint16" | "Uint32";
+/** Integer label dtypes supported by zlib mask OME-TIFF export. */
+export type LabelDtype =
+  | "Uint8"
+  | "Uint16"
+  | "Uint32"
+  | "Int8"
+  | "Int16"
+  | "Int32";
 
 export function bitsPerSampleFromDtype(dtype: string): 8 | 16 | 32 {
   if (dtype === "Uint8" || dtype === "Int8") return 8;
@@ -53,12 +59,19 @@ export function omeTypeFromDtype(dtype: string): string {
   }
 }
 
-export function assertUnsignedLabelDtype(dtype: string): LabelDtype {
-  if (dtype === "Uint8" || dtype === "Uint16" || dtype === "Uint32") {
+export function assertLabelDtype(dtype: string): LabelDtype {
+  if (
+    dtype === "Uint8" ||
+    dtype === "Uint16" ||
+    dtype === "Uint32" ||
+    dtype === "Int8" ||
+    dtype === "Int16" ||
+    dtype === "Int32"
+  ) {
     return dtype;
   }
   throw new Error(
-    `Mask OME-TIFF export requires unsigned integer pixels (got ${dtype})`,
+    `Mask OME-TIFF export requires integer pixels (got ${dtype})`,
   );
 }
 
