@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-COlbpWsX.js","./pako.esm-KbdoS3Oq.js","./lerc-9Pg8CmBY.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BpVlg9jV.js","./pako.esm-KbdoS3Oq.js","./lerc-CgTYvRG8.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18514,7 +18514,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "c6f93038ac4cb66c82f8ebdf3a426bdbd5599242"
+    "VITE_APP_GIT_SHA": "942fb0d53fcf3aeae4beac21c09af65b3526488f"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79250,26 +79250,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-dDUhpVpB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-13mfkDdG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CoRAFrzB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-B6hPvPPZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DqXQJavg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DGybV38k.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-COlbpWsX.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-0CkJ_LYZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-9Pg8CmBY.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-BpVlg9jV.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-BqPTtI8y.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CgTYvRG8.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Dc7OsYF1.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DLM2G21M.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BA20gX1c.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-CKSouusQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -173202,8 +173202,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-11-03T16:08:15.453Z";
-    const sha = "c6f93038ac4cb66c82f8ebdf3a426bdbd5599242";
+    const iso = "2026-11-03T18:16:27.884Z";
+    const sha = "942fb0d53fcf3aeae4beac21c09af65b3526488f";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -175113,6 +175113,23 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   };
+  const VIEWPORT_MARGIN = 8;
+  function anchoredMenuPosition(anchor, menu2, opts = {}) {
+    const { gap: gap2 = 4, align = "start" } = opts;
+    const maxTop = window.innerHeight - VIEWPORT_MARGIN - menu2.height;
+    const below = anchor.bottom + gap2;
+    const above = anchor.top - gap2 - menu2.height;
+    let top2 = below;
+    if (below > maxTop) {
+      top2 = above >= VIEWPORT_MARGIN ? above : maxTop;
+    }
+    const left = align === "end" ? anchor.right - menu2.width : anchor.left;
+    const maxLeft = window.innerWidth - VIEWPORT_MARGIN - menu2.width;
+    return {
+      top: Math.max(VIEWPORT_MARGIN, top2),
+      left: Math.max(VIEWPORT_MARGIN, Math.min(left, maxLeft))
+    };
+  }
   const container = "_container_1gwwf_1";
   const toggle = "_toggle_1gwwf_6";
   const chevron = "_chevron_1gwwf_23";
@@ -175141,14 +175158,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       toggleRef,
       menuRef
     ]);
-    reactExports.useEffect(() => {
-      if (isOpen && toggleRef.current) {
-        const rect = toggleRef.current.getBoundingClientRect();
-        setMenuPos({
-          top: rect.bottom + 3,
-          left: rect.left
-        });
-      }
+    reactExports.useLayoutEffect(() => {
+      if (!isOpen || !toggleRef.current || !menuRef.current) return;
+      setMenuPos(anchoredMenuPosition(toggleRef.current.getBoundingClientRect(), menuRef.current.getBoundingClientRect(), {
+        gap: 3
+      }));
     }, [
       isOpen
     ]);
@@ -176580,6 +176594,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     ]);
     return shapeLayers;
   }
+  function isTextField(target) {
+    return target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable]") !== null;
+  }
   const errorToast = "_errorToast_1fd03_1";
   const hintBar = "_hintBar_1fd03_16";
   const hintAdd = "_hintAdd_1fd03_35";
@@ -176931,6 +176948,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     reactExports.useEffect(() => {
       if (activeTool !== "polyline") return;
       const handleKeyDown2 = (event) => {
+        if (isTextField(event.target)) return;
         if (event.key === "Enter" || event.key === "Return" || event.key === "Escape") {
           event.preventDefault();
           finalizeCurrentPolyline();
@@ -176947,6 +176965,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     reactExports.useEffect(() => {
       if (activeTool !== "rectangle") return;
       const handleKeyDown2 = (event) => {
+        if (isTextField(event.target)) return;
         if (event.key === "Escape" && isRectangleClickMode) {
           event.preventDefault();
           setRectangleFirstClick(null);
@@ -176965,6 +176984,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     reactExports.useEffect(() => {
       if (activeTool !== "arrow" && activeTool !== "line") return;
       const handleKeyDown2 = (event) => {
+        if (isTextField(event.target)) return;
         if (event.key === "Escape" && isLineClickMode) {
           event.preventDefault();
           setLineFirstClick(null);
@@ -176983,6 +177003,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     reactExports.useEffect(() => {
       if (activeTool !== "ellipse") return;
       const handleKeyDown2 = (event) => {
+        if (isTextField(event.target)) return;
         if (event.key === "Escape" && isEllipseClickMode) {
           event.preventDefault();
           setEllipseFirstClick(null);
@@ -177001,6 +177022,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     reactExports.useEffect(() => {
       if (activeTool !== "lasso") return;
       const handleKeyDown2 = (event) => {
+        if (isTextField(event.target)) return;
         if ((event.key === "Enter" || event.key === "Return" || event.key === "Escape") && isPolygonClickMode) {
           event.preventDefault();
           if (event.key === "Escape") {
@@ -177032,6 +177054,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     reactExports.useEffect(() => {
       if (activeTool !== "magic_wand") return;
       const handleKeyDown2 = (event) => {
+        if (isTextField(event.target)) return;
         if (event.key === "Enter" || event.key === "Return") {
           event.preventDefault();
           sam2ConfirmSession();
@@ -248823,11 +248846,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     });
   }
-  function useAnchoredMenu(opts) {
-    const { align, estimateHeight } = opts;
+  function useAnchoredMenu(align) {
     const [open, setOpen] = reactExports.useState(false);
     const wrapRef = reactExports.useRef(null);
     const menuRef = reactExports.useRef(null);
+    const anchorRef = reactExports.useRef(null);
     const [menuStyle, setMenuStyle] = reactExports.useState({});
     const close = reactExports.useCallback(() => setOpen(false), []);
     const toggleFromButton = (btn) => {
@@ -248835,18 +248858,18 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         close();
         return;
       }
-      const rect = btn.getBoundingClientRect();
-      const openUp = rect.bottom + estimateHeight + 8 > window.innerHeight && rect.top > estimateHeight;
-      const top2 = openUp ? rect.top - 4 - estimateHeight : rect.bottom + 4;
-      setMenuStyle(align === "end" ? {
-        top: top2,
-        right: Math.max(8, window.innerWidth - rect.right)
-      } : {
-        top: top2,
-        left: Math.max(8, Math.min(rect.left, window.innerWidth - 188))
-      });
+      anchorRef.current = btn;
       setOpen(true);
     };
+    reactExports.useLayoutEffect(() => {
+      if (!open || !anchorRef.current || !menuRef.current) return;
+      setMenuStyle(anchoredMenuPosition(anchorRef.current.getBoundingClientRect(), menuRef.current.getBoundingClientRect(), {
+        align
+      }));
+    }, [
+      open,
+      align
+    ]);
     reactExports.useEffect(() => {
       if (!open) return;
       const onDoc = (e2) => {
@@ -248879,10 +248902,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function ChannelRowMoreMenu(props) {
     const { channelName: channelName2, onFitContrast, fitBusy, onRemoveFromGroup } = props;
     const hasItems = Boolean(onFitContrast || onRemoveFromGroup);
-    const menu2 = useAnchoredMenu({
-      align: "end",
-      estimateHeight: 72
-    });
+    const menu2 = useAnchoredMenu("end");
     if (!hasItems) return null;
     return jsxRuntimeExports.jsxs("div", {
       ref: menu2.wrapRef,
@@ -248958,10 +248978,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function GroupFolderGearMenu(props) {
     const { groupName, canOptimize, optimizeBusy, onOptimize } = props;
-    const menu2 = useAnchoredMenu({
-      align: "start",
-      estimateHeight: 44
-    });
+    const menu2 = useAnchoredMenu("start");
     return jsxRuntimeExports.jsxs("div", {
       ref: menu2.wrapRef,
       children: [
@@ -255488,28 +255505,28 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     }
     return "";
   }
-  const presentation = "_presentation_o48fs_6";
-  const frame$1 = "_frame_o48fs_14";
-  const previewRibbon = "_previewRibbon_o48fs_35";
-  const previewRibbonChevron = "_previewRibbonChevron_o48fs_42";
-  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_o48fs_54";
-  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_o48fs_71";
-  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_o48fs_76";
-  const navPane = "_navPane_o48fs_128";
-  const navPaneHasStoryName = "_navPaneHasStoryName_o48fs_141";
-  const storyTitle = "_storyTitle_o48fs_145";
-  const toolbar$1 = "_toolbar_o48fs_152";
-  const contentWrap = "_contentWrap_o48fs_164";
-  const navInactive = "_navInactive_o48fs_201";
-  const heading = "_heading_o48fs_213";
-  const tocButton = "_tocButton_o48fs_229";
-  const navLeft = "_navLeft_o48fs_234";
-  const count = "_count_o48fs_238";
-  const navRight = "_navRight_o48fs_242";
-  const inlineNext = "_inlineNext_o48fs_305";
-  const nextLink = "_nextLink_o48fs_323";
-  const tocWrapper = "_tocWrapper_o48fs_367";
-  const channelName = "_channelName_o48fs_376";
+  const presentation = "_presentation_1uqhi_6";
+  const frame$1 = "_frame_1uqhi_14";
+  const previewRibbon = "_previewRibbon_1uqhi_35";
+  const previewRibbonChevron = "_previewRibbonChevron_1uqhi_42";
+  const previewRibbonDocumentTitle = "_previewRibbonDocumentTitle_1uqhi_54";
+  const previewRibbonDocumentTitleFlush = "_previewRibbonDocumentTitleFlush_1uqhi_71";
+  const previewRibbonPreviewBadge = "_previewRibbonPreviewBadge_1uqhi_76";
+  const navPane = "_navPane_1uqhi_128";
+  const navPaneHasStoryName = "_navPaneHasStoryName_1uqhi_141";
+  const storyTitle = "_storyTitle_1uqhi_145";
+  const toolbar$1 = "_toolbar_1uqhi_152";
+  const contentWrap = "_contentWrap_1uqhi_164";
+  const navInactive = "_navInactive_1uqhi_201";
+  const heading = "_heading_1uqhi_213";
+  const tocButton = "_tocButton_1uqhi_229";
+  const navLeft = "_navLeft_1uqhi_234";
+  const count = "_count_1uqhi_238";
+  const navRight = "_navRight_1uqhi_242";
+  const inlineNext = "_inlineNext_1uqhi_311";
+  const nextLink = "_nextLink_1uqhi_329";
+  const tocWrapper = "_tocWrapper_1uqhi_373";
+  const channelName = "_channelName_1uqhi_382";
   const styles$a = {
     presentation,
     frame: frame$1,
@@ -257553,9 +257570,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function resizeCursor(anchor, handle2) {
     const deg = Math.atan2(handle2[1] - anchor[1], handle2[0] - anchor[0]) * 180 / Math.PI;
     return RESIZE_CURSORS[(Math.round(deg / 45) % 4 + 4) % 4];
-  }
-  function isTextField(target) {
-    return target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable]") !== null;
   }
   function ImageArrangeBox(props) {
     const { imageId, images, loaders, preview, project: project2, unproject, layoutRef, getCanvas } = props;
