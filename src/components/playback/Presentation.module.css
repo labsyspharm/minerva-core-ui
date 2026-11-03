@@ -302,6 +302,12 @@
   font-weight: bold;
 }
 
+/* Markdown images shrink to the pane width instead of scrolling it sideways. */
+.contentWrap img {
+  max-width: 100%;
+  height: auto;
+}
+
 .inlineNext {
   display: grid;
   grid-template-columns: 1fr 30px;

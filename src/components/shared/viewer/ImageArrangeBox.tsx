@@ -24,6 +24,7 @@ import { useAppStore } from "@/lib/stores/appStore";
 import type { Image, ImageOrientation } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { setImageOrientation } from "@/lib/stores/storeUtils";
+import { isTextField } from "@/lib/viewer/isTextField";
 import styles from "./ImageArrangeBox.module.css";
 
 type World = [number, number];
@@ -66,13 +67,6 @@ function resizeCursor(anchor: World, handle: World): string {
   const deg =
     (Math.atan2(handle[1] - anchor[1], handle[0] - anchor[0]) * 180) / Math.PI;
   return RESIZE_CURSORS[((Math.round(deg / 45) % 4) + 4) % 4];
-}
-
-function isTextField(target: EventTarget | null): boolean {
-  return (
-    target instanceof HTMLElement &&
-    target.closest("input, textarea, select, [contenteditable]") !== null
-  );
 }
 
 /**

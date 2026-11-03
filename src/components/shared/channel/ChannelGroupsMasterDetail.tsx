@@ -90,6 +90,7 @@ import {
   patchSourceChannelOnImages,
   uniqueImageDisplayLabels,
 } from "@/lib/stores/storeUtils";
+import { anchoredMenuPosition } from "@/lib/viewer/anchoredMenuPosition";
 import styles from "./ChannelGroupsMasterDetail.module.css";
 
 const CHANNEL_DRAG_MIME = "application/x-minerva-channel-ref";
@@ -221,14 +222,11 @@ function DraggableChannelRow(props: {
   );
 }
 
-function useAnchoredMenu(opts: {
-  align: "start" | "end";
-  estimateHeight: number;
-}) {
-  const { align, estimateHeight } = opts;
+function useAnchoredMenu(align: "start" | "end") {
   const [open, setOpen] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const anchorRef = React.useRef<HTMLButtonElement | null>(null);
   const [menuStyle, setMenuStyle] = React.useState<React.CSSProperties>({});
 
   const close = React.useCallback(() => setOpen(false), []);
@@ -238,21 +236,21 @@ function useAnchoredMenu(opts: {
       close();
       return;
     }
-    const rect = btn.getBoundingClientRect();
-    const openUp =
-      rect.bottom + estimateHeight + 8 > window.innerHeight &&
-      rect.top > estimateHeight;
-    const top = openUp ? rect.top - 4 - estimateHeight : rect.bottom + 4;
-    setMenuStyle(
-      align === "end"
-        ? { top, right: Math.max(8, window.innerWidth - rect.right) }
-        : {
-            top,
-            left: Math.max(8, Math.min(rect.left, window.innerWidth - 188)),
-          },
-    );
+    anchorRef.current = btn;
     setOpen(true);
   };
+
+  // Measure the rendered menu before paint so the flip/clamp uses its real size.
+  React.useLayoutEffect(() => {
+    if (!open || !anchorRef.current || !menuRef.current) return;
+    setMenuStyle(
+      anchoredMenuPosition(
+        anchorRef.current.getBoundingClientRect(),
+        menuRef.current.getBoundingClientRect(),
+        { align },
+      ),
+    );
+  }, [open, align]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -285,7 +283,7 @@ type ChannelRowMoreMenuProps = {
 function ChannelRowMoreMenu(props: ChannelRowMoreMenuProps) {
   const { channelName, onFitContrast, fitBusy, onRemoveFromGroup } = props;
   const hasItems = Boolean(onFitContrast || onRemoveFromGroup);
-  const menu = useAnchoredMenu({ align: "end", estimateHeight: 72 });
+  const menu = useAnchoredMenu("end");
 
   if (!hasItems) return null;
 
@@ -377,7 +375,7 @@ type GroupFolderGearMenuProps = {
 
 function GroupFolderGearMenu(props: GroupFolderGearMenuProps) {
   const { groupName, canOptimize, optimizeBusy, onOptimize } = props;
-  const menu = useAnchoredMenu({ align: "start", estimateHeight: 44 });
+  const menu = useAnchoredMenu("start");
 
   return (
     <div ref={menu.wrapRef}>

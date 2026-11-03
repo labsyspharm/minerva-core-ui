@@ -2,6 +2,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { useClickOutside } from "@/components/shared/useClickOutside";
+import { anchoredMenuPosition } from "@/lib/viewer/anchoredMenuPosition";
 import styles from "./ToolSubmenu.module.css";
 
 export interface ToolSubmenuItem {
@@ -42,11 +43,16 @@ const ToolSubmenu: React.FC<ToolSubmenuProps> = ({
 
   useClickOutside(isOpen, () => setIsOpen(false), [toggleRef, menuRef]);
 
-  React.useEffect(() => {
-    if (isOpen && toggleRef.current) {
-      const rect = toggleRef.current.getBoundingClientRect();
-      setMenuPos({ top: rect.bottom + 3, left: rect.left });
-    }
+  // Measure before paint so the menu can flip above a toggle near the window bottom.
+  React.useLayoutEffect(() => {
+    if (!isOpen || !toggleRef.current || !menuRef.current) return;
+    setMenuPos(
+      anchoredMenuPosition(
+        toggleRef.current.getBoundingClientRect(),
+        menuRef.current.getBoundingClientRect(),
+        { gap: 3 },
+      ),
+    );
   }, [isOpen]);
 
   const handleSelect = (toolId: string) => {
