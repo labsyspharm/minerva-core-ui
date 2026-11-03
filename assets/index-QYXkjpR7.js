@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-Bly4nvkI.js","./pako.esm-KbdoS3Oq.js","./lerc-DC7vTg8j.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CpDD14Xq.js","./pako.esm-KbdoS3Oq.js","./lerc-B27gFhR-.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18514,7 +18514,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "cd74386f5d3fe5c875000066e35b1123ffa3cf32"
+    "VITE_APP_GIT_SHA": "4dc490759e6d9f60c3b59da6652e54ccaa848b6e"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79250,26 +79250,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-BykR2R2Y.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-C1nCDE8A.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-AvF3wVwl.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BsXYk3-Z.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DntBVaU1.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CDljJclU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-Bly4nvkI.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-s-0ilfEE.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-DC7vTg8j.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-CpDD14Xq.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-PdYWuR32.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-B27gFhR-.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CGRwbf0R.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-aM3s3qM_.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BdQLxNVH.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BWwN0THl.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -81924,6 +81924,9 @@ vec4 colormap(float intensity, float opacity) {
           return target.getImage(index2);
         };
       }
+      if (key2 === "getImageCount") {
+        return async () => offsets.length;
+      }
       if (key2 === OFFSETS_PROXY_KEY) {
         return true;
       }
@@ -82928,7 +82931,6 @@ vec4 colormap(float intensity, float opacity) {
     return {
       pyramidIndexer,
       levels: baseImage.fileDirectory.SubIFDs ? baseImage.fileDirectory.SubIFDs.length + 1 : 1,
-      tileSize: getTiffTileSize(baseImage),
       axes: extractAxesFromPixels(metadata["Pixels"]),
       dtype: parsePixelDataType(metadata["Pixels"]["Type"]),
       meta: {
@@ -82968,24 +82970,23 @@ vec4 colormap(float intensity, float opacity) {
       });
       const data2 = await Promise.all(Array.from({
         length: opts.levels
-      }, async (_2, level) => {
-        const levelImage = await opts.pyramidIndexer({
-          t: 0,
-          c: 0,
-          z: 0
-        }, level);
-        return new TiffPixelSource((sel) => opts.pyramidIndexer({
-          t: sel.t ?? 0,
-          c: sel.c ?? 0,
-          z: sel.z ?? 0
-        }, level), opts.dtype, opts.tileSize, getShapeForLevel({
-          axes: opts.axes,
-          width: levelImage.getWidth(),
-          height: levelImage.getHeight()
-        }), opts.axes.labels, opts.meta, options.pool);
-      }));
+      }, (_2, level) => opts.pyramidIndexer({
+        t: 0,
+        c: 0,
+        z: 0
+      }, level)));
+      const tileSize = getTiffTileSize(data2[0]);
+      const sources = data2.map((levelImage, level) => new TiffPixelSource((sel) => opts.pyramidIndexer({
+        t: sel.t ?? 0,
+        c: sel.c ?? 0,
+        z: sel.z ?? 0
+      }, level), opts.dtype, tileSize, getShapeForLevel({
+        axes: opts.axes,
+        width: levelImage.getWidth(),
+        height: levelImage.getHeight()
+      }), opts.axes.labels, opts.meta, options.pool));
       tiffImages.push({
-        data: data2,
+        data: sources,
         metadata
       });
     }
@@ -83144,35 +83145,29 @@ vec4 colormap(float intensity, float opacity) {
         ifdOffset: imageIfdOffset,
         dimensionOrder: metadata["Pixels"]["DimensionOrder"]
       });
-      const tileSize = getTiffTileSize(await pyramidIndexer({
-        c: 0,
-        t: 0,
-        z: 0
-      }, 0));
       const sourcePhoto = firstImage.fileDirectory.PhotometricInterpretation;
       const meta = {
         physicalSizes: extractPhysicalSizesfromPixels(metadata["Pixels"]),
         sourcePhotometricInterpretation: sourcePhoto,
         photometricInterpretation: packedRgb ? presentPlanar ? PHOTOMETRIC_BLACK_IS_ZERO : PHOTOMETRIC_RGB : sourcePhoto
       };
-      const data2 = await Promise.all(Array.from({
+      const levelImages = await Promise.all(Array.from({
         length: levels
-      }, async (_2, level) => {
-        const levelImage = await pyramidIndexer({
-          t: 0,
-          c: 0,
-          z: 0
-        }, level);
-        return new TiffPixelSource((sel) => pyramidIndexer({
-          t: sel.t ?? 0,
-          c: packedRgb ? 0 : sel.c ?? 0,
-          z: sel.z ?? 0
-        }, level), vivDtype, tileSize, getShapeForLevel({
-          axes,
-          width: levelImage.getWidth(),
-          height: levelImage.getHeight()
-        }), axes.labels, meta, pool);
-      }));
+      }, (_2, level) => pyramidIndexer({
+        t: 0,
+        c: 0,
+        z: 0
+      }, level)));
+      const tileSize = getTiffTileSize(levelImages[0]);
+      const data2 = levelImages.map((levelImage, level) => new TiffPixelSource((sel) => pyramidIndexer({
+        t: sel.t ?? 0,
+        c: packedRgb ? 0 : sel.c ?? 0,
+        z: sel.z ?? 0
+      }, level), vivDtype, tileSize, getShapeForLevel({
+        axes,
+        width: levelImage.getWidth(),
+        height: levelImage.getHeight()
+      }), axes.labels, meta, pool));
       images.push({
         data: data2,
         metadata
@@ -83669,6 +83664,9 @@ vec4 colormap(float intensity, float opacity) {
         oldProps,
         ...rest2
       });
+      if (props.image === (oldProps == null ? void 0 : oldProps.image) && this.state.bitmapTexture) {
+        return;
+      }
       const img = getPreparedImage(props.image);
       if (!img) {
         if (this.state.bitmapTexture) {
@@ -83677,9 +83675,6 @@ vec4 colormap(float intensity, float opacity) {
             bitmapTexture: null
           });
         }
-        return;
-      }
-      if (props.image === (oldProps == null ? void 0 : oldProps.image) && this.state.bitmapTexture) {
         return;
       }
       if (this.state.bitmapTexture) {
@@ -84490,6 +84485,42 @@ void main(void) {
     }
   };
   const MultiscaleImageLayer = class extends CompositeLayer {
+    updateState(params) {
+      var _a2;
+      super.updateState(params);
+      const { props, oldProps } = params;
+      if (props.loader === oldProps.loader && props.modelMatrix === oldProps.modelMatrix) {
+        return;
+      }
+      const { loader, modelMatrix, id: id2 } = props;
+      const { width, height } = getImageSize(loader[0]);
+      const levelZooms = getPyramidZoomLevels(loader);
+      const userScale = modelMatrix ? modelMatrix.getScale() : [
+        1,
+        1,
+        1
+      ];
+      console.log(`[viv modelMatrix] ${id2}`, {
+        modelMatrix: modelMatrix ? Array.from(modelMatrix) : null,
+        modelMatrixScale: userScale,
+        zoomOffset: Math.round(Math.log2(userScale[0])),
+        extent: [
+          0,
+          0,
+          width,
+          height
+        ],
+        tileSize: loader[0].tileSize,
+        levels: loader.map((source2, i2) => ({
+          ...getImageSize(source2),
+          zoom: levelZooms[i2],
+          scaleToLevel0: getLevelScale(loader, i2)
+        })),
+        minZoom: levelZooms[levelZooms.length - 1],
+        backgroundScale: userScale[0] * getLevelScale(loader, loader.length - 1),
+        physicalSizes: ((_a2 = loader[0].meta) == null ? void 0 : _a2.physicalSizes) ?? null
+      });
+    }
     renderLayers() {
       const { loader, selections, opacity, viewportId, onTileError, onHover, id: id2, onClick, modelMatrix, excludeBackground, refinementStrategy } = this.props;
       const { tileSize, dtype } = loader[0];
@@ -173160,8 +173191,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-11-02T19:50:16.721Z";
-    const sha = "cd74386f5d3fe5c875000066e35b1123ffa3cf32";
+    const iso = "2026-11-03T00:07:47.203Z";
+    const sha = "4dc490759e6d9f60c3b59da6652e54ccaa848b6e";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -261882,12 +261913,16 @@ uniform classStyleUniforms {
       dicomIndexList
     ]);
     const onEnsureChannelHistograms = reactExports.useCallback(async (channelIds) => {
-      if (omeLoaderEntries.length === 0 || channelIds.length === 0) return;
+      const loaderEntries = [
+        ...omeLoaderEntries,
+        ...dicomIndexList
+      ];
+      if (loaderEntries.length === 0 || channelIds.length === 0) return;
       const imageKey = viewerImageKey;
       if (!imageKey) return;
       const doc = useDocumentStore.getState();
       const prevCh = documentSourceChannels(doc);
-      const loaderByImageId = new Map(omeLoaderEntries.map((e2) => [
+      const loaderByImageId = new Map(loaderEntries.map((e2) => [
         e2.sourceImageId,
         e2.loader
       ]));
@@ -261936,6 +261971,7 @@ uniform classStyleUniforms {
       docNow.setImages(applySourceChannelsToImages(docNow.images, next2));
     }, [
       omeLoaderEntries,
+      dicomIndexList,
       viewerImageKey
     ]);
     const storyImageSource = useDocumentStore((s2) => s2.metadata.imageSource);
