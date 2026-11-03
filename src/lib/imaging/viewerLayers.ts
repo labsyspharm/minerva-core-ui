@@ -5,6 +5,7 @@ import {
   bitmapLayerOpacity,
   type ImageOpacityPreview,
   imageFadeParameters,
+  OME_INTENSITY_OVERLAY_PROPS,
   opacityForImage,
 } from "@/lib/imaging/imageOpacity";
 import type {
@@ -124,20 +125,6 @@ function createDicomTileLayer(args: {
     opacity: args.opacity,
   });
 }
-
-/** Later OME intensity layers: skip Viv's opaque background and add onto the base. */
-const OME_INTENSITY_OVERLAY_PROPS = {
-  refinementStrategy: "no-overlap" as const,
-  parameters: {
-    blend: true,
-    blendColorOperation: "add",
-    blendAlphaOperation: "add",
-    blendColorSrcFactor: "one",
-    blendColorDstFactor: "one",
-    blendAlphaSrcFactor: "one",
-    blendAlphaDstFactor: "one",
-  },
-};
 
 function createMultiscaleLayer(args: {
   loader: Loader;

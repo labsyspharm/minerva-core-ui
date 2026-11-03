@@ -71,16 +71,14 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
   const channelNav = useMemo<AuthorChannelNav>(
     () => ({
       ensureChannelHistograms: props.ensureChannelHistograms,
+      contrastEditable: props.contrastEditable,
     }),
-    [props.ensureChannelHistograms],
+    [props.ensureChannelHistograms, props.contrastEditable],
   );
 
   const otherPanel =
     activeTab === "channels" ? (
-      <ChannelGroupsMasterDetail
-        noLoader={props.noLoader}
-        contrastEditable={props.contrastEditable}
-      />
+      <ChannelGroupsMasterDetail noLoader={props.noLoader} />
     ) : activeTab === "story" ? (
       <WaypointsList />
     ) : null;

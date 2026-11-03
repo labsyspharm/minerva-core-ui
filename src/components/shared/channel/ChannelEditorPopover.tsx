@@ -411,7 +411,8 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     setColorPos(colorPickerAnchorPosition(el.getBoundingClientRect()));
   };
 
-  const contrast = showHistogram
+  const contrastEditable = showHistogram && Boolean(nav?.contrastEditable);
+  const contrast = contrastEditable
     ? gc && chip.groupId
       ? {
           ...contrastEditorPropsForGroupRow(
@@ -449,6 +450,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
           onBlur: rename,
         }}
         contrast={contrast}
+        more={contrastEditable ? { fitContrastId: sc.id } : undefined}
         {...(!rgbDisplay && isMaskChannel(sc)
           ? {
               isMask: true as const,

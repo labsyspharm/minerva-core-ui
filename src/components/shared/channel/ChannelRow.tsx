@@ -10,6 +10,10 @@ import {
   ChannelContrastEditor,
   type ChannelContrastEditorProps,
 } from "@/components/shared/channel/ChannelContrastEditor";
+import {
+  type ChannelRowMore,
+  ChannelRowMoreMenu,
+} from "@/components/shared/channel/ChannelRowMoreMenu";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
@@ -259,6 +263,7 @@ type ChannelRowProps = {
   fitting?: boolean;
   visibilityBlocked?: boolean;
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
+  more?: ChannelRowMore;
 };
 
 function EditableChannelRowName(
@@ -336,6 +341,7 @@ export function ChannelRow(props: ChannelRowProps) {
     fitting,
     visibilityBlocked,
     onColorClick,
+    more,
   } = props;
 
   const showMask = isMask && maskVisualization;
@@ -412,7 +418,18 @@ export function ChannelRow(props: ChannelRowProps) {
             onClick={onColorClick}
           />
         ) : null}
-        <div className={styles.channelRowTrailing}>{trailing}</div>
+        <div className={styles.channelRowTrailing}>
+          {trailing}
+          {/* Contours are offered wherever the contrast editor is shown. */}
+          {more || contrast ? (
+            <ChannelRowMoreMenu
+              channelName={name.name}
+              fitBusy={fitting}
+              contourChannelId={contrast?.sourceChannelId}
+              {...more}
+            />
+          ) : null}
+        </div>
         {showMask ? maskAction : null}
       </div>
       {showMask && maskFooter ? (

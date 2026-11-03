@@ -542,6 +542,23 @@ export async function refitGmm(
   return { lower: outcome.window.lower, upper: outcome.window.upper };
 }
 
+/** Refits `channelId` and applies the new window to every group row showing it. */
+export async function refitGroupContrast(channelId: string): Promise<void> {
+  const limits = await refitGmm(channelId);
+  if (!limits) return;
+  const { channelGroups, setChannelGroups } = useDocumentStore.getState();
+  let changed = false;
+  const nextGroups = channelGroups.map((g) => ({
+    ...g,
+    channels: g.channels.map((gc) => {
+      if (gc.channelId !== channelId) return gc;
+      changed = true;
+      return { ...gc, lowerLimit: limits.lower, upperLimit: limits.upper };
+    }),
+  }));
+  if (changed) setChannelGroups(nextGroups);
+}
+
 export function subscribeGmmFit(onStoreChange: () => void): () => void {
   listeners.add(onStoreChange);
   return () => {
