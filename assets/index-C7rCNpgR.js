@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CpDD14Xq.js","./pako.esm-KbdoS3Oq.js","./lerc-B27gFhR-.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-COlbpWsX.js","./pako.esm-KbdoS3Oq.js","./lerc-9Pg8CmBY.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18514,7 +18514,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "4dc490759e6d9f60c3b59da6652e54ccaa848b6e"
+    "VITE_APP_GIT_SHA": "c6f93038ac4cb66c82f8ebdf3a426bdbd5599242"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79250,26 +79250,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-AvF3wVwl.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BsXYk3-Z.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-dDUhpVpB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-13mfkDdG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CDljJclU.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-DqXQJavg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-CpDD14Xq.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-PdYWuR32.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-B27gFhR-.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-COlbpWsX.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-0CkJ_LYZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-9Pg8CmBY.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-aM3s3qM_.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-Dc7OsYF1.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-BWwN0THl.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BA20gX1c.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -170360,12 +170360,20 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ].some((n2) => Number.isNaN(n2))) {
         return null;
       }
+      const markerStart = attr(el2, "MarkerStart", "markerStart");
+      const markerEnd = attr(el2, "MarkerEnd", "markerEnd");
       return common2({
         type: "line",
         X1: x1,
         Y1: y1,
         X2: x2,
-        Y2: y2
+        Y2: y2,
+        ...markerStart ? {
+          MarkerStart: markerStart
+        } : {},
+        ...markerEnd ? {
+          MarkerEnd: markerEnd
+        } : {}
       });
     }
     if (lower === "point") {
@@ -170586,12 +170594,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       }
     };
   };
+  const isArrowMarker = (marker) => (marker == null ? void 0 : marker.toLowerCase()) === "arrow";
+  const lineHasArrowHead = (shape) => isArrowMarker(shape.MarkerStart) || isArrowMarker(shape.MarkerEnd);
   const lineShapeToViewerShape = (shape, roi) => {
     const { X1, Y1, X2, Y2, Transform, ID, Text, Name } = shape;
     const start = applyTransform(X1, Y1, Transform);
     const end = applyTransform(X2, Y2, Transform);
     const lineWidth = shape.StrokeWidth || 3;
-    const polygon = [
+    const hasArrowHead = lineHasArrowHead(shape);
+    const tipAtStart = isArrowMarker(shape.MarkerStart) && !isArrowMarker(shape.MarkerEnd);
+    const polygon = tipAtStart ? [
+      end,
+      start
+    ] : [
       start,
       end
     ];
@@ -170611,7 +170626,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       id: `roi-${roi.ID}-${ID}`,
       type: "line",
       polygon,
-      hasArrowHead: false,
+      hasArrowHead,
       style: {
         fillColor,
         lineColor,
@@ -170619,7 +170634,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       },
       text: Text,
       metadata: {
-        label: Name || ID,
+        label: hasArrowHead ? Name : Name || ID,
         description: `Imported from ROI ${roi.Name || roi.ID}, Shape ${ID}`,
         isImported: true
       }
@@ -170802,15 +170817,9 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       const line = ((_c2 = desc.split(/\r?\n/)[0]) == null ? void 0 : _c2.trim()) ?? "";
       if (line) return line.length > 120 ? `${line.slice(0, 117)}\u2026` : line;
     }
-    const id2 = roi.ID.trim();
-    if (id2.includes(":")) {
-      const tail = id2.split(":").pop();
-      if (tail) return tail;
-    }
-    return id2 || "ROI";
+    return null;
   }
-  function makeImportCentroidTextShape(roi, position2) {
-    const text2 = importRoiCentroidLabelText(roi);
+  function makeImportCentroidTextShape(roi, text2, position2) {
     return {
       id: `roi-${roi.ID}__import-centroid-label`,
       type: "text",
@@ -170870,10 +170879,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         }
       });
       const labelOnlyRoi = roi.shapes.length > 0 && roi.shapes.every((s2) => s2.type === "label");
-      if (drewShape && !labelOnlyRoi) {
+      const captionedArrowRoi = roi.shapes.every((s2) => s2.type === "line" && lineHasArrowHead(s2) && Boolean(s2.Text || s2.Name));
+      const labelText = importRoiCentroidLabelText(roi);
+      if (drewShape && !labelOnlyRoi && !captionedArrowRoi && labelText) {
         const centroidPos = importRoiCentroidPosition(roi);
         if (centroidPos) {
-          shapes.push(makeImportCentroidTextShape(roi, centroidPos));
+          shapes.push(makeImportCentroidTextShape(roi, labelText, centroidPos));
         }
       }
     });
@@ -173191,8 +173202,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-11-03T00:07:47.203Z";
-    const sha = "4dc490759e6d9f60c3b59da6652e54ccaa848b6e";
+    const iso = "2026-11-03T16:08:15.453Z";
+    const sha = "c6f93038ac4cb66c82f8ebdf3a426bdbd5599242";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
