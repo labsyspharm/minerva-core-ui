@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-BpVlg9jV.js","./pako.esm-KbdoS3Oq.js","./lerc-CgTYvRG8.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-B96gcoGJ.js","./pako.esm-KbdoS3Oq.js","./lerc-CazrtuTl.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18514,7 +18514,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "942fb0d53fcf3aeae4beac21c09af65b3526488f"
+    "VITE_APP_GIT_SHA": "c1b4cd0f4ff3319015594867c45b3f3527f16c1f"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79250,26 +79250,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-CoRAFrzB.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-B6hPvPPZ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BfMe0Fo2.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-D5SEq09L.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-DGybV38k.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-D6CIf590.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-BpVlg9jV.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BqPTtI8y.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-CgTYvRG8.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-B96gcoGJ.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-CpZNai1b.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CazrtuTl.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DLM2G21M.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-DwxDVxMk.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-CKSouusQ.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-BD6BNJ6B.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -172085,11 +172085,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         throw new Error(`Unsupported mask dtype ${dtype}`);
     }
   }
-  function assertUnsignedLabelDtype(dtype) {
-    if (dtype === "Uint8" || dtype === "Uint16" || dtype === "Uint32") {
+  function assertLabelDtype(dtype) {
+    if (dtype === "Uint8" || dtype === "Uint16" || dtype === "Uint32" || dtype === "Int8" || dtype === "Int16" || dtype === "Int32") {
       return dtype;
     }
-    throw new Error(`Mask OME-TIFF export requires unsigned integer pixels (got ${dtype})`);
+    throw new Error(`Mask OME-TIFF export requires integer pixels (got ${dtype})`);
   }
   function escapeXmlAttr(value) {
     return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -173202,8 +173202,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-11-03T18:16:27.884Z";
-    const sha = "942fb0d53fcf3aeae4beac21c09af65b3526488f";
+    const iso = "2026-11-03T18:57:36.837Z";
+    const sha = "c1b4cd0f4ff3319015594867c45b3f3527f16c1f";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -251494,12 +251494,6 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       bitsPerSample: 8
     });
   }
-  function grayscaleDeflateTags(bits) {
-    return grayscaleTags({
-      compression: TIFF_COMPRESSION.DEFLATE,
-      bitsPerSample: bits
-    });
-  }
   function assertSafeNumberOffset$1(offset) {
     if (offset < 0n || offset > BigInt(Number.MAX_SAFE_INTEGER)) {
       throw new Error(`Sink offset ${offset} exceeds Number.MAX_SAFE_INTEGER; this adapter cannot represent it`);
@@ -251868,7 +251862,10 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   function labelArrayCtor(dtype) {
     if (dtype === "Uint8") return Uint8Array;
     if (dtype === "Uint16") return Uint16Array;
-    return Uint32Array;
+    if (dtype === "Uint32") return Uint32Array;
+    if (dtype === "Int8") return Int8Array;
+    if (dtype === "Int16") return Int16Array;
+    return Int32Array;
   }
   function toLabelArray(data2, dtype) {
     const Ctor = labelArrayCtor(dtype);
@@ -252001,7 +251998,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         ...levels
       ],
       channelCount: channels2.length,
-      baseTags: grayscaleDeflateTags(bits),
+      baseTags: grayscaleTags({
+        compression: TIFF_COMPRESSION.DEFLATE,
+        bitsPerSample: bits,
+        sampleFormat: dtype.startsWith("Int") ? 2 : 1
+      }),
       imageDescription: omeXml
     });
     let exportFailed = null;
@@ -252110,7 +252111,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       throw new Error(`No mask channels to export for ${image2.basename || image2.id}`);
     }
     const loaderData = loaderPlanes(entry);
-    const dtype = assertUnsignedLabelDtype(loaderData[0].dtype);
+    const dtype = assertLabelDtype(loaderData[0].dtype);
     const { levels, useLoaderTiles } = planMaskExportLevels(loaderData);
     let generated = null;
     if (!useLoaderTiles) {
