@@ -6,12 +6,14 @@ import {
   frameModelMatrix,
   layerModelMatrix,
   omePixelsWorldFrame,
+  type WorldFrame,
 } from "@/lib/imaging/worldFrame";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { StoryShape } from "@/lib/stores/documentSchema";
 import { useDocumentStore } from "@/lib/stores/documentStore";
 import { viewerShapesToStoryShapes } from "@/lib/stores/storeUtils";
 import { ensureDefaultWaypoint } from "@/lib/waypoints/ensureDefaultWaypoint";
+import { parseGeoJsonStringToRois } from "./geoJsonRois";
 import { parseOmeXmlStringToRois } from "./omeXmlRois";
 import type { Roi } from "./roiParser";
 import { parseRoisFromLoader, parseRoisFromRoiList } from "./roiParser";
@@ -141,6 +143,10 @@ export function applyOmeRoisFromLoaderToWaypoint(
   appendImportedStoryShapesDeduped(scopeImportedShapeIds(storyShapes, imageId));
 }
 
+type AnnotationImportResult =
+  | { success: true; shapeCount: number; waypointId: string }
+  | { success: false; error: string; shapeCount: number };
+
 /**
  * Import annotations from an OME-XML file (e.g. companion to the image) and attach to the open
  * waypoint, else the active row, else the first. ROI pixels are placed by {@link omePixelsWorldFrame}, else on the
@@ -148,9 +154,7 @@ export function applyOmeRoisFromLoaderToWaypoint(
  */
 export function applyOmeRoisFromAnnotationXmlString(
   xml: string,
-):
-  | { success: true; shapeCount: number; waypointId: string }
-  | { success: false; error: string; shapeCount: number } {
+): AnnotationImportResult {
   const { viewerImageFrames } = useAppStore.getState();
   if (viewerImageFrames.length === 0) {
     return {
@@ -176,20 +180,99 @@ export function applyOmeRoisFromAnnotationXmlString(
       shapeCount: 0,
     };
   }
-  const viewerRoiShapes = parseRoisFromRoiList(rois);
   const omeDoc = parseOmeXml(xml);
   const pixels = omeDoc && omePixelsElement(omeDoc);
   const frame =
     (pixels && omePixelsWorldFrame(pixels, viewerImageFrames)) ??
     viewerImageFrames[0];
+  return applyRoisOnFrame(rois, frame, "XML");
+}
+
+/** Name before its first dot, lowercased: `LSP24534.ome.tif-1-rois.geojson` → `lsp24534`. */
+const fileStem = (name: string) => name.trim().toLowerCase().split(".")[0];
+
+/** One stem extends the other at a word break: `lsp24534` and `lsp24534-minerva`. */
+const stemsMatch = (a: string, b: string) => {
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  return (
+    short !== "" &&
+    long.startsWith(short) &&
+    !/[a-z0-9]/.test(long.charAt(short.length))
+  );
+};
+
+/**
+ * Viewer frame of the image a GeoJSON file names: `LSP24534.ome.tif-1963160-rois.geojson`
+ * matches basename `LSP24534-minerva.ome.tif`, or OMERO image id 1963160.
+ */
+function geoJsonFileWorldFrame(
+  fileName: string,
+  imageFrames: readonly WorldFrame[],
+): WorldFrame | undefined {
+  const stem = fileStem(fileName);
+  const numbers = new Set(fileName.match(/\d+/g) ?? []);
+  const { images } = useDocumentStore.getState();
+  const image =
+    images.find(
+      (img) =>
+        img.omero != null && numbers.has(String(img.omero.imageIdentifier)),
+    ) ?? images.find((img) => stemsMatch(stem, fileStem(img.basename)));
+  return image && imageFrames.find((f) => f.sourceImageId === image.id);
+}
+
+/**
+ * Import annotations from a GeoJSON file and attach to the open waypoint, else the active
+ * row, else the first. Coordinates are pixels of the image the file name matches, else of
+ * the viewer's first image.
+ */
+export function applyRoisFromGeoJsonString(
+  json: string,
+  fileName: string,
+): AnnotationImportResult {
+  const { viewerImageFrames } = useAppStore.getState();
+  if (viewerImageFrames.length === 0) {
+    return {
+      success: false,
+      error: "Load an image before importing annotations.",
+      shapeCount: 0,
+    };
+  }
+  let rois: Roi[];
+  try {
+    rois = parseGeoJsonStringToRois(json);
+  } catch (e) {
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : String(e),
+      shapeCount: 0,
+    };
+  }
+  if (rois.length === 0) {
+    return {
+      success: false,
+      error: "No features with drawable geometry were found in the GeoJSON.",
+      shapeCount: 0,
+    };
+  }
+  const frame =
+    geoJsonFileWorldFrame(fileName, viewerImageFrames) ?? viewerImageFrames[0];
+  return applyRoisOnFrame(rois, frame, "GeoJSON");
+}
+
+/** Place `rois` (image pixels of `frame`) in world µm and add them to the import waypoint. */
+function applyRoisOnFrame(
+  rois: Roi[],
+  frame: WorldFrame,
+  format: string,
+): AnnotationImportResult {
   const storyShapes = roiShapesToWorld(
-    viewerRoiShapes,
+    parseRoisFromRoiList(rois),
     frameModelMatrix(frame, imageOrientation(frame.sourceImageId)),
   );
   if (storyShapes.length === 0) {
     return {
       success: false,
-      error: "No valid annotations could be built from the XML.",
+      error: `No valid annotations could be built from the ${format}.`,
       shapeCount: 0,
     };
   }

@@ -11,9 +11,9 @@ const KINDS: Record<
     mimeTypes: ["image/tiff"],
   },
   annotations: {
-    label: "OME-XML annotations",
-    extensions: [".xml"],
-    mimeTypes: ["text/xml", "application/xml"],
+    label: "OME-XML or GeoJSON annotations",
+    extensions: [".xml", ".geojson"],
+    mimeTypes: ["text/xml", "application/xml", "application/geo+json"],
   },
   featureTable: {
     label: "CSV feature tables",

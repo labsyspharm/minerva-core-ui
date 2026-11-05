@@ -60,7 +60,10 @@ import {
   detectOmeTiffRgbLayout,
 } from "@/lib/imaging/omeTiff";
 import { urlFileName } from "@/lib/imaging/sourceUrl";
-import { applyOmeRoisFromAnnotationXmlString } from "@/lib/shapes/applyOmeRoisToDocument";
+import {
+  applyOmeRoisFromAnnotationXmlString,
+  applyRoisFromGeoJsonString,
+} from "@/lib/shapes/applyOmeRoisToDocument";
 import { useAppStore } from "@/lib/stores/appStore";
 import type { Image } from "@/lib/stores/documentStore";
 import {
@@ -114,7 +117,7 @@ type UploadProps = {
   /**
    * Drop / Browse route by extension. Images open the import dialog. With this
    * (Library), `.json` stories are accepted; without it (a story), `.xml` OME
-   * ROIs attach to the story and `.csv` feature tables to a mask.
+   * and `.geojson` ROIs attach to the story and `.csv` feature tables to a mask.
    */
   onImportStory?: (file: File) => void | Promise<void>;
   /** Bumps after a successful image import; clears pending add state. */
@@ -685,7 +688,11 @@ const Upload = (props: UploadProps) => {
     if (kind === "story") {
       await onImportStory?.(file);
     } else if (kind === "annotations") {
-      const r = applyOmeRoisFromAnnotationXmlString(await file.text());
+      const text = await file.text();
+      // XML never starts with `{` or `[`; GeoJSON always does.
+      const r = /^\s*[{[]/.test(text)
+        ? applyRoisFromGeoJsonString(text, file.name)
+        : applyOmeRoisFromAnnotationXmlString(text);
       if (r.success === false) failDrop(r.error);
       else {
         const n = r.shapeCount;
