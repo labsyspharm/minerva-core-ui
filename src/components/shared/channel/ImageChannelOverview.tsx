@@ -259,6 +259,8 @@ function GroupStrip(props: {
       ) {
         return;
       }
+      // An open row ⋮ menu takes this click to close itself; keep the editor.
+      if (document.querySelector("[data-channel-row-menu]")) return;
       dismiss();
     };
     card.addEventListener("pointerdown", onPointerDown);

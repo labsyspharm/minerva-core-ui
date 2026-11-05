@@ -26,6 +26,64 @@
   min-width: 0;
 }
 
+.contourLevel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.35em 0.85em 0.55em 1.6em;
+  color: var(--minerva-quiet);
+}
+
+.contourStepper {
+  display: inline-flex;
+  align-items: stretch;
+  height: 20px;
+  border: 1px solid var(--minerva-edge);
+}
+
+.contourStepper button {
+  width: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--minerva-quiet);
+  font: inherit;
+  cursor: pointer;
+}
+
+.contourStepper button:hover:not(:disabled) {
+  color: var(--minerva-ink);
+  background: var(--minerva-wash);
+}
+
+.contourStepper button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.contourStepper output {
+  /* Fits "128 px", so both steppers line up. */
+  min-width: 6ch;
+  align-self: center;
+  color: var(--minerva-ink);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.menuCheckItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.menuCheck {
+  flex: 0 0 1em;
+  text-align: right;
+}
+
 .channelRowMid {
   flex: 1 1 0;
   min-width: 0;
@@ -56,6 +114,30 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Small buttons in the row's trailing slot: color lock, ⋮, clear selection. */
+.channelActionButton {
+  background: none;
+  border: none;
+  color: var(--minerva-quiet);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+}
+
+.channelActionButton:hover {
+  color: var(--minerva-ink);
+  background: var(--minerva-wash);
+}
+
+/* Locked color, or a channel drawn as contour lines. */
+.channelActionButtonOn {
+  color: var(--minerva-ink);
+  box-shadow: inset 0 -1px 0 var(--minerva-ink);
 }
 
 .channelRowTrailing {

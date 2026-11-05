@@ -134,6 +134,11 @@ export const ImageChannelSchema = z.object({
   lowerLimit: z.number().optional(),
   upperLimit: z.number().optional(),
   maskVisualization: MaskVisualizationSchema.optional(),
+  /**
+   * Draw as an absorbing stain (Beer–Lambert) over the images below, e.g. IF
+   * over H&E; `color` is the stain's color on glass. Omitted → fluorescence.
+   */
+  stain: z.literal(true).optional(),
 });
 
 /**

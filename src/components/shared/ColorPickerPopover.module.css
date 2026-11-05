@@ -84,3 +84,29 @@
   opacity: 0;
   pointer-events: none;
 }
+
+.stainPreview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 6px;
+  margin-top: 6px;
+}
+
+.stainPreviewItem {
+  display: grid;
+  row-gap: 2px;
+  min-width: 0;
+}
+
+.stainPreviewRamp {
+  height: 10px;
+  border: 1px solid var(--minerva-edge);
+}
+
+.stainPreviewLabel {
+  color: var(--minerva-quiet);
+  font-size: var(--minerva-size-note);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
