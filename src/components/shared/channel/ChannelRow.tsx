@@ -221,6 +221,48 @@ function MaskModeControls(props: {
   );
 }
 
+/** RGB vs H&E stains, in the same segmented chrome as the mask fill toggle. */
+function HeDisplayModeToggle(props: {
+  split: boolean;
+  onChange: (split: boolean) => void;
+}) {
+  const { split, onChange } = props;
+  const option = (active: boolean) =>
+    [
+      minervaTheme.focusRing,
+      styles.maskVizOption,
+      styles.modeToggleOption,
+      active ? styles.maskVizOptionActive : null,
+    ]
+      .filter(Boolean)
+      .join(" ");
+  return (
+    <fieldset
+      className={styles.maskVizToggle}
+      aria-label="Display as RGB or H&E stains"
+    >
+      <button
+        type="button"
+        className={option(!split)}
+        aria-pressed={!split}
+        title="Show RGB"
+        onClick={() => onChange(false)}
+      >
+        RGB
+      </button>
+      <button
+        type="button"
+        className={option(split)}
+        aria-pressed={split}
+        title="Split into Hematoxylin and Eosin"
+        onClick={() => onChange(true)}
+      >
+        H&E
+      </button>
+    </fieldset>
+  );
+}
+
 type ChannelRowNameProps =
   | {
       mode: "label";
@@ -259,6 +301,9 @@ type ChannelRowProps = {
   fitting?: boolean;
   visibilityBlocked?: boolean;
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
+  /** Packed RGB (H&E) row: shows the RGB / H&E stain-split toggle. */
+  heSplit?: boolean;
+  onHeSplitChange?: (split: boolean) => void;
 };
 
 function EditableChannelRowName(
@@ -336,6 +381,8 @@ export function ChannelRow(props: ChannelRowProps) {
     fitting,
     visibilityBlocked,
     onColorClick,
+    heSplit,
+    onHeSplitChange,
   } = props;
 
   const showMask = isMask && maskVisualization;
@@ -392,6 +439,12 @@ export function ChannelRow(props: ChannelRowProps) {
               ariaLabel={maskAriaLabel ?? name.name}
               classColors={maskFooter != null}
               onChange={onMaskVisualizationChange}
+            />
+          ) : null}
+          {onHeSplitChange ? (
+            <HeDisplayModeToggle
+              split={Boolean(heSplit)}
+              onChange={onHeSplitChange}
             />
           ) : null}
         </div>

@@ -3,6 +3,7 @@ import AxisBreakIcon from "@/components/shared/icons/axis-break.svg?react";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { sourceDtypeMax } from "@/lib/imaging/channelKind";
 import { channelFloatRange } from "@/lib/imaging/floatRange";
+import type { HeDeconvComponent } from "@/lib/imaging/heDeconvView";
 import { resolveHistogramChartView } from "@/lib/imaging/histogramChartView";
 import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
 import type { SourceDistributionData } from "@/lib/stores/documentSchema";
@@ -150,14 +151,26 @@ export type ChannelContrastEditorProps = {
   sourceDataTypeId?: string;
   /** Finite sample span for a float plane. Absent for integer dtypes. */
   floatRange?: { min: number; max: number } | null;
+  /** Slider ceiling when the range is not a dtype's (H&E stain concentration). */
+  dtypeMax?: number;
+  /** Commit somewhere other than the document (H&E stain session state). */
+  onCommitRange?: (lower: number, upper: number) => void;
+  /** Live preview and cleanup key for one stain of an H&E-split channel. */
+  heComponent?: HeDeconvComponent;
 };
 
 export function renderingForSource<K extends ChannelRendering["kind"]>(
   live: ChannelRendering | null,
   sourceChannelId: string,
   kind: K,
+  /** H&E stain previews share the RGB channel's id; match the stain too. */
+  heComponent?: HeDeconvComponent,
 ): Extract<ChannelRendering, { kind: K }> | null {
-  if (live?.kind === kind && live.sourceChannelId === sourceChannelId) {
+  if (
+    live?.kind === kind &&
+    live.sourceChannelId === sourceChannelId &&
+    live.heComponent === heComponent
+  ) {
     return live as Extract<ChannelRendering, { kind: K }>;
   }
   return null;
@@ -236,7 +249,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
     [rangeMin, rangeMax],
   );
   const fractional = range != null;
-  const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
+  const dtypeMax = props.dtypeMax ?? sourceDtypeMax(props.sourceDataTypeId);
   const chart = React.useMemo(
     () =>
       resolveHistogramChartView(dist, {
@@ -305,6 +318,7 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
       sourceChannelId: props.sourceChannelId,
       lower,
       upper,
+      ...(props.heComponent ? { heComponent: props.heComponent } : {}),
     });
   };
 
@@ -317,6 +331,11 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
       return;
     }
     lastCommittedRangeRef.current = [lo, hi];
+    if (props.onCommitRange) {
+      props.onCommitRange(lo, hi);
+      useAppStore.getState().clearChannelRendering();
+      return;
+    }
     // Read document slices at commit time — avoid stale closures from drag start.
     const doc = useDocumentStore.getState();
     if (props.groupId) {
@@ -344,12 +363,13 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
         useAppStore.getState();
       if (
         channelRendering?.kind === "contrast" &&
-        channelRendering.sourceChannelId === props.sourceChannelId
+        channelRendering.sourceChannelId === props.sourceChannelId &&
+        channelRendering.heComponent === props.heComponent
       ) {
         clearChannelRendering();
       }
     };
-  }, [props.sourceChannelId]);
+  }, [props.sourceChannelId, props.heComponent]);
 
   const syncFromSliders = (loStep: number, hiStep: number, commit: boolean) => {
     const active = scaleRef.current;
