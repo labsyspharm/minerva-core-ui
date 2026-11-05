@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DCgRQP7w.js","./pako.esm-KbdoS3Oq.js","./lerc-Ck1N02A7.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DDUDAMVb.js","./pako.esm-KbdoS3Oq.js","./lerc-BtYefjOY.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18514,7 +18514,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "1868e598ba7dd71800c8b404792a0c78716378fb"
+    "VITE_APP_GIT_SHA": "86be68d8b15d2ea1c27cd0d7b9fcc77c0bf8cbbf"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -22394,16 +22394,16 @@ let __tla = (async () => {
   const log$4 = createLog();
   const isBoolean = (value) => typeof value === "boolean";
   const isFunction = (value) => typeof value === "function";
-  const isObject$1 = (value) => value !== null && typeof value === "object";
-  const isPureObject = (value) => isObject$1(value) && value.constructor === {}.constructor;
+  const isObject$2 = (value) => value !== null && typeof value === "object";
+  const isPureObject = (value) => isObject$2(value) && value.constructor === {}.constructor;
   const isSharedArrayBuffer = (value) => typeof SharedArrayBuffer !== "undefined" && value instanceof SharedArrayBuffer;
-  const isArrayBufferLike = (value) => isObject$1(value) && typeof value.byteLength === "number" && typeof value.slice === "function";
+  const isArrayBufferLike = (value) => isObject$2(value) && typeof value.byteLength === "number" && typeof value.slice === "function";
   const isIterable = (value) => Boolean(value) && isFunction(value[Symbol.iterator]);
   const isAsyncIterable$1 = (value) => Boolean(value) && isFunction(value[Symbol.asyncIterator]);
-  const isResponse = (value) => typeof Response !== "undefined" && value instanceof Response || isObject$1(value) && isFunction(value.arrayBuffer) && isFunction(value.text) && isFunction(value.json);
+  const isResponse = (value) => typeof Response !== "undefined" && value instanceof Response || isObject$2(value) && isFunction(value.arrayBuffer) && isFunction(value.text) && isFunction(value.json);
   const isBlob = (value) => typeof Blob !== "undefined" && value instanceof Blob;
-  const isReadableDOMStream = (value) => typeof ReadableStream !== "undefined" && value instanceof ReadableStream || isObject$1(value) && isFunction(value.tee) && isFunction(value.cancel) && isFunction(value.getReader);
-  const isReadableNodeStream = (value) => isObject$1(value) && isFunction(value.read) && isFunction(value.pipe) && isBoolean(value.readable);
+  const isReadableDOMStream = (value) => typeof ReadableStream !== "undefined" && value instanceof ReadableStream || isObject$2(value) && isFunction(value.tee) && isFunction(value.cancel) && isFunction(value.getReader);
+  const isReadableNodeStream = (value) => isObject$2(value) && isFunction(value.read) && isFunction(value.pipe) && isBoolean(value.readable);
   const isReadableStream = (value) => isReadableDOMStream(value) || isReadableNodeStream(value);
   function mergeOptions(baseOptions, newOptions) {
     return mergeOptionsRecursively(baseOptions || {}, newOptions);
@@ -23749,7 +23749,7 @@ let __tla = (async () => {
     const loaderName = id2 || "Top level";
     const prefix2 = id2 ? `${id2}.` : "";
     for (const key2 in options) {
-      const isSubOptions = !id2 && isObject$1(options[key2]);
+      const isSubOptions = !id2 && isObject$2(options[key2]);
       const isBaseUriOption = key2 === "baseUri" && !id2;
       const isWorkerUrlOption = key2 === "workerUrl" && id2;
       if (!(key2 in defaultOptions2) && !isBaseUriOption && !isWorkerUrlOption) {
@@ -24285,7 +24285,7 @@ let __tla = (async () => {
     if (typeof fetchOption === "function") {
       return fetchOption;
     }
-    if (isObject$1(fetchOption)) {
+    if (isObject$2(fetchOption)) {
       return (url) => fetchFile(url, fetchOption);
     }
     if (context == null ? void 0 : context.fetch) {
@@ -28914,10 +28914,10 @@ vec4 picking_filterColor(vec4 color) {
     return `${type}${location2}: ${message2}`.trim();
   }
   class DeviceFeatures {
-    constructor(features = [], disabledFeatures) {
+    constructor(features2 = [], disabledFeatures) {
       __publicField(this, "features");
       __publicField(this, "disabledFeatures");
-      this.features = new Set(features);
+      this.features = new Set(features2);
       this.disabledFeatures = disabledFeatures || {};
     }
     *[Symbol.iterator]() {
@@ -36046,14 +36046,14 @@ ${fragment$2}
     ].map((pixel) => screenToCommonSpace(pixel, pixelUnprojectionMatrix));
     for (const shadowMatrix of shadowMatrices) {
       const viewMatrix2 = shadowMatrix.clone().translate(new Vector3(viewport2.center).negate());
-      const positions = corners.map((corner) => viewMatrix2.transform(corner));
+      const positions2 = corners.map((corner) => viewMatrix2.transform(corner));
       const projectionMatrix = new Matrix4().ortho({
-        left: Math.min(...positions.map((position2) => position2[0])),
-        right: Math.max(...positions.map((position2) => position2[0])),
-        bottom: Math.min(...positions.map((position2) => position2[1])),
-        top: Math.max(...positions.map((position2) => position2[1])),
-        near: Math.min(...positions.map((position2) => -position2[2])),
-        far: Math.max(...positions.map((position2) => -position2[2]))
+        left: Math.min(...positions2.map((position2) => position2[0])),
+        right: Math.max(...positions2.map((position2) => position2[0])),
+        bottom: Math.min(...positions2.map((position2) => position2[1])),
+        top: Math.max(...positions2.map((position2) => position2[1])),
+        near: Math.min(...positions2.map((position2) => -position2[2])),
+        far: Math.max(...positions2.map((position2) => -position2[2]))
       });
       projectionMatrices.push(projectionMatrix.multiplyRight(shadowMatrix));
     }
@@ -38191,8 +38191,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     getIndexes() {
       return this.indices || null;
     }
-    _calculateVertexCount(positions) {
-      const vertexCount = positions.byteLength / 12;
+    _calculateVertexCount(positions2) {
+      const vertexCount = positions2.byteLength / 12;
       return vertexCount;
     }
   }
@@ -47114,8 +47114,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       getWebGLExtension(gl2, "EXT_color_buffer_float", extensions);
     }
     *[Symbol.iterator]() {
-      const features = this.getFeatures();
-      for (const feature of features) {
+      const features2 = this.getFeatures();
+      for (const feature of features2) {
         if (this.has(feature)) {
           yield feature;
         }
@@ -47139,8 +47139,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       return this.features.has(feature);
     }
     initializeFeatures() {
-      const features = this.getFeatures().filter((feature) => feature !== "polygon-mode-webgl");
-      for (const feature of features) {
+      const features2 = this.getFeatures().filter((feature) => feature !== "polygon-mode-webgl");
+      for (const feature of features2) {
         this.has(feature);
       }
     }
@@ -53941,7 +53941,7 @@ void main(void) {
   const ERR_NOT_OBJECT = "count(): argument not an object";
   const ERR_NOT_CONTAINER = "count(): argument not a container";
   function count$2(container2) {
-    if (!isObject(container2)) {
+    if (!isObject$1(container2)) {
       throw new Error(ERR_NOT_OBJECT);
     }
     if (typeof container2.count === "function") {
@@ -53961,7 +53961,7 @@ void main(void) {
   function isPlainObject$3(value) {
     return value !== null && typeof value === "object" && value.constructor === Object;
   }
-  function isObject(value) {
+  function isObject$1(value) {
     return value !== null && typeof value === "object";
   }
   function mergeShaders(target, source2) {
@@ -56450,7 +56450,7 @@ void main(void) {
     const vertexCount = (uCount - 1) * (vCount - 1) * 6;
     const indices = new Uint32Array(vertexCount);
     const texCoords = new Float32Array(uCount * vCount * 2);
-    const positions = new Float64Array(uCount * vCount * 3);
+    const positions2 = new Float64Array(uCount * vCount * 3);
     let vertex2 = 0;
     let index2 = 0;
     for (let u2 = 0; u2 < uCount; u2++) {
@@ -56458,9 +56458,9 @@ void main(void) {
       for (let v2 = 0; v2 < vCount; v2++) {
         const vt = v2 / (vCount - 1);
         const p2 = interpolateQuad(bounds, ut, vt);
-        positions[vertex2 * 3 + 0] = p2[0];
-        positions[vertex2 * 3 + 1] = p2[1];
-        positions[vertex2 * 3 + 2] = p2[2] || 0;
+        positions2[vertex2 * 3 + 0] = p2[0];
+        positions2[vertex2 * 3 + 1] = p2[1];
+        positions2[vertex2 * 3 + 2] = p2[2] || 0;
         texCoords[vertex2 * 2 + 0] = ut;
         texCoords[vertex2 * 2 + 1] = 1 - vt;
         if (u2 > 0 && v2 > 0) {
@@ -56476,21 +56476,21 @@ void main(void) {
     }
     return {
       vertexCount,
-      positions,
+      positions: positions2,
       indices,
       texCoords
     };
   }
   function createQuad(bounds) {
-    const positions = new Float64Array(12);
+    const positions2 = new Float64Array(12);
     for (let i2 = 0; i2 < bounds.length; i2++) {
-      positions[i2 * 3 + 0] = bounds[i2][0];
-      positions[i2 * 3 + 1] = bounds[i2][1];
-      positions[i2 * 3 + 2] = bounds[i2][2] || 0;
+      positions2[i2 * 3 + 0] = bounds[i2][0];
+      positions2[i2 * 3 + 1] = bounds[i2][1];
+      positions2[i2 * 3 + 2] = bounds[i2][2] || 0;
     }
     return {
       vertexCount: 6,
-      positions,
+      positions: positions2,
       indices: DEFAULT_INDICES,
       texCoords: DEFAULT_TEX_COORDS
     };
@@ -57681,7 +57681,7 @@ fn fragmentMain(inp: Varyings) -> @location(0) vec4<f32> {
       }
     }
     _getModel() {
-      const positions = [
+      const positions2 = [
         -1,
         -1,
         1,
@@ -57700,7 +57700,7 @@ fn fragmentMain(inp: Varyings) -> @location(0) vec4<f32> {
           attributes: {
             positions: {
               size: 2,
-              value: new Float32Array(positions)
+              value: new Float32Array(positions2)
             }
           }
         }),
@@ -58165,7 +58165,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       }
     }
     _getModel() {
-      const positions = [
+      const positions2 = [
         0,
         -1,
         0,
@@ -58188,7 +58188,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
           attributes: {
             positions: {
               size: 3,
-              value: new Float32Array(positions)
+              value: new Float32Array(positions2)
             }
           }
         }),
@@ -58729,7 +58729,7 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
       model.draw(this.context.renderPass);
     }
     _getModel() {
-      const positions = [
+      const positions2 = [
         -1,
         -1,
         0,
@@ -58752,7 +58752,7 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
           attributes: {
             positions: {
               size: 3,
-              value: new Float32Array(positions)
+              value: new Float32Array(positions2)
             }
           }
         }),
@@ -58834,10 +58834,10 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
       target[i2] = source2[i2];
     }
   }
-  function getPointAtIndex(positions, index2, size, offset, out = []) {
+  function getPointAtIndex(positions2, index2, size, offset, out = []) {
     const startI = offset + index2 * size;
     for (let i2 = 0; i2 < size; i2++) {
-      out[i2] = positions[startI + i2];
+      out[i2] = positions2[startI + i2];
     }
     return out;
   }
@@ -58872,24 +58872,24 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     else if (p2[1] > bbox[3]) code2 |= 8;
     return code2;
   }
-  function cutPolylineByGrid(positions, options) {
+  function cutPolylineByGrid(positions2, options) {
     const { size = 2, broken = false, gridResolution = 10, gridOffset = [
       0,
       0
-    ], startIndex = 0, endIndex = positions.length } = options || {};
+    ], startIndex = 0, endIndex = positions2.length } = options || {};
     const numPoints = (endIndex - startIndex) / size;
     let part = [];
     const result = [
       part
     ];
-    const a2 = getPointAtIndex(positions, 0, size, startIndex);
+    const a2 = getPointAtIndex(positions2, 0, size, startIndex);
     let b2;
     let codeB;
     const cell = getGridCell(a2, gridResolution, gridOffset, []);
     const scratchPoint = [];
     push$1(part, a2);
     for (let i2 = 1; i2 < numPoints; i2++) {
-      b2 = getPointAtIndex(positions, i2, size, startIndex, b2);
+      b2 = getPointAtIndex(positions2, i2, size, startIndex, b2);
       codeB = bitCode(b2, cell);
       while (codeB) {
         intersect(a2, b2, codeB, cell, scratchPoint);
@@ -58915,8 +58915,8 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
   }
   const TYPE_INSIDE = 0;
   const TYPE_BORDER = 1;
-  function cutPolygonByGrid(positions, holeIndices = null, options) {
-    if (!positions.length) {
+  function cutPolygonByGrid(positions2, holeIndices = null, options) {
+    if (!positions2.length) {
       return [];
     }
     const { size = 2, gridResolution = 10, gridOffset = [
@@ -58926,8 +58926,8 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     const result = [];
     const queue2 = [
       {
-        pos: positions,
-        types: edgeTypes ? new Array(positions.length / size).fill(TYPE_BORDER) : null,
+        pos: positions2,
+        types: edgeTypes ? new Array(positions2.length / size).fill(TYPE_BORDER) : null,
         holes: holeIndices || []
       }
     ];
@@ -58986,7 +58986,7 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     }
     return result;
   }
-  function bisectPolygon(positions, edgeTypes, size, startIndex, endIndex, bbox, edge) {
+  function bisectPolygon(positions2, edgeTypes, size, startIndex, endIndex, bbox, edge) {
     const numPoints = (endIndex - startIndex) / size;
     const resultLow = [];
     const resultHigh = [];
@@ -58996,13 +58996,13 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     let p2;
     let side;
     let type;
-    const prev = getPointAtIndex(positions, numPoints - 1, size, startIndex);
+    const prev = getPointAtIndex(positions2, numPoints - 1, size, startIndex);
     let prevSide = Math.sign(edge & 8 ? prev[1] - bbox[3] : prev[0] - bbox[2]);
     let prevType = edgeTypes && edgeTypes[numPoints - 1];
     let lowPointCount = 0;
     let highPointCount = 0;
     for (let i2 = 0; i2 < numPoints; i2++) {
-      p2 = getPointAtIndex(positions, i2, size, startIndex, p2);
+      p2 = getPointAtIndex(positions2, i2, size, startIndex, p2);
       side = Math.sign(edge & 8 ? p2[1] - bbox[3] : p2[0] - bbox[2]);
       type = edgeTypes && edgeTypes[startIndex / size + i2];
       if (side && prevSide && prevSide !== side) {
@@ -59061,14 +59061,14 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
       cell[2] -= gridResolution;
     }
   }
-  function getBoundingBox$1(positions, size, endIndex, out) {
+  function getBoundingBox$1(positions2, size, endIndex, out) {
     let minX = Infinity;
     let maxX = -Infinity;
     let minY = Infinity;
     let maxY = -Infinity;
     for (let i2 = 0; i2 < endIndex; i2 += size) {
-      const x2 = positions[i2];
-      const y2 = positions[i2 + 1];
+      const x2 = positions2[i2];
+      const y2 = positions2[i2 + 1];
       minX = x2 < minX ? x2 : minX;
       maxX = x2 > maxX ? x2 : maxX;
       minY = y2 < minY ? y2 : minY;
@@ -59087,9 +59087,9 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     return arr1;
   }
   const DEFAULT_MAX_LATITUDE = 85.051129;
-  function cutPolylineByMercatorBounds(positions, options) {
-    const { size = 2, startIndex = 0, endIndex = positions.length, normalize: normalize2 = true } = options || {};
-    const newPositions = positions.slice(startIndex, endIndex);
+  function cutPolylineByMercatorBounds(positions2, options) {
+    const { size = 2, startIndex = 0, endIndex = positions2.length, normalize: normalize2 = true } = options || {};
+    const newPositions = positions2.slice(startIndex, endIndex);
     wrapLongitudesForShortestPath(newPositions, size, 0, endIndex - startIndex);
     const parts = cutPolylineByGrid(newPositions, {
       size,
@@ -59107,7 +59107,7 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     }
     return parts;
   }
-  function cutPolygonByMercatorBounds(positions, holeIndices = null, options) {
+  function cutPolygonByMercatorBounds(positions2, holeIndices = null, options) {
     const { size = 2, normalize: normalize2 = true, edgeTypes = false } = options || {};
     holeIndices = holeIndices || [];
     const newPositions = [];
@@ -59115,14 +59115,14 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     let srcStartIndex = 0;
     let targetIndex = 0;
     for (let ringIndex = 0; ringIndex <= holeIndices.length; ringIndex++) {
-      const srcEndIndex = holeIndices[ringIndex] || positions.length;
+      const srcEndIndex = holeIndices[ringIndex] || positions2.length;
       const targetStartIndex = targetIndex;
-      const splitIndex = findSplitIndex(positions, size, srcStartIndex, srcEndIndex);
+      const splitIndex = findSplitIndex(positions2, size, srcStartIndex, srcEndIndex);
       for (let i2 = splitIndex; i2 < srcEndIndex; i2++) {
-        newPositions[targetIndex++] = positions[i2];
+        newPositions[targetIndex++] = positions2[i2];
       }
       for (let i2 = srcStartIndex; i2 < splitIndex; i2++) {
-        newPositions[targetIndex++] = positions[i2];
+        newPositions[targetIndex++] = positions2[i2];
       }
       wrapLongitudesForShortestPath(newPositions, size, targetStartIndex, targetIndex);
       insertPoleVertices(newPositions, size, targetStartIndex, targetIndex, options == null ? void 0 : options.maxLatitude);
@@ -59146,11 +59146,11 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     }
     return parts;
   }
-  function findSplitIndex(positions, size, startIndex, endIndex) {
+  function findSplitIndex(positions2, size, startIndex, endIndex) {
     let maxLat = -1;
     let pointIndex = -1;
     for (let i2 = startIndex + 1; i2 < endIndex; i2 += size) {
-      const lat = Math.abs(positions[i2]);
+      const lat = Math.abs(positions2[i2]);
       if (lat > maxLat) {
         maxLat = lat;
         pointIndex = i2 - 1;
@@ -59158,36 +59158,36 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     }
     return pointIndex;
   }
-  function insertPoleVertices(positions, size, startIndex, endIndex, maxLatitude = DEFAULT_MAX_LATITUDE) {
-    const firstLng = positions[startIndex];
-    const lastLng = positions[endIndex - size];
+  function insertPoleVertices(positions2, size, startIndex, endIndex, maxLatitude = DEFAULT_MAX_LATITUDE) {
+    const firstLng = positions2[startIndex];
+    const lastLng = positions2[endIndex - size];
     if (Math.abs(firstLng - lastLng) > 180) {
-      const p2 = getPointAtIndex(positions, 0, size, startIndex);
+      const p2 = getPointAtIndex(positions2, 0, size, startIndex);
       p2[0] += Math.round((lastLng - firstLng) / 360) * 360;
-      push$1(positions, p2);
+      push$1(positions2, p2);
       p2[1] = Math.sign(p2[1]) * maxLatitude;
-      push$1(positions, p2);
+      push$1(positions2, p2);
       p2[0] = firstLng;
-      push$1(positions, p2);
+      push$1(positions2, p2);
     }
   }
-  function wrapLongitudesForShortestPath(positions, size, startIndex, endIndex) {
-    let prevLng = positions[0];
+  function wrapLongitudesForShortestPath(positions2, size, startIndex, endIndex) {
+    let prevLng = positions2[0];
     let lng;
     for (let i2 = startIndex; i2 < endIndex; i2 += size) {
-      lng = positions[i2];
+      lng = positions2[i2];
       const delta = lng - prevLng;
       if (delta > 180 || delta < -180) {
         lng -= Math.round(delta / 360) * 360;
       }
-      positions[i2] = prevLng = lng;
+      positions2[i2] = prevLng = lng;
     }
   }
-  function shiftLongitudesIntoRange(positions, size) {
+  function shiftLongitudesIntoRange(positions2, size) {
     let refLng;
-    const pointCount = positions.length / size;
+    const pointCount = positions2.length / size;
     for (let i2 = 0; i2 < pointCount; i2++) {
-      refLng = positions[i2 * size];
+      refLng = positions2[i2 * size];
       if ((refLng + 180) % 360 !== 0) {
         break;
       }
@@ -59197,7 +59197,7 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
       return;
     }
     for (let i2 = 0; i2 < pointCount; i2++) {
-      positions[i2 * size] += delta;
+      positions2[i2 * size] += delta;
     }
   }
   function normalizePath(path2, size, gridResolution, wrapLongitude) {
@@ -59310,17 +59310,17 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
       segmentTypes[vertexStart + geometrySize - 1] = INVALID;
     }
     _updatePositions(path2, context) {
-      const { positions } = this.attributes;
-      if (!positions || !path2) {
+      const { positions: positions2 } = this.attributes;
+      if (!positions2 || !path2) {
         return;
       }
       const { vertexStart, geometrySize } = context;
       const p2 = new Array(3);
       for (let i2 = vertexStart, ptIndex = 0; ptIndex < geometrySize; i2++, ptIndex++) {
         this.getPointOnPath(path2, ptIndex, p2);
-        positions[i2 * 3] = p2[0];
-        positions[i2 * 3 + 1] = p2[1];
-        positions[i2 * 3 + 2] = p2[2];
+        positions2[i2 * 3] = p2[0];
+        positions2[i2 * 3 + 1] = p2[1];
+        positions2[i2 * 3 + 2] = p2[2];
       }
     }
     getPathLength(path2) {
@@ -60265,9 +60265,9 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     const p1 = simplePolygon[simplePolygon.length - 1];
     return p0[0] === p1[0] && p0[1] === p1[1] && p0[2] === p1[2];
   }
-  function isFlatRingClosed(positions, size, startIndex, endIndex) {
+  function isFlatRingClosed(positions2, size, startIndex, endIndex) {
     for (let i2 = 0; i2 < size; i2++) {
-      if (positions[startIndex + i2] !== positions[endIndex - size + i2]) {
+      if (positions2[startIndex + i2] !== positions2[endIndex - size + i2]) {
         return false;
       }
     }
@@ -60292,19 +60292,19 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     modifyPolygonWindingDirection(target, windingDirection, windingOptions);
     return targetIndex;
   }
-  function copyFlatRing(target, targetStartIndex, positions, size, srcStartIndex = 0, srcEndIndex, windingDirection) {
-    srcEndIndex = srcEndIndex || positions.length;
+  function copyFlatRing(target, targetStartIndex, positions2, size, srcStartIndex = 0, srcEndIndex, windingDirection) {
+    srcEndIndex = srcEndIndex || positions2.length;
     const srcLength = srcEndIndex - srcStartIndex;
     if (srcLength <= 0) {
       return targetStartIndex;
     }
     let targetIndex = targetStartIndex;
     for (let i2 = 0; i2 < srcLength; i2++) {
-      target[targetIndex++] = positions[srcStartIndex + i2];
+      target[targetIndex++] = positions2[srcStartIndex + i2];
     }
-    if (!isFlatRingClosed(positions, size, srcStartIndex, srcEndIndex)) {
+    if (!isFlatRingClosed(positions2, size, srcStartIndex, srcEndIndex)) {
       for (let i2 = 0; i2 < size; i2++) {
-        target[targetIndex++] = positions[srcStartIndex + i2];
+        target[targetIndex++] = positions2[srcStartIndex + i2];
       }
     }
     windingOptions.start = targetStartIndex;
@@ -60315,63 +60315,63 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
   }
   function normalize$3(polygon, positionSize) {
     validate(polygon);
-    const positions = [];
+    const positions2 = [];
     const holeIndices = [];
     if ("positions" in polygon) {
       const { positions: srcPositions, holeIndices: srcHoleIndices } = polygon;
       if (srcHoleIndices) {
         let targetIndex = 0;
         for (let i2 = 0; i2 <= srcHoleIndices.length; i2++) {
-          targetIndex = copyFlatRing(positions, targetIndex, srcPositions, positionSize, srcHoleIndices[i2 - 1], srcHoleIndices[i2], i2 === 0 ? OUTER_POLYGON_WINDING : HOLE_POLYGON_WINDING);
+          targetIndex = copyFlatRing(positions2, targetIndex, srcPositions, positionSize, srcHoleIndices[i2 - 1], srcHoleIndices[i2], i2 === 0 ? OUTER_POLYGON_WINDING : HOLE_POLYGON_WINDING);
           holeIndices.push(targetIndex);
         }
         holeIndices.pop();
         return {
-          positions,
+          positions: positions2,
           holeIndices
         };
       }
       polygon = srcPositions;
     }
     if (!isNested(polygon)) {
-      copyFlatRing(positions, 0, polygon, positionSize, 0, positions.length, OUTER_POLYGON_WINDING);
-      return positions;
+      copyFlatRing(positions2, 0, polygon, positionSize, 0, positions2.length, OUTER_POLYGON_WINDING);
+      return positions2;
     }
     if (!isSimple(polygon)) {
       let targetIndex = 0;
       for (const [polygonIndex, simplePolygon] of polygon.entries()) {
-        targetIndex = copyNestedRing(positions, targetIndex, simplePolygon, positionSize, polygonIndex === 0 ? OUTER_POLYGON_WINDING : HOLE_POLYGON_WINDING);
+        targetIndex = copyNestedRing(positions2, targetIndex, simplePolygon, positionSize, polygonIndex === 0 ? OUTER_POLYGON_WINDING : HOLE_POLYGON_WINDING);
         holeIndices.push(targetIndex);
       }
       holeIndices.pop();
       return {
-        positions,
+        positions: positions2,
         holeIndices
       };
     }
-    copyNestedRing(positions, 0, polygon, positionSize, OUTER_POLYGON_WINDING);
-    return positions;
+    copyNestedRing(positions2, 0, polygon, positionSize, OUTER_POLYGON_WINDING);
+    return positions2;
   }
-  function getPlaneArea(positions, xIndex, yIndex) {
-    const numVerts = positions.length / 3;
+  function getPlaneArea(positions2, xIndex, yIndex) {
+    const numVerts = positions2.length / 3;
     let area2 = 0;
     for (let i2 = 0; i2 < numVerts; i2++) {
       const j2 = (i2 + 1) % numVerts;
-      area2 += positions[i2 * 3 + xIndex] * positions[j2 * 3 + yIndex];
-      area2 -= positions[j2 * 3 + xIndex] * positions[i2 * 3 + yIndex];
+      area2 += positions2[i2 * 3 + xIndex] * positions2[j2 * 3 + yIndex];
+      area2 -= positions2[j2 * 3 + xIndex] * positions2[i2 * 3 + yIndex];
     }
     return Math.abs(area2 / 2);
   }
-  function permutePositions(positions, xIndex, yIndex, zIndex) {
-    const numVerts = positions.length / 3;
+  function permutePositions(positions2, xIndex, yIndex, zIndex) {
+    const numVerts = positions2.length / 3;
     for (let i2 = 0; i2 < numVerts; i2++) {
       const o2 = i2 * 3;
-      const x2 = positions[o2 + 0];
-      const y2 = positions[o2 + 1];
-      const z2 = positions[o2 + 2];
-      positions[o2 + xIndex] = x2;
-      positions[o2 + yIndex] = y2;
-      positions[o2 + zIndex] = z2;
+      const x2 = positions2[o2 + 0];
+      const y2 = positions2[o2 + 1];
+      const z2 = positions2[o2 + 2];
+      positions2[o2 + xIndex] = x2;
+      positions2[o2 + yIndex] = y2;
+      positions2[o2 + zIndex] = z2;
     }
   }
   function getSurfaceIndices(polygon, positionSize, preproject, full3d) {
@@ -60379,47 +60379,47 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     if (holeIndices) {
       holeIndices = holeIndices.map((positionIndex) => positionIndex / positionSize);
     }
-    let positions = getPositions(polygon);
+    let positions2 = getPositions(polygon);
     const is3d = full3d && positionSize === 3;
     if (preproject) {
-      const n2 = positions.length;
-      positions = positions.slice();
+      const n2 = positions2.length;
+      positions2 = positions2.slice();
       const p2 = [];
       for (let i2 = 0; i2 < n2; i2 += positionSize) {
-        p2[0] = positions[i2];
-        p2[1] = positions[i2 + 1];
+        p2[0] = positions2[i2];
+        p2[1] = positions2[i2 + 1];
         if (is3d) {
-          p2[2] = positions[i2 + 2];
+          p2[2] = positions2[i2 + 2];
         }
         const xy = preproject(p2);
-        positions[i2] = xy[0];
-        positions[i2 + 1] = xy[1];
+        positions2[i2] = xy[0];
+        positions2[i2 + 1] = xy[1];
         if (is3d) {
-          positions[i2 + 2] = xy[2];
+          positions2[i2 + 2] = xy[2];
         }
       }
     }
     if (is3d) {
-      const xyArea = getPlaneArea(positions, 0, 1);
-      const xzArea = getPlaneArea(positions, 0, 2);
-      const yzArea = getPlaneArea(positions, 1, 2);
+      const xyArea = getPlaneArea(positions2, 0, 1);
+      const xzArea = getPlaneArea(positions2, 0, 2);
+      const yzArea = getPlaneArea(positions2, 1, 2);
       if (!xyArea && !xzArea && !yzArea) {
         return [];
       }
       if (xyArea > xzArea && xyArea > yzArea) ;
       else if (xzArea > yzArea) {
         if (!preproject) {
-          positions = positions.slice();
+          positions2 = positions2.slice();
         }
-        permutePositions(positions, 0, 2, 1);
+        permutePositions(positions2, 0, 2, 1);
       } else {
         if (!preproject) {
-          positions = positions.slice();
+          positions2 = positions2.slice();
         }
-        permutePositions(positions, 2, 0, 1);
+        permutePositions(positions2, 2, 0, 1);
       }
     }
-    return earcut$1(positions, holeIndices, positionSize);
+    return earcut$1(positions2, holeIndices, positionSize);
   }
   class PolygonTesselator extends Tesselator {
     constructor(opts) {
@@ -60529,8 +60529,8 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       attributes2.indices = target;
     }
     _updatePositions(polygon, { vertexStart, geometrySize }) {
-      const { attributes: { positions }, positionSize } = this;
-      if (!positions || !polygon) {
+      const { attributes: { positions: positions2 }, positionSize } = this;
+      if (!positions2 || !polygon) {
         return;
       }
       const polygonPositions = getPositions(polygon);
@@ -60538,9 +60538,9 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
         const x2 = polygonPositions[j2 * positionSize];
         const y2 = polygonPositions[j2 * positionSize + 1];
         const z2 = positionSize > 2 ? polygonPositions[j2 * positionSize + 2] : 0;
-        positions[i2 * 3] = x2;
-        positions[i2 * 3 + 1] = y2;
-        positions[i2 * 3 + 2] = z2;
+        positions2[i2 * 3] = x2;
+        positions2[i2 * 3 + 1] = y2;
+        positions2[i2 * 3 + 2] = z2;
       }
     }
     _updateVertexValid(polygon, { vertexStart, geometrySize }) {
@@ -61176,17 +61176,17 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
           polygon = normalize$3(polygon, positionSize);
         }
         const { holeIndices } = polygon;
-        const positions = polygon.positions || polygon;
+        const positions2 = polygon.positions || polygon;
         if (holeIndices) {
           for (let i2 = 0; i2 <= holeIndices.length; i2++) {
-            const path2 = positions.slice(holeIndices[i2 - 1] || 0, holeIndices[i2] || positions.length);
+            const path2 = positions2.slice(holeIndices[i2 - 1] || 0, holeIndices[i2] || positions2.length);
             paths.push(this.getSubLayerRow({
               path: path2
             }, object, objectInfo.index));
           }
         } else {
           paths.push(this.getSubLayerRow({
-            path: positions
+            path: positions2
           }, object, objectInfo.index));
         }
       }
@@ -62644,7 +62644,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       model.draw(this.context.renderPass);
     }
     _getModel() {
-      const positions = [
+      const positions2 = [
         0,
         0,
         1,
@@ -62664,7 +62664,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
           attributes: {
             positions: {
               size: 2,
-              value: new Float32Array(positions)
+              value: new Float32Array(positions2)
             }
           }
         }),
@@ -63217,16 +63217,16 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
         ];
     }
   }
-  function separateGeojsonFeatures(features, wrapFeature, dataRange = {}) {
+  function separateGeojsonFeatures(features2, wrapFeature, dataRange = {}) {
     const separated = {
       pointFeatures: [],
       lineFeatures: [],
       polygonFeatures: [],
       polygonOutlineFeatures: []
     };
-    const { startRow = 0, endRow = features.length } = dataRange;
+    const { startRow = 0, endRow = features2.length } = dataRange;
     for (let featureIndex = startRow; featureIndex < endRow; featureIndex++) {
-      const feature = features[featureIndex];
+      const feature = features2[featureIndex];
       const { geometry: geometry2 } = feature;
       if (!geometry2) {
         continue;
@@ -63342,9 +63342,9 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
   function getCoordinates(f2) {
     return f2.geometry.coordinates;
   }
-  function createLayerPropsFromFeatures(features, featuresDiff) {
+  function createLayerPropsFromFeatures(features2, featuresDiff) {
     const layerProps = createEmptyLayerProps();
-    const { pointFeatures, lineFeatures, polygonFeatures, polygonOutlineFeatures } = features;
+    const { pointFeatures, lineFeatures, polygonFeatures, polygonOutlineFeatures } = features2;
     layerProps.points.data = pointFeatures;
     layerProps.points._dataDiff = featuresDiff.pointFeatures && (() => featuresDiff.pointFeatures);
     layerProps.points.getPosition = getCoordinates;
@@ -63512,7 +63512,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       });
     }
     _updateStateJSON({ props, changeFlags }) {
-      const features = getGeojsonFeatures(props.data);
+      const features2 = getGeojsonFeatures(props.data);
       const wrapFeature = this.getSubLayerRow.bind(this);
       let newFeatures = {};
       const featuresDiff = {};
@@ -63523,7 +63523,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
           featuresDiff[key2] = [];
         }
         for (const dataRange of changeFlags.dataChanged) {
-          const partialFeatures = separateGeojsonFeatures(features, wrapFeature, dataRange);
+          const partialFeatures = separateGeojsonFeatures(features2, wrapFeature, dataRange);
           for (const key2 in oldFeatures) {
             featuresDiff[key2].push(replaceInRange({
               data: newFeatures[key2],
@@ -63534,7 +63534,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
           }
         }
       } else {
-        newFeatures = separateGeojsonFeatures(features, wrapFeature);
+        newFeatures = separateGeojsonFeatures(features2, wrapFeature);
       }
       const layerProps = createLayerPropsFromFeatures(newFeatures, featuresDiff);
       this.setState({
@@ -64433,8 +64433,8 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     diagonal: new Matrix3(),
     unitary: new Matrix3()
   };
-  function makeOrientedBoundingBoxFromPoints(positions, result = new OrientedBoundingBox()) {
-    if (!positions || positions.length === 0) {
+  function makeOrientedBoundingBoxFromPoints(positions2, result = new OrientedBoundingBox()) {
+    if (!positions2 || positions2.length === 0) {
       result.halfAxes = new Matrix3([
         0,
         0,
@@ -64449,9 +64449,9 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       result.center = new Vector3();
       return result;
     }
-    const length2 = positions.length;
+    const length2 = positions2.length;
     const meanPoint = new Vector3(0, 0, 0);
-    for (const position2 of positions) {
+    for (const position2 of positions2) {
       meanPoint.add(position2);
     }
     const invLength = 1 / length2;
@@ -64462,7 +64462,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     let eyy = 0;
     let eyz = 0;
     let ezz = 0;
-    for (const position2 of positions) {
+    for (const position2 of positions2) {
       const p2 = scratchVector2.copy(position2).subtract(meanPoint);
       exx += p2.x * p2.x;
       exy += p2.x * p2.y;
@@ -64498,7 +64498,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     let l1 = Number.MAX_VALUE;
     let l2 = Number.MAX_VALUE;
     let l3 = Number.MAX_VALUE;
-    for (const position2 of positions) {
+    for (const position2 of positions2) {
       scratchVector2.copy(position2);
       u1 = Math.max(scratchVector2.dot(v1), u1);
       u2 = Math.max(scratchVector2.dot(v2), u2);
@@ -79250,26 +79250,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-D0x06EsK.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BmOU-jwy.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-DD64z--A.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-Bkf7suvx.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-R1N56l_E.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-D0r_I35m.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DCgRQP7w.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-BGUn4AFg.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-Ck1N02A7.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-DDUDAMVb.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DDnjsQ1A.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-BtYefjOY.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-EeFs9fKw.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CUYEn65F.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-B74_Oa2D.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-23Pr7476.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -84056,21 +84056,21 @@ void main(void) {
       });
     }
     calculatePositions(attributes2) {
-      const { positions } = this.state;
+      const { positions: positions2 } = this.state;
       const { bounds } = this.props;
-      positions[0] = bounds[0];
-      positions[1] = bounds[1];
-      positions[2] = 0;
-      positions[3] = bounds[0];
-      positions[4] = bounds[3];
-      positions[5] = 0;
-      positions[6] = bounds[2];
-      positions[7] = bounds[3];
-      positions[8] = 0;
-      positions[9] = bounds[2];
-      positions[10] = bounds[1];
-      positions[11] = 0;
-      attributes2.value = positions;
+      positions2[0] = bounds[0];
+      positions2[1] = bounds[1];
+      positions2[2] = 0;
+      positions2[3] = bounds[0];
+      positions2[4] = bounds[3];
+      positions2[5] = 0;
+      positions2[6] = bounds[2];
+      positions2[7] = bounds[3];
+      positions2[8] = 0;
+      positions2[9] = bounds[2];
+      positions2[10] = bounds[1];
+      positions2[11] = 0;
+      attributes2.value = positions2;
     }
     _setNewTexturesFromLoadThisFrame(textures) {
       this._newTexturesFromLoadThisFrame = textures;
@@ -86511,13 +86511,15 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       ]
     },
     annotations: {
-      label: "OME-XML annotations",
+      label: "OME-XML or GeoJSON annotations",
       extensions: [
-        ".xml"
+        ".xml",
+        ".geojson"
       ],
       mimeTypes: [
         "text/xml",
-        "application/xml"
+        "application/xml",
+        "application/geo+json"
       ]
     },
     featureTable: {
@@ -170184,6 +170186,152 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     app.addStory(raw2);
     app.setActiveStory(0);
   }
+  const isObject = (v2) => typeof v2 === "object" && v2 !== null && !Array.isArray(v2);
+  const position$3 = (v2) => {
+    if (!Array.isArray(v2) || v2.length < 2) return null;
+    const [x2, y2] = v2;
+    return typeof x2 === "number" && typeof y2 === "number" && Number.isFinite(x2) && Number.isFinite(y2) ? [
+      x2,
+      y2
+    ] : null;
+  };
+  const positions = (v2) => {
+    if (!Array.isArray(v2)) return null;
+    const out = [];
+    for (const p2 of v2) {
+      const pos = position$3(p2);
+      if (!pos) return null;
+      out.push(pos);
+    }
+    return out;
+  };
+  const pointsAttr = (pts) => pts.map(([x2, y2]) => `${x2},${y2}`).join(" ");
+  const text$9 = (v2) => {
+    if (typeof v2 !== "string" && typeof v2 !== "number") return void 0;
+    const s2 = String(v2).trim();
+    return s2 && s2 !== "undefined" && s2 !== "null" ? s2 : void 0;
+  };
+  const featureName = (props) => {
+    const classification = isObject(props.classification) ? props.classification : void 0;
+    return text$9(props.Name) ?? text$9(props.name) ?? text$9(props.Text) ?? text$9(props.text) ?? text$9(classification == null ? void 0 : classification.name) ?? text$9(props.classification);
+  };
+  const omeShapeType = (props) => typeof props.type === "string" ? props.type.toLowerCase() : "";
+  function geometryShapes(geometry2, props, nextId2) {
+    if (!isObject(geometry2)) return [];
+    const coords = geometry2.coordinates;
+    const polygon = (rings) => {
+      const outer = Array.isArray(rings) ? positions(rings[0]) : null;
+      if (!outer || outer.length < 3) return [];
+      return [
+        {
+          type: "polygon",
+          ID: nextId2(),
+          Points: pointsAttr(outer)
+        }
+      ];
+    };
+    const lineString = (v2) => {
+      const pts = positions(v2);
+      if (!pts || pts.length < 2) return [];
+      return [
+        {
+          type: "polyline",
+          ID: nextId2(),
+          Points: pointsAttr(pts)
+        }
+      ];
+    };
+    const point2 = (v2) => {
+      const p2 = position$3(v2);
+      if (!p2) return [];
+      const [X2, Y2] = p2;
+      const label2 = text$9(props.Text) ?? text$9(props.text);
+      if (omeShapeType(props) === "label" && label2) {
+        return [
+          {
+            type: "label",
+            ID: nextId2(),
+            X: X2,
+            Y: Y2,
+            Text: label2
+          }
+        ];
+      }
+      return [
+        {
+          type: "point",
+          ID: nextId2(),
+          X: X2,
+          Y: Y2
+        }
+      ];
+    };
+    const each = (v2, f2) => Array.isArray(v2) ? v2.flatMap(f2) : [];
+    switch (geometry2.type) {
+      case "Point":
+        return point2(coords);
+      case "MultiPoint":
+        return each(coords, point2);
+      case "LineString":
+        return lineString(coords);
+      case "MultiLineString":
+        return each(coords, lineString);
+      case "Polygon":
+        return polygon(coords);
+      case "MultiPolygon":
+        return each(coords, polygon);
+      case "GeometryCollection":
+        return each(geometry2.geometries, (g2) => geometryShapes(g2, props, nextId2));
+      default:
+        return [];
+    }
+  }
+  function features(root2) {
+    if (Array.isArray(root2)) return root2.filter(isObject);
+    if (!isObject(root2)) return [];
+    if (root2.type === "FeatureCollection") {
+      return Array.isArray(root2.features) ? root2.features.filter(isObject) : [];
+    }
+    if (root2.type === "Feature") return [
+      root2
+    ];
+    if (typeof root2.type === "string" && root2.type !== "") {
+      return [
+        {
+          type: "Feature",
+          geometry: root2,
+          properties: {}
+        }
+      ];
+    }
+    return [];
+  }
+  function parseGeoJsonStringToRois(json2) {
+    let root2;
+    try {
+      root2 = JSON.parse(json2);
+    } catch {
+      throw new Error("The file is not valid JSON.");
+    }
+    const list2 = features(root2);
+    if (list2.length === 0) {
+      throw new Error("The file has no GeoJSON features.");
+    }
+    const rois = [];
+    list2.forEach((feature, i2) => {
+      const props = isObject(feature.properties) ? feature.properties : {};
+      const id2 = text$9(feature.id) ?? text$9(props.Id) ?? text$9(props.id) ?? `Feature:${i2}`;
+      let part = 0;
+      const shapes = geometryShapes(feature.geometry, props, () => part++ === 0 ? id2 : `${id2}:${part - 1}`);
+      if (shapes.length === 0) return;
+      rois.push({
+        ID: id2,
+        Name: featureName(props),
+        shapes
+      });
+    });
+    return rois;
+  }
   const attr = (el2, ...keys2) => {
     for (const k2 of keys2) {
       const v2 = el2.getAttribute(k2);
@@ -171028,15 +171176,64 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         shapeCount: 0
       };
     }
-    const viewerRoiShapes = parseRoisFromRoiList(rois);
     const omeDoc = parseOmeXml(xml2);
     const pixels = omeDoc && omePixelsElement(omeDoc);
     const frame2 = (pixels && omePixelsWorldFrame(pixels, viewerImageFrames)) ?? viewerImageFrames[0];
-    const storyShapes = roiShapesToWorld(viewerRoiShapes, frameModelMatrix(frame2, imageOrientation(frame2.sourceImageId)));
+    return applyRoisOnFrame(rois, frame2, "XML");
+  }
+  const fileStem = (name2) => name2.trim().toLowerCase().split(".")[0];
+  const stemsMatch = (a2, b2) => {
+    const [short, long] = a2.length <= b2.length ? [
+      a2,
+      b2
+    ] : [
+      b2,
+      a2
+    ];
+    return short !== "" && long.startsWith(short) && !/[a-z0-9]/.test(long.charAt(short.length));
+  };
+  function geoJsonFileWorldFrame(fileName, imageFrames) {
+    const stem2 = fileStem(fileName);
+    const numbers = new Set(fileName.match(/\d+/g) ?? []);
+    const { images } = useDocumentStore.getState();
+    const image2 = images.find((img) => img.omero != null && numbers.has(String(img.omero.imageIdentifier))) ?? images.find((img) => stemsMatch(stem2, fileStem(img.basename)));
+    return image2 && imageFrames.find((f2) => f2.sourceImageId === image2.id);
+  }
+  function applyRoisFromGeoJsonString(json2, fileName) {
+    const { viewerImageFrames } = useAppStore.getState();
+    if (viewerImageFrames.length === 0) {
+      return {
+        success: false,
+        error: "Load an image before importing annotations.",
+        shapeCount: 0
+      };
+    }
+    let rois;
+    try {
+      rois = parseGeoJsonStringToRois(json2);
+    } catch (e2) {
+      return {
+        success: false,
+        error: e2 instanceof Error ? e2.message : String(e2),
+        shapeCount: 0
+      };
+    }
+    if (rois.length === 0) {
+      return {
+        success: false,
+        error: "No features with drawable geometry were found in the GeoJSON.",
+        shapeCount: 0
+      };
+    }
+    const frame2 = geoJsonFileWorldFrame(fileName, viewerImageFrames) ?? viewerImageFrames[0];
+    return applyRoisOnFrame(rois, frame2, "GeoJSON");
+  }
+  function applyRoisOnFrame(rois, frame2, format) {
+    const storyShapes = roiShapesToWorld(parseRoisFromRoiList(rois), frameModelMatrix(frame2, imageOrientation(frame2.sourceImageId)));
     if (storyShapes.length === 0) {
       return {
         success: false,
-        error: "No valid annotations could be built from the XML.",
+        error: `No valid annotations could be built from the ${format}.`,
         shapeCount: 0
       };
     }
@@ -171473,7 +171670,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       if (kind === "story") {
         await (onImportStory == null ? void 0 : onImportStory(file));
       } else if (kind === "annotations") {
-        const r2 = applyOmeRoisFromAnnotationXmlString(await file.text());
+        const text2 = await file.text();
+        const r2 = /^\s*[{[]/.test(text2) ? applyRoisFromGeoJsonString(text2, file.name) : applyOmeRoisFromAnnotationXmlString(text2);
         if (r2.success === false) failDrop(r2.error);
         else {
           const n2 = r2.shapeCount;
@@ -173219,8 +173417,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-11-03T20:49:59.604Z";
-    const sha = "1868e598ba7dd71800c8b404792a0c78716378fb";
+    const iso = "2026-11-05T16:35:52.430Z";
+    const sha = "86be68d8b15d2ea1c27cd0d7b9fcc77c0bf8cbbf";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
