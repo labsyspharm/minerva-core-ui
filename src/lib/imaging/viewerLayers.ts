@@ -1,6 +1,6 @@
 import type { Layer } from "@deck.gl/core";
 import { isInterleaved, MultiscaleImageLayer } from "@hms-dbmi/viv";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   bitmapLayerOpacity,
   type ImageOpacityPreview,
@@ -14,9 +14,10 @@ import type {
   MainSettings,
   OmeLoaderEntry,
 } from "@/lib/imaging/loaderEntries";
-import type {
-  ChannelRendering,
-  ImageOrientationPreview,
+import {
+  type ChannelRendering,
+  type ImageOrientationPreview,
+  useAppStore,
 } from "@/lib/stores/appStore";
 import type {
   Channel,
@@ -28,6 +29,18 @@ import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
 import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
+import { createHeDeconvLayer } from "./heDeconvTileLayer";
+import type {
+  HeDeconvComponent,
+  HeDeconvSplit,
+  HeSplitMode,
+  HeStainView,
+} from "./heDeconvView";
+import {
+  ensureHeStainFit,
+  type HeStainFit,
+  RETRY_FAILED_AFTER_MS,
+} from "./heStainFit";
 import { orientationForImage } from "./imageOrientation";
 import { createJpegLayers } from "./jpeg.js";
 import { JPEG_BAKED_CONTRAST_LIMIT } from "./jpegPyramid";
@@ -46,7 +59,7 @@ function applyChannelRendering<S extends MainSettings>(
   settings: S,
   live: ChannelRendering | null | undefined,
 ): S {
-  if (!live) return settings;
+  if (!live || live.heComponent) return settings;
   const ids = settings.sourceChannelIds;
   if (!ids?.length) return settings;
   const idx = ids.indexOf(live.sourceChannelId);
@@ -72,6 +85,18 @@ function applyChannelRendering<S extends MainSettings>(
   return { ...settings, colors };
 }
 
+type StainSplit = [MainSettings | null, MainSettings | null];
+
+/**
+ * Last split per settings object. Viv compares `selections` by identity, so
+ * fresh arrays on every rebuild (e.g. each tick of another image's opacity
+ * slider) would rebuild every cached tile of this one.
+ */
+const stainSplitCache = new WeakMap<
+  MainSettings,
+  { mask: string; split: StainSplit }
+>();
+
 /**
  * `settings` split into its fluorescence and its stain channels (either null
  * when empty), so each half fetches only its own planes.
@@ -79,13 +104,17 @@ function applyChannelRendering<S extends MainSettings>(
 function splitStainChannels(
   settings: MainSettings,
   stainChannelIds: ReadonlySet<string>,
-): [MainSettings | null, MainSettings | null] {
+): StainSplit {
   const ids = settings.sourceChannelIds;
   if (!ids?.some((id) => stainChannelIds.has(id))) return [settings, null];
+  const isStain = ids.map((id) => stainChannelIds.has(id));
+  const mask = isStain.map(Number).join("");
+  const cached = stainSplitCache.get(settings);
+  if (cached?.mask === mask) return cached.split;
   const part = (stain: boolean): MainSettings | null => {
-    const keep = ids.map((id) => stainChannelIds.has(id) === stain);
-    if (!keep.includes(true)) return null;
-    const pick = <T>(values: readonly T[]) => values.filter((_, i) => keep[i]);
+    if (!isStain.includes(stain)) return null;
+    const pick = <T>(values: readonly T[]) =>
+      values.filter((_, i) => isStain[i] === stain);
     return {
       ...settings,
       selections: pick(settings.selections),
@@ -96,7 +125,9 @@ function splitStainChannels(
       sourceChannelIds: pick(ids),
     };
   };
-  return [part(false), part(true)];
+  const split: StainSplit = [part(false), part(true)];
+  stainSplitCache.set(settings, { mask, split });
+  return split;
 }
 
 type ViewerLoaderSources = {
@@ -133,6 +164,9 @@ function loaderListFromEntries(sources: ViewerLoaderSources): LoaderList {
   return list;
 }
 
+/** Brightfield DICOM draws RGB tiles through deck's BitmapLayer. */
+const isDicomRgb = (entry: DicomIndex) => entry.modality === "Brightfield";
+
 function createDicomTileLayer(args: {
   entry: DicomIndex;
   settings: unknown;
@@ -140,14 +174,13 @@ function createDicomTileLayer(args: {
   orientation?: ImageOrientation | null;
   opacity: number;
 }): Layer | null {
-  const rgbImage = args.entry.modality === "Brightfield";
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
   const imageKey = args.entry.sourceImageId || `dicom-${args.entry.series}`;
   return createTileLayers({
     pyramids: args.entry.pyramids,
     dicomLoader: args.entry.loader,
     settings: args.settings,
-    rgbImage,
+    rgbImage: isDicomRgb(args.entry),
     imageID: `${imageKey}${remount}`,
     modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
     opacity: args.opacity,
@@ -167,8 +200,6 @@ function createMultiscaleLayer(args: {
    */
   transfer?: JpegExportTransfer;
   overlay?: boolean;
-  /** Stain layer: whether anything is drawn below it to absorb from. */
-  stainBelow?: boolean;
   orientation?: ImageOrientation | null;
   opacity: number;
 }): Layer {
@@ -191,12 +222,8 @@ function createMultiscaleLayer(args: {
     // Viv's overview ImageLayer getRaster()s the full coarsest plane; isLoaded
     // waits on that decode even after tiles have painted.
     excludeBackground: true,
-    ...(args.stainBelow === undefined
-      ? {
-          ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
-          ...imageFadeParameters(Boolean(args.overlay), args.opacity),
-        }
-      : stainLayerParameters(args.stainBelow)),
+    ...(args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {}),
+    ...imageFadeParameters(Boolean(args.overlay), args.opacity),
     // Viv draws interleaved (packed RGB) tiles with deck's BitmapLayer.
     opacity: isInterleaved(args.loader.data[0].shape)
       ? bitmapLayerOpacity(args.opacity)
@@ -210,21 +237,90 @@ function createEncodedImageLayer(args: {
   entry: JpegLoaderEntry;
   settings: unknown;
   remountKey?: string | number;
-  stainBelow?: boolean;
   orientation?: ImageOrientation | null;
   opacity: number;
 }): Layer {
   const remount = args.remountKey === undefined ? "" : `-r${args.remountKey}`;
-  const stain = args.stainBelow === undefined ? "" : "-stain";
   return createJpegLayers({
     jpegLoader: args.entry.loader.data,
     settings: args.settings,
     transfer: args.entry.transfer ?? "contrast",
-    layerId: `jpeg-${args.entry.sourceImageId}${stain}${remount}`,
+    layerId: `jpeg-${args.entry.sourceImageId}${remount}`,
     modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
     opacity: args.opacity,
-    stainBelow: args.stainBelow,
   });
+}
+
+type HeDeconvPaint = {
+  parentIndex: number;
+  sourceChannelId: string;
+  mode: HeSplitMode;
+  hematoxylin: HeStainView;
+  eosin: HeStainView;
+};
+
+function liveHeStain(
+  stain: HeStainView,
+  sourceChannelId: string,
+  component: HeDeconvComponent,
+  live: ChannelRendering | null | undefined,
+): HeStainView {
+  if (
+    live?.sourceChannelId !== sourceChannelId ||
+    live.heComponent !== component
+  ) {
+    return stain;
+  }
+  if (live.kind === "contrast") {
+    return { ...stain, lower: live.lower, upper: live.upper };
+  }
+  return { ...stain, color: [live.r, live.g, live.b] };
+}
+
+function peelHeDeconvFromSettings(
+  settings: MainSettings | undefined,
+  heDeconvByChannelId: Record<string, HeDeconvSplit> | undefined,
+  live: ChannelRendering | null | undefined,
+): { settings: MainSettings | undefined; heLayers: HeDeconvPaint[] } {
+  const ids = settings?.sourceChannelIds;
+  if (!settings || !ids?.length || !heDeconvByChannelId) {
+    return { settings, heLayers: [] };
+  }
+  const heLayers: HeDeconvPaint[] = [];
+  const keep: number[] = [];
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i];
+    const split = id ? heDeconvByChannelId[id] : undefined;
+    if (!id || !split) {
+      keep.push(i);
+      continue;
+    }
+    const hematoxylin = liveHeStain(split.hematoxylin, id, "hematoxylin", live);
+    const eosin = liveHeStain(split.eosin, id, "eosin", live);
+    if (!hematoxylin.visible && !eosin.visible) continue;
+    heLayers.push({
+      parentIndex: settings.selections[i]?.c ?? 0,
+      sourceChannelId: id,
+      mode: split.mode,
+      hematoxylin,
+      eosin,
+    });
+  }
+  if (keep.length === ids.length) return { settings, heLayers };
+  const visibleFlags = settings.channelsVisible;
+  return {
+    settings: {
+      ...settings,
+      selections: keep.map((i) => settings.selections[i]),
+      colors: keep.map((i) => settings.colors[i]),
+      contrastLimits: keep.map((i) => settings.contrastLimits[i]),
+      channelsVisible: visibleFlags
+        ? keep.map((i) => visibleFlags[i] ?? true)
+        : undefined,
+      sourceChannelIds: keep.map((i) => ids[i]),
+    },
+    heLayers,
+  };
 }
 
 function buildImageLayers(args: {
@@ -238,6 +334,9 @@ function buildImageLayers(args: {
   images?: Image[];
   orientationPreview?: ImageOrientationPreview | null;
   opacityPreview?: ImageOpacityPreview | null;
+  heDeconvByChannelId?: Record<string, HeDeconvSplit>;
+  heStainFitByChannelId?: Record<string, HeStainFit>;
+  channelRendering?: ChannelRendering | null;
 }): Layer[] {
   const dicomIndexList = args.dicomIndexList ?? [];
   const omeLoaderEntries = args.omeLoaderEntries ?? [];
@@ -255,104 +354,127 @@ function buildImageLayers(args: {
     ),
   );
   // Stains multiply what is already drawn, so they paint after everything.
-  const stains: ((stainBelow: boolean) => Layer)[] = [];
+  const stains: Layer[] = [];
+  /**
+   * The fluorescence layer for `settings`. Its stain channels, if any, are
+   * built the same way and set aside in `stains`.
+   */
+  const withStains = (
+    settings: MainSettings,
+    canStain: boolean,
+    make: (settings: MainSettings, stain: boolean) => Layer | null,
+  ): Layer[] => {
+    const [fluorescence, stain] = canStain
+      ? splitStainChannels(settings, stainChannelIds)
+      : [settings, null];
+    const layer = fluorescence && make(fluorescence, false);
+    const stainLayer = stain && make(stain, true);
+    if (stainLayer) stains.push(stainLayer);
+    return layer ? [layer] : [];
+  };
 
   let omeVisiblePainted = 0;
-  const painted = [
+  const layers = [
     ...dicomIndexList.flatMap((entry, i) => {
       const settings = dicomSettingsList[i] as MainSettings | undefined;
       if (!settings?.selections?.length) return [];
-      const layer = createDicomTileLayer({
-        entry,
-        settings,
-        remountKey: args.remountKey,
-        orientation: orientationForImage(
-          images,
-          entry.sourceImageId,
-          orientationPreview,
-        ),
-        opacity: opacityOf(entry.sourceImageId),
-      });
-      if (!layer) return [];
-      return [layer];
+      return withStains(settings, !isDicomRgb(entry), (part) =>
+        createDicomTileLayer({
+          entry,
+          settings: part,
+          remountKey: args.remountKey,
+          orientation: orientationForImage(
+            images,
+            entry.sourceImageId,
+            orientationPreview,
+          ),
+          opacity: opacityOf(entry.sourceImageId),
+        }),
+      );
     }),
     ...omeLoaderEntries.flatMap(({ loader, transfer, sourceImageId }, i) => {
-      const settings = omeSettingsList[i] as MainSettings | undefined;
+      // Packed RGB draws through deck's BitmapLayer, which has no stain
+      // shader, and is the only layout the H&E split reads.
+      const packedRgb = isInterleaved(loader.data[0].shape);
       // Mask-only loaders have no intensity selections; painted by createMaskTileLayer.
-      if (!settings?.selections?.length) return [];
-      const layerId = `mainLayer-${sourceImageId}`;
-      const layerArgs = {
-        loader,
-        remountKey: args.remountKey,
-        orientation: orientationForImage(
-          images,
-          sourceImageId,
-          orientationPreview,
-        ),
-        opacity: opacityOf(sourceImageId),
-        ...(transfer ? { transfer } : {}),
-      };
-      // Packed RGB draws through deck's BitmapLayer, which has no stain shader.
-      const [fluorescence, stain] = isInterleaved(loader.data[0].shape)
-        ? [settings, null]
-        : splitStainChannels(settings, stainChannelIds);
-      if (stain) {
-        stains.push((stainBelow) =>
-          createMultiscaleLayer({
-            ...layerArgs,
-            settings: stain,
-            layerId: `${layerId}-stain`,
-            stainBelow,
-          }),
-        );
+      // H&E-split channels leave Viv's settings and paint as their own layer.
+      const peeled = peelHeDeconvFromSettings(
+        omeSettingsList[i] as MainSettings | undefined,
+        packedRgb ? args.heDeconvByChannelId : undefined,
+        args.channelRendering,
+      );
+      const settings = peeled.settings;
+      const orientation = orientationForImage(
+        images,
+        sourceImageId,
+        orientationPreview,
+      );
+      const opacity = opacityOf(sourceImageId);
+      const canStain = !packedRgb;
+      const out = settings?.selections?.length
+        ? withStains(settings, canStain, (part, stain) =>
+            createMultiscaleLayer({
+              loader,
+              settings: part,
+              layerId: `mainLayer-${sourceImageId}`,
+              remountKey: args.remountKey,
+              ...(transfer ? { transfer } : {}),
+              overlay: !stain && omeVisiblePainted++ > 0,
+              orientation,
+              opacity,
+            }),
+          )
+        : [];
+      const remount =
+        args.remountKey === undefined ? "" : `-r${args.remountKey}`;
+      for (const he of peeled.heLayers) {
+        const layer = createHeDeconvLayer({
+          id: `heDeconv-${sourceImageId}-${he.sourceChannelId}${remount}`,
+          loader,
+          parentIndex: he.parentIndex,
+          mode: he.mode,
+          hematoxylin: he.hematoxylin,
+          eosin: he.eosin,
+          overlay: omeVisiblePainted > 0,
+          modelMatrix: layerModelMatrix(loader, orientation),
+          opacity,
+          stainInverse:
+            args.heStainFitByChannelId?.[he.sourceChannelId]?.glslInverse,
+        });
+        if (layer) {
+          out.push(layer);
+          omeVisiblePainted += 1;
+        }
       }
-      if (!fluorescence) return [];
-      const overlay = omeVisiblePainted > 0;
-      omeVisiblePainted += 1;
-      return [
-        createMultiscaleLayer({
-          ...layerArgs,
-          settings: fluorescence,
-          layerId,
-          overlay,
-        }),
-      ];
+      return out;
     }),
     ...jpegLoaderEntries.flatMap((entry, i) => {
       const settings = jpegSettingsList[i] as MainSettings | undefined;
       if (!settings?.selections?.length) return [];
-      const layerArgs = {
-        entry,
-        remountKey: args.remountKey,
-        orientation: orientationForImage(
-          images,
-          entry.sourceImageId,
-          orientationPreview,
-        ),
-        opacity: opacityOf(entry.sourceImageId),
-      };
-      const [fluorescence, stain] = splitStainChannels(
-        settings,
-        stainChannelIds,
+      return withStains(settings, true, (part) =>
+        createEncodedImageLayer({
+          entry,
+          settings: part,
+          remountKey: args.remountKey,
+          orientation: orientationForImage(
+            images,
+            entry.sourceImageId,
+            orientationPreview,
+          ),
+          opacity: opacityOf(entry.sourceImageId),
+        }),
       );
-      if (stain) {
-        stains.push((stainBelow) =>
-          createEncodedImageLayer({
-            ...layerArgs,
-            settings: stain,
-            stainBelow,
-          }),
-        );
-      }
-      return fluorescence
-        ? [createEncodedImageLayer({ ...layerArgs, settings: fluorescence })]
-        : [];
     }),
   ];
-  return [
-    ...painted,
-    ...stains.map((make, i) => make(painted.length > 0 || i > 0)),
-  ];
+  for (const layer of stains) {
+    layers.push(
+      layer.clone({
+        id: `${layer.id}-stain`,
+        ...stainLayerParameters(layers.length > 0),
+      } as never),
+    );
+  }
+  return layers;
 }
 
 /** Settings, loader list, and layers for document-backed playback / authoring. */
@@ -391,6 +513,52 @@ export function useViewerLayers(args: {
     opacityPreview = null,
     remountKey,
   } = args;
+  const heDeconvByChannelId = useAppStore((s) => s.heDeconvByChannelId);
+  const heStainFitByChannelId = useAppStore((s) => s.heStainFitByChannelId);
+
+  useEffect(() => {
+    const ids = Object.keys(heDeconvByChannelId);
+    if (ids.length === 0) return;
+    let cancelled = false;
+
+    for (const channelId of ids) {
+      if (heStainFitByChannelId[channelId]) continue;
+      const sc = sourceChannels.find((c) => c.id === channelId);
+      if (!sc) continue;
+      const entry = omeLoaderEntries.find(
+        (e) => e.sourceImageId === sc.imageId,
+      );
+      if (!entry) continue;
+      void ensureHeStainFit({
+        loader: entry.loader,
+        cacheKey: `${sc.imageId}:${sc.index}`,
+        channelIndex: sc.index,
+      }).then((fit) => {
+        if (cancelled) return;
+        const store = useAppStore.getState();
+        if (!store.heDeconvByChannelId[channelId]) return;
+        store.setHeStainFit(channelId, fit);
+        if (!fit.failed) return;
+        // A failed read still draws (default vectors, empty sparklines) until
+        // the cache lets it be read again; dropping it then reruns this effect.
+        setTimeout(() => {
+          const app = useAppStore.getState();
+          if (app.heStainFitByChannelId[channelId] === fit) {
+            app.setHeStainFit(channelId, null);
+          }
+        }, RETRY_FAILED_AFTER_MS);
+      });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    heDeconvByChannelId,
+    heStainFitByChannelId,
+    omeLoaderEntries,
+    sourceChannels,
+  ]);
 
   // Histogram merges rewrite `sourceChannels` identity without changing Viv paint
   // inputs. Key config/settings/layers on a signature that omits distributions.
@@ -507,6 +675,9 @@ export function useViewerLayers(args: {
         images,
         orientationPreview,
         opacityPreview,
+        heDeconvByChannelId,
+        heStainFitByChannelId,
+        channelRendering,
       }),
     [
       dicomIndexList,
@@ -519,6 +690,9 @@ export function useViewerLayers(args: {
       images,
       orientationPreview,
       opacityPreview,
+      heDeconvByChannelId,
+      heStainFitByChannelId,
+      channelRendering,
     ],
   );
 

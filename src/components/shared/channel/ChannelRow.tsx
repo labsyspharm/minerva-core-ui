@@ -225,6 +225,70 @@ function MaskModeControls(props: {
   );
 }
 
+function toggleOptionClass(active: boolean): string {
+  return [
+    minervaTheme.focusRing,
+    styles.maskVizOption,
+    styles.modeToggleOption,
+    active ? styles.maskVizOptionActive : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** A choice of text options, in the same segmented chrome as the mask fill toggle. */
+export function SegmentedToggle<T extends string>(props: {
+  ariaLabel: string;
+  value: T;
+  options: readonly { value: T; label: string; title: string }[];
+  onChange: (value: T) => void;
+}) {
+  const { ariaLabel, value, options, onChange } = props;
+  return (
+    <fieldset className={styles.maskVizToggle} aria-label={ariaLabel}>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          className={toggleOptionClass(option.value === value)}
+          aria-pressed={option.value === value}
+          title={option.title}
+          onClick={() => {
+            if (option.value !== value) onChange(option.value);
+          }}
+        >
+          {option.label}
+        </button>
+      ))}
+    </fieldset>
+  );
+}
+
+/** Stain deconvolution on or off for a packed RGB H&E row. */
+function SeparateStainsToggle(props: {
+  on: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  const { on, onChange } = props;
+  return (
+    <span className={styles.maskVizToggle}>
+      <button
+        type="button"
+        className={toggleOptionClass(on)}
+        aria-pressed={on}
+        title={
+          on
+            ? "Show the scanned RGB image again"
+            : "Color deconvolution: hematoxylin and eosin as their own channels, fitted to this slide"
+        }
+        onClick={() => onChange(!on)}
+      >
+        Separate stains
+      </button>
+    </span>
+  );
+}
+
 type ChannelRowNameProps =
   | {
       mode: "label";
@@ -264,6 +328,9 @@ type ChannelRowProps = {
   visibilityBlocked?: boolean;
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
   more?: ChannelRowMore;
+  /** Packed RGB (H&E) row: shows the Separate stains switch. */
+  heSplit?: boolean;
+  onHeSplitChange?: (split: boolean) => void;
 };
 
 function EditableChannelRowName(
@@ -342,6 +409,8 @@ export function ChannelRow(props: ChannelRowProps) {
     visibilityBlocked,
     onColorClick,
     more,
+    heSplit,
+    onHeSplitChange,
   } = props;
 
   const showMask = isMask && maskVisualization;
@@ -400,8 +469,14 @@ export function ChannelRow(props: ChannelRowProps) {
               onChange={onMaskVisualizationChange}
             />
           ) : null}
+          {onHeSplitChange ? (
+            <SeparateStainsToggle
+              on={Boolean(heSplit)}
+              onChange={onHeSplitChange}
+            />
+          ) : null}
         </div>
-        {showMask && fixedColorHex ? (
+        {fixedColorHex && !showColor ? (
           <span
             className={styles.channelColorSwatchStatic}
             style={{ backgroundColor: `#${fixedColorHex}` }}
@@ -420,12 +495,16 @@ export function ChannelRow(props: ChannelRowProps) {
         ) : null}
         <div className={styles.channelRowTrailing}>
           {trailing}
-          {/* Draw modes are offered wherever the contrast editor is shown. */}
-          {more || contrast ? (
+          {/* Draw modes are offered wherever a channel's contrast editor is
+              shown; an H&E stain row is part of its RGB channel instead. */}
+          {more || (contrast && !contrast.heComponent) ? (
             <ChannelRowMoreMenu
               channelName={name.name}
               fitBusy={fitting}
-              drawChannelId={contrast?.sourceChannelId}
+              drawChannelId={
+                contrast?.heComponent ? undefined : contrast?.sourceChannelId
+              }
+              drawRowId={contrast?.groupId ? contrast.channelId : undefined}
               {...more}
             />
           ) : null}

@@ -17,7 +17,7 @@ import {
   isFloatDtype,
   quantizeFloatToUint16,
 } from "./floatRange";
-import type { LoaderPlane } from "./loaderTypes";
+import type { Loader } from "./viv";
 
 const FETCH_CONCURRENCY = 1;
 const FIT_CONCURRENCY = 2;
@@ -25,8 +25,6 @@ const GMM_MAX_SAMPLES = 40_000;
 /** Skip a tile/plane decode above this (uint16 4MP ≈ 8MB). */
 const GMM_MAX_DECODE_PIXELS = 4_000_000;
 const GMM_MAX_TILES = 8;
-
-type Loader = { data: LoaderPlane[] };
 
 type WriteGuard =
   | { kind: "still-missing" }
@@ -437,6 +435,11 @@ function upsertJob(args: {
   jobsByKey.set(key, job);
   enqueue(job);
   return job;
+}
+
+/** The story's OME loader for `imageId`, as last passed to `reconcileGmm`. */
+export function loaderForImage(imageId: string): Loader | undefined {
+  return loadersByImageId.get(imageId);
 }
 
 function targetFor(channelId: string): { sc: Channel; loader: Loader } | null {

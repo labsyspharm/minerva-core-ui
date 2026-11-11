@@ -5,12 +5,18 @@ import {
 } from "@/components/shared/ColorPickerPopover";
 import { useAuthorChannelNav } from "@/components/shared/channel/AuthorChannelNav";
 import {
+  type ChannelContrastEditorProps,
   contrastEditorPropsForGroupRow,
   contrastEditorPropsForSource,
   renderingForSource,
 } from "@/components/shared/channel/ChannelContrastEditor";
-import { ChannelRow } from "@/components/shared/channel/ChannelRow";
+import {
+  ChannelRow,
+  SegmentedToggle,
+} from "@/components/shared/channel/ChannelRow";
+import rowStyles from "@/components/shared/channel/ChannelRow.module.css";
 import { featureTableRowExtras } from "@/components/shared/channel/FeatureTable";
+import { StainPreview } from "@/components/shared/channel/StainPreview";
 import {
   applyGroupRowVisibilities,
   applyStackVisibilities,
@@ -29,6 +35,17 @@ import {
   type MaskVisualization,
 } from "@/lib/imaging/channelKind";
 import { getGmmPendingIds, subscribeGmmFit } from "@/lib/imaging/gmmScheduler";
+import {
+  defaultHeDeconvSplit,
+  HE_CONTRAST_SCALE,
+  HE_DECONV_COMPONENTS,
+  HE_DECONV_LABELS,
+  type HeDeconvComponent,
+  type HeDeconvSplit,
+  type HeSplitMode,
+  type HeStainView,
+} from "@/lib/imaging/heDeconvView";
+import { heStainColorsForFit } from "@/lib/imaging/heStainColors";
 import { sourceDistributionYValuesLength } from "@/lib/imaging/histogramLazy";
 import type { ImageChannelChip } from "@/lib/imaging/imageChannelOverview";
 import {
@@ -54,13 +71,28 @@ import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
 
 export type ChannelColorTarget =
   | { scope: "source"; sourceId: string }
-  | { scope: "group"; groupId: string; rowId: string };
+  | { scope: "group"; groupId: string; rowId: string }
+  /** One separated stain of an RGB channel (session state, not the document). */
+  | { scope: "he"; sourceId: string; component: HeDeconvComponent };
 
 export function commitChannelColorTarget(target: ChannelColorTarget | null) {
   if (!target) return;
-  const live = useAppStore.getState().channelRendering;
+  const app = useAppStore.getState();
+  const live = app.channelRendering;
   const doc = useDocumentStore.getState();
-  if (target.scope === "source") {
+  if (target.scope === "he") {
+    const colorLive = renderingForSource(
+      live,
+      target.sourceId,
+      "color",
+      target.component,
+    );
+    if (colorLive) {
+      app.patchHeDeconv(target.sourceId, target.component, {
+        color: [colorLive.r, colorLive.g, colorLive.b],
+      });
+    }
+  } else if (target.scope === "source") {
     const colorLive = renderingForSource(live, target.sourceId, "color");
     if (colorLive) {
       doc.setImages(
@@ -108,7 +140,21 @@ function hexForColorTarget(
   channelRendering: ChannelRendering | null,
   sourceChannels: Channel[],
   channelGroups: readonly ChannelGroup[],
+  heDeconvByChannelId: Record<string, HeDeconvSplit>,
 ): string | null {
+  if (target.scope === "he") {
+    const live = renderingForSource(
+      channelRendering,
+      target.sourceId,
+      "color",
+      target.component,
+    );
+    if (live) return rgbToHex(live);
+    const stain = heDeconvByChannelId[target.sourceId]?.[target.component];
+    if (!stain) return null;
+    const [r, g, b] = stain.color;
+    return rgbToHex({ r, g, b });
+  }
   if (target.scope === "source") {
     const live = renderingForSource(channelRendering, target.sourceId, "color");
     if (live) return rgbToHex(live);
@@ -127,6 +173,16 @@ function hexForColorTarget(
   );
 }
 
+function sourceIdForColorTarget(
+  target: ChannelColorTarget,
+  channelGroups: readonly ChannelGroup[],
+): string | undefined {
+  if (target.scope !== "group") return target.sourceId;
+  return channelGroups
+    .find((group) => group.id === target.groupId)
+    ?.channels.find((gc) => gc.id === target.rowId)?.channelId;
+}
+
 function previewLiveColor(target: ChannelColorTarget, hex: string) {
   const raw = hex.replace(/^#/, "").slice(0, 6);
   if (raw.length < 6) return;
@@ -134,13 +190,10 @@ function previewLiveColor(target: ChannelColorTarget, hex: string) {
   const g = Number.parseInt(raw.slice(2, 4), 16);
   const b = Number.parseInt(raw.slice(4, 6), 16);
   if ([r, g, b].some((n) => Number.isNaN(n))) return;
-  const doc = useDocumentStore.getState();
-  const sourceId =
-    target.scope === "source"
-      ? target.sourceId
-      : doc.channelGroups
-          .find((group) => group.id === target.groupId)
-          ?.channels.find((gc) => gc.id === target.rowId)?.channelId;
+  const sourceId = sourceIdForColorTarget(
+    target,
+    useDocumentStore.getState().channelGroups,
+  );
   if (!sourceId) return;
   useAppStore.getState().setChannelRendering({
     kind: "color",
@@ -148,6 +201,7 @@ function previewLiveColor(target: ChannelColorTarget, hex: string) {
     r,
     g,
     b,
+    ...(target.scope === "he" ? { heComponent: target.component } : {}),
   });
 }
 
@@ -160,6 +214,7 @@ export function ChannelColorPicker(props: {
   const images = useDocumentStore((s) => s.images);
   const channelGroups = useDocumentStore((s) => s.channelGroups);
   const channelRendering = useAppStore((s) => s.channelRendering);
+  const heDeconvByChannelId = useAppStore((s) => s.heDeconvByChannelId);
   const targetRef = React.useRef(target);
   targetRef.current = target;
 
@@ -168,16 +223,17 @@ export function ChannelColorPicker(props: {
     [images],
   );
   const hex = target
-    ? hexForColorTarget(target, channelRendering, sourceChannels, channelGroups)
+    ? hexForColorTarget(
+        target,
+        channelRendering,
+        sourceChannels,
+        channelGroups,
+        heDeconvByChannelId,
+      )
     : null;
-  const targetSourceId =
-    target?.scope === "source"
-      ? target.sourceId
-      : target
-        ? channelGroups
-            .find((g) => g.id === target.groupId)
-            ?.channels.find((gc) => gc.id === target.rowId)?.channelId
-        : undefined;
+  const targetSourceId = target
+    ? sourceIdForColorTarget(target, channelGroups)
+    : undefined;
   const stain = Boolean(
     targetSourceId && findSourceChannel(sourceChannels, targetSourceId)?.stain,
   );
@@ -201,12 +257,204 @@ export function ChannelColorPicker(props: {
       onClose={close}
       color={`#${hex ?? "000000"}`}
       showAlpha={false}
-      stainPreview={stain}
+      footer={stain && hex ? <StainPreview hex={hex} /> : null}
       onChange={(c) => {
         if (!target) return;
         previewLiveColor(target, c.hex);
       }}
     />
+  );
+}
+
+/** H&E stain sliders run over a stain's IF-like signal × HE_CONTRAST_SCALE, not a dtype. */
+const HE_CONTRAST_DISTRIBUTION = {
+  id: "",
+  YValues: [] as number[],
+  XScale: "linear" as const,
+  YScale: "linear" as const,
+  LowerRange: 0,
+  UpperRange: HE_CONTRAST_SCALE,
+};
+
+function heStainColor(
+  stain: HeStainView,
+  live: ChannelRendering | null,
+  sourceChannelId: string,
+  component: HeDeconvComponent,
+): { r: number; g: number; b: number } {
+  const liveColor = renderingForSource(
+    live,
+    sourceChannelId,
+    "color",
+    component,
+  );
+  if (liveColor) return { r: liveColor.r, g: liveColor.g, b: liveColor.b };
+  return { r: stain.color[0], g: stain.color[1], b: stain.color[2] };
+}
+
+function heDeconvContrastEditorProps(
+  sc: Channel,
+  component: HeDeconvComponent,
+  stain: HeStainView,
+  live: ChannelRendering | null,
+  yValues: number[],
+): ChannelContrastEditorProps {
+  const c = heStainColor(stain, live, sc.id, component);
+  const liveContrast = renderingForSource(live, sc.id, "contrast", component);
+  return {
+    groupId: "",
+    channelId: `${sc.id}:${component}`,
+    sourceChannelId: sc.id,
+    channelLabel: HE_DECONV_LABELS[component],
+    r: c.r,
+    g: c.g,
+    b: c.b,
+    lowerLimit: liveContrast ? liveContrast.lower : stain.lower,
+    upperLimit: liveContrast ? liveContrast.upper : stain.upper,
+    distribution: { ...HE_CONTRAST_DISTRIBUTION, YValues: yValues },
+    dtypeMax: HE_CONTRAST_SCALE,
+    heComponent: component,
+  };
+}
+
+/** Turning separation off keeps it, so turning it back on restores its settings. */
+const lastHeSplits = new Map<string, HeDeconvSplit>();
+
+/**
+ * The Separate stains switch for a packed RGB channel's row (the stain shader
+ * reads one packed RGB channel; planar RGB images get none).
+ */
+export function heSplitToggleProps(
+  sc: Channel | undefined,
+  sourceChannels: readonly Channel[],
+  split: HeDeconvSplit | undefined,
+): { heSplit?: boolean; onHeSplitChange?: (split: boolean) => void } {
+  if (!sc || sc.samples !== 3 || !isRgbDisplayChannel(sc, sourceChannels)) {
+    return {};
+  }
+  const id = sc.id;
+  return {
+    heSplit: Boolean(split),
+    onHeSplitChange: (on) => {
+      const app = useAppStore.getState();
+      const current = app.heDeconvByChannelId[id];
+      if (!on && current) lastHeSplits.set(id, current);
+      app.setHeDeconv(
+        id,
+        on ? (lastHeSplits.get(id) ?? defaultHeDeconvSplit()) : null,
+      );
+    },
+  };
+}
+
+const HE_SPLIT_MODES = [
+  {
+    value: "fluorescence",
+    label: "Fluorescence",
+    title:
+      "Each stain as an IF channel: its density converted to an IF-like signal, glowing on black",
+  },
+  {
+    value: "brightfield",
+    label: "Brightfield",
+    title: "Each stain as scanned: its own density on white glass",
+  },
+] as const satisfies readonly {
+  value: HeSplitMode;
+  label: string;
+  title: string;
+}[];
+
+/**
+ * Hematoxylin and eosin rows of an RGB channel whose stains are separated,
+ * under the choice of how they draw. As fluorescence each is an IF channel
+ * (visibility, color, a window over its signal); as brightfield each keeps
+ * its fitted color and density, so only visibility is left to set.
+ */
+export function HeStainRows(props: {
+  sc: Channel;
+  contrastEditable: boolean;
+  onPickColor: (target: ChannelColorTarget, anchor: DOMRect) => void;
+}) {
+  const { sc, contrastEditable, onPickColor } = props;
+  const split = useAppStore((s) => s.heDeconvByChannelId[sc.id]);
+  const fit = useAppStore((s) => s.heStainFitByChannelId[sc.id]);
+  const channelRendering = useAppStore((s) => s.channelRendering);
+  const patchHeDeconv = useAppStore((s) => s.patchHeDeconv);
+  if (!split) return null;
+  const brightfield = split.mode === "brightfield";
+  const fittedColors = brightfield ? heStainColorsForFit(fit) : null;
+  return (
+    <div className={rowStyles.heStains}>
+      <div className={rowStyles.heStainMode}>
+        <SegmentedToggle
+          ariaLabel="Draw the separated stains as"
+          value={split.mode}
+          options={HE_SPLIT_MODES}
+          onChange={(mode) =>
+            useAppStore.getState().setHeDeconv(sc.id, { ...split, mode })
+          }
+        />
+      </div>
+      <ul className={rowStyles.heStainList}>
+        {HE_DECONV_COMPONENTS.map((component) => {
+          const stain = split[component];
+          const label = HE_DECONV_LABELS[component];
+          const c = heStainColor(stain, channelRendering, sc.id, component);
+          return (
+            <li key={component} className={rowStyles.heStainBlock}>
+              <ChannelRow
+                visible={stain.visible}
+                visibilityTitle={
+                  stain.visible ? `Hide ${label}` : `Show ${label}`
+                }
+                visibilityAriaLabel={`Toggle visibility for ${label}`}
+                onToggleVisibility={() =>
+                  patchHeDeconv(sc.id, component, { visible: !stain.visible })
+                }
+                name={{
+                  mode: "label",
+                  name: label,
+                  title: label,
+                  className: rowStyles.stainName,
+                }}
+                {...(fittedColors
+                  ? { fixedColorHex: rgbToHex(fittedColors[component]) }
+                  : {
+                      colorHex: rgbToHex(c),
+                      colorTitle: `Pick color for ${label}`,
+                      onColorClick: (
+                        e: React.MouseEvent<HTMLButtonElement>,
+                      ) => {
+                        e.stopPropagation();
+                        onPickColor(
+                          { scope: "he", sourceId: sc.id, component },
+                          e.currentTarget.getBoundingClientRect(),
+                        );
+                      },
+                    })}
+                contrast={
+                  contrastEditable && stain.visible && !brightfield
+                    ? {
+                        ...heDeconvContrastEditorProps(
+                          sc,
+                          component,
+                          stain,
+                          channelRendering,
+                          fit?.stains?.[component].histogram ?? [],
+                        ),
+                        histogramLoading: !fit,
+                        onCommitRange: (lower, upper) =>
+                          patchHeDeconv(sc.id, component, { lower, upper }),
+                      }
+                    : undefined
+                }
+              />
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -230,6 +478,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     (s) => s.setChannelGroupRowVisibilities,
   );
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
+  const heSplit = useAppStore((s) => s.heDeconvByChannelId[chip.sourceId]);
   const palettePendingIds = React.useSyncExternalStore(
     subscribeStackPalettePending,
     getStackPalettePendingIds,
@@ -417,10 +666,10 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     setImagesAndChannelGroups(nextImages, nextGroups);
   };
 
-  const openColor = (el: HTMLButtonElement) => {
+  const openColor = (target: ChannelColorTarget, anchor: DOMRect) => {
     commitChannelColorTarget(colorTarget);
-    setColorTarget(colorTargetForRow);
-    setColorPos(colorPickerAnchorPosition(el.getBoundingClientRect()));
+    setColorTarget(target);
+    setColorPos(colorPickerAnchorPosition(anchor));
   };
 
   const contrastEditable = showHistogram && Boolean(nav?.contrastEditable);
@@ -463,6 +712,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
         }}
         contrast={contrast}
         more={contrastEditable ? { fitContrastId: sc.id } : undefined}
+        {...(rgbDisplay ? heSplitToggleProps(sc, sourceChannels, heSplit) : {})}
         {...(!rgbDisplay && isMaskChannel(sc)
           ? {
               isMask: true as const,
@@ -478,11 +728,21 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
                 colorTitle: `Pick color for ${sc.name}`,
                 onColorClick: (e: React.MouseEvent<HTMLButtonElement>) => {
                   e.stopPropagation();
-                  openColor(e.currentTarget);
+                  openColor(
+                    colorTargetForRow,
+                    e.currentTarget.getBoundingClientRect(),
+                  );
                 },
               }
             : {})}
       />
+      {rgbDisplay && visible && heSplit ? (
+        <HeStainRows
+          sc={sc}
+          contrastEditable={Boolean(nav?.contrastEditable)}
+          onPickColor={openColor}
+        />
+      ) : null}
       {colorTarget && colorPos ? (
         <ChannelColorPicker
           target={colorTarget}

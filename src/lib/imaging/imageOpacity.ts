@@ -69,6 +69,17 @@ export function imageFadeParameters(overlay: boolean, opacity: number) {
   };
 }
 
+/** Premultiplied `src` over what is drawn below (coverage in alpha). */
+export const PREMULTIPLIED_OVER_PARAMETERS = {
+  blend: true,
+  blendColorOperation: "add",
+  blendAlphaOperation: "add",
+  blendColorSrcFactor: "one",
+  blendColorDstFactor: "one-minus-src-alpha",
+  blendAlphaSrcFactor: "one",
+  blendAlphaDstFactor: "one-minus-src-alpha",
+};
+
 /** Later OME intensity layers: skip Viv's opaque background and add onto the base. */
 export const OME_INTENSITY_OVERLAY_PROPS = {
   refinementStrategy: "no-overlap" as const,

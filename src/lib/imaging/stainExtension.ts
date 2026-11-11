@@ -1,5 +1,7 @@
 import type { Layer } from "@deck.gl/core";
 import { VivLayerExtension } from "@hms-dbmi/viv";
+import { PREMULTIPLIED_OVER_PARAMETERS } from "./imageOpacity";
+import { STAIN_SIGNAL_K, stainDensityShare } from "./stainTransfer";
 
 /**
  * Lowest transmittance a picked stain color may ask for. A pure hue has a 0
@@ -26,7 +28,9 @@ export function stainOver(
   c: number,
 ): [number, number, number] {
   const od = stainDensity(color);
-  const t = (i: 0 | 1 | 2) => Math.round(background[i] * Math.exp(-c * od[i]));
+  const share = stainDensityShare(c, Math.hypot(od[0], od[1], od[2]));
+  const t = (i: 0 | 1 | 2) =>
+    Math.round(background[i] * Math.exp(-share * od[i]));
   return [t(0), t(1), t(2)];
 }
 
@@ -34,10 +38,20 @@ export function stainOver(
 const CHANNEL = "VIV_CHANNEL_INDEX";
 const moduleName = "stainModule";
 
+// The IF signal is the light the stain takes away, 1 − T^k (stainTransfer.ts),
+// so T^k falls linearly with it: weak signal stains lightly, and only the
+// strongest reaches the long dark tail real stains have.
 const fs = `uniform ${moduleName}Uniforms {
   float opacity;
   vec3 density${CHANNEL};
 } ${moduleName};
+
+const float STAIN_SIGNAL_K = ${STAIN_SIGNAL_K.toFixed(6)};
+
+float stain_density_share(float t, float full) {
+  float kd = STAIN_SIGNAL_K * full;
+  return kd > 1e-6 ? -log(1. - t * (1. - exp(-kd))) / kd : t;
+}
 
 vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   vec3 densities[NUM_CHANNELS] = vec3[NUM_CHANNELS](
@@ -45,7 +59,9 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   );
   vec3 od = vec3(0.);
   for (int i = 0; i < NUM_CHANNELS; i++) {
-    od += clamp(intensity[i], 0., 1.) * densities[i];
+    vec3 density = densities[i];
+    float t = clamp(intensity[i], 0., 1.);
+    od += stain_density_share(t, length(density)) * density;
   }
   float a = ${moduleName}.opacity;
   return vec4(exp(-od) * a, a);
@@ -74,7 +90,8 @@ type StainLayerProps = {
 /**
  * Replaces Viv's additive palette: each channel is a stain whose color at
  * full signal is its channel color, and the layer outputs premultiplied
- * transmittance `exp(-Σ cᵢ·ODᵢ)`.
+ * transmittance `exp(-Σ sᵢ·ODᵢ)`, `sᵢ` being the share of full density
+ * channel i's signal stands for (`stainDensityShare`).
  */
 class StainExtension extends VivLayerExtension {
   static extensionName = "StainExtension";
@@ -105,33 +122,30 @@ class StainExtension extends VivLayerExtension {
 /** Shared so deck sees the same `extensions` array across renders. */
 const STAIN_EXTENSIONS = [new StainExtension()];
 
+/** `dst · mix(1, T, α)` from premultiplied `(T·α, α)`; alpha below is kept. */
+const MULTIPLY_BELOW_PARAMETERS = {
+  blend: true,
+  blendColorOperation: "add",
+  blendColorSrcFactor: "dst",
+  blendColorDstFactor: "one-minus-src-alpha",
+  blendAlphaOperation: "add",
+  blendAlphaSrcFactor: "zero",
+  blendAlphaDstFactor: "one",
+};
+
 /**
- * Blend state for a stain layer. Over something: `dst · mix(1, T, α)`,
- * from premultiplied `(T·α, α)`. Nothing below: plain premultiplied over,
- * so the stains show on the (transparent → page) background like glass.
+ * Blend state for a stain layer. Over something: multiply what is below.
+ * Nothing below: plain premultiplied over, so the stains show on the
+ * (transparent → page) background like glass.
+ * Each pixel must be multiplied once: no overview backdrop, no overlapping tiles.
  */
 export function stainLayerParameters(somethingBelow: boolean) {
   return {
     extensions: STAIN_EXTENSIONS,
+    excludeBackground: true,
     refinementStrategy: "no-overlap" as const,
     parameters: somethingBelow
-      ? {
-          blend: true,
-          blendColorOperation: "add",
-          blendColorSrcFactor: "dst",
-          blendColorDstFactor: "one-minus-src-alpha",
-          blendAlphaOperation: "add",
-          blendAlphaSrcFactor: "zero",
-          blendAlphaDstFactor: "one",
-        }
-      : {
-          blend: true,
-          blendColorOperation: "add",
-          blendColorSrcFactor: "one",
-          blendColorDstFactor: "one-minus-src-alpha",
-          blendAlphaOperation: "add",
-          blendAlphaSrcFactor: "one",
-          blendAlphaDstFactor: "one-minus-src-alpha",
-        },
+      ? MULTIPLY_BELOW_PARAMETERS
+      : PREMULTIPLIED_OVER_PARAMETERS,
   };
 }

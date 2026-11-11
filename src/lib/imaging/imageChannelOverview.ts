@@ -40,6 +40,8 @@ export type ImageChannelChip = {
   visible: boolean;
   groupId: string | null;
   groupRowId?: string;
+  /** False for a chip with no editor to open (a planar RGB image's unit). */
+  editable?: boolean;
 };
 
 type ImageChannelGroupStrip = {

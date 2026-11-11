@@ -489,6 +489,24 @@ export function patchSourceChannelOnImages(
   }));
 }
 
+/** `groups` with the group row `rowId` patched (row ids are unique across groups). */
+export function patchGroupRowOnGroups(
+  groups: ChannelGroup[],
+  rowId: string,
+  patch: Partial<Pick<ChannelGroup["channels"][number], "color">>,
+): ChannelGroup[] {
+  return groups.map((g) =>
+    g.channels.some((gc) => gc.id === rowId)
+      ? {
+          ...g,
+          channels: g.channels.map((gc) =>
+            gc.id === rowId ? { ...gc, ...patch } : gc,
+          ),
+        }
+      : g,
+  );
+}
+
 /** Attach {@link ImageSource} to the row matching `imageId` (for persistence / reload). */
 export function setImageSource(
   images: Image[],

@@ -1,16 +1,47 @@
+import { Fragment } from "react";
 import { createPortal } from "react-dom";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { useAnchoredMenu } from "@/components/shared/useAnchoredMenu";
 import { CONTOUR_LEVELS_MAX } from "@/lib/imaging/contourExtension";
 import { refitGroupContrast } from "@/lib/imaging/gmmScheduler";
+import { setStainMode } from "@/lib/imaging/psudoPalette";
 import { useAppStore } from "@/lib/stores/appStore";
 import { useDocumentStore } from "@/lib/stores/documentStore";
-import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
 import styles from "./ChannelRow.module.css";
 
-function setChannelStain(channelId: string, stain: true | undefined) {
-  const doc = useDocumentStore.getState();
-  doc.setImages(patchSourceChannelOnImages(doc.images, channelId, { stain }));
+type DrawMode = "contour" | "stain" | null;
+
+const DRAW_MODES: { mode: DrawMode; label: string; title: string }[] = [
+  { mode: null, label: "Fill", title: "Glowing color fill" },
+  {
+    mode: "contour",
+    label: "Contour lines",
+    title: "Isolines across the contrast range",
+  },
+  {
+    mode: "stain",
+    label: "IHC stain",
+    title: "Darkens the images below, like a brightfield stain",
+  },
+];
+
+/**
+ * At most one draw mode per channel. Contour is session state in the app
+ * store; stain is saved on the document's source channel (see `setStainMode`).
+ * `rowId` is the group row the menu belongs to, if any.
+ */
+function setDrawMode(
+  channelId: string,
+  mode: DrawMode,
+  current: { contour: boolean; stain: boolean },
+  rowId: string | undefined,
+) {
+  if (current.contour !== (mode === "contour")) {
+    useAppStore.getState().toggleContourChannel(channelId);
+  }
+  if (current.stain !== (mode === "stain")) {
+    setStainMode(channelId, mode === "stain", rowId);
+  }
 }
 
 /** Row ⋮ actions a caller opts into; draw modes follow the row's contrast editor. */
@@ -26,6 +57,8 @@ export function ChannelRowMoreMenu(
     fitBusy?: boolean;
     /** Offers the draw modes (contour lines, IHC stain) for this source channel. */
     drawChannelId?: string;
+    /** The group row whose color an IHC stain recolors; none for a source row. */
+    drawRowId?: string;
   },
 ) {
   const {
@@ -34,18 +67,20 @@ export function ChannelRowMoreMenu(
     channelName,
     fitBusy,
     drawChannelId,
+    drawRowId,
   } = props;
   const contourOn = useAppStore((s) =>
     drawChannelId ? Boolean(s.contourChannelIds[drawChannelId]) : false,
   );
   const stainOn = useDocumentStore((s) =>
-    s.images.some((im) =>
-      im.channels.some((ch) => ch.id === drawChannelId && ch.stain),
-    ),
+    drawChannelId
+      ? s.images.some((im) =>
+          im.channels.some((ch) => ch.id === drawChannelId && ch.stain),
+        )
+      : false,
   );
-  const drawnAs = [contourOn && "contour lines", stainOn && "IHC stain"]
-    .filter(Boolean)
-    .join(" and ");
+  const mode: DrawMode = contourOn ? "contour" : stainOn ? "stain" : null;
+  const drawnAs = mode && DRAW_MODES.find((d) => d.mode === mode)?.label;
   const menu = useAnchoredMenu("end");
   if (!fitContrastId && !onRemoveFromGroup && !drawChannelId) return null;
   return (
@@ -53,8 +88,8 @@ export function ChannelRowMoreMenu(
       <button
         type="button"
         className={`${styles.channelActionButton}${drawnAs ? ` ${styles.channelActionButtonOn}` : ""}`}
-        title={drawnAs ? `Drawn as ${drawnAs}` : undefined}
-        aria-label={`More actions for ${channelName}${drawnAs ? ` (drawn as ${drawnAs})` : ""}`}
+        title={drawnAs || undefined}
+        aria-label={`More actions for ${channelName}${drawnAs ? ` (${drawnAs})` : ""}`}
         aria-expanded={menu.open}
         aria-haspopup="menu"
         onClick={(e) => {
@@ -90,49 +125,31 @@ export function ChannelRowMoreMenu(
                 </button>
               ) : null}
               {drawChannelId ? (
-                <button
-                  type="button"
-                  role="menuitemcheckbox"
-                  aria-checked={contourOn}
-                  className={`${minervaTheme.menuItem} ${styles.menuCheckItem}`}
-                  title="Draw this channel as isolines across its contrast range instead of a color fill"
-                  onClick={(e) => {
-                    // Stays open so the line count can be set right away.
-                    e.stopPropagation();
-                    if (!contourOn && stainOn)
-                      setChannelStain(drawChannelId, undefined);
-                    useAppStore.getState().toggleContourChannel(drawChannelId);
-                  }}
-                >
-                  Show as contour lines
-                  <span className={styles.menuCheck} aria-hidden>
-                    {contourOn ? "✓" : ""}
-                  </span>
-                </button>
-              ) : null}
-              {contourOn ? <ContourControls /> : null}
-              {drawChannelId ? (
-                <button
-                  type="button"
-                  role="menuitemcheckbox"
-                  aria-checked={stainOn}
-                  className={`${minervaTheme.menuItem} ${styles.menuCheckItem}`}
-                  title="Draw this channel as a brightfield stain that darkens the images below, in its channel color, instead of a glowing fill"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!stainOn && contourOn) {
-                      useAppStore
-                        .getState()
-                        .toggleContourChannel(drawChannelId);
-                    }
-                    setChannelStain(drawChannelId, stainOn ? undefined : true);
-                  }}
-                >
-                  Show as IHC stain
-                  <span className={styles.menuCheck} aria-hidden>
-                    {stainOn ? "✓" : ""}
-                  </span>
-                </button>
+                <fieldset aria-label="Draw as" className={styles.menuGroup}>
+                  <div className={styles.menuGroupLabel} aria-hidden>
+                    Draw as
+                  </div>
+                  {DRAW_MODES.map((option) => (
+                    <Fragment key={option.label}>
+                      <MenuRadioItem
+                        label={option.label}
+                        title={option.title}
+                        checked={mode === option.mode}
+                        onSelect={() =>
+                          setDrawMode(
+                            drawChannelId,
+                            option.mode,
+                            { contour: contourOn, stain: stainOn },
+                            drawRowId,
+                          )
+                        }
+                      />
+                      {option.mode === "contour" && contourOn ? (
+                        <ContourControls />
+                      ) : null}
+                    </Fragment>
+                  ))}
+                </fieldset>
               ) : null}
               {onRemoveFromGroup ? (
                 <button
@@ -153,6 +170,33 @@ export function ChannelRowMoreMenu(
           )
         : null}
     </div>
+  );
+}
+
+/** One choice of a ⋮ group. Stays open, so e.g. the contour line count can be set right away. */
+function MenuRadioItem(props: {
+  label: string;
+  title: string;
+  checked: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitemradio"
+      aria-checked={props.checked}
+      className={`${minervaTheme.menuItem} ${styles.menuCheckItem}`}
+      title={props.title}
+      onClick={(e) => {
+        e.stopPropagation();
+        props.onSelect();
+      }}
+    >
+      {props.label}
+      <span className={styles.menuCheck} aria-hidden>
+        {props.checked ? "✓" : ""}
+      </span>
+    </button>
   );
 }
 

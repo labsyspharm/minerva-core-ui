@@ -10,6 +10,8 @@ import {
   ChannelColorPicker,
   type ChannelColorTarget,
   commitChannelColorTarget,
+  HeStainRows,
+  heSplitToggleProps,
 } from "@/components/shared/channel/ChannelEditorPopover";
 import { ChannelRow } from "@/components/shared/channel/ChannelRow";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
@@ -134,8 +136,6 @@ type ChannelDragPayload = {
   fromGroupId?: string;
   fromRowId?: string;
 };
-
-const EMPTY_LOCKED_ROW_IDS = new Set<string>();
 
 let groupChannelDragActive = false;
 
@@ -282,7 +282,9 @@ function GroupFolderGearMenu(props: GroupFolderGearMenuProps) {
                 className={minervaTheme.menuItem}
                 disabled={!canOptimize || optimizeBusy}
                 title={
-                  canOptimize ? undefined : "Needs at least two image channels"
+                  canOptimize
+                    ? undefined
+                    : "Needs two fluorescence channels, two IHC stains, or a stain over H&E"
                 }
                 onClick={(e) => {
                   e.stopPropagation();
@@ -392,6 +394,7 @@ export const ChannelGroupsMasterDetail = (
   );
   const setGroupNames = useAppStore((s) => s.setGroupNames);
   const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
+  const heDeconvByChannelId = useAppStore((s) => s.heDeconvByChannelId);
 
   const sourceChannels = React.useMemo(
     () => flattenImageChannelsInDocumentOrder(images),
@@ -498,8 +501,12 @@ export const ChannelGroupsMasterDetail = (
     document.addEventListener("dragend", hide);
     return () => document.removeEventListener("dragend", hide);
   }, []);
-  const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] =
-    React.useState<Map<string, Set<string>>>(() => new Map());
+  const colorLockedRowIds = useAppStore((s) => s.colorLockedRowIds);
+  // Row ids are unique across groups, so one set serves every group.
+  const lockedRowIds = React.useMemo(
+    () => new Set(Object.keys(colorLockedRowIds)),
+    [colorLockedRowIds],
+  );
   const [channelNameFilter, setChannelNameFilter] = React.useState("");
   const channelSearch = uniqueSourceChannels.length > 1;
   const filteredAllChannels = React.useMemo(() => {
@@ -514,50 +521,6 @@ export const ChannelGroupsMasterDetail = (
     return first ? [first, ...rest] : matched;
   }, [uniqueSourceChannels, channelNameFilter, channelSearch]);
   const showAllChannelsList = uniqueSourceChannels.length > 0;
-
-  React.useEffect(() => {
-    setLockedColorRowIdsByGroup((prev) => {
-      const validGroupIds = new Set(channelGroups.map((g) => g.id));
-      const validRowIds = new Set(
-        channelGroups.flatMap((g) => g.channels.map((gc) => gc.id)),
-      );
-      let changed = false;
-      const next = new Map<string, Set<string>>();
-      for (const [groupId, rowIds] of prev) {
-        if (!validGroupIds.has(groupId)) {
-          changed = true;
-          continue;
-        }
-        const filtered = new Set(
-          [...rowIds].filter((rowId) => validRowIds.has(rowId)),
-        );
-        if (filtered.size !== rowIds.size) changed = true;
-        if (filtered.size > 0) next.set(groupId, filtered);
-      }
-      return changed ? next : prev;
-    });
-  }, [channelGroups]);
-
-  const lockedIdsForGroup = React.useCallback(
-    (groupId: string) =>
-      lockedColorRowIdsByGroup.get(groupId) ?? EMPTY_LOCKED_ROW_IDS,
-    [lockedColorRowIdsByGroup],
-  );
-
-  const toggleColorLock = React.useCallback(
-    (groupId: string, rowId: string) => {
-      setLockedColorRowIdsByGroup((prev) => {
-        const next = new Map(prev);
-        const set = new Set(next.get(groupId) ?? []);
-        if (set.has(rowId)) set.delete(rowId);
-        else set.add(rowId);
-        if (set.size === 0) next.delete(groupId);
-        else next.set(groupId, set);
-        return next;
-      });
-    },
-    [],
-  );
 
   const selectionMaskVisible =
     channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true;
@@ -673,12 +636,6 @@ export const ChannelGroupsMasterDetail = (
   const deleteGroup = (groupId: string) => {
     const newGroups = channelGroups.filter(({ id }) => id !== groupId);
     syncGroupState(newGroups);
-    setLockedColorRowIdsByGroup((prev) => {
-      if (!prev.has(groupId)) return prev;
-      const next = new Map(prev);
-      next.delete(groupId);
-      return next;
-    });
     if (activeChannelGroupId === groupId) {
       const next = newGroups[0]?.id;
       if (next) activateGroup(next);
@@ -750,7 +707,7 @@ export const ChannelGroupsMasterDetail = (
       }
       const sc = sourceChannels.find(({ id }) => id === sourceChannelUUID);
       if (!sc) return;
-      const lockedIds = new Set(group.channels.map((gc) => gc.id));
+      const storyId = useDocumentStore.getState().activeStoryId;
       const slotIndex = group.channels.length;
       const isMask = isMaskChannel(sc);
       // H&E joins as one unit: every plane of its image, no GMM or palette.
@@ -781,13 +738,22 @@ export const ChannelGroupsMasterDetail = (
         awaitGroupRowFits(newRows);
       }
 
-      const newGroups = channelGroups.map((g) =>
-        g.id !== groupId ? g : { ...g, channels: [...g.channels, ...newRows] },
-      );
+      // The GMM fit above and the palette below can take seconds, so the new
+      // rows go into the groups as they are when each result lands.
+      const storyChanged = () =>
+        useDocumentStore.getState().activeStoryId !== storyId;
+      if (storyChanged()) return;
+      const withNewRows = (groups: ChannelGroup[]) =>
+        groups.map((g) =>
+          g.id !== groupId
+            ? g
+            : { ...g, channels: [...g.channels, ...newRows] },
+        );
+      const newGroups = withNewRows(useDocumentStore.getState().channelGroups);
 
       const updatedGroup = newGroups.find((g) => g.id === groupId);
       setChannelGroupRowVisibilities({
-        ...channelGroupRowVisibilities,
+        ...useAppStore.getState().channelGroupRowVisibilities,
         ...Object.fromEntries(newRows.map((gc) => [gc.id, true])),
       });
 
@@ -801,6 +767,12 @@ export const ChannelGroupsMasterDetail = (
         return;
       }
 
+      // Only the new rows get colors; every other row keeps its own.
+      const lockedIds = new Set(
+        updatedGroup.channels
+          .filter((gc) => !newRows.includes(gc))
+          .map((gc) => gc.id),
+      );
       setOptimizePaletteBusy(true);
       const pendingIds = groupOptimizePendingSourceIds(
         updatedGroup,
@@ -815,13 +787,21 @@ export const ChannelGroupsMasterDetail = (
           sourceChannels,
           lockedIds,
         );
+        if (storyChanged()) return;
         syncGroupState(
-          applyOptimizedColorsToChannelGroup(newGroups, groupId, colors, {
-            lockedChannelRowIds: lockedIds,
-          }),
+          applyOptimizedColorsToChannelGroup(
+            withNewRows(useDocumentStore.getState().channelGroups),
+            updatedGroup,
+            colors,
+            { lockedChannelRowIds: lockedIds },
+          ),
         );
       } catch {
-        syncGroupState(newGroups);
+        if (!storyChanged()) {
+          syncGroupState(
+            withNewRows(useDocumentStore.getState().channelGroups),
+          );
+        }
       } finally {
         setStackPalettePendingMany(pendingIds, false);
         setOptimizePaletteBusy(false);
@@ -833,7 +813,6 @@ export const ChannelGroupsMasterDetail = (
       syncGroupState,
       optimizePaletteBusy,
       setChannelGroupRowVisibilities,
-      channelGroupRowVisibilities,
     ],
   );
 
@@ -854,7 +833,6 @@ export const ChannelGroupsMasterDetail = (
             ),
           )
         : null;
-    // Locked-color ids for dropped rows are pruned by the channelGroups effect.
     syncGroupState(
       groups.map((g) =>
         g.id !== groupId
@@ -901,12 +879,12 @@ export const ChannelGroupsMasterDetail = (
     if (!group || !isGroupEligibleForPsudoOptimize(group, sourceChannels)) {
       return;
     }
-    const lockedIds = lockedIdsForGroup(groupId);
     const pendingIds = groupOptimizePendingSourceIds(
       group,
       sourceChannels,
-      lockedIds,
+      lockedRowIds,
     );
+    const storyId = useDocumentStore.getState().activeStoryId;
     setOptimizePaletteBusy(true);
     setStackPalettePendingMany(pendingIds, true);
     useAppStore.getState().clearChannelRendering();
@@ -914,15 +892,18 @@ export const ChannelGroupsMasterDetail = (
       const colors = await optimizeChannelGroupWithLocks(
         group,
         sourceChannels,
-        lockedIds,
+        lockedRowIds,
+      );
+      const doc = useDocumentStore.getState();
+      if (doc.activeStoryId !== storyId) return;
+      // Locks as they are now: a row locked while this ran keeps its color.
+      const lockedNow = new Set(
+        Object.keys(useAppStore.getState().colorLockedRowIds),
       );
       syncGroupState(
-        applyOptimizedColorsToChannelGroup(
-          useDocumentStore.getState().channelGroups,
-          groupId,
-          colors,
-          { lockedChannelRowIds: lockedIds },
-        ),
+        applyOptimizedColorsToChannelGroup(doc.channelGroups, group, colors, {
+          lockedChannelRowIds: lockedNow,
+        }),
       );
     } catch {
     } finally {
@@ -1023,6 +1004,21 @@ export const ChannelGroupsMasterDetail = (
     setColorPickerPos(colorPickerAnchorPosition(rect));
   };
 
+  const heSplitProps = (sc: Channel | undefined) =>
+    heSplitToggleProps(
+      sc,
+      sourceChannels,
+      sc ? heDeconvByChannelId[sc.id] : undefined,
+    );
+
+  const renderHeStainRows = (sc: Channel) => (
+    <HeStainRows
+      sc={sc}
+      contrastEditable={Boolean(contrastEditable)}
+      onPickColor={openColorPicker}
+    />
+  );
+
   const showImageBadge = images.length > 1;
   const imageLabels = React.useMemo(
     () => uniqueImageDisplayLabels(images),
@@ -1053,7 +1049,7 @@ export const ChannelGroupsMasterDetail = (
           return [{ gc, sc, rgbDisplay }];
         })
       : [];
-    const lockedIds = lockedIdsForGroup(group.id);
+    const lockedIds = lockedRowIds;
     const allGroupRowsOn =
       group.channels.length > 0 &&
       group.channels.every((gc) =>
@@ -1282,6 +1278,7 @@ export const ChannelGroupsMasterDetail = (
                         imageSubtitle={imageSubtitle}
                         contrast={contrast}
                         locked={colorLocked}
+                        {...(rgbDisplay ? heSplitProps(sc) : {})}
                         {...(!rgbDisplay && sc && isMaskChannel(sc)
                           ? {
                               isMask: true,
@@ -1339,7 +1336,9 @@ export const ChannelGroupsMasterDetail = (
                                   : `Lock color for ${name}`
                               }
                               aria-pressed={colorLocked}
-                              onClick={() => toggleColorLock(group.id, gc.id)}
+                              onClick={() =>
+                                useAppStore.getState().toggleColorLock(gc.id)
+                              }
                             >
                               {colorLocked ? (
                                 <LockIcon width={12} height={12} aria-hidden />
@@ -1355,6 +1354,9 @@ export const ChannelGroupsMasterDetail = (
                         }
                       />
                     </DraggableChannelRow>
+                    {rgbDisplay && visible && sc && heSplitProps(sc).heSplit
+                      ? renderHeStainRows(sc)
+                      : null}
                   </li>
                 );
               })}
@@ -1542,6 +1544,7 @@ export const ChannelGroupsMasterDetail = (
             }}
             imageSubtitle={imageSubtitle}
             contrast={contrast}
+            {...(expanded && rgbDisplay ? heSplitProps(sc) : {})}
             {...(expanded && !rgbDisplay && isMaskChannel(sc)
               ? {
                   isMask: true,
@@ -1559,6 +1562,9 @@ export const ChannelGroupsMasterDetail = (
             }
           />
         </DraggableChannelRow>
+        {expanded && rgbDisplay && heSplitProps(sc).heSplit
+          ? renderHeStainRows(sc)
+          : null}
       </li>
     );
   };

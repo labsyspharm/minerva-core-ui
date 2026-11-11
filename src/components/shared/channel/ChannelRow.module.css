@@ -1,5 +1,35 @@
 /* Channel row — story look. */
 
+/* Separated stains under an H&E row: how they draw, then a row each. */
+.heStains {
+  padding: 0 0 4px 28px;
+}
+
+.heStainMode {
+  display: flex;
+  margin: 2px 0 4px;
+}
+
+.heStainList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.heStainBlock {
+  margin: 0;
+}
+
+.stainName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: inherit;
+  color: var(--minerva-ink);
+}
+
 .channelNameInput {
   display: block;
   width: 100%;
@@ -72,6 +102,32 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* A set of ⋮ choices (draw modes), ruled off from the actions around it. */
+.menuGroup {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.menuGroup:not(:first-child) {
+  margin-top: 0.25em;
+  padding-top: 0.25em;
+  border-top: 1px solid var(--minerva-edge);
+}
+
+.menuGroup:not(:last-child) {
+  margin-bottom: 0.25em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--minerva-edge);
+}
+
+.menuGroupLabel {
+  padding: 0.35em 0.85em 0.15em;
+  color: var(--minerva-quiet);
+  font-size: var(--minerva-size-note);
+}
+
 .menuCheckItem {
   display: flex;
   align-items: center;
@@ -134,7 +190,7 @@
   background: var(--minerva-wash);
 }
 
-/* Locked color, or a channel drawn as contour lines. */
+/* Locked color, or a channel drawn other than as a fill. */
 .channelActionButtonOn {
   color: var(--minerva-ink);
   box-shadow: inset 0 -1px 0 var(--minerva-ink);
@@ -431,6 +487,17 @@
 .maskVizOptionActive {
   background: color-mix(in srgb, var(--minerva-ink) 16%, transparent);
   color: var(--minerva-ink);
+}
+
+.modeToggleOption {
+  width: auto;
+  min-width: 26px;
+  padding: 0 5px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
 }
 
 .maskVizIconOutline,

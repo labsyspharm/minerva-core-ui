@@ -54,6 +54,7 @@ import {
   isGroupRowAwaitingFit,
   reconcileGmm,
 } from "@/lib/imaging/gmmScheduler";
+import { forgetHeStainEstimates } from "@/lib/imaging/heStainFit";
 import {
   clearOmeHistogramCache,
   ensureOmeHistogramDistributions,
@@ -738,9 +739,20 @@ const Content = (props: Props) => {
     app.clearChannelRendering();
     const channelVisibilities = { ...app.channelVisibilities };
     delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
+    // A replaced image keeps its channel ids: its H&E split and fit must not.
+    const channelIds = new Set(
+      removed.flatMap((im) => im.channels.map((ch) => ch.id)),
+    );
+    const without = <T,>(byId: Record<string, T>) =>
+      Object.fromEntries(
+        Object.entries(byId).filter(([id]) => !channelIds.has(id)),
+      );
+    for (const im of removed) forgetHeStainEstimates(im.id);
     useAppStore.setState({
       imageSelectionMask: null,
       channelVisibilities,
+      heDeconvByChannelId: without(app.heDeconvByChannelId),
+      heStainFitByChannelId: without(app.heStainFitByChannelId),
     });
     const keys = removed.flatMap((im) =>
       im.source?.kind === "local" ? [im.source.handleKey] : [],

@@ -13,6 +13,7 @@ import {
   CONTOUR_SMOOTHING_STEPS,
   contourExtension,
 } from "./contourExtension";
+import { PREMULTIPLIED_OVER_PARAMETERS } from "./imageOpacity";
 import type { HasTile, LoaderPlane, SupportedTypedArray } from "./loaderTypes";
 
 /** Raw tiles kept for stitching edge buffers; neighboring windows share them. */
@@ -412,15 +413,7 @@ export function withContourLayers(
     contourLevels: opts.levels,
     pickable: false,
     refinementStrategy: "no-overlap",
-    parameters: {
-      blend: true,
-      blendColorOperation: "add",
-      blendAlphaOperation: "add",
-      blendColorSrcFactor: "one",
-      blendColorDstFactor: "one-minus-src-alpha",
-      blendAlphaSrcFactor: "one",
-      blendAlphaDstFactor: "one-minus-src-alpha",
-    },
+    parameters: PREMULTIPLIED_OVER_PARAMETERS,
     ...clip([contourExtension]),
   } as never);
   return { base, lines };
