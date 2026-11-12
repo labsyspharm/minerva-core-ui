@@ -102,11 +102,9 @@ export function WaypointLensSettings(props: {
           </span>
         </>
       ) : null}
-      <p className={styles.lensHint}>
-        {choices.length === 0 && !lens
-          ? "Add a second channel group to show it through a lens."
-          : "Shows another group inside a circle that follows the reader's cursor. L hides it."}
-      </p>
+      {choices.length === 0 ? (
+        <p className={styles.lensHint}>Needs two channel groups.</p>
+      ) : null}
     </section>
   );
 }

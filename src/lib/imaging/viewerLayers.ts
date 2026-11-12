@@ -24,6 +24,7 @@ import type {
   ImageOrientation,
 } from "@/lib/stores/documentStore";
 import { buildImageViewerSignature } from "@/lib/viewer/imageViewerSignature";
+import { visibilitiesShowingOnlyGroup } from "./channelCompositor";
 import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
@@ -479,10 +480,17 @@ export function useViewerLayers(args: {
     lensGroup,
   );
 
-  // Readers always see a whole group (eye toggles are session-only), so the
-  // lens ignores visibility maps and skips the live contrast/colour preview.
+  // An empty visibility map means "first group". The lens has to name its group.
+  // Live contrast/colour preview stays on the base image.
   const lensImageLayers = useMemo(() => {
     if (!lensGroup) return [] as Layer[];
+    const { sourceChannels, channelGroups } = channelsRef.current;
+    const only = visibilitiesShowingOnlyGroup({
+      group: lensGroup,
+      channelGroups,
+      sourceChannels,
+      stackVisibilities: {},
+    });
     const settingsFor = (
       modality: string,
       loader: Loader | undefined,
@@ -492,9 +500,9 @@ export function useViewerLayers(args: {
         lensGroup.id,
         modality,
         loader,
-        {},
+        only.channelVisibilities,
         sourceImageId,
-        {},
+        only.channelGroupRowVisibilities,
       ) as MainSettings;
     return buildImageLayers({
       dicomIndexList,
