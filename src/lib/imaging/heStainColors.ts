@@ -1,13 +1,10 @@
 import { Matrix3 } from "@math.gl/core";
-import type { Channel } from "@/lib/stores/documentStore";
 import {
   DEFAULT_STAIN_INVERSE,
-  ensureHeStainFit,
   type GlslMat3,
   type HeStainFit,
 } from "./heStainFit";
 import type { RgbColor } from "./sourceChannelStyle";
-import type { Loader } from "./viv";
 
 /** How hematoxylin and eosin look on this slide, as colors on glass. */
 export type HeStainColors = { hematoxylin: RgbColor; eosin: RgbColor };
@@ -68,21 +65,4 @@ export function heStainColorsForFit(
       fit.stains?.hematoxylin.strength ?? DEFAULT_STRENGTHS.hematoxylin,
     eosin: fit.stains?.eosin.strength ?? DEFAULT_STRENGTHS.eosin,
   });
-}
-
-/**
- * Macenko H and E colors for an RGB H&E source channel. The fit is cached by
- * `heStainFit`, keyed as the stain separation is.
- */
-export async function estimateHeStainColors(
-  loader: Loader,
-  channel: Pick<Channel, "imageId" | "index">,
-): Promise<HeStainColors> {
-  return heStainColorsForFit(
-    await ensureHeStainFit({
-      loader,
-      cacheKey: `${channel.imageId}:${channel.index}`,
-      channelIndex: channel.index,
-    }),
-  );
 }

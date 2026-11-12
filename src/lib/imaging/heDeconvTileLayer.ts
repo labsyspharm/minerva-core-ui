@@ -19,9 +19,7 @@ import type {
   SupportedDtype,
   SupportedTypedArray,
 } from "@/lib/imaging/loaderTypes";
-import { planeSize } from "@/lib/imaging/loaderTypes";
 import {
-  ADDITIVE_BLEND_PARAMETERS,
   createLoaderPyramidTileLayer,
   layerGetShaders,
   XRLayerBase,
@@ -307,8 +305,6 @@ export function createHeDeconvLayer(args: {
   const planes = args.loader.data;
   if (!planes?.length) return null;
   const finest = planes[0];
-  const { width: planeW, height: planeH } = planeSize(finest);
-  if (planeW <= 0 || planeH <= 0) return null;
   const parentIndex = args.parentIndex;
   const dtype = finest.dtype;
   const uToRgb8 = rgb8ScaleFromDtype(dtype);
@@ -330,7 +326,14 @@ export function createHeDeconvLayer(args: {
     opacity < 1
       ? imageFadeParameters(overlay, opacity).parameters
       : overlay
-        ? ADDITIVE_BLEND_PARAMETERS
+        ? {
+            blendColorOperation: "add",
+            blendAlphaOperation: "add",
+            blendColorSrcFactor: "one",
+            blendColorDstFactor: "one",
+            blendAlphaSrcFactor: "one",
+            blendAlphaDstFactor: "one",
+          }
         : undefined;
 
   return createLoaderPyramidTileLayer<HeTileData>({

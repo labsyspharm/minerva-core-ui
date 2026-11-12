@@ -138,34 +138,25 @@ export function withFittedWindows(
 /** A result that failed to read (error, timeout) is read again after this. */
 export const RETRY_FAILED_AFTER_MS = 30_000;
 
-/** `run` once per `key`; a `failed` result stays only until it may be retried. */
-function cachedRun<T extends { failed?: true }>(
-  cache: Map<string, Promise<T>>,
-  key: string,
-  run: () => Promise<T>,
-): Promise<T> {
-  const hit = cache.get(key);
-  if (hit) return hit;
-  const p = run().then((result) => {
-    if (result.failed) {
-      setTimeout(() => {
-        if (cache.get(key) === p) cache.delete(key);
-      }, RETRY_FAILED_AFTER_MS);
-    }
-    return result;
-  });
-  cache.set(key, p);
-  return p;
-}
-
 export function ensureHeStainFit(args: {
   loader: Loader;
   cacheKey: string;
   channelIndex: number;
 }): Promise<HeStainFit> {
-  return cachedRun(inflight, args.cacheKey, () =>
-    estimateHeStainFit(args.loader, args.channelIndex),
+  const hit = inflight.get(args.cacheKey);
+  if (hit) return hit;
+  const p = estimateHeStainFit(args.loader, args.channelIndex).then(
+    (result) => {
+      if (result.failed) {
+        setTimeout(() => {
+          if (inflight.get(args.cacheKey) === p) inflight.delete(args.cacheKey);
+        }, RETRY_FAILED_AFTER_MS);
+      }
+      return result;
+    },
   );
+  inflight.set(args.cacheKey, p);
+  return p;
 }
 
 function unit(v: readonly number[]): Vec3 | null {

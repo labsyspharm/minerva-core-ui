@@ -10,10 +10,7 @@ import {
   contrastEditorPropsForSource,
   renderingForSource,
 } from "@/components/shared/channel/ChannelContrastEditor";
-import {
-  ChannelRow,
-  SegmentedToggle,
-} from "@/components/shared/channel/ChannelRow";
+import { ChannelRow } from "@/components/shared/channel/ChannelRow";
 import rowStyles from "@/components/shared/channel/ChannelRow.module.css";
 import { featureTableRowExtras } from "@/components/shared/channel/FeatureTable";
 import { StainPreview } from "@/components/shared/channel/StainPreview";
@@ -321,14 +318,20 @@ function heDeconvContrastEditorProps(
 const lastHeSplits = new Map<string, HeDeconvSplit>();
 
 /**
- * The Separate stains switch for a packed RGB channel's row (the stain shader
- * reads one packed RGB channel; planar RGB images get none).
+ * The recombine / separate stains toggle, and how separated stains draw, for
+ * a packed RGB channel's row (the stain shader reads one packed RGB channel;
+ * planar RGB images get none).
  */
 export function heSplitToggleProps(
   sc: Channel | undefined,
   sourceChannels: readonly Channel[],
   split: HeDeconvSplit | undefined,
-): { heSplit?: boolean; onHeSplitChange?: (split: boolean) => void } {
+): {
+  heSplit?: boolean;
+  onHeSplitChange?: (split: boolean) => void;
+  heMode?: HeSplitMode;
+  onHeModeChange?: (mode: HeSplitMode) => void;
+} {
   if (!sc || sc.samples !== 3 || !isRgbDisplayChannel(sc, sourceChannels)) {
     return {};
   }
@@ -344,32 +347,20 @@ export function heSplitToggleProps(
         on ? (lastHeSplits.get(id) ?? defaultHeDeconvSplit()) : null,
       );
     },
+    heMode: split?.mode,
+    onHeModeChange: (mode) => {
+      const app = useAppStore.getState();
+      const current = app.heDeconvByChannelId[id];
+      if (current) app.setHeDeconv(id, { ...current, mode });
+    },
   };
 }
 
-const HE_SPLIT_MODES = [
-  {
-    value: "fluorescence",
-    label: "Fluorescence",
-    title:
-      "Each stain as an IF channel: its density converted to an IF-like signal, glowing on black",
-  },
-  {
-    value: "brightfield",
-    label: "Brightfield",
-    title: "Each stain as scanned: its own density on white glass",
-  },
-] as const satisfies readonly {
-  value: HeSplitMode;
-  label: string;
-  title: string;
-}[];
-
 /**
- * Hematoxylin and eosin rows of an RGB channel whose stains are separated,
- * under the choice of how they draw. As fluorescence each is an IF channel
- * (visibility, color, a window over its signal); as brightfield each keeps
- * its fitted color and density, so only visibility is left to set.
+ * Hematoxylin and eosin rows of an RGB channel whose stains are separated.
+ * As fluorescence each is an IF channel (visibility, color, a window over its
+ * signal); as brightfield each keeps its fitted color and density, so only
+ * visibility is left to set.
  */
 export function HeStainRows(props: {
   sc: Channel;
@@ -385,76 +376,62 @@ export function HeStainRows(props: {
   const brightfield = split.mode === "brightfield";
   const fittedColors = brightfield ? heStainColorsForFit(fit) : null;
   return (
-    <div className={rowStyles.heStains}>
-      <div className={rowStyles.heStainMode}>
-        <SegmentedToggle
-          ariaLabel="Draw the separated stains as"
-          value={split.mode}
-          options={HE_SPLIT_MODES}
-          onChange={(mode) =>
-            useAppStore.getState().setHeDeconv(sc.id, { ...split, mode })
-          }
-        />
-      </div>
-      <ul className={rowStyles.heStainList}>
-        {HE_DECONV_COMPONENTS.map((component) => {
-          const stain = split[component];
-          const label = HE_DECONV_LABELS[component];
-          const c = heStainColor(stain, channelRendering, sc.id, component);
-          return (
-            <li key={component} className={rowStyles.heStainBlock}>
-              <ChannelRow
-                visible={stain.visible}
-                visibilityTitle={
-                  stain.visible ? `Hide ${label}` : `Show ${label}`
-                }
-                visibilityAriaLabel={`Toggle visibility for ${label}`}
-                onToggleVisibility={() =>
-                  patchHeDeconv(sc.id, component, { visible: !stain.visible })
-                }
-                name={{
-                  mode: "label",
-                  name: label,
-                  title: label,
-                  className: rowStyles.stainName,
-                }}
-                {...(fittedColors
-                  ? { fixedColorHex: rgbToHex(fittedColors[component]) }
-                  : {
-                      colorHex: rgbToHex(c),
-                      colorTitle: `Pick color for ${label}`,
-                      onColorClick: (
-                        e: React.MouseEvent<HTMLButtonElement>,
-                      ) => {
-                        e.stopPropagation();
-                        onPickColor(
-                          { scope: "he", sourceId: sc.id, component },
-                          e.currentTarget.getBoundingClientRect(),
-                        );
-                      },
-                    })}
-                contrast={
-                  contrastEditable && stain.visible && !brightfield
-                    ? {
-                        ...heDeconvContrastEditorProps(
-                          sc,
-                          component,
-                          stain,
-                          channelRendering,
-                          fit?.stains?.[component].histogram ?? [],
-                        ),
-                        histogramLoading: !fit,
-                        onCommitRange: (lower, upper) =>
-                          patchHeDeconv(sc.id, component, { lower, upper }),
-                      }
-                    : undefined
-                }
-              />
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <ul className={rowStyles.heStainList}>
+      {HE_DECONV_COMPONENTS.map((component) => {
+        const stain = split[component];
+        const label = HE_DECONV_LABELS[component];
+        const c = heStainColor(stain, channelRendering, sc.id, component);
+        return (
+          <li key={component} className={rowStyles.heStainBlock}>
+            <ChannelRow
+              visible={stain.visible}
+              visibilityTitle={
+                stain.visible ? `Hide ${label}` : `Show ${label}`
+              }
+              visibilityAriaLabel={`Toggle visibility for ${label}`}
+              onToggleVisibility={() =>
+                patchHeDeconv(sc.id, component, { visible: !stain.visible })
+              }
+              name={{
+                mode: "label",
+                name: label,
+                title: label,
+                className: rowStyles.stainName,
+              }}
+              {...(fittedColors
+                ? { fixedColorHex: rgbToHex(fittedColors[component]) }
+                : {
+                    colorHex: rgbToHex(c),
+                    colorTitle: `Pick color for ${label}`,
+                    onColorClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+                      e.stopPropagation();
+                      onPickColor(
+                        { scope: "he", sourceId: sc.id, component },
+                        e.currentTarget.getBoundingClientRect(),
+                      );
+                    },
+                  })}
+              contrast={
+                contrastEditable && stain.visible && !brightfield
+                  ? {
+                      ...heDeconvContrastEditorProps(
+                        sc,
+                        component,
+                        stain,
+                        channelRendering,
+                        fit?.stains?.[component].histogram ?? [],
+                      ),
+                      histogramLoading: !fit,
+                      onCommitRange: (lower, upper) =>
+                        patchHeDeconv(sc.id, component, { lower, upper }),
+                    }
+                  : undefined
+              }
+            />
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

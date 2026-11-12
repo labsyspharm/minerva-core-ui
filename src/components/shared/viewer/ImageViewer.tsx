@@ -1077,7 +1077,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
   // MaskExtension registers Deck's mask effect only when a layer is created,
   // not when a clone adds it to a live layer, so image layers always carry it;
   // maskId turns the clip on.
-  const clippedImageLayers = useMemo(() => {
+  const clippedImageLayerParts = useMemo(() => {
     const mask = {
       extension: maskExtension,
       maskId: selectionMaskActive ? IMAGE_SELECTION_MASK_LAYER_ID : "",
@@ -1094,8 +1094,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
       bases.push(part.base);
       if (part.lines) lines.push(part.lines);
     }
-    // After every image, including a brightfield H&E painted later in the list.
-    return [...bases, ...lines];
+    // Lines paint after every image, including a brightfield H&E later in the
+    // list. They are a second pyramid: the fill clones are what image loading
+    // follows, because a line layer's tiles do not share the fill's isLoaded.
+    return { painted: [...bases, ...lines], load: bases };
   }, [
     imageLayers,
     contourChannelIds,
@@ -1104,6 +1106,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
     selectionMaskActive,
     maskExtension,
   ]);
+
+  const clippedImageLayers = clippedImageLayerParts.painted;
+  const imageLoadLayers = clippedImageLayerParts.load;
 
   const allLayers = useMemo(() => {
     const layers: AnyLayer[] = [
@@ -1416,22 +1421,22 @@ export const ImageViewer = (props: ImageViewerProps) => {
 
   const handleAfterRender = useCallback(() => {
     if (loadingWidgetRef.current) {
-      // Drawn image tiles only. Overlay layers stay out. Contour and
-      // selection-mask clones are the instances Deck updates.
-      loadingWidgetRef.current.onRedraw({ layers: clippedImageLayers });
+      // Fill clones only. Overlay layers stay out, and contour line layers
+      // are a second pyramid whose isLoaded does not follow the image.
+      loadingWidgetRef.current.onRedraw({ layers: imageLoadLayers });
     }
     // Skip Zustand while the camera is busy — isLoaded flickers as LODs churn.
     if (isCameraBusyRef.current) return;
     const loaded =
-      clippedImageLayers.length > 0 &&
-      clippedImageLayers.every(
+      imageLoadLayers.length > 0 &&
+      imageLoadLayers.every(
         (layer) => (layer as { isLoaded?: boolean }).isLoaded,
       );
     if (imageLayersLoadedRef.current !== loaded) {
       imageLayersLoadedRef.current = loaded;
       setViewerImageLayersLoaded(loaded);
     }
-  }, [clippedImageLayers, setViewerImageLayersLoaded]);
+  }, [imageLoadLayers, setViewerImageLayersLoaded]);
 
   useEffect(() => {
     return () => {

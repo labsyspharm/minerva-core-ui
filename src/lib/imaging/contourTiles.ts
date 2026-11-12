@@ -344,7 +344,6 @@ type ImageLayerProps = {
   contrastLimits?: unknown[];
   channelsVisible?: boolean[];
   sourceChannelIds?: readonly string[];
-  opacity?: number;
   extensions: LayerExtension[];
 };
 

@@ -1049,7 +1049,6 @@ export const ChannelGroupsMasterDetail = (
           return [{ gc, sc, rgbDisplay }];
         })
       : [];
-    const lockedIds = lockedRowIds;
     const allGroupRowsOn =
       group.channels.length > 0 &&
       group.channels.every((gc) =>
@@ -1221,7 +1220,7 @@ export const ChannelGroupsMasterDetail = (
                     ? `${imageSubtitle} · index ${sc.index}`
                     : `Index ${sc.index}`
                   : "";
-                const colorLocked = lockedIds.has(gc.id);
+                const colorLocked = lockedRowIds.has(gc.id);
                 const showColorLock = !(sc && isMaskChannel(sc)) && !rgbDisplay;
 
                 return (

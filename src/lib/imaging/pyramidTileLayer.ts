@@ -1,6 +1,6 @@
 /**
- * Custom Viv loader pyramids: non-dyadic zoom mapping + shared TileLayer /
- * XRLayer subclass scaffolding (H&E deconv, mask bitmask).
+ * Custom Viv loader pyramids: non-dyadic zoom mapping and the shared
+ * TileLayer / XRLayer subclass used by H&E deconvolution.
  */
 import type { Layer } from "@deck.gl/core";
 import { TileLayer } from "@deck.gl/geo-layers";
@@ -148,23 +148,12 @@ type PyramidTileData = {
   height: number;
 };
 
-/** Additive blend params shared by OME intensity overlays and H&E deconv overlays. */
-export const ADDITIVE_BLEND_PARAMETERS = {
-  blendColorOperation: "add",
-  blendAlphaOperation: "add",
-  blendColorSrcFactor: "one",
-  blendColorDstFactor: "one",
-  blendAlphaSrcFactor: "one",
-  blendAlphaDstFactor: "one",
-} as const;
-
 export function createLoaderPyramidTileLayer<T extends PyramidTileData>(args: {
   id: string;
   planes: LoaderPlane[];
   /** Image placement (`layerModelMatrix`): physical size, then orientation. */
   modelMatrix: Matrix4;
   refinementStrategy?: "best-available" | "no-overlap";
-  pickable?: boolean;
   updateTriggers: Record<string, unknown>;
   getTileData: (ctx: {
     level: number;
@@ -205,7 +194,7 @@ export function createLoaderPyramidTileLayer<T extends PyramidTileData>(args: {
     modelMatrix,
     refinementStrategy: args.refinementStrategy ?? "best-available",
     ...TILE_CACHE_PROPS,
-    pickable: args.pickable ?? false,
+    pickable: false,
     updateTriggers: args.updateTriggers,
     getTileData: async ({ index, signal }) => {
       const { level, x, y, part } = nativePyramidTile(

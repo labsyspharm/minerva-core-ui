@@ -12,8 +12,9 @@ import {
 import { loaderForImage } from "@/lib/imaging/gmmScheduler";
 import {
   DEFAULT_HE_STAIN_COLORS,
-  estimateHeStainColors,
+  heStainColorsForFit,
 } from "@/lib/imaging/heStainColors";
+import { ensureHeStainFit } from "@/lib/imaging/heStainFit";
 import {
   hexToRgb,
   IMPORT_DEFAULT_SEED_HEX,
@@ -301,7 +302,13 @@ async function heContextSlots(he: Channel | undefined): Promise<PaletteSlot[]> {
   if (!he) return [];
   const loader = he.samples === 3 ? loaderForImage(he.imageId) : undefined;
   const colors = loader
-    ? await estimateHeStainColors(loader, he)
+    ? heStainColorsForFit(
+        await ensureHeStainFit({
+          loader,
+          cacheKey: `${he.imageId}:${he.index}`,
+          channelIndex: he.index,
+        }),
+      )
     : DEFAULT_HE_STAIN_COLORS;
   return [
     { id: "he:hematoxylin", color: colors.hematoxylin },
@@ -986,7 +993,7 @@ export function setStainMode(
  * where its color lives (see `colorTarget`). Skipped if that color is locked
  * or changed while the H&E fit or psudo runs; joins the switch's undo step.
  */
-export async function recolorAsStain(
+async function recolorAsStain(
   sourceChannelId: string,
   rowId?: string,
 ): Promise<void> {
