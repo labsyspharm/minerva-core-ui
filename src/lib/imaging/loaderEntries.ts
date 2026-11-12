@@ -25,6 +25,11 @@ export type JpegLoaderEntry = {
   groupChannelFolders?: Readonly<
     Record<string, Readonly<Record<number, string>>>
   >;
+  /**
+   * A second loader for the same pyramid reading other folders. The waypoint
+   * lens draws another group, whose baked contrast lives in other folders.
+   */
+  loaderForFolders?: (channelFolders: Record<number, string>) => Loader;
 };
 
 export type LoaderListItem = {

@@ -364,6 +364,7 @@ function buildIdReplacementMap(data: {
   for (const w of data.waypoints) {
     note(w?.id);
     if (w.groupId != null) note(w.groupId);
+    note((w.lens as { groupId?: unknown } | undefined)?.groupId);
     const sids = w.shapeIds;
     if (Array.isArray(sids)) for (const sid of sids) note(sid);
   }
@@ -438,14 +439,18 @@ function repairDocumentReferenceDrift(data: DocumentData): DocumentData {
   const waypoints = data.waypoints.map((wp) => {
     const groupId =
       wp.groupId != null && !groupIds.has(wp.groupId) ? undefined : wp.groupId;
+    // A lens whose group was deleted shows nothing, so drop it.
+    const lens =
+      wp.lens && !groupIds.has(wp.lens.groupId) ? undefined : wp.lens;
     const shapeIdsFiltered = wp.shapeIds.filter((id) => shapeIds.has(id));
     if (
       groupId === wp.groupId &&
+      lens === wp.lens &&
       shapeIdsFiltered.length === wp.shapeIds.length
     ) {
       return wp;
     }
-    return { ...wp, groupId, shapeIds: shapeIdsFiltered };
+    return { ...wp, groupId, lens, shapeIds: shapeIdsFiltered };
   });
 
   const cgSame = channelGroups.every((g, i) => g === data.channelGroups[i]);

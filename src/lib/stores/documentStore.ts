@@ -53,6 +53,7 @@ export type {
   ImageChannel,
   ImageOrientation,
   Waypoint,
+  WaypointLens,
 } from "./documentSchema";
 export {
   findSourceChannel,

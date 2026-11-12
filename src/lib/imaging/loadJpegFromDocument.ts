@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import type { JpegTileFetcher } from "@/lib/imaging/jpegImage";
 import type { JpegLoaderEntry } from "@/lib/imaging/loaderEntries";
 import type { Image } from "@/lib/stores/documentSchema";
@@ -284,6 +284,62 @@ export function useSyncJpegChannelFolders(
   ]);
 }
 
+/**
+ * JPEG entries for the waypoint lens group. Each pyramid's loader reads one
+ * folder map, and with baked contrast another group's channels live in other
+ * folders, so the lens gets its own loader when the maps differ.
+ * Empty until a lens group is set; entries without that group's folders drop.
+ */
+export function useLensJpegLoaderEntries(
+  jpegLoaderEntries: JpegLoaderEntry[],
+  images: Image[],
+  lensGroup: GroupLike | null | undefined,
+): JpegLoaderEntry[] {
+  const [lensEntries, setLensEntries] = useState<JpegLoaderEntry[]>([]);
+  const lensGroupId = lensGroup?.id ?? null;
+  const lensChannels = lensGroup?.channels;
+  useEffect(() => {
+    const rows = toGroupChannelRows(lensChannels ?? []);
+    if (!lensGroupId || rows.length === 0 || jpegLoaderEntries.length === 0) {
+      setLensEntries([]);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const next: JpegLoaderEntry[] = [];
+      for (const entry of jpegLoaderEntries) {
+        const im = images.find((i) => i.id === entry.sourceImageId);
+        if (!im) continue;
+        const desired = await resolveChannelFolders({
+          groupChannels: rows,
+          image: im,
+          transfer: entry.transfer ?? "contrast",
+        });
+        const folders = pickAvailableChannelFolders({
+          desired,
+          available: entry.availablePyramidFolders,
+          activeGroupId: lensGroupId,
+          groupChannelFolders: entry.groupChannelFolders ?? {},
+          allowOtherGroupFallback: false,
+        });
+        if (!folders || !entry.loaderForFolders) continue;
+        // A loader of its own: the base loader's folder map is rewritten in
+        // place when the reader switches groups.
+        next.push({
+          ...entry,
+          channelFolders: folders,
+          loader: entry.loaderForFolders(folders),
+        });
+      }
+      if (!cancelled) setLensEntries(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [jpegLoaderEntries, images, lensGroupId, lensChannels]);
+  return lensEntries;
+}
+
 export async function jpegLoaderEntriesFromImages(opts: {
   images: Image[];
   channelGroups: ReadonlyArray<GroupLike>;
@@ -352,27 +408,29 @@ export async function jpegLoaderEntriesFromImages(opts: {
         activeGroupId: activeGroup?.id,
         groupChannelFolders,
       }) ?? desired;
-    const loader = loadJpeg({
-      imagePath: storyRootUrl,
-      imageWidth: im.sizeX,
-      imageHeight: im.sizeY,
-      channels: im.channels.map((ch) => ({
-        id: ch.id,
-        name: ch.name,
-        index: ch.index,
-      })),
-      channelFolders,
-      fetchTile: opts.fetchTile,
-      transfer: imageTransfer,
-    });
+    const loaderForFolders = (folders: Record<number, string>) =>
+      loadJpeg({
+        imagePath: storyRootUrl,
+        imageWidth: im.sizeX,
+        imageHeight: im.sizeY,
+        channels: im.channels.map((ch) => ({
+          id: ch.id,
+          name: ch.name,
+          index: ch.index,
+        })),
+        channelFolders: folders,
+        fetchTile: opts.fetchTile,
+        transfer: imageTransfer,
+      });
     entries.push({
-      loader,
+      loader: loaderForFolders(channelFolders),
       sourceImageId: im.id,
       channelFolders,
       imagePath: storyRootUrl,
       transfer: imageTransfer,
       availablePyramidFolders,
       groupChannelFolders,
+      loaderForFolders,
     });
   }
   return entries;
