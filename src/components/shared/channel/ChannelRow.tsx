@@ -607,9 +607,7 @@ export function ChannelRow(props: ChannelRowProps) {
             <ChannelRowMoreMenu
               channelName={name.name}
               fitBusy={fitting}
-              drawChannelId={
-                contrast?.heComponent ? undefined : contrast?.sourceChannelId
-              }
+              drawChannelId={contrast?.sourceChannelId}
               drawRowId={contrast?.groupId ? contrast.channelId : undefined}
               {...more}
             />

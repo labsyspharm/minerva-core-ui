@@ -382,7 +382,7 @@ export function HeStainRows(props: {
         const label = HE_DECONV_LABELS[component];
         const c = heStainColor(stain, channelRendering, sc.id, component);
         return (
-          <li key={component} className={rowStyles.heStainBlock}>
+          <li key={component}>
             <ChannelRow
               visible={stain.visible}
               visibilityTitle={
