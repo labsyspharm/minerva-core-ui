@@ -37,6 +37,9 @@ import {
   toSettings,
 } from "./viv";
 import "./vivNearestSampling";
+import "./vivMaskedRgbTiles";
+import { LENS_LAYER_ID_PREFIX } from "@/lib/viewer/lensLayers";
+import { useLensJpegLoaderEntries } from "./loadJpegFromDocument";
 import { inheritUnitlessPhysicalSize, layerModelMatrix } from "./worldFrame";
 
 /** Fold live channel drag preview into Viv settings without writing the document. */
@@ -108,6 +111,7 @@ function createDicomTileLayer(args: {
   entry: DicomIndex;
   settings: unknown;
   remountKey?: string | number;
+  idPrefix?: string;
   orientation?: ImageOrientation | null;
   opacity: number;
 }): Layer | null {
@@ -119,7 +123,7 @@ function createDicomTileLayer(args: {
     dicomLoader: args.entry.loader,
     settings: args.settings,
     rgbImage,
-    imageID: `${imageKey}${remount}`,
+    imageID: `${args.idPrefix ?? ""}${imageKey}${remount}`,
     modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
     opacity: args.opacity,
   });
@@ -189,6 +193,7 @@ function createEncodedImageLayer(args: {
   entry: JpegLoaderEntry;
   settings: unknown;
   remountKey?: string | number;
+  idPrefix?: string;
   orientation?: ImageOrientation | null;
   opacity: number;
 }): Layer {
@@ -197,7 +202,7 @@ function createEncodedImageLayer(args: {
     jpegLoader: args.entry.loader.data,
     settings: args.settings,
     transfer: args.entry.transfer ?? "contrast",
-    layerId: `jpeg-${args.entry.sourceImageId}${remount}`,
+    layerId: `${args.idPrefix ?? ""}jpeg-${args.entry.sourceImageId}${remount}`,
     modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
     opacity: args.opacity,
   });
@@ -214,6 +219,8 @@ function buildImageLayers(args: {
   images?: Image[];
   orientationPreview?: ImageOrientationPreview | null;
   opacityPreview?: ImageOpacityPreview | null;
+  /** Keeps a second set of layers (the waypoint lens) apart from the first. */
+  idPrefix?: string;
 }): Layer[] {
   const dicomIndexList = args.dicomIndexList ?? [];
   const omeLoaderEntries = args.omeLoaderEntries ?? [];
@@ -221,7 +228,7 @@ function buildImageLayers(args: {
   const dicomSettingsList = args.dicomSettingsList ?? [];
   const omeSettingsList = args.omeSettingsList ?? [];
   const jpegSettingsList = args.jpegSettingsList ?? [];
-  const { images, orientationPreview, opacityPreview } = args;
+  const { images, orientationPreview, opacityPreview, idPrefix = "" } = args;
   const opacityOf = (sourceImageId: string | undefined) =>
     opacityForImage(images, sourceImageId, opacityPreview);
 
@@ -234,6 +241,7 @@ function buildImageLayers(args: {
         entry,
         settings,
         remountKey: args.remountKey,
+        idPrefix,
         orientation: orientationForImage(
           images,
           entry.sourceImageId,
@@ -254,7 +262,7 @@ function buildImageLayers(args: {
         createMultiscaleLayer({
           loader,
           settings,
-          layerId: `mainLayer-${sourceImageId}`,
+          layerId: `${idPrefix}mainLayer-${sourceImageId}`,
           remountKey: args.remountKey,
           overlay,
           orientation: orientationForImage(
@@ -275,6 +283,7 @@ function buildImageLayers(args: {
           entry,
           settings,
           remountKey: args.remountKey,
+          idPrefix,
           orientation: orientationForImage(
             images,
             entry.sourceImageId,
@@ -307,6 +316,8 @@ export function useViewerLayers(args: {
   opacityPreview?: ImageOpacityPreview | null;
   /** Authoring: bump after export to recreate GL layers (CDN omits). */
   remountKey?: string | number;
+  /** Waypoint lens group, drawn as a second set of layers (`lensImageLayers`). */
+  lensGroupId?: string | null;
 }) {
   const {
     dicomIndexList = [],
@@ -322,6 +333,7 @@ export function useViewerLayers(args: {
     orientationPreview = null,
     opacityPreview = null,
     remountKey,
+    lensGroupId = null,
   } = args;
 
   // Histogram merges rewrite `sourceChannels` identity without changing Viv paint
@@ -454,5 +466,69 @@ export function useViewerLayers(args: {
     ],
   );
 
-  return { loaderList, mainSettingsList, imageLayers };
+  const lensGroup = useMemo(
+    () =>
+      lensGroupId
+        ? (channelGroups.find((g) => g.id === lensGroupId) ?? null)
+        : null,
+    [channelGroups, lensGroupId],
+  );
+  const lensJpegLoaderEntries = useLensJpegLoaderEntries(
+    jpegLoaderEntries,
+    images ?? EMPTY_IMAGES,
+    lensGroup,
+  );
+
+  // Readers always see a whole group (eye toggles are session-only), so the
+  // lens ignores visibility maps and skips the live contrast/colour preview.
+  const lensImageLayers = useMemo(() => {
+    if (!lensGroup) return [] as Layer[];
+    const settingsFor = (
+      modality: string,
+      loader: Loader | undefined,
+      sourceImageId?: string,
+    ) =>
+      toDocSettings(
+        lensGroup.id,
+        modality,
+        loader,
+        {},
+        sourceImageId,
+        {},
+      ) as MainSettings;
+    return buildImageLayers({
+      dicomIndexList,
+      omeLoaderEntries,
+      jpegLoaderEntries: lensJpegLoaderEntries,
+      dicomSettingsList: dicomIndexList.map(
+        ({ loader, modality, sourceImageId }) =>
+          settingsFor(modality, loader, sourceImageId || undefined),
+      ),
+      omeSettingsList: omeLoaderEntries.map(({ loader, sourceImageId }) =>
+        settingsFor("Colorimetric", loader, sourceImageId),
+      ),
+      jpegSettingsList: lensJpegLoaderEntries.map(({ loader, sourceImageId }) =>
+        settingsFor("Colorimetric", loader, sourceImageId),
+      ),
+      remountKey,
+      images,
+      orientationPreview,
+      opacityPreview,
+      idPrefix: LENS_LAYER_ID_PREFIX,
+    });
+  }, [
+    lensGroup,
+    toDocSettings,
+    dicomIndexList,
+    omeLoaderEntries,
+    lensJpegLoaderEntries,
+    remountKey,
+    images,
+    orientationPreview,
+    opacityPreview,
+  ]);
+
+  return { loaderList, mainSettingsList, imageLayers, lensImageLayers };
 }
+
+const EMPTY_IMAGES: Image[] = [];

@@ -16,6 +16,48 @@
   pointer-events: auto;
 }
 
+/* Playback: names the lens group and turns the lens off/on (also "L"). */
+.lensChip {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  z-index: 2;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(60%, 320px);
+  padding: 4px 10px 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.lensChip:is(:hover, :focus-visible) {
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.lensChip[aria-pressed="false"] {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.lensChip svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+}
+
+.lensChipLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .viewerInfoButton {
   display: grid;
   place-items: center;

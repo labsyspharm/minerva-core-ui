@@ -627,6 +627,9 @@ function configWaypointToExportWaypoint(
   if (wp.groupId) {
     out.groupId = wp.groupId;
   }
+  if (wp.lens) {
+    out.lens = { ...wp.lens };
+  }
   if (wp.name !== undefined) {
     out.name = wp.name;
   }
@@ -682,6 +685,9 @@ export function waypointToConfigWaypoint(
   };
   if (wp.groupId !== undefined) {
     out.groupId = wp.groupId;
+  }
+  if (wp.lens !== undefined) {
+    out.lens = { ...wp.lens };
   }
   if (wp.name !== undefined) {
     out.name = wp.name;

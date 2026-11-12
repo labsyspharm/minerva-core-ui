@@ -150,6 +150,7 @@ import {
   planWaypointConfigSeedTick,
   type WaypointSeedMirror,
 } from "@/lib/waypoints/seedWaypointConfig";
+import { useWaypointLens } from "@/lib/waypoints/useWaypointLens";
 import {
   parseRootSearch,
   rootRouteApi,
@@ -2063,21 +2064,24 @@ const Content = (props: Props) => {
     [viewerImages],
   );
 
-  const { loaderList, mainSettingsList, imageLayers } = useViewerLayers({
-    dicomIndexList,
-    omeLoaderEntries,
-    jpegLoaderEntries,
-    sourceChannels: viewerSourceChannels,
-    channelGroups,
-    activeChannelGroupId,
-    channelVisibilities,
-    channelGroupRowVisibilities,
-    channelRendering,
-    images: viewerImages,
-    orientationPreview: imageOrientationPreview,
-    opacityPreview: imageOpacityPreview,
-    remountKey: viewerRemountKey,
-  });
+  const lens = useWaypointLens(presenting);
+  const { loaderList, mainSettingsList, imageLayers, lensImageLayers } =
+    useViewerLayers({
+      dicomIndexList,
+      omeLoaderEntries,
+      jpegLoaderEntries,
+      sourceChannels: viewerSourceChannels,
+      channelGroups,
+      activeChannelGroupId,
+      channelVisibilities,
+      channelGroupRowVisibilities,
+      channelRendering,
+      images: viewerImages,
+      orientationPreview: imageOrientationPreview,
+      opacityPreview: imageOpacityPreview,
+      remountKey: viewerRemountKey,
+      lensGroupId: lens?.groupId ?? null,
+    });
 
   const imageProps = React.useMemo(() => {
     return {
@@ -2086,6 +2090,9 @@ const Content = (props: Props) => {
       imageLayers,
       omeLoaderEntries,
       showSquareViewportOverlay,
+      lens,
+      lensImageLayers,
+      playback: presenting,
     };
   }, [
     showSquareViewportOverlay,
@@ -2093,6 +2100,9 @@ const Content = (props: Props) => {
     imageLayers,
     loaderList,
     omeLoaderEntries,
+    lens,
+    lensImageLayers,
+    presenting,
   ]);
 
   // Use Zustand store for overlay state management

@@ -18,6 +18,7 @@ import {
   type Image,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
+import { useWaypointLens } from "@/lib/waypoints/useWaypointLens";
 import styles from "./StoryPlaybackView.module.css";
 
 /** Loader state shared by CDN player and authoring Story preview. */
@@ -59,7 +60,8 @@ function useStoryPlaybackLayers(
     setJpegLoaderEntries,
   );
 
-  return useViewerLayers({
+  const lens = useWaypointLens(true);
+  const layers = useViewerLayers({
     dicomIndexList,
     omeLoaderEntries,
     jpegLoaderEntries,
@@ -69,7 +71,9 @@ function useStoryPlaybackLayers(
     channelVisibilities,
     channelGroupRowVisibilities,
     images,
+    lensGroupId: lens?.groupId ?? null,
   });
+  return { ...layers, lens };
 }
 
 /** Info-panel row; quiet so readers pass over it. Disabled while the story is copied. */
@@ -117,10 +121,8 @@ export function StoryPlaybackView(
       cancelled = true;
     };
   }, [storeImages, channelGroups]);
-  const { loaderList, mainSettingsList, imageLayers } = useStoryPlaybackLayers(
-    props,
-    displayImages,
-  );
+  const { loaderList, mainSettingsList, imageLayers, lensImageLayers, lens } =
+    useStoryPlaybackLayers(props, displayImages);
   const {
     overlayLayers,
     activeTool,
@@ -134,6 +136,9 @@ export function StoryPlaybackView(
       <ImageViewer
         omeLoaderEntries={omeLoaderEntries}
         imageLayers={imageLayers}
+        lensImageLayers={lensImageLayers}
+        lens={lens}
+        playback
         mainSettingsList={mainSettingsList}
         loaderList={loaderList}
         overlayLayers={overlayLayers}

@@ -6,9 +6,6 @@ export type Waypoint = {
   markdown: string;
   g: number;
   v: number[];
-  lensing?: {
-    group: string;
-  };
 };
 
 export type Story = {
@@ -54,9 +51,6 @@ export interface ExhibitConfig {
       Name: string;
       Zoom: number;
       Pan: [number, number];
-      Lensing?: {
-        group: string;
-      };
     }[];
   }[];
 }
@@ -81,11 +75,6 @@ const readStories = (config: ExhibitConfig): Story[] => {
           g: indexGroupName(waypoint.Group),
           v: [waypoint.Zoom, x, y],
         };
-        if ("Lensing" in waypoint) {
-          output_waypoint.lensing = Object.assign(waypoint.Lensing, {
-            g: indexGroupName(waypoint.Lensing.group),
-          });
-        }
         return output_waypoint;
       }),
     };

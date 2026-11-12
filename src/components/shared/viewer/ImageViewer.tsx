@@ -3,6 +3,7 @@ import Deck, { type DeckGLRef } from "@deck.gl/react";
 import { ScaleBarLayer } from "@hms-dbmi/viv";
 import {
   type ReactNode,
+  type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -57,6 +58,13 @@ import {
 import { uniqueImageDisplayLabels } from "@/lib/stores/storeUtils";
 import { useActiveWaypoint } from "@/lib/stores/useActiveWaypoint";
 import { buildStamp } from "@/lib/version/buildStamp";
+import { isMobileDevice } from "@/lib/viewer/isMobileDevice";
+import { isTextField } from "@/lib/viewer/isTextField";
+import {
+  clipLensImageLayers,
+  createLensOverlayLayers,
+  drawDeckWithoutLens,
+} from "@/lib/viewer/lensLayers";
 import {
   getViewerViewportSnapshotFromDeck,
   orthographicZoomToNumber,
@@ -65,6 +73,7 @@ import {
   WAYPOINT_TRANSITION_INTERPOLATOR,
   withOrthoZoom,
 } from "@/lib/viewer/viewerViewport";
+import type { ActiveLens } from "@/lib/waypoints/useWaypointLens";
 import { getWaypointViewState } from "@/lib/waypoints/waypoint";
 import {
   WAYPOINT_THUMBNAIL_JPEG_QUALITY,
@@ -423,7 +432,14 @@ export type ImageViewerProps = {
   preserveDrawingBuffer?: boolean;
   /** Last row of the info panel (the published player's Edit link). */
   infoFooter?: ReactNode;
+  /** Waypoint lens to arm; its group's layers come from `useViewerLayers`. */
+  lens?: ActiveLens | null;
+  lensImageLayers?: Layer[];
+  /** Story playback (published player, authoring preview) rather than editing. */
+  playback?: boolean;
 };
+
+const EMPTY_LAYERS: Layer[] = [];
 
 const _isElement = (x = {}): x is HTMLElement => {
   return ["Width", "Height"].every((k) => `client${k}` in x);
@@ -447,6 +463,9 @@ export const ImageViewer = (props: ImageViewerProps) => {
     squareViewportColor = "rgba(255, 255, 255, 0.9)",
     squareViewportBorderWidth = 2,
     preserveDrawingBuffer = true,
+    lens = null,
+    lensImageLayers = EMPTY_LAYERS,
+    playback = false,
   } = props;
   const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const channelVisibilities = useAppStore((s) => s.channelVisibilities);
@@ -684,6 +703,75 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const cameraRef = useRef<OrthographicViewState>(fitViewState);
   const viewportSizeRef = useRef(viewportSize);
   viewportSizeRef.current = viewportSize;
+
+  // --- Waypoint lens ---------------------------------------------------------
+  // The lens sits at a screen position. Deck owns live pan/zoom, so while the
+  // lens shows, camera frames bump `lensFrame` to keep it under the pointer at
+  // a fixed pixel size.
+  const lensArmed = lens != null && lensImageLayers.length > 0;
+  const [lensPointer, setLensPointer] = useState<[number, number] | null>(null);
+  const [lensFrame, setLensFrame] = useState(0);
+  const [lensHidden, setLensHidden] = useState(false);
+  /** Touch screens have no hover: the lens stays centred and the image pans under it. */
+  const lensAtCentre = useMemo(() => isMobileDevice(), []);
+  const lensShownRef = useRef(false);
+  const lensRafRef = useRef<number | null>(null);
+  const lensPointerNextRef = useRef<[number, number] | null>(null);
+  const scheduleLensFrame = useCallback(() => {
+    if (lensRafRef.current != null) return;
+    lensRafRef.current = requestAnimationFrame(() => {
+      lensRafRef.current = null;
+      setLensPointer(lensPointerNextRef.current);
+      setLensFrame((f) => f + 1);
+    });
+  }, []);
+  useEffect(
+    () => () => {
+      if (lensRafRef.current != null) cancelAnimationFrame(lensRafRef.current);
+    },
+    [],
+  );
+  const handleLensPointerMove = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!lensArmed || event.pointerType === "touch") return;
+      const root = rootRef.current;
+      if (!root) return;
+      const rect = root.getBoundingClientRect();
+      lensPointerNextRef.current = [
+        event.clientX - rect.left,
+        event.clientY - rect.top,
+      ];
+      scheduleLensFrame();
+    },
+    [lensArmed, scheduleLensFrame],
+  );
+  const handleLensPointerLeave = useCallback(() => {
+    if (lensPointerNextRef.current == null) return;
+    lensPointerNextRef.current = null;
+    scheduleLensFrame();
+  }, [scheduleLensFrame]);
+  // Readers toggle the lens; authors see it whenever they edit a lens waypoint.
+  useEffect(() => {
+    if (!lensArmed || !playback) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "l" && event.key !== "L") return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (isTextField(event.target)) return;
+      setLensHidden((hidden) => !hidden);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [lensArmed, playback]);
+  // Drawing tools own the pointer while editing.
+  const lensCentreScreen: [number, number] | null =
+    !lensArmed ||
+    (playback && lensHidden) ||
+    !(playback || activeTool === "move")
+      ? null
+      : (lensPointer ??
+        (lensAtCentre
+          ? [viewportSize.width / 2, viewportSize.height / 2]
+          : null));
   const hasInitialized = useRef(false);
   const waypointTransitionGenRef = useRef(0);
   const inTransitionRef = useRef(false);
@@ -1047,12 +1135,50 @@ export const ImageViewer = (props: ImageViewerProps) => {
     );
   }, [imageLayers, selectionMaskActive, imageSelectionMask, maskExtension]);
 
+  const lensCx = lensCentreScreen?.[0];
+  const lensCy = lensCentreScreen?.[1];
+  const lensRadius = lens?.radius;
+  const lensOverlay = useMemo(() => {
+    if (lensCx === undefined || lensCy === undefined || !lensRadius) {
+      return null;
+    }
+    // The live camera is in cameraRef; these deps only say when to re-read it.
+    void lensFrame;
+    void viewState;
+    const flat = toFlatViewState(cameraRef.current);
+    if (!flat) return null;
+    const scale = 2 ** flat.zoom;
+    if (!Number.isFinite(scale) || scale <= 0) return null;
+    const vp = viewportSizeRef.current;
+    return createLensOverlayLayers({
+      center: [
+        (lensCx - vp.width / 2) / scale + flat.target[0],
+        (lensCy - vp.height / 2) / scale + flat.target[1],
+      ],
+      radiusWorld: lensRadius / scale,
+    });
+  }, [lensCx, lensCy, lensRadius, lensFrame, viewState]);
+  const lensShown = lensOverlay != null;
+  lensShownRef.current = lensShown;
+
+  const clippedLensImageLayers = useMemo(
+    () =>
+      lensArmed
+        ? clipLensImageLayers(lensImageLayers, maskExtension, lensShown)
+        : EMPTY_LAYERS,
+    [lensArmed, lensImageLayers, maskExtension, lensShown],
+  );
+
   const allLayers = useMemo(() => {
     const layers: AnyLayer[] = [
       worldPickSurfaceLayer,
       ...selectionMaskDeckLayers,
       ...clippedImageLayers,
       ...maskDisplayLayers,
+      // Over the base masks, under annotations: the lens shows its group only.
+      ...(lensOverlay?.under ?? EMPTY_LAYERS),
+      ...clippedLensImageLayers,
+      ...(lensOverlay?.over ?? EMPTY_LAYERS),
       ...overlayLayers,
     ];
     if (scaleBarLayer) layers.push(scaleBarLayer);
@@ -1062,6 +1188,8 @@ export const ImageViewer = (props: ImageViewerProps) => {
     selectionMaskDeckLayers,
     clippedImageLayers,
     maskDisplayLayers,
+    lensOverlay,
+    clippedLensImageLayers,
     overlayLayers,
     scaleBarLayer,
   ]);
@@ -1118,7 +1246,11 @@ export const ImageViewer = (props: ImageViewerProps) => {
     sourceCanvas.height = sh;
     const sourceCtx = sourceCanvas.getContext("2d");
     if (!sourceCtx) return null;
+    // The lens follows the pointer; it is not part of the waypoint's picture.
+    const deckWithLens = lensShownRef.current ? deckRef.current?.deck : null;
+    if (deckWithLens) drawDeckWithoutLens(deckWithLens);
     sourceCtx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
+    if (deckWithLens) deckWithLens.redraw("lens-restore");
 
     const outputSide = WAYPOINT_THUMBNAIL_PIXEL_SIZE;
     const outputCanvas = document.createElement("canvas");
@@ -1313,6 +1445,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
       } else if (nextViewState) {
         cameraRef.current = nextViewState as OrthographicViewState;
       }
+      if (lensShownRef.current) scheduleLensFrame();
       // DeckGL can call this while rendering (a resize re-applies a waypoint
       // transition in deck.setProps); React state updates must wait.
       queueMicrotask(() => {
@@ -1320,7 +1453,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
         arrangeLayoutRef.current?.();
       });
     },
-    [isDragging, publishPyramidHud],
+    [isDragging, publishPyramidHud, scheduleLensFrame],
   );
 
   const handleInteractionStateChange = useCallback(
@@ -1395,7 +1528,12 @@ export const ImageViewer = (props: ImageViewerProps) => {
   }
 
   return (
-    <div className={styles.main} ref={setRoot}>
+    <div
+      className={styles.main}
+      ref={setRoot}
+      onPointerMove={handleLensPointerMove}
+      onPointerLeave={handleLensPointerLeave}
+    >
       <Deck
         ref={deckRef}
         getCursor={getCursor}
@@ -1431,6 +1569,25 @@ export const ImageViewer = (props: ImageViewerProps) => {
         />
       ) : null}
       <LoadingWidget ref={loadingWidgetRef} placement="center" />
+      {playback && lensArmed && lens ? (
+        <button
+          type="button"
+          className={styles.lensChip}
+          aria-pressed={!lensHidden}
+          title={`${lensHidden ? "Show" : "Hide"} the lens (L)`}
+          onClick={() => setLensHidden((hidden) => !hidden)}
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="8" r="5.5" fill="none" strokeWidth="1.5" />
+            {lensHidden ? (
+              <path d="M3 13 13 3" strokeWidth="1.5" strokeLinecap="round" />
+            ) : null}
+          </svg>
+          <span className={styles.lensChipLabel}>
+            {lensHidden ? "Lens off" : `Lens: ${lens.groupName}`}
+          </span>
+        </button>
+      ) : null}
       <div className={styles.viewerInfo} ref={pyramidInfoRef}>
         {pyramidInfoOpen ? (
           <div
