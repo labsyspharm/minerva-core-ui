@@ -58,9 +58,10 @@ const DEFAULT_HE_STAIN: Record<HeDeconvComponent, HeStainView> = {
   },
 };
 
+/** Freshly separated stains draw as brightfield, looking as scanned. */
 export function defaultHeDeconvSplit(): HeDeconvSplit {
   return {
-    mode: "fluorescence",
+    mode: "brightfield",
     hematoxylin: { ...DEFAULT_HE_STAIN.hematoxylin },
     eosin: { ...DEFAULT_HE_STAIN.eosin },
   };
