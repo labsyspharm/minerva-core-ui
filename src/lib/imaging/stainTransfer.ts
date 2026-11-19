@@ -24,6 +24,27 @@ export function stainSignal(c: number): number {
 }
 
 /**
+ * Separated stains read as 16-bit IF channels: their signal as camera-like
+ * counts, so the same log histogram, slider and limits apply. Gain and floor
+ * follow the registered DNA channel on LSP79801 (DNA ≈ −756 + 10,885·signal
+ * over tissue; background around 150–250). Like any IF scale, a convention:
+ * DNA's 99th percentile was 6,500 there and 23,000 on LSP24534.
+ */
+export const STAIN_COUNTS_FLOOR = 200;
+export const STAIN_COUNTS_GAIN = 10_000;
+export const STAIN_COUNTS_MAX = 65_535;
+
+/** Virtual IF counts for stain signal `signal` (0…1). */
+export function stainCounts(signal: number): number {
+  return STAIN_COUNTS_FLOOR + STAIN_COUNTS_GAIN * signal;
+}
+
+/** Stain signal for virtual IF counts: the inverse of `stainCounts`. */
+export function signalFromCounts(counts: number): number {
+  return (counts - STAIN_COUNTS_FLOOR) / STAIN_COUNTS_GAIN;
+}
+
+/**
  * Share of a stain's full density at IF signal `t` (0…1): the inverse of
  * `stainSignal`, scaled so `t = 1` is the full density. `full` is that
  * density's size in natural-log units (the length of its RGB density vector).

@@ -4,16 +4,24 @@
  * channel UI do not import deck.gl shader code.
  */
 
-export type HeDeconvComponent = "hematoxylin" | "eosin";
+import { STAIN_COUNTS_FLOOR, stainCounts } from "@/lib/imaging/stainTransfer";
+
+/**
+ * The two stains, and the residual: absorption neither explains (dust, pen,
+ * dark debris), along the H–E plane's normal.
+ */
+export type HeDeconvComponent = "hematoxylin" | "eosin" | "residual";
 
 export const HE_DECONV_COMPONENTS: readonly HeDeconvComponent[] = [
   "hematoxylin",
   "eosin",
+  "residual",
 ];
 
 export const HE_DECONV_LABELS: Record<HeDeconvComponent, string> = {
   hematoxylin: "Hematoxylin",
   eosin: "Eosin",
+  residual: "Residual",
 };
 
 /**
@@ -23,10 +31,10 @@ export const HE_DECONV_LABELS: Record<HeDeconvComponent, string> = {
  */
 export type HeSplitMode = "fluorescence" | "brightfield";
 
-/** Integer contrast sliders map a stain's IF-like signal (`stainSignal`, 0–1) → 0–1000. */
-export const HE_CONTRAST_SCALE = 1000;
-
-/** One separated stain. Color and window are its fluorescence settings. */
+/**
+ * One separated stain. Color and window are its fluorescence settings; the
+ * window is in virtual 16-bit IF counts (`stainCounts`).
+ */
 export type HeStainView = {
   color: [number, number, number];
   lower: number;
@@ -36,7 +44,7 @@ export type HeStainView = {
   autoContrast?: true;
 };
 
-/** An RGB H&E source separated into its two stains, and how they draw. */
+/** An RGB H&E source separated into its stains and residual, and how they draw. */
 export type HeDeconvSplit = Record<HeDeconvComponent, HeStainView> & {
   mode: HeSplitMode;
 };
@@ -44,15 +52,24 @@ export type HeDeconvSplit = Record<HeDeconvComponent, HeStainView> & {
 const DEFAULT_HE_STAIN: Record<HeDeconvComponent, HeStainView> = {
   hematoxylin: {
     color: [0, 90, 255],
-    lower: 0,
-    upper: HE_CONTRAST_SCALE,
+    lower: STAIN_COUNTS_FLOOR,
+    upper: stainCounts(1),
     visible: true,
     autoContrast: true,
   },
   eosin: {
     color: [255, 56, 140],
-    lower: 0,
-    upper: HE_CONTRAST_SCALE,
+    lower: STAIN_COUNTS_FLOOR,
+    upper: stainCounts(1),
+    visible: true,
+    autoContrast: true,
+  },
+  // Shown: brightfield needs it for an exact rebuild of the scan; as
+  // fluorescence it is what lies off the stains (debris, pen).
+  residual: {
+    color: [210, 210, 210],
+    lower: STAIN_COUNTS_FLOOR,
+    upper: stainCounts(1),
     visible: true,
     autoContrast: true,
   },
@@ -64,5 +81,6 @@ export function defaultHeDeconvSplit(): HeDeconvSplit {
     mode: "brightfield",
     hematoxylin: { ...DEFAULT_HE_STAIN.hematoxylin },
     eosin: { ...DEFAULT_HE_STAIN.eosin },
+    residual: { ...DEFAULT_HE_STAIN.residual },
   };
 }

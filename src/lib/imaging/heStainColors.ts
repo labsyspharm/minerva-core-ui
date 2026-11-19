@@ -1,4 +1,5 @@
 import { Matrix3 } from "@math.gl/core";
+import type { HeDeconvComponent } from "./heDeconvView";
 import {
   DEFAULT_STAIN_INVERSE,
   type GlslMat3,
@@ -6,26 +7,31 @@ import {
 } from "./heStainFit";
 import type { RgbColor } from "./sourceChannelStyle";
 
-/** How hematoxylin and eosin look on this slide, as colors on glass. */
-export type HeStainColors = { hematoxylin: RgbColor; eosin: RgbColor };
+/** How hematoxylin, eosin and the residual look on this slide, as colors on glass. */
+export type HeStainColors = Record<HeDeconvComponent, RgbColor>;
 
 type Vec3 = [number, number, number];
 
 /** Each stain's log₁₀ optical density per unit concentration. */
-export type HeStainVectors = { hematoxylin: Vec3; eosin: Vec3 };
+export type HeStainVectors = Record<HeDeconvComponent, Vec3>;
 
-type Strengths = { hematoxylin: number; eosin: number };
+type Strengths = Record<HeDeconvComponent, number>;
 
 /** Typical H&E strengths, when the fit read no stained tissue. */
-const DEFAULT_STRENGTHS: Strengths = { hematoxylin: 0.6, eosin: 0.3 };
+const DEFAULT_STRENGTHS: Strengths = {
+  hematoxylin: 0.6,
+  eosin: 0.3,
+  residual: 0.3,
+};
 
-/** The H and E rows of the stain matrix the unmixing `inverse` inverts. */
+/** The rows of the stain matrix the unmixing `inverse` inverts. */
 export function heStainVectors(inverse: GlslMat3): HeStainVectors {
   // Row-major [H; E; residual]; inv(Mᵀ) = inv(M)ᵀ keeps rows as rows.
   const stains = [...new Matrix3(inverse).invert()];
   return {
     hematoxylin: [stains[0], stains[1], stains[2]],
     eosin: [stains[3], stains[4], stains[5]],
+    residual: [stains[6], stains[7], stains[8]],
   };
 }
 
@@ -42,6 +48,7 @@ function heColors(inverse: GlslMat3, strengths: Strengths): HeStainColors {
   return {
     hematoxylin: colorOnGlass(stains.hematoxylin, strengths.hematoxylin),
     eosin: colorOnGlass(stains.eosin, strengths.eosin),
+    residual: colorOnGlass(stains.residual, strengths.residual),
   };
 }
 
@@ -64,5 +71,6 @@ export function heStainColorsForFit(
     hematoxylin:
       fit.stains?.hematoxylin.strength ?? DEFAULT_STRENGTHS.hematoxylin,
     eosin: fit.stains?.eosin.strength ?? DEFAULT_STRENGTHS.eosin,
+    residual: fit.stains?.residual?.strength ?? DEFAULT_STRENGTHS.residual,
   });
 }

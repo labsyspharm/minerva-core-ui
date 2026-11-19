@@ -4,7 +4,6 @@ import { DTYPE_VALUES } from "@hms-dbmi/viv";
 import type { Matrix4 } from "@math.gl/core";
 import {
   defaultHeDeconvSplit,
-  HE_CONTRAST_SCALE,
   type HeSplitMode,
   type HeStainView,
 } from "@/lib/imaging/heDeconvView";
@@ -24,7 +23,10 @@ import {
   layerGetShaders,
   XRLayerBase,
 } from "@/lib/imaging/pyramidTileLayer";
-import { STAIN_SIGNAL_K_LN10 } from "@/lib/imaging/stainTransfer";
+import {
+  STAIN_SIGNAL_K_LN10,
+  signalFromCounts,
+} from "@/lib/imaging/stainTransfer";
 import type { Loader } from "@/lib/imaging/viv";
 
 type HeTileData = {
@@ -56,7 +58,7 @@ void main(void) {
 
 // As the stain-deconvolution fiddle (and he_deconv.ipynb, but for the residual):
 //   optical_density(rgb8) = max(0, -log10(max(rgb8, 1) / 255))
-//   STAIN_MATRIX rows = unit(H), unit(E), neutral grey (the fiddle's black)
+//   STAIN_MATRIX rows = unit(H), unit(E), unit(H × E) (as scikit-image)
 //   concentrations = od @ inv(STAIN_MATRIX)
 // GLSL columns = numpy rows so `M * v` == `v @ M`. As fluorescence, each stain
 // then shows as the light it takes away, 1 - 10^(-k·c) (stainTransfer.ts),
@@ -104,13 +106,19 @@ void main() {
   vec3 conc = heDeconv.uStainInverse * optical_density(rgb8);
   vec3 rgb;
   if (heDeconv.uBrightfield > 0.5) {
+    // Signed, not clamped: amounts below zero are real corrections (the
+    // residual off the H–E plane goes both ways). All three together rebuild
+    // the scan; glass caps at white.
     vec3 od =
-      max(conc.x, 0.0) * heDeconv.uHStain + max(conc.y, 0.0) * heDeconv.uEStain;
-    rgb = exp(-LN10 * od);
+      conc.x * heDeconv.uHStain +
+      conc.y * heDeconv.uEStain +
+      conc.z * heDeconv.uRStain;
+    rgb = min(exp(-LN10 * od), vec3(1.0));
   } else {
     rgb =
       windowed(stain_signal(conc.x), heDeconv.uHContrast) * heDeconv.uHColor +
-      windowed(stain_signal(conc.y), heDeconv.uEContrast) * heDeconv.uEColor;
+      windowed(stain_signal(conc.y), heDeconv.uEContrast) * heDeconv.uEColor +
+      windowed(stain_signal(conc.z), heDeconv.uRContrast) * heDeconv.uRColor;
   }
   fragColor = vec4(rgb, heDeconv.opacity);
 
@@ -127,26 +135,32 @@ uniform heDeconvUniforms {
   float uToRgb8;
   vec2 uHContrast;
   vec2 uEContrast;
+  vec2 uRContrast;
   vec3 uHColor;
   vec3 uEColor;
+  vec3 uRColor;
   mat3 uStainInverse;
   float opacity;
   float uBrightfield;
   vec3 uHStain;
   vec3 uEStain;
+  vec3 uRStain;
 } heDeconv;
 `,
   uniformTypes: {
     uToRgb8: "f32",
     uHContrast: "vec2<f32>",
     uEContrast: "vec2<f32>",
+    uRContrast: "vec2<f32>",
     uHColor: "vec3<f32>",
     uEColor: "vec3<f32>",
+    uRColor: "vec3<f32>",
     uStainInverse: "mat3x3<f32>",
     opacity: "f32",
     uBrightfield: "f32",
     uHStain: "vec3<f32>",
     uEStain: "vec3<f32>",
+    uRStain: "vec3<f32>",
   },
 };
 
@@ -173,7 +187,7 @@ function heSamplerType(dtype: unknown): string {
 }
 
 function stainContrast(stain: HeStainView): [number, number] {
-  return [stain.lower / HE_CONTRAST_SCALE, stain.upper / HE_CONTRAST_SCALE];
+  return [signalFromCounts(stain.lower), signalFromCounts(stain.upper)];
 }
 
 function stainColor(stain: HeStainView): [number, number, number] {
@@ -187,6 +201,7 @@ const NO_STAIN: Vec3 = [0, 0, 0];
 const DEFAULT_STAIN = defaultHeDeconvSplit();
 const DEFAULT_H_COLOR = stainColor(DEFAULT_STAIN.hematoxylin);
 const DEFAULT_E_COLOR = stainColor(DEFAULT_STAIN.eosin);
+const DEFAULT_R_COLOR = stainColor(DEFAULT_STAIN.residual);
 const DEFAULT_VECTORS = heStainVectors(DEFAULT_STAIN_INVERSE);
 
 class HeDeconvXrLayer extends XRLayerBase {
@@ -196,12 +211,15 @@ class HeDeconvXrLayer extends XRLayerBase {
     uToRgb8: 1,
     uHContrast: [0, 1],
     uEContrast: [0, 1],
+    uRContrast: [0, 1],
     uHColor: DEFAULT_H_COLOR,
     uEColor: DEFAULT_E_COLOR,
+    uRColor: DEFAULT_R_COLOR,
     uStainInverse: DEFAULT_STAIN_INVERSE,
     uBrightfield: 0,
     uHStain: DEFAULT_VECTORS.hematoxylin,
     uEStain: DEFAULT_VECTORS.eosin,
+    uRStain: DEFAULT_VECTORS.residual,
   };
 
   getNumChannels() {
@@ -237,25 +255,31 @@ class HeDeconvXrLayer extends XRLayerBase {
       uToRgb8: number;
       uHContrast: [number, number];
       uEContrast: [number, number];
+      uRContrast: [number, number];
       uHColor: Vec3;
       uEColor: Vec3;
+      uRColor: Vec3;
       uStainInverse: GlslMat3;
       uBrightfield: number;
       uHStain: Vec3;
       uEStain: Vec3;
+      uRStain: Vec3;
     };
     model.shaderInputs.setProps({
       heDeconv: {
         uToRgb8: props.uToRgb8 ?? 1,
         uHContrast: props.uHContrast ?? [0, 1],
         uEContrast: props.uEContrast ?? [0, 1],
+        uRContrast: props.uRContrast ?? [0, 1],
         uHColor: props.uHColor ?? DEFAULT_H_COLOR,
         uEColor: props.uEColor ?? DEFAULT_E_COLOR,
+        uRColor: props.uRColor ?? DEFAULT_R_COLOR,
         uStainInverse: props.uStainInverse ?? DEFAULT_STAIN_INVERSE,
         opacity: this.props.opacity ?? 1,
         uBrightfield: props.uBrightfield ?? 0,
         uHStain: props.uHStain ?? DEFAULT_VECTORS.hematoxylin,
         uEStain: props.uEStain ?? DEFAULT_VECTORS.eosin,
+        uRStain: props.uRStain ?? DEFAULT_VECTORS.residual,
       },
     });
   }
@@ -285,7 +309,7 @@ function splitInterleavedRgb(
 }
 
 /**
- * Hematoxylin + eosin in one TileLayer. Mode/color/contrast/visibility are
+ * Hematoxylin, eosin and residual in one TileLayer. Mode/color/contrast/visibility are
  * uniforms so one RGB fetch covers both stains (avoids additive LOD flash).
  */
 export function createHeDeconvLayer(args: {
@@ -295,6 +319,7 @@ export function createHeDeconvLayer(args: {
   mode: HeSplitMode;
   hematoxylin: HeStainView;
   eosin: HeStainView;
+  residual: HeStainView;
   overlay: boolean;
   /** `layerModelMatrix` for the image, like its Viv layer. */
   modelMatrix: Matrix4;
@@ -310,13 +335,16 @@ export function createHeDeconvLayer(args: {
   const uToRgb8 = rgb8ScaleFromDtype(dtype);
   const uHContrast = stainContrast(args.hematoxylin);
   const uEContrast = stainContrast(args.eosin);
+  const uRContrast = stainContrast(args.residual);
   const uHColor = stainColor(args.hematoxylin);
   const uEColor = stainColor(args.eosin);
+  const uRColor = stainColor(args.residual);
   const uStainInverse = args.stainInverse ?? DEFAULT_STAIN_INVERSE;
   const uBrightfield = args.mode === "brightfield" ? 1 : 0;
   const vectors = heStainVectors(uStainInverse);
   const uHStain = args.hematoxylin.visible ? vectors.hematoxylin : NO_STAIN;
   const uEStain = args.eosin.visible ? vectors.eosin : NO_STAIN;
+  const uRStain = args.residual.visible ? vectors.residual : NO_STAIN;
   // Opaque: best-available covers holes. Additive: no-overlap or LODs flash 2×.
   const { overlay, opacity } = args;
   const refinementStrategy =
@@ -348,12 +376,15 @@ export function createHeDeconvLayer(args: {
         uToRgb8,
         ...uHContrast,
         ...uEContrast,
+        ...uRContrast,
         ...uHColor,
         ...uEColor,
+        ...uRColor,
         ...uStainInverse,
         uBrightfield,
         ...uHStain,
         ...uEStain,
+        ...uRStain,
         opacity,
         overlay,
         args.modelMatrix,
@@ -392,12 +423,15 @@ export function createHeDeconvLayer(args: {
         uToRgb8,
         uHContrast,
         uEContrast,
+        uRContrast,
         uHColor,
         uEColor,
+        uRColor,
         uStainInverse,
         uBrightfield,
         uHStain,
         uEStain,
+        uRStain,
         ...HE_XR_PROPS,
         opacity,
         ...(parameters ? { parameters } : {}),

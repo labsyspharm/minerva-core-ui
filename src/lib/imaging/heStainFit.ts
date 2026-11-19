@@ -4,17 +4,17 @@
  * the GLSL inverse; residual is used to unmix, not shown.
  */
 import {
-  HE_CONTRAST_SCALE,
   HE_DECONV_COMPONENTS,
   type HeDeconvComponent,
   type HeDeconvSplit,
 } from "@/lib/imaging/heDeconvView";
+import { histogramBinFromPixels } from "@/lib/imaging/histogramBin";
 import type {
   LoaderPlane,
   SupportedTypedArray,
 } from "@/lib/imaging/loaderTypes";
 import { planeSize } from "@/lib/imaging/loaderTypes";
-import { stainSignal } from "@/lib/imaging/stainTransfer";
+import { stainCounts, stainSignal } from "@/lib/imaging/stainTransfer";
 import type { Loader } from "@/lib/imaging/viv";
 
 /**
@@ -37,9 +37,9 @@ export type GlslMat3 = [
 
 /** One stain over the tissue of the fit's native tiles. */
 export type HeStainSummary = {
-  /** Linear bins of its IF-like signal over the 0–HE_CONTRAST_SCALE slider. */
+  /** Log₂ bins of its virtual IF counts (`stainCounts`), as a 16-bit IF channel's. */
   histogram: number[];
-  /** Default window on that slider: the tissue's 25th to 97th percentile. */
+  /** Default window in those counts: the tissue's 25th to 97th percentile. */
   window: [number, number];
   /**
    * Log₁₀ concentration at the 90th percentile of the tissue it clearly
@@ -58,7 +58,6 @@ export type HeStainFit = {
   failed?: true;
 };
 
-const STAIN_HISTOGRAM_BINS = 50;
 /**
  * As IF auto-contrast starts above background, a stain's window starts above
  * the tissue it barely marks (cytoplasm for hematoxylin, nuclei and lumen for
@@ -127,8 +126,10 @@ export function withFittedWindows(
   let next = split;
   for (const component of HE_DECONV_COMPONENTS) {
     const stain = split[component];
-    const [lower, upper] = stains[component].window;
-    if (!stain.autoContrast) continue;
+    // A fit made before the residual was summarized has no window for it.
+    const window = stains[component]?.window;
+    if (!stain || !window || !stain.autoContrast) continue;
+    const [lower, upper] = window;
     if (stain.lower === lower && stain.upper === upper) continue;
     next = { ...next, [component]: { ...stain, lower, upper } };
   }
@@ -192,26 +193,23 @@ function invert3(m: readonly Vec3[]): GlslMat3 | null {
   ];
 }
 
-const GREY: Vec3 = [SQRT3_INV, SQRT3_INV, SQRT3_INV];
-/** Grey closer than this to the H–E plane can't be told from H and E. */
-const MIN_GREY_SIN = Math.sin((5 * Math.PI) / 180);
-
 /**
- * Third unmixing vector: neutral grey, as the stain-deconvolution fiddle's
- * black residual color, so absorption that is neither H nor E (dust, pen, dark
- * debris) lands here instead of in either stain. When grey lies within 5° of
- * the H–E plane, unmixing against it would amplify noise many times over, so
- * the plane's normal is used instead.
+ * Third unmixing vector: the H–E plane's normal, H × E, as scikit-image
+ * completes its two-stain matrices (Ruifrok & Johnston). H and E are then the
+ * least-squares fit within their plane, so they alone already rebuild the
+ * scan, and the residual holds only absorption off that plane. (Neutral grey,
+ * the deconvolution fiddle's choice, lay ~20° off the plane: H and E took
+ * extra grey that a mostly negative residual gave back, and hematoxylin noise
+ * rose 1.6×.) The fit's angle check keeps H and E from being parallel.
  */
 function residualFor(h: Vec3, e: Vec3): Vec3 {
-  const normal = unit([
-    h[1] * e[2] - h[2] * e[1],
-    h[2] * e[0] - h[0] * e[2],
-    h[0] * e[1] - h[1] * e[0],
-  ]);
-  if (!normal) return GREY;
-  const greySin = Math.abs((normal[0] + normal[1] + normal[2]) * SQRT3_INV);
-  return greySin >= MIN_GREY_SIN ? GREY : normal;
+  return (
+    unit([
+      h[1] * e[2] - h[2] * e[1],
+      h[2] * e[0] - h[0] * e[2],
+      h[0] * e[1] - h[1] * e[0],
+    ]) ?? [SQRT3_INV, SQRT3_INV, SQRT3_INV]
+  );
 }
 
 function defaultFit(): HeStainFit {
@@ -710,15 +708,18 @@ function summarizeStains(
 ): Record<HeDeconvComponent, HeStainSummary> {
   const hematoxylin = new Float64Array(count);
   const eosin = new Float64Array(count);
+  const residual = new Float64Array(count);
   for (let i = 0; i < count; i++) {
     const o = i * 3;
-    const [h, e] = unmixHe(inverse, packed[o], packed[o + 1], packed[o + 2]);
+    const [h, e, r] = unmixHe(inverse, packed[o], packed[o + 1], packed[o + 2]);
     hematoxylin[i] = h;
     eosin[i] = e;
+    residual[i] = r;
   }
   return {
     hematoxylin: summarizeStain(hematoxylin),
     eosin: summarizeStain(eosin),
+    residual: summarizeStain(residual),
   };
 }
 
@@ -727,16 +728,15 @@ function summarizeStain(conc: Float64Array): HeStainSummary {
   /** Value at share `p` of the sorted values from index `from` on. */
   const at = (p: number, from = 0) =>
     conc[from + Math.floor(p * (conc.length - 1 - from))];
-  const slider = (c: number) => Math.round(stainSignal(c) * HE_CONTRAST_SCALE);
-  const histogram = new Array<number>(STAIN_HISTOGRAM_BINS).fill(0);
-  for (const c of conc) {
-    // Sparklines skip unstained pixels, as IF histograms skip zeros.
-    if (!(c > 0)) continue;
-    const bin = Math.floor(stainSignal(c) * STAIN_HISTOGRAM_BINS);
-    histogram[Math.min(STAIN_HISTOGRAM_BINS - 1, bin)] += 1;
-  }
-  const lower = slider(at(STAIN_WINDOW_PERCENTILES[0]));
-  const upper = Math.max(lower + 1, slider(at(STAIN_WINDOW_PERCENTILES[1])));
+  const counts = (c: number) => Math.round(stainCounts(stainSignal(c)));
+  // Unstained tissue sits at the floor, as IF background does.
+  const histogram = histogramBinFromPixels(
+    16,
+    conc.length,
+    conc.map((c) => stainCounts(stainSignal(c))),
+  );
+  const lower = counts(at(STAIN_WINDOW_PERCENTILES[0]));
+  const upper = Math.max(lower + 1, counts(at(STAIN_WINDOW_PERCENTILES[1])));
   const stained = conc.findIndex((c) => c >= STAIN_STRENGTH_MIN);
   return {
     histogram,
@@ -752,9 +752,10 @@ function unmixHe(
   ro: number,
   go: number,
   bo: number,
-): [number, number] {
+): [number, number, number] {
   return [
     inverse[0] * ro + inverse[3] * go + inverse[6] * bo,
     inverse[1] * ro + inverse[4] * go + inverse[7] * bo,
+    inverse[2] * ro + inverse[5] * go + inverse[8] * bo,
   ];
 }

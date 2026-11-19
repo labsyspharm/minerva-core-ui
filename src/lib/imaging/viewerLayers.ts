@@ -30,11 +30,12 @@ import type { JpegExportTransfer } from "./cubeRootEncoding";
 import { createTileLayers } from "./dicom.js";
 import type { DicomIndex } from "./dicomIndex";
 import { createHeDeconvLayer } from "./heDeconvTileLayer";
-import type {
-  HeDeconvComponent,
-  HeDeconvSplit,
-  HeSplitMode,
-  HeStainView,
+import {
+  defaultHeDeconvSplit,
+  type HeDeconvComponent,
+  type HeDeconvSplit,
+  type HeSplitMode,
+  type HeStainView,
 } from "./heDeconvView";
 import {
   ensureHeStainFit,
@@ -257,6 +258,7 @@ type HeDeconvPaint = {
   mode: HeSplitMode;
   hematoxylin: HeStainView;
   eosin: HeStainView;
+  residual: HeStainView;
 };
 
 function liveHeStain(
@@ -297,13 +299,21 @@ function peelHeDeconvFromSettings(
     }
     const hematoxylin = liveHeStain(split.hematoxylin, id, "hematoxylin", live);
     const eosin = liveHeStain(split.eosin, id, "eosin", live);
-    if (!hematoxylin.visible && !eosin.visible) continue;
+    // Splits made before the residual existed have none: use the default.
+    const residual = liveHeStain(
+      split.residual ?? defaultHeDeconvSplit().residual,
+      id,
+      "residual",
+      live,
+    );
+    if (!hematoxylin.visible && !eosin.visible && !residual.visible) continue;
     heLayers.push({
       parentIndex: settings.selections[i]?.c ?? 0,
       sourceChannelId: id,
       mode: split.mode,
       hematoxylin,
       eosin,
+      residual,
     });
   }
   if (keep.length === ids.length) return { settings, heLayers };
@@ -435,6 +445,7 @@ function buildImageLayers(args: {
           mode: he.mode,
           hematoxylin: he.hematoxylin,
           eosin: he.eosin,
+          residual: he.residual,
           overlay: omeVisiblePainted > 0,
           modelMatrix: layerModelMatrix(loader, orientation),
           opacity,

@@ -34,7 +34,6 @@ import {
 import { getGmmPendingIds, subscribeGmmFit } from "@/lib/imaging/gmmScheduler";
 import {
   defaultHeDeconvSplit,
-  HE_CONTRAST_SCALE,
   HE_DECONV_COMPONENTS,
   HE_DECONV_LABELS,
   type HeDeconvComponent,
@@ -57,6 +56,7 @@ import {
   effectiveSourceLimits,
   rgbToHex,
 } from "@/lib/imaging/sourceChannelStyle";
+import { STAIN_COUNTS_MAX } from "@/lib/imaging/stainTransfer";
 import { type ChannelRendering, useAppStore } from "@/lib/stores/appStore";
 import type { Channel, ChannelGroup } from "@/lib/stores/documentStore";
 import {
@@ -263,14 +263,14 @@ export function ChannelColorPicker(props: {
   );
 }
 
-/** H&E stain sliders run over a stain's IF-like signal × HE_CONTRAST_SCALE, not a dtype. */
+/** Separated stains read as 16-bit IF channels: log₂ bins over 16 bits, log slider. */
 const HE_CONTRAST_DISTRIBUTION = {
   id: "",
   YValues: [] as number[],
-  XScale: "linear" as const,
+  XScale: "log" as const,
   YScale: "linear" as const,
   LowerRange: 0,
-  UpperRange: HE_CONTRAST_SCALE,
+  UpperRange: 16,
 };
 
 function heStainColor(
@@ -309,7 +309,7 @@ function heDeconvContrastEditorProps(
     lowerLimit: liveContrast ? liveContrast.lower : stain.lower,
     upperLimit: liveContrast ? liveContrast.upper : stain.upper,
     distribution: { ...HE_CONTRAST_DISTRIBUTION, YValues: yValues },
-    dtypeMax: HE_CONTRAST_SCALE,
+    dtypeMax: STAIN_COUNTS_MAX,
     heComponent: component,
   };
 }
@@ -419,7 +419,7 @@ export function HeStainRows(props: {
                         component,
                         stain,
                         channelRendering,
-                        fit?.stains?.[component].histogram ?? [],
+                        fit?.stains?.[component]?.histogram ?? [],
                       ),
                       histogramLoading: !fit,
                       onCommitRange: (lower, upper) =>
