@@ -384,3 +384,18 @@ export const useDocumentStore = create<DocumentStore>()(
 export function clearDocumentHistory(): void {
   useDocumentStore.temporal.getState().clear();
 }
+
+/**
+ * Run `write` untracked, so it joins the last undo step: for results that land
+ * after the edit that asked for them (a palette picked for a channel just
+ * added or switched to a stain). Undo then takes both back, redo restores both.
+ */
+export function joinLastUndoStep(write: () => void): void {
+  const history = useDocumentStore.temporal.getState();
+  history.pause();
+  try {
+    write();
+  } finally {
+    history.resume();
+  }
+}

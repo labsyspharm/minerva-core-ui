@@ -17,7 +17,8 @@ import {
   isFloatDtype,
   quantizeFloatToUint16,
 } from "./floatRange";
-import type { LoaderPlane } from "./loaderTypes";
+import { planeSize } from "./loaderTypes";
+import type { Loader } from "./viv";
 
 const FETCH_CONCURRENCY = 1;
 const FIT_CONCURRENCY = 2;
@@ -25,8 +26,6 @@ const GMM_MAX_SAMPLES = 40_000;
 /** Skip a tile/plane decode above this (uint16 4MP ≈ 8MB). */
 const GMM_MAX_DECODE_PIXELS = 4_000_000;
 const GMM_MAX_TILES = 8;
-
-type Loader = { data: LoaderPlane[] };
 
 type WriteGuard =
   | { kind: "still-missing" }
@@ -207,18 +206,6 @@ function commitFitted(
     for (const id of filledRowIds) rowsAwaitingFit.delete(id);
     doc.setChannelGroups(nextGroups);
   }
-}
-
-function planeSize(plane: Loader["data"][number]): {
-  width: number;
-  height: number;
-} {
-  const xi = plane.labels.indexOf("x");
-  const yi = plane.labels.indexOf("y");
-  return {
-    width: xi >= 0 ? plane.shape[xi] : 0,
-    height: yi >= 0 ? plane.shape[yi] : 0,
-  };
 }
 
 function pickTileCoords(nx: number, ny: number): [number, number][] {
@@ -439,6 +426,11 @@ function upsertJob(args: {
   return job;
 }
 
+/** The story's OME loader for `imageId`, as last passed to `reconcileGmm`. */
+export function loaderForImage(imageId: string): Loader | undefined {
+  return loadersByImageId.get(imageId);
+}
+
 function targetFor(channelId: string): { sc: Channel; loader: Loader } | null {
   const all = documentChannels();
   const sc = all.find((c) => c.id === channelId);
@@ -550,6 +542,23 @@ export async function refitGmm(
   const sc = readChannel(channelId);
   if (!limitsEqual(sc?.gmmContrastLimits, outcome.window)) return null;
   return { lower: outcome.window.lower, upper: outcome.window.upper };
+}
+
+/** Refits `channelId` and applies the new window to every group row showing it. */
+export async function refitGroupContrast(channelId: string): Promise<void> {
+  const limits = await refitGmm(channelId);
+  if (!limits) return;
+  const { channelGroups, setChannelGroups } = useDocumentStore.getState();
+  let changed = false;
+  const nextGroups = channelGroups.map((g) => ({
+    ...g,
+    channels: g.channels.map((gc) => {
+      if (gc.channelId !== channelId) return gc;
+      changed = true;
+      return { ...gc, lowerLimit: limits.lower, upperLimit: limits.upper };
+    }),
+  }));
+  if (changed) setChannelGroups(nextGroups);
 }
 
 /** Let new group rows take their channel's fit once it lands. */

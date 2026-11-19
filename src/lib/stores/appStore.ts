@@ -8,6 +8,21 @@ import {
 } from "../imaging/channelCompositor";
 import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
+import {
+  CONTOUR_LEVELS_DEFAULT,
+  CONTOUR_SMOOTHING_DEFAULT,
+  CONTOUR_SMOOTHING_STEPS,
+} from "../imaging/contourExtension";
+import type {
+  HeDeconvComponent,
+  HeDeconvSplit,
+  HeStainView,
+} from "../imaging/heDeconvView";
+import {
+  clearHeStainEstimateCache,
+  type HeStainFit,
+  withFittedWindows,
+} from "../imaging/heStainFit";
 import type { ImageOpacityPreview } from "../imaging/imageOpacity";
 import {
   type ImageSelectionMask,
@@ -587,6 +602,7 @@ export type ChannelRendering =
       sourceChannelId: string;
       lower: number;
       upper: number;
+      heComponent?: HeDeconvComponent;
     }
   | {
       kind: "color";
@@ -594,6 +610,7 @@ export type ChannelRendering =
       r: number;
       g: number;
       b: number;
+      heComponent?: HeDeconvComponent;
     };
 
 /** In-flight image placement while dragging on the canvas; committed on pointerup. */
@@ -819,7 +836,37 @@ export interface AppStore {
   arrangeImageId: string | null;
   setArrangeImageId: (imageId: string | null) => void;
   channelVisibilities: Record<string, boolean>;
+  /** Source channel ids drawn as isolines instead of a color fill. */
+  contourChannelIds: Record<string, boolean>;
+  toggleContourChannel: (sourceChannelId: string) => void;
+  /** Isolines across each contoured channel's contrast window. */
+  contourLevels: number;
+  setContourLevels: (levels: number) => void;
+  /** Contour smoothing radius in full-resolution image pixels. */
+  contourSmoothing: number;
+  setContourSmoothing: (radius: number) => void;
+  /** Smoothing steps that still change the open contoured pyramids. */
+  contourSmoothingSteps: readonly number[];
+  setContourSmoothingSteps: (steps: readonly number[]) => void;
+  /** Group row ids whose color palette optimization and stain recolor keep. */
+  colorLockedRowIds: Record<string, true>;
+  toggleColorLock: (rowId: string) => void;
   groupNames: Record<string, string>;
+  heDeconvByChannelId: Record<string, HeDeconvSplit>;
+  /** Stains on their automatic window take the slide's fitted one, if known. */
+  setHeDeconv: (channelId: string, split: HeDeconvSplit | null) => void;
+  /** A new window ends that stain's automatic one. */
+  patchHeDeconv: (
+    channelId: string,
+    component: HeDeconvComponent,
+    patch: Partial<HeStainView>,
+  ) => void;
+  heStainFitByChannelId: Record<string, HeStainFit>;
+  /**
+   * `null` drops the fit, so the viewer fits again. A fit moves the split's
+   * stains that are still on their automatic window to the fitted one.
+   */
+  setHeStainFit: (channelId: string, fit: HeStainFit | null) => void;
   /**
    * Classes turned off from the playback legend, by `legendClassKey`.
    * Session only: the waypoint's class view is not changed.
@@ -982,6 +1029,13 @@ const overlayInitialState = {
   imageOpacityPreview: null,
   arrangeImageId: null,
   channelVisibilities: {},
+  contourChannelIds: {},
+  contourLevels: CONTOUR_LEVELS_DEFAULT,
+  contourSmoothing: CONTOUR_SMOOTHING_DEFAULT,
+  contourSmoothingSteps: CONTOUR_SMOOTHING_STEPS,
+  colorLockedRowIds: {} as Record<string, true>,
+  heDeconvByChannelId: {} as Record<string, HeDeconvSplit>,
+  heStainFitByChannelId: {} as Record<string, HeStainFit>,
   channelGroupRowVisibilities: {},
   groupNames: {},
   hiddenLegendClasses: {} as Record<string, string[]>,
@@ -1259,6 +1313,7 @@ export const useAppStore = create<AppStore>()(
       resetStoryViewerSession: () => {
         const vis = { ...get().channelVisibilities };
         delete vis[SELECTION_MASK_CHANNEL_KEY];
+        clearHeStainEstimateCache();
         set({
           shapes: [],
           shapeGroups: [],
@@ -1271,6 +1326,13 @@ export const useAppStore = create<AppStore>()(
           brushLastScreenCoord: null,
           imageSelectionMask: null,
           channelVisibilities: vis,
+          heDeconvByChannelId: {},
+          heStainFitByChannelId: {},
+          contourChannelIds: {},
+          contourLevels: CONTOUR_LEVELS_DEFAULT,
+          contourSmoothing: CONTOUR_SMOOTHING_DEFAULT,
+          contourSmoothingSteps: CONTOUR_SMOOTHING_STEPS,
+          colorLockedRowIds: {},
           hiddenLegendClasses: {},
           activeStoryIndex: null,
           waypointAuthoring: new Map(),
@@ -2311,6 +2373,51 @@ export const useAppStore = create<AppStore>()(
         set({ editingViewstateWaypointIndex: index });
       },
 
+      toggleContourChannel: (sourceChannelId) => {
+        set((state) => {
+          const contourChannelIds = { ...state.contourChannelIds };
+          if (contourChannelIds[sourceChannelId]) {
+            delete contourChannelIds[sourceChannelId];
+          } else {
+            contourChannelIds[sourceChannelId] = true;
+          }
+          return { contourChannelIds };
+        });
+      },
+
+      toggleColorLock: (rowId) => {
+        set((state) => {
+          const colorLockedRowIds = { ...state.colorLockedRowIds };
+          if (colorLockedRowIds[rowId]) delete colorLockedRowIds[rowId];
+          else colorLockedRowIds[rowId] = true;
+          return { colorLockedRowIds };
+        });
+      },
+
+      setContourLevels: (contourLevels) => {
+        set({ contourLevels });
+      },
+
+      setContourSmoothing: (contourSmoothing) => {
+        set({ contourSmoothing });
+      },
+
+      setContourSmoothingSteps: (steps) => {
+        const current = get().contourSmoothing;
+        // The largest step not above the current one: dropped steps draw the same.
+        const contourSmoothing =
+          steps.findLast((step) => step <= current) ?? steps[0];
+        const prev = get().contourSmoothingSteps;
+        if (
+          contourSmoothing === current &&
+          prev.length === steps.length &&
+          prev.every((step, i) => step === steps[i])
+        ) {
+          return;
+        }
+        set({ contourSmoothingSteps: steps, contourSmoothing });
+      },
+
       setChannelVisibilities: (vis: Record<string, boolean>) => {
         const { images } = useDocumentStore.getState();
         set({
@@ -2319,6 +2426,54 @@ export const useAppStore = create<AppStore>()(
             vis,
             { kind: Object.keys(vis).length === 0 ? "fresh" : "sync" },
           ),
+        });
+      },
+
+      setHeDeconv: (channelId, split) => {
+        set((s) => {
+          const next = { ...s.heDeconvByChannelId };
+          if (split) {
+            next[channelId] = withFittedWindows(
+              split,
+              s.heStainFitByChannelId[channelId],
+            );
+          } else delete next[channelId];
+          return { heDeconvByChannelId: next };
+        });
+      },
+
+      patchHeDeconv: (channelId, component, patch) => {
+        set((s) => {
+          const prev = s.heDeconvByChannelId[channelId];
+          if (!prev) return s;
+          const stain = { ...prev[component], ...patch };
+          if (patch.lower !== undefined || patch.upper !== undefined) {
+            delete stain.autoContrast;
+          }
+          return {
+            heDeconvByChannelId: {
+              ...s.heDeconvByChannelId,
+              [channelId]: { ...prev, [component]: stain },
+            },
+          };
+        });
+      },
+
+      setHeStainFit: (channelId, fit) => {
+        set((s) => {
+          const heStainFitByChannelId = { ...s.heStainFitByChannelId };
+          if (fit) heStainFitByChannelId[channelId] = fit;
+          else delete heStainFitByChannelId[channelId];
+          const split = s.heDeconvByChannelId[channelId];
+          const fitted = split && fit ? withFittedWindows(split, fit) : null;
+          if (!fitted || fitted === split) return { heStainFitByChannelId };
+          return {
+            heStainFitByChannelId,
+            heDeconvByChannelId: {
+              ...s.heDeconvByChannelId,
+              [channelId]: fitted,
+            },
+          };
         });
       },
 

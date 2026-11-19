@@ -22,12 +22,15 @@ export function colorPickerAnchorPosition(rect: DOMRect): {
 type ColorPickerPopoverProps = {
   position: { top: number; left: number } | null;
   onClose: () => void;
+  /** Shown under the picker, e.g. a preview of the color in use. */
+  footer?: React.ReactNode;
 } & Omit<React.ComponentProps<typeof Chrome>, "ref">;
 
 /** Fixed popover. Chevron, hue, white, and close share one row. */
 export function ColorPickerPopover({
   position,
   onClose,
+  footer,
   ...pickerProps
 }: ColorPickerPopoverProps) {
   React.useEffect(() => {
@@ -126,6 +129,7 @@ export function ColorPickerPopover({
           </div>
           <Saturation {...saturationProps} />
         </div>
+        {footer}
       </div>
     </>,
     document.body,

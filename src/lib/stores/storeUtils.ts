@@ -140,6 +140,7 @@ export function applySourceChannelsToImages(
       lowerLimit,
       upperLimit,
       maskVisualization,
+      stain,
     } = row;
     const slice: ImageChannel = {
       id: id && id.length > 0 ? id : crypto.randomUUID(),
@@ -155,6 +156,7 @@ export function applySourceChannelsToImages(
       ...(lowerLimit !== undefined ? { lowerLimit } : {}),
       ...(upperLimit !== undefined ? { upperLimit } : {}),
       ...(maskVisualization !== undefined ? { maskVisualization } : {}),
+      ...(stain ? { stain } : {}),
     };
     const list = byImage.get(imageId) ?? [];
     list.push(slice);
@@ -292,6 +294,7 @@ export function rebindReplacementImageChannels(
       gmmContrastLimits: prev.gmmContrastLimits ?? ch.gmmContrastLimits,
       floatRange: prev.floatRange ?? ch.floatRange,
       maskVisualization: prev.maskVisualization ?? ch.maskVisualization,
+      stain: prev.stain,
     };
   });
   return {
@@ -472,6 +475,7 @@ export function patchSourceChannelOnImages(
       | "lowerLimit"
       | "upperLimit"
       | "maskVisualization"
+      | "stain"
       | "name"
       | "kind"
     >
@@ -483,6 +487,24 @@ export function patchSourceChannelOnImages(
       ch.id === sourceChannelId ? { ...ch, ...patch } : ch,
     ),
   }));
+}
+
+/** `groups` with the group row `rowId` patched (row ids are unique across groups). */
+export function patchGroupRowOnGroups(
+  groups: ChannelGroup[],
+  rowId: string,
+  patch: Partial<Pick<ChannelGroup["channels"][number], "color">>,
+): ChannelGroup[] {
+  return groups.map((g) =>
+    g.channels.some((gc) => gc.id === rowId)
+      ? {
+          ...g,
+          channels: g.channels.map((gc) =>
+            gc.id === rowId ? { ...gc, ...patch } : gc,
+          ),
+        }
+      : g,
+  );
 }
 
 /** Attach {@link ImageSource} to the row matching `imageId` (for persistence / reload). */

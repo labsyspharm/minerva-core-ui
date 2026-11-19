@@ -57,12 +57,24 @@ import styles from "./ImageChannelOverview.module.css";
 /** Packed-RGB / H&E unit chip — same magenta as `samples === 3` default tint. */
 const HE_CHIP_HEX = "cc00ff";
 
+/**
+ * One chip for an RGB image's channels. Only packed RGB opens an editor: it
+ * holds Separate stains, which a planar image cannot take.
+ */
 function heUnitChip(
   base: ImageChannelChip,
   key: string,
   visible: boolean,
+  packed: boolean,
 ): ImageChannelChip {
-  return { ...base, key, name: "H&E", hex: HE_CHIP_HEX, visible };
+  return {
+    ...base,
+    key,
+    name: "H&E",
+    hex: HE_CHIP_HEX,
+    visible,
+    editable: packed,
+  };
 }
 
 function chipAriaLabel(chip: ImageChannelChip): string {
@@ -97,7 +109,7 @@ function ChipButton(props: {
   const pendingLabel = gmmPending
     ? `Fitting contrast for ${chip.name}`
     : `Assigning color to ${chip.name}`;
-  const showEditor = !chip.key.endsWith(":rgb");
+  const showEditor = chip.editable !== false;
   return (
     <div
       className={[
@@ -259,6 +271,8 @@ function GroupStrip(props: {
       ) {
         return;
       }
+      // An open row ⋮ menu takes this click to close itself; keep the editor.
+      if (document.querySelector("[data-channel-row-menu]")) return;
       dismiss();
     };
     card.addEventListener("pointerdown", onPointerDown);
@@ -382,12 +396,33 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
     [model.allChannels, channelNameFilter, channelSearch],
   );
   const rgbDisplay = isRgbDisplayImage(image);
+  const packedRgb = rgbDisplay && image.channels.some((c) => c.samples === 3);
   const rgbChannels = flattenImageChannelsInDocumentOrder([image]);
   const showAllChannelsStrip = model.allChannels.length > 0;
 
+  /** An RGB image shows one H&E chip per strip in place of its channels. */
+  const stripChips = (
+    chips: ImageChannelChip[],
+    key: string,
+  ): ImageChannelChip[] =>
+    rgbDisplay && chips[0]
+      ? [
+          heUnitChip(
+            chips[0],
+            key,
+            chips.every((c) => c.visible),
+            packedRgb,
+          ),
+        ]
+      : chips;
+  const groupStrips = model.groups.map((group) => ({
+    group,
+    chips: stripChips(group.chips, `g:${group.id}:rgb`),
+  }));
+  // The open chip is looked up among chips as shown, filtered or not.
   const overviewChips = [
-    ...model.groups.flatMap((g) => g.chips),
-    ...model.allChannels,
+    ...groupStrips.flatMap((strip) => strip.chips),
+    ...stripChips(model.allChannels, "e:rgb"),
   ];
   const maskIds = new Set(
     image.channels.filter(isMaskChannel).map((c) => c.id),
@@ -520,17 +555,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
 
   return (
     <div className={styles.root}>
-      {model.groups.map((group) => {
-        const rgbUnit =
-          rgbDisplay && group.chips[0]
-            ? [
-                heUnitChip(
-                  group.chips[0],
-                  `g:${group.id}:rgb`,
-                  group.allVisible,
-                ),
-              ]
-            : group.chips;
+      {groupStrips.map(({ group, chips }) => {
         const docGroup = channelGroups.find((g) => g.id === group.id);
         const showAllNext = { ...filledGroupVis };
         if (docGroup) {
@@ -545,7 +570,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
           <GroupStrip
             key={group.id}
             name={group.name}
-            chips={rgbUnit}
+            chips={chips}
             openChip={openChip}
             shownIds={shownIds}
             blockedIds={blockedIds}
@@ -574,17 +599,7 @@ export function ImageChannelOverviewCard(props: { image: Image }) {
       {showAllChannelsStrip ? (
         <GroupStrip
           name="All channels"
-          chips={
-            rgbDisplay && filteredAllChannels[0]
-              ? [
-                  heUnitChip(
-                    filteredAllChannels[0],
-                    "e:rgb",
-                    filteredAllChannels.every((c) => c.visible),
-                  ),
-                ]
-              : filteredAllChannels
-          }
+          chips={stripChips(filteredAllChannels, "e:rgb")}
           openChip={openChip}
           shownIds={shownIds}
           blockedIds={blockedIds}

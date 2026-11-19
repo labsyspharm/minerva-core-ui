@@ -112,7 +112,12 @@ export function assignedDisplayHex(
   groupRow?: ChannelGroupChannel | null,
   rendering?: ChannelRendering | null,
 ): string | undefined {
-  if (rendering?.kind === "color" && rendering.sourceChannelId === channel.id) {
+  // A live H&E stain color belongs to that stain's row, not the RGB channel's.
+  if (
+    rendering?.kind === "color" &&
+    rendering.sourceChannelId === channel.id &&
+    !rendering.heComponent
+  ) {
     return rgbToHex(rendering);
   }
   if (

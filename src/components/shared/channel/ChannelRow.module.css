@@ -1,5 +1,28 @@
 /* Channel row — story look. */
 
+/* Separated stains, one row each, under their H&E row. */
+.heStainList {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 4px 28px;
+}
+
+/* Edge of the fluorescence (black) and brightfield (white) stain icons. */
+.stainIconFrame {
+  stroke: var(--minerva-edge);
+  stroke-width: 1;
+}
+
+.stainName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: inherit;
+  color: var(--minerva-ink);
+}
+
 .channelNameInput {
   display: block;
   width: 100%;
@@ -26,6 +49,90 @@
   min-width: 0;
 }
 
+.contourLevel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.35em 0.85em 0.55em 1.6em;
+  color: var(--minerva-quiet);
+}
+
+.contourStepper {
+  display: inline-flex;
+  align-items: stretch;
+  height: 20px;
+  border: 1px solid var(--minerva-edge);
+}
+
+.contourStepper button {
+  width: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--minerva-quiet);
+  font: inherit;
+  cursor: pointer;
+}
+
+.contourStepper button:hover:not(:disabled) {
+  color: var(--minerva-ink);
+  background: var(--minerva-wash);
+}
+
+.contourStepper button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.contourStepper output {
+  /* Fits "128 px", so both steppers line up. */
+  min-width: 6ch;
+  align-self: center;
+  color: var(--minerva-ink);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A set of ⋮ choices (draw modes), ruled off from the actions around it. */
+.menuGroup {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.menuGroup:not(:first-child) {
+  margin-top: 0.25em;
+  padding-top: 0.25em;
+  border-top: 1px solid var(--minerva-edge);
+}
+
+.menuGroup:not(:last-child) {
+  margin-bottom: 0.25em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--minerva-edge);
+}
+
+.menuGroupLabel {
+  padding: 0.35em 0.85em 0.15em;
+  color: var(--minerva-quiet);
+  font-size: var(--minerva-size-note);
+}
+
+.menuCheckItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.menuCheck {
+  flex: 0 0 1em;
+  text-align: right;
+}
+
 .channelRowMid {
   flex: 1 1 0;
   min-width: 0;
@@ -34,11 +141,12 @@
   gap: 4px;
 }
 
-.channelRowMainMask {
+/* Mask and H&E rows: toggle groups, labelled underneath, at the row's end. */
+.channelRowMainToggles {
   align-items: flex-start;
 }
 
-.channelRowMainMask .channelRowMid {
+.channelRowMainToggles .channelRowMid {
   flex: 0 0 auto;
   margin-left: auto;
 }
@@ -58,6 +166,30 @@
   white-space: nowrap;
 }
 
+/* Small buttons in the row's trailing slot: color lock, ⋮, clear selection. */
+.channelActionButton {
+  background: none;
+  border: none;
+  color: var(--minerva-quiet);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+}
+
+.channelActionButton:hover {
+  color: var(--minerva-ink);
+  background: var(--minerva-wash);
+}
+
+/* Locked color, or a channel drawn other than as a fill. */
+.channelActionButtonOn {
+  color: var(--minerva-ink);
+  box-shadow: inset 0 -1px 0 var(--minerva-ink);
+}
+
 .channelRowTrailing {
   display: flex;
   align-items: center;
@@ -68,7 +200,7 @@
   min-width: 25px;
 }
 
-.channelRowMainMask .channelRowTrailing {
+.channelRowMainToggles .channelRowTrailing {
   flex: 0 0 auto;
   width: auto;
   min-width: 0;
@@ -349,6 +481,23 @@
 .maskVizOptionActive {
   background: color-mix(in srgb, var(--minerva-ink) 16%, transparent);
   color: var(--minerva-ink);
+}
+
+/* Icon over a word (H&E stain toggles). */
+.maskVizOptionCaptioned {
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 2px;
+  width: auto;
+  min-width: 30px;
+  height: auto;
+  padding: 4px 4px 3px;
+}
+
+.maskVizCaption {
+  font-size: 9px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .maskVizIconOutline,

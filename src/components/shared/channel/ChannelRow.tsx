@@ -10,10 +10,15 @@ import {
   ChannelContrastEditor,
   type ChannelContrastEditorProps,
 } from "@/components/shared/channel/ChannelContrastEditor";
+import {
+  type ChannelRowMore,
+  ChannelRowMoreMenu,
+} from "@/components/shared/channel/ChannelRowMoreMenu";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import { withReseededRandomColors } from "@/lib/imaging/channelKind";
+import type { HeSplitMode } from "@/lib/imaging/heDeconvView";
 import styles from "./ChannelRow.module.css";
 
 function ChannelColorSwatchButton(props: {
@@ -57,20 +62,29 @@ function MaskVizButton(props: {
   label: string;
   title?: string;
   onClick: () => void;
-  iconClass: string;
+  /** A CSS-drawn icon, or `icon` for an SVG one. */
+  iconClass?: string;
+  icon?: ReactNode;
+  /** A word under the icon. */
+  caption?: string;
 }) {
   return (
     <button
       type="button"
       className={`${minervaTheme.focusRing} ${styles.maskVizOption}${
-        props.active ? ` ${styles.maskVizOptionActive}` : ""
-      }`}
+        props.caption ? ` ${styles.maskVizOptionCaptioned}` : ""
+      }${props.active ? ` ${styles.maskVizOptionActive}` : ""}`}
       aria-pressed={props.active}
       title={props.title ?? props.label}
       aria-label={props.label}
       onClick={props.onClick}
     >
-      <span className={props.iconClass} aria-hidden />
+      {props.icon ?? <span className={props.iconClass} aria-hidden />}
+      {props.caption ? (
+        <span className={styles.maskVizCaption} aria-hidden>
+          {props.caption}
+        </span>
+      ) : null}
     </button>
   );
 }
@@ -221,6 +235,157 @@ function MaskModeControls(props: {
   );
 }
 
+/** Hematoxylin and eosin as the stain icons draw them. */
+const ICON_HEMATOXYLIN = "#6861ab";
+const ICON_EOSIN = "#dc93ad";
+/** Hematoxylin's default fluorescence color (`defaultHeDeconvSplit`). */
+const ICON_GLOW = "#005aff";
+
+/** Both stains in one disc: the scanned image. */
+function StainsCombinedIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
+      <title>Recombine stains</title>
+      <path d="M6 1.5a4.5 4.5 0 0 0 0 9z" fill={ICON_HEMATOXYLIN} />
+      <path d="M6 1.5a4.5 4.5 0 0 1 0 9z" fill={ICON_EOSIN} />
+    </svg>
+  );
+}
+
+/** The disc pulled apart: each stain its own channel. */
+function StainsSplitIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
+      <title>Separate stains</title>
+      <path d="M4.4 2a4 4 0 0 0 0 8z" fill={ICON_HEMATOXYLIN} />
+      <path d="M7.6 2a4 4 0 0 1 0 8z" fill={ICON_EOSIN} />
+    </svg>
+  );
+}
+
+/** A stain glowing on black. */
+function FluorescenceIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
+      <title>Fluorescence</title>
+      <rect
+        x="0.5"
+        y="0.5"
+        width="11"
+        height="11"
+        fill="#000"
+        className={styles.stainIconFrame}
+      />
+      <circle cx="6" cy="6" r="4" fill={ICON_GLOW} opacity="0.35" />
+      <circle cx="6" cy="6" r="2.4" fill={ICON_GLOW} />
+    </svg>
+  );
+}
+
+/** A stain darkening white glass. */
+function BrightfieldIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
+      <title>Brightfield</title>
+      <rect
+        x="0.5"
+        y="0.5"
+        width="11"
+        height="11"
+        fill="#fff"
+        className={styles.stainIconFrame}
+      />
+      <circle cx="6" cy="6" r="2.8" fill={ICON_HEMATOXYLIN} />
+    </svg>
+  );
+}
+
+const HE_MODE_OPTIONS: readonly {
+  mode: HeSplitMode;
+  label: string;
+  title: string;
+  Icon: () => ReactNode;
+}[] = [
+  {
+    mode: "fluorescence",
+    label: "Fluorescence",
+    title:
+      "Fluorescence: each stain converted to an IF-like signal, glowing on black",
+    Icon: FluorescenceIcon,
+  },
+  {
+    mode: "brightfield",
+    label: "Brightfield",
+    title: "Brightfield: each stain's own density on white glass",
+    Icon: BrightfieldIcon,
+  },
+];
+
+/**
+ * An H&E row's stains recombined (the scanned image) or separated, and how
+ * separated stains draw; laid out as the mask row's Fill and Color toggles.
+ */
+function HeStainControls(props: {
+  split: boolean;
+  mode?: HeSplitMode;
+  onSplitChange: (split: boolean) => void;
+  onModeChange?: (mode: HeSplitMode) => void;
+}) {
+  const { split, mode, onSplitChange, onModeChange } = props;
+  return (
+    <div className={styles.maskModeControls}>
+      <div className={styles.maskModeGroup}>
+        <fieldset className={styles.maskVizToggle} aria-label="Stains">
+          <MaskVizButton
+            active={!split}
+            label="Recombine stains"
+            title="Recombine stains: the scanned RGB image"
+            icon={<StainsCombinedIcon />}
+            caption="Merged"
+            onClick={() => {
+              if (split) onSplitChange(false);
+            }}
+          />
+          <MaskVizButton
+            active={split}
+            label="Separate stains"
+            title="Separate stains: hematoxylin and eosin as their own channels, by color deconvolution fitted to this slide"
+            icon={<StainsSplitIcon />}
+            caption="Split"
+            onClick={() => {
+              if (!split) onSplitChange(true);
+            }}
+          />
+        </fieldset>
+        <span className={styles.maskModeGroupLabel}>Stains</span>
+      </div>
+      {split && mode && onModeChange ? (
+        <div className={styles.maskModeGroup}>
+          <fieldset
+            className={styles.maskVizToggle}
+            aria-label="Draw separated stains as"
+          >
+            {HE_MODE_OPTIONS.map(({ mode: option, label, title, Icon }) => (
+              <MaskVizButton
+                key={option}
+                active={mode === option}
+                label={label}
+                title={title}
+                icon={<Icon />}
+                caption={label}
+                onClick={() => {
+                  if (mode !== option) onModeChange(option);
+                }}
+              />
+            ))}
+          </fieldset>
+          <span className={styles.maskModeGroupLabel}>Draw as</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 type ChannelRowNameProps =
   | {
       mode: "label";
@@ -259,6 +424,13 @@ type ChannelRowProps = {
   fitting?: boolean;
   visibilityBlocked?: boolean;
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
+  more?: ChannelRowMore;
+  /** Packed RGB (H&E) row: its stains recombined or separated. */
+  heSplit?: boolean;
+  onHeSplitChange?: (split: boolean) => void;
+  /** How separated stains draw, while they are. */
+  heMode?: HeSplitMode;
+  onHeModeChange?: (mode: HeSplitMode) => void;
 };
 
 function EditableChannelRowName(
@@ -336,10 +508,17 @@ export function ChannelRow(props: ChannelRowProps) {
     fitting,
     visibilityBlocked,
     onColorClick,
+    more,
+    heSplit,
+    onHeSplitChange,
+    heMode,
+    onHeModeChange,
   } = props;
 
   const showMask = isMask && maskVisualization;
   const showColor = !isMask && onColorClick;
+  // Mask and H&E rows hold toggle groups, set at the row's end.
+  const toggles = showMask || onHeSplitChange;
 
   return (
     <div
@@ -355,7 +534,7 @@ export function ChannelRow(props: ChannelRowProps) {
     >
       <div
         className={`${styles.channelRowMain}${
-          showMask ? ` ${styles.channelRowMainMask}` : ""
+          toggles ? ` ${styles.channelRowMainToggles}` : ""
         }`}
       >
         <ChannelVisibilitySwatch
@@ -394,8 +573,16 @@ export function ChannelRow(props: ChannelRowProps) {
               onChange={onMaskVisualizationChange}
             />
           ) : null}
+          {onHeSplitChange ? (
+            <HeStainControls
+              split={Boolean(heSplit)}
+              mode={heMode}
+              onSplitChange={onHeSplitChange}
+              onModeChange={onHeModeChange}
+            />
+          ) : null}
         </div>
-        {showMask && fixedColorHex ? (
+        {fixedColorHex && !showColor ? (
           <span
             className={styles.channelColorSwatchStatic}
             style={{ backgroundColor: `#${fixedColorHex}` }}
@@ -412,7 +599,20 @@ export function ChannelRow(props: ChannelRowProps) {
             onClick={onColorClick}
           />
         ) : null}
-        <div className={styles.channelRowTrailing}>{trailing}</div>
+        <div className={styles.channelRowTrailing}>
+          {trailing}
+          {/* Draw modes are offered wherever a channel's contrast editor is
+              shown; an H&E stain row is part of its RGB channel instead. */}
+          {more || (contrast && !contrast.heComponent) ? (
+            <ChannelRowMoreMenu
+              channelName={name.name}
+              fitBusy={fitting}
+              drawChannelId={contrast?.sourceChannelId}
+              drawRowId={contrast?.groupId ? contrast.channelId : undefined}
+              {...more}
+            />
+          ) : null}
+        </div>
         {showMask ? maskAction : null}
       </div>
       {showMask && maskFooter ? (
