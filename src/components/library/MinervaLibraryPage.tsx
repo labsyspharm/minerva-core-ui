@@ -20,7 +20,7 @@ import {
 } from "@/lib/storyExport/importStoryFolder";
 import { buildStamp } from "@/lib/version/buildStamp";
 import { classifyViewerLaunchUrl } from "@/lib/viewer/launchUrl";
-import { rootRouteApi } from "@/router/appRouter";
+import { rootRouteApi, useUrlSrc } from "@/router/appRouter";
 import styles from "./MinervaLibraryPage.module.css";
 
 const APP_TAB_TITLE_PREFIX = "Minerva";
@@ -267,7 +267,7 @@ function LibraryBuildInfo() {
 
 export function MinervaLibraryPage() {
   const navigate = rootRouteApi.useNavigate();
-  const launchUrl = rootRouteApi.useSearch().src;
+  const launchUrl = useUrlSrc();
   const switchStory = useDocumentStore((s) => s.switchStory);
   const createStory = useDocumentStore((s) => s.createStory);
   const deleteStory = useDocumentStore((s) => s.deleteStory);
@@ -289,9 +289,12 @@ export function MinervaLibraryPage() {
       });
   }, []);
 
+  // Leaving a story lands here before it is saved and closed; list once it
+  // is, so its title and thumbnail are current.
+  const storyOpen = useDocumentStore((s) => s.activeStoryId !== null);
   React.useEffect(() => {
-    refresh();
-  }, [refresh]);
+    if (!storyOpen) refresh();
+  }, [storyOpen, refresh]);
 
   React.useEffect(() => {
     document.title = `${APP_TAB_TITLE_PREFIX} | Minerva Library`;
@@ -299,9 +302,18 @@ export function MinervaLibraryPage() {
 
   useClickOutside(addOpen, () => setAddOpen(false), [addRef]);
 
+  /**
+   * Show the story `id` (already the active story). From the shelf: a new
+   * entry, so Back returns here. From `?src=`: the same entry and address,
+   * with the story it opened as in history state (a reload reopens it).
+   */
   const goToStory = React.useCallback(
-    (id: string) => {
-      navigate({ search: { storyid: id }, replace: true } as never);
+    (id: string, src?: string) => {
+      navigate(
+        (src
+          ? { search: { src }, state: { srcStoryId: id }, replace: true }
+          : { search: { storyid: id } }) as never,
+      );
     },
     [navigate],
   );
@@ -342,12 +354,15 @@ export function MinervaLibraryPage() {
   }, [goToStory, openNewStory]);
 
   const startStoryWithPendingImport = React.useCallback(
-    async (pending: PendingLibraryImport): Promise<OmeImportResult> => {
+    async (
+      pending: PendingLibraryImport,
+      src?: string,
+    ): Promise<OmeImportResult> => {
       setError(null);
       try {
         const id = await openNewStory();
         pendingLibraryImport = pending;
-        goToStory(id);
+        goToStory(id, src);
         return { ok: true };
       } catch (e: unknown) {
         const error = e instanceof Error ? e.message : "Could not create story";
@@ -391,7 +406,7 @@ export function MinervaLibraryPage() {
       void (async () => {
         try {
           useAppStore.getState().resetStoryViewerSession();
-          goToStory(await importStoryFromUrl(launch.url));
+          goToStory(await importStoryFromUrl(launch.url), launchUrl);
         } catch (e: unknown) {
           setError(
             e instanceof Error ? e.message : "Could not open config.json",
@@ -408,6 +423,7 @@ export function MinervaLibraryPage() {
             role: "intensity",
             source: { kind: "url", url: launch.url },
           },
+      launchUrl,
     );
   }, [launchUrl, goToStory, startStoryWithPendingImport]);
 

@@ -2,6 +2,7 @@ import {
   createRootRoute,
   createRouter,
   getRouteApi,
+  useLocation,
 } from "@tanstack/react-router";
 import type { ComponentType } from "react";
 import * as React from "react";
@@ -12,7 +13,9 @@ import { classifyViewerLaunchUrl } from "@/lib/viewer/launchUrl";
 
 /**
  * The app's whole query: `?storyid=<uuid>` names a library story; `?src=<url>`
- * opens a story JSON, OME-TIFF or DICOMweb series (and becomes a `storyid`).
+ * opens a story JSON, OME-TIFF or DICOMweb series as a library story. The
+ * address bar keeps `?src=`; the story it opened is `srcStoryId` in history
+ * state.
  */
 type RootSearch = { storyid?: string; src?: string };
 
@@ -47,39 +50,73 @@ function stringifyRootSearch({ storyid, src }: RootSearch): string {
 export const rootRouteApi = getRouteApi("__root__");
 
 /**
- * Keeps `?storyid=` in sync with {@link useDocumentStore}'s `activeStoryId` while a
- * story is open, and opens the story the URL names (back/forward, edited URL).
+ * The library story a location names: `?storyid=`, else the story a `?src=`
+ * entry was opened as. Null means the library (or a `?src=` not yet opened).
+ */
+function storyIdForLocation(
+  search: RootSearch,
+  historyState: unknown,
+): string | null {
+  if (search.storyid) return search.storyid;
+  if (!search.src) return null;
+  const id = uuidSchema.safeParse(
+    (historyState as { srcStoryId?: unknown } | null)?.srcStoryId,
+  );
+  return id.success ? id.data : null;
+}
+
+/** {@link storyIdForLocation} for the router's current location. */
+export function useUrlStoryId(): string | null {
+  return useLocation({
+    select: (l) => storyIdForLocation(l.search as RootSearch, l.state),
+  });
+}
+
+/**
+ * `?src=` of the router's current location. Read it here, not with
+ * `rootRouteApi.useSearch()`: on back/forward the route match keeps the old
+ * search for a render, so the library would see the `src` it just left and
+ * open it again.
+ */
+export function useUrlSrc(): string | undefined {
+  return useLocation({ select: (l) => (l.search as RootSearch).src });
+}
+
+/**
+ * Opens the story the URL names, and closes it when the URL names none, so
+ * back/forward and "Return to Library" move between the library and stories.
+ * Navigation that opens a story itself (the library) switches the store
+ * first; this then sees a match.
  */
 export function StoryIdUrlSync() {
-  const search = rootRouteApi.useSearch();
+  const urlStoryId = useUrlStoryId();
   const navigate = rootRouteApi.useNavigate();
-  const activeStoryId = useDocumentStore((s) => s.activeStoryId);
-  const switchStory = useDocumentStore((s) => s.switchStory);
+  const wantRef = React.useRef(urlStoryId);
+  const queueRef = React.useRef(Promise.resolve());
 
   React.useEffect(() => {
-    const sid = search.storyid;
-    if (sid === undefined || activeStoryId === sid) return;
-    // Back in the library (e.g. right after "Return to Library"): drop the
-    // stale id rather than reopen the story we just left.
-    if (activeStoryId === null) {
-      navigate({ search: {}, replace: true } as never);
-      return;
-    }
-    void (async () => {
-      useAppStore.getState().resetStoryViewerSession();
-      try {
-        await switchStory(sid);
-      } catch {
-        navigate({ search: {}, replace: true } as never);
-      }
-    })();
-  }, [search.storyid, activeStoryId, switchStory, navigate]);
-
-  React.useEffect(() => {
-    if (activeStoryId === null) return;
-    if (search.storyid === activeStoryId && search.src === undefined) return;
-    navigate({ search: { storyid: activeStoryId }, replace: true } as never);
-  }, [activeStoryId, navigate, search.storyid, search.src]);
+    wantRef.current = urlStoryId;
+    // One step at a time, each toward the latest URL.
+    queueRef.current = queueRef.current
+      .then(async () => {
+        const want = wantRef.current;
+        const doc = useDocumentStore.getState();
+        if (want === doc.activeStoryId) return;
+        useAppStore.getState().resetStoryViewerSession();
+        if (want === null) return doc.closeStory();
+        try {
+          await doc.switchStory(want);
+        } catch {
+          // Not in this library (deleted, or another browser's id). A `?src=`
+          // entry falls back to opening its source again.
+          navigate({
+            search: (prev: RootSearch) => ({ src: prev.src }),
+            replace: true,
+          } as never);
+        }
+      })
+      .catch((e) => console.error("[StoryIdUrlSync]", e));
+  }, [urlStoryId, navigate]);
 
   return null;
 }

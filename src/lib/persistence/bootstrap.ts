@@ -40,8 +40,9 @@ async function runBootstrap(preferredStoryId: string | null): Promise<void> {
 
 /**
  * Load persisted state for {@link useDocumentStore}.
- * - No `storyid` in the URL → Minerva Library: clear active story and document slices.
- * - With `storyid` → hydrate that story from Dexie (or fall back to Library if missing).
+ * - No story id (from `?storyid=`, or a `?src=` entry's history state) →
+ *   Minerva Library: clear active story and document slices.
+ * - With one → hydrate that story from Dexie (or fall back to Library if missing).
  *
  * Call once before the main UI mounts. Concurrent callers share one run
  * (avoids duplicate work under React Strict Mode).

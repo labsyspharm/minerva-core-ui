@@ -88,6 +88,8 @@ export type DocumentStore = DocumentState & {
 
   /** Save current doc, load another story from Dexie, persist active id. */
   switchStory: (id: string) => Promise<void>;
+  /** Save current doc, persist no active story, then {@link clearForLibraryView}. */
+  closeStory: () => Promise<void>;
   /** Save current doc, create a new empty story, switch to it. Returns new story id. */
   createStory: (title?: string) => Promise<string>;
   /** Remove a story from Dexie; if it was active, load another or create one. */
@@ -253,6 +255,15 @@ export const useDocumentStore = create<DocumentStore>()(
             activeStoryId: null,
           });
           clearDocumentHistory();
+        },
+
+        closeStory: async () => {
+          const s = get();
+          if (s.activeStoryId) {
+            await saveStoryDocument(s.activeStoryId, s.toDocumentData());
+          }
+          await persistActiveStoryId(null);
+          get().clearForLibraryView();
         },
 
         switchStory: async (id) => {

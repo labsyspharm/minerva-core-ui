@@ -17,10 +17,10 @@ export function useStoryAutoSave(): void {
   useEffect(() => {
     const flush = () => {
       const t = timerRef.current;
-      if (t !== undefined) {
-        clearTimeout(t);
-        timerRef.current = undefined;
-      }
+      // No edit waiting: already saved. Closing a story saves it anyway.
+      if (t === undefined) return;
+      clearTimeout(t);
+      timerRef.current = undefined;
       const s = useDocumentStore.getState();
       const id = s.activeStoryId;
       if (!id) return;

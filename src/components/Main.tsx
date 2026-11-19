@@ -103,7 +103,6 @@ import {
 import {
   isBlankOrUntitledStoryTitle,
   saveStoryDocument,
-  setActiveStoryId,
 } from "@/lib/persistence/storyPersistence";
 import { useStoryAutoSave } from "@/lib/persistence/useAutoSave";
 import { applyOmeRoisFromLoaderToWaypoint } from "@/lib/shapes/applyOmeRoisToDocument";
@@ -151,9 +150,9 @@ import {
   type WaypointSeedMirror,
 } from "@/lib/waypoints/seedWaypointConfig";
 import {
-  parseRootSearch,
   rootRouteApi,
   StoryIdUrlSync,
+  useUrlStoryId,
 } from "@/router/appRouter";
 import styles from "./Main.module.css";
 
@@ -200,10 +199,11 @@ type Props = {
 
 const StoryPersistenceRoot = ({ children }: { children: React.ReactNode }) => {
   const [ready, setReady] = useState(false);
+  // Only the story the page loaded on; later URLs are StoryIdUrlSync's.
+  const [initialStoryId] = useState(useUrlStoryId());
   useEffect(() => {
-    const { storyid } = parseRootSearch(window.location.search);
-    void bootstrapStoryPersistence(storyid).then(() => setReady(true));
-  }, []);
+    void bootstrapStoryPersistence(initialStoryId).then(() => setReady(true));
+  }, [initialStoryId]);
   /** Minerva Library mounts without `Content` (no FileHandler); the HTML shell loader must still be cleared. */
   useEffect(() => {
     if (!ready) return;
@@ -340,17 +340,10 @@ const Content = (props: Props) => {
   const { handleKeys, useLaunchQueue = false } = props;
   useStoryAutoSave();
   const navigate = rootRouteApi.useNavigate();
+  // A new entry, like a link: Back returns to this story. StoryIdUrlSync
+  // saves and closes it, as it does for Back.
   const returnToLibrary = React.useCallback(() => {
-    void (async () => {
-      const s = useDocumentStore.getState();
-      if (s.activeStoryId) {
-        await saveStoryDocument(s.activeStoryId, s.toDocumentData());
-      }
-      await setActiveStoryId(null);
-      useAppStore.getState().resetStoryViewerSession();
-      s.clearForLibraryView();
-      navigate({ search: {}, replace: true } as never);
-    })();
+    navigate({ search: {} } as never);
   }, [navigate]);
   const storyTitleForTab = useDocumentStore((s) => s.metadata.title ?? "");
   React.useEffect(() => {
@@ -2446,8 +2439,8 @@ const Content = (props: Props) => {
 };
 
 const LibraryOrAuthor = (props: Props) => {
-  const { storyid } = rootRouteApi.useSearch();
-  if (!storyid) {
+  const storyId = useUrlStoryId();
+  if (!storyId) {
     return <MinervaLibraryPage />;
   }
   return <Content {...props} />;
