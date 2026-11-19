@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-DDUDAMVb.js","./pako.esm-KbdoS3Oq.js","./lerc-BtYefjOY.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CCfDFONo.js","./pako.esm-KbdoS3Oq.js","./lerc-CaoKGUVm.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -13203,6 +13203,19 @@ let __tla = (async () => {
       children: jsxRuntimeExports.jsx(Matches, {})
     });
   }
+  function useLocation(opts) {
+    const router = useRouter();
+    const previousResult = reactExports.useRef(void 0);
+    return useStore$1(router.stores.location, (location2) => {
+      const selected = (opts == null ? void 0 : opts.select) ? opts.select(location2) : location2;
+      if ((opts == null ? void 0 : opts.structuralSharing) ?? router.options.defaultStructuralSharing) {
+        const shared = replaceEqualDeep(previousResult.current, selected);
+        previousResult.current = shared;
+        return shared;
+      }
+      return selected;
+    });
+  }
   var createRoot;
   var m$2 = reactDomExports;
   {
@@ -18514,7 +18527,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "86be68d8b15d2ea1c27cd0d7b9fcc77c0bf8cbbf"
+    "VITE_APP_GIT_SHA": "1acb1747d31de895258466945541ea6c3688de46"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
   const getTrackedConnectionState = (name2) => {
@@ -79250,26 +79263,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-DD64z--A.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-Bkf7suvx.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-CvZF-AI-.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-DJ04UZ--.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-D0r_I35m.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-CDg04k13.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-DDUDAMVb.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DDnjsQ1A.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BtYefjOY.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-CCfDFONo.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-DPHfiPTc.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-CaoKGUVm.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-CUYEn65F.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-D3Sb-3ox.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-23Pr7476.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-WoRxRoOm.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -90036,6 +90049,14 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         activeStoryId: null
       });
       clearDocumentHistory();
+    },
+    closeStory: async () => {
+      const s2 = get2();
+      if (s2.activeStoryId) {
+        await saveStoryDocument(s2.activeStoryId, s2.toDocumentData());
+      }
+      await setActiveStoryId(null);
+      get2().clearForLibraryView();
     },
     switchStory: async (id2) => {
       const s2 = get2();
@@ -172833,52 +172854,49 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return parts.length ? `?${parts.join("&")}` : "";
   }
   const rootRouteApi = getRouteApi("__root__");
+  function storyIdForLocation(search2, historyState) {
+    if (search2.storyid) return search2.storyid;
+    if (!search2.src) return null;
+    const id2 = uuidSchema.safeParse(historyState == null ? void 0 : historyState.srcStoryId);
+    return id2.success ? id2.data : null;
+  }
+  function useUrlStoryId() {
+    return useLocation({
+      select: (l2) => storyIdForLocation(l2.search, l2.state)
+    });
+  }
+  function useUrlSrc() {
+    return useLocation({
+      select: (l2) => l2.search.src
+    });
+  }
   function StoryIdUrlSync() {
-    const search2 = rootRouteApi.useSearch();
+    const urlStoryId = useUrlStoryId();
     const navigate = rootRouteApi.useNavigate();
-    const activeStoryId = useDocumentStore((s2) => s2.activeStoryId);
-    const switchStory = useDocumentStore((s2) => s2.switchStory);
+    const wantRef = reactExports.useRef(urlStoryId);
+    const queueRef = reactExports.useRef(Promise.resolve());
     reactExports.useEffect(() => {
-      const sid = search2.storyid;
-      if (sid === void 0 || activeStoryId === sid) return;
-      if (activeStoryId === null) {
-        navigate({
-          search: {},
-          replace: true
-        });
-        return;
-      }
-      void (async () => {
+      wantRef.current = urlStoryId;
+      queueRef.current = queueRef.current.then(async () => {
+        const want = wantRef.current;
+        const doc = useDocumentStore.getState();
+        if (want === doc.activeStoryId) return;
         useAppStore.getState().resetStoryViewerSession();
+        if (want === null) return doc.closeStory();
         try {
-          await switchStory(sid);
+          await doc.switchStory(want);
         } catch {
           navigate({
-            search: {},
+            search: (prev) => ({
+              src: prev.src
+            }),
             replace: true
           });
         }
-      })();
+      }).catch((e2) => console.error("[StoryIdUrlSync]", e2));
     }, [
-      search2.storyid,
-      activeStoryId,
-      switchStory,
+      urlStoryId,
       navigate
-    ]);
-    reactExports.useEffect(() => {
-      if (activeStoryId === null) return;
-      if (search2.storyid === activeStoryId && search2.src === void 0) return;
-      navigate({
-        search: {
-          storyid: activeStoryId
-        },
-        replace: true
-      });
-    }, [
-      activeStoryId,
-      navigate,
-      search2.storyid,
-      search2.src
     ]);
     return null;
   }
@@ -173417,8 +173435,8 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-11-05T16:35:52.430Z";
-    const sha = "86be68d8b15d2ea1c27cd0d7b9fcc77c0bf8cbbf";
+    const iso = "2026-11-19T15:44:28.045Z";
+    const sha = "1acb1747d31de895258466945541ea6c3688de46";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -173701,7 +173719,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
   }
   function MinervaLibraryPage() {
     const navigate = rootRouteApi.useNavigate();
-    const launchUrl = rootRouteApi.useSearch().src;
+    const launchUrl = useUrlSrc();
     const switchStory = useDocumentStore((s2) => s2.switchStory);
     const createStory = useDocumentStore((s2) => s2.createStory);
     const deleteStory = useDocumentStore((s2) => s2.deleteStory);
@@ -173718,9 +173736,11 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         setError(e2 instanceof Error ? e2.message : "Failed to load stories");
       });
     }, []);
+    const storyOpen = useDocumentStore((s2) => s2.activeStoryId !== null);
     reactExports.useEffect(() => {
-      refresh();
+      if (!storyOpen) refresh();
     }, [
+      storyOpen,
       refresh
     ]);
     reactExports.useEffect(() => {
@@ -173729,12 +173749,19 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
     useClickOutside(addOpen, () => setAddOpen(false), [
       addRef
     ]);
-    const goToStory = reactExports.useCallback((id2) => {
-      navigate({
+    const goToStory = reactExports.useCallback((id2, src) => {
+      navigate(src ? {
         search: {
-          storyid: id2
+          src
+        },
+        state: {
+          srcStoryId: id2
         },
         replace: true
+      } : {
+        search: {
+          storyid: id2
+        }
       });
     }, [
       navigate
@@ -173776,12 +173803,12 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
       goToStory,
       openNewStory
     ]);
-    const startStoryWithPendingImport = reactExports.useCallback(async (pending2) => {
+    const startStoryWithPendingImport = reactExports.useCallback(async (pending2, src) => {
       setError(null);
       try {
         const id2 = await openNewStory();
         pendingLibraryImport = pending2;
-        goToStory(id2);
+        goToStory(id2, src);
         return {
           ok: true
         };
@@ -173827,7 +173854,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
         void (async () => {
           try {
             useAppStore.getState().resetStoryViewerSession();
-            goToStory(await importStoryFromUrl(launch.url));
+            goToStory(await importStoryFromUrl(launch.url), launchUrl);
           } catch (e2) {
             setError(e2 instanceof Error ? e2.message : "Could not open config.json");
           }
@@ -173844,7 +173871,7 @@ float apply_contrast_limits(float intensity, vec2 contrastLimits) {
           kind: "url",
           url: launch.url
         }
-      });
+      }, launchUrl);
     }, [
       launchUrl,
       goToStory,
@@ -260646,10 +260673,9 @@ uniform classStyleUniforms {
     reactExports.useEffect(() => {
       const flush2 = () => {
         const t2 = timerRef.current;
-        if (t2 !== void 0) {
-          clearTimeout(t2);
-          timerRef.current = void 0;
-        }
+        if (t2 === void 0) return;
+        clearTimeout(t2);
+        timerRef.current = void 0;
         const s2 = useDocumentStore.getState();
         const id2 = s2.activeStoryId;
         if (!id2) return;
@@ -260817,10 +260843,12 @@ uniform classStyleUniforms {
   }
   const StoryPersistenceRoot = ({ children }) => {
     const [ready, setReady] = reactExports.useState(false);
+    const [initialStoryId] = reactExports.useState(useUrlStoryId());
     reactExports.useEffect(() => {
-      const { storyid } = parseRootSearch(window.location.search);
-      void bootstrapStoryPersistence(storyid).then(() => setReady(true));
-    }, []);
+      void bootstrapStoryPersistence(initialStoryId).then(() => setReady(true));
+    }, [
+      initialStoryId
+    ]);
     reactExports.useEffect(() => {
       var _a2;
       if (!ready) return;
@@ -260935,19 +260963,9 @@ uniform classStyleUniforms {
     useStoryAutoSave();
     const navigate = rootRouteApi.useNavigate();
     const returnToLibrary = reactExports.useCallback(() => {
-      void (async () => {
-        const s2 = useDocumentStore.getState();
-        if (s2.activeStoryId) {
-          await saveStoryDocument(s2.activeStoryId, s2.toDocumentData());
-        }
-        await setActiveStoryId(null);
-        useAppStore.getState().resetStoryViewerSession();
-        s2.clearForLibraryView();
-        navigate({
-          search: {},
-          replace: true
-        });
-      })();
+      navigate({
+        search: {}
+      });
     }, [
       navigate
     ]);
@@ -262618,8 +262636,8 @@ uniform classStyleUniforms {
     });
   };
   const LibraryOrAuthor = (props) => {
-    const { storyid } = rootRouteApi.useSearch();
-    if (!storyid) {
+    const storyId = useUrlStoryId();
+    if (!storyId) {
       return jsxRuntimeExports.jsx(MinervaLibraryPage, {});
     }
     return jsxRuntimeExports.jsx(Content, {
