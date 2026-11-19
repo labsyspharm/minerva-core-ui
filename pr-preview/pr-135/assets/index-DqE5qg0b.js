@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-C5ygxL6k.js","./pako.esm-KbdoS3Oq.js","./lerc-BawkL5s3.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./deflate-CcjoEfFy.js","./pako.esm-KbdoS3Oq.js","./lerc-DmioO5ld.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -18515,7 +18515,7 @@ let __tla = (async () => {
     "MODE": "production",
     "PROD": true,
     "SSR": false,
-    "VITE_APP_GIT_SHA": "eade1d2ef34176b7fbf6f0523e186b6d9c3ba8e3",
+    "VITE_APP_GIT_SHA": "19fbcbfcb379b6c8231ccb68515736df8bfd0e53",
     "VITE_STORY_BUNDLE_URL": "bundle/"
   };
   const trackedConnections = /* @__PURE__ */ new Map();
@@ -19289,16 +19289,16 @@ let __tla = (async () => {
   const log$4 = createLog();
   const isBoolean = (value) => typeof value === "boolean";
   const isFunction = (value) => typeof value === "function";
-  const isObject$1 = (value) => value !== null && typeof value === "object";
-  const isPureObject = (value) => isObject$1(value) && value.constructor === {}.constructor;
+  const isObject$2 = (value) => value !== null && typeof value === "object";
+  const isPureObject = (value) => isObject$2(value) && value.constructor === {}.constructor;
   const isSharedArrayBuffer = (value) => typeof SharedArrayBuffer !== "undefined" && value instanceof SharedArrayBuffer;
-  const isArrayBufferLike = (value) => isObject$1(value) && typeof value.byteLength === "number" && typeof value.slice === "function";
+  const isArrayBufferLike = (value) => isObject$2(value) && typeof value.byteLength === "number" && typeof value.slice === "function";
   const isIterable = (value) => Boolean(value) && isFunction(value[Symbol.iterator]);
   const isAsyncIterable$1 = (value) => Boolean(value) && isFunction(value[Symbol.asyncIterator]);
-  const isResponse = (value) => typeof Response !== "undefined" && value instanceof Response || isObject$1(value) && isFunction(value.arrayBuffer) && isFunction(value.text) && isFunction(value.json);
+  const isResponse = (value) => typeof Response !== "undefined" && value instanceof Response || isObject$2(value) && isFunction(value.arrayBuffer) && isFunction(value.text) && isFunction(value.json);
   const isBlob = (value) => typeof Blob !== "undefined" && value instanceof Blob;
-  const isReadableDOMStream = (value) => typeof ReadableStream !== "undefined" && value instanceof ReadableStream || isObject$1(value) && isFunction(value.tee) && isFunction(value.cancel) && isFunction(value.getReader);
-  const isReadableNodeStream = (value) => isObject$1(value) && isFunction(value.read) && isFunction(value.pipe) && isBoolean(value.readable);
+  const isReadableDOMStream = (value) => typeof ReadableStream !== "undefined" && value instanceof ReadableStream || isObject$2(value) && isFunction(value.tee) && isFunction(value.cancel) && isFunction(value.getReader);
+  const isReadableNodeStream = (value) => isObject$2(value) && isFunction(value.read) && isFunction(value.pipe) && isBoolean(value.readable);
   const isReadableStream = (value) => isReadableDOMStream(value) || isReadableNodeStream(value);
   function mergeOptions(baseOptions, newOptions) {
     return mergeOptionsRecursively(baseOptions || {}, newOptions);
@@ -20644,7 +20644,7 @@ let __tla = (async () => {
     const loaderName = id2 || "Top level";
     const prefix2 = id2 ? `${id2}.` : "";
     for (const key2 in options) {
-      const isSubOptions = !id2 && isObject$1(options[key2]);
+      const isSubOptions = !id2 && isObject$2(options[key2]);
       const isBaseUriOption = key2 === "baseUri" && !id2;
       const isWorkerUrlOption = key2 === "workerUrl" && id2;
       if (!(key2 in defaultOptions2) && !isBaseUriOption && !isWorkerUrlOption) {
@@ -21180,7 +21180,7 @@ let __tla = (async () => {
     if (typeof fetchOption === "function") {
       return fetchOption;
     }
-    if (isObject$1(fetchOption)) {
+    if (isObject$2(fetchOption)) {
       return (url) => fetchFile(url, fetchOption);
     }
     if (context == null ? void 0 : context.fetch) {
@@ -28856,10 +28856,10 @@ vec4 picking_filterColor(vec4 color) {
     return `${type}${location2}: ${message2}`.trim();
   }
   class DeviceFeatures {
-    constructor(features = [], disabledFeatures) {
+    constructor(features2 = [], disabledFeatures) {
       __publicField(this, "features");
       __publicField(this, "disabledFeatures");
-      this.features = new Set(features);
+      this.features = new Set(features2);
       this.disabledFeatures = disabledFeatures || {};
     }
     *[Symbol.iterator]() {
@@ -35988,14 +35988,14 @@ ${fragment$2}
     ].map((pixel) => screenToCommonSpace(pixel, pixelUnprojectionMatrix));
     for (const shadowMatrix of shadowMatrices) {
       const viewMatrix2 = shadowMatrix.clone().translate(new Vector3(viewport2.center).negate());
-      const positions = corners.map((corner) => viewMatrix2.transform(corner));
+      const positions2 = corners.map((corner) => viewMatrix2.transform(corner));
       const projectionMatrix = new Matrix4().ortho({
-        left: Math.min(...positions.map((position2) => position2[0])),
-        right: Math.max(...positions.map((position2) => position2[0])),
-        bottom: Math.min(...positions.map((position2) => position2[1])),
-        top: Math.max(...positions.map((position2) => position2[1])),
-        near: Math.min(...positions.map((position2) => -position2[2])),
-        far: Math.max(...positions.map((position2) => -position2[2]))
+        left: Math.min(...positions2.map((position2) => position2[0])),
+        right: Math.max(...positions2.map((position2) => position2[0])),
+        bottom: Math.min(...positions2.map((position2) => position2[1])),
+        top: Math.max(...positions2.map((position2) => position2[1])),
+        near: Math.min(...positions2.map((position2) => -position2[2])),
+        far: Math.max(...positions2.map((position2) => -position2[2]))
       });
       projectionMatrices.push(projectionMatrix.multiplyRight(shadowMatrix));
     }
@@ -38133,8 +38133,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
     getIndexes() {
       return this.indices || null;
     }
-    _calculateVertexCount(positions) {
-      const vertexCount = positions.byteLength / 12;
+    _calculateVertexCount(positions2) {
+      const vertexCount = positions2.byteLength / 12;
       return vertexCount;
     }
   }
@@ -47056,8 +47056,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       getWebGLExtension(gl2, "EXT_color_buffer_float", extensions);
     }
     *[Symbol.iterator]() {
-      const features = this.getFeatures();
-      for (const feature of features) {
+      const features2 = this.getFeatures();
+      for (const feature of features2) {
         if (this.has(feature)) {
           yield feature;
         }
@@ -47081,8 +47081,8 @@ fn picking_isColorValid(color: vec3<f32>) -> bool {
       return this.features.has(feature);
     }
     initializeFeatures() {
-      const features = this.getFeatures().filter((feature) => feature !== "polygon-mode-webgl");
-      for (const feature of features) {
+      const features2 = this.getFeatures().filter((feature) => feature !== "polygon-mode-webgl");
+      for (const feature of features2) {
         this.has(feature);
       }
     }
@@ -53883,7 +53883,7 @@ void main(void) {
   const ERR_NOT_OBJECT = "count(): argument not an object";
   const ERR_NOT_CONTAINER = "count(): argument not a container";
   function count$2(container2) {
-    if (!isObject(container2)) {
+    if (!isObject$1(container2)) {
       throw new Error(ERR_NOT_OBJECT);
     }
     if (typeof container2.count === "function") {
@@ -53903,7 +53903,7 @@ void main(void) {
   function isPlainObject$3(value) {
     return value !== null && typeof value === "object" && value.constructor === Object;
   }
-  function isObject(value) {
+  function isObject$1(value) {
     return value !== null && typeof value === "object";
   }
   function mergeShaders(target, source2) {
@@ -59908,26 +59908,26 @@ vec4 colormap(float intensity, float opacity) {
   addDecoder([
     void 0,
     1
-  ], () => __vitePreload(() => import("./raw-AEO1CEMG.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
-  addDecoder(5, () => __vitePreload(() => import("./lzw-BC4o2d3g.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  ], () => __vitePreload(() => import("./raw-BNVPAXoS.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(5, () => __vitePreload(() => import("./lzw-BhAz_J0z.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder(6, () => {
     throw new Error("old style JPEG compression is not supported.");
   });
-  addDecoder(7, () => __vitePreload(() => import("./jpeg-CJTc80uq.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(7, () => __vitePreload(() => import("./jpeg-BK3zR9gk.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
   addDecoder([
     8,
     32946
-  ], () => __vitePreload(() => import("./deflate-C5ygxL6k.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(32773, () => __vitePreload(() => import("./packbits-DZ50qzhN.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
-  addDecoder(34887, () => __vitePreload(() => import("./lerc-BawkL5s3.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
+  ], () => __vitePreload(() => import("./deflate-CcjoEfFy.js"), true ? __vite__mapDeps([0,1]) : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(32773, () => __vitePreload(() => import("./packbits-vFGMqFyx.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default));
+  addDecoder(34887, () => __vitePreload(() => import("./lerc-DmioO5ld.js"), true ? __vite__mapDeps([2,1]) : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(5e4, () => __vitePreload(() => import("./zstd-nXw22YC3.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
+  addDecoder(5e4, () => __vitePreload(() => import("./zstd-BH6fBdkm.js"), true ? [] : void 0, import.meta.url).then(async (m2) => {
     await m2.zstd.init();
     return m2;
   }).then((m2) => m2.default));
-  addDecoder(50001, () => __vitePreload(() => import("./webimage-B6J84ILM.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
+  addDecoder(50001, () => __vitePreload(() => import("./webimage-B9uWVC-a.js"), true ? [] : void 0, import.meta.url).then((m2) => m2.default), false);
   function copyNewSize(array, width, height, samplesPerPixel = 1) {
     return new (Object.getPrototypeOf(array)).constructor(width * height * samplesPerPixel);
   }
@@ -63963,7 +63963,7 @@ vec4 colormap(float intensity, float opacity) {
     const vertexCount = (uCount - 1) * (vCount - 1) * 6;
     const indices = new Uint32Array(vertexCount);
     const texCoords = new Float32Array(uCount * vCount * 2);
-    const positions = new Float64Array(uCount * vCount * 3);
+    const positions2 = new Float64Array(uCount * vCount * 3);
     let vertex2 = 0;
     let index2 = 0;
     for (let u2 = 0; u2 < uCount; u2++) {
@@ -63971,9 +63971,9 @@ vec4 colormap(float intensity, float opacity) {
       for (let v2 = 0; v2 < vCount; v2++) {
         const vt = v2 / (vCount - 1);
         const p2 = interpolateQuad(bounds, ut, vt);
-        positions[vertex2 * 3 + 0] = p2[0];
-        positions[vertex2 * 3 + 1] = p2[1];
-        positions[vertex2 * 3 + 2] = p2[2] || 0;
+        positions2[vertex2 * 3 + 0] = p2[0];
+        positions2[vertex2 * 3 + 1] = p2[1];
+        positions2[vertex2 * 3 + 2] = p2[2] || 0;
         texCoords[vertex2 * 2 + 0] = ut;
         texCoords[vertex2 * 2 + 1] = 1 - vt;
         if (u2 > 0 && v2 > 0) {
@@ -63989,21 +63989,21 @@ vec4 colormap(float intensity, float opacity) {
     }
     return {
       vertexCount,
-      positions,
+      positions: positions2,
       indices,
       texCoords
     };
   }
   function createQuad(bounds) {
-    const positions = new Float64Array(12);
+    const positions2 = new Float64Array(12);
     for (let i2 = 0; i2 < bounds.length; i2++) {
-      positions[i2 * 3 + 0] = bounds[i2][0];
-      positions[i2 * 3 + 1] = bounds[i2][1];
-      positions[i2 * 3 + 2] = bounds[i2][2] || 0;
+      positions2[i2 * 3 + 0] = bounds[i2][0];
+      positions2[i2 * 3 + 1] = bounds[i2][1];
+      positions2[i2 * 3 + 2] = bounds[i2][2] || 0;
     }
     return {
       vertexCount: 6,
-      positions,
+      positions: positions2,
       indices: DEFAULT_INDICES,
       texCoords: DEFAULT_TEX_COORDS
     };
@@ -65194,7 +65194,7 @@ fn fragmentMain(inp: Varyings) -> @location(0) vec4<f32> {
       }
     }
     _getModel() {
-      const positions = [
+      const positions2 = [
         -1,
         -1,
         1,
@@ -65213,7 +65213,7 @@ fn fragmentMain(inp: Varyings) -> @location(0) vec4<f32> {
           attributes: {
             positions: {
               size: 2,
-              value: new Float32Array(positions)
+              value: new Float32Array(positions2)
             }
           }
         }),
@@ -65678,7 +65678,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       }
     }
     _getModel() {
-      const positions = [
+      const positions2 = [
         0,
         -1,
         0,
@@ -65701,7 +65701,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
           attributes: {
             positions: {
               size: 3,
-              value: new Float32Array(positions)
+              value: new Float32Array(positions2)
             }
           }
         }),
@@ -66242,7 +66242,7 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
       model.draw(this.context.renderPass);
     }
     _getModel() {
-      const positions = [
+      const positions2 = [
         -1,
         -1,
         0,
@@ -66265,7 +66265,7 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
           attributes: {
             positions: {
               size: 3,
-              value: new Float32Array(positions)
+              value: new Float32Array(positions2)
             }
           }
         }),
@@ -66347,10 +66347,10 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
       target[i2] = source2[i2];
     }
   }
-  function getPointAtIndex(positions, index2, size, offset, out = []) {
+  function getPointAtIndex(positions2, index2, size, offset, out = []) {
     const startI = offset + index2 * size;
     for (let i2 = 0; i2 < size; i2++) {
-      out[i2] = positions[startI + i2];
+      out[i2] = positions2[startI + i2];
     }
     return out;
   }
@@ -66385,24 +66385,24 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     else if (p2[1] > bbox[3]) code2 |= 8;
     return code2;
   }
-  function cutPolylineByGrid(positions, options) {
+  function cutPolylineByGrid(positions2, options) {
     const { size = 2, broken = false, gridResolution = 10, gridOffset = [
       0,
       0
-    ], startIndex = 0, endIndex = positions.length } = options || {};
+    ], startIndex = 0, endIndex = positions2.length } = options || {};
     const numPoints = (endIndex - startIndex) / size;
     let part = [];
     const result = [
       part
     ];
-    const a2 = getPointAtIndex(positions, 0, size, startIndex);
+    const a2 = getPointAtIndex(positions2, 0, size, startIndex);
     let b2;
     let codeB;
     const cell = getGridCell(a2, gridResolution, gridOffset, []);
     const scratchPoint = [];
     push$1(part, a2);
     for (let i2 = 1; i2 < numPoints; i2++) {
-      b2 = getPointAtIndex(positions, i2, size, startIndex, b2);
+      b2 = getPointAtIndex(positions2, i2, size, startIndex, b2);
       codeB = bitCode(b2, cell);
       while (codeB) {
         intersect(a2, b2, codeB, cell, scratchPoint);
@@ -66428,8 +66428,8 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
   }
   const TYPE_INSIDE = 0;
   const TYPE_BORDER = 1;
-  function cutPolygonByGrid(positions, holeIndices = null, options) {
-    if (!positions.length) {
+  function cutPolygonByGrid(positions2, holeIndices = null, options) {
+    if (!positions2.length) {
       return [];
     }
     const { size = 2, gridResolution = 10, gridOffset = [
@@ -66439,8 +66439,8 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     const result = [];
     const queue2 = [
       {
-        pos: positions,
-        types: edgeTypes ? new Array(positions.length / size).fill(TYPE_BORDER) : null,
+        pos: positions2,
+        types: edgeTypes ? new Array(positions2.length / size).fill(TYPE_BORDER) : null,
         holes: holeIndices || []
       }
     ];
@@ -66499,7 +66499,7 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     }
     return result;
   }
-  function bisectPolygon(positions, edgeTypes, size, startIndex, endIndex, bbox, edge) {
+  function bisectPolygon(positions2, edgeTypes, size, startIndex, endIndex, bbox, edge) {
     const numPoints = (endIndex - startIndex) / size;
     const resultLow = [];
     const resultHigh = [];
@@ -66509,13 +66509,13 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     let p2;
     let side;
     let type;
-    const prev = getPointAtIndex(positions, numPoints - 1, size, startIndex);
+    const prev = getPointAtIndex(positions2, numPoints - 1, size, startIndex);
     let prevSide = Math.sign(edge & 8 ? prev[1] - bbox[3] : prev[0] - bbox[2]);
     let prevType = edgeTypes && edgeTypes[numPoints - 1];
     let lowPointCount = 0;
     let highPointCount = 0;
     for (let i2 = 0; i2 < numPoints; i2++) {
-      p2 = getPointAtIndex(positions, i2, size, startIndex, p2);
+      p2 = getPointAtIndex(positions2, i2, size, startIndex, p2);
       side = Math.sign(edge & 8 ? p2[1] - bbox[3] : p2[0] - bbox[2]);
       type = edgeTypes && edgeTypes[startIndex / size + i2];
       if (side && prevSide && prevSide !== side) {
@@ -66574,14 +66574,14 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
       cell[2] -= gridResolution;
     }
   }
-  function getBoundingBox$1(positions, size, endIndex, out) {
+  function getBoundingBox$1(positions2, size, endIndex, out) {
     let minX = Infinity;
     let maxX = -Infinity;
     let minY = Infinity;
     let maxY = -Infinity;
     for (let i2 = 0; i2 < endIndex; i2 += size) {
-      const x2 = positions[i2];
-      const y2 = positions[i2 + 1];
+      const x2 = positions2[i2];
+      const y2 = positions2[i2 + 1];
       minX = x2 < minX ? x2 : minX;
       maxX = x2 > maxX ? x2 : maxX;
       minY = y2 < minY ? y2 : minY;
@@ -66600,9 +66600,9 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     return arr1;
   }
   const DEFAULT_MAX_LATITUDE = 85.051129;
-  function cutPolylineByMercatorBounds(positions, options) {
-    const { size = 2, startIndex = 0, endIndex = positions.length, normalize: normalize2 = true } = options || {};
-    const newPositions = positions.slice(startIndex, endIndex);
+  function cutPolylineByMercatorBounds(positions2, options) {
+    const { size = 2, startIndex = 0, endIndex = positions2.length, normalize: normalize2 = true } = options || {};
+    const newPositions = positions2.slice(startIndex, endIndex);
     wrapLongitudesForShortestPath(newPositions, size, 0, endIndex - startIndex);
     const parts = cutPolylineByGrid(newPositions, {
       size,
@@ -66620,7 +66620,7 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     }
     return parts;
   }
-  function cutPolygonByMercatorBounds(positions, holeIndices = null, options) {
+  function cutPolygonByMercatorBounds(positions2, holeIndices = null, options) {
     const { size = 2, normalize: normalize2 = true, edgeTypes = false } = options || {};
     holeIndices = holeIndices || [];
     const newPositions = [];
@@ -66628,14 +66628,14 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     let srcStartIndex = 0;
     let targetIndex = 0;
     for (let ringIndex = 0; ringIndex <= holeIndices.length; ringIndex++) {
-      const srcEndIndex = holeIndices[ringIndex] || positions.length;
+      const srcEndIndex = holeIndices[ringIndex] || positions2.length;
       const targetStartIndex = targetIndex;
-      const splitIndex = findSplitIndex(positions, size, srcStartIndex, srcEndIndex);
+      const splitIndex = findSplitIndex(positions2, size, srcStartIndex, srcEndIndex);
       for (let i2 = splitIndex; i2 < srcEndIndex; i2++) {
-        newPositions[targetIndex++] = positions[i2];
+        newPositions[targetIndex++] = positions2[i2];
       }
       for (let i2 = srcStartIndex; i2 < splitIndex; i2++) {
-        newPositions[targetIndex++] = positions[i2];
+        newPositions[targetIndex++] = positions2[i2];
       }
       wrapLongitudesForShortestPath(newPositions, size, targetStartIndex, targetIndex);
       insertPoleVertices(newPositions, size, targetStartIndex, targetIndex, options == null ? void 0 : options.maxLatitude);
@@ -66659,11 +66659,11 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     }
     return parts;
   }
-  function findSplitIndex(positions, size, startIndex, endIndex) {
+  function findSplitIndex(positions2, size, startIndex, endIndex) {
     let maxLat = -1;
     let pointIndex = -1;
     for (let i2 = startIndex + 1; i2 < endIndex; i2 += size) {
-      const lat = Math.abs(positions[i2]);
+      const lat = Math.abs(positions2[i2]);
       if (lat > maxLat) {
         maxLat = lat;
         pointIndex = i2 - 1;
@@ -66671,36 +66671,36 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
     }
     return pointIndex;
   }
-  function insertPoleVertices(positions, size, startIndex, endIndex, maxLatitude = DEFAULT_MAX_LATITUDE) {
-    const firstLng = positions[startIndex];
-    const lastLng = positions[endIndex - size];
+  function insertPoleVertices(positions2, size, startIndex, endIndex, maxLatitude = DEFAULT_MAX_LATITUDE) {
+    const firstLng = positions2[startIndex];
+    const lastLng = positions2[endIndex - size];
     if (Math.abs(firstLng - lastLng) > 180) {
-      const p2 = getPointAtIndex(positions, 0, size, startIndex);
+      const p2 = getPointAtIndex(positions2, 0, size, startIndex);
       p2[0] += Math.round((lastLng - firstLng) / 360) * 360;
-      push$1(positions, p2);
+      push$1(positions2, p2);
       p2[1] = Math.sign(p2[1]) * maxLatitude;
-      push$1(positions, p2);
+      push$1(positions2, p2);
       p2[0] = firstLng;
-      push$1(positions, p2);
+      push$1(positions2, p2);
     }
   }
-  function wrapLongitudesForShortestPath(positions, size, startIndex, endIndex) {
-    let prevLng = positions[0];
+  function wrapLongitudesForShortestPath(positions2, size, startIndex, endIndex) {
+    let prevLng = positions2[0];
     let lng;
     for (let i2 = startIndex; i2 < endIndex; i2 += size) {
-      lng = positions[i2];
+      lng = positions2[i2];
       const delta = lng - prevLng;
       if (delta > 180 || delta < -180) {
         lng -= Math.round(delta / 360) * 360;
       }
-      positions[i2] = prevLng = lng;
+      positions2[i2] = prevLng = lng;
     }
   }
-  function shiftLongitudesIntoRange(positions, size) {
+  function shiftLongitudesIntoRange(positions2, size) {
     let refLng;
-    const pointCount = positions.length / size;
+    const pointCount = positions2.length / size;
     for (let i2 = 0; i2 < pointCount; i2++) {
-      refLng = positions[i2 * size];
+      refLng = positions2[i2 * size];
       if ((refLng + 180) % 360 !== 0) {
         break;
       }
@@ -66710,7 +66710,7 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
       return;
     }
     for (let i2 = 0; i2 < pointCount; i2++) {
-      positions[i2 * size] += delta;
+      positions2[i2 * size] += delta;
     }
   }
   function normalizePath(path2, size, gridResolution, wrapLongitude) {
@@ -66823,17 +66823,17 @@ fn fragmentMain(varyings: Varyings) -> @location(0) vec4<f32> {
       segmentTypes[vertexStart + geometrySize - 1] = INVALID;
     }
     _updatePositions(path2, context) {
-      const { positions } = this.attributes;
-      if (!positions || !path2) {
+      const { positions: positions2 } = this.attributes;
+      if (!positions2 || !path2) {
         return;
       }
       const { vertexStart, geometrySize } = context;
       const p2 = new Array(3);
       for (let i2 = vertexStart, ptIndex = 0; ptIndex < geometrySize; i2++, ptIndex++) {
         this.getPointOnPath(path2, ptIndex, p2);
-        positions[i2 * 3] = p2[0];
-        positions[i2 * 3 + 1] = p2[1];
-        positions[i2 * 3 + 2] = p2[2];
+        positions2[i2 * 3] = p2[0];
+        positions2[i2 * 3 + 1] = p2[1];
+        positions2[i2 * 3 + 2] = p2[2];
       }
     }
     getPathLength(path2) {
@@ -67778,9 +67778,9 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     const p1 = simplePolygon[simplePolygon.length - 1];
     return p0[0] === p1[0] && p0[1] === p1[1] && p0[2] === p1[2];
   }
-  function isFlatRingClosed(positions, size, startIndex, endIndex) {
+  function isFlatRingClosed(positions2, size, startIndex, endIndex) {
     for (let i2 = 0; i2 < size; i2++) {
-      if (positions[startIndex + i2] !== positions[endIndex - size + i2]) {
+      if (positions2[startIndex + i2] !== positions2[endIndex - size + i2]) {
         return false;
       }
     }
@@ -67805,19 +67805,19 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     modifyPolygonWindingDirection(target, windingDirection, windingOptions);
     return targetIndex;
   }
-  function copyFlatRing(target, targetStartIndex, positions, size, srcStartIndex = 0, srcEndIndex, windingDirection) {
-    srcEndIndex = srcEndIndex || positions.length;
+  function copyFlatRing(target, targetStartIndex, positions2, size, srcStartIndex = 0, srcEndIndex, windingDirection) {
+    srcEndIndex = srcEndIndex || positions2.length;
     const srcLength = srcEndIndex - srcStartIndex;
     if (srcLength <= 0) {
       return targetStartIndex;
     }
     let targetIndex = targetStartIndex;
     for (let i2 = 0; i2 < srcLength; i2++) {
-      target[targetIndex++] = positions[srcStartIndex + i2];
+      target[targetIndex++] = positions2[srcStartIndex + i2];
     }
-    if (!isFlatRingClosed(positions, size, srcStartIndex, srcEndIndex)) {
+    if (!isFlatRingClosed(positions2, size, srcStartIndex, srcEndIndex)) {
       for (let i2 = 0; i2 < size; i2++) {
-        target[targetIndex++] = positions[srcStartIndex + i2];
+        target[targetIndex++] = positions2[srcStartIndex + i2];
       }
     }
     windingOptions.start = targetStartIndex;
@@ -67828,63 +67828,63 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
   }
   function normalize$3(polygon, positionSize) {
     validate(polygon);
-    const positions = [];
+    const positions2 = [];
     const holeIndices = [];
     if ("positions" in polygon) {
       const { positions: srcPositions, holeIndices: srcHoleIndices } = polygon;
       if (srcHoleIndices) {
         let targetIndex = 0;
         for (let i2 = 0; i2 <= srcHoleIndices.length; i2++) {
-          targetIndex = copyFlatRing(positions, targetIndex, srcPositions, positionSize, srcHoleIndices[i2 - 1], srcHoleIndices[i2], i2 === 0 ? OUTER_POLYGON_WINDING : HOLE_POLYGON_WINDING);
+          targetIndex = copyFlatRing(positions2, targetIndex, srcPositions, positionSize, srcHoleIndices[i2 - 1], srcHoleIndices[i2], i2 === 0 ? OUTER_POLYGON_WINDING : HOLE_POLYGON_WINDING);
           holeIndices.push(targetIndex);
         }
         holeIndices.pop();
         return {
-          positions,
+          positions: positions2,
           holeIndices
         };
       }
       polygon = srcPositions;
     }
     if (!isNested(polygon)) {
-      copyFlatRing(positions, 0, polygon, positionSize, 0, positions.length, OUTER_POLYGON_WINDING);
-      return positions;
+      copyFlatRing(positions2, 0, polygon, positionSize, 0, positions2.length, OUTER_POLYGON_WINDING);
+      return positions2;
     }
     if (!isSimple(polygon)) {
       let targetIndex = 0;
       for (const [polygonIndex, simplePolygon] of polygon.entries()) {
-        targetIndex = copyNestedRing(positions, targetIndex, simplePolygon, positionSize, polygonIndex === 0 ? OUTER_POLYGON_WINDING : HOLE_POLYGON_WINDING);
+        targetIndex = copyNestedRing(positions2, targetIndex, simplePolygon, positionSize, polygonIndex === 0 ? OUTER_POLYGON_WINDING : HOLE_POLYGON_WINDING);
         holeIndices.push(targetIndex);
       }
       holeIndices.pop();
       return {
-        positions,
+        positions: positions2,
         holeIndices
       };
     }
-    copyNestedRing(positions, 0, polygon, positionSize, OUTER_POLYGON_WINDING);
-    return positions;
+    copyNestedRing(positions2, 0, polygon, positionSize, OUTER_POLYGON_WINDING);
+    return positions2;
   }
-  function getPlaneArea(positions, xIndex, yIndex) {
-    const numVerts = positions.length / 3;
+  function getPlaneArea(positions2, xIndex, yIndex) {
+    const numVerts = positions2.length / 3;
     let area2 = 0;
     for (let i2 = 0; i2 < numVerts; i2++) {
       const j2 = (i2 + 1) % numVerts;
-      area2 += positions[i2 * 3 + xIndex] * positions[j2 * 3 + yIndex];
-      area2 -= positions[j2 * 3 + xIndex] * positions[i2 * 3 + yIndex];
+      area2 += positions2[i2 * 3 + xIndex] * positions2[j2 * 3 + yIndex];
+      area2 -= positions2[j2 * 3 + xIndex] * positions2[i2 * 3 + yIndex];
     }
     return Math.abs(area2 / 2);
   }
-  function permutePositions(positions, xIndex, yIndex, zIndex) {
-    const numVerts = positions.length / 3;
+  function permutePositions(positions2, xIndex, yIndex, zIndex) {
+    const numVerts = positions2.length / 3;
     for (let i2 = 0; i2 < numVerts; i2++) {
       const o2 = i2 * 3;
-      const x2 = positions[o2 + 0];
-      const y2 = positions[o2 + 1];
-      const z2 = positions[o2 + 2];
-      positions[o2 + xIndex] = x2;
-      positions[o2 + yIndex] = y2;
-      positions[o2 + zIndex] = z2;
+      const x2 = positions2[o2 + 0];
+      const y2 = positions2[o2 + 1];
+      const z2 = positions2[o2 + 2];
+      positions2[o2 + xIndex] = x2;
+      positions2[o2 + yIndex] = y2;
+      positions2[o2 + zIndex] = z2;
     }
   }
   function getSurfaceIndices(polygon, positionSize, preproject, full3d) {
@@ -67892,47 +67892,47 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     if (holeIndices) {
       holeIndices = holeIndices.map((positionIndex) => positionIndex / positionSize);
     }
-    let positions = getPositions(polygon);
+    let positions2 = getPositions(polygon);
     const is3d = full3d && positionSize === 3;
     if (preproject) {
-      const n2 = positions.length;
-      positions = positions.slice();
+      const n2 = positions2.length;
+      positions2 = positions2.slice();
       const p2 = [];
       for (let i2 = 0; i2 < n2; i2 += positionSize) {
-        p2[0] = positions[i2];
-        p2[1] = positions[i2 + 1];
+        p2[0] = positions2[i2];
+        p2[1] = positions2[i2 + 1];
         if (is3d) {
-          p2[2] = positions[i2 + 2];
+          p2[2] = positions2[i2 + 2];
         }
         const xy = preproject(p2);
-        positions[i2] = xy[0];
-        positions[i2 + 1] = xy[1];
+        positions2[i2] = xy[0];
+        positions2[i2 + 1] = xy[1];
         if (is3d) {
-          positions[i2 + 2] = xy[2];
+          positions2[i2 + 2] = xy[2];
         }
       }
     }
     if (is3d) {
-      const xyArea = getPlaneArea(positions, 0, 1);
-      const xzArea = getPlaneArea(positions, 0, 2);
-      const yzArea = getPlaneArea(positions, 1, 2);
+      const xyArea = getPlaneArea(positions2, 0, 1);
+      const xzArea = getPlaneArea(positions2, 0, 2);
+      const yzArea = getPlaneArea(positions2, 1, 2);
       if (!xyArea && !xzArea && !yzArea) {
         return [];
       }
       if (xyArea > xzArea && xyArea > yzArea) ;
       else if (xzArea > yzArea) {
         if (!preproject) {
-          positions = positions.slice();
+          positions2 = positions2.slice();
         }
-        permutePositions(positions, 0, 2, 1);
+        permutePositions(positions2, 0, 2, 1);
       } else {
         if (!preproject) {
-          positions = positions.slice();
+          positions2 = positions2.slice();
         }
-        permutePositions(positions, 2, 0, 1);
+        permutePositions(positions2, 2, 0, 1);
       }
     }
-    return earcut$1(positions, holeIndices, positionSize);
+    return earcut$1(positions2, holeIndices, positionSize);
   }
   class PolygonTesselator extends Tesselator {
     constructor(opts) {
@@ -68042,8 +68042,8 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       attributes2.indices = target;
     }
     _updatePositions(polygon, { vertexStart, geometrySize }) {
-      const { attributes: { positions }, positionSize } = this;
-      if (!positions || !polygon) {
+      const { attributes: { positions: positions2 }, positionSize } = this;
+      if (!positions2 || !polygon) {
         return;
       }
       const polygonPositions = getPositions(polygon);
@@ -68051,9 +68051,9 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
         const x2 = polygonPositions[j2 * positionSize];
         const y2 = polygonPositions[j2 * positionSize + 1];
         const z2 = positionSize > 2 ? polygonPositions[j2 * positionSize + 2] : 0;
-        positions[i2 * 3] = x2;
-        positions[i2 * 3 + 1] = y2;
-        positions[i2 * 3 + 2] = z2;
+        positions2[i2 * 3] = x2;
+        positions2[i2 * 3 + 1] = y2;
+        positions2[i2 * 3 + 2] = z2;
       }
     }
     _updateVertexValid(polygon, { vertexStart, geometrySize }) {
@@ -68689,17 +68689,17 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
           polygon = normalize$3(polygon, positionSize);
         }
         const { holeIndices } = polygon;
-        const positions = polygon.positions || polygon;
+        const positions2 = polygon.positions || polygon;
         if (holeIndices) {
           for (let i2 = 0; i2 <= holeIndices.length; i2++) {
-            const path2 = positions.slice(holeIndices[i2 - 1] || 0, holeIndices[i2] || positions.length);
+            const path2 = positions2.slice(holeIndices[i2 - 1] || 0, holeIndices[i2] || positions2.length);
             paths.push(this.getSubLayerRow({
               path: path2
             }, object, objectInfo.index));
           }
         } else {
           paths.push(this.getSubLayerRow({
-            path: positions
+            path: positions2
           }, object, objectInfo.index));
         }
       }
@@ -70157,7 +70157,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       model.draw(this.context.renderPass);
     }
     _getModel() {
-      const positions = [
+      const positions2 = [
         0,
         0,
         1,
@@ -70177,7 +70177,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
           attributes: {
             positions: {
               size: 2,
-              value: new Float32Array(positions)
+              value: new Float32Array(positions2)
             }
           }
         }),
@@ -70730,16 +70730,16 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
         ];
     }
   }
-  function separateGeojsonFeatures(features, wrapFeature, dataRange = {}) {
+  function separateGeojsonFeatures(features2, wrapFeature, dataRange = {}) {
     const separated = {
       pointFeatures: [],
       lineFeatures: [],
       polygonFeatures: [],
       polygonOutlineFeatures: []
     };
-    const { startRow = 0, endRow = features.length } = dataRange;
+    const { startRow = 0, endRow = features2.length } = dataRange;
     for (let featureIndex = startRow; featureIndex < endRow; featureIndex++) {
-      const feature = features[featureIndex];
+      const feature = features2[featureIndex];
       const { geometry: geometry2 } = feature;
       if (!geometry2) {
         continue;
@@ -70855,9 +70855,9 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
   function getCoordinates(f2) {
     return f2.geometry.coordinates;
   }
-  function createLayerPropsFromFeatures(features, featuresDiff) {
+  function createLayerPropsFromFeatures(features2, featuresDiff) {
     const layerProps = createEmptyLayerProps();
-    const { pointFeatures, lineFeatures, polygonFeatures, polygonOutlineFeatures } = features;
+    const { pointFeatures, lineFeatures, polygonFeatures, polygonOutlineFeatures } = features2;
     layerProps.points.data = pointFeatures;
     layerProps.points._dataDiff = featuresDiff.pointFeatures && (() => featuresDiff.pointFeatures);
     layerProps.points.getPosition = getCoordinates;
@@ -71025,7 +71025,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       });
     }
     _updateStateJSON({ props, changeFlags }) {
-      const features = getGeojsonFeatures(props.data);
+      const features2 = getGeojsonFeatures(props.data);
       const wrapFeature = this.getSubLayerRow.bind(this);
       let newFeatures = {};
       const featuresDiff = {};
@@ -71036,7 +71036,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
           featuresDiff[key2] = [];
         }
         for (const dataRange of changeFlags.dataChanged) {
-          const partialFeatures = separateGeojsonFeatures(features, wrapFeature, dataRange);
+          const partialFeatures = separateGeojsonFeatures(features2, wrapFeature, dataRange);
           for (const key2 in oldFeatures) {
             featuresDiff[key2].push(replaceInRange({
               data: newFeatures[key2],
@@ -71047,7 +71047,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
           }
         }
       } else {
-        newFeatures = separateGeojsonFeatures(features, wrapFeature);
+        newFeatures = separateGeojsonFeatures(features2, wrapFeature);
       }
       const layerProps = createLayerPropsFromFeatures(newFeatures, featuresDiff);
       this.setState({
@@ -71946,8 +71946,8 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     diagonal: new Matrix3(),
     unitary: new Matrix3()
   };
-  function makeOrientedBoundingBoxFromPoints(positions, result = new OrientedBoundingBox()) {
-    if (!positions || positions.length === 0) {
+  function makeOrientedBoundingBoxFromPoints(positions2, result = new OrientedBoundingBox()) {
+    if (!positions2 || positions2.length === 0) {
       result.halfAxes = new Matrix3([
         0,
         0,
@@ -71962,9 +71962,9 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
       result.center = new Vector3();
       return result;
     }
-    const length2 = positions.length;
+    const length2 = positions2.length;
     const meanPoint = new Vector3(0, 0, 0);
-    for (const position2 of positions) {
+    for (const position2 of positions2) {
       meanPoint.add(position2);
     }
     const invLength = 1 / length2;
@@ -71975,7 +71975,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     let eyy = 0;
     let eyz = 0;
     let ezz = 0;
-    for (const position2 of positions) {
+    for (const position2 of positions2) {
       const p2 = scratchVector2.copy(position2).subtract(meanPoint);
       exx += p2.x * p2.x;
       exy += p2.x * p2.y;
@@ -72011,7 +72011,7 @@ DECKGL_FILTER_COLOR(fragColor, geometry);
     let l1 = Number.MAX_VALUE;
     let l2 = Number.MAX_VALUE;
     let l3 = Number.MAX_VALUE;
-    for (const position2 of positions) {
+    for (const position2 of positions2) {
       scratchVector2.copy(position2);
       u1 = Math.max(scratchVector2.dot(v1), u1);
       u2 = Math.max(scratchVector2.dot(v2), u2);
@@ -73878,12 +73878,12 @@ in vec2 mask_texCoords;
       exponent: -24
     }
   ];
-  function sizeToMeters(size, unit) {
-    if (!unit || unit === "m") {
+  function sizeToMeters(size, unit2) {
+    if (!unit2 || unit2 === "m") {
       return size;
     }
-    if (unit.length > 1) {
-      let unitPrefix = unit.substring(0, unit.length - 1);
+    if (unit2.length > 1) {
+      let unitPrefix = unit2.substring(0, unit2.length - 1);
       if (unitPrefix === "u") {
         unitPrefix = "\xB5";
       }
@@ -74454,21 +74454,21 @@ void main(void) {
       });
     }
     calculatePositions(attributes2) {
-      const { positions } = this.state;
+      const { positions: positions2 } = this.state;
       const { bounds } = this.props;
-      positions[0] = bounds[0];
-      positions[1] = bounds[1];
-      positions[2] = 0;
-      positions[3] = bounds[0];
-      positions[4] = bounds[3];
-      positions[5] = 0;
-      positions[6] = bounds[2];
-      positions[7] = bounds[3];
-      positions[8] = 0;
-      positions[9] = bounds[2];
-      positions[10] = bounds[1];
-      positions[11] = 0;
-      attributes2.value = positions;
+      positions2[0] = bounds[0];
+      positions2[1] = bounds[1];
+      positions2[2] = 0;
+      positions2[3] = bounds[0];
+      positions2[4] = bounds[3];
+      positions2[5] = 0;
+      positions2[6] = bounds[2];
+      positions2[7] = bounds[3];
+      positions2[8] = 0;
+      positions2[9] = bounds[2];
+      positions2[10] = bounds[1];
+      positions2[11] = 0;
+      attributes2.value = positions2;
     }
     _setNewTexturesFromLoadThisFrame(textures) {
       this._newTexturesFromLoadThisFrame = textures;
@@ -75215,17 +75215,17 @@ void main(void) {
   };
   const ScaleBarLayer = class extends CompositeLayer {
     renderLayers() {
-      const { id: id2, unit, size, position: position2, imageViewState, length: length2, snap, height, width } = this.props;
+      const { id: id2, unit: unit2, size, position: position2, imageViewState, length: length2, snap, height, width } = this.props;
       const boundingBox = makeBoundingBox(imageViewState);
       const viewLength = boundingBox[2][0] - boundingBox[0][0];
       const barLength = viewLength * 0.05;
       const barScreenLength = barLength * 2 ** imageViewState.zoom;
       const barHeight = 10;
       let displayNumber = (barLength * size).toPrecision(5);
-      let displayUnit = unit;
+      let displayUnit = unit2;
       let adjustedBarLength = barScreenLength;
       if (snap) {
-        const meterSize = sizeToMeters(size, unit);
+        const meterSize = sizeToMeters(size, unit2);
         const numUnits = barLength * meterSize;
         const [snappedOrigUnits, snappedNewUnits, snappedUnitPrefix] = snapValue(numUnits);
         displayNumber = snappedNewUnits;
@@ -76808,6 +76808,724 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     }
   });
   const contourExtension = new ContourExtension();
+  const STAIN_SIGNAL_K = 0.5;
+  const STAIN_SIGNAL_K_LN10 = STAIN_SIGNAL_K * Math.LN10;
+  function stainSignal(c2) {
+    return 1 - 10 ** (-0.5 * Math.max(0, c2));
+  }
+  const STAIN_COUNTS_FLOOR = 200;
+  const STAIN_COUNTS_GAIN = 1e4;
+  const STAIN_COUNTS_MAX = 65535;
+  function stainCounts(signal) {
+    return STAIN_COUNTS_FLOOR + STAIN_COUNTS_GAIN * signal;
+  }
+  function signalFromCounts(counts) {
+    return (counts - STAIN_COUNTS_FLOOR) / STAIN_COUNTS_GAIN;
+  }
+  function stainDensityShare(t2, full2) {
+    const kd2 = STAIN_SIGNAL_K * full2;
+    if (!(kd2 > 1e-6)) return t2;
+    return -Math.log(1 - t2 * (1 - Math.exp(-kd2))) / kd2;
+  }
+  const HE_DECONV_COMPONENTS = [
+    "hematoxylin",
+    "eosin",
+    "residual"
+  ];
+  const HE_DECONV_LABELS = {
+    hematoxylin: "Hematoxylin",
+    eosin: "Eosin",
+    residual: "Residual"
+  };
+  const DEFAULT_HE_STAIN = {
+    hematoxylin: {
+      color: [
+        0,
+        90,
+        255
+      ],
+      lower: STAIN_COUNTS_FLOOR,
+      upper: stainCounts(1),
+      visible: true,
+      autoContrast: true
+    },
+    eosin: {
+      color: [
+        255,
+        56,
+        140
+      ],
+      lower: STAIN_COUNTS_FLOOR,
+      upper: stainCounts(1),
+      visible: true,
+      autoContrast: true
+    },
+    residual: {
+      color: [
+        210,
+        210,
+        210
+      ],
+      lower: STAIN_COUNTS_FLOOR,
+      upper: stainCounts(1),
+      visible: true,
+      autoContrast: true
+    }
+  };
+  function defaultHeDeconvSplit() {
+    return {
+      mode: "brightfield",
+      hematoxylin: {
+        ...DEFAULT_HE_STAIN.hematoxylin
+      },
+      eosin: {
+        ...DEFAULT_HE_STAIN.eosin
+      },
+      residual: {
+        ...DEFAULT_HE_STAIN.residual
+      }
+    };
+  }
+  const HISTOGRAM_BIN_COUNT = 100;
+  const MAX_HISTOGRAM_TILE_PIXELS = 4e6;
+  function intensityToHistogramBin(v2, bits) {
+    const n2 = HISTOGRAM_BIN_COUNT;
+    if (bits <= 8) {
+      return Math.min(n2 - 1, Math.floor(v2 * n2 / 2 ** bits));
+    }
+    return Math.min(n2 - 1, Math.floor(n2 * Math.log2(v2) / bits));
+  }
+  function binInRange(v2, min2, max2) {
+    const n2 = HISTOGRAM_BIN_COUNT;
+    const t2 = (v2 - min2) / (max2 - min2);
+    return Math.min(n2 - 1, Math.max(0, Math.floor(t2 * n2)));
+  }
+  function histogramBinFromPixels(bits, width, data2, range2) {
+    const len2 = data2.length;
+    if (len2 === 0 || len2 > MAX_HISTOGRAM_TILE_PIXELS) return [];
+    const spanned = range2 != null && range2.max > range2.min;
+    const counts = new Array(HISTOGRAM_BIN_COUNT).fill(0);
+    const step = 4;
+    const w2 = Math.max(1, width);
+    for (let i2 = 0; i2 < len2; i2++) {
+      if (i2 % step !== 0 && Math.floor(i2 / w2) % step !== 0) continue;
+      const v2 = data2[i2];
+      if (spanned) {
+        if (!Number.isFinite(v2)) continue;
+        counts[binInRange(v2, range2.min, range2.max)]++;
+      } else {
+        if (!(v2 > 0)) continue;
+        counts[intensityToHistogramBin(v2, bits)]++;
+      }
+    }
+    return counts;
+  }
+  function planeSize$1(plane) {
+    const xi2 = plane.labels.indexOf("x");
+    const yi2 = plane.labels.indexOf("y");
+    return {
+      width: xi2 >= 0 ? plane.shape[xi2] : 0,
+      height: yi2 >= 0 ? plane.shape[yi2] : 0
+    };
+  }
+  const STAIN_WINDOW_PERCENTILES = [
+    0.25,
+    0.97
+  ];
+  const STAIN_STRENGTH_PERCENTILE = 0.9;
+  const STAIN_STRENGTH_MIN = 0.1;
+  const MAX_TISSUE_PIXELS = 6e4;
+  const PADDING_MAX = 30;
+  const MAX_OVERVIEW_PIXELS = 4096 * 4096;
+  const N_TILES = 16;
+  const MAX_READS = 32;
+  const MAX_BLIND_READS = 96;
+  const OVERVIEW_TISSUE = 0.5;
+  const FULLRES_TISSUE = 0.4;
+  const TISSUE_MAX = 220;
+  const FPS_SEED = 1;
+  const READ_BATCH = 4;
+  const LN10 = Math.LN10;
+  const MIN_OD = 0.05;
+  const MAX_OD_NORM = 1;
+  const IGNORE = 0.01;
+  const MAX_PIXELS = 1e5;
+  const GRAY_COS = Math.cos(0.15);
+  const MIN_ANGLE_DEG = 12;
+  const MAX_ANGLE_DEG = 80;
+  const SQRT3_INV = 1 / Math.sqrt(3);
+  const DEFAULT_H = unit([
+    0.65,
+    0.7,
+    0.29
+  ]);
+  const DEFAULT_E = unit([
+    0.2159,
+    0.8012,
+    0.5581
+  ]);
+  const inflight$1 = /* @__PURE__ */ new Map();
+  function clearHeStainEstimateCache() {
+    inflight$1.clear();
+  }
+  function forgetHeStainEstimates(imageId) {
+    for (const key2 of [
+      ...inflight$1.keys()
+    ]) {
+      if (key2.startsWith(`${imageId}:`)) inflight$1.delete(key2);
+    }
+  }
+  function withFittedWindows(split, fit) {
+    var _a2;
+    const stains = fit == null ? void 0 : fit.stains;
+    if (!stains) return split;
+    let next2 = split;
+    for (const component of HE_DECONV_COMPONENTS) {
+      const stain = split[component];
+      const window2 = (_a2 = stains[component]) == null ? void 0 : _a2.window;
+      if (!stain || !window2 || !stain.autoContrast) continue;
+      const [lower, upper] = window2;
+      if (stain.lower === lower && stain.upper === upper) continue;
+      next2 = {
+        ...next2,
+        [component]: {
+          ...stain,
+          lower,
+          upper
+        }
+      };
+    }
+    return next2;
+  }
+  const RETRY_FAILED_AFTER_MS = 3e4;
+  function ensureHeStainFit(args) {
+    const hit = inflight$1.get(args.cacheKey);
+    if (hit) return hit;
+    const p2 = estimateHeStainFit(args.loader, args.channelIndex).then((result) => {
+      if (result.failed) {
+        setTimeout(() => {
+          if (inflight$1.get(args.cacheKey) === p2) inflight$1.delete(args.cacheKey);
+        }, RETRY_FAILED_AFTER_MS);
+      }
+      return result;
+    });
+    inflight$1.set(args.cacheKey, p2);
+    return p2;
+  }
+  function unit(v2) {
+    const n2 = Math.hypot(v2[0], v2[1], v2[2]);
+    if (!(n2 > 1e-12)) return null;
+    return [
+      v2[0] / n2,
+      v2[1] / n2,
+      v2[2] / n2
+    ];
+  }
+  function stainAngleDeg(a2, b2) {
+    const d2 = Math.min(1, Math.max(-1, a2[0] * b2[0] + a2[1] * b2[1] + a2[2] * b2[2]));
+    return Math.acos(d2) * 180 / Math.PI;
+  }
+  function invert3(m2) {
+    const [[a2, b2, c2], [d2, e2, f2], [g2, h2, i2]] = m2;
+    const A2 = e2 * i2 - f2 * h2;
+    const B2 = f2 * g2 - d2 * i2;
+    const C3 = d2 * h2 - e2 * g2;
+    const det = a2 * A2 + b2 * B2 + c2 * C3;
+    if (!Number.isFinite(det) || Math.abs(det) < 1e-12) return null;
+    const s2 = 1 / det;
+    return [
+      A2 * s2,
+      (c2 * h2 - b2 * i2) * s2,
+      (b2 * f2 - c2 * e2) * s2,
+      B2 * s2,
+      (a2 * i2 - c2 * g2) * s2,
+      (c2 * d2 - a2 * f2) * s2,
+      C3 * s2,
+      (b2 * g2 - a2 * h2) * s2,
+      (a2 * e2 - b2 * d2) * s2
+    ];
+  }
+  function residualFor(h2, e2) {
+    return unit([
+      h2[1] * e2[2] - h2[2] * e2[1],
+      h2[2] * e2[0] - h2[0] * e2[2],
+      h2[0] * e2[1] - h2[1] * e2[0]
+    ]) ?? [
+      SQRT3_INV,
+      SQRT3_INV,
+      SQRT3_INV
+    ];
+  }
+  function defaultFit() {
+    return {
+      glslInverse: invert3([
+        DEFAULT_H,
+        DEFAULT_E,
+        residualFor(DEFAULT_H, DEFAULT_E)
+      ])
+    };
+  }
+  const DEFAULT_STAIN_INVERSE = defaultFit().glslInverse;
+  function failedFit() {
+    return {
+      glslInverse: DEFAULT_STAIN_INVERSE,
+      failed: true
+    };
+  }
+  function opticalDensity(v2) {
+    return -Math.log(Math.max(v2, 1) / 255) / LN10;
+  }
+  function box3MeanTwoPass(r2, g2, b2, w2, h2) {
+    if (w2 < 3 || h2 < 3) return;
+    const n2 = w2 * h2;
+    const tr2 = new Float32Array(n2);
+    const tg2 = new Float32Array(n2);
+    const tb2 = new Float32Array(n2);
+    box3Pass(r2, g2, b2, tr2, tg2, tb2, w2, h2);
+    box3Pass(tr2, tg2, tb2, r2, g2, b2, w2, h2);
+  }
+  function box3Pass(sr, sg2, sb2, dr, dg2, db2, w2, h2) {
+    for (let y2 = 0; y2 < h2; y2++) {
+      for (let x2 = 0; x2 < w2; x2++) {
+        const i2 = y2 * w2 + x2;
+        if (x2 === 0 || y2 === 0 || x2 === w2 - 1 || y2 === h2 - 1) {
+          dr[i2] = sr[i2];
+          dg2[i2] = sg2[i2];
+          db2[i2] = sb2[i2];
+          continue;
+        }
+        let rs = 0;
+        let gs = 0;
+        let bs = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          const row2 = (y2 + dy) * w2 + x2;
+          for (let dx = -1; dx <= 1; dx++) {
+            const j2 = row2 + dx;
+            rs += sr[j2];
+            gs += sg2[j2];
+            bs += sb2[j2];
+          }
+        }
+        dr[i2] = rs / 9;
+        dg2[i2] = gs / 9;
+        db2[i2] = bs / 9;
+      }
+    }
+  }
+  function keepHeOdPixel(ro, go2, bo) {
+    const magSq = ro * ro + go2 * go2 + bo * bo;
+    if (magSq > MAX_OD_NORM * MAX_OD_NORM || magSq <= 0) return false;
+    if (ro < MIN_OD || go2 < MIN_OD || bo < MIN_OD) return false;
+    if (ro > go2 || bo > go2) return false;
+    const mag = Math.sqrt(magSq);
+    if ((ro + go2 + bo) * SQRT3_INV / mag >= GRAY_COS) return false;
+    return true;
+  }
+  function seededRandom(seed) {
+    let s2 = seed >>> 0;
+    return () => {
+      s2 = Math.imul(s2, 1664525) + 1013904223 >>> 0;
+      return s2 / 2 ** 32;
+    };
+  }
+  function odReservoir(capacity) {
+    const packed = new Float32Array(capacity * 3);
+    const rand = seededRandom(FPS_SEED);
+    let seen2 = 0;
+    return {
+      add(ro, go2, bo) {
+        const slot = seen2 < capacity ? seen2 : Math.floor(rand() * (seen2 + 1));
+        seen2 += 1;
+        if (slot >= capacity) return;
+        packed[slot * 3] = ro;
+        packed[slot * 3 + 1] = go2;
+        packed[slot * 3 + 2] = bo;
+      },
+      count: () => Math.min(seen2, capacity),
+      packed: () => packed.subarray(0, Math.min(seen2, capacity) * 3)
+    };
+  }
+  function farthestPointSample(pts, n2) {
+    if (pts.length <= n2) return pts.slice();
+    const rand = seededRandom(FPS_SEED);
+    const picked = [
+      pts[Math.floor(rand() * pts.length)]
+    ];
+    const minD = pts.map(() => Infinity);
+    while (picked.length < n2) {
+      const last2 = picked[picked.length - 1];
+      let bestI = 0;
+      let bestD = -1;
+      for (let i2 = 0; i2 < pts.length; i2++) {
+        const dx = pts[i2].x - last2.x;
+        const dy = pts[i2].y - last2.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < minD[i2]) minD[i2] = d2;
+        if (minD[i2] > bestD) {
+          bestD = minD[i2];
+          bestI = i2;
+        }
+      }
+      picked.push(pts[bestI]);
+    }
+    return picked;
+  }
+  function mul3(S2, v2) {
+    return [
+      S2[0] * v2[0] + S2[1] * v2[1] + S2[2] * v2[2],
+      S2[3] * v2[0] + S2[4] * v2[1] + S2[5] * v2[2],
+      S2[6] * v2[0] + S2[7] * v2[1] + S2[8] * v2[2]
+    ];
+  }
+  function powerEigen(S2, v0) {
+    let v2 = unit(v0) ?? [
+      1,
+      0,
+      0
+    ];
+    for (let i2 = 0; i2 < 48; i2++) {
+      v2 = unit(mul3(S2, v2)) ?? v2;
+    }
+    const w2 = mul3(S2, v2);
+    return {
+      val: v2[0] * w2[0] + v2[1] * w2[1] + v2[2] * w2[2],
+      vec: v2
+    };
+  }
+  function covariance3(packed, count2) {
+    let mr = 0;
+    let mg2 = 0;
+    let mb2 = 0;
+    for (let i2 = 0; i2 < count2; i2++) {
+      const o2 = i2 * 3;
+      mr += packed[o2];
+      mg2 += packed[o2 + 1];
+      mb2 += packed[o2 + 2];
+    }
+    const inv = 1 / count2;
+    mr *= inv;
+    mg2 *= inv;
+    mb2 *= inv;
+    let crr = 0;
+    let cgg = 0;
+    let cbb = 0;
+    let crg = 0;
+    let crb = 0;
+    let cgb = 0;
+    for (let i2 = 0; i2 < count2; i2++) {
+      const o2 = i2 * 3;
+      const dr = packed[o2] - mr;
+      const dg2 = packed[o2 + 1] - mg2;
+      const db2 = packed[o2 + 2] - mb2;
+      crr += dr * dr;
+      cgg += dg2 * dg2;
+      cbb += db2 * db2;
+      crg += dr * dg2;
+      crb += dr * db2;
+      cgb += dg2 * db2;
+    }
+    return [
+      crr * inv,
+      crg * inv,
+      crb * inv,
+      crg * inv,
+      cgg * inv,
+      cgb * inv,
+      crb * inv,
+      cgb * inv,
+      cbb * inv
+    ];
+  }
+  function fitAutoFromPackedOd(packed, count2) {
+    const fallback = defaultFit();
+    if (count2 <= 1) return fallback;
+    const S2 = covariance3(packed, count2);
+    const e1 = powerEigen(S2, [
+      1,
+      0.4,
+      0.2
+    ]);
+    const S22 = S2.slice();
+    for (let i3 = 0; i3 < 3; i3++) {
+      for (let j2 = 0; j2 < 3; j2++) {
+        S22[i3 * 3 + j2] -= e1.val * e1.vec[i3] * e1.vec[j2];
+      }
+    }
+    const e2 = powerEigen(S22, [
+      0.2,
+      1,
+      0.4
+    ]);
+    const phi = new Float64Array(count2);
+    for (let i3 = 0; i3 < count2; i3++) {
+      const o2 = i3 * 3;
+      const r2 = packed[o2];
+      const g2 = packed[o2 + 1];
+      const b2 = packed[o2 + 2];
+      phi[i3] = Math.atan2(r2 * e1.vec[0] + g2 * e1.vec[1] + b2 * e1.vec[2], r2 * e2.vec[0] + g2 * e2.vec[1] + b2 * e2.vec[2]);
+    }
+    const order2 = new Int32Array(count2);
+    for (let i3 = 0; i3 < count2; i3++) order2[i3] = i3;
+    order2.sort((a2, b2) => phi[a2] - phi[b2]);
+    const i1 = order2[Math.max(0, Math.round(IGNORE * count2))];
+    const i2 = order2[Math.min(count2 - 1, Math.round((1 - IGNORE) * count2))];
+    const p1 = unit([
+      packed[i1 * 3],
+      packed[i1 * 3 + 1],
+      packed[i1 * 3 + 2]
+    ]);
+    const p2 = unit([
+      packed[i2 * 3],
+      packed[i2 * 3 + 1],
+      packed[i2 * 3 + 2]
+    ]);
+    if (!p1 || !p2) return fallback;
+    const hematoxylin = p1[0] >= p2[0] ? p1 : p2;
+    const eosin = p1[0] >= p2[0] ? p2 : p1;
+    const inverse2 = invert3([
+      hematoxylin,
+      eosin,
+      residualFor(hematoxylin, eosin)
+    ]);
+    const angleDeg = stainAngleDeg(hematoxylin, eosin);
+    if (!inverse2 || angleDeg < MIN_ANGLE_DEG || angleDeg > MAX_ANGLE_DEG) {
+      return fallback;
+    }
+    return {
+      glslInverse: inverse2
+    };
+  }
+  function rgb8ScaleFromDtype(dtype) {
+    if (dtype.startsWith("Float")) return 255;
+    if (dtype === "Uint16" || dtype === "Int16") return 1 / 257;
+    return 1;
+  }
+  function splitInterleavedRgb8(data2, width, height, scale2) {
+    const n2 = width * height;
+    if (n2 <= 0 || data2.length < n2 * 3) return null;
+    const r2 = new Float32Array(n2);
+    const g2 = new Float32Array(n2);
+    const b2 = new Float32Array(n2);
+    for (let i2 = 0; i2 < n2; i2++) {
+      const s2 = i2 * 3;
+      r2[i2] = data2[s2] * scale2;
+      g2[i2] = data2[s2 + 1] * scale2;
+      b2[i2] = data2[s2 + 2] * scale2;
+    }
+    return {
+      r: r2,
+      g: g2,
+      b: b2
+    };
+  }
+  function tissueFrac(r2, g2, b2, w2, x0, y0, x1, y1) {
+    let n2 = 0;
+    let t2 = 0;
+    for (let y2 = y0; y2 < y1; y2++) {
+      const row2 = y2 * w2;
+      for (let x2 = x0; x2 < x1; x2++) {
+        n2++;
+        if (Math.min(r2[row2 + x2], g2[row2 + x2], b2[row2 + x2]) < TISSUE_MAX) t2++;
+      }
+    }
+    return n2 > 0 ? t2 / n2 : 0;
+  }
+  function overviewPlane(planes) {
+    const coarsest = planes[planes.length - 1];
+    const { width, height } = planeSize$1(coarsest);
+    if (width <= 0 || height <= 0) return null;
+    return width * height <= MAX_OVERVIEW_PIXELS ? coarsest : null;
+  }
+  function tileGrid(plane) {
+    const { width, height } = planeSize$1(plane);
+    const tileSize = Math.max(1, plane.tileSize || 1024);
+    const tiles = [];
+    for (let y2 = 0; y2 < Math.ceil(height / tileSize); y2++) {
+      for (let x2 = 0; x2 < Math.ceil(width / tileSize); x2++) tiles.push({
+        x: x2,
+        y: y2
+      });
+    }
+    return tiles;
+  }
+  async function readRgb(plane, channelIndex, tile) {
+    var _a2;
+    const raw2 = tile ? await plane.getTile({
+      x: tile.x,
+      y: tile.y,
+      selection: {
+        t: 0,
+        z: 0,
+        c: channelIndex
+      }
+    }) : await plane.getRaster({
+      selection: {
+        t: 0,
+        z: 0,
+        c: channelIndex
+      }
+    });
+    if (!((_a2 = raw2 == null ? void 0 : raw2.data) == null ? void 0 : _a2.length) || raw2.width <= 0 || raw2.height <= 0) return null;
+    const scale2 = rgb8ScaleFromDtype(plane.dtype);
+    const rgb = splitInterleavedRgb8(raw2.data, raw2.width, raw2.height, scale2);
+    if (!rgb) return null;
+    return {
+      ...rgb,
+      w: raw2.width,
+      h: raw2.height
+    };
+  }
+  async function estimateHeStainFit(loader, channelIndex) {
+    try {
+      const planes = loader.data;
+      if (!(planes == null ? void 0 : planes.length)) return defaultFit();
+      const finest = planes[0];
+      const { width: fineW, height: fineH } = planeSize$1(finest);
+      const tileSize = Math.max(1, finest.tileSize || 1024);
+      if (fineW <= 0 || fineH <= 0) return defaultFit();
+      const fallback = defaultFit();
+      const overviewSource = overviewPlane(planes);
+      let tissueTiles = tileGrid(finest);
+      if (overviewSource) {
+        let overview = null;
+        try {
+          overview = await readRgb(overviewSource, channelIndex);
+        } catch {
+          return failedFit();
+        }
+        if (!overview) return defaultFit();
+        const sx = overview.w / fineW;
+        const sy = overview.h / fineH;
+        tissueTiles = tissueTiles.filter(({ x: tx, y: ty }) => {
+          const x0 = tx * tileSize;
+          const y0 = ty * tileSize;
+          const x1 = Math.min(fineW, x0 + tileSize);
+          const y1 = Math.min(fineH, y0 + tileSize);
+          const ox0 = Math.max(0, Math.floor(x0 * sx));
+          const oy0 = Math.max(0, Math.floor(y0 * sy));
+          const ox1 = Math.min(overview.w, Math.max(ox0 + 1, Math.ceil(x1 * sx)));
+          const oy1 = Math.min(overview.h, Math.max(oy0 + 1, Math.ceil(y1 * sy)));
+          return tissueFrac(overview.r, overview.g, overview.b, overview.w, ox0, oy0, ox1, oy1) >= OVERVIEW_TISSUE;
+        });
+      }
+      if (tissueTiles.length === 0) return fallback;
+      const maxReads = overviewSource ? MAX_READS : MAX_BLIND_READS;
+      const queue2 = farthestPointSample(tissueTiles, Math.min(tissueTiles.length, maxReads));
+      const queued = new Set(queue2.map((t2) => `${t2.x},${t2.y}`));
+      const gridW = Math.ceil(fineW / tileSize);
+      const gridH = Math.ceil(fineH / tileSize);
+      const od2 = odReservoir(MAX_PIXELS);
+      const tissue = odReservoir(MAX_TISSUE_PIXELS);
+      let accepted = 0;
+      let reads = 0;
+      let readFailed = false;
+      while (queue2.length > 0 && reads < maxReads && accepted < N_TILES) {
+        const batch2 = queue2.splice(0, Math.min(READ_BATCH, maxReads - reads));
+        reads += batch2.length;
+        const rgbs = await Promise.all(batch2.map(async (tile) => {
+          try {
+            const rgb = await readRgb(finest, channelIndex, tile);
+            if (!rgb) return null;
+            if (tissueFrac(rgb.r, rgb.g, rgb.b, rgb.w, 0, 0, rgb.w, rgb.h) < FULLRES_TISSUE) {
+              return null;
+            }
+            return rgb;
+          } catch {
+            readFailed = true;
+            return null;
+          }
+        }));
+        for (const [k2, rgb] of rgbs.entries()) {
+          if (!rgb || accepted >= N_TILES) continue;
+          accepted += 1;
+          if (!overviewSource) {
+            const { x: x2, y: y2 } = batch2[k2];
+            for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                const nx = x2 + dx;
+                const ny = y2 + dy;
+                const key2 = `${nx},${ny}`;
+                if (nx < 0 || ny < 0 || nx >= gridW || ny >= gridH) continue;
+                if (queued.has(key2)) continue;
+                queued.add(key2);
+                queue2.unshift({
+                  x: nx,
+                  y: ny
+                });
+              }
+            }
+          }
+          box3MeanTwoPass(rgb.r, rgb.g, rgb.b, rgb.w, rgb.h);
+          const n2 = rgb.r.length;
+          for (let p2 = 0; p2 < n2; p2++) {
+            const ro = opticalDensity(rgb.r[p2]);
+            const go2 = opticalDensity(rgb.g[p2]);
+            const bo = opticalDensity(rgb.b[p2]);
+            if (keepHeOdPixel(ro, go2, bo)) od2.add(ro, go2, bo);
+            if (isTissuePixel(rgb.r[p2], rgb.g[p2], rgb.b[p2])) {
+              tissue.add(ro, go2, bo);
+            }
+          }
+        }
+      }
+      const fitted = accepted > 0 && od2.count() >= 2 ? fitAutoFromPackedOd(od2.packed(), od2.count()) : null;
+      if (!fitted && readFailed) return failedFit();
+      const fit = fitted ?? fallback;
+      if (tissue.count() === 0) return fit;
+      return {
+        ...fit,
+        stains: summarizeStains(fit.glslInverse, tissue.packed(), tissue.count())
+      };
+    } catch {
+      return failedFit();
+    }
+  }
+  function isTissuePixel(r2, g2, b2) {
+    return Math.min(r2, g2, b2) < TISSUE_MAX && Math.max(r2, g2, b2) >= PADDING_MAX;
+  }
+  function summarizeStains(inverse2, packed, count2) {
+    const hematoxylin = new Float64Array(count2);
+    const eosin = new Float64Array(count2);
+    const residual = new Float64Array(count2);
+    for (let i2 = 0; i2 < count2; i2++) {
+      const o2 = i2 * 3;
+      const [h2, e2, r2] = unmixHe(inverse2, packed[o2], packed[o2 + 1], packed[o2 + 2]);
+      hematoxylin[i2] = h2;
+      eosin[i2] = e2;
+      residual[i2] = r2;
+    }
+    return {
+      hematoxylin: summarizeStain(hematoxylin),
+      eosin: summarizeStain(eosin),
+      residual: summarizeStain(residual)
+    };
+  }
+  function summarizeStain(conc) {
+    conc.sort();
+    const at = (p2, from = 0) => conc[from + Math.floor(p2 * (conc.length - 1 - from))];
+    const counts = (c2) => Math.round(stainCounts(stainSignal(c2)));
+    const histogram = histogramBinFromPixels(16, conc.length, conc.map((c2) => stainCounts(stainSignal(c2))));
+    const lower = counts(at(STAIN_WINDOW_PERCENTILES[0]));
+    const upper = Math.max(lower + 1, counts(at(STAIN_WINDOW_PERCENTILES[1])));
+    const stained = conc.findIndex((c2) => c2 >= STAIN_STRENGTH_MIN);
+    return {
+      histogram,
+      window: [
+        lower,
+        upper
+      ],
+      ...stained >= 0 ? {
+        strength: at(STAIN_STRENGTH_PERCENTILE, stained)
+      } : {}
+    };
+  }
+  function unmixHe(inverse2, ro, go2, bo) {
+    return [
+      inverse2[0] * ro + inverse2[3] * go2 + inverse2[6] * bo,
+      inverse2[1] * ro + inverse2[4] * go2 + inverse2[7] * bo,
+      inverse2[2] * ro + inverse2[5] * go2 + inverse2[8] * bo
+    ];
+  }
   function wrapDisplayDeg(deg) {
     if (!Number.isFinite(deg)) return 0;
     const d2 = ((deg + 180) % 360 + 360) % 360 - 180;
@@ -79704,7 +80422,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     return planarRgbDisplayColor(channel, allChannels) ?? (groupRow == null ? void 0 : groupRow.color) ?? effectiveSourceColor(channel, allChannels);
   }
   function assignedDisplayHex(channel, allChannels, groupRow, rendering) {
-    if ((rendering == null ? void 0 : rendering.kind) === "color" && rendering.sourceChannelId === channel.id) {
+    if ((rendering == null ? void 0 : rendering.kind) === "color" && rendering.sourceChannelId === channel.id && !rendering.heComponent) {
       return rgbToHex$1(rendering);
     }
     if (!channel.color && !(groupRow == null ? void 0 : groupRow.color) && !planarRgbDisplayColor(channel, allChannels)) {
@@ -80052,8 +80770,8 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     z: 1e-21,
     y: 1e-24
   };
-  function metresPerUnit(unit) {
-    const u2 = unit.trim();
+  function metresPerUnit(unit2) {
+    const u2 = unit2.trim();
     const word = u2.toLowerCase();
     if (word === "micron" || word === "microns" || word === "micrometer" || word === "micrometers") {
       return 1e-6;
@@ -80063,11 +80781,11 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     const prefix2 = u2.slice(0, -1);
     return prefix2 in METRE_PREFIX ? METRE_PREFIX[prefix2] : null;
   }
-  function umPerPixelFromAxis(size, unit) {
+  function umPerPixelFromAxis(size, unit2) {
     if (size == null) return null;
     const n2 = Number(size);
     if (!Number.isFinite(n2) || n2 <= 0) return null;
-    const unitStr = unit == null || unit === "" ? WORLD_MICRON : String(unit);
+    const unitStr = unit2 == null || unit2 === "" ? WORLD_MICRON : String(unit2);
     const metres = metresPerUnit(unitStr);
     if (metres == null) return null;
     return n2 * metres * 1e6;
@@ -86664,13 +87382,15 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       ]
     },
     annotations: {
-      label: "OME-XML annotations",
+      label: "OME-XML or GeoJSON annotations",
       extensions: [
-        ".xml"
+        ".xml",
+        ".geojson"
       ],
       mimeTypes: [
         "text/xml",
-        "application/xml"
+        "application/xml",
+        "application/geo+json"
       ]
     },
     featureTable: {
@@ -87497,7 +88217,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     sharedPool ?? (sharedPool = new OmeDecodePool(void 0, () => new WorkerWrapper$4()));
     return sharedPool;
   }
-  function cropTile(full2, stride, width, height) {
+  function cropTile$1(full2, stride, width, height) {
     if (width === stride && height === stride) return full2;
     const out = new Uint16Array(width * height);
     for (let row2 = 0; row2 < height; row2++) {
@@ -87532,7 +88252,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       const bytes = tile.data;
       const full2 = bytes.byteLength === stride * stride * 2 ? new Uint16Array(bytes) : expandThroughLut(new Uint8Array(bytes), lut);
       return {
-        data: cropTile(full2, stride, width, height),
+        data: cropTile$1(full2, stride, width, height),
         width,
         height
       };
@@ -88202,6 +88922,15 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       }
     };
   }
+  const PREMULTIPLIED_OVER_PARAMETERS = {
+    blend: true,
+    blendColorOperation: "add",
+    blendAlphaOperation: "add",
+    blendColorSrcFactor: "one",
+    blendColorDstFactor: "one-minus-src-alpha",
+    blendAlphaSrcFactor: "one",
+    blendAlphaDstFactor: "one-minus-src-alpha"
+  };
   const OME_INTENSITY_OVERLAY_PROPS = {
     refinementStrategy: "no-overlap",
     parameters: {
@@ -88881,6 +89610,15 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
         ...patch2
       } : ch2)
     }));
+  }
+  function patchGroupRowOnGroups(groups, rowId, patch2) {
+    return groups.map((g2) => g2.channels.some((gc2) => gc2.id === rowId) ? {
+      ...g2,
+      channels: g2.channels.map((gc2) => gc2.id === rowId ? {
+        ...gc2,
+        ...patch2
+      } : gc2)
+    } : g2);
   }
   function setImageSource(images, imageId, source2) {
     const idx = images.findIndex((im) => im.id === imageId);
@@ -90392,6 +91130,15 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
   function clearDocumentHistory() {
     useDocumentStore.temporal.getState().clear();
   }
+  function joinLastUndoStep(write) {
+    const history = useDocumentStore.temporal.getState();
+    history.pause();
+    try {
+      write();
+    } finally {
+      history.resume();
+    }
+  }
   function newShapeId() {
     return crypto.randomUUID();
   }
@@ -90972,6 +91719,9 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     contourLevels: CONTOUR_LEVELS_DEFAULT,
     contourSmoothing: CONTOUR_SMOOTHING_DEFAULT,
     contourSmoothingSteps: CONTOUR_SMOOTHING_STEPS,
+    colorLockedRowIds: {},
+    heDeconvByChannelId: {},
+    heStainFitByChannelId: {},
     channelGroupRowVisibilities: {},
     groupNames: {},
     hiddenLegendClasses: {},
@@ -91248,6 +91998,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
         ...get2().channelVisibilities
       };
       delete vis[SELECTION_MASK_CHANNEL_KEY];
+      clearHeStainEstimateCache();
       set2({
         shapes: [],
         shapeGroups: [],
@@ -91260,6 +92011,13 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
         brushLastScreenCoord: null,
         imageSelectionMask: null,
         channelVisibilities: vis,
+        heDeconvByChannelId: {},
+        heStainFitByChannelId: {},
+        contourChannelIds: {},
+        contourLevels: CONTOUR_LEVELS_DEFAULT,
+        contourSmoothing: CONTOUR_SMOOTHING_DEFAULT,
+        contourSmoothingSteps: CONTOUR_SMOOTHING_STEPS,
+        colorLockedRowIds: {},
         hiddenLegendClasses: {},
         activeStoryIndex: null,
         waypointAuthoring: /* @__PURE__ */ new Map(),
@@ -92216,6 +92974,18 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
         };
       });
     },
+    toggleColorLock: (rowId) => {
+      set2((state) => {
+        const colorLockedRowIds = {
+          ...state.colorLockedRowIds
+        };
+        if (colorLockedRowIds[rowId]) delete colorLockedRowIds[rowId];
+        else colorLockedRowIds[rowId] = true;
+        return {
+          colorLockedRowIds
+        };
+      });
+    },
     setContourLevels: (contourLevels) => {
       set2({
         contourLevels
@@ -92244,6 +93014,62 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
         channelVisibilities: applyStackVisibilities(flattenImageChannelsInDocumentOrder(images), vis, {
           kind: Object.keys(vis).length === 0 ? "fresh" : "sync"
         })
+      });
+    },
+    setHeDeconv: (channelId, split) => {
+      set2((s2) => {
+        const next2 = {
+          ...s2.heDeconvByChannelId
+        };
+        if (split) {
+          next2[channelId] = withFittedWindows(split, s2.heStainFitByChannelId[channelId]);
+        } else delete next2[channelId];
+        return {
+          heDeconvByChannelId: next2
+        };
+      });
+    },
+    patchHeDeconv: (channelId, component, patch2) => {
+      set2((s2) => {
+        const prev = s2.heDeconvByChannelId[channelId];
+        if (!prev) return s2;
+        const stain = {
+          ...prev[component],
+          ...patch2
+        };
+        if (patch2.lower !== void 0 || patch2.upper !== void 0) {
+          delete stain.autoContrast;
+        }
+        return {
+          heDeconvByChannelId: {
+            ...s2.heDeconvByChannelId,
+            [channelId]: {
+              ...prev,
+              [component]: stain
+            }
+          }
+        };
+      });
+    },
+    setHeStainFit: (channelId, fit) => {
+      set2((s2) => {
+        const heStainFitByChannelId = {
+          ...s2.heStainFitByChannelId
+        };
+        if (fit) heStainFitByChannelId[channelId] = fit;
+        else delete heStainFitByChannelId[channelId];
+        const split = s2.heDeconvByChannelId[channelId];
+        const fitted = split && fit ? withFittedWindows(split, fit) : null;
+        if (!fitted || fitted === split) return {
+          heStainFitByChannelId
+        };
+        return {
+          heStainFitByChannelId,
+          heDeconvByChannelId: {
+            ...s2.heDeconvByChannelId,
+            [channelId]: fitted
+          }
+        };
       });
     },
     setChannelGroupRowVisibilities: (vis) => {
@@ -92501,14 +93327,14 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     return useStore(useDocumentStore.temporal, (s2) => s2.futureStates.length > 0);
   }
   const clusterFieldset = "_clusterFieldset_18uri_1";
-  const styles$x = {
+  const styles$y = {
     clusterFieldset
   };
   function DocumentUndoControls() {
     const canUndo = useCanDocumentUndo();
     const canRedo = useCanDocumentRedo();
     return jsxRuntimeExports.jsxs("fieldset", {
-      className: styles$x.clusterFieldset,
+      className: styles$y.clusterFieldset,
       "aria-label": "Document undo and redo",
       children: [
         jsxRuntimeExports.jsx(PanelIconButton, {
@@ -92566,7 +93392,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
   }
   const menuWrap = "_menuWrap_doy1a_1";
   const exportChoice = "_exportChoice_doy1a_9";
-  const styles$w = {
+  const styles$x = {
     menuWrap,
     exportChoice
   };
@@ -92599,7 +93425,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       wrapRef
     ]);
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$w.menuWrap,
+      className: styles$x.menuWrap,
       ref: wrapRef,
       children: [
         jsxRuntimeExports.jsx(PanelIconButton, {
@@ -92649,7 +93475,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
                 jsxRuntimeExports.jsx("button", {
                   type: "button",
                   role: "menuitem",
-                  className: `${minervaTheme.menuItem} ${styles$w.exportChoice}`,
+                  className: `${minervaTheme.menuItem} ${styles$x.exportChoice}`,
                   onClick: (e2) => {
                     e2.stopPropagation();
                     close();
@@ -92660,7 +93486,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
                 jsxRuntimeExports.jsx("button", {
                   type: "button",
                   role: "menuitem",
-                  className: `${minervaTheme.menuItem} ${styles$w.exportChoice}`,
+                  className: `${minervaTheme.menuItem} ${styles$x.exportChoice}`,
                   onClick: (e2) => {
                     e2.stopPropagation();
                     close();
@@ -92687,7 +93513,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
   }));
   const volume = "_volume_drqkm_1";
   const spine = "_spine_drqkm_9";
-  const styles$v = {
+  const styles$w = {
     volume,
     spine
   };
@@ -92703,10 +93529,10 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
   ];
   function StorySpines() {
     return jsxRuntimeExports.jsx("span", {
-      className: styles$v.volume,
+      className: styles$w.volume,
       "aria-hidden": true,
       children: SPINE_HEIGHTS.map((frac, i2) => jsxRuntimeExports.jsx("span", {
-        className: styles$v.spine,
+        className: styles$w.spine,
         style: {
           height: `${frac * 100}%`,
           background: `var(--cloth-${SPINE_CLOTH[i2]})`
@@ -92722,7 +93548,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
   const titleDisplay = "_titleDisplay_1juq2_52";
   const titleInput = "_titleInput_1juq2_53";
   const titlePlaceholder = "_titlePlaceholder_1juq2_67";
-  const styles$u = {
+  const styles$v = {
     banner,
     leading,
     play,
@@ -92751,32 +93577,32 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       editing
     ]);
     return jsxRuntimeExports.jsxs("section", {
-      className: `${minervaTheme.bar} ${styles$u.banner}`,
+      className: `${minervaTheme.bar} ${styles$v.banner}`,
       "aria-label": "Story title",
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$u.leading,
+          className: styles$v.leading,
           children: [
             onExport ? jsxRuntimeExports.jsx(StoryAuthorOverflowMenu, {
               onReturnToLibrary,
               onExport
             }) : null,
             jsxRuntimeExports.jsx("span", {
-              className: `${minervaTheme.wordmark} ${styles$u.wordmark}`,
+              className: `${minervaTheme.wordmark} ${styles$v.wordmark}`,
               children: "Minerva"
             }),
             jsxRuntimeExports.jsx(DocumentUndoControls, {})
           ]
         }),
         jsxRuntimeExports.jsxs("label", {
-          className: styles$u.titleFieldWrap,
+          className: styles$v.titleFieldWrap,
           htmlFor: editing ? fieldId : void 0,
           children: [
             jsxRuntimeExports.jsx(StorySpines, {}),
             editing ? jsxRuntimeExports.jsx("input", {
               ref: inputRef,
               id: fieldId,
-              className: `${minervaTheme.field} ${styles$u.titleInput}`,
+              className: `${minervaTheme.field} ${styles$v.titleInput}`,
               type: "text",
               value: draftTitle,
               placeholder: "Untitled story",
@@ -92801,21 +93627,21 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
               spellCheck: false
             }) : jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.field} ${styles$u.titleDisplay}`,
+              className: `${minervaTheme.field} ${styles$v.titleDisplay}`,
               "aria-label": "Story title",
               onClick: () => {
                 setDraftTitle(titleText);
                 setEditing(true);
               },
               children: titleText.trim() ? titleText : jsxRuntimeExports.jsx("span", {
-                className: styles$u.titlePlaceholder,
+                className: styles$v.titlePlaceholder,
                 children: "Untitled story"
               })
             })
           ]
         }),
         onEnterPlaybackPreview ? jsxRuntimeExports.jsx(PanelIconButton, {
-          className: styles$u.play,
+          className: styles$v.play,
           onClick: onEnterPlaybackPreview,
           disabled: playbackPreviewDisabled,
           title: playbackPreviewDisabled ? "Add a waypoint to preview" : "Preview playback",
@@ -92968,7 +93794,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
   const rangeInputMin = "_rangeInputMin_1sovl_138";
   const rangeInputMax = "_rangeInputMax_1sovl_145";
   const limitInput = "_limitInput_1sovl_183";
-  const styles$t = {
+  const styles$u = {
     wrap: wrap$2,
     histogramHost,
     histogramPlot,
@@ -93074,8 +93900,8 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       fillPath
     };
   }
-  function renderingForSource(live2, sourceChannelId, kind) {
-    if ((live2 == null ? void 0 : live2.kind) === kind && live2.sourceChannelId === sourceChannelId) {
+  function renderingForSource(live2, sourceChannelId, kind, heComponent) {
+    if ((live2 == null ? void 0 : live2.kind) === kind && live2.sourceChannelId === sourceChannelId && live2.heComponent === heComponent) {
       return live2;
     }
     return null;
@@ -93135,7 +93961,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       rangeMax
     ]);
     const fractional = range2 != null;
-    const dtypeMax = sourceDtypeMax(props.sourceDataTypeId);
+    const dtypeMax = props.dtypeMax ?? sourceDtypeMax(props.sourceDataTypeId);
     const chart = reactExports.useMemo(() => resolveHistogramChartView(dist2, {
       floatRange: range2,
       dtypeMax,
@@ -93202,7 +94028,10 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
         kind: "contrast",
         sourceChannelId: props.sourceChannelId,
         lower,
-        upper
+        upper,
+        ...props.heComponent ? {
+          heComponent: props.heComponent
+        } : {}
       });
     };
     const commitRange = (lower, upper) => {
@@ -93217,6 +94046,11 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
         lo,
         hi2
       ];
+      if (props.onCommitRange) {
+        props.onCommitRange(lo, hi2);
+        useAppStore.getState().clearChannelRendering();
+        return;
+      }
       const doc = useDocumentStore.getState();
       if (props.groupId) {
         setChannelGroups(applyGroupChannelRange(doc.channelGroups, {
@@ -93233,12 +94067,13 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     reactExports.useEffect(() => {
       return () => {
         const { channelRendering, clearChannelRendering } = useAppStore.getState();
-        if ((channelRendering == null ? void 0 : channelRendering.kind) === "contrast" && channelRendering.sourceChannelId === props.sourceChannelId) {
+        if ((channelRendering == null ? void 0 : channelRendering.kind) === "contrast" && channelRendering.sourceChannelId === props.sourceChannelId && channelRendering.heComponent === props.heComponent) {
           clearChannelRendering();
         }
       };
     }, [
-      props.sourceChannelId
+      props.sourceChannelId,
+      props.heComponent
     ]);
     const syncFromSliders = (loStep, hiStep, commit) => {
       const active = scaleRef.current;
@@ -93354,11 +94189,11 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     const histogramClipWidth = (maxFrac - minFrac) * histogramViewWidth;
     const trimmed = chart.startBin > 0;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$t.wrap,
+      className: styles$u.wrap,
       children: [
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$t.limitInput}`,
+          className: `${minervaTheme.input} ${styles$u.limitInput}`,
           value: minInput,
           "aria-label": `${props.channelLabel} contrast minimum value`,
           min: scale2.dtypeMin,
@@ -93377,23 +94212,23 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
           }
         }),
         jsxRuntimeExports.jsx("div", {
-          className: styles$t.histogramHost,
+          className: styles$u.histogramHost,
           style: props.r != null && props.g != null && props.b != null ? {
             "--histogram-color": `rgb(${props.r},${props.g},${props.b})`
           } : void 0,
           children: jsxRuntimeExports.jsxs("div", {
-            className: trimmed ? `${styles$t.histogramPlot} ${styles$t.histogramPlotTrimmed}` : styles$t.histogramPlot,
+            className: trimmed ? `${styles$u.histogramPlot} ${styles$u.histogramPlotTrimmed}` : styles$u.histogramPlot,
             children: [
               trimmed ? jsxRuntimeExports.jsx("button", {
                 type: "button",
-                className: `${minervaTheme.focusRing} ${styles$t.axisBreak}`,
+                className: `${minervaTheme.focusRing} ${styles$u.axisBreak}`,
                 title: "Full range",
                 "aria-label": `${props.channelLabel} full histogram range`,
                 onClick: () => setExpanded(true),
                 children: jsxRuntimeExports.jsx(SvgAxisBreak, {})
               }) : null,
               jsxRuntimeExports.jsxs("svg", {
-                className: styles$t.histogramSvg,
+                className: styles$u.histogramSvg,
                 viewBox: "1.15 0 96.7 11",
                 preserveAspectRatio: "none",
                 role: "img",
@@ -93425,22 +94260,22 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
                     clipPath: `url(#${histogramClipId}-frame)`,
                     children: [
                       jsxRuntimeExports.jsx("path", {
-                        className: `${styles$t.histogramFill} ${styles$t.histogramOutOfRange}`,
+                        className: `${styles$u.histogramFill} ${styles$u.histogramOutOfRange}`,
                         d: histFillPath
                       }),
                       jsxRuntimeExports.jsx("path", {
-                        className: `${styles$t.histogramLine} ${styles$t.histogramOutOfRange}`,
+                        className: `${styles$u.histogramLine} ${styles$u.histogramOutOfRange}`,
                         d: histLinePath
                       }),
                       jsxRuntimeExports.jsxs("g", {
                         clipPath: `url(#${histogramClipId})`,
                         children: [
                           jsxRuntimeExports.jsx("path", {
-                            className: styles$t.histogramFill,
+                            className: styles$u.histogramFill,
                             d: histFillPath
                           }),
                           jsxRuntimeExports.jsx("path", {
-                            className: styles$t.histogramLine,
+                            className: styles$u.histogramLine,
                             d: histLinePath
                           })
                         ]
@@ -93450,18 +94285,18 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
                 ]
               }),
               jsxRuntimeExports.jsx("div", {
-                className: `${styles$t.histogramLoading}${props.histogramLoading ? ` ${styles$t.histogramLoadingVisible}` : ""}`,
+                className: `${styles$u.histogramLoading}${props.histogramLoading ? ` ${styles$u.histogramLoadingVisible}` : ""}`,
                 title: "Loading histogram",
                 children: jsxRuntimeExports.jsx("div", {
                   className: minervaTheme.spinnerSm
                 })
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$t.sliderRow,
+                className: styles$u.sliderRow,
                 children: [
                   jsxRuntimeExports.jsx("input", {
                     type: "range",
-                    className: `${styles$t.rangeInput} ${styles$t.rangeInputMin}`,
+                    className: `${styles$u.rangeInput} ${styles$u.rangeInputMin}`,
                     min: 0,
                     max: scale2.sliderSteps,
                     value: sliderMin,
@@ -93476,7 +94311,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
                   }),
                   jsxRuntimeExports.jsx("input", {
                     type: "range",
-                    className: `${styles$t.rangeInput} ${styles$t.rangeInputMax}`,
+                    className: `${styles$u.rangeInput} ${styles$u.rangeInputMax}`,
                     min: 0,
                     max: scale2.sliderSteps,
                     value: sliderMax,
@@ -93495,7 +94330,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
         }),
         jsxRuntimeExports.jsx("input", {
           type: "number",
-          className: `${minervaTheme.input} ${styles$t.limitInput}`,
+          className: `${minervaTheme.input} ${styles$u.limitInput}`,
           value: maxInput,
           "aria-label": `${props.channelLabel} contrast maximum value`,
           min: scale2.dtypeMin,
@@ -93594,9 +94429,66 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       close
     };
   }
+  const DEFAULT_STRENGTHS = {
+    hematoxylin: 0.6,
+    eosin: 0.3,
+    residual: 0.3
+  };
+  function heStainVectors(inverse2) {
+    const stains = [
+      ...new Matrix3(inverse2).invert()
+    ];
+    return {
+      hematoxylin: [
+        stains[0],
+        stains[1],
+        stains[2]
+      ],
+      eosin: [
+        stains[3],
+        stains[4],
+        stains[5]
+      ],
+      residual: [
+        stains[6],
+        stains[7],
+        stains[8]
+      ]
+    };
+  }
+  function colorOnGlass(density2, strength) {
+    const t2 = (k2) => Math.round(255 * 10 ** (-strength * Math.max(0, density2[k2])));
+    return {
+      r: t2(0),
+      g: t2(1),
+      b: t2(2)
+    };
+  }
+  function heColors(inverse2, strengths) {
+    const stains = heStainVectors(inverse2);
+    return {
+      hematoxylin: colorOnGlass(stains.hematoxylin, strengths.hematoxylin),
+      eosin: colorOnGlass(stains.eosin, strengths.eosin),
+      residual: colorOnGlass(stains.residual, strengths.residual)
+    };
+  }
+  const DEFAULT_HE_STAIN_COLORS = heColors(DEFAULT_STAIN_INVERSE, DEFAULT_STRENGTHS);
+  function heStainColorsForFit(fit) {
+    var _a2, _b2, _c2, _d;
+    if (!fit) return DEFAULT_HE_STAIN_COLORS;
+    return heColors(fit.glslInverse, {
+      hematoxylin: ((_a2 = fit.stains) == null ? void 0 : _a2.hematoxylin.strength) ?? DEFAULT_STRENGTHS.hematoxylin,
+      eosin: ((_b2 = fit.stains) == null ? void 0 : _b2.eosin.strength) ?? DEFAULT_STRENGTHS.eosin,
+      residual: ((_d = (_c2 = fit.stains) == null ? void 0 : _c2.residual) == null ? void 0 : _d.strength) ?? DEFAULT_STRENGTHS.residual
+    });
+  }
   const DEFAULT_LUMINANCE = new Uint16Array([
     60,
     92
+  ]);
+  const STAIN_LUMINANCE = new Uint16Array([
+    40,
+    75
   ]);
   const PSUDO_INCLUDE_SPATIAL_CHANNEL_OVERLAP = false;
   const PSUDO_MAX_ITERS = 2700;
@@ -93706,7 +94598,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     const optimized = await psudo.optimize(inputs.colors, inputs.locked, inputs.intensities, inputs.contrastLimits, inputs.luminance, inputs.excluded, inputs.colorNames, inputs.maxIters, inputs.confusionSamples, inputs.spatial, inputs.numRestarts);
     return optimized instanceof Float32Array ? optimized : new Float32Array(optimized);
   }
-  async function optimizePaletteSlots(slots, lockedIds = /* @__PURE__ */ new Set(), budget) {
+  async function optimizePaletteSlots(slots, lockedIds = /* @__PURE__ */ new Set(), overrides) {
     if (slots.length < 2) {
       throw new Error("At least two channels are required to optimize a palette.");
     }
@@ -93715,12 +94607,10 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
         ...slot.color
       }));
     }
-    const inputs = buildOptimizeInputsFromSlots(slots, lockedIds);
-    if (budget) {
-      inputs.maxIters = budget.maxIters;
-      inputs.confusionSamples = budget.confusionSamples;
-      inputs.numRestarts = budget.numRestarts;
-    }
+    const inputs = {
+      ...buildOptimizeInputsFromSlots(slots, lockedIds),
+      ...overrides
+    };
     const nChannels = inputs.colorNames.length;
     const linear = await invokePsudoOptimize(inputs);
     const out = [];
@@ -93755,14 +94645,79 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       numRestarts: CLASS_PALETTE_RESTARTS
     });
   }
-  function isGroupEligibleForPsudoOptimize(group2, sourceChannels) {
-    let imageChannelCount = 0;
+  function isStainChannel(sc2) {
+    return Boolean((sc2 == null ? void 0 : sc2.stain) && sc2.samples !== 3 && isImageChannel(sc2));
+  }
+  const STAIN_OVERRIDES = {
+    luminance: STAIN_LUMINANCE
+  };
+  const GLASS_SLOT = {
+    id: "glass",
+    color: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
+  };
+  function heUnder(sourceChannels, candidates) {
+    const split = useAppStore.getState().heDeconvByChannelId;
+    const rgb = candidates.filter((sc2) => {
+      var _a2;
+      return ((_a2 = split[sc2.id]) == null ? void 0 : _a2.mode) !== "fluorescence" && isRgbDisplayChannel(sc2, sourceChannels);
+    });
+    return rgb.find((sc2) => sc2.samples === 3 && loaderForImage(sc2.imageId)) ?? rgb[0];
+  }
+  async function heContextSlots(he2) {
+    if (!he2) return [];
+    const loader = he2.samples === 3 ? loaderForImage(he2.imageId) : void 0;
+    const colors = loader ? heStainColorsForFit(await ensureHeStainFit({
+      loader,
+      cacheKey: `${he2.imageId}:${he2.index}`,
+      channelIndex: he2.index
+    })) : DEFAULT_HE_STAIN_COLORS;
+    return [
+      {
+        id: "he:hematoxylin",
+        color: colors.hematoxylin
+      },
+      {
+        id: "he:eosin",
+        color: colors.eosin
+      }
+    ];
+  }
+  function groupDrawModes(group2, sourceChannels) {
+    const fluorescence = [];
+    const stains = [];
+    const rows2 = [];
     for (const gc2 of group2.channels ?? []) {
       const sc2 = findSourceChannel(sourceChannels, gc2.channelId);
-      if (!sc2 || sc2.samples === 3 || !isImageChannel(sc2)) continue;
-      imageChannelCount++;
+      if (!sc2) continue;
+      rows2.push(sc2);
+      if (!isImageChannel(sc2) || isRgbDisplayChannel(sc2, sourceChannels)) {
+        continue;
+      }
+      const slot = {
+        id: gc2.id,
+        color: asRgbColor(gc2.color)
+      };
+      (isStainChannel(sc2) ? stains : fluorescence).push(slot);
     }
-    return imageChannelCount >= 2;
+    const he2 = stains.length > 0 ? heUnder(sourceChannels, [
+      ...rows2,
+      ...shownIntensityLayers(useDocumentStore.getState().channelGroups, sourceChannels).map((layer2) => layer2.sc)
+    ]) : void 0;
+    return {
+      fluorescence,
+      stains,
+      he: he2,
+      canOptimizeFluorescence: fluorescence.length >= 2,
+      canOptimizeStains: stains.length + (he2 ? 2 : 0) >= 2
+    };
+  }
+  function isGroupEligibleForPsudoOptimize(group2, sourceChannels) {
+    const modes = groupDrawModes(group2, sourceChannels);
+    return modes.canOptimizeFluorescence || modes.canOptimizeStains;
   }
   function seedRgbForGroupChannelIndex(index2) {
     return hexToRgb(IMPORT_DEFAULT_SEED_HEX[index2 % IMPORT_DEFAULT_SEED_HEX.length]);
@@ -93775,32 +94730,60 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     }));
   }
   async function optimizeChannelGroupWithLocks(group2, sourceChannels, lockedChannelRowIds = /* @__PURE__ */ new Set()) {
-    if (!isGroupEligibleForPsudoOptimize(group2, sourceChannels)) {
-      return currentGroupColors(group2);
+    const modes = groupDrawModes(group2, sourceChannels);
+    const anyUnlocked = (slots) => slots.some((slot) => !lockedChannelRowIds.has(slot.id));
+    const fluorescence = modes.canOptimizeFluorescence && anyUnlocked(modes.fluorescence);
+    const stains = modes.canOptimizeStains && anyUnlocked(modes.stains);
+    if (!fluorescence && !stains) return currentGroupColors(group2);
+    const he2 = stains ? heContextSlots(modes.he) : null;
+    const colorById = /* @__PURE__ */ new Map();
+    const keep = (slots, colors) => {
+      slots.forEach((slot, i2) => {
+        colorById.set(slot.id, colors[i2]);
+      });
+    };
+    if (fluorescence) {
+      keep(modes.fluorescence, await optimizePaletteSlots(modes.fluorescence, lockedChannelRowIds));
     }
-    const slots = (group2.channels ?? []).map((gc2) => ({
-      id: gc2.id,
-      color: asRgbColor(gc2.color)
-    }));
-    if (!slots.some((slot) => !lockedChannelRowIds.has(slot.id))) {
-      return currentGroupColors(group2);
+    if (he2) {
+      const heSlots = await he2;
+      const slots = [
+        ...modes.stains,
+        ...heSlots
+      ];
+      const locked = /* @__PURE__ */ new Set([
+        ...lockedChannelRowIds,
+        ...heSlots.map((slot) => slot.id)
+      ]);
+      keep(slots, await optimizePaletteSlots(slots, locked, STAIN_OVERRIDES));
     }
-    return optimizePaletteSlots(slots, lockedChannelRowIds);
+    return (group2.channels ?? []).map((gc2) => colorById.get(gc2.id) ?? asRgbColor(gc2.color));
   }
-  function applyOptimizedColorsToChannelGroup(channelGroups, groupId, colors, options) {
+  function sameRgb(a2, b2) {
+    return (a2 == null ? void 0 : a2.r) === (b2 == null ? void 0 : b2.r) && (a2 == null ? void 0 : a2.g) === (b2 == null ? void 0 : b2.g) && (a2 == null ? void 0 : a2.b) === (b2 == null ? void 0 : b2.b);
+  }
+  function applyOptimizedColorsToChannelGroup(channelGroups, from, colors, options) {
     const locked = options == null ? void 0 : options.lockedChannelRowIds;
+    const optimized = new Map(from.channels.map((gc2, i2) => [
+      gc2.id,
+      {
+        was: gc2.color,
+        c: colors[i2]
+      }
+    ]));
     return channelGroups.map((g2) => {
-      if (g2.id !== groupId) return g2;
-      const channels2 = g2.channels.map((gc2, i2) => {
-        if (locked == null ? void 0 : locked.has(gc2.id)) return gc2;
-        const c2 = colors[i2];
-        if (!c2) return gc2;
+      if (g2.id !== from.id) return g2;
+      const channels2 = g2.channels.map((gc2) => {
+        const row2 = optimized.get(gc2.id);
+        if (!(row2 == null ? void 0 : row2.c) || (locked == null ? void 0 : locked.has(gc2.id)) || !sameRgb(gc2.color, row2.was)) {
+          return gc2;
+        }
         return {
           ...gc2,
           color: {
-            r: c2.r,
-            g: c2.g,
-            b: c2.b
+            r: row2.c.r,
+            g: row2.c.g,
+            b: row2.c.b
           }
         };
       });
@@ -93927,6 +94910,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     initPaletteKey = null;
     initPaletteInFlight = null;
     prevUngroupedStackVis = null;
+    fillBeforeStain.clear();
   }
   function ensureInitPalette(storyId) {
     const doc = useDocumentStore.getState();
@@ -94022,24 +95006,24 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     return run;
   }
   let stackPaletteChain = Promise.resolve();
-  const stackPalettePending = /* @__PURE__ */ new Set();
+  const stackPalettePending = /* @__PURE__ */ new Map();
   let stackPalettePendingSnapshot = [];
   const stackPalettePendingListeners = /* @__PURE__ */ new Set();
   function setStackPalettePendingMany(sourceChannelIds, pending2) {
     if (sourceChannelIds.length === 0) return;
     let changed = false;
     for (const id2 of sourceChannelIds) {
-      if (pending2) {
-        if (stackPalettePending.has(id2)) continue;
-        stackPalettePending.add(id2);
-        changed = true;
+      const runs = (stackPalettePending.get(id2) ?? 0) + (pending2 ? 1 : -1);
+      if (runs > 0) {
+        changed || (changed = runs === 1 && pending2);
+        stackPalettePending.set(id2, runs);
       } else if (stackPalettePending.delete(id2)) {
         changed = true;
       }
     }
     if (!changed) return;
     stackPalettePendingSnapshot = [
-      ...stackPalettePending
+      ...stackPalettePending.keys()
     ];
     for (const listener of stackPalettePendingListeners) listener();
   }
@@ -94090,17 +95074,26 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
   }
   function optimizeUngroupedStackChannel(sourceChannelId) {
     const pending2 = markStackPalettePendingIfNeeded(sourceChannelId);
-    const run = stackPaletteChain.then(async () => {
-      try {
-        await runEnsureStackPalette(sourceChannelId);
-      } finally {
-        if (pending2) setStackPalettePendingMany([
-          sourceChannelId
-        ], false);
-      }
-    });
-    stackPaletteChain = run.then(() => void 0, () => void 0);
-    return run;
+    const enqueue2 = () => {
+      const run = stackPaletteChain.then(async () => {
+        try {
+          await runEnsureStackPalette(sourceChannelId);
+        } finally {
+          if (pending2) setStackPalettePendingMany([
+            sourceChannelId
+          ], false);
+        }
+      });
+      stackPaletteChain = run.then(() => void 0, () => void 0);
+      return run;
+    };
+    const doc = useDocumentStore.getState();
+    const sources = flattenImageChannelsInDocumentOrder(doc.images);
+    if (!pending2 || !isStainChannel(findSourceChannel(sources, sourceChannelId))) {
+      return enqueue2();
+    }
+    const layers = shownIntensityLayers(doc.channelGroups, sources);
+    return heContextSlots(heUnder(sources, layers.map((layer2) => layer2.sc))).then(enqueue2, enqueue2);
   }
   function reconcileUngroupedStackPalette(stackVisibilities) {
     const vis = stackVisibilities;
@@ -94115,6 +95108,149 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       void optimizeUngroupedStackChannel(sc2.id);
     }
   }
+  function shownIntensityLayers(groups, sourceChannels) {
+    const app = useAppStore.getState();
+    const visibility = applyVisibilityTransition(sourceChannels, groups, app.channelVisibilities, app.channelGroupRowVisibilities, {
+      kind: "sync"
+    });
+    return buildCompositedIntensityLayers({
+      onLoader: sourceChannels.filter(isImageChannel),
+      activeGroup: groups.find((g2) => g2.id === app.activeChannelGroupId),
+      channelGroups: groups,
+      stackVisibilities: visibility.channelVisibilities,
+      groupRowVisibilities: visibility.channelGroupRowVisibilities,
+      hasVisibilityMap: true
+    });
+  }
+  async function shownPaletteContext(shown, layers, sourceChannels) {
+    const stain = isStainChannel(shown);
+    const slots = [];
+    const seen2 = /* @__PURE__ */ new Set([
+      shown.id
+    ]);
+    for (const { sc: sc2, gc: gc2 } of layers) {
+      if (seen2.has(sc2.id)) continue;
+      if (sc2.samples === 3 || isRgbDisplayChannel(sc2, sourceChannels)) continue;
+      if (isStainChannel(sc2) !== stain) continue;
+      seen2.add(sc2.id);
+      const color2 = (gc2 == null ? void 0 : gc2.color) ?? sc2.color;
+      if (color2) slots.push({
+        id: sc2.id,
+        color: asRgbColor(color2)
+      });
+    }
+    if (!stain) return slots;
+    const he2 = heUnder(sourceChannels, layers.map((layer2) => layer2.sc));
+    slots.push(...await heContextSlots(he2));
+    return slots.length > 0 ? slots : [
+      GLASS_SLOT
+    ];
+  }
+  function colorTarget(sourceId, rowId, layers) {
+    var _a2, _b2;
+    return {
+      sourceId,
+      rowId: rowId ?? ((_b2 = (_a2 = layers.find((layer2) => layer2.sc.id === sourceId)) == null ? void 0 : _a2.gc) == null ? void 0 : _b2.id)
+    };
+  }
+  function colorAt(target, doc = useDocumentStore.getState()) {
+    var _a2;
+    if (!target.rowId) {
+      const images = flattenImageChannelsInDocumentOrder(doc.images);
+      return (_a2 = findSourceChannel(images, target.sourceId)) == null ? void 0 : _a2.color;
+    }
+    for (const g2 of doc.channelGroups) {
+      const gc2 = g2.channels.find((c2) => c2.id === target.rowId);
+      if (gc2) return gc2.color;
+    }
+    return void 0;
+  }
+  const fillBeforeStain = /* @__PURE__ */ new Map();
+  function setStainMode(sourceId, stain, rowId) {
+    const doc = useDocumentStore.getState();
+    let images = patchSourceChannelOnImages(doc.images, sourceId, {
+      stain: stain || void 0
+    });
+    if (stain) {
+      doc.setImages(images);
+      void recolorAsStain(sourceId, rowId);
+      return;
+    }
+    let groups = doc.channelGroups;
+    for (const [key2, fill] of fillBeforeStain) {
+      if (fill.sourceId !== sourceId) continue;
+      fillBeforeStain.delete(key2);
+      if (key2 === sourceId) {
+        images = patchSourceChannelOnImages(images, sourceId, {
+          color: fill.color
+        });
+      } else {
+        groups = patchGroupRowOnGroups(groups, key2, {
+          color: fill.color
+        });
+      }
+    }
+    if (groups === doc.channelGroups) doc.setImages(images);
+    else doc.setImagesAndChannelGroups(images, groups);
+  }
+  async function recolorAsStain(sourceChannelId, rowId) {
+    const doc = useDocumentStore.getState();
+    const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+    const shown = sourceChannels.find((sc2) => sc2.id === sourceChannelId);
+    if (!shown || !isStainChannel(shown)) return;
+    const layers = shownIntensityLayers(doc.channelGroups, sourceChannels);
+    const target = colorTarget(shown.id, rowId, layers);
+    const locked = () => Boolean(target.rowId && useAppStore.getState().colorLockedRowIds[target.rowId]);
+    if (locked()) return;
+    const current = colorAt(target, doc);
+    setStackPalettePendingMany([
+      shown.id
+    ], true);
+    try {
+      const context = await shownPaletteContext(shown, layers, sourceChannels);
+      const slots = [
+        ...context,
+        {
+          id: shown.id,
+          color: current ? asRgbColor(current) : startingColorAwayFromLocked(context.map((slot) => slot.color))
+        }
+      ];
+      const colors = await optimizePaletteSlots(slots, new Set(context.map((slot) => slot.id)), STAIN_OVERRIDES);
+      const c2 = colors[slots.length - 1];
+      const color2 = {
+        r: c2.r,
+        g: c2.g,
+        b: c2.b
+      };
+      const docNow = useDocumentStore.getState();
+      const now = flattenImageChannelsInDocumentOrder(docNow.images);
+      if (!isStainChannel(findSourceChannel(now, shown.id)) || locked() || !sameRgb(colorAt(target, docNow), current)) {
+        return;
+      }
+      if (current) {
+        fillBeforeStain.set(target.rowId ?? shown.id, {
+          sourceId: shown.id,
+          color: asRgbColor(current)
+        });
+      }
+      joinLastUndoStep(() => {
+        if (target.rowId) {
+          docNow.setChannelGroups(patchGroupRowOnGroups(docNow.channelGroups, target.rowId, {
+            color: color2
+          }));
+        } else {
+          docNow.setImages(patchSourceChannelOnImages(docNow.images, shown.id, {
+            color: color2
+          }));
+        }
+      });
+    } catch (e2) {
+    } finally {
+      setStackPalettePendingMany([
+        shown.id
+      ], false);
+    }
+  }
   async function runEnsureStackPalette(sourceChannelId) {
     const doc = useDocumentStore.getState();
     if (sourceChannelInAnyGroup(doc.channelGroups, sourceChannelId)) return;
@@ -94124,34 +95260,8 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       return;
     }
     if (shown.color && !isStackSeedColor(shown.color)) return;
-    const groups = doc.channelGroups;
-    const app = useAppStore.getState();
-    const visibility = applyVisibilityTransition(sourceChannels, groups, app.channelVisibilities, app.channelGroupRowVisibilities, {
-      kind: "sync"
-    });
-    const lockedSlots = [];
-    const seen2 = /* @__PURE__ */ new Set([
-      shown.id
-    ]);
-    for (const { sc: sc2, gc: gc2 } of buildCompositedIntensityLayers({
-      onLoader: sourceChannels.filter(isImageChannel),
-      activeGroup: groups.find((g2) => g2.id === app.activeChannelGroupId),
-      channelGroups: groups,
-      stackVisibilities: visibility.channelVisibilities,
-      groupRowVisibilities: visibility.channelGroupRowVisibilities,
-      hasVisibilityMap: true
-    })) {
-      if (seen2.has(sc2.id)) continue;
-      if (sc2.samples === 3 || isRgbDisplayChannel(sc2, sourceChannels)) continue;
-      seen2.add(sc2.id);
-      const color2 = (gc2 == null ? void 0 : gc2.color) ?? sc2.color;
-      if (color2) {
-        lockedSlots.push({
-          id: sc2.id,
-          color: asRgbColor(color2)
-        });
-      }
-    }
+    const stain = isStainChannel(shown);
+    const lockedSlots = await shownPaletteContext(shown, shownIntensityLayers(doc.channelGroups, sourceChannels), sourceChannels);
     const lockedIds = new Set(lockedSlots.map((slot) => slot.id));
     const unlockedStart = shown.color ? asRgbColor(shown.color) : startingColorAwayFromLocked(lockedSlots.map((slot) => slot.color));
     const slots = [
@@ -94171,7 +95281,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     }
     let colors;
     try {
-      colors = await optimizePaletteSlots(slots, lockedIds);
+      colors = await optimizePaletteSlots(slots, lockedIds, stain ? STAIN_OVERRIDES : void 0);
     } catch (e2) {
       return;
     }
@@ -94397,14 +95507,6 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       doc.setChannelGroups(nextGroups);
     }
   }
-  function planeSize$1(plane) {
-    const xi2 = plane.labels.indexOf("x");
-    const yi2 = plane.labels.indexOf("y");
-    return {
-      width: xi2 >= 0 ? plane.shape[xi2] : 0,
-      height: yi2 >= 0 ? plane.shape[yi2] : 0
-    };
-  }
   function pickTileCoords(nx, ny) {
     if (nx <= 0 || ny <= 0) return [];
     const cx = Math.floor(nx / 2);
@@ -94628,6 +95730,9 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     enqueue(job);
     return job;
   }
+  function loaderForImage(imageId) {
+    return loadersByImageId.get(imageId);
+  }
   function targetFor(channelId) {
     const all2 = documentChannels();
     const sc2 = all2.find((c2) => c2.id === channelId);
@@ -94796,55 +95901,67 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     snapshot = emptySnapshot;
     for (const listener of listeners) listener();
   }
-  const channelNameInput = "_channelNameInput_7exc4_3";
-  const channelRowMain = "_channelRowMain_7exc4_12";
-  const channelRowTitle = "_channelRowTitle_7exc4_19";
-  const contourLevel = "_contourLevel_7exc4_29";
-  const contourStepper = "_contourStepper_7exc4_38";
-  const menuCheckItem = "_menuCheckItem_7exc4_75";
-  const menuCheck = "_menuCheck_7exc4_75";
-  const channelRowMid = "_channelRowMid_7exc4_87";
-  const channelRowMainMask = "_channelRowMainMask_7exc4_95";
-  const channelNameSlot = "_channelNameSlot_7exc4_104";
-  const channelActionButton = "_channelActionButton_7exc4_120";
-  const channelActionButtonOn = "_channelActionButtonOn_7exc4_138";
-  const channelRowTrailing = "_channelRowTrailing_7exc4_143";
-  const channelImageSubtitle = "_channelImageSubtitle_7exc4_159";
-  const maskModeControls = "_maskModeControls_7exc4_172";
-  const maskModeGroup = "_maskModeGroup_7exc4_181";
-  const maskModeGroupLabel = "_maskModeGroupLabel_7exc4_190";
-  const maskOpacityLabel = "_maskOpacityLabel_7exc4_191";
-  const maskControlsPanel = "_maskControlsPanel_7exc4_199";
-  const maskVizToggle = "_maskVizToggle_7exc4_204";
-  const maskOpacityControl = "_maskOpacityControl_7exc4_216";
-  const maskOpacityInputRow = "_maskOpacityInputRow_7exc4_225";
-  const maskOpacitySlider = "_maskOpacitySlider_7exc4_237";
-  const maskOpacityValue = "_maskOpacityValue_7exc4_305";
-  const cursorHintHost = "_cursorHintHost_7exc4_315";
-  const cursorHint = "_cursorHint_7exc4_315";
-  const channelVisibilityButton = "_channelVisibilityButton_7exc4_342";
-  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_7exc4_366";
-  const channelColorSwatch = "_channelColorSwatch_7exc4_370";
-  const channelColorSwatchStatic = "_channelColorSwatchStatic_7exc4_371";
-  const channelColorSwatchUnfilled = "_channelColorSwatchUnfilled_7exc4_384";
-  const detailChannelRowLocked = "_detailChannelRowLocked_7exc4_402";
-  const maskVizOption = "_maskVizOption_7exc4_406";
-  const maskVizOptionActive = "_maskVizOptionActive_7exc4_431";
-  const maskVizIconOutline = "_maskVizIconOutline_7exc4_436";
-  const maskVizIconFull = "_maskVizIconFull_7exc4_437";
-  const maskVizSwatchWhite = "_maskVizSwatchWhite_7exc4_438";
-  const maskVizSwatchRandom = "_maskVizSwatchRandom_7exc4_439";
-  const channelRow = "_channelRow_7exc4_12";
+  const heStainList = "_heStainList_2zs8s_4";
+  const stainIconFrame = "_stainIconFrame_2zs8s_11";
+  const stainName = "_stainName_2zs8s_16";
+  const channelNameInput = "_channelNameInput_2zs8s_26";
+  const channelRowMain = "_channelRowMain_2zs8s_35";
+  const channelRowTitle = "_channelRowTitle_2zs8s_42";
+  const contourLevel = "_contourLevel_2zs8s_52";
+  const contourStepper = "_contourStepper_2zs8s_61";
+  const menuGroup = "_menuGroup_2zs8s_99";
+  const menuGroupLabel = "_menuGroupLabel_2zs8s_118";
+  const menuCheckItem = "_menuCheckItem_2zs8s_124";
+  const menuCheck = "_menuCheck_2zs8s_124";
+  const channelRowMid = "_channelRowMid_2zs8s_136";
+  const channelRowMainToggles = "_channelRowMainToggles_2zs8s_145";
+  const channelNameSlot = "_channelNameSlot_2zs8s_154";
+  const channelActionButton = "_channelActionButton_2zs8s_170";
+  const channelActionButtonOn = "_channelActionButtonOn_2zs8s_188";
+  const channelRowTrailing = "_channelRowTrailing_2zs8s_193";
+  const channelImageSubtitle = "_channelImageSubtitle_2zs8s_209";
+  const maskModeControls = "_maskModeControls_2zs8s_222";
+  const maskModeGroup = "_maskModeGroup_2zs8s_231";
+  const maskModeGroupLabel = "_maskModeGroupLabel_2zs8s_240";
+  const maskOpacityLabel = "_maskOpacityLabel_2zs8s_241";
+  const maskControlsPanel = "_maskControlsPanel_2zs8s_249";
+  const maskVizToggle = "_maskVizToggle_2zs8s_254";
+  const maskOpacityControl = "_maskOpacityControl_2zs8s_266";
+  const maskOpacityInputRow = "_maskOpacityInputRow_2zs8s_275";
+  const maskOpacitySlider = "_maskOpacitySlider_2zs8s_287";
+  const maskOpacityValue = "_maskOpacityValue_2zs8s_355";
+  const cursorHintHost = "_cursorHintHost_2zs8s_365";
+  const cursorHint = "_cursorHint_2zs8s_365";
+  const channelVisibilityButton = "_channelVisibilityButton_2zs8s_392";
+  const channelVisibilityButtonHidden = "_channelVisibilityButtonHidden_2zs8s_416";
+  const channelColorSwatch = "_channelColorSwatch_2zs8s_420";
+  const channelColorSwatchStatic = "_channelColorSwatchStatic_2zs8s_421";
+  const channelColorSwatchUnfilled = "_channelColorSwatchUnfilled_2zs8s_434";
+  const detailChannelRowLocked = "_detailChannelRowLocked_2zs8s_452";
+  const maskVizOption = "_maskVizOption_2zs8s_456";
+  const maskVizOptionActive = "_maskVizOptionActive_2zs8s_481";
+  const maskVizOptionCaptioned = "_maskVizOptionCaptioned_2zs8s_487";
+  const maskVizCaption = "_maskVizCaption_2zs8s_497";
+  const maskVizIconOutline = "_maskVizIconOutline_2zs8s_503";
+  const maskVizIconFull = "_maskVizIconFull_2zs8s_504";
+  const maskVizSwatchWhite = "_maskVizSwatchWhite_2zs8s_505";
+  const maskVizSwatchRandom = "_maskVizSwatchRandom_2zs8s_506";
+  const channelRow = "_channelRow_2zs8s_35";
   const rowStyles = {
+    heStainList,
+    stainIconFrame,
+    stainName,
     channelNameInput,
     channelRowMain,
     channelRowTitle,
     contourLevel,
     contourStepper,
+    menuGroup,
+    menuGroupLabel,
     menuCheckItem,
     menuCheck,
     channelRowMid,
-    channelRowMainMask,
+    channelRowMainToggles,
     channelNameSlot,
     channelActionButton,
     channelActionButtonOn,
@@ -94870,26 +95987,46 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     detailChannelRowLocked,
     maskVizOption,
     maskVizOptionActive,
+    maskVizOptionCaptioned,
+    maskVizCaption,
     maskVizIconOutline,
     maskVizIconFull,
     maskVizSwatchWhite,
     maskVizSwatchRandom,
     channelRow
   };
-  function setChannelStain(channelId, stain) {
-    const doc = useDocumentStore.getState();
-    doc.setImages(patchSourceChannelOnImages(doc.images, channelId, {
-      stain
-    }));
+  const DRAW_MODES = [
+    {
+      mode: null,
+      label: "Fill",
+      title: "Glowing color fill"
+    },
+    {
+      mode: "contour",
+      label: "Contour lines",
+      title: "Isolines across the contrast range"
+    },
+    {
+      mode: "stain",
+      label: "IHC stain",
+      title: "Darkens the images below, like a brightfield stain"
+    }
+  ];
+  function setDrawMode(channelId, mode, current, rowId) {
+    if (current.contour !== (mode === "contour")) {
+      useAppStore.getState().toggleContourChannel(channelId);
+    }
+    if (current.stain !== (mode === "stain")) {
+      setStainMode(channelId, mode === "stain", rowId);
+    }
   }
   function ChannelRowMoreMenu(props) {
-    const { fitContrastId, onRemoveFromGroup, channelName: channelName2, fitBusy, drawChannelId } = props;
+    var _a2;
+    const { fitContrastId, onRemoveFromGroup, channelName: channelName2, fitBusy, drawChannelId, drawRowId } = props;
     const contourOn = useAppStore((s2) => drawChannelId ? Boolean(s2.contourChannelIds[drawChannelId]) : false);
-    const stainOn = useDocumentStore((s2) => s2.images.some((im) => im.channels.some((ch2) => ch2.id === drawChannelId && ch2.stain)));
-    const drawnAs = [
-      contourOn && "contour lines",
-      stainOn && "IHC stain"
-    ].filter(Boolean).join(" and ");
+    const stainOn = useDocumentStore((s2) => drawChannelId ? s2.images.some((im) => im.channels.some((ch2) => ch2.id === drawChannelId && ch2.stain)) : false);
+    const mode = contourOn ? "contour" : stainOn ? "stain" : null;
+    const drawnAs = mode && ((_a2 = DRAW_MODES.find((d2) => d2.mode === mode)) == null ? void 0 : _a2.label);
     const menu2 = useAnchoredMenu("end");
     if (!fitContrastId && !onRemoveFromGroup && !drawChannelId) return null;
     return jsxRuntimeExports.jsxs("div", {
@@ -94898,8 +96035,8 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
         jsxRuntimeExports.jsx("button", {
           type: "button",
           className: `${rowStyles.channelActionButton}${drawnAs ? ` ${rowStyles.channelActionButtonOn}` : ""}`,
-          title: drawnAs ? `Drawn as ${drawnAs}` : void 0,
-          "aria-label": `More actions for ${channelName2}${drawnAs ? ` (drawn as ${drawnAs})` : ""}`,
+          title: drawnAs || void 0,
+          "aria-label": `More actions for ${channelName2}${drawnAs ? ` (${drawnAs})` : ""}`,
           "aria-expanded": menu2.open,
           "aria-haspopup": "menu",
           onClick: (e2) => {
@@ -94928,47 +96065,29 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
               },
               children: fitBusy ? "Fitting contrast\u2026" : "Fit contrast"
             }) : null,
-            drawChannelId ? jsxRuntimeExports.jsxs("button", {
-              type: "button",
-              role: "menuitemcheckbox",
-              "aria-checked": contourOn,
-              className: `${minervaTheme.menuItem} ${rowStyles.menuCheckItem}`,
-              title: "Draw this channel as isolines across its contrast range instead of a color fill",
-              onClick: (e2) => {
-                e2.stopPropagation();
-                if (!contourOn && stainOn) setChannelStain(drawChannelId, void 0);
-                useAppStore.getState().toggleContourChannel(drawChannelId);
-              },
+            drawChannelId ? jsxRuntimeExports.jsxs("fieldset", {
+              "aria-label": "Draw as",
+              className: rowStyles.menuGroup,
               children: [
-                "Show as contour lines",
-                jsxRuntimeExports.jsx("span", {
-                  className: rowStyles.menuCheck,
+                jsxRuntimeExports.jsx("div", {
+                  className: rowStyles.menuGroupLabel,
                   "aria-hidden": true,
-                  children: contourOn ? "\u2713" : ""
-                })
-              ]
-            }) : null,
-            contourOn ? jsxRuntimeExports.jsx(ContourControls, {}) : null,
-            drawChannelId ? jsxRuntimeExports.jsxs("button", {
-              type: "button",
-              role: "menuitemcheckbox",
-              "aria-checked": stainOn,
-              className: `${minervaTheme.menuItem} ${rowStyles.menuCheckItem}`,
-              title: "Draw this channel as a brightfield stain that darkens the images below, in its channel color, instead of a glowing fill",
-              onClick: (e2) => {
-                e2.stopPropagation();
-                if (!stainOn && contourOn) {
-                  useAppStore.getState().toggleContourChannel(drawChannelId);
-                }
-                setChannelStain(drawChannelId, stainOn ? void 0 : true);
-              },
-              children: [
-                "Show as IHC stain",
-                jsxRuntimeExports.jsx("span", {
-                  className: rowStyles.menuCheck,
-                  "aria-hidden": true,
-                  children: stainOn ? "\u2713" : ""
-                })
+                  children: "Draw as"
+                }),
+                DRAW_MODES.map((option2) => jsxRuntimeExports.jsxs(reactExports.Fragment, {
+                  children: [
+                    jsxRuntimeExports.jsx(MenuRadioItem, {
+                      label: option2.label,
+                      title: option2.title,
+                      checked: mode === option2.mode,
+                      onSelect: () => setDrawMode(drawChannelId, option2.mode, {
+                        contour: contourOn,
+                        stain: stainOn
+                      }, drawRowId)
+                    }),
+                    option2.mode === "contour" && contourOn ? jsxRuntimeExports.jsx(ContourControls, {}) : null
+                  ]
+                }, option2.label))
               ]
             }) : null,
             onRemoveFromGroup ? jsxRuntimeExports.jsx("button", {
@@ -94984,6 +96103,27 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
             }) : null
           ]
         }), document.body) : null
+      ]
+    });
+  }
+  function MenuRadioItem(props) {
+    return jsxRuntimeExports.jsxs("button", {
+      type: "button",
+      role: "menuitemradio",
+      "aria-checked": props.checked,
+      className: `${minervaTheme.menuItem} ${rowStyles.menuCheckItem}`,
+      title: props.title,
+      onClick: (e2) => {
+        e2.stopPropagation();
+        props.onSelect();
+      },
+      children: [
+        props.label,
+        jsxRuntimeExports.jsx("span", {
+          className: rowStyles.menuCheck,
+          "aria-hidden": true,
+          children: props.checked ? "\u2713" : ""
+        })
       ]
     });
   }
@@ -95191,17 +96331,24 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     });
   }
   function MaskVizButton(props) {
-    return jsxRuntimeExports.jsx("button", {
+    return jsxRuntimeExports.jsxs("button", {
       type: "button",
-      className: `${minervaTheme.focusRing} ${rowStyles.maskVizOption}${props.active ? ` ${rowStyles.maskVizOptionActive}` : ""}`,
+      className: `${minervaTheme.focusRing} ${rowStyles.maskVizOption}${props.caption ? ` ${rowStyles.maskVizOptionCaptioned}` : ""}${props.active ? ` ${rowStyles.maskVizOptionActive}` : ""}`,
       "aria-pressed": props.active,
       title: props.title ?? props.label,
       "aria-label": props.label,
       onClick: props.onClick,
-      children: jsxRuntimeExports.jsx("span", {
-        className: props.iconClass,
-        "aria-hidden": true
-      })
+      children: [
+        props.icon ?? jsxRuntimeExports.jsx("span", {
+          className: props.iconClass,
+          "aria-hidden": true
+        }),
+        props.caption ? jsxRuntimeExports.jsx("span", {
+          className: rowStyles.maskVizCaption,
+          "aria-hidden": true,
+          children: props.caption
+        }) : null
+      ]
     });
   }
   function OpacitySlider(props) {
@@ -95370,6 +96517,192 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       ]
     });
   }
+  const ICON_HEMATOXYLIN = "#6861ab";
+  const ICON_EOSIN = "#dc93ad";
+  const ICON_GLOW = "#005aff";
+  function StainsCombinedIcon() {
+    return jsxRuntimeExports.jsxs("svg", {
+      width: "12",
+      height: "12",
+      viewBox: "0 0 12 12",
+      "aria-hidden": true,
+      children: [
+        jsxRuntimeExports.jsx("title", {
+          children: "Recombine stains"
+        }),
+        jsxRuntimeExports.jsx("path", {
+          d: "M6 1.5a4.5 4.5 0 0 0 0 9z",
+          fill: ICON_HEMATOXYLIN
+        }),
+        jsxRuntimeExports.jsx("path", {
+          d: "M6 1.5a4.5 4.5 0 0 1 0 9z",
+          fill: ICON_EOSIN
+        })
+      ]
+    });
+  }
+  function StainsSplitIcon() {
+    return jsxRuntimeExports.jsxs("svg", {
+      width: "12",
+      height: "12",
+      viewBox: "0 0 12 12",
+      "aria-hidden": true,
+      children: [
+        jsxRuntimeExports.jsx("title", {
+          children: "Separate stains"
+        }),
+        jsxRuntimeExports.jsx("path", {
+          d: "M4.4 2a4 4 0 0 0 0 8z",
+          fill: ICON_HEMATOXYLIN
+        }),
+        jsxRuntimeExports.jsx("path", {
+          d: "M7.6 2a4 4 0 0 1 0 8z",
+          fill: ICON_EOSIN
+        })
+      ]
+    });
+  }
+  function FluorescenceIcon() {
+    return jsxRuntimeExports.jsxs("svg", {
+      width: "12",
+      height: "12",
+      viewBox: "0 0 12 12",
+      "aria-hidden": true,
+      children: [
+        jsxRuntimeExports.jsx("title", {
+          children: "Fluorescence"
+        }),
+        jsxRuntimeExports.jsx("rect", {
+          x: "0.5",
+          y: "0.5",
+          width: "11",
+          height: "11",
+          fill: "#000",
+          className: rowStyles.stainIconFrame
+        }),
+        jsxRuntimeExports.jsx("circle", {
+          cx: "6",
+          cy: "6",
+          r: "4",
+          fill: ICON_GLOW,
+          opacity: "0.35"
+        }),
+        jsxRuntimeExports.jsx("circle", {
+          cx: "6",
+          cy: "6",
+          r: "2.4",
+          fill: ICON_GLOW
+        })
+      ]
+    });
+  }
+  function BrightfieldIcon() {
+    return jsxRuntimeExports.jsxs("svg", {
+      width: "12",
+      height: "12",
+      viewBox: "0 0 12 12",
+      "aria-hidden": true,
+      children: [
+        jsxRuntimeExports.jsx("title", {
+          children: "Brightfield"
+        }),
+        jsxRuntimeExports.jsx("rect", {
+          x: "0.5",
+          y: "0.5",
+          width: "11",
+          height: "11",
+          fill: "#fff",
+          className: rowStyles.stainIconFrame
+        }),
+        jsxRuntimeExports.jsx("circle", {
+          cx: "6",
+          cy: "6",
+          r: "2.8",
+          fill: ICON_HEMATOXYLIN
+        })
+      ]
+    });
+  }
+  const HE_MODE_OPTIONS = [
+    {
+      mode: "fluorescence",
+      label: "Fluorescence",
+      title: "Fluorescence: each stain converted to an IF-like signal, glowing on black",
+      Icon: FluorescenceIcon
+    },
+    {
+      mode: "brightfield",
+      label: "Brightfield",
+      title: "Brightfield: each stain's own density on white glass",
+      Icon: BrightfieldIcon
+    }
+  ];
+  function HeStainControls(props) {
+    const { split, mode, onSplitChange, onModeChange } = props;
+    return jsxRuntimeExports.jsxs("div", {
+      className: rowStyles.maskModeControls,
+      children: [
+        jsxRuntimeExports.jsxs("div", {
+          className: rowStyles.maskModeGroup,
+          children: [
+            jsxRuntimeExports.jsxs("fieldset", {
+              className: rowStyles.maskVizToggle,
+              "aria-label": "Stains",
+              children: [
+                jsxRuntimeExports.jsx(MaskVizButton, {
+                  active: !split,
+                  label: "Recombine stains",
+                  title: "Recombine stains: the scanned RGB image",
+                  icon: jsxRuntimeExports.jsx(StainsCombinedIcon, {}),
+                  caption: "Merged",
+                  onClick: () => {
+                    if (split) onSplitChange(false);
+                  }
+                }),
+                jsxRuntimeExports.jsx(MaskVizButton, {
+                  active: split,
+                  label: "Separate stains",
+                  title: "Separate stains: hematoxylin and eosin as their own channels, by color deconvolution fitted to this slide",
+                  icon: jsxRuntimeExports.jsx(StainsSplitIcon, {}),
+                  caption: "Split",
+                  onClick: () => {
+                    if (!split) onSplitChange(true);
+                  }
+                })
+              ]
+            }),
+            jsxRuntimeExports.jsx("span", {
+              className: rowStyles.maskModeGroupLabel,
+              children: "Stains"
+            })
+          ]
+        }),
+        split && mode && onModeChange ? jsxRuntimeExports.jsxs("div", {
+          className: rowStyles.maskModeGroup,
+          children: [
+            jsxRuntimeExports.jsx("fieldset", {
+              className: rowStyles.maskVizToggle,
+              "aria-label": "Draw separated stains as",
+              children: HE_MODE_OPTIONS.map(({ mode: option2, label: label2, title: title7, Icon }) => jsxRuntimeExports.jsx(MaskVizButton, {
+                active: mode === option2,
+                label: label2,
+                title: title7,
+                icon: jsxRuntimeExports.jsx(Icon, {}),
+                caption: label2,
+                onClick: () => {
+                  if (mode !== option2) onModeChange(option2);
+                }
+              }, option2))
+            }),
+            jsxRuntimeExports.jsx("span", {
+              className: rowStyles.maskModeGroupLabel,
+              children: "Draw as"
+            })
+          ]
+        }) : null
+      ]
+    });
+  }
   function EditableChannelRowName(props) {
     const [draft, setDraft] = reactExports.useState(props.name);
     const cancelCommit = reactExports.useRef(false);
@@ -95415,9 +96748,10 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
     });
   }
   function ChannelRow(props) {
-    const { visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, contrast, trailing, locked, isMask, maskVisualization, onMaskVisualizationChange, maskFooter, maskAction, maskAriaLabel, fixedColorHex, colorHex, colorTitle, busy, fitting, visibilityBlocked, onColorClick, more } = props;
+    const { visible, visibilityTitle, visibilityAriaLabel, onToggleVisibility, name: name2, imageSubtitle, contrast, trailing, locked, isMask, maskVisualization, onMaskVisualizationChange, maskFooter, maskAction, maskAriaLabel, fixedColorHex, colorHex, colorTitle, busy, fitting, visibilityBlocked, onColorClick, more, heSplit, onHeSplitChange, heMode, onHeModeChange } = props;
     const showMask = isMask && maskVisualization;
     const showColor = !isMask && onColorClick;
+    const toggles = showMask || onHeSplitChange;
     return jsxRuntimeExports.jsxs("div", {
       className: [
         rowStyles.channelRow,
@@ -95428,7 +96762,7 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
       title: fitting ? "Fitting contrast\u2026" : void 0,
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: `${rowStyles.channelRowMain}${showMask ? ` ${rowStyles.channelRowMainMask}` : ""}`,
+          className: `${rowStyles.channelRowMain}${toggles ? ` ${rowStyles.channelRowMainToggles}` : ""}`,
           children: [
             jsxRuntimeExports.jsx(ChannelVisibilitySwatch, {
               visible,
@@ -95468,10 +96802,16 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
                   ariaLabel: maskAriaLabel ?? name2.name,
                   classColors: maskFooter != null,
                   onChange: onMaskVisualizationChange
+                }) : null,
+                onHeSplitChange ? jsxRuntimeExports.jsx(HeStainControls, {
+                  split: Boolean(heSplit),
+                  mode: heMode,
+                  onSplitChange: onHeSplitChange,
+                  onModeChange: onHeModeChange
                 }) : null
               ]
             }),
-            showMask && fixedColorHex ? jsxRuntimeExports.jsx("span", {
+            fixedColorHex && !showColor ? jsxRuntimeExports.jsx("span", {
               className: rowStyles.channelColorSwatchStatic,
               style: {
                 backgroundColor: `#${fixedColorHex}`
@@ -95490,10 +96830,11 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
               className: rowStyles.channelRowTrailing,
               children: [
                 trailing,
-                more || contrast ? jsxRuntimeExports.jsx(ChannelRowMoreMenu, {
+                more || contrast && !contrast.heComponent ? jsxRuntimeExports.jsx(ChannelRowMoreMenu, {
                   channelName: name2.name,
                   fitBusy: fitting,
                   drawChannelId: contrast == null ? void 0 : contrast.sourceChannelId,
+                  drawRowId: (contrast == null ? void 0 : contrast.groupId) ? contrast.channelId : void 0,
                   ...more
                 }) : null
               ]
@@ -96266,17 +97607,17 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
   const chevronLeft = "_chevronLeft_m5cf6_2";
   const chevronDown = "_chevronDown_m5cf6_3";
   const chevronUp = "_chevronUp_m5cf6_4";
-  const styles$s = {
+  const styles$t = {
     chevronRight,
     chevronLeft,
     chevronDown,
     chevronUp
   };
   const DIRECTION_CLASS = {
-    right: styles$s.chevronRight,
-    left: styles$s.chevronLeft,
-    down: styles$s.chevronDown,
-    up: styles$s.chevronUp
+    right: styles$t.chevronRight,
+    left: styles$t.chevronLeft,
+    down: styles$t.chevronDown,
+    up: styles$t.chevronUp
   };
   function ChevronIcon({ direction: direction2 = "down", className: className2 }) {
     return jsxRuntimeExports.jsx(SvgChevronDown, {
@@ -96300,131 +97641,17 @@ fragColor = vec4(min(contourRgb, vec3(contourCover)) * contourModule.opacity, co
   }, reactExports.createElement("path", {
     d: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
   }));
-  const STAIN_TRANSMITTANCE_FLOOR = 0.05;
-  function stainDensity(color2) {
-    const od2 = (v2) => -Math.log(Math.max(STAIN_TRANSMITTANCE_FLOOR, v2 / 255));
-    return [
-      od2(color2[0]),
-      od2(color2[1]),
-      od2(color2[2])
-    ];
-  }
-  function stainOver(background, color2, c2) {
-    const od2 = stainDensity(color2);
-    const t2 = (i2) => Math.round(background[i2] * Math.exp(-c2 * od2[i2]));
-    return [
-      t2(0),
-      t2(1),
-      t2(2)
-    ];
-  }
-  const CHANNEL = "VIV_CHANNEL_INDEX";
-  const moduleName = "stainModule";
-  const fs = `uniform ${moduleName}Uniforms {
-  float opacity;
-  vec3 density${CHANNEL};
-} ${moduleName};
-
-vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
-  vec3 densities[NUM_CHANNELS] = vec3[NUM_CHANNELS](
-    ${moduleName}.density${CHANNEL},
-  );
-  vec3 od = vec3(0.);
-  for (int i = 0; i < NUM_CHANNELS; i++) {
-    od += clamp(intensity[i], 0., 1.) * densities[i];
-  }
-  float a = ${moduleName}.opacity;
-  return vec4(exp(-od) * a, a);
-}
-`;
-  const stainModule = {
-    name: moduleName,
-    uniformTypes: {
-      opacity: "f32",
-      [`density${CHANNEL}`]: "vec3<f32>"
-    },
-    fs,
-    inject: {
-      "fs:DECKGL_MUTATE_COLOR": "rgba = stain_transmittance(intensity);"
-    }
-  };
-  class StainExtension extends VivLayerExtension {
-    getVivShaderTemplates() {
-      return {
-        modules: [
-          stainModule
-        ]
-      };
-    }
-    updateState() {
-      var _a2;
-      const props = this.props;
-      const { colors = [], channelsVisible = [], opacity = 1 } = props;
-      const uniforms = {
-        opacity
-      };
-      const n2 = ((_a2 = props.selections) == null ? void 0 : _a2.length) ?? colors.length;
-      for (let i2 = 0; i2 < n2; i2++) {
-        const color2 = colors[i2];
-        uniforms[`density${i2}`] = channelsVisible[i2] !== false && color2 ? stainDensity([
-          color2[0],
-          color2[1],
-          color2[2]
-        ]) : [
-          0,
-          0,
-          0
-        ];
-      }
-      for (const model of this.getModels()) {
-        model.shaderInputs.setProps({
-          [moduleName]: uniforms
-        });
-      }
-    }
-  }
-  __publicField(StainExtension, "extensionName", "StainExtension");
-  const STAIN_EXTENSIONS = [
-    new StainExtension()
-  ];
-  function stainLayerParameters(somethingBelow) {
-    return {
-      extensions: STAIN_EXTENSIONS,
-      refinementStrategy: "no-overlap",
-      parameters: somethingBelow ? {
-        blend: true,
-        blendColorOperation: "add",
-        blendColorSrcFactor: "dst",
-        blendColorDstFactor: "one-minus-src-alpha",
-        blendAlphaOperation: "add",
-        blendAlphaSrcFactor: "zero",
-        blendAlphaDstFactor: "one"
-      } : {
-        blend: true,
-        blendColorOperation: "add",
-        blendColorSrcFactor: "one",
-        blendColorDstFactor: "one-minus-src-alpha",
-        blendAlphaOperation: "add",
-        blendAlphaSrcFactor: "one",
-        blendAlphaDstFactor: "one-minus-src-alpha"
-      }
-    };
-  }
-  const backdrop = "_backdrop_o256v_1";
-  const panel$2 = "_panel_o256v_12";
-  const colorGrid = "_colorGrid_o256v_21";
-  const colorGridExpanded = "_colorGridExpanded_o256v_25";
-  const hueRow = "_hueRow_o256v_29";
-  const iconButton = "_iconButton_o256v_36";
-  const whiteSwatch = "_whiteSwatch_o256v_49";
-  const closeIcon = "_closeIcon_o256v_54";
-  const saturation = "_saturation_o256v_77";
-  const saturationHidden = "_saturationHidden_o256v_83";
-  const stainPreview = "_stainPreview_o256v_88";
-  const stainPreviewItem = "_stainPreviewItem_o256v_95";
-  const stainPreviewRamp = "_stainPreviewRamp_o256v_101";
-  const stainPreviewLabel = "_stainPreviewLabel_o256v_106";
-  const styles$r = {
+  const backdrop = "_backdrop_1v3n3_1";
+  const panel$2 = "_panel_1v3n3_12";
+  const colorGrid = "_colorGrid_1v3n3_21";
+  const colorGridExpanded = "_colorGridExpanded_1v3n3_25";
+  const hueRow = "_hueRow_1v3n3_29";
+  const iconButton = "_iconButton_1v3n3_36";
+  const whiteSwatch = "_whiteSwatch_1v3n3_49";
+  const closeIcon = "_closeIcon_1v3n3_54";
+  const saturation = "_saturation_1v3n3_77";
+  const saturationHidden = "_saturationHidden_1v3n3_83";
+  const styles$s = {
     backdrop,
     panel: panel$2,
     colorGrid,
@@ -96434,11 +97661,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     whiteSwatch,
     closeIcon,
     saturation,
-    saturationHidden,
-    stainPreview,
-    stainPreviewItem,
-    stainPreviewRamp,
-    stainPreviewLabel
+    saturationHidden
   };
   function colorPickerAnchorPosition(rect) {
     return {
@@ -96446,64 +97669,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       left: Math.min(rect.left, window.innerWidth - 252)
     };
   }
-  const STAIN_PREVIEW_STOPS = [
-    0,
-    0.25,
-    0.5,
-    0.75,
-    1
-  ];
-  const STAIN_PREVIEW_BACKGROUNDS = [
-    {
-      label: "Glass",
-      rgb: [
-        255,
-        255,
-        255
-      ]
-    },
-    {
-      label: "Eosin",
-      rgb: [
-        236,
-        158,
-        199
-      ]
-    },
-    {
-      label: "Hematoxylin",
-      rgb: [
-        86,
-        64,
-        145
-      ]
-    }
-  ];
-  function StainPreview({ rgb }) {
-    return jsxRuntimeExports.jsx("div", {
-      className: styles$r.stainPreview,
-      children: STAIN_PREVIEW_BACKGROUNDS.map(({ label: label2, rgb: under }) => {
-        const stops = STAIN_PREVIEW_STOPS.map((c2) => `rgb(${stainOver(under, rgb, c2).join(" ")})`);
-        return jsxRuntimeExports.jsxs("div", {
-          className: styles$r.stainPreviewItem,
-          children: [
-            jsxRuntimeExports.jsx("div", {
-              className: styles$r.stainPreviewRamp,
-              title: `${label2}: no signal \u2192 full signal`,
-              style: {
-                background: `linear-gradient(to right, ${stops})`
-              }
-            }),
-            jsxRuntimeExports.jsx("span", {
-              className: styles$r.stainPreviewLabel,
-              children: label2
-            })
-          ]
-        }, label2);
-      })
-    });
-  }
-  function ColorPickerPopover({ position: position2, onClose, stainPreview: stainPreview2 = false, ...pickerProps }) {
+  function ColorPickerPopover({ position: position2, onClose, footer: footer2, ...pickerProps }) {
     reactExports.useEffect(() => {
       if (!position2) return;
       const onKey = (e2) => {
@@ -96532,7 +97698,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     };
     const saturationProps = {
       hsva: currentColor.hsva,
-      className: expanded ? styles$r.saturation : `${styles$r.saturation} ${styles$r.saturationHidden}`,
+      className: expanded ? styles$s.saturation : `${styles$s.saturation} ${styles$s.saturationHidden}`,
       style: expanded ? void 0 : {
         height: 0
       },
@@ -96550,27 +97716,27 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: styles$r.backdrop,
+          className: styles$s.backdrop,
           "aria-label": "Close color picker",
           onClick: onClose
         }),
         jsxRuntimeExports.jsxs("div", {
           "data-minerva-color-picker": "",
-          className: styles$r.panel,
+          className: styles$s.panel,
           style: {
             top: position2.top,
             left: position2.left
           },
           children: [
             jsxRuntimeExports.jsxs("div", {
-              className: expanded ? `${styles$r.colorGrid} ${styles$r.colorGridExpanded}` : styles$r.colorGrid,
+              className: expanded ? `${styles$s.colorGrid} ${styles$s.colorGridExpanded}` : styles$s.colorGrid,
               children: [
                 jsxRuntimeExports.jsxs("div", {
-                  className: styles$r.hueRow,
+                  className: styles$s.hueRow,
                   children: [
                     jsxRuntimeExports.jsx("button", {
                       type: "button",
-                      className: styles$r.iconButton,
+                      className: styles$s.iconButton,
                       "aria-expanded": expanded,
                       title: expanded ? "Fewer colors" : "More colors",
                       onClick: () => setExpanded(!expanded),
@@ -96587,7 +97753,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                     }),
                     jsxRuntimeExports.jsx("button", {
                       type: "button",
-                      className: styles$r.whiteSwatch,
+                      className: styles$s.whiteSwatch,
                       "aria-pressed": isWhite,
                       "aria-label": "White",
                       title: "White",
@@ -96597,14 +97763,14 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                       type: "button",
                       title: "Close",
                       "aria-label": "Close color picker",
-                      className: styles$r.iconButton,
+                      className: styles$s.iconButton,
                       onClick: (e2) => {
                         e2.stopPropagation();
                         onClose();
                       },
                       children: jsxRuntimeExports.jsx(SvgClose, {
                         "aria-hidden": true,
-                        className: styles$r.closeIcon
+                        className: styles$s.closeIcon
                       })
                     })
                   ]
@@ -96614,13 +97780,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                 })
               ]
             }),
-            stainPreview2 ? jsxRuntimeExports.jsx(StainPreview, {
-              rgb: [
-                currentColor.rgba.r,
-                currentColor.rgba.g,
-                currentColor.rgba.b
-              ]
-            }) : null
+            footer2
           ]
         })
       ]
@@ -96682,7 +97842,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   const imageCardMeta = "_imageCardMeta_173h0_409";
   const imageCardActions = "_imageCardActions_173h0_415";
   const imageOpacity = "_imageOpacity_173h0_424";
-  const styles$q = {
+  const styles$r = {
     stack,
     panelDock,
     addStrip,
@@ -96725,37 +97885,37 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   function ImportOverlay(props) {
     const busy = props.busy === true;
     return reactDomExports.createPortal(jsxRuntimeExports.jsxs("div", {
-      className: styles$q.typeOverlay,
+      className: styles$r.typeOverlay,
       role: "dialog",
       "aria-modal": "true",
       "aria-busy": busy,
       "aria-labelledby": props.titleId,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$q.typeOverlayBackdrop,
+          className: styles$r.typeOverlayBackdrop,
           "aria-hidden": "true"
         }),
         jsxRuntimeExports.jsxs("div", {
-          className: `${minervaTheme.surface} ${styles$q.typeOverlayCard}`,
+          className: `${minervaTheme.surface} ${styles$r.typeOverlayCard}`,
           children: [
             jsxRuntimeExports.jsx("div", {
               id: props.titleId,
-              className: styles$q.typeOverlayFile,
+              className: styles$r.typeOverlayFile,
               title: props.title,
               children: props.title
             }),
             props.children != null ? jsxRuntimeExports.jsx("fieldset", {
               disabled: props.importDisabled,
-              className: styles$q.typeOverlayFields,
+              className: styles$r.typeOverlayFields,
               children: props.children
             }) : null,
             props.error ? jsxRuntimeExports.jsx("div", {
-              className: styles$q.importError,
+              className: styles$r.importError,
               role: "alert",
               children: props.error
             }) : null,
             jsxRuntimeExports.jsxs("div", {
-              className: styles$q.typeFooter,
+              className: styles$r.typeFooter,
               children: [
                 jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
@@ -96765,7 +97925,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                 }),
                 jsxRuntimeExports.jsx(PanelActionButton, {
                   type: "button",
-                  className: styles$q.typeImport,
+                  className: styles$r.typeImport,
                   disabled: props.importDisabled,
                   onClick: props.onImport,
                   children: busy ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
@@ -97578,7 +98738,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   const swatch$1 = "_swatch_1qjry_193";
   const swatchPending = "_swatchPending_1qjry_208";
   const name$3 = "_name_1qjry_213";
-  const styles$p = {
+  const styles$q = {
     attach,
     attachBtn,
     attachLabel,
@@ -97661,7 +98821,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   }
   function TableLoading() {
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.loading,
+      className: styles$q.loading,
       children: [
         jsxRuntimeExports.jsx("div", {
           className: minervaTheme.spinnerSm,
@@ -97804,7 +98964,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       children: [
         label2,
         jsxRuntimeExports.jsx("select", {
-          className: styles$p.field,
+          className: styles$q.field,
           value,
           "aria-label": `${label2} column`,
           onChange: (e2) => onChange(e2.target.value),
@@ -97816,7 +98976,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       ]
     });
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.colPick,
+      className: styles$q.colPick,
       children: [
         props.id != null && props.onId ? select("ID", props.id, props.onId) : null,
         select("Name", props.name, props.onName)
@@ -97840,11 +99000,11 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   function FeatureTableGlyph(props) {
     const { wait: wait2, folder, title: title7, ariaLabel, onClick } = props;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.attach,
+      className: styles$q.attach,
       children: [
         jsxRuntimeExports.jsx("button", {
           type: "button",
-          className: `${minervaTheme.focusRing} ${styles$p.attachBtn}${wait2 ? ` ${minervaTheme.busyOverlay}` : ""}`,
+          className: `${minervaTheme.focusRing} ${styles$q.attachBtn}${wait2 ? ` ${minervaTheme.busyOverlay}` : ""}`,
           disabled: wait2 || onClick == null,
           title: title7,
           "aria-label": ariaLabel,
@@ -97857,7 +99017,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           }) : jsxRuntimeExports.jsx(TableIcon, {})
         }),
         jsxRuntimeExports.jsx("span", {
-          className: styles$p.attachLabel,
+          className: styles$q.attachLabel,
           children: "Class Table"
         })
       ]
@@ -97942,12 +99102,12 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       onImport: () => void attach2(),
       children: [
         masks.length > 1 ? jsxRuntimeExports.jsx("div", {
-          className: styles$p.colPick,
+          className: styles$q.colPick,
           children: jsxRuntimeExports.jsxs("label", {
             children: [
               "Mask",
               jsxRuntimeExports.jsx("select", {
-                className: styles$p.field,
+                className: styles$q.field,
                 value: maskId,
                 "aria-label": "Mask",
                 onChange: (e2) => setMaskId(e2.target.value),
@@ -98025,10 +99185,10 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         jsxRuntimeExports.jsxs("div", {
-          className: styles$p.toolbar,
+          className: styles$q.toolbar,
           children: [
             jsxRuntimeExports.jsx("input", {
-              className: styles$p.field,
+              className: styles$q.field,
               type: "text",
               value: list2.filter,
               placeholder: "Filter classes\u2026",
@@ -98041,7 +99201,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
+              className: `${minervaTheme.focusRing} ${styles$q.textBtn}`,
               disabled: readOnly2,
               onClick: () => {
                 if (waypointId && !readOnly2) setAllClassesVisible(waypointId, featureTableId, true);
@@ -98050,7 +99210,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
             }),
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
+              className: `${minervaTheme.focusRing} ${styles$q.textBtn}`,
               disabled: readOnly2,
               onClick: () => {
                 if (waypointId && !readOnly2) setAllClassesVisible(waypointId, featureTableId, false);
@@ -98062,7 +99222,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         }),
         jsxRuntimeExports.jsxs("div", {
           ref: scrollerRef,
-          className: `${styles$p.scroller} ${panel$1.thinScrollbar}`,
+          className: `${styles$q.scroller} ${panel$1.thinScrollbar}`,
           onScroll: () => {
             const el2 = scrollerRef.current;
             if (!el2) return;
@@ -98070,7 +99230,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           },
           children: [
             overlay ? jsxRuntimeExports.jsx("div", {
-              className: styles$p.accessPrompt,
+              className: styles$q.accessPrompt,
               children: overlay
             }) : null,
             showBusy && !overlay ? jsxRuntimeExports.jsx(TableLoading, {}) : null,
@@ -98080,7 +99240,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                 position: "relative"
               },
               children: list2.rows.map((row2, i2) => jsxRuntimeExports.jsxs("div", {
-                className: styles$p.row,
+                className: styles$q.row,
                 style: {
                   top: (list2.loadedOffset + i2) * ROW_H
                 },
@@ -98094,7 +99254,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                   }),
                   row2.color ? jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$p.swatch}`,
+                    className: `${minervaTheme.focusRing} ${styles$q.swatch}`,
                     style: {
                       backgroundColor: `#${rgbToHex$1(row2.color)}`
                     },
@@ -98112,13 +99272,13 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                     }
                   }) : jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${styles$p.swatch} ${styles$p.swatchPending} ${minervaTheme.busyOverlay}`,
+                    className: `${styles$q.swatch} ${styles$q.swatchPending} ${minervaTheme.busyOverlay}`,
                     "aria-label": `Assigning color for ${row2.name}`,
                     disabled: true
                   }),
                   jsxRuntimeExports.jsx("button", {
                     type: "button",
-                    className: `${minervaTheme.focusRing} ${styles$p.name}`,
+                    className: `${minervaTheme.focusRing} ${styles$q.name}`,
                     title: row2.visible ? `Hide ${row2.name}` : `Show ${row2.name}`,
                     "aria-pressed": row2.visible,
                     disabled: readOnly2,
@@ -98177,7 +99337,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     });
     return jsxRuntimeExports.jsx("button", {
       type: "button",
-      className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
+      className: `${minervaTheme.focusRing} ${styles$q.textBtn}`,
       disabled: !hasView,
       onClick: () => resetClassView(waypoint.id, featureTableId),
       children: "Reset"
@@ -98204,14 +99364,14 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     };
     if (!hasIngestedFeatureTable(featureTableId) && !needsReselect) return null;
     return jsxRuntimeExports.jsxs("div", {
-      className: styles$p.root,
+      className: styles$q.root,
       children: [
         jsxRuntimeExports.jsx("div", {
-          className: styles$p.toolbar,
+          className: styles$q.toolbar,
           children: waypoint ? jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
             children: [
               jsxRuntimeExports.jsx("span", {
-                className: styles$p.viewTitle,
+                className: styles$q.viewTitle,
                 title: waypoint.title,
                 children: waypoint.title.trim() || "Untitled waypoint"
               }),
@@ -98221,7 +99381,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
               })
             ]
           }) : jsxRuntimeExports.jsx("span", {
-            className: styles$p.readOnlyNote,
+            className: styles$q.readOnlyNote,
             children: waypointCount === 0 ? "Add a waypoint to customize classes" : "Select a waypoint to customize classes"
           })
         }),
@@ -98242,7 +99402,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           }),
           overlay: needsReselect ? jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: `${minervaTheme.focusRing} ${styles$p.textBtn}`,
+            className: `${minervaTheme.focusRing} ${styles$q.textBtn}`,
             onClick: () => void restoreFile(),
             children: "Choose file again"
           }) : null
@@ -98262,18 +99422,18 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     ]);
     if (featureTables.length === 0) return null;
     return jsxRuntimeExports.jsx("div", {
-      className: styles$p.waypointClasses,
+      className: styles$q.waypointClasses,
       children: featureTables.map((featureTable) => {
         const label2 = maskNames.get(featureTable.sourceChannelId) ?? "Mask";
         const loaded = hasIngestedFeatureTable(featureTable.id);
         return jsxRuntimeExports.jsxs("div", {
-          className: styles$p.root,
+          className: styles$q.root,
           children: [
             jsxRuntimeExports.jsxs("div", {
-              className: styles$p.toolbar,
+              className: styles$q.toolbar,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$p.viewTitle,
+                  className: styles$q.viewTitle,
                   title: label2,
                   children: label2
                 }),
@@ -98288,7 +99448,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
               waypoint,
               readOnly: readOnly2
             }) : jsxRuntimeExports.jsx("span", {
-              className: styles$p.readOnlyNote,
+              className: styles$q.readOnlyNote,
               children: "Table not loaded. Choose the file again in the channel panel."
             })
           ]
@@ -98301,39 +99461,184 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   function useAuthorChannelNav() {
     return reactExports.useContext(AuthorChannelNavContext);
   }
-  const HISTOGRAM_BIN_COUNT = 100;
-  const MAX_HISTOGRAM_TILE_PIXELS = 4e6;
-  function intensityToHistogramBin(v2, bits) {
-    const n2 = HISTOGRAM_BIN_COUNT;
-    if (bits <= 8) {
-      return Math.min(n2 - 1, Math.floor(v2 * n2 / 2 ** bits));
+  const STAIN_TRANSMITTANCE_FLOOR = 0.05;
+  function stainDensity(color2) {
+    const od2 = (v2) => -Math.log(Math.max(STAIN_TRANSMITTANCE_FLOOR, v2 / 255));
+    return [
+      od2(color2[0]),
+      od2(color2[1]),
+      od2(color2[2])
+    ];
+  }
+  function stainOver(background, color2, c2) {
+    const od2 = stainDensity(color2);
+    const share = stainDensityShare(c2, Math.hypot(od2[0], od2[1], od2[2]));
+    const t2 = (i2) => Math.round(background[i2] * Math.exp(-share * od2[i2]));
+    return [
+      t2(0),
+      t2(1),
+      t2(2)
+    ];
+  }
+  const CHANNEL = "VIV_CHANNEL_INDEX";
+  const moduleName = "stainModule";
+  const fs = `uniform ${moduleName}Uniforms {
+  float opacity;
+  vec3 density${CHANNEL};
+} ${moduleName};
+
+const float STAIN_SIGNAL_K = ${STAIN_SIGNAL_K.toFixed(6)};
+
+float stain_density_share(float t, float full) {
+  float kd = STAIN_SIGNAL_K * full;
+  return kd > 1e-6 ? -log(1. - t * (1. - exp(-kd))) / kd : t;
+}
+
+vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
+  vec3 densities[NUM_CHANNELS] = vec3[NUM_CHANNELS](
+    ${moduleName}.density${CHANNEL},
+  );
+  vec3 od = vec3(0.);
+  for (int i = 0; i < NUM_CHANNELS; i++) {
+    vec3 density = densities[i];
+    float t = clamp(intensity[i], 0., 1.);
+    od += stain_density_share(t, length(density)) * density;
+  }
+  float a = ${moduleName}.opacity;
+  return vec4(exp(-od) * a, a);
+}
+`;
+  const stainModule = {
+    name: moduleName,
+    uniformTypes: {
+      opacity: "f32",
+      [`density${CHANNEL}`]: "vec3<f32>"
+    },
+    fs,
+    inject: {
+      "fs:DECKGL_MUTATE_COLOR": "rgba = stain_transmittance(intensity);"
     }
-    return Math.min(n2 - 1, Math.floor(n2 * Math.log2(v2) / bits));
-  }
-  function binInRange(v2, min2, max2) {
-    const n2 = HISTOGRAM_BIN_COUNT;
-    const t2 = (v2 - min2) / (max2 - min2);
-    return Math.min(n2 - 1, Math.max(0, Math.floor(t2 * n2)));
-  }
-  function histogramBinFromPixels(bits, width, data2, range2) {
-    const len2 = data2.length;
-    if (len2 === 0 || len2 > MAX_HISTOGRAM_TILE_PIXELS) return [];
-    const spanned = range2 != null && range2.max > range2.min;
-    const counts = new Array(HISTOGRAM_BIN_COUNT).fill(0);
-    const step = 4;
-    const w2 = Math.max(1, width);
-    for (let i2 = 0; i2 < len2; i2++) {
-      if (i2 % step !== 0 && Math.floor(i2 / w2) % step !== 0) continue;
-      const v2 = data2[i2];
-      if (spanned) {
-        if (!Number.isFinite(v2)) continue;
-        counts[binInRange(v2, range2.min, range2.max)]++;
-      } else {
-        if (!(v2 > 0)) continue;
-        counts[intensityToHistogramBin(v2, bits)]++;
+  };
+  class StainExtension extends VivLayerExtension {
+    getVivShaderTemplates() {
+      return {
+        modules: [
+          stainModule
+        ]
+      };
+    }
+    updateState() {
+      var _a2;
+      const props = this.props;
+      const { colors = [], channelsVisible = [], opacity = 1 } = props;
+      const uniforms = {
+        opacity
+      };
+      const n2 = ((_a2 = props.selections) == null ? void 0 : _a2.length) ?? colors.length;
+      for (let i2 = 0; i2 < n2; i2++) {
+        const color2 = colors[i2];
+        uniforms[`density${i2}`] = channelsVisible[i2] !== false && color2 ? stainDensity([
+          color2[0],
+          color2[1],
+          color2[2]
+        ]) : [
+          0,
+          0,
+          0
+        ];
+      }
+      for (const model of this.getModels()) {
+        model.shaderInputs.setProps({
+          [moduleName]: uniforms
+        });
       }
     }
-    return counts;
+  }
+  __publicField(StainExtension, "extensionName", "StainExtension");
+  const STAIN_EXTENSIONS = [
+    new StainExtension()
+  ];
+  const MULTIPLY_BELOW_PARAMETERS = {
+    blend: true,
+    blendColorOperation: "add",
+    blendColorSrcFactor: "dst",
+    blendColorDstFactor: "one-minus-src-alpha",
+    blendAlphaOperation: "add",
+    blendAlphaSrcFactor: "zero",
+    blendAlphaDstFactor: "one"
+  };
+  function stainLayerParameters(somethingBelow) {
+    return {
+      extensions: STAIN_EXTENSIONS,
+      excludeBackground: true,
+      refinementStrategy: "no-overlap",
+      parameters: somethingBelow ? MULTIPLY_BELOW_PARAMETERS : PREMULTIPLIED_OVER_PARAMETERS
+    };
+  }
+  const stainPreview = "_stainPreview_7efz0_1";
+  const stainPreviewItem = "_stainPreviewItem_7efz0_8";
+  const stainPreviewRamp = "_stainPreviewRamp_7efz0_14";
+  const stainPreviewLabel = "_stainPreviewLabel_7efz0_19";
+  const styles$p = {
+    stainPreview,
+    stainPreviewItem,
+    stainPreviewRamp,
+    stainPreviewLabel
+  };
+  const STAIN_PREVIEW_STOPS = [
+    0,
+    0.25,
+    0.5,
+    0.75,
+    1
+  ];
+  const tuple = ({ r: r2, g: g2, b: b2 }) => [
+    r2,
+    g2,
+    b2
+  ];
+  const STAIN_PREVIEW_BACKGROUNDS = [
+    {
+      label: "Glass",
+      rgb: [
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      label: "Eosin",
+      rgb: tuple(DEFAULT_HE_STAIN_COLORS.eosin)
+    },
+    {
+      label: "Hematoxylin",
+      rgb: tuple(DEFAULT_HE_STAIN_COLORS.hematoxylin)
+    }
+  ];
+  function StainPreview({ hex }) {
+    const rgb = tuple(hexToRgb(hex));
+    return jsxRuntimeExports.jsx("div", {
+      className: styles$p.stainPreview,
+      children: STAIN_PREVIEW_BACKGROUNDS.map(({ label: label2, rgb: under }) => {
+        const stops = STAIN_PREVIEW_STOPS.map((c2) => `rgb(${stainOver(under, rgb, c2).join(" ")})`);
+        return jsxRuntimeExports.jsxs("div", {
+          className: styles$p.stainPreviewItem,
+          children: [
+            jsxRuntimeExports.jsx("div", {
+              className: styles$p.stainPreviewRamp,
+              title: `${label2}: no signal \u2192 full signal`,
+              style: {
+                background: `linear-gradient(to right, ${stops})`
+              }
+            }),
+            jsxRuntimeExports.jsx("span", {
+              className: styles$p.stainPreviewLabel,
+              children: label2
+            })
+          ]
+        }, label2);
+      })
+    });
   }
   function WorkerWrapper$2(options) {
     return new Worker("" + new URL("histogram.worker-D54kmtrr.js", import.meta.url).href, {
@@ -98710,9 +100015,21 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   function commitChannelColorTarget(target) {
     var _a2;
     if (!target) return;
-    const live2 = useAppStore.getState().channelRendering;
+    const app = useAppStore.getState();
+    const live2 = app.channelRendering;
     const doc = useDocumentStore.getState();
-    if (target.scope === "source") {
+    if (target.scope === "he") {
+      const colorLive = renderingForSource(live2, target.sourceId, "color", target.component);
+      if (colorLive) {
+        app.patchHeDeconv(target.sourceId, target.component, {
+          color: [
+            colorLive.r,
+            colorLive.g,
+            colorLive.b
+          ]
+        });
+      }
+    } else if (target.scope === "source") {
       const colorLive = renderingForSource(live2, target.sourceId, "color");
       if (colorLive) {
         doc.setImages(patchSourceChannelOnImages(doc.images, target.sourceId, {
@@ -98742,7 +100059,20 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     }
     useAppStore.getState().clearChannelRendering();
   }
-  function hexForColorTarget(target, channelRendering, sourceChannels, channelGroups) {
+  function hexForColorTarget(target, channelRendering, sourceChannels, channelGroups, heDeconvByChannelId) {
+    var _a2;
+    if (target.scope === "he") {
+      const live22 = renderingForSource(channelRendering, target.sourceId, "color", target.component);
+      if (live22) return rgbToHex$1(live22);
+      const stain = (_a2 = heDeconvByChannelId[target.sourceId]) == null ? void 0 : _a2[target.component];
+      if (!stain) return null;
+      const [r2, g22, b2] = stain.color;
+      return rgbToHex$1({
+        r: r2,
+        g: g22,
+        b: b2
+      });
+    }
     if (target.scope === "source") {
       const live22 = renderingForSource(channelRendering, target.sourceId, "color");
       if (live22) return rgbToHex$1(live22);
@@ -98758,8 +100088,12 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     if (live2) return rgbToHex$1(live2);
     return rgbToHex$1(sc2 ? effectiveDisplayColor(sc2, sourceChannels, gc2) : gc2.color);
   }
-  function previewLiveColor(target, hex) {
+  function sourceIdForColorTarget(target, channelGroups) {
     var _a2, _b2;
+    if (target.scope !== "group") return target.sourceId;
+    return (_b2 = (_a2 = channelGroups.find((group2) => group2.id === target.groupId)) == null ? void 0 : _a2.channels.find((gc2) => gc2.id === target.rowId)) == null ? void 0 : _b2.channelId;
+  }
+  function previewLiveColor(target, hex) {
     const raw2 = hex.replace(/^#/, "").slice(0, 6);
     if (raw2.length < 6) return;
     const r2 = Number.parseInt(raw2.slice(0, 2), 16);
@@ -98770,31 +100104,34 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       g2,
       b2
     ].some((n2) => Number.isNaN(n2))) return;
-    const doc = useDocumentStore.getState();
-    const sourceId = target.scope === "source" ? target.sourceId : (_b2 = (_a2 = doc.channelGroups.find((group2) => group2.id === target.groupId)) == null ? void 0 : _a2.channels.find((gc2) => gc2.id === target.rowId)) == null ? void 0 : _b2.channelId;
+    const sourceId = sourceIdForColorTarget(target, useDocumentStore.getState().channelGroups);
     if (!sourceId) return;
     useAppStore.getState().setChannelRendering({
       kind: "color",
       sourceChannelId: sourceId,
       r: r2,
       g: g2,
-      b: b2
+      b: b2,
+      ...target.scope === "he" ? {
+        heComponent: target.component
+      } : {}
     });
   }
   function ChannelColorPicker(props) {
-    var _a2, _b2, _c2;
+    var _a2;
     const { target, position: position2, onDismiss } = props;
     const images = useDocumentStore((s2) => s2.images);
     const channelGroups = useDocumentStore((s2) => s2.channelGroups);
     const channelRendering = useAppStore((s2) => s2.channelRendering);
+    const heDeconvByChannelId = useAppStore((s2) => s2.heDeconvByChannelId);
     const targetRef = reactExports.useRef(target);
     targetRef.current = target;
     const sourceChannels = reactExports.useMemo(() => flattenImageChannelsInDocumentOrder(images), [
       images
     ]);
-    const hex = target ? hexForColorTarget(target, channelRendering, sourceChannels, channelGroups) : null;
-    const targetSourceId = (target == null ? void 0 : target.scope) === "source" ? target.sourceId : target ? (_b2 = (_a2 = channelGroups.find((g2) => g2.id === target.groupId)) == null ? void 0 : _a2.channels.find((gc2) => gc2.id === target.rowId)) == null ? void 0 : _b2.channelId : void 0;
-    const stain = Boolean(targetSourceId && ((_c2 = findSourceChannel(sourceChannels, targetSourceId)) == null ? void 0 : _c2.stain));
+    const hex = target ? hexForColorTarget(target, channelRendering, sourceChannels, channelGroups, heDeconvByChannelId) : null;
+    const targetSourceId = target ? sourceIdForColorTarget(target, channelGroups) : void 0;
+    const stain = Boolean(targetSourceId && ((_a2 = findSourceChannel(sourceChannels, targetSourceId)) == null ? void 0 : _a2.stain));
     reactExports.useEffect(() => () => {
       commitChannelColorTarget(targetRef.current);
     }, []);
@@ -98808,11 +100145,137 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       onClose: close,
       color: `#${hex ?? "000000"}`,
       showAlpha: false,
-      stainPreview: stain,
+      footer: stain && hex ? jsxRuntimeExports.jsx(StainPreview, {
+        hex
+      }) : null,
       onChange: (c2) => {
         if (!target) return;
         previewLiveColor(target, c2.hex);
       }
+    });
+  }
+  const HE_CONTRAST_DISTRIBUTION = {
+    id: "",
+    YValues: [],
+    XScale: "log",
+    YScale: "linear",
+    LowerRange: 0,
+    UpperRange: 16
+  };
+  function heStainColor(stain, live2, sourceChannelId, component) {
+    const liveColor = renderingForSource(live2, sourceChannelId, "color", component);
+    if (liveColor) return {
+      r: liveColor.r,
+      g: liveColor.g,
+      b: liveColor.b
+    };
+    return {
+      r: stain.color[0],
+      g: stain.color[1],
+      b: stain.color[2]
+    };
+  }
+  function heDeconvContrastEditorProps(sc2, component, stain, live2, yValues) {
+    const c2 = heStainColor(stain, live2, sc2.id, component);
+    const liveContrast = renderingForSource(live2, sc2.id, "contrast", component);
+    return {
+      groupId: "",
+      channelId: `${sc2.id}:${component}`,
+      sourceChannelId: sc2.id,
+      channelLabel: HE_DECONV_LABELS[component],
+      r: c2.r,
+      g: c2.g,
+      b: c2.b,
+      lowerLimit: liveContrast ? liveContrast.lower : stain.lower,
+      upperLimit: liveContrast ? liveContrast.upper : stain.upper,
+      distribution: {
+        ...HE_CONTRAST_DISTRIBUTION,
+        YValues: yValues
+      },
+      dtypeMax: STAIN_COUNTS_MAX,
+      heComponent: component
+    };
+  }
+  const lastHeSplits = /* @__PURE__ */ new Map();
+  function heSplitToggleProps(sc2, sourceChannels, split) {
+    if (!sc2 || sc2.samples !== 3 || !isRgbDisplayChannel(sc2, sourceChannels)) {
+      return {};
+    }
+    const id2 = sc2.id;
+    return {
+      heSplit: Boolean(split),
+      onHeSplitChange: (on) => {
+        const app = useAppStore.getState();
+        const current = app.heDeconvByChannelId[id2];
+        if (!on && current) lastHeSplits.set(id2, current);
+        app.setHeDeconv(id2, on ? lastHeSplits.get(id2) ?? defaultHeDeconvSplit() : null);
+      },
+      heMode: split == null ? void 0 : split.mode,
+      onHeModeChange: (mode) => {
+        const app = useAppStore.getState();
+        const current = app.heDeconvByChannelId[id2];
+        if (current) app.setHeDeconv(id2, {
+          ...current,
+          mode
+        });
+      }
+    };
+  }
+  function HeStainRows(props) {
+    const { sc: sc2, contrastEditable, onPickColor } = props;
+    const split = useAppStore((s2) => s2.heDeconvByChannelId[sc2.id]);
+    const fit = useAppStore((s2) => s2.heStainFitByChannelId[sc2.id]);
+    const channelRendering = useAppStore((s2) => s2.channelRendering);
+    const patchHeDeconv = useAppStore((s2) => s2.patchHeDeconv);
+    if (!split) return null;
+    const brightfield = split.mode === "brightfield";
+    const fittedColors = brightfield ? heStainColorsForFit(fit) : null;
+    return jsxRuntimeExports.jsx("ul", {
+      className: rowStyles.heStainList,
+      children: HE_DECONV_COMPONENTS.map((component) => {
+        var _a2, _b2;
+        const stain = split[component];
+        const label2 = HE_DECONV_LABELS[component];
+        const c2 = heStainColor(stain, channelRendering, sc2.id, component);
+        return jsxRuntimeExports.jsx("li", {
+          children: jsxRuntimeExports.jsx(ChannelRow, {
+            visible: stain.visible,
+            visibilityTitle: stain.visible ? `Hide ${label2}` : `Show ${label2}`,
+            visibilityAriaLabel: `Toggle visibility for ${label2}`,
+            onToggleVisibility: () => patchHeDeconv(sc2.id, component, {
+              visible: !stain.visible
+            }),
+            name: {
+              mode: "label",
+              name: label2,
+              title: label2,
+              className: rowStyles.stainName
+            },
+            ...fittedColors ? {
+              fixedColorHex: rgbToHex$1(fittedColors[component])
+            } : {
+              colorHex: rgbToHex$1(c2),
+              colorTitle: `Pick color for ${label2}`,
+              onColorClick: (e2) => {
+                e2.stopPropagation();
+                onPickColor({
+                  scope: "he",
+                  sourceId: sc2.id,
+                  component
+                }, e2.currentTarget.getBoundingClientRect());
+              }
+            },
+            contrast: contrastEditable && stain.visible && !brightfield ? {
+              ...heDeconvContrastEditorProps(sc2, component, stain, channelRendering, ((_b2 = (_a2 = fit == null ? void 0 : fit.stains) == null ? void 0 : _a2[component]) == null ? void 0 : _b2.histogram) ?? []),
+              histogramLoading: !fit,
+              onCommitRange: (lower, upper) => patchHeDeconv(sc2.id, component, {
+                lower,
+                upper
+              })
+            } : void 0
+          })
+        }, component);
+      })
     });
   }
   function ChannelEditor(props) {
@@ -98830,9 +100293,10 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     const setChannelVisibilities = useAppStore((s2) => s2.setChannelVisibilities);
     const setChannelGroupRowVisibilities = useAppStore((s2) => s2.setChannelGroupRowVisibilities);
     const activeChannelGroupId = useAppStore((s2) => s2.activeChannelGroupId);
+    const heSplit = useAppStore((s2) => s2.heDeconvByChannelId[chip2.sourceId]);
     const palettePendingIds = reactExports.useSyncExternalStore(subscribeStackPalettePending, getStackPalettePendingIds, getStackPalettePendingIds);
     const gmmPendingIds = reactExports.useSyncExternalStore(subscribeGmmFit, getGmmPendingIds, getGmmPendingIds);
-    const [colorTarget, setColorTarget] = reactExports.useState(null);
+    const [colorTarget2, setColorTarget] = reactExports.useState(null);
     const [colorPos, setColorPos] = reactExports.useState(null);
     const [histogramLoading2, setHistogramLoading] = reactExports.useState(false);
     const sourceChannels = reactExports.useMemo(() => flattenImageChannelsInDocumentOrder(images), [
@@ -98971,10 +100435,10 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       }));
       setImagesAndChannelGroups(nextImages, nextGroups);
     };
-    const openColor = (el2) => {
-      commitChannelColorTarget(colorTarget);
-      setColorTarget(colorTargetForRow);
-      setColorPos(colorPickerAnchorPosition(el2.getBoundingClientRect()));
+    const openColor = (target, anchor) => {
+      commitChannelColorTarget(colorTarget2);
+      setColorTarget(target);
+      setColorPos(colorPickerAnchorPosition(anchor));
     };
     const contrastEditable = showHistogram && Boolean(nav == null ? void 0 : nav.contrastEditable);
     const contrast = contrastEditable ? gc2 && chip2.groupId ? {
@@ -99003,6 +100467,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           more: contrastEditable ? {
             fitContrastId: sc2.id
           } : void 0,
+          ...rgbDisplay ? heSplitToggleProps(sc2, sourceChannels, heSplit) : {},
           ...!rgbDisplay && isMaskChannel(sc2) ? {
             isMask: true,
             maskVisualization: effectiveMaskVisualization(gc2 ?? sc2),
@@ -99015,12 +100480,17 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
             colorTitle: `Pick color for ${sc2.name}`,
             onColorClick: (e2) => {
               e2.stopPropagation();
-              openColor(e2.currentTarget);
+              openColor(colorTargetForRow, e2.currentTarget.getBoundingClientRect());
             }
           } : {}
         }),
-        colorTarget && colorPos ? jsxRuntimeExports.jsx(ChannelColorPicker, {
-          target: colorTarget,
+        rgbDisplay && visible && heSplit ? jsxRuntimeExports.jsx(HeStainRows, {
+          sc: sc2,
+          contrastEditable: Boolean(nav == null ? void 0 : nav.contrastEditable),
+          onPickColor: openColor
+        }) : null,
+        colorTarget2 && colorPos ? jsxRuntimeExports.jsx(ChannelColorPicker, {
+          target: colorTarget2,
           position: colorPos,
           onDismiss: () => {
             setColorTarget(null);
@@ -99150,13 +100620,14 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     editor
   };
   const HE_CHIP_HEX = "cc00ff";
-  function heUnitChip(base2, key2, visible) {
+  function heUnitChip(base2, key2, visible, packed) {
     return {
       ...base2,
       key: key2,
       name: "H&E",
       hex: HE_CHIP_HEX,
-      visible
+      visible,
+      editable: packed
     };
   }
   function chipAriaLabel(chip2) {
@@ -99166,7 +100637,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     const { chip: chip2, open, dim, colorPending, gmmPending, shown, showBlocked, onClick, onOpenEditor, onDismiss } = props;
     const pending2 = colorPending || gmmPending;
     const pendingLabel2 = gmmPending ? `Fitting contrast for ${chip2.name}` : `Assigning color to ${chip2.name}`;
-    const showEditor = !chip2.key.endsWith(":rgb");
+    const showEditor = chip2.editable !== false;
     return jsxRuntimeExports.jsxs("div", {
       className: [
         styles$o.chipCell,
@@ -99377,13 +100848,21 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       channelSearch
     ]);
     const rgbDisplay = isRgbDisplayImage(image2);
+    const packedRgb = rgbDisplay && image2.channels.some((c2) => c2.samples === 3);
     const rgbChannels = flattenImageChannelsInDocumentOrder([
       image2
     ]);
     const showAllChannelsStrip = model.allChannels.length > 0;
+    const stripChips = (chips, key2) => rgbDisplay && chips[0] ? [
+      heUnitChip(chips[0], key2, chips.every((c2) => c2.visible), packedRgb)
+    ] : chips;
+    const groupStrips = model.groups.map((group2) => ({
+      group: group2,
+      chips: stripChips(group2.chips, `g:${group2.id}:rgb`)
+    }));
     const overviewChips = [
-      ...model.groups.flatMap((g2) => g2.chips),
-      ...model.allChannels
+      ...groupStrips.flatMap((strip2) => strip2.chips),
+      ...stripChips(model.allChannels, "e:rgb")
     ];
     const maskIds = new Set(image2.channels.filter(isMaskChannel).map((c2) => c2.id));
     const defaultMaskKey = ((_a2 = overviewChips.find((c2) => maskIds.has(c2.sourceId))) == null ? void 0 : _a2.key) ?? null;
@@ -99512,10 +100991,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     return jsxRuntimeExports.jsxs("div", {
       className: styles$o.root,
       children: [
-        model.groups.map((group2) => {
-          const rgbUnit = rgbDisplay && group2.chips[0] ? [
-            heUnitChip(group2.chips[0], `g:${group2.id}:rgb`, group2.allVisible)
-          ] : group2.chips;
+        groupStrips.map(({ group: group2, chips }) => {
           const docGroup = channelGroups.find((g2) => g2.id === group2.id);
           const showAllNext = {
             ...filledGroupVis
@@ -99528,7 +101004,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           });
           return jsxRuntimeExports.jsx(GroupStrip, {
             name: group2.name,
-            chips: rgbUnit,
+            chips,
             openChip,
             shownIds,
             blockedIds,
@@ -99559,9 +101035,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         }),
         showAllChannelsStrip ? jsxRuntimeExports.jsx(GroupStrip, {
           name: "All channels",
-          chips: rgbDisplay && filteredAllChannels[0] ? [
-            heUnitChip(filteredAllChannels[0], "e:rgb", filteredAllChannels.every((c2) => c2.visible))
-          ] : filteredAllChannels,
+          chips: stripChips(filteredAllChannels, "e:rgb"),
           openChip,
           shownIds,
           blockedIds,
@@ -164974,7 +166448,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       {
         key: "contentItem",
         value: function contentItem() {
-          var _this$props = this.props, point1 = _this$props.point1, point2 = _this$props.point2, _this$props$unit = _this$props.unit, unit = _this$props$unit === void 0 ? "mm" : _this$props$unit, _this$props$use3DSpat = _this$props.use3DSpatialCoordinates, use3DSpatialCoordinates = _this$props$use3DSpat === void 0 ? false : _this$props$use3DSpat, distance2 = _this$props.distance, ReferencedSOPSequence = _this$props.ReferencedSOPSequence, ReferencedFrameOfReferenceUID = _this$props.ReferencedFrameOfReferenceUID;
+          var _this$props = this.props, point1 = _this$props.point1, point2 = _this$props.point2, _this$props$unit = _this$props.unit, unit2 = _this$props$unit === void 0 ? "mm" : _this$props$unit, _this$props$use3DSpat = _this$props.use3DSpatialCoordinates, use3DSpatialCoordinates = _this$props$use3DSpat === void 0 ? false : _this$props$use3DSpat, distance2 = _this$props.distance, ReferencedSOPSequence = _this$props.ReferencedSOPSequence, ReferencedFrameOfReferenceUID = _this$props.ReferencedFrameOfReferenceUID;
           var GraphicData = this.flattenPoints({
             points: [
               point1,
@@ -164992,7 +166466,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                 CodeMeaning: "Length"
               },
               MeasuredValueSequence: {
-                MeasurementUnitsCodeSequence: unit2CodingValue(unit),
+                MeasurementUnitsCodeSequence: unit2CodingValue(unit2),
                 NumericValue: distance2
               },
               ContentSequence: {
@@ -165093,7 +166567,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       {
         key: "contentItem",
         value: function contentItem() {
-          var _this$props = this.props, points = _this$props.points, area2 = _this$props.area, _this$props$areaUnit = _this$props.areaUnit, areaUnit = _this$props$areaUnit === void 0 ? "mm2" : _this$props$areaUnit, ReferencedSOPSequence = _this$props.ReferencedSOPSequence, _this$props$use3DSpat = _this$props.use3DSpatialCoordinates, use3DSpatialCoordinates = _this$props$use3DSpat === void 0 ? false : _this$props$use3DSpat, perimeter = _this$props.perimeter, _this$props$unit = _this$props.unit, unit = _this$props$unit === void 0 ? "mm" : _this$props$unit, ReferencedFrameOfReferenceUID = _this$props.ReferencedFrameOfReferenceUID;
+          var _this$props = this.props, points = _this$props.points, area2 = _this$props.area, _this$props$areaUnit = _this$props.areaUnit, areaUnit = _this$props$areaUnit === void 0 ? "mm2" : _this$props$areaUnit, ReferencedSOPSequence = _this$props.ReferencedSOPSequence, _this$props$use3DSpat = _this$props.use3DSpatialCoordinates, use3DSpatialCoordinates = _this$props$use3DSpat === void 0 ? false : _this$props$use3DSpat, perimeter = _this$props.perimeter, _this$props$unit = _this$props.unit, unit2 = _this$props$unit === void 0 ? "mm" : _this$props$unit, ReferencedFrameOfReferenceUID = _this$props.ReferencedFrameOfReferenceUID;
           var GraphicData = this.flattenPoints({
             points,
             use3DSpatialCoordinates
@@ -165108,7 +166582,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                 CodeMeaning: "Perimeter"
               },
               MeasuredValueSequence: {
-                MeasurementUnitsCodeSequence: unit2CodingValue(unit),
+                MeasurementUnitsCodeSequence: unit2CodingValue(unit2),
                 NumericValue: perimeter
               },
               ContentSequence: {
@@ -165237,7 +166711,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       {
         key: "contentItem",
         value: function contentItem() {
-          var _this$props = this.props, longAxis = _this$props.longAxis, shortAxis = _this$props.shortAxis, longAxisLength = _this$props.longAxisLength, shortAxisLength = _this$props.shortAxisLength, unit = _this$props.unit, _this$props$use3DSpat = _this$props.use3DSpatialCoordinates, use3DSpatialCoordinates = _this$props$use3DSpat === void 0 ? false : _this$props$use3DSpat, ReferencedSOPSequence = _this$props.ReferencedSOPSequence, ReferencedFrameOfReferenceUID = _this$props.ReferencedFrameOfReferenceUID;
+          var _this$props = this.props, longAxis = _this$props.longAxis, shortAxis = _this$props.shortAxis, longAxisLength = _this$props.longAxisLength, shortAxisLength = _this$props.shortAxisLength, unit2 = _this$props.unit, _this$props$use3DSpat = _this$props.use3DSpatialCoordinates, use3DSpatialCoordinates = _this$props$use3DSpat === void 0 ? false : _this$props$use3DSpat, ReferencedSOPSequence = _this$props.ReferencedSOPSequence, ReferencedFrameOfReferenceUID = _this$props.ReferencedFrameOfReferenceUID;
           var longAxisGraphicData = this.flattenPoints({
             points: [
               longAxis.point1,
@@ -165262,7 +166736,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                 CodeMeaning: "Long Axis"
               },
               MeasuredValueSequence: {
-                MeasurementUnitsCodeSequence: unit2CodingValue(unit),
+                MeasurementUnitsCodeSequence: unit2CodingValue(unit2),
                 NumericValue: longAxisLength
               },
               ContentSequence: {
@@ -165287,7 +166761,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                 CodeMeaning: "Short Axis"
               },
               MeasuredValueSequence: {
-                MeasurementUnitsCodeSequence: unit2CodingValue(unit),
+                MeasurementUnitsCodeSequence: unit2CodingValue(unit2),
                 NumericValue: shortAxisLength
               },
               ContentSequence: {
@@ -165668,7 +167142,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       {
         key: "contentItem",
         value: function contentItem() {
-          var _this$props = this.props, points = _this$props.points, ReferencedSOPSequence = _this$props.ReferencedSOPSequence, _this$props$use3DSpat = _this$props.use3DSpatialCoordinates, use3DSpatialCoordinates = _this$props$use3DSpat === void 0 ? false : _this$props$use3DSpat, perimeter = _this$props.perimeter, area2 = _this$props.area, _this$props$areaUnit = _this$props.areaUnit, areaUnit = _this$props$areaUnit === void 0 ? "mm2" : _this$props$areaUnit, _this$props$unit = _this$props.unit, unit = _this$props$unit === void 0 ? "mm" : _this$props$unit, ReferencedFrameOfReferenceUID = _this$props.ReferencedFrameOfReferenceUID;
+          var _this$props = this.props, points = _this$props.points, ReferencedSOPSequence = _this$props.ReferencedSOPSequence, _this$props$use3DSpat = _this$props.use3DSpatialCoordinates, use3DSpatialCoordinates = _this$props$use3DSpat === void 0 ? false : _this$props$use3DSpat, perimeter = _this$props.perimeter, area2 = _this$props.area, _this$props$areaUnit = _this$props.areaUnit, areaUnit = _this$props$areaUnit === void 0 ? "mm2" : _this$props$areaUnit, _this$props$unit = _this$props.unit, unit2 = _this$props$unit === void 0 ? "mm" : _this$props$unit, ReferencedFrameOfReferenceUID = _this$props.ReferencedFrameOfReferenceUID;
           var GraphicData = this.flattenPoints({
             points,
             use3DSpatialCoordinates
@@ -165683,7 +167157,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                 CodeMeaning: "Perimeter"
               },
               MeasuredValueSequence: {
-                MeasurementUnitsCodeSequence: unit2CodingValue(unit),
+                MeasurementUnitsCodeSequence: unit2CodingValue(unit2),
                 NumericValue: perimeter
               },
               ContentSequence: {
@@ -165785,7 +167259,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         value: function getTID300RepresentationArguments(tool) {
           var _tool$cachedStats = tool.cachedStats, cachedStats = _tool$cachedStats === void 0 ? {} : _tool$cachedStats, handles = tool.handles, finding = tool.finding, findingSites = tool.findingSites;
           var center = handles.start, end = handles.end;
-          var area2 = cachedStats.area, _cachedStats$areaUnit = cachedStats.areaUnit, areaUnit = _cachedStats$areaUnit === void 0 ? "mm2" : _cachedStats$areaUnit, _cachedStats$unit = cachedStats.unit, unit = _cachedStats$unit === void 0 ? "mm" : _cachedStats$unit, radius = cachedStats.radius;
+          var area2 = cachedStats.area, _cachedStats$areaUnit = cachedStats.areaUnit, areaUnit = _cachedStats$areaUnit === void 0 ? "mm2" : _cachedStats$areaUnit, _cachedStats$unit = cachedStats.unit, unit2 = _cachedStats$unit === void 0 ? "mm" : _cachedStats$unit, radius = cachedStats.radius;
           var perimeter = 2 * Math.PI * radius;
           var points = [];
           points.push(center);
@@ -165795,7 +167269,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
             area: area2,
             areaUnit,
             perimeter,
-            unit,
+            unit: unit2,
             radius,
             points,
             trackingIdentifierTextValue: trackingIdentifierTextValue2,
@@ -168371,7 +169845,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       {
         key: "contentItem",
         value: function contentItem() {
-          var _this$props = this.props, points = _this$props.points, perimeter = _this$props.perimeter, _this$props$unit = _this$props.unit, unit = _this$props$unit === void 0 ? "mm" : _this$props$unit, area2 = _this$props.area, areaUnit = _this$props.areaUnit, ReferencedSOPSequence = _this$props.ReferencedSOPSequence, _this$props$use3DSpat = _this$props.use3DSpatialCoordinates, use3DSpatialCoordinates = _this$props$use3DSpat === void 0 ? false : _this$props$use3DSpat, ReferencedFrameOfReferenceUID = _this$props.ReferencedFrameOfReferenceUID;
+          var _this$props = this.props, points = _this$props.points, perimeter = _this$props.perimeter, _this$props$unit = _this$props.unit, unit2 = _this$props$unit === void 0 ? "mm" : _this$props$unit, area2 = _this$props.area, areaUnit = _this$props.areaUnit, ReferencedSOPSequence = _this$props.ReferencedSOPSequence, _this$props$use3DSpat = _this$props.use3DSpatialCoordinates, use3DSpatialCoordinates = _this$props$use3DSpat === void 0 ? false : _this$props$use3DSpat, ReferencedFrameOfReferenceUID = _this$props.ReferencedFrameOfReferenceUID;
           var GraphicData = this.flattenPoints({
             points,
             use3DSpatialCoordinates
@@ -168386,7 +169860,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                 CodeMeaning: "Perimeter"
               },
               MeasuredValueSequence: {
-                MeasurementUnitsCodeSequence: unit2CodingValue(unit),
+                MeasurementUnitsCodeSequence: unit2CodingValue(unit2),
                 NumericValue: perimeter
               },
               ContentSequence: {
@@ -170432,7 +171906,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       contrastLimits,
       selections,
       modelMatrix: meta.modelMatrix,
-      ...meta.stainBelow === void 0 ? imageFadeParameters(false, meta.opacity) : stainLayerParameters(meta.stainBelow),
+      ...imageFadeParameters(false, meta.opacity),
       opacity: meta.opacity
     });
   }
@@ -170886,6 +172360,152 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     const app = useAppStore.getState();
     app.addStory(raw2);
     app.setActiveStory(0);
+  }
+  const isObject = (v2) => typeof v2 === "object" && v2 !== null && !Array.isArray(v2);
+  const position$3 = (v2) => {
+    if (!Array.isArray(v2) || v2.length < 2) return null;
+    const [x2, y2] = v2;
+    return typeof x2 === "number" && typeof y2 === "number" && Number.isFinite(x2) && Number.isFinite(y2) ? [
+      x2,
+      y2
+    ] : null;
+  };
+  const positions = (v2) => {
+    if (!Array.isArray(v2)) return null;
+    const out = [];
+    for (const p2 of v2) {
+      const pos = position$3(p2);
+      if (!pos) return null;
+      out.push(pos);
+    }
+    return out;
+  };
+  const pointsAttr = (pts) => pts.map(([x2, y2]) => `${x2},${y2}`).join(" ");
+  const text$9 = (v2) => {
+    if (typeof v2 !== "string" && typeof v2 !== "number") return void 0;
+    const s2 = String(v2).trim();
+    return s2 && s2 !== "undefined" && s2 !== "null" ? s2 : void 0;
+  };
+  const featureName = (props) => {
+    const classification = isObject(props.classification) ? props.classification : void 0;
+    return text$9(props.Name) ?? text$9(props.name) ?? text$9(props.Text) ?? text$9(props.text) ?? text$9(classification == null ? void 0 : classification.name) ?? text$9(props.classification);
+  };
+  const omeShapeType = (props) => typeof props.type === "string" ? props.type.toLowerCase() : "";
+  function geometryShapes(geometry2, props, nextId2) {
+    if (!isObject(geometry2)) return [];
+    const coords = geometry2.coordinates;
+    const polygon = (rings) => {
+      const outer = Array.isArray(rings) ? positions(rings[0]) : null;
+      if (!outer || outer.length < 3) return [];
+      return [
+        {
+          type: "polygon",
+          ID: nextId2(),
+          Points: pointsAttr(outer)
+        }
+      ];
+    };
+    const lineString = (v2) => {
+      const pts = positions(v2);
+      if (!pts || pts.length < 2) return [];
+      return [
+        {
+          type: "polyline",
+          ID: nextId2(),
+          Points: pointsAttr(pts)
+        }
+      ];
+    };
+    const point2 = (v2) => {
+      const p2 = position$3(v2);
+      if (!p2) return [];
+      const [X2, Y2] = p2;
+      const label2 = text$9(props.Text) ?? text$9(props.text);
+      if (omeShapeType(props) === "label" && label2) {
+        return [
+          {
+            type: "label",
+            ID: nextId2(),
+            X: X2,
+            Y: Y2,
+            Text: label2
+          }
+        ];
+      }
+      return [
+        {
+          type: "point",
+          ID: nextId2(),
+          X: X2,
+          Y: Y2
+        }
+      ];
+    };
+    const each = (v2, f2) => Array.isArray(v2) ? v2.flatMap(f2) : [];
+    switch (geometry2.type) {
+      case "Point":
+        return point2(coords);
+      case "MultiPoint":
+        return each(coords, point2);
+      case "LineString":
+        return lineString(coords);
+      case "MultiLineString":
+        return each(coords, lineString);
+      case "Polygon":
+        return polygon(coords);
+      case "MultiPolygon":
+        return each(coords, polygon);
+      case "GeometryCollection":
+        return each(geometry2.geometries, (g2) => geometryShapes(g2, props, nextId2));
+      default:
+        return [];
+    }
+  }
+  function features(root2) {
+    if (Array.isArray(root2)) return root2.filter(isObject);
+    if (!isObject(root2)) return [];
+    if (root2.type === "FeatureCollection") {
+      return Array.isArray(root2.features) ? root2.features.filter(isObject) : [];
+    }
+    if (root2.type === "Feature") return [
+      root2
+    ];
+    if (typeof root2.type === "string" && root2.type !== "") {
+      return [
+        {
+          type: "Feature",
+          geometry: root2,
+          properties: {}
+        }
+      ];
+    }
+    return [];
+  }
+  function parseGeoJsonStringToRois(json2) {
+    let root2;
+    try {
+      root2 = JSON.parse(json2);
+    } catch {
+      throw new Error("The file is not valid JSON.");
+    }
+    const list2 = features(root2);
+    if (list2.length === 0) {
+      throw new Error("The file has no GeoJSON features.");
+    }
+    const rois = [];
+    list2.forEach((feature, i2) => {
+      const props = isObject(feature.properties) ? feature.properties : {};
+      const id2 = text$9(feature.id) ?? text$9(props.Id) ?? text$9(props.id) ?? `Feature:${i2}`;
+      let part = 0;
+      const shapes = geometryShapes(feature.geometry, props, () => part++ === 0 ? id2 : `${id2}:${part - 1}`);
+      if (shapes.length === 0) return;
+      rois.push({
+        ID: id2,
+        Name: featureName(props),
+        shapes
+      });
+    });
+    return rois;
   }
   const attr = (el2, ...keys2) => {
     for (const k2 of keys2) {
@@ -171731,15 +173351,64 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         shapeCount: 0
       };
     }
-    const viewerRoiShapes = parseRoisFromRoiList(rois);
     const omeDoc = parseOmeXml(xml2);
     const pixels = omeDoc && omePixelsElement(omeDoc);
     const frame2 = (pixels && omePixelsWorldFrame(pixels, viewerImageFrames)) ?? viewerImageFrames[0];
-    const storyShapes = roiShapesToWorld(viewerRoiShapes, frameModelMatrix(frame2, imageOrientation(frame2.sourceImageId)));
+    return applyRoisOnFrame(rois, frame2, "XML");
+  }
+  const fileStem = (name2) => name2.trim().toLowerCase().split(".")[0];
+  const stemsMatch = (a2, b2) => {
+    const [short, long] = a2.length <= b2.length ? [
+      a2,
+      b2
+    ] : [
+      b2,
+      a2
+    ];
+    return short !== "" && long.startsWith(short) && !/[a-z0-9]/.test(long.charAt(short.length));
+  };
+  function geoJsonFileWorldFrame(fileName, imageFrames) {
+    const stem2 = fileStem(fileName);
+    const numbers = new Set(fileName.match(/\d+/g) ?? []);
+    const { images } = useDocumentStore.getState();
+    const image2 = images.find((img) => img.omero != null && numbers.has(String(img.omero.imageIdentifier))) ?? images.find((img) => stemsMatch(stem2, fileStem(img.basename)));
+    return image2 && imageFrames.find((f2) => f2.sourceImageId === image2.id);
+  }
+  function applyRoisFromGeoJsonString(json2, fileName) {
+    const { viewerImageFrames } = useAppStore.getState();
+    if (viewerImageFrames.length === 0) {
+      return {
+        success: false,
+        error: "Load an image before importing annotations.",
+        shapeCount: 0
+      };
+    }
+    let rois;
+    try {
+      rois = parseGeoJsonStringToRois(json2);
+    } catch (e2) {
+      return {
+        success: false,
+        error: e2 instanceof Error ? e2.message : String(e2),
+        shapeCount: 0
+      };
+    }
+    if (rois.length === 0) {
+      return {
+        success: false,
+        error: "No features with drawable geometry were found in the GeoJSON.",
+        shapeCount: 0
+      };
+    }
+    const frame2 = geoJsonFileWorldFrame(fileName, viewerImageFrames) ?? viewerImageFrames[0];
+    return applyRoisOnFrame(rois, frame2, "GeoJSON");
+  }
+  function applyRoisOnFrame(rois, frame2, format) {
+    const storyShapes = roiShapesToWorld(parseRoisFromRoiList(rois), frameModelMatrix(frame2, imageOrientation(frame2.sourceImageId)));
     if (storyShapes.length === 0) {
       return {
         success: false,
-        error: "No valid annotations could be built from the XML.",
+        error: `No valid annotations could be built from the ${format}.`,
         shapeCount: 0
       };
     }
@@ -171790,9 +173459,9 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       type: "button",
       "aria-pressed": selected,
       className: [
-        selected ? styles$q.typeChipActive : null,
-        suggested ? styles$q.typeChipSuggested : null,
-        muted ? styles$q.typeChipMuted : null
+        selected ? styles$r.typeChipActive : null,
+        suggested ? styles$r.typeChipSuggested : null,
+        muted ? styles$r.typeChipMuted : null
       ].filter(Boolean).join(" "),
       onClick,
       children: label2
@@ -172176,7 +173845,8 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       if (kind === "story") {
         await (onImportStory == null ? void 0 : onImportStory(file));
       } else if (kind === "annotations") {
-        const r2 = applyOmeRoisFromAnnotationXmlString(await file.text());
+        const text2 = await file.text();
+        const r2 = /^\s*[{[]/.test(text2) ? applyRoisFromGeoJsonString(text2, file.name) : applyOmeRoisFromAnnotationXmlString(text2);
         if (r2.success === false) failDrop(r2.error);
         else {
           const n2 = r2.shapeCount;
@@ -172396,27 +174066,27 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       const fileReference = showAccessOverlay ? sourceFileReference(im) : null;
       const pointing = (pointTarget == null ? void 0 : pointTarget.imageId) === im.id ? pointTarget.mode : null;
       return jsxRuntimeExports.jsxs("article", {
-        className: styles$q.imageCard,
+        className: styles$r.imageCard,
         children: [
           jsxRuntimeExports.jsxs("div", {
-            className: styles$q.imageCardHeader,
+            className: styles$r.imageCardHeader,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$q.imageCardText,
+                className: styles$r.imageCardText,
                 children: [
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$q.imageCardTitle,
+                    className: styles$r.imageCardTitle,
                     title: title7,
                     children: title7
                   }),
                   jsxRuntimeExports.jsx("div", {
-                    className: styles$q.imageCardMeta,
+                    className: styles$r.imageCardMeta,
                     children: metaParts.join(" \xB7 ")
                   })
                 ]
               }),
               jsxRuntimeExports.jsxs("div", {
-                className: styles$q.imageCardActions,
+                className: styles$r.imageCardActions,
                 children: [
                   jsxRuntimeExports.jsx(PanelIconButton, {
                     title: "Arrange",
@@ -172453,7 +174123,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
             ]
           }),
           jsxRuntimeExports.jsx(OpacitySlider, {
-            className: styles$q.imageOpacity,
+            className: styles$r.imageOpacity,
             value: clampImageOpacity(im.opacity),
             ariaLabel: title7,
             onPreview: (opacity) => {
@@ -172477,16 +174147,16 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
             image: im
           }),
           showAccessOverlay ? jsxRuntimeExports.jsxs("div", {
-            className: styles$q.fileAccessOverlay,
+            className: styles$r.fileAccessOverlay,
             children: [
               fileReference ? jsxRuntimeExports.jsx("div", {
-                className: styles$q.fileAccessName,
+                className: styles$r.fileAccessName,
                 title: fileReference,
                 children: fileReference
               }) : null,
               jsxRuntimeExports.jsx(PanelActionButton, {
                 type: "button",
-                className: styles$q.fileAccessAction,
+                className: styles$r.fileAccessAction,
                 active: pointing === "locate",
                 "aria-pressed": needsReselect || needsLocateFile ? pointing === "locate" : void 0,
                 onClick: (e2) => {
@@ -172504,18 +174174,18 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     };
     const imageCards = images.length > 0 ? images.map((im, i2) => renderImageCard(im, i2)) : imageLoaded && loadedSource ? [
       jsxRuntimeExports.jsx("article", {
-        className: styles$q.imageCard,
+        className: styles$r.imageCard,
         children: jsxRuntimeExports.jsx("div", {
-          className: styles$q.imageCardHeader,
+          className: styles$r.imageCardHeader,
           children: jsxRuntimeExports.jsxs("div", {
-            className: styles$q.imageCardText,
+            className: styles$r.imageCardText,
             children: [
               jsxRuntimeExports.jsx("div", {
-                className: styles$q.imageCardTitle,
+                className: styles$r.imageCardTitle,
                 children: loadedSource.label
               }),
               jsxRuntimeExports.jsx("div", {
-                className: styles$q.imageCardMeta,
+                className: styles$r.imageCardMeta,
                 children: formatDims(loadedSource.width, loadedSource.height, loadedSource.channelCount) ?? "Loading dimensions\u2026"
               })
             ]
@@ -172532,39 +174202,39 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     const renderAddStrip = (popup) => {
       const strip2 = popup || !pointTarget ? liveStrip : IDLE_STRIP;
       return jsxRuntimeExports.jsxs("div", {
-        className: popup ? styles$q.addStrip : `${styles$q.addStrip} ${styles$q.addStripRow}`,
+        className: popup ? styles$r.addStrip : `${styles$r.addStrip} ${styles$r.addStripRow}`,
         children: [
           jsxRuntimeExports.jsx("button", {
             type: "button",
-            className: styles$q.dropZone,
+            className: styles$r.dropZone,
             disabled: disabled2,
             "aria-invalid": strip2.dropError ? true : void 0,
             onClick: () => void browseLocal(),
             children: jsxRuntimeExports.jsx("span", {
               className: [
-                styles$q.dropZoneTitle,
-                strip2.dropError ? styles$q.importError : ""
+                styles$r.dropZoneTitle,
+                strip2.dropError ? styles$r.importError : ""
               ].filter(Boolean).join(" "),
               role: strip2.dropError ? "alert" : notice ? "status" : void 0,
               children: strip2.dropError ?? (popup ? "Drop or Browse Image File" : notice ?? "Drop or Browse File")
             })
           }),
           jsxRuntimeExports.jsx("div", {
-            className: styles$q.orDivider,
+            className: styles$r.orDivider,
             children: jsxRuntimeExports.jsx("span", {
               children: "or"
             })
           }),
           jsxRuntimeExports.jsxs("div", {
-            className: styles$q.urlRow,
+            className: styles$r.urlRow,
             children: [
               jsxRuntimeExports.jsxs("div", {
-                className: styles$q.urlField,
+                className: styles$r.urlField,
                 children: [
                   jsxRuntimeExports.jsx("input", {
                     id: popup ? void 0 : "upload-add-url",
                     type: "url",
-                    className: `${minervaTheme.input} ${styles$q.urlInput}`,
+                    className: `${minervaTheme.input} ${styles$r.urlInput}`,
                     placeholder: "Image URL",
                     "aria-label": "Image URL",
                     "aria-invalid": strip2.urlError ? true : void 0,
@@ -172583,7 +174253,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                   }),
                   strip2.draft.trim() ? jsxRuntimeExports.jsx(PanelActionButton, {
                     type: "button",
-                    className: styles$q.urlAdd,
+                    className: styles$r.urlAdd,
                     disabled: disabled2 || !urlReady,
                     onClick: acceptUrlDraft,
                     children: "Add"
@@ -172591,7 +174261,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                 ]
               }),
               strip2.urlError ? jsxRuntimeExports.jsx("div", {
-                className: styles$q.importError,
+                className: styles$r.importError,
                 role: "alert",
                 children: strip2.urlError
               }) : null
@@ -172609,19 +174279,19 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     return jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
       children: [
         dragging ? reactDomExports.createPortal(jsxRuntimeExports.jsx("output", {
-          className: styles$q.windowDrop,
+          className: styles$r.windowDrop,
           children: pointTarget ? "Drop image file" : "Drop file"
         }), document.body) : null,
         pointTarget ? reactDomExports.createPortal(jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
           children: [
             jsxRuntimeExports.jsx("button", {
               type: "button",
-              className: styles$q.pointBackdrop,
+              className: styles$r.pointBackdrop,
               "aria-label": "Close",
               onClick: () => setPointTarget(null)
             }),
             jsxRuntimeExports.jsx("div", {
-              className: styles$q.pointPopup,
+              className: styles$r.pointPopup,
               style: {
                 top: pointTarget.top,
                 left: pointTarget.left,
@@ -172637,7 +174307,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           className: panel$1.authorPanel,
           children: [
             jsxRuntimeExports.jsx("div", {
-              className: styles$q.panelDock,
+              className: styles$r.panelDock,
               children: addStrip2
             }),
             jsxRuntimeExports.jsx("div", {
@@ -172646,7 +174316,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                 panel$1.thinScrollbar
               ].join(" "),
               children: imageCards.length > 0 ? jsxRuntimeExports.jsx("div", {
-                className: styles$q.stack,
+                className: styles$r.stack,
                 children: imageCards
               }) : null
             })
@@ -172664,10 +174334,10 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           onImport: () => void runImport(),
           children: [
             jsxRuntimeExports.jsxs("div", {
-              className: styles$q.typeRow,
+              className: styles$r.typeRow,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$q.fieldLabel,
+                  className: styles$r.fieldLabel,
                   children: "Image Type"
                 }),
                 jsxRuntimeExports.jsx(FormatChip, {
@@ -172708,12 +174378,12 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
               ]
             }),
             dicomAllowed ? jsxRuntimeExports.jsx("div", {
-              className: styles$q.typeSection,
+              className: styles$r.typeSection,
               children: jsxRuntimeExports.jsxs("div", {
-                className: styles$q.typeRow,
+                className: styles$r.typeRow,
                 children: [
                   jsxRuntimeExports.jsx("span", {
-                    className: styles$q.fieldLabel,
+                    className: styles$r.fieldLabel,
                     children: "Format"
                   }),
                   FORMAT_OPTIONS.map(({ format, label: label2 }) => jsxRuntimeExports.jsx(FormatChip, {
@@ -172730,10 +174400,10 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
               })
             }) : null,
             overlayRole === "segmentation" || overlayRole === "intensity" && !overlayRgbDisplay ? jsxRuntimeExports.jsxs("div", {
-              className: styles$q.typeRow,
+              className: styles$r.typeRow,
               children: [
                 jsxRuntimeExports.jsx("span", {
-                  className: styles$q.fieldLabel,
+                  className: styles$r.fieldLabel,
                   children: overlayRole === "segmentation" ? "Feature table" : "Markers"
                 }),
                 jsxRuntimeExports.jsx(PanelActionButton, {
@@ -173925,8 +175595,8 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     return new Date(t2).toISOString().replace("T", " ").slice(0, 16);
   }
   function buildStamp() {
-    const iso = "2026-11-03T22:30:17.333Z";
-    const sha = "eade1d2ef34176b7fbf6f0523e186b6d9c3ba8e3";
+    const iso = "2026-11-19T15:08:07.684Z";
+    const sha = "19fbcbfcb379b6c8231ccb68515736df8bfd0e53";
     const label2 = utcShort(iso);
     const short = sha.slice(0, 7);
     const text2 = [
@@ -179757,11 +181427,11 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         nestedRound,
         array
       ]);
-      var tuple = replace2(/\(<<0>>+(?:,<<0>>+)+\)/.source, [
+      var tuple2 = replace2(/\(<<0>>+(?:,<<0>>+)+\)/.source, [
         tupleElement
       ]);
       var typeExpression = replace2(/(?:<<0>>|<<1>>)(?:\s*(?:\?\s*)?<<2>>)*(?:\s*\?)?/.source, [
-        tuple,
+        tuple2,
         identifier,
         array
       ]);
@@ -187445,7 +189115,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           lookbehind: true
         }
       });
-      var unit = {
+      var unit2 = {
         pattern: /(\b\d+)(?:%|[a-z]+(?![\w-]))/,
         lookbehind: true
       };
@@ -187470,7 +189140,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           {
             pattern: /\b(?:hsl|rgb)\(\s*\d{1,3}\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*\)\B|\b(?:hsl|rgb)a\(\s*\d{1,3}\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*,\s*(?:0|0?\.\d+|1)\s*\)\B/i,
             inside: {
-              unit,
+              unit: unit2,
               number: number2,
               function: /[\w-]+(?=\()/,
               punctuation: /[(),]/
@@ -187478,7 +189148,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           }
         ],
         entity: /\\[\da-f]{1,8}/i,
-        unit,
+        unit: unit2,
         number: number2
       });
     })(Prism2);
@@ -195949,7 +197619,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   stylus$1.aliases = [];
   function stylus$1(Prism2) {
     (function(Prism3) {
-      var unit = {
+      var unit2 = {
         pattern: /(\b\d+)(?:%|[a-z]+)/,
         lookbehind: true
       };
@@ -195983,7 +197653,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           {
             pattern: /\b(?:hsl|rgb)\(\s*\d{1,3}\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*\)\B|\b(?:hsl|rgb)a\(\s*\d{1,3}\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*,\s*(?:0|0?\.\d+|1)\s*\)\B/i,
             inside: {
-              unit,
+              unit: unit2,
               number: number2,
               function: /[\w-]+(?=\()/,
               punctuation: /[(),]/
@@ -195991,7 +197661,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           }
         ],
         entity: /\\[\da-f]{1,8}/i,
-        unit,
+        unit: unit2,
         boolean: /\b(?:false|true)\b/,
         operator: [
           /~|[+!\/%<>?=]=?|[-:]=|\*[*=]?|\.{2,3}|&&|\|\||\B-\B|\b(?:and|in|is(?: a| defined| not|nt)?|not|or)\b/
@@ -221348,10 +223018,10 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     ];
     let index2 = -1;
     while (++index2 < list2.length) {
-      const tuple = list2[index2];
+      const tuple2 = list2[index2];
       result.push([
-        toExpression(tuple[0]),
-        toFunction(tuple[1])
+        toExpression(tuple2[0]),
+        toFunction(tuple2[1])
       ]);
     }
     return result;
@@ -226716,11 +228386,11 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         nestedRound,
         array
       ]);
-      var tuple = replace2(/\(<<0>>+(?:,<<0>>+)+\)/.source, [
+      var tuple2 = replace2(/\(<<0>>+(?:,<<0>>+)+\)/.source, [
         tupleElement
       ]);
       var typeExpression = replace2(/(?:<<0>>|<<1>>)(?:\s*(?:\?\s*)?<<2>>)*(?:\s*\?)?/.source, [
-        tuple,
+        tuple2,
         identifier,
         array
       ]);
@@ -232694,7 +234364,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           lookbehind: true
         }
       });
-      var unit = {
+      var unit2 = {
         pattern: /(\b\d+)(?:%|[a-z]+(?![\w-]))/,
         lookbehind: true
       };
@@ -232719,7 +234389,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           {
             pattern: /\b(?:hsl|rgb)\(\s*\d{1,3}\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*\)\B|\b(?:hsl|rgb)a\(\s*\d{1,3}\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*,\s*(?:0|0?\.\d+|1)\s*\)\B/i,
             inside: {
-              unit,
+              unit: unit2,
               number: number2,
               function: /[\w-]+(?=\()/,
               punctuation: /[(),]/
@@ -232727,7 +234397,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           }
         ],
         entity: /\\[\da-f]{1,8}/i,
-        unit,
+        unit: unit2,
         number: number2
       });
     })(Prism2);
@@ -241198,7 +242868,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
   stylus.aliases = [];
   function stylus(Prism2) {
     (function(Prism3) {
-      var unit = {
+      var unit2 = {
         pattern: /(\b\d+)(?:%|[a-z]+)/,
         lookbehind: true
       };
@@ -241232,7 +242902,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           {
             pattern: /\b(?:hsl|rgb)\(\s*\d{1,3}\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*\)\B|\b(?:hsl|rgb)a\(\s*\d{1,3}\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*,\s*(?:0|0?\.\d+|1)\s*\)\B/i,
             inside: {
-              unit,
+              unit: unit2,
               number: number2,
               function: /[\w-]+(?=\()/,
               punctuation: /[(),]/
@@ -241240,7 +242910,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           }
         ],
         entity: /\\[\da-f]{1,8}/i,
-        unit,
+        unit: unit2,
         boolean: /\b(?:false|true)\b/,
         operator: [
           /~|[+!\/%<>?=]=?|[-:]=|\*[*=]?|\.{2,3}|&&|\|\||\B-\B|\b(?:and|in|is(?: a| defined| not|nt)?|not|or)\b/
@@ -249476,7 +251146,6 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     }
     return imageLabel;
   }
-  const EMPTY_LOCKED_ROW_IDS = /* @__PURE__ */ new Set();
   let groupChannelDragActive = false;
   function readDragPayload(e2) {
     const raw2 = e2.dataTransfer.getData(CHANNEL_DRAG_MIME) || e2.dataTransfer.getData("text/plain");
@@ -249599,7 +251268,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
             role: "menuitem",
             className: minervaTheme.menuItem,
             disabled: !canOptimize || optimizeBusy,
-            title: canOptimize ? void 0 : "Needs at least two image channels",
+            title: canOptimize ? void 0 : "Needs two fluorescence channels, two IHC stains, or a stain over H&E",
             onClick: (e2) => {
               e2.stopPropagation();
               if (!canOptimize || optimizeBusy) return;
@@ -249666,6 +251335,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     const setImagesAndChannelGroups = useDocumentStore((s2) => s2.setImagesAndChannelGroups);
     const setGroupNames = useAppStore((s2) => s2.setGroupNames);
     const setChannelVisibilities = useAppStore((s2) => s2.setChannelVisibilities);
+    const heDeconvByChannelId = useAppStore((s2) => s2.heDeconvByChannelId);
     const sourceChannels = reactExports.useMemo(() => flattenImageChannelsInDocumentOrder(images), [
       images
     ]);
@@ -249733,7 +251403,10 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       document.addEventListener("dragend", hide2);
       return () => document.removeEventListener("dragend", hide2);
     }, []);
-    const [lockedColorRowIdsByGroup, setLockedColorRowIdsByGroup] = reactExports.useState(() => /* @__PURE__ */ new Map());
+    const colorLockedRowIds = useAppStore((s2) => s2.colorLockedRowIds);
+    const lockedRowIds = reactExports.useMemo(() => new Set(Object.keys(colorLockedRowIds)), [
+      colorLockedRowIds
+    ]);
     const [channelNameFilter, setChannelNameFilter] = reactExports.useState("");
     const channelSearch = uniqueSourceChannels.length > 1;
     const filteredAllChannels = reactExports.useMemo(() => {
@@ -249751,42 +251424,6 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       channelSearch
     ]);
     const showAllChannelsList = uniqueSourceChannels.length > 0;
-    reactExports.useEffect(() => {
-      setLockedColorRowIdsByGroup((prev) => {
-        const validGroupIds = new Set(channelGroups.map((g2) => g2.id));
-        const validRowIds = new Set(channelGroups.flatMap((g2) => g2.channels.map((gc2) => gc2.id)));
-        let changed = false;
-        const next2 = /* @__PURE__ */ new Map();
-        for (const [groupId, rowIds] of prev) {
-          if (!validGroupIds.has(groupId)) {
-            changed = true;
-            continue;
-          }
-          const filtered = new Set([
-            ...rowIds
-          ].filter((rowId) => validRowIds.has(rowId)));
-          if (filtered.size !== rowIds.size) changed = true;
-          if (filtered.size > 0) next2.set(groupId, filtered);
-        }
-        return changed ? next2 : prev;
-      });
-    }, [
-      channelGroups
-    ]);
-    const lockedIdsForGroup = reactExports.useCallback((groupId) => lockedColorRowIdsByGroup.get(groupId) ?? EMPTY_LOCKED_ROW_IDS, [
-      lockedColorRowIdsByGroup
-    ]);
-    const toggleColorLock = reactExports.useCallback((groupId, rowId) => {
-      setLockedColorRowIdsByGroup((prev) => {
-        const next2 = new Map(prev);
-        const set2 = new Set(next2.get(groupId) ?? []);
-        if (set2.has(rowId)) set2.delete(rowId);
-        else set2.add(rowId);
-        if (set2.size === 0) next2.delete(groupId);
-        else next2.set(groupId, set2);
-        return next2;
-      });
-    }, []);
     const selectionMaskVisible = channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true;
     const syncGroupState = reactExports.useCallback((newGroups) => {
       const normalized = newGroups.map((g2) => ({
@@ -249887,12 +251524,6 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       var _a2;
       const newGroups = channelGroups.filter(({ id: id2 }) => id2 !== groupId);
       syncGroupState(newGroups);
-      setLockedColorRowIdsByGroup((prev) => {
-        if (!prev.has(groupId)) return prev;
-        const next2 = new Map(prev);
-        next2.delete(groupId);
-        return next2;
-      });
       if (activeChannelGroupId === groupId) {
         const next2 = (_a2 = newGroups[0]) == null ? void 0 : _a2.id;
         if (next2) activateGroup(next2);
@@ -249953,7 +251584,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       }
       const sc2 = sourceChannels.find(({ id: id2 }) => id2 === sourceChannelUUID);
       if (!sc2) return;
-      const lockedIds = new Set(group2.channels.map((gc2) => gc2.id));
+      const storyId = useDocumentStore.getState().activeStoryId;
       const slotIndex = group2.channels.length;
       const isMask = isMaskChannel(sc2);
       const rgbUnit = isRgbDisplayChannel(sc2, sourceChannels);
@@ -249982,16 +251613,19 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       } else {
         awaitGroupRowFits(newRows);
       }
-      const newGroups = channelGroups.map((g2) => g2.id !== groupId ? g2 : {
+      const storyChanged = () => useDocumentStore.getState().activeStoryId !== storyId;
+      if (storyChanged()) return;
+      const withNewRows = (groups) => groups.map((g2) => g2.id !== groupId ? g2 : {
         ...g2,
         channels: [
           ...g2.channels,
           ...newRows
         ]
       });
+      const newGroups = withNewRows(useDocumentStore.getState().channelGroups);
       const updatedGroup = newGroups.find((g2) => g2.id === groupId);
       setChannelGroupRowVisibilities({
-        ...channelGroupRowVisibilities,
+        ...useAppStore.getState().channelGroupRowVisibilities,
         ...Object.fromEntries(newRows.map((gc2) => [
           gc2.id,
           true
@@ -250001,17 +251635,21 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         syncGroupState(newGroups);
         return;
       }
+      const lockedIds = new Set(updatedGroup.channels.filter((gc2) => !newRows.includes(gc2)).map((gc2) => gc2.id));
       setOptimizePaletteBusy(true);
       const pendingIds = groupOptimizePendingSourceIds(updatedGroup, sourceChannels, lockedIds);
       setStackPalettePendingMany(pendingIds, true);
       useAppStore.getState().clearChannelRendering();
       try {
         const colors = await optimizeChannelGroupWithLocks(updatedGroup, sourceChannels, lockedIds);
-        syncGroupState(applyOptimizedColorsToChannelGroup(newGroups, groupId, colors, {
+        if (storyChanged()) return;
+        syncGroupState(applyOptimizedColorsToChannelGroup(withNewRows(useDocumentStore.getState().channelGroups), updatedGroup, colors, {
           lockedChannelRowIds: lockedIds
         }));
       } catch {
-        syncGroupState(newGroups);
+        if (!storyChanged()) {
+          syncGroupState(withNewRows(useDocumentStore.getState().channelGroups));
+        }
       } finally {
         setStackPalettePendingMany(pendingIds, false);
         setOptimizePaletteBusy(false);
@@ -250021,8 +251659,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       sourceChannels,
       syncGroupState,
       optimizePaletteBusy,
-      setChannelGroupRowVisibilities,
-      channelGroupRowVisibilities
+      setChannelGroupRowVisibilities
     ]);
     const removeChannelFromGroup = (groupId, rowId) => {
       var _a2;
@@ -250063,15 +251700,18 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       if (!group2 || !isGroupEligibleForPsudoOptimize(group2, sourceChannels)) {
         return;
       }
-      const lockedIds = lockedIdsForGroup(groupId);
-      const pendingIds = groupOptimizePendingSourceIds(group2, sourceChannels, lockedIds);
+      const pendingIds = groupOptimizePendingSourceIds(group2, sourceChannels, lockedRowIds);
+      const storyId = useDocumentStore.getState().activeStoryId;
       setOptimizePaletteBusy(true);
       setStackPalettePendingMany(pendingIds, true);
       useAppStore.getState().clearChannelRendering();
       try {
-        const colors = await optimizeChannelGroupWithLocks(group2, sourceChannels, lockedIds);
-        syncGroupState(applyOptimizedColorsToChannelGroup(useDocumentStore.getState().channelGroups, groupId, colors, {
-          lockedChannelRowIds: lockedIds
+        const colors = await optimizeChannelGroupWithLocks(group2, sourceChannels, lockedRowIds);
+        const doc = useDocumentStore.getState();
+        if (doc.activeStoryId !== storyId) return;
+        const lockedNow = new Set(Object.keys(useAppStore.getState().colorLockedRowIds));
+        syncGroupState(applyOptimizedColorsToChannelGroup(doc.channelGroups, group2, colors, {
+          lockedChannelRowIds: lockedNow
         }));
       } catch {
       } finally {
@@ -250162,6 +251802,12 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       setColorPickerTarget(target);
       setColorPickerPos(colorPickerAnchorPosition(rect));
     };
+    const heSplitProps = (sc2) => heSplitToggleProps(sc2, sourceChannels, sc2 ? heDeconvByChannelId[sc2.id] : void 0);
+    const renderHeStainRows = (sc2) => jsxRuntimeExports.jsx(HeStainRows, {
+      sc: sc2,
+      contrastEditable: Boolean(contrastEditable),
+      onPickColor: openColorPicker
+    });
     const showImageBadge = images.length > 1;
     const imageLabels = reactExports.useMemo(() => uniqueImageDisplayLabels(images), [
       images
@@ -250188,7 +251834,6 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
           }
         ];
       }) : [];
-      const lockedIds = lockedIdsForGroup(group2.id);
       const allGroupRowsOn = group2.channels.length > 0 && group2.channels.every((gc2) => isGroupRowVisible(channelGroupRowVisibilities, gc2.id));
       const groupShowAllNext = {
         ...channelGroupRowVisibilities
@@ -250317,90 +251962,94 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
                   } : void 0;
                   const imageSubtitle = showImageBadge && sc2 ? imageSubtitleIfDistinct(name2, imageLabels.get(sc2.imageId) ?? null) : null;
                   const channelMeta = sc2 ? imageSubtitle ? `${imageSubtitle} \xB7 index ${sc2.index}` : `Index ${sc2.index}` : "";
-                  const colorLocked = lockedIds.has(gc2.id);
+                  const colorLocked = lockedRowIds.has(gc2.id);
                   const showColorLock = !(sc2 && isMaskChannel(sc2)) && !rgbDisplay;
-                  return jsxRuntimeExports.jsx("li", {
+                  return jsxRuntimeExports.jsxs("li", {
                     className: styles$e.groupChildBlock,
-                    children: jsxRuntimeExports.jsx(DraggableChannelRow, {
-                      label: name2,
-                      sourceId: gc2.channelId,
-                      fromGroupId: group2.id,
-                      fromRowId: gc2.id,
-                      onRemoveFromGroup: () => removeChannelFromGroup(group2.id, gc2.id),
-                      children: jsxRuntimeExports.jsx(ChannelRow, {
-                        visible,
-                        fitting: sc2 ? gmmPendingIds.includes(sc2.id) : false,
-                        visibilityTitle: visible ? `Hide ${name2}` : `Show ${name2}`,
-                        visibilityAriaLabel: `Toggle visibility for ${name2}`,
-                        visibilityBlocked: showBlocked,
-                        onToggleVisibility: (event) => toggleWithScrollOnShow(event, !visible, () => {
-                          if (rgbDisplay && sc2) {
-                            applyRgbUnit(sc2.imageId, !visible, group2.id);
-                            return;
-                          }
-                          setChannelGroupRowVisibilities(visible ? {
-                            ...channelGroupRowVisibilities,
-                            [gc2.id]: false
-                          } : nextRowVis);
-                        }),
-                        name: sc2 ? {
-                          mode: "editable",
-                          name: name2,
-                          meta: channelMeta,
-                          onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
-                        } : {
-                          mode: "label",
-                          name: name2,
-                          title: name2,
-                          className: styles$e.groupChildName
-                        },
-                        imageSubtitle,
-                        contrast,
-                        locked: colorLocked,
-                        ...!rgbDisplay && sc2 && isMaskChannel(sc2) ? {
-                          isMask: true,
-                          maskVisualization: effectiveMaskVisualization(gc2),
-                          maskAriaLabel: `Mask display for ${name2}`,
-                          ...featureTableRowExtras(sc2.id, featureTables),
-                          onMaskVisualizationChange: (viz) => syncMaskVisualization(gc2.channelId, viz, group2.id, gc2.id)
-                        } : !rgbDisplay ? {
-                          busy: palettePending,
-                          colorHex: hex,
-                          colorTitle: `Pick color for ${name2} in this group`,
-                          onColorClick: (e2) => {
-                            openColorPicker({
-                              scope: "group",
-                              groupId: group2.id,
-                              rowId: gc2.id
-                            }, e2.currentTarget.getBoundingClientRect());
-                          }
-                        } : {},
-                        more: {
-                          fitContrastId: canFitContrast(sc2) ? sc2.id : void 0,
-                          onRemoveFromGroup: () => removeChannelFromGroup(group2.id, gc2.id)
-                        },
-                        trailing: showColorLock ? jsxRuntimeExports.jsx("button", {
-                          type: "button",
-                          className: [
-                            rowStyles.channelActionButton,
-                            colorLocked ? rowStyles.channelActionButtonOn : ""
-                          ].join(" "),
-                          title: colorLocked ? "Unlock color" : "Lock color",
-                          "aria-label": colorLocked ? `Unlock color for ${name2}` : `Lock color for ${name2}`,
-                          "aria-pressed": colorLocked,
-                          onClick: () => toggleColorLock(group2.id, gc2.id),
-                          children: colorLocked ? jsxRuntimeExports.jsx(SvgLock, {
-                            width: 12,
-                            height: 12,
-                            "aria-hidden": true
-                          }) : jsxRuntimeExports.jsx(SvgLockOpen, {
-                            width: 12,
-                            height: 12,
-                            "aria-hidden": true
-                          })
-                        }) : void 0
-                      })
-                    })
+                    children: [
+                      jsxRuntimeExports.jsx(DraggableChannelRow, {
+                        label: name2,
+                        sourceId: gc2.channelId,
+                        fromGroupId: group2.id,
+                        fromRowId: gc2.id,
+                        onRemoveFromGroup: () => removeChannelFromGroup(group2.id, gc2.id),
+                        children: jsxRuntimeExports.jsx(ChannelRow, {
+                          visible,
+                          fitting: sc2 ? gmmPendingIds.includes(sc2.id) : false,
+                          visibilityTitle: visible ? `Hide ${name2}` : `Show ${name2}`,
+                          visibilityAriaLabel: `Toggle visibility for ${name2}`,
+                          visibilityBlocked: showBlocked,
+                          onToggleVisibility: (event) => toggleWithScrollOnShow(event, !visible, () => {
+                            if (rgbDisplay && sc2) {
+                              applyRgbUnit(sc2.imageId, !visible, group2.id);
+                              return;
+                            }
+                            setChannelGroupRowVisibilities(visible ? {
+                              ...channelGroupRowVisibilities,
+                              [gc2.id]: false
+                            } : nextRowVis);
+                          }),
+                          name: sc2 ? {
+                            mode: "editable",
+                            name: name2,
+                            meta: channelMeta,
+                            onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
+                          } : {
+                            mode: "label",
+                            name: name2,
+                            title: name2,
+                            className: styles$e.groupChildName
+                          },
+                          imageSubtitle,
+                          contrast,
+                          locked: colorLocked,
+                          ...rgbDisplay ? heSplitProps(sc2) : {},
+                          ...!rgbDisplay && sc2 && isMaskChannel(sc2) ? {
+                            isMask: true,
+                            maskVisualization: effectiveMaskVisualization(gc2),
+                            maskAriaLabel: `Mask display for ${name2}`,
+                            ...featureTableRowExtras(sc2.id, featureTables),
+                            onMaskVisualizationChange: (viz) => syncMaskVisualization(gc2.channelId, viz, group2.id, gc2.id)
+                          } : !rgbDisplay ? {
+                            busy: palettePending,
+                            colorHex: hex,
+                            colorTitle: `Pick color for ${name2} in this group`,
+                            onColorClick: (e2) => {
+                              openColorPicker({
+                                scope: "group",
+                                groupId: group2.id,
+                                rowId: gc2.id
+                              }, e2.currentTarget.getBoundingClientRect());
+                            }
+                          } : {},
+                          more: {
+                            fitContrastId: canFitContrast(sc2) ? sc2.id : void 0,
+                            onRemoveFromGroup: () => removeChannelFromGroup(group2.id, gc2.id)
+                          },
+                          trailing: showColorLock ? jsxRuntimeExports.jsx("button", {
+                            type: "button",
+                            className: [
+                              rowStyles.channelActionButton,
+                              colorLocked ? rowStyles.channelActionButtonOn : ""
+                            ].join(" "),
+                            title: colorLocked ? "Unlock color" : "Lock color",
+                            "aria-label": colorLocked ? `Unlock color for ${name2}` : `Lock color for ${name2}`,
+                            "aria-pressed": colorLocked,
+                            onClick: () => useAppStore.getState().toggleColorLock(gc2.id),
+                            children: colorLocked ? jsxRuntimeExports.jsx(SvgLock, {
+                              width: 12,
+                              height: 12,
+                              "aria-hidden": true
+                            }) : jsxRuntimeExports.jsx(SvgLockOpen, {
+                              width: 12,
+                              height: 12,
+                              "aria-hidden": true
+                            })
+                          }) : void 0
+                        })
+                      }),
+                      rgbDisplay && visible && sc2 && heSplitProps(sc2).heSplit ? renderHeStainRows(sc2) : null
+                    ]
                   }, gc2.id);
                 })
               }),
@@ -250503,40 +252152,44 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         ...contrastEditorPropsForSource(channelRendering, sc2, displayColor, displayLimits),
         histogramLoading: loadingHistogramSourceIds.includes(sc2.id)
       } : void 0;
-      return jsxRuntimeExports.jsx("li", {
+      return jsxRuntimeExports.jsxs("li", {
         className: styles$e.rootChannelBlock,
-        children: jsxRuntimeExports.jsx(DraggableChannelRow, {
-          label: sc2.name,
-          sourceId: sc2.id,
-          children: jsxRuntimeExports.jsx(ChannelRow, {
-            visible: shownInViewer,
-            fitting: gmmPendingIds.includes(sc2.id),
-            visibilityTitle: home ? shownInViewer ? `Hide ${sc2.name} in groups` : `Show ${sc2.name} in groups` : stackLayerTitle(sc2, shownInViewer),
-            visibilityAriaLabel,
-            visibilityBlocked: showBlocked,
-            onToggleVisibility: expanded ? () => toggleAllChannelsVisibility(false) : (event) => toggleWithScrollOnShow(event, !shownInViewer, () => {
-              toggleAllChannelsVisibility(!shownInViewer);
-            }),
-            name: {
-              mode: "editable",
-              name: rgbDisplay ? "H&E" : sc2.name,
-              meta,
-              onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
-            },
-            imageSubtitle,
-            contrast,
-            ...expanded && !rgbDisplay && isMaskChannel(sc2) ? {
-              isMask: true,
-              maskVisualization: effectiveMaskVisualization(sc2),
-              maskAriaLabel: `Mask display for ${sc2.name}`,
-              ...featureTableRowExtras(sc2.id, featureTables),
-              onMaskVisualizationChange: (viz) => syncMaskVisualization(sc2.id, viz)
-            } : colorSwatch,
-            more: expanded && canFitContrast(sc2) ? {
-              fitContrastId: sc2.id
-            } : void 0
-          })
-        })
+        children: [
+          jsxRuntimeExports.jsx(DraggableChannelRow, {
+            label: sc2.name,
+            sourceId: sc2.id,
+            children: jsxRuntimeExports.jsx(ChannelRow, {
+              visible: shownInViewer,
+              fitting: gmmPendingIds.includes(sc2.id),
+              visibilityTitle: home ? shownInViewer ? `Hide ${sc2.name} in groups` : `Show ${sc2.name} in groups` : stackLayerTitle(sc2, shownInViewer),
+              visibilityAriaLabel,
+              visibilityBlocked: showBlocked,
+              onToggleVisibility: expanded ? () => toggleAllChannelsVisibility(false) : (event) => toggleWithScrollOnShow(event, !shownInViewer, () => {
+                toggleAllChannelsVisibility(!shownInViewer);
+              }),
+              name: {
+                mode: "editable",
+                name: rgbDisplay ? "H&E" : sc2.name,
+                meta,
+                onBlur: (value) => renameSourceChannelDisplayName(sc2.id, value)
+              },
+              imageSubtitle,
+              contrast,
+              ...expanded && rgbDisplay ? heSplitProps(sc2) : {},
+              ...expanded && !rgbDisplay && isMaskChannel(sc2) ? {
+                isMask: true,
+                maskVisualization: effectiveMaskVisualization(sc2),
+                maskAriaLabel: `Mask display for ${sc2.name}`,
+                ...featureTableRowExtras(sc2.id, featureTables),
+                onMaskVisualizationChange: (viz) => syncMaskVisualization(sc2.id, viz)
+              } : colorSwatch,
+              more: expanded && canFitContrast(sc2) ? {
+                fitContrastId: sc2.id
+              } : void 0
+            })
+          }),
+          expanded && rgbDisplay && heSplitProps(sc2).heSplit ? renderHeStainRows(sc2) : null
+        ]
       }, `all-${sc2.id}`);
     };
     return jsxRuntimeExports.jsxs("div", {
@@ -257898,7 +259551,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
     return String(Math.round(n2 * 1e6) / 1e6);
   }
   function NumberField(props) {
-    const { label: label2, prefix: prefix2, unit, value, wide, onCommit } = props;
+    const { label: label2, prefix: prefix2, unit: unit2, value, wide, onCommit } = props;
     const [draft, setDraft] = reactExports.useState(null);
     const cancel = reactExports.useRef(false);
     const finish = (raw2) => {
@@ -257939,7 +259592,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
         }),
         jsxRuntimeExports.jsx("span", {
           "aria-hidden": true,
-          children: unit
+          children: unit2
         })
       ]
     });
@@ -258703,15 +260356,7 @@ vec4 stain_transmittance(float[NUM_CHANNELS] intensity) {
       contourLevels: opts.levels,
       pickable: false,
       refinementStrategy: "no-overlap",
-      parameters: {
-        blend: true,
-        blendColorOperation: "add",
-        blendAlphaOperation: "add",
-        blendColorSrcFactor: "one",
-        blendColorDstFactor: "one-minus-src-alpha",
-        blendAlphaSrcFactor: "one",
-        blendAlphaDstFactor: "one-minus-src-alpha"
-      },
+      parameters: PREMULTIPLIED_OVER_PARAMETERS,
       ...clip([
         contourExtension
       ])
@@ -259111,9 +260756,9 @@ uniform classStyleUniforms {
       });
     }
   }
-  const XRLayerBase = XRLayer;
-  const layerGetShaders = Object.getPrototypeOf(XRLayerBase.prototype).getShaders;
-  class MaskBitmaskLayer extends XRLayerBase {
+  const XRLayerBase$1 = XRLayer;
+  const layerGetShaders$1 = Object.getPrototypeOf(XRLayerBase$1.prototype).getShaders;
+  class MaskBitmaskLayer extends XRLayerBase$1 {
     getNumChannels() {
       return 1;
     }
@@ -259121,7 +260766,7 @@ uniform classStyleUniforms {
       return 1;
     }
     getShaders() {
-      return layerGetShaders.call(this, {
+      return layerGetShaders$1.call(this, {
         vs: MASK_VS,
         fs: MASK_FS,
         modules: [
@@ -259141,7 +260786,7 @@ uniform classStyleUniforms {
       var _a2;
       this.state.classIndexTexture = void 0;
       this.state.classPaletteTexture = void 0;
-      const proto2 = Object.getPrototypeOf(XRLayerBase.prototype);
+      const proto2 = Object.getPrototypeOf(XRLayerBase$1.prototype);
       (_a2 = proto2.finalizeState) == null ? void 0 : _a2.call(this);
     }
     writeMaskViz() {
@@ -260285,7 +261930,7 @@ uniform classStyleUniforms {
       imageSelectionMask,
       selectionMaskActive
     ]);
-    const clippedImageLayers = reactExports.useMemo(() => {
+    const clippedImageLayerParts = reactExports.useMemo(() => {
       const mask2 = {
         extension: maskExtension,
         maskId: selectionMaskActive ? IMAGE_SELECTION_MASK_LAYER_ID : ""
@@ -260302,10 +261947,13 @@ uniform classStyleUniforms {
         bases.push(part.base);
         if (part.lines) lines.push(part.lines);
       }
-      return [
-        ...bases,
-        ...lines
-      ];
+      return {
+        painted: [
+          ...bases,
+          ...lines
+        ],
+        load: bases
+      };
     }, [
       imageLayers,
       contourChannelIds,
@@ -260314,6 +261962,8 @@ uniform classStyleUniforms {
       selectionMaskActive,
       maskExtension
     ]);
+    const clippedImageLayers = clippedImageLayerParts.painted;
+    const imageLoadLayers = clippedImageLayerParts.load;
     const allLayers = reactExports.useMemo(() => {
       const layers = [
         worldPickSurfaceLayer,
@@ -260538,17 +262188,17 @@ uniform classStyleUniforms {
     const handleAfterRender = reactExports.useCallback(() => {
       if (loadingWidgetRef.current) {
         loadingWidgetRef.current.onRedraw({
-          layers: clippedImageLayers
+          layers: imageLoadLayers
         });
       }
       if (isCameraBusyRef.current) return;
-      const loaded = clippedImageLayers.length > 0 && clippedImageLayers.every((layer2) => layer2.isLoaded);
+      const loaded = imageLoadLayers.length > 0 && imageLoadLayers.every((layer2) => layer2.isLoaded);
       if (imageLayersLoadedRef.current !== loaded) {
         imageLayersLoadedRef.current = loaded;
         setViewerImageLayersLoaded(loaded);
       }
     }, [
-      clippedImageLayers,
+      imageLoadLayers,
       setViewerImageLayersLoaded
     ]);
     reactExports.useEffect(() => {
@@ -260979,6 +262629,538 @@ uniform classStyleUniforms {
       groups
     });
   }
+  function pyramidScales(levelWidths) {
+    if (!levelWidths.length) return [
+      1
+    ];
+    const baseWidth = levelWidths[0];
+    if (!(baseWidth > 0)) return levelWidths.map(() => 1);
+    return levelWidths.map((width) => {
+      if (!(width > 0)) return 1;
+      return Math.max(1, Math.round(baseWidth / width));
+    });
+  }
+  function pyramidMinZoom(scales) {
+    const coarsest = scales[scales.length - 1] ?? 1;
+    if (!(coarsest > 1)) return 0;
+    return -Math.floor(Math.log2(coarsest));
+  }
+  function snapToPyramidLevel(z2, scales) {
+    const requested = 2 ** -Math.round(z2);
+    for (let i2 = 0; i2 < scales.length; i2++) {
+      if (scales[i2] >= requested) return i2;
+    }
+    return Math.max(0, scales.length - 1);
+  }
+  function nativePyramidTile(index2, scales, tileSize) {
+    const level = snapToPyramidLevel(index2.z, scales);
+    const factor2 = scales[level] / 2 ** -Math.round(index2.z);
+    const x2 = Math.floor(index2.x / factor2);
+    const y2 = Math.floor(index2.y / factor2);
+    const split = Number.isInteger(factor2) && factor2 > 1 && tileSize % factor2 === 0 ? factor2 : 1;
+    const size = tileSize / split;
+    const part = split > 1 ? {
+      x: (index2.x - x2 * split) * size,
+      y: (index2.y - y2 * split) * size,
+      size
+    } : {
+      x: 0,
+      y: 0,
+      size: tileSize
+    };
+    return {
+      level,
+      x: x2,
+      y: y2,
+      part
+    };
+  }
+  function cropTile(tile, part) {
+    const w2 = Math.min(part.size, tile.width - part.x);
+    const h2 = Math.min(part.size, tile.height - part.y);
+    if (w2 <= 0 || h2 <= 0) return null;
+    if (w2 === tile.width && h2 === tile.height) return tile;
+    const data2 = tile.data.map((plane) => {
+      const src = plane;
+      const out = new src.constructor(w2 * h2);
+      for (let row2 = 0; row2 < h2; row2++) {
+        const start = (part.y + row2) * tile.width + part.x;
+        out.set(src.subarray(start, start + w2), row2 * w2);
+      }
+      return out;
+    });
+    return {
+      ...tile,
+      data: data2,
+      width: w2,
+      height: h2
+    };
+  }
+  function pyramidTilePixelBounds(args) {
+    const { x: x2, y: y2, level, part } = nativePyramidTile(args.index, args.scales, args.tileSize);
+    const scale2 = args.scales[level];
+    const boundLeft = (x2 * args.tileSize + part.x) * scale2;
+    const boundTop = (y2 * args.tileSize + part.y) * scale2;
+    return [
+      boundLeft,
+      boundTop + args.dataHeight * scale2,
+      boundLeft + args.dataWidth * scale2,
+      boundTop
+    ];
+  }
+  const XRLayerBase = XRLayer;
+  const layerGetShaders = Object.getPrototypeOf(XRLayerBase.prototype).getShaders;
+  function createLoaderPyramidTileLayer(args) {
+    const { planes } = args;
+    if (!(planes == null ? void 0 : planes.length)) return null;
+    const finest = planes[0];
+    const { width, height } = planeSize$1(finest);
+    if (width <= 0 || height <= 0) return null;
+    const { modelMatrix } = args;
+    const scales = pyramidScales(planes.map((plane) => planeSize$1(plane).width));
+    return new TileLayer({
+      id: args.id,
+      tileSize: finest.tileSize,
+      minZoom: pyramidMinZoom(scales),
+      maxZoom: 0,
+      zoomOffset: Math.round(Math.log2(modelMatrix.getScale()[0] || 1)),
+      extent: [
+        0,
+        0,
+        width,
+        height
+      ],
+      modelMatrix,
+      refinementStrategy: args.refinementStrategy ?? "best-available",
+      ...TILE_CACHE_PROPS,
+      pickable: false,
+      updateTriggers: args.updateTriggers,
+      getTileData: async ({ index: index2, signal }) => {
+        const { level, x: x2, y: y2, part } = nativePyramidTile(index2, scales, finest.tileSize);
+        try {
+          const tile = await args.getTileData({
+            level,
+            x: x2,
+            y: y2,
+            plane: planes[level],
+            signal
+          });
+          return tile && cropTile(tile, part);
+        } catch (e2) {
+          if ((signal == null ? void 0 : signal.aborted) || e2 === "__vivSignalAborted") return null;
+          console.error(e2);
+          return null;
+        }
+      },
+      renderSubLayers: (props) => {
+        var _a2;
+        const tileData = props.data;
+        if (!((_a2 = tileData == null ? void 0 : tileData.data) == null ? void 0 : _a2[0]) || tileData.width <= 0 || tileData.height <= 0) {
+          return null;
+        }
+        const bbox = props.tile.bbox;
+        if (!("left" in bbox)) return null;
+        const { left, top: top2 } = bbox;
+        if (left < 0 || top2 < 0) return null;
+        const bounds = pyramidTilePixelBounds({
+          index: props.tile.index,
+          dataWidth: tileData.width,
+          dataHeight: tileData.height,
+          tileSize: finest.tileSize,
+          scales
+        });
+        return args.renderSubLayer({
+          subLayerProps: props,
+          layerId: args.id,
+          tileData,
+          bounds,
+          tileId: props.tile.id,
+          modelMatrix
+        });
+      }
+    });
+  }
+  const HE_VS = `#version 300 es
+#define SHADER_NAME he-deconv-layer-vertex-shader
+
+in vec2 texCoords;
+in vec3 positions;
+in vec3 positions64Low;
+in vec3 instancePickingColors;
+out vec2 vTexCoord;
+
+void main(void) {
+  geometry.worldPosition = positions;
+  geometry.uv = texCoords;
+  geometry.pickingColor = instancePickingColors;
+  gl_Position = project_position_to_clipspace(positions, positions64Low, vec3(0.), geometry.position);
+  DECKGL_FILTER_GL_POSITION(gl_Position, geometry);
+  vTexCoord = texCoords;
+  vec4 color = vec4(0.);
+  DECKGL_FILTER_COLOR(color, geometry);
+}
+`;
+  const HE_FS = `#version 300 es
+#define SHADER_NAME he-deconv-layer-fragment-shader
+
+precision highp float;
+precision highp int;
+precision highp SAMPLER_TYPE;
+
+uniform SAMPLER_TYPE channel0;
+uniform SAMPLER_TYPE channel1;
+uniform SAMPLER_TYPE channel2;
+
+in vec2 vTexCoord;
+out vec4 fragColor;
+
+const float LN10 = 2.302585092994046;
+const float BACKGROUND = 255.0;
+const float STAIN_SIGNAL_K_LN10 = ${STAIN_SIGNAL_K_LN10.toFixed(7)};
+
+float samplePlane(SAMPLER_TYPE plane, vec2 uv) {
+  return float(texture(plane, uv).r);
+}
+
+vec3 optical_density(vec3 rgb8) {
+  return max(vec3(0.0), -log(max(rgb8, vec3(1.0)) / BACKGROUND) / LN10);
+}
+
+float stain_signal(float conc) {
+  return 1.0 - exp(-STAIN_SIGNAL_K_LN10 * max(conc, 0.0));
+}
+
+float windowed(float raw, vec2 contrast) {
+  return clamp((raw - contrast.x) / max(contrast.y - contrast.x, 1.0e-6), 0.0, 1.0);
+}
+
+void main() {
+  vec3 rgb8 = vec3(
+    samplePlane(channel0, vTexCoord),
+    samplePlane(channel1, vTexCoord),
+    samplePlane(channel2, vTexCoord)
+  ) * heDeconv.uToRgb8;
+  vec3 conc = heDeconv.uStainInverse * optical_density(rgb8);
+  vec3 rgb;
+  if (heDeconv.uBrightfield > 0.5) {
+    // Signed, not clamped: amounts below zero are real corrections (the
+    // residual off the H\u2013E plane goes both ways). All three together rebuild
+    // the scan; glass caps at white.
+    vec3 od =
+      conc.x * heDeconv.uHStain +
+      conc.y * heDeconv.uEStain +
+      conc.z * heDeconv.uRStain;
+    rgb = min(exp(-LN10 * od), vec3(1.0));
+  } else {
+    rgb =
+      windowed(stain_signal(conc.x), heDeconv.uHContrast) * heDeconv.uHColor +
+      windowed(stain_signal(conc.y), heDeconv.uEContrast) * heDeconv.uEColor +
+      windowed(stain_signal(conc.z), heDeconv.uRContrast) * heDeconv.uRColor;
+  }
+  fragColor = vec4(rgb, heDeconv.opacity);
+
+  geometry.uv = vTexCoord;
+  DECKGL_FILTER_COLOR(fragColor, geometry);
+}
+`;
+  const heDeconv = {
+    name: "heDeconv",
+    fs: `uniform heDeconvUniforms {
+  float uToRgb8;
+  vec2 uHContrast;
+  vec2 uEContrast;
+  vec2 uRContrast;
+  vec3 uHColor;
+  vec3 uEColor;
+  vec3 uRColor;
+  mat3 uStainInverse;
+  float opacity;
+  float uBrightfield;
+  vec3 uHStain;
+  vec3 uEStain;
+  vec3 uRStain;
+} heDeconv;
+`,
+    uniformTypes: {
+      uToRgb8: "f32",
+      uHContrast: "vec2<f32>",
+      uEContrast: "vec2<f32>",
+      uRContrast: "vec2<f32>",
+      uHColor: "vec3<f32>",
+      uEColor: "vec3<f32>",
+      uRColor: "vec3<f32>",
+      uStainInverse: "mat3x3<f32>",
+      opacity: "f32",
+      uBrightfield: "f32",
+      uHStain: "vec3<f32>",
+      uEStain: "vec3<f32>",
+      uRStain: "vec3<f32>"
+    }
+  };
+  const HE_XR_PROPS = {
+    interpolation: "nearest",
+    channelsVisible: [
+      true,
+      true,
+      true
+    ],
+    contrastLimits: [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+    pickable: false,
+    opacity: 1
+  };
+  function heSamplerType(dtype) {
+    var _a2;
+    return ((_a2 = DTYPE_VALUES[dtype]) == null ? void 0 : _a2.sampler) ?? DTYPE_VALUES.Uint8.sampler;
+  }
+  function stainContrast(stain) {
+    return [
+      signalFromCounts(stain.lower),
+      signalFromCounts(stain.upper)
+    ];
+  }
+  function stainColor(stain) {
+    if (!stain.visible) return [
+      0,
+      0,
+      0
+    ];
+    return [
+      stain.color[0] / 255,
+      stain.color[1] / 255,
+      stain.color[2] / 255
+    ];
+  }
+  const NO_STAIN = [
+    0,
+    0,
+    0
+  ];
+  const DEFAULT_STAIN = defaultHeDeconvSplit();
+  const DEFAULT_H_COLOR = stainColor(DEFAULT_STAIN.hematoxylin);
+  const DEFAULT_E_COLOR = stainColor(DEFAULT_STAIN.eosin);
+  const DEFAULT_R_COLOR = stainColor(DEFAULT_STAIN.residual);
+  const DEFAULT_VECTORS = heStainVectors(DEFAULT_STAIN_INVERSE);
+  class HeDeconvXrLayer extends XRLayerBase {
+    getNumChannels() {
+      return 3;
+    }
+    getNumPlanes() {
+      return 1;
+    }
+    getShaders() {
+      return layerGetShaders.call(this, {
+        vs: HE_VS,
+        fs: HE_FS,
+        modules: [
+          project32,
+          picking,
+          heDeconv
+        ],
+        defines: {
+          SAMPLER_TYPE: heSamplerType(this.props.dtype),
+          NUM_CHANNELS: "3",
+          NUM_PLANES: "1"
+        }
+      });
+    }
+    updateState(params) {
+      super.updateState(params);
+      const { model } = this.state;
+      if (!model) return;
+      const props = this.props;
+      model.shaderInputs.setProps({
+        heDeconv: {
+          uToRgb8: props.uToRgb8 ?? 1,
+          uHContrast: props.uHContrast ?? [
+            0,
+            1
+          ],
+          uEContrast: props.uEContrast ?? [
+            0,
+            1
+          ],
+          uRContrast: props.uRContrast ?? [
+            0,
+            1
+          ],
+          uHColor: props.uHColor ?? DEFAULT_H_COLOR,
+          uEColor: props.uEColor ?? DEFAULT_E_COLOR,
+          uRColor: props.uRColor ?? DEFAULT_R_COLOR,
+          uStainInverse: props.uStainInverse ?? DEFAULT_STAIN_INVERSE,
+          opacity: this.props.opacity ?? 1,
+          uBrightfield: props.uBrightfield ?? 0,
+          uHStain: props.uHStain ?? DEFAULT_VECTORS.hematoxylin,
+          uEStain: props.uEStain ?? DEFAULT_VECTORS.eosin,
+          uRStain: props.uRStain ?? DEFAULT_VECTORS.residual
+        }
+      });
+    }
+  }
+  __publicField(HeDeconvXrLayer, "layerName", "HeDeconvXrLayer");
+  __publicField(HeDeconvXrLayer, "defaultProps", {
+    ...HE_XR_PROPS,
+    uToRgb8: 1,
+    uHContrast: [
+      0,
+      1
+    ],
+    uEContrast: [
+      0,
+      1
+    ],
+    uRContrast: [
+      0,
+      1
+    ],
+    uHColor: DEFAULT_H_COLOR,
+    uEColor: DEFAULT_E_COLOR,
+    uRColor: DEFAULT_R_COLOR,
+    uStainInverse: DEFAULT_STAIN_INVERSE,
+    uBrightfield: 0,
+    uHStain: DEFAULT_VECTORS.hematoxylin,
+    uEStain: DEFAULT_VECTORS.eosin,
+    uRStain: DEFAULT_VECTORS.residual
+  });
+  function splitInterleavedRgb(data2, width, height) {
+    const n2 = width * height;
+    if (n2 <= 0 || data2.length < n2 * 3) return null;
+    const Ctor = data2.constructor;
+    const r2 = new Ctor(n2);
+    const g2 = new Ctor(n2);
+    const b2 = new Ctor(n2);
+    for (let i2 = 0; i2 < n2; i2++) {
+      const s2 = i2 * 3;
+      r2[i2] = data2[s2];
+      g2[i2] = data2[s2 + 1];
+      b2[i2] = data2[s2 + 2];
+    }
+    return [
+      r2,
+      g2,
+      b2
+    ];
+  }
+  function createHeDeconvLayer(args) {
+    const planes = args.loader.data;
+    if (!(planes == null ? void 0 : planes.length)) return null;
+    const finest = planes[0];
+    const parentIndex = args.parentIndex;
+    const dtype = finest.dtype;
+    const uToRgb8 = rgb8ScaleFromDtype(dtype);
+    const uHContrast = stainContrast(args.hematoxylin);
+    const uEContrast = stainContrast(args.eosin);
+    const uRContrast = stainContrast(args.residual);
+    const uHColor = stainColor(args.hematoxylin);
+    const uEColor = stainColor(args.eosin);
+    const uRColor = stainColor(args.residual);
+    const uStainInverse = args.stainInverse ?? DEFAULT_STAIN_INVERSE;
+    const uBrightfield = args.mode === "brightfield" ? 1 : 0;
+    const vectors = heStainVectors(uStainInverse);
+    const uHStain = args.hematoxylin.visible ? vectors.hematoxylin : NO_STAIN;
+    const uEStain = args.eosin.visible ? vectors.eosin : NO_STAIN;
+    const uRStain = args.residual.visible ? vectors.residual : NO_STAIN;
+    const { overlay, opacity } = args;
+    const refinementStrategy = overlay || opacity < 1 ? "no-overlap" : "best-available";
+    const parameters = opacity < 1 ? imageFadeParameters(overlay, opacity).parameters : overlay ? {
+      blendColorOperation: "add",
+      blendAlphaOperation: "add",
+      blendColorSrcFactor: "one",
+      blendColorDstFactor: "one",
+      blendAlphaSrcFactor: "one",
+      blendAlphaDstFactor: "one"
+    } : void 0;
+    return createLoaderPyramidTileLayer({
+      id: args.id,
+      planes,
+      modelMatrix: args.modelMatrix,
+      refinementStrategy,
+      updateTriggers: {
+        getTileData: [
+          parentIndex
+        ],
+        renderSubLayers: [
+          dtype,
+          uToRgb8,
+          ...uHContrast,
+          ...uEContrast,
+          ...uRContrast,
+          ...uHColor,
+          ...uEColor,
+          ...uRColor,
+          ...uStainInverse,
+          uBrightfield,
+          ...uHStain,
+          ...uEStain,
+          ...uRStain,
+          opacity,
+          overlay,
+          args.modelMatrix
+        ]
+      },
+      getTileData: async ({ plane, x: x2, y: y2, signal }) => {
+        var _a2;
+        const tile = await plane.getTile({
+          x: x2,
+          y: y2,
+          selection: {
+            t: 0,
+            z: 0,
+            c: parentIndex
+          },
+          signal
+        });
+        if (!((_a2 = tile == null ? void 0 : tile.data) == null ? void 0 : _a2.length) || tile.width <= 0 || tile.height <= 0) {
+          return null;
+        }
+        const split = splitInterleavedRgb(tile.data, tile.width, tile.height);
+        if (!split) return null;
+        return {
+          data: split,
+          width: tile.width,
+          height: tile.height
+        };
+      },
+      renderSubLayer: ({ subLayerProps, layerId, tileData, bounds, tileId, modelMatrix }) => new HeDeconvXrLayer({
+        ...subLayerProps,
+        id: `${layerId}-xr-${tileId}`,
+        channelData: tileData,
+        bounds,
+        modelMatrix,
+        dtype,
+        uToRgb8,
+        uHContrast,
+        uEContrast,
+        uRContrast,
+        uHColor,
+        uEColor,
+        uRColor,
+        uStainInverse,
+        uBrightfield,
+        uHStain,
+        uEStain,
+        uRStain,
+        ...HE_XR_PROPS,
+        opacity,
+        ...parameters ? {
+          parameters
+        } : {}
+      })
+    });
+  }
   const proto = XRLayer.prototype;
   for (const method of [
     "getShaders",
@@ -261000,7 +263182,7 @@ uniform classStyleUniforms {
     };
   }
   function applyChannelRendering(settings, live2) {
-    if (!live2) return settings;
+    if (!live2 || live2.heComponent) return settings;
     const ids = settings.sourceChannelIds;
     if (!(ids == null ? void 0 : ids.length)) return settings;
     const idx = ids.indexOf(live2.sourceChannelId);
@@ -261037,16 +263219,20 @@ uniform classStyleUniforms {
       colors
     };
   }
+  const stainSplitCache = /* @__PURE__ */ new WeakMap();
   function splitStainChannels(settings, stainChannelIds) {
     const ids = settings.sourceChannelIds;
     if (!(ids == null ? void 0 : ids.some((id2) => stainChannelIds.has(id2)))) return [
       settings,
       null
     ];
+    const isStain = ids.map((id2) => stainChannelIds.has(id2));
+    const mask2 = isStain.map(Number).join("");
+    const cached = stainSplitCache.get(settings);
+    if ((cached == null ? void 0 : cached.mask) === mask2) return cached.split;
     const part = (stain) => {
-      const keep = ids.map((id2) => stainChannelIds.has(id2) === stain);
-      if (!keep.includes(true)) return null;
-      const pick = (values) => values.filter((_2, i2) => keep[i2]);
+      if (!isStain.includes(stain)) return null;
+      const pick = (values) => values.filter((_2, i2) => isStain[i2] === stain);
       return {
         ...settings,
         selections: pick(settings.selections),
@@ -261056,10 +263242,15 @@ uniform classStyleUniforms {
         sourceChannelIds: pick(ids)
       };
     };
-    return [
+    const split = [
       part(false),
       part(true)
     ];
+    stainSplitCache.set(settings, {
+      mask: mask2,
+      split
+    });
+    return split;
   }
   function loaderListFromEntries(sources) {
     const { dicomIndexList = [], omeLoaderEntries = [], jpegLoaderEntries = [] } = sources;
@@ -261083,15 +263274,15 @@ uniform classStyleUniforms {
     inheritUnitlessPhysicalSize(list2.map((row2) => row2.loader));
     return list2;
   }
+  const isDicomRgb = (entry) => entry.modality === "Brightfield";
   function createDicomTileLayer(args) {
-    const rgbImage = args.entry.modality === "Brightfield";
     const remount = args.remountKey === void 0 ? "" : `-r${args.remountKey}`;
     const imageKey = args.entry.sourceImageId || `dicom-${args.entry.series}`;
     return createTileLayers({
       pyramids: args.entry.pyramids,
       dicomLoader: args.entry.loader,
       settings: args.settings,
-      rgbImage,
+      rgbImage: isDicomRgb(args.entry),
       imageID: `${imageKey}${remount}`,
       modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
       opacity: args.opacity
@@ -261110,10 +263301,8 @@ uniform classStyleUniforms {
       ...TILE_CACHE_PROPS,
       TilesetClass: PlaceholderTileset2D,
       excludeBackground: true,
-      ...args.stainBelow === void 0 ? {
-        ...args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {},
-        ...imageFadeParameters(Boolean(args.overlay), args.opacity)
-      } : stainLayerParameters(args.stainBelow),
+      ...args.overlay ? OME_INTENSITY_OVERLAY_PROPS : {},
+      ...imageFadeParameters(Boolean(args.overlay), args.opacity),
       opacity: isInterleaved(args.loader.data[0].shape) ? bitmapLayerOpacity(args.opacity) : args.opacity,
       loader: args.loader.data,
       modelMatrix: layerModelMatrix(args.loader, args.orientation)
@@ -261121,16 +263310,82 @@ uniform classStyleUniforms {
   }
   function createEncodedImageLayer(args) {
     const remount = args.remountKey === void 0 ? "" : `-r${args.remountKey}`;
-    const stain = args.stainBelow === void 0 ? "" : "-stain";
     return createJpegLayers({
       jpegLoader: args.entry.loader.data,
       settings: args.settings,
       transfer: args.entry.transfer ?? "contrast",
-      layerId: `jpeg-${args.entry.sourceImageId}${stain}${remount}`,
+      layerId: `jpeg-${args.entry.sourceImageId}${remount}`,
       modelMatrix: layerModelMatrix(args.entry.loader, args.orientation),
-      opacity: args.opacity,
-      stainBelow: args.stainBelow
+      opacity: args.opacity
     });
+  }
+  function liveHeStain(stain, sourceChannelId, component, live2) {
+    if ((live2 == null ? void 0 : live2.sourceChannelId) !== sourceChannelId || live2.heComponent !== component) {
+      return stain;
+    }
+    if (live2.kind === "contrast") {
+      return {
+        ...stain,
+        lower: live2.lower,
+        upper: live2.upper
+      };
+    }
+    return {
+      ...stain,
+      color: [
+        live2.r,
+        live2.g,
+        live2.b
+      ]
+    };
+  }
+  function peelHeDeconvFromSettings(settings, heDeconvByChannelId, live2) {
+    var _a2;
+    const ids = settings == null ? void 0 : settings.sourceChannelIds;
+    if (!settings || !(ids == null ? void 0 : ids.length) || !heDeconvByChannelId) {
+      return {
+        settings,
+        heLayers: []
+      };
+    }
+    const heLayers = [];
+    const keep = [];
+    for (let i2 = 0; i2 < ids.length; i2++) {
+      const id2 = ids[i2];
+      const split = id2 ? heDeconvByChannelId[id2] : void 0;
+      if (!id2 || !split) {
+        keep.push(i2);
+        continue;
+      }
+      const hematoxylin = liveHeStain(split.hematoxylin, id2, "hematoxylin", live2);
+      const eosin = liveHeStain(split.eosin, id2, "eosin", live2);
+      const residual = liveHeStain(split.residual ?? defaultHeDeconvSplit().residual, id2, "residual", live2);
+      if (!hematoxylin.visible && !eosin.visible && !residual.visible) continue;
+      heLayers.push({
+        parentIndex: ((_a2 = settings.selections[i2]) == null ? void 0 : _a2.c) ?? 0,
+        sourceChannelId: id2,
+        mode: split.mode,
+        hematoxylin,
+        eosin,
+        residual
+      });
+    }
+    if (keep.length === ids.length) return {
+      settings,
+      heLayers
+    };
+    const visibleFlags = settings.channelsVisible;
+    return {
+      settings: {
+        ...settings,
+        selections: keep.map((i2) => settings.selections[i2]),
+        colors: keep.map((i2) => settings.colors[i2]),
+        contrastLimits: keep.map((i2) => settings.contrastLimits[i2]),
+        channelsVisible: visibleFlags ? keep.map((i2) => visibleFlags[i2] ?? true) : void 0,
+        sourceChannelIds: keep.map((i2) => ids[i2])
+      },
+      heLayers
+    };
   }
   function buildImageLayers(args) {
     const dicomIndexList = args.dicomIndexList ?? [];
@@ -261143,95 +263398,136 @@ uniform classStyleUniforms {
     const opacityOf = (sourceImageId) => opacityForImage(images, sourceImageId, opacityPreview);
     const stainChannelIds = new Set(images == null ? void 0 : images.flatMap((im) => im.channels.filter((ch2) => ch2.stain).map((ch2) => ch2.id)));
     const stains = [];
+    const withStains = (settings, canStain, make) => {
+      const [fluorescence, stain] = canStain ? splitStainChannels(settings, stainChannelIds) : [
+        settings,
+        null
+      ];
+      const layer2 = fluorescence && make(fluorescence, false);
+      const stainLayer = stain && make(stain, true);
+      if (stainLayer) stains.push(stainLayer);
+      return layer2 ? [
+        layer2
+      ] : [];
+    };
     let omeVisiblePainted = 0;
-    const painted = [
+    const layers = [
       ...dicomIndexList.flatMap((entry, i2) => {
         var _a2;
         const settings = dicomSettingsList[i2];
         if (!((_a2 = settings == null ? void 0 : settings.selections) == null ? void 0 : _a2.length)) return [];
-        const layer2 = createDicomTileLayer({
+        return withStains(settings, !isDicomRgb(entry), (part) => createDicomTileLayer({
           entry,
-          settings,
+          settings: part,
           remountKey: args.remountKey,
           orientation: orientationForImage(images, entry.sourceImageId, orientationPreview),
           opacity: opacityOf(entry.sourceImageId)
-        });
-        if (!layer2) return [];
-        return [
-          layer2
-        ];
+        }));
       }),
       ...omeLoaderEntries.flatMap(({ loader, transfer, sourceImageId }, i2) => {
-        var _a2;
-        const settings = omeSettingsList[i2];
-        if (!((_a2 = settings == null ? void 0 : settings.selections) == null ? void 0 : _a2.length)) return [];
-        const layerId = `mainLayer-${sourceImageId}`;
-        const layerArgs = {
+        var _a2, _b2, _c2;
+        const packedRgb = isInterleaved(loader.data[0].shape);
+        const peeled = peelHeDeconvFromSettings(omeSettingsList[i2], packedRgb ? args.heDeconvByChannelId : void 0, args.channelRendering);
+        const settings = peeled.settings;
+        const orientation = orientationForImage(images, sourceImageId, orientationPreview);
+        const opacity = opacityOf(sourceImageId);
+        const canStain = !packedRgb;
+        const out = ((_a2 = settings == null ? void 0 : settings.selections) == null ? void 0 : _a2.length) ? withStains(settings, canStain, (part, stain) => createMultiscaleLayer({
           loader,
+          settings: part,
+          layerId: `mainLayer-${sourceImageId}`,
           remountKey: args.remountKey,
-          orientation: orientationForImage(images, sourceImageId, orientationPreview),
-          opacity: opacityOf(sourceImageId),
           ...transfer ? {
             transfer
-          } : {}
-        };
-        const [fluorescence, stain] = isInterleaved(loader.data[0].shape) ? [
-          settings,
-          null
-        ] : splitStainChannels(settings, stainChannelIds);
-        if (stain) {
-          stains.push((stainBelow) => createMultiscaleLayer({
-            ...layerArgs,
-            settings: stain,
-            layerId: `${layerId}-stain`,
-            stainBelow
-          }));
+          } : {},
+          overlay: !stain && omeVisiblePainted++ > 0,
+          orientation,
+          opacity
+        })) : [];
+        const remount = args.remountKey === void 0 ? "" : `-r${args.remountKey}`;
+        for (const he2 of peeled.heLayers) {
+          const layer2 = createHeDeconvLayer({
+            id: `heDeconv-${sourceImageId}-${he2.sourceChannelId}${remount}`,
+            loader,
+            parentIndex: he2.parentIndex,
+            mode: he2.mode,
+            hematoxylin: he2.hematoxylin,
+            eosin: he2.eosin,
+            residual: he2.residual,
+            overlay: omeVisiblePainted > 0,
+            modelMatrix: layerModelMatrix(loader, orientation),
+            opacity,
+            stainInverse: (_c2 = (_b2 = args.heStainFitByChannelId) == null ? void 0 : _b2[he2.sourceChannelId]) == null ? void 0 : _c2.glslInverse
+          });
+          if (layer2) {
+            out.push(layer2);
+            omeVisiblePainted += 1;
+          }
         }
-        if (!fluorescence) return [];
-        const overlay = omeVisiblePainted > 0;
-        omeVisiblePainted += 1;
-        return [
-          createMultiscaleLayer({
-            ...layerArgs,
-            settings: fluorescence,
-            layerId,
-            overlay
-          })
-        ];
+        return out;
       }),
       ...jpegLoaderEntries.flatMap((entry, i2) => {
         var _a2;
         const settings = jpegSettingsList[i2];
         if (!((_a2 = settings == null ? void 0 : settings.selections) == null ? void 0 : _a2.length)) return [];
-        const layerArgs = {
+        return withStains(settings, true, (part) => createEncodedImageLayer({
           entry,
+          settings: part,
           remountKey: args.remountKey,
           orientation: orientationForImage(images, entry.sourceImageId, orientationPreview),
           opacity: opacityOf(entry.sourceImageId)
-        };
-        const [fluorescence, stain] = splitStainChannels(settings, stainChannelIds);
-        if (stain) {
-          stains.push((stainBelow) => createEncodedImageLayer({
-            ...layerArgs,
-            settings: stain,
-            stainBelow
-          }));
-        }
-        return fluorescence ? [
-          createEncodedImageLayer({
-            ...layerArgs,
-            settings: fluorescence
-          })
-        ] : [];
+        }));
       })
     ];
-    return [
-      ...painted,
-      ...stains.map((make, i2) => make(painted.length > 0 || i2 > 0))
-    ];
+    for (const layer2 of stains) {
+      layers.push(layer2.clone({
+        id: `${layer2.id}-stain`,
+        ...stainLayerParameters(layers.length > 0)
+      }));
+    }
+    return layers;
   }
   function useViewerLayers(args) {
     const { dicomIndexList = [], omeLoaderEntries, jpegLoaderEntries, sourceChannels, channelGroups, activeChannelGroupId, channelVisibilities, channelGroupRowVisibilities, channelRendering = null, images, orientationPreview = null, opacityPreview = null, remountKey } = args;
+    const heDeconvByChannelId = useAppStore((s2) => s2.heDeconvByChannelId);
+    const heStainFitByChannelId = useAppStore((s2) => s2.heStainFitByChannelId);
+    reactExports.useEffect(() => {
+      const ids = Object.keys(heDeconvByChannelId);
+      if (ids.length === 0) return;
+      let cancelled = false;
+      for (const channelId of ids) {
+        if (heStainFitByChannelId[channelId]) continue;
+        const sc2 = sourceChannels.find((c2) => c2.id === channelId);
+        if (!sc2) continue;
+        const entry = omeLoaderEntries.find((e2) => e2.sourceImageId === sc2.imageId);
+        if (!entry) continue;
+        void ensureHeStainFit({
+          loader: entry.loader,
+          cacheKey: `${sc2.imageId}:${sc2.index}`,
+          channelIndex: sc2.index
+        }).then((fit) => {
+          if (cancelled) return;
+          const store = useAppStore.getState();
+          if (!store.heDeconvByChannelId[channelId]) return;
+          store.setHeStainFit(channelId, fit);
+          if (!fit.failed) return;
+          setTimeout(() => {
+            const app = useAppStore.getState();
+            if (app.heStainFitByChannelId[channelId] === fit) {
+              app.setHeStainFit(channelId, null);
+            }
+          }, RETRY_FAILED_AFTER_MS);
+        });
+      }
+      return () => {
+        cancelled = true;
+      };
+    }, [
+      heDeconvByChannelId,
+      heStainFitByChannelId,
+      omeLoaderEntries,
+      sourceChannels
+    ]);
     const channelsSignature = buildImageViewerSignature(channelGroups, sourceChannels);
     const channelsRef = reactExports.useRef({
       sourceChannels,
@@ -261306,7 +263602,10 @@ uniform classStyleUniforms {
       remountKey,
       images,
       orientationPreview,
-      opacityPreview
+      opacityPreview,
+      heDeconvByChannelId,
+      heStainFitByChannelId,
+      channelRendering
     }), [
       dicomIndexList,
       omeLoaderEntries,
@@ -261317,7 +263616,10 @@ uniform classStyleUniforms {
       remountKey,
       images,
       orientationPreview,
-      opacityPreview
+      opacityPreview,
+      heDeconvByChannelId,
+      heStainFitByChannelId,
+      channelRendering
     ]);
     return {
       loaderList,
@@ -261981,9 +264283,14 @@ uniform classStyleUniforms {
         ...app.channelVisibilities
       };
       delete channelVisibilities2[SELECTION_MASK_CHANNEL_KEY];
+      const channelIds = new Set(removed.flatMap((im) => im.channels.map((ch2) => ch2.id)));
+      const without = (byId) => Object.fromEntries(Object.entries(byId).filter(([id2]) => !channelIds.has(id2)));
+      for (const im of removed) forgetHeStainEstimates(im.id);
       useAppStore.setState({
         imageSelectionMask: null,
-        channelVisibilities: channelVisibilities2
+        channelVisibilities: channelVisibilities2,
+        heDeconvByChannelId: without(app.heDeconvByChannelId),
+        heStainFitByChannelId: without(app.heStainFitByChannelId)
       });
       const keys2 = removed.flatMap((im) => {
         var _a2;

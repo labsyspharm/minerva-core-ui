@@ -1,4 +1,4 @@
-import { B as BaseDecoder } from "./index-BfW702JS.js";
+import { B as BaseDecoder } from "./index-DqE5qg0b.js";
 let init;
 let instance;
 let heap;
