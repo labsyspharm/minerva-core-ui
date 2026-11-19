@@ -8,6 +8,16 @@ import {
 } from "../imaging/channelCompositor";
 import type { MaskVisualization } from "../imaging/channelKind";
 import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
+import type {
+  HeDeconvComponent,
+  HeDeconvSplit,
+  HeStainView,
+} from "../imaging/heDeconvView";
+import {
+  clearHeStainEstimateCache,
+  type HeHistogram,
+  type HeStainFit,
+} from "../imaging/heStainFit";
 import type { ImageOpacityPreview } from "../imaging/imageOpacity";
 import {
   type ImageSelectionMask,
@@ -587,6 +597,7 @@ export type ChannelRendering =
       sourceChannelId: string;
       lower: number;
       upper: number;
+      heComponent?: HeDeconvComponent;
     }
   | {
       kind: "color";
@@ -594,6 +605,7 @@ export type ChannelRendering =
       r: number;
       g: number;
       b: number;
+      heComponent?: HeDeconvComponent;
     };
 
 /** In-flight image placement while dragging on the canvas; committed on pointerup. */
@@ -820,6 +832,17 @@ export interface AppStore {
   setArrangeImageId: (imageId: string | null) => void;
   channelVisibilities: Record<string, boolean>;
   groupNames: Record<string, string>;
+  heDeconvByChannelId: Record<string, HeDeconvSplit>;
+  setHeDeconv: (channelId: string, split: HeDeconvSplit | null) => void;
+  patchHeDeconv: (
+    channelId: string,
+    component: HeDeconvComponent,
+    patch: Partial<HeStainView>,
+  ) => void;
+  heStainFitByChannelId: Record<string, HeStainFit>;
+  setHeStainFit: (channelId: string, fit: HeStainFit) => void;
+  heHistogramByChannelId: Record<string, HeHistogram>;
+  setHeHistogram: (channelId: string, histogram: HeHistogram) => void;
   /**
    * Classes turned off from the playback legend, by `legendClassKey`.
    * Session only: the waypoint's class view is not changed.
@@ -982,6 +1005,9 @@ const overlayInitialState = {
   imageOpacityPreview: null,
   arrangeImageId: null,
   channelVisibilities: {},
+  heDeconvByChannelId: {} as Record<string, HeDeconvSplit>,
+  heStainFitByChannelId: {} as Record<string, HeStainFit>,
+  heHistogramByChannelId: {} as Record<string, HeHistogram>,
   channelGroupRowVisibilities: {},
   groupNames: {},
   hiddenLegendClasses: {} as Record<string, string[]>,
@@ -1259,6 +1285,7 @@ export const useAppStore = create<AppStore>()(
       resetStoryViewerSession: () => {
         const vis = { ...get().channelVisibilities };
         delete vis[SELECTION_MASK_CHANNEL_KEY];
+        clearHeStainEstimateCache();
         set({
           shapes: [],
           shapeGroups: [],
@@ -1271,6 +1298,9 @@ export const useAppStore = create<AppStore>()(
           brushLastScreenCoord: null,
           imageSelectionMask: null,
           channelVisibilities: vis,
+          heDeconvByChannelId: {},
+          heStainFitByChannelId: {},
+          heHistogramByChannelId: {},
           hiddenLegendClasses: {},
           activeStoryIndex: null,
           waypointAuthoring: new Map(),
@@ -2320,6 +2350,56 @@ export const useAppStore = create<AppStore>()(
             { kind: Object.keys(vis).length === 0 ? "fresh" : "sync" },
           ),
         });
+      },
+
+      setHeDeconv: (channelId, split) => {
+        set((s) => {
+          const next = { ...s.heDeconvByChannelId };
+          const histograms = { ...s.heHistogramByChannelId };
+          if (split) next[channelId] = split;
+          else {
+            delete next[channelId];
+            delete histograms[channelId];
+          }
+          return {
+            heDeconvByChannelId: next,
+            heHistogramByChannelId: histograms,
+          };
+        });
+      },
+
+      patchHeDeconv: (channelId, component, patch) => {
+        set((s) => {
+          const prev = s.heDeconvByChannelId[channelId];
+          if (!prev) return s;
+          return {
+            heDeconvByChannelId: {
+              ...s.heDeconvByChannelId,
+              [channelId]: {
+                ...prev,
+                [component]: { ...prev[component], ...patch },
+              },
+            },
+          };
+        });
+      },
+
+      setHeStainFit: (channelId, fit) => {
+        set((s) => ({
+          heStainFitByChannelId: {
+            ...s.heStainFitByChannelId,
+            [channelId]: fit,
+          },
+        }));
+      },
+
+      setHeHistogram: (channelId, histogram) => {
+        set((s) => ({
+          heHistogramByChannelId: {
+            ...s.heHistogramByChannelId,
+            [channelId]: histogram,
+          },
+        }));
       },
 
       setChannelGroupRowVisibilities: (vis: Record<string, boolean>) => {
