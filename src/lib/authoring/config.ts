@@ -17,6 +17,7 @@ import type {
   ChannelGroup,
   ClassView,
   StoryShape,
+  WaypointLens,
 } from "../stores/documentSchema";
 
 export type {
@@ -128,6 +129,8 @@ export type ConfigWaypoint = WaypointProperties & {
   name?: string;
   /** Story `waypoints[].classViews`. */
   classViews?: ClassView[];
+  /** Story `waypoints[].lens`. */
+  lens?: WaypointLens;
 };
 
 type ExtractDistributions = (

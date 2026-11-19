@@ -280,9 +280,18 @@ const ClassViewSchema = z.object({
     .default([]),
 });
 
+/** Circle that follows the cursor and shows another channel group inside it. */
+const WaypointLensSchema = z.object({
+  /** Group drawn inside the lens; references {@link ChannelGroup.id}. */
+  groupId: IdSchema,
+  /** Screen pixels, independent of zoom. */
+  radius: z.number().positive(),
+});
+
 const waypointObjectZ = z.object({
   id: IdSchema,
   groupId: IdSchema.optional(),
+  lens: WaypointLensSchema.optional(),
   thumbnail: z.string(),
   title: z.string(),
   name: z.string().optional(),
@@ -430,6 +439,7 @@ export type Channel = ImageChannel & {
 export type ChannelGroupChannel = z.infer<typeof ChannelGroupChannelSchema>;
 export type ChannelGroup = z.infer<typeof ChannelGroupSchema>;
 export type Waypoint = z.infer<typeof WaypointSchema>;
+export type WaypointLens = z.infer<typeof WaypointLensSchema>;
 export type ClassView = z.infer<typeof ClassViewSchema>;
 export type SourceDistributionData = z.infer<typeof SourceDistributionSchema>;
 export type FeatureTable = z.infer<typeof FeatureTableSchema>;

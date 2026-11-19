@@ -498,3 +498,58 @@
 .channelGroupDropdownOption:focus-visible {
   outline-offset: -2px;
 }
+
+/* --- Waypoint lens ------------------------------------------------------- */
+
+.lensBadge {
+  min-width: 0;
+  padding: 2px 5px;
+}
+
+.lensHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.lensHeader input {
+  margin: 0;
+  accent-color: var(--minerva-blue);
+}
+
+.lensFieldLabel {
+  margin-top: 2px;
+  color: var(--minerva-quiet);
+  font-size: var(--minerva-size-note);
+  line-height: 1.2;
+}
+
+.lensRadiusRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lensRadiusSlider {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  accent-color: var(--minerva-ink);
+}
+
+.lensRadiusValue {
+  flex: none;
+  min-width: 46px;
+  text-align: right;
+  font-size: var(--minerva-size-note);
+  font-variant-numeric: tabular-nums;
+}
+
+.lensHint {
+  margin: 0;
+  color: var(--minerva-quiet);
+  font-size: var(--minerva-size-note);
+  line-height: 1.35;
+}

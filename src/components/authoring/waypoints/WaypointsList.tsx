@@ -16,14 +16,9 @@ import {
   viewStateToPixels,
 } from "@/lib/imaging/worldFrame";
 import { useAppStore } from "@/lib/stores/appStore";
-import type {
-  Channel,
-  ChannelGroup,
-  Waypoint,
-} from "@/lib/stores/documentStore";
+import type { ChannelGroup, Waypoint } from "@/lib/stores/documentStore";
 import {
   documentWaypoints,
-  findSourceChannel,
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
@@ -34,8 +29,10 @@ import {
   orthographicZoomToNumber,
 } from "@/lib/viewer/viewerViewport";
 import { WAYPOINT_THUMBNAIL_PIXEL_SIZE } from "@/lib/waypoints/waypointThumbnail";
+import { ChannelGroupDropdown } from "./ChannelGroupDropdown";
 import { WaypointAnnotationEditor } from "./WaypointAnnotationEditor";
 import { WaypointContentEditor } from "./WaypointContentEditor";
+import { WaypointLensSettings } from "./WaypointLensSettings";
 import styles from "./WaypointsList.module.css";
 
 export type WaypointsListProps = {
@@ -47,16 +44,6 @@ const countWaypointAnnotations = (story: Waypoint) =>
 
 const annotationCountLabel = (count: number) =>
   `${count} ${count === 1 ? "shape" : "shapes"}`;
-
-function channelNamesForGroup(
-  group: ChannelGroup,
-  sourceChannels: Channel[],
-): string[] {
-  return (group.channels ?? [])
-    .map((gc) => findSourceChannel(sourceChannels, gc.channelId))
-    .filter((sc): sc is Channel => sc != null)
-    .map((sc) => sc.name);
-}
 
 const WaypointsList = (props: WaypointsListProps) => {
   const { viewOnly } = props;
@@ -107,9 +94,6 @@ const WaypointsList = (props: WaypointsListProps) => {
   const detailBodyRef = React.useRef<HTMLDivElement | null>(null);
   const detailTitleFieldId = React.useId();
   const detailGroupFieldId = React.useId();
-  const channelGroupDropdownRef = React.useRef<HTMLDivElement | null>(null);
-
-  const [channelGroupMenuOpen, setChannelGroupMenuOpen] = React.useState(false);
 
   // Detail view state (master-detail).
   const [detailStoryId, setDetailStoryId] = React.useState<string | null>(null);
@@ -146,29 +130,7 @@ const WaypointsList = (props: WaypointsListProps) => {
       setDetailAnnotationsExpanded(true);
       setDetailClassesExpanded(true);
     }
-    setChannelGroupMenuOpen(false);
   }, [detailStoryId]);
-
-  React.useEffect(() => {
-    if (!channelGroupMenuOpen) return;
-    const onPointerDown = (event: PointerEvent) => {
-      const root = channelGroupDropdownRef.current;
-      if (root && !root.contains(event.target as Node)) {
-        setChannelGroupMenuOpen(false);
-      }
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setChannelGroupMenuOpen(false);
-      }
-    };
-    document.addEventListener("pointerdown", onPointerDown, true);
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown, true);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [channelGroupMenuOpen]);
 
   // Drag and drop state.
   const [draggedStoryId, setDraggedStoryId] = React.useState<string | null>(
@@ -672,6 +634,30 @@ const WaypointsList = (props: WaypointsListProps) => {
                       <span className={styles.rowTitle} title={story.title}>
                         {story.title}
                       </span>
+                      {story.lens ? (
+                        <span
+                          className={`${minervaTheme.surface} ${styles.annotationBadge} ${styles.lensBadge}`}
+                          title="Has a lens"
+                        >
+                          <span className={styles.visuallyHidden}>
+                            Has a lens
+                          </span>
+                          <svg
+                            className={styles.annotationIcon}
+                            viewBox="0 0 16 16"
+                            aria-hidden="true"
+                          >
+                            <circle
+                              cx="8"
+                              cy="8"
+                              r="5.5"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                            />
+                          </svg>
+                        </span>
+                      ) : null}
                       <span
                         className={`${minervaTheme.surface} ${styles.annotationBadge}`}
                         title={annotationTitle}
@@ -757,17 +743,11 @@ const WaypointsList = (props: WaypointsListProps) => {
 
     let selectedGroupUuid: string | undefined;
     let selectedGroup: ChannelGroup | undefined;
-    let selectedChannelsSubtitle = "";
     if (channelGroups.length > 0) {
       selectedGroup =
         channelGroups.find((group) => group.id === detailStory.groupId) ??
         channelGroups[0];
       selectedGroupUuid = selectedGroup.id;
-      const selectedChannelNames = channelNamesForGroup(
-        selectedGroup,
-        sourceChannels,
-      );
-      selectedChannelsSubtitle = selectedChannelNames.join(", ");
     }
     // Classes only for masks in this waypoint's group that have a table.
     const classTables = featureTables.filter((table) =>
@@ -783,7 +763,6 @@ const WaypointsList = (props: WaypointsListProps) => {
       if (!nextGroup) return;
       updateStory(detailStoryIndex, { groupId: nextGroup.id });
       showOnlyChannelGroup(nextGroup.id);
-      setChannelGroupMenuOpen(false);
       scheduleThumbnailCaptureForStory(detailStoryIndex, true, true, 1100);
     };
 
@@ -844,81 +823,28 @@ const WaypointsList = (props: WaypointsListProps) => {
                 >
                   Channel group
                 </label>
-                <div
-                  className={styles.channelGroupDropdown}
-                  ref={channelGroupDropdownRef}
-                >
-                  <button
-                    type="button"
-                    id={detailGroupFieldId}
-                    className={`${minervaTheme.input} ${minervaTheme.focusRing} ${styles.channelGroupDropdownTrigger}`}
-                    aria-haspopup="listbox"
-                    aria-expanded={channelGroupMenuOpen}
-                    disabled={!canEdit}
-                    onClick={() => setChannelGroupMenuOpen((open) => !open)}
-                  >
-                    <span className={styles.channelGroupDropdownTriggerMain}>
-                      <span className={styles.channelGroupDropdownTitle}>
-                        {selectedGroup.name}
-                      </span>
-                      <span className={styles.channelGroupDropdownChannels}>
-                        {selectedChannelsSubtitle || "—"}
-                      </span>
-                    </span>
-                    <ChevronIcon
-                      direction={channelGroupMenuOpen ? "up" : "down"}
-                      className={styles.channelGroupDropdownChevron}
-                    />
-                  </button>
-                  {channelGroupMenuOpen ? (
-                    <div
-                      className={`${minervaTheme.menu} ${styles.channelGroupDropdownMenu}`}
-                      role="listbox"
-                      aria-label="Channel groups"
-                    >
-                      {channelGroups.map((group) => {
-                        const names = channelNamesForGroup(
-                          group,
-                          sourceChannels,
-                        );
-                        const subtitle = names.join(", ");
-                        const isSelected = group.id === selectedGroupUuid;
-                        return (
-                          <div
-                            key={group.id}
-                            className={styles.channelGroupDropdownItem}
-                          >
-                            <button
-                              type="button"
-                              role="option"
-                              aria-selected={isSelected}
-                              className={[
-                                minervaTheme.menuItem,
-                                styles.channelGroupDropdownOption,
-                                isSelected ? minervaTheme.selectLeft : "",
-                              ]
-                                .filter(Boolean)
-                                .join(" ")}
-                              onClick={() => selectChannelGroupByUuid(group.id)}
-                            >
-                              <span
-                                className={styles.channelGroupDropdownTitle}
-                              >
-                                {group.name}
-                              </span>
-                              <span
-                                className={styles.channelGroupDropdownChannels}
-                              >
-                                {subtitle || "—"}
-                              </span>
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </div>
+                <ChannelGroupDropdown
+                  key={detailStory.id}
+                  id={detailGroupFieldId}
+                  groups={channelGroups}
+                  sourceChannels={sourceChannels}
+                  selectedId={selectedGroupUuid}
+                  onSelect={selectChannelGroupByUuid}
+                  disabled={!canEdit}
+                  ariaLabel="Channel groups"
+                />
               </div>
+            ) : null}
+            {channelGroups.length > 0 ? (
+              <WaypointLensSettings
+                key={detailStory.id}
+                lens={detailStory.lens}
+                baseGroupId={selectedGroupUuid}
+                groups={channelGroups}
+                sourceChannels={sourceChannels}
+                disabled={!canEdit}
+                onChange={(lens) => updateStory(detailStoryIndex, { lens })}
+              />
             ) : null}
             <div
               className={[
