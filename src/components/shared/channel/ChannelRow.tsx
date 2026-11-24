@@ -145,7 +145,6 @@ function MaskModeControls(props: {
 }
 
 type ChannelRowNameProps = {
-  mode: "editable";
   name: string;
   meta: string;
   onBlur: (value: string) => void;
@@ -178,9 +177,7 @@ type ChannelRowProps = {
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
 };
 
-function EditableChannelRowName(
-  props: Extract<ChannelRowNameProps, { mode: "editable" }>,
-) {
+function EditableChannelRowName(props: ChannelRowNameProps) {
   const [draft, setDraft] = useState(props.name);
   const cancelCommit = useRef(false);
 

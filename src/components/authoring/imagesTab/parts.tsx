@@ -192,15 +192,13 @@ export function InlineEditor(props: {
   actions?: ReactNode;
   /** In place of the editable name (e.g. the channel's chip). */
   label?: ReactNode;
-  /** No taller than a chip. */
-  compact?: boolean;
 }) {
   return (
     <div className={props.className}>
       <ChannelEditor
         key={props.chip.key}
         chip={props.chip}
-        look={props.compact ? "compact" : "inline"}
+        look="compact"
         actions={props.actions}
         label={props.label}
       />
@@ -260,10 +258,4 @@ export function EditorActions(props: {
       ) : null}
     </>
   );
-}
-
-export function without(set: ReadonlySet<string>, id: string) {
-  const next = new Set(set);
-  next.delete(id);
-  return next;
 }

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import type { ChannelChipTone } from "@/components/shared/channel/ChannelChip";
 import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import { PlusIcon } from "@/components/shared/common/PlusIcon";
@@ -9,11 +10,11 @@ import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { PanelIconButton } from "@/components/shared/panel/PanelButtons";
 import panel from "@/components/shared/panel/panelShared.module.css";
 import { useClickOutside } from "@/components/shared/useClickOutside";
+import { isGroupEligibleForPsudoOptimize } from "@/lib/imaging/psudoPalette";
 import type { ChannelGroup } from "@/lib/stores/documentStore";
 import { anchoredMenuPosition } from "@/lib/viewer/anchoredMenuPosition";
 import { ClampedChips } from "./ClampedChips";
 import {
-  canOptimize,
   lockedRows,
   optimizeGroupColors,
   toggleLock,
@@ -40,7 +41,11 @@ import {
   UnitChip,
 } from "./parts";
 import styles from "./Split.module.css";
-import { cx, groupMembers, type Member, toneOf, useGroupDrop } from "./units";
+import { cx, groupMembers, type Member, useGroupDrop } from "./units";
+
+/** Filled when drawn, outlined when not; no color yet reads as such. */
+const toneOf = (hex: string, drawn: boolean): ChannelChipTone =>
+  !hex ? "unassigned" : drawn ? "on" : "outlined";
 
 type Board = Shared & {
   renaming: string | null;
@@ -98,7 +103,6 @@ function Group(props: Board & { group: ChannelGroup }) {
   const { group, state } = props;
   // Open is selected: expanding selects it, collapsing deselects it.
   const open = state.activeGroupId === group.id;
-  const active = open;
   const expand = () => channelActions.showGroup(group.id);
   const collapse = () => channelActions.clearGroup(group.id);
   const { over, dropProps } = useGroupDrop(group.id);
@@ -114,7 +118,10 @@ function Group(props: Board & { group: ChannelGroup }) {
   );
   const tools = useColorTools();
   const optimizing = tools.optimizing.has(group.id);
-  const optimizable = canOptimize(group, state.sourceChannels);
+  const optimizable = isGroupEligibleForPsudoOptimize(
+    group,
+    state.sourceChannels,
+  );
   const locked = lockedRows(group);
   const shown = isGroupShown(state, group);
   const adding = props.adding === group.id;
@@ -126,8 +133,8 @@ function Group(props: Board & { group: ChannelGroup }) {
 
   // A group shown from elsewhere (a waypoint) scrolls into view.
   useEffect(() => {
-    if (active) ref.current?.scrollIntoView({ block: "nearest" });
-  }, [active]);
+    if (open) ref.current?.scrollIntoView({ block: "nearest" });
+  }, [open]);
 
   const chip = (m: Member) => {
     const visible = isRowVisible(state, m.row.id);
@@ -176,7 +183,6 @@ function Group(props: Board & { group: ChannelGroup }) {
         chip={editing}
         className={styles.chLine}
         label={chip(m)}
-        compact
         actions={
           <EditorActions
             chip={editing}
@@ -198,7 +204,7 @@ function Group(props: Board & { group: ChannelGroup }) {
   return (
     <li
       ref={ref}
-      className={cx(styles.group, active && styles.active, over && styles.over)}
+      className={cx(styles.group, open && styles.active, over && styles.over)}
       {...dropProps}
     >
       <button
@@ -239,12 +245,12 @@ function Group(props: Board & { group: ChannelGroup }) {
           type="button"
           className={cx(minervaTheme.focusRing, styles.bare, styles.name)}
           title={
-            active
+            open
               ? "Click to deselect · double-click or F2 to rename"
               : `Show ${group.name}`
           }
           onClick={(e) => {
-            if (!active) {
+            if (!open) {
               channelActions.showGroup(group.id);
               return;
             }

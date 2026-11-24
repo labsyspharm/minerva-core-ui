@@ -18,9 +18,6 @@ export type ChannelChipTone =
   | "neutral"
   | "unassigned";
 
-/** H&E / packed-RGB unit chip — same magenta as the `samples === 3` default tint. */
-export const RGB_UNIT_CHIP_HEX = "cc00ff";
-
 /** Black or white label, whichever reads on a filled chip of `hex`. */
 function inkOnHex(hex: string): string {
   const n = Number.parseInt(hex.slice(0, 6), 16);

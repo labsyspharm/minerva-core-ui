@@ -10,6 +10,7 @@
 import * as React from "react";
 import {
   applyGroupRowVisibilities,
+  applyVisibilityTransition,
   isGroupRowVisible,
   isMaskSourceRendered,
   isOwnStyleShown,
@@ -17,7 +18,6 @@ import {
   ownStyleKey,
   paintedIntensityLayers,
   type VivIntensityCapVis,
-  viewerFilledVisibilities,
   visibilitiesForRgbUnit,
   vivIntensityCapExceeded,
   withGroupRowVisible,
@@ -50,8 +50,8 @@ import {
 } from "@/lib/stores/storeUtils";
 import { optimizeGroupColors } from "./colorTools";
 
-/** Hex used for an H&E / packed-RGB unit (matches the chips and legend). */
-export { RGB_UNIT_CHIP_HEX } from "@/components/shared/channel/ChannelChip";
+/** H&E / packed-RGB unit chip — same magenta as the `samples === 3` default tint. */
+export const RGB_UNIT_CHIP_HEX = "cc00ff";
 
 type Membership = { group: ChannelGroup; row: ChannelGroupChannel };
 
@@ -87,11 +87,12 @@ function buildState(args: {
   channelRendering: ChannelRendering | null;
 }): ChannelState {
   const sourceChannels = flattenImageChannelsInDocumentOrder(args.images);
-  const filled = viewerFilledVisibilities(
+  const filled = applyVisibilityTransition(
     sourceChannels,
     args.groups,
     args.stack,
     args.rows,
+    { kind: "sync" },
   );
   const activeGroup = args.activeGroupId
     ? args.groups.find((g) => g.id === args.activeGroupId)
@@ -163,7 +164,7 @@ export function useChannelState(): ChannelState {
 }
 
 /** The same state, read now (for event handlers). */
-export function getChannelState(): ChannelState {
+function getChannelState(): ChannelState {
   const doc = useDocumentStore.getState();
   const app = useAppStore.getState();
   return buildState({
@@ -239,7 +240,7 @@ function homeMembership(
 }
 
 /** On by any route: a visible group row, or in its own style. */
-export function isChannelShown(state: ChannelState, sourceId: string): boolean {
+function isChannelShown(state: ChannelState, sourceId: string): boolean {
   return isShownViaRow(state, sourceId) || isShownOwnStyle(state, sourceId);
 }
 
@@ -254,10 +255,7 @@ export function isShownViaRow(state: ChannelState, sourceId: string): boolean {
  * On in its own style, outside any group: an ungrouped channel by its eye, a
  * grouped one by its own-style mark (see `setChannelShown`).
  */
-export function isShownOwnStyle(
-  state: ChannelState,
-  sourceId: string,
-): boolean {
+function isShownOwnStyle(state: ChannelState, sourceId: string): boolean {
   return membershipsOf(state, sourceId).length > 0
     ? isOwnStyleShown(state.stackVisibilities, sourceId)
     : isStackVisible(state.stackVisibilities, sourceId);

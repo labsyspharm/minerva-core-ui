@@ -73,8 +73,6 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
     [props.ensureChannelHistograms, props.contrastEditable],
   );
 
-  const otherPanel = activeTab === "story" ? <WaypointsList /> : null;
-
   return (
     <AuthorChannelNavProvider value={channelNav}>
       <SidebarStripSlotProvider>
@@ -104,7 +102,7 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
               >
                 {props.imagesPanel}
               </div>
-              {otherPanel}
+              {activeTab === "story" ? <WaypointsList /> : null}
             </div>
           </div>
         </div>

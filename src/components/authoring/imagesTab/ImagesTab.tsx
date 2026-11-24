@@ -31,7 +31,6 @@ import {
   SectionHead,
   type Shared,
   UnitChip,
-  without,
 } from "./parts";
 import styles from "./Split.module.css";
 import {
@@ -170,7 +169,11 @@ export function ImagesTab(props: {
         units={unitsOf(image)}
         open={open.has(image.id)}
         onOpen={() => setOpen(new Set([...open, image.id]))}
-        onClose={() => setOpen(without(open, image.id))}
+        onClose={() => {
+          const next = new Set(open);
+          next.delete(image.id);
+          setOpen(next);
+        }}
         query={queries.get(image.id) ?? ""}
       />
     ),
@@ -215,7 +218,6 @@ function imageLooks(state: ChannelState, units: Unit[]) {
             : "on";
     return {
       ...u,
-      row,
       groups,
       hex: on ? hex : "",
       tone,
@@ -244,7 +246,6 @@ function addLooks(state: ChannelState, units: Unit[], group: ChannelGroup) {
     const tone: ChannelChipTone = !row ? "neutral" : hex ? "on" : "unassigned";
     return {
       ...u,
-      row,
       groups,
       hex,
       tone,
@@ -371,7 +372,6 @@ function ImageChips(
                 chip={editing}
                 className={styles.chLine}
                 label={chip(u)}
-                compact
                 actions={<EditorActions chip={editing} state={state} />}
               />
             ) : null;

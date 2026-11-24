@@ -53,7 +53,7 @@ export type CompositedIntensityLayer = {
 };
 
 /** True when any group-row eye for this source is on. */
-export function isDisplayedViaGroupRow(
+function isDisplayedViaGroupRow(
   sourceId: string,
   channelGroups: readonly ChannelGroup[],
   groupRowVisibilities: Record<string, boolean>,
@@ -294,37 +294,12 @@ function compositedForImage(
   });
 }
 
-/** Source ids occupying a Viv slot per image (first `MAX_VIV_INTENSITY_CHANNELS`). */
-export function vivShownIntensitySourceIds(
-  vis: VivIntensityCapVis,
-): Set<string> {
-  const ids = new Set<string>();
-  const imageIds = new Set<string>();
-  for (const sc of vis.channels) {
-    if (isImageChannel(sc)) imageIds.add(sc.imageId);
-  }
-  for (const imageId of imageIds) {
-    const layers = compositedForImage(imageId, vis);
-    for (let i = 0; i < layers.length && i < MAX_VIV_INTENSITY_CHANNELS; i++) {
-      ids.add(layers[i].sc.id);
-    }
-  }
-  return ids;
-}
-
-export function vivIntensityLayerCount(
-  imageId: string,
-  vis: VivIntensityCapVis,
-): number {
-  return compositedForImage(imageId, vis).length;
-}
-
 /** True when this image's composite would exceed the Viv shader cap. */
 export function vivIntensityCapExceeded(
   imageId: string,
   vis: VivIntensityCapVis,
 ): boolean {
-  return vivIntensityLayerCount(imageId, vis) > MAX_VIV_INTENSITY_CHANNELS;
+  return compositedForImage(imageId, vis).length > MAX_VIV_INTENSITY_CHANNELS;
 }
 
 export function isMaskSourceRendered(args: {
@@ -501,25 +476,6 @@ export function applyGroupRowVisibilities(
   return out;
 }
 
-/**
- * The viewer's fill rule (`toSettings`): an empty stack map takes the fresh
- * defaults. Surfaces that list what is painted use this so they agree.
- */
-export function viewerFilledVisibilities(
-  sourceChannels: Channel[],
-  channelGroups: ChannelGroup[],
-  stackVisibilities: Record<string, boolean>,
-  groupRowVisibilities: Record<string, boolean>,
-) {
-  return applyVisibilityTransition(
-    sourceChannels,
-    channelGroups,
-    stackVisibilities,
-    groupRowVisibilities,
-    visibilityKindForMap(stackVisibilities),
-  );
-}
-
 /** Intensity layers the viewer paints for one image (same call as `toSettings`). */
 export function paintedIntensityLayers(
   imageId: string,
@@ -532,7 +488,7 @@ export function paintedIntensityLayers(
 }
 
 /** Empty session map → first-group / import defaults. A written map is kept. */
-export function visibilityKindForMap(
+function visibilityKindForMap(
   map: Record<string, boolean>,
 ): VisibilityTransition {
   return Object.keys(map).length === 0 ? { kind: "fresh" } : { kind: "sync" };

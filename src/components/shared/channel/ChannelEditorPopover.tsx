@@ -41,11 +41,11 @@ import {
 } from "@/lib/stores/documentStore";
 import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
 
-export type ChannelColorTarget =
+type ChannelColorTarget =
   | { scope: "source"; sourceId: string }
   | { scope: "group"; groupId: string; rowId: string };
 
-export function commitChannelColorTarget(target: ChannelColorTarget | null) {
+function commitChannelColorTarget(target: ChannelColorTarget | null) {
   if (!target) return;
   const live = useAppStore.getState().channelRendering;
   const doc = useDocumentStore.getState();
@@ -140,7 +140,7 @@ function previewLiveColor(target: ChannelColorTarget, hex: string) {
   });
 }
 
-export function ChannelColorPicker(props: {
+function ChannelColorPicker(props: {
   target: ChannelColorTarget | null;
   position: { top: number; left: number } | null;
   onDismiss: () => void;
@@ -337,7 +337,6 @@ export function ChannelEditor(props: {
         label={props.label}
         trailing={props.actions}
         name={{
-          mode: "editable",
           name: sc.name,
           meta: `Index ${sc.index}`,
           onBlur: rename,

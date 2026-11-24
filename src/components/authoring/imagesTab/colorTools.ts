@@ -95,11 +95,6 @@ function sourceChannels(): Channel[] {
   );
 }
 
-/** Two or more image channels to tell apart. */
-export function canOptimize(group: ChannelGroup, channels: Channel[]): boolean {
-  return isGroupEligibleForPsudoOptimize(group, channels);
-}
-
 /** Image channels whose swatches wait on the optimizer (not locked, not H&E or masks). */
 function pendingIds(
   group: ChannelGroup,

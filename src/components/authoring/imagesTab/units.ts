@@ -1,6 +1,6 @@
 /**
- * Images tab helpers: chip units (an H&E image is one "H&E" chip),
- * drag-and-drop between images and groups, and chip tone.
+ * Images tab helpers: chip units (an H&E image is one "H&E" chip) and
+ * drag-and-drop between images and groups.
  */
 import {
   type DragEvent,
@@ -8,7 +8,6 @@ import {
   useEffect,
   useState,
 } from "react";
-import type { ChannelChipTone } from "@/components/shared/channel/ChannelChip";
 import type {
   Channel,
   ChannelGroup,
@@ -72,10 +71,6 @@ export function groupsUsing(state: ChannelState, unit: Unit): ChannelGroup[] {
     g.channels.some((gc) => gc.channelId === unit.id),
   );
 }
-
-/** Filled when drawn, outlined when not; no color yet reads as such. */
-export const toneOf = (hex: string, drawn: boolean): ChannelChipTone =>
-  !hex ? "unassigned" : drawn ? "on" : "outlined";
 
 export function cx(...names: (string | false | null | undefined)[]): string {
   return names.filter(Boolean).join(" ");
