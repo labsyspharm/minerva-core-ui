@@ -12,17 +12,6 @@ import {
 import { ChannelRow } from "@/components/shared/channel/ChannelRow";
 import { featureTableRowExtras } from "@/components/shared/channel/FeatureTable";
 import {
-  applyGroupRowVisibilities,
-  applyStackVisibilities,
-  isGroupRowVisible,
-  isStackVisible,
-  type VivIntensityCapVis,
-  visibilitiesForRgbUnit,
-  visibilityKindForMap,
-  vivIntensityCapExceeded,
-  withGroupRowVisible,
-} from "@/lib/imaging/channelCompositor";
-import {
   isImageChannel,
   isMaskChannel,
   isRgbDisplayChannel,
@@ -52,11 +41,11 @@ import {
 } from "@/lib/stores/documentStore";
 import { patchSourceChannelOnImages } from "@/lib/stores/storeUtils";
 
-export type ChannelColorTarget =
+type ChannelColorTarget =
   | { scope: "source"; sourceId: string }
   | { scope: "group"; groupId: string; rowId: string };
 
-export function commitChannelColorTarget(target: ChannelColorTarget | null) {
+function commitChannelColorTarget(target: ChannelColorTarget | null) {
   if (!target) return;
   const live = useAppStore.getState().channelRendering;
   const doc = useDocumentStore.getState();
@@ -151,7 +140,7 @@ function previewLiveColor(target: ChannelColorTarget, hex: string) {
   });
 }
 
-export function ChannelColorPicker(props: {
+function ChannelColorPicker(props: {
   target: ChannelColorTarget | null;
   position: { top: number; left: number } | null;
   onDismiss: () => void;
@@ -198,7 +187,16 @@ export function ChannelColorPicker(props: {
   );
 }
 
-export function ChannelEditor(props: { chip: ImageChannelChip }) {
+export function ChannelEditor(props: {
+  /** `visible` fills the color swatch; its eye is the chip it opens from. */
+  chip: ImageChannelChip;
+  /** See `ChannelRow`'s `look`. */
+  look?: "inline" | "compact";
+  /** Extra controls at the row's end (e.g. Fit contrast, a color lock). */
+  actions?: React.ReactNode;
+  /** Shown in place of the editable name; see `ChannelRow`'s `label`. */
+  label?: React.ReactNode;
+}) {
   const { chip } = props;
   const nav = useAuthorChannelNav();
   const images = useDocumentStore((s) => s.images);
@@ -208,16 +206,7 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
   const setImagesAndChannelGroups = useDocumentStore(
     (s) => s.setImagesAndChannelGroups,
   );
-  const storedStackVisibilities = useAppStore((s) => s.channelVisibilities);
-  const storedGroupRowVisibilities = useAppStore(
-    (s) => s.channelGroupRowVisibilities,
-  );
   const channelRendering = useAppStore((s) => s.channelRendering);
-  const setChannelVisibilities = useAppStore((s) => s.setChannelVisibilities);
-  const setChannelGroupRowVisibilities = useAppStore(
-    (s) => s.setChannelGroupRowVisibilities,
-  );
-  const activeChannelGroupId = useAppStore((s) => s.activeChannelGroupId);
   const palettePendingIds = React.useSyncExternalStore(
     subscribeStackPalettePending,
     getStackPalettePendingIds,
@@ -240,24 +229,6 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     () => flattenImageChannelsInDocumentOrder(images),
     [images],
   );
-  const stackVisibilities = React.useMemo(
-    () =>
-      applyStackVisibilities(
-        sourceChannels,
-        storedStackVisibilities,
-        visibilityKindForMap(storedStackVisibilities),
-      ),
-    [sourceChannels, storedStackVisibilities],
-  );
-  const groupRowVisibilities = React.useMemo(
-    () =>
-      applyGroupRowVisibilities(
-        channelGroups,
-        storedGroupRowVisibilities,
-        visibilityKindForMap(storedGroupRowVisibilities),
-      ),
-    [channelGroups, storedGroupRowVisibilities],
-  );
   const sc = findSourceChannel(sourceChannels, chip.sourceId);
   const gc =
     chip.groupId && chip.groupRowId
@@ -266,15 +237,14 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
           ?.channels.find((ch) => ch.id === chip.groupRowId) ?? null)
       : null;
   const distLen = sc ? sourceDistributionYValuesLength(sc) : 0;
+  const contrastEditable = nav?.contrastEditable !== false;
 
+  // A boolean, so a document change elsewhere doesn't re-request it.
+  const loadable = Boolean(
+    sc && isImageChannel(sc) && !isRgbDisplayChannel(sc, sourceChannels),
+  );
   React.useEffect(() => {
-    if (
-      !chip.sourceId ||
-      !sc ||
-      !isImageChannel(sc) ||
-      distLen > 0 ||
-      isRgbDisplayChannel(sc, sourceChannels)
-    ) {
+    if (!contrastEditable || !chip.sourceId || !loadable || distLen > 0) {
       setHistogramLoading(false);
       return;
     }
@@ -289,95 +259,20 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
     return () => {
       cancelled = true;
     };
-  }, [nav, chip.sourceId, distLen, sc, sourceChannels]);
+  }, [nav, contrastEditable, chip.sourceId, distLen, loadable]);
 
   if (!sc) return null;
 
   const rgbDisplay = isRgbDisplayChannel(sc, sourceChannels);
-  const visible = gc
-    ? isGroupRowVisible(groupRowVisibilities, gc.id)
-    : isStackVisible(stackVisibilities, sc.id);
+  const visible = chip.visible;
   const color = effectiveDisplayColor(sc, sourceChannels, gc);
   const hex = assignedDisplayHex(sc, sourceChannels, gc, channelRendering);
   const palettePending = palettePendingIds.includes(sc.id);
-  const showHistogram = isImageChannel(sc) && !rgbDisplay;
+  const showHistogram = contrastEditable && isImageChannel(sc) && !rgbDisplay;
   const colorTargetForRow: ChannelColorTarget =
     gc && chip.groupId
       ? { scope: "group", groupId: chip.groupId, rowId: gc.id }
       : { scope: "source", sourceId: sc.id };
-
-  const capVis: VivIntensityCapVis = {
-    channels: sourceChannels,
-    activeGroup: channelGroups.find((g) => g.id === activeChannelGroupId),
-    channelGroups,
-    stackVisibilities,
-    groupRowVisibilities,
-  };
-  const fits = (
-    next: Partial<
-      Pick<VivIntensityCapVis, "stackVisibilities" | "groupRowVisibilities">
-    >,
-  ) => !vivIntensityCapExceeded(sc.imageId, { ...capVis, ...next });
-
-  const rgbUnit = rgbDisplay
-    ? visibilitiesForRgbUnit({
-        rgbChannels: sourceChannels.filter(
-          (c) => c.imageId === sc.imageId && isImageChannel(c),
-        ),
-        channelGroups,
-        groupRowVisibilities,
-        stackVisibilities,
-        visible: !visible,
-        groupId: chip.groupId ?? undefined,
-      })
-    : null;
-  const nextGroupVis = gc
-    ? withGroupRowVisible(groupRowVisibilities, channelGroups, gc.id, !visible)
-    : null;
-  const nextStackVis = {
-    ...stackVisibilities,
-    [sc.id]: !visible,
-  };
-
-  const toggleVisible = () => {
-    if (rgbUnit) {
-      if (
-        !visible &&
-        !fits({
-          stackVisibilities: rgbUnit.channelVisibilities,
-          groupRowVisibilities: rgbUnit.channelGroupRowVisibilities,
-        })
-      ) {
-        return;
-      }
-      setChannelGroupRowVisibilities(rgbUnit.channelGroupRowVisibilities);
-      setChannelVisibilities(rgbUnit.channelVisibilities);
-      return;
-    }
-    if (nextGroupVis) {
-      if (!visible && !fits({ groupRowVisibilities: nextGroupVis })) return;
-      setChannelGroupRowVisibilities(nextGroupVis);
-      return;
-    }
-    if (!visible && !fits({ stackVisibilities: nextStackVis })) return;
-    setChannelVisibilities(nextStackVis);
-  };
-
-  const showBlocked = Boolean(
-    rgbUnit
-      ? !visible &&
-          !fits({
-            stackVisibilities: rgbUnit.channelVisibilities,
-            groupRowVisibilities: rgbUnit.channelGroupRowVisibilities,
-          })
-      : isImageChannel(sc) &&
-          !visible &&
-          !fits(
-            nextGroupVis
-              ? { groupRowVisibilities: nextGroupVis }
-              : { stackVisibilities: nextStackVis },
-          ),
-  );
 
   const rename = (value: string) => {
     const trimmed = value.trim();
@@ -438,12 +333,10 @@ export function ChannelEditor(props: { chip: ImageChannelChip }) {
       <ChannelRow
         visible={visible}
         fitting={gmmPendingIds.includes(sc.id)}
-        visibilityTitle={visible ? `Hide ${sc.name}` : `Show ${sc.name}`}
-        visibilityAriaLabel={`Toggle visibility for ${sc.name}`}
-        visibilityBlocked={showBlocked}
-        onToggleVisibility={toggleVisible}
+        look={props.look}
+        label={props.label}
+        trailing={props.actions}
         name={{
-          mode: "editable",
           name: sc.name,
           meta: `Index ${sc.index}`,
           onBlur: rename,

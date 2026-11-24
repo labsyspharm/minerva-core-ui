@@ -10,7 +10,6 @@ import {
   isRgbDisplaySource,
   MAX_VIV_INTENSITY_CHANNELS,
 } from "./channelKind";
-import { SELECTION_MASK_CHANNEL_KEY } from "./maskLayers";
 
 /** Stack (All Channels) eye — layer overlay for ungrouped channels. */
 export function isStackVisible(
@@ -18,6 +17,25 @@ export function isStackVisible(
   sourceChannelId: string,
 ): boolean {
   return stackVisibilities[sourceChannelId] !== false;
+}
+
+const OWN_PREFIX = "own:";
+
+/**
+ * A grouped channel shown on its own, outside its groups, in its own color
+ * (the author Images tab's channel lists do this). It is marked in the stack
+ * map under this key, so it travels wherever stack visibility does; showing a
+ * group clears every mark. Ungrouped channels use their plain stack entry.
+ */
+export function ownStyleKey(sourceId: string): string {
+  return `${OWN_PREFIX}${sourceId}`;
+}
+
+export function isOwnStyleShown(
+  stackVisibilities: Record<string, boolean>,
+  sourceId: string,
+): boolean {
+  return stackVisibilities[ownStyleKey(sourceId)] === true;
 }
 
 /** Per group-row eye. */
@@ -35,7 +53,7 @@ export type CompositedIntensityLayer = {
 };
 
 /** True when any group-row eye for this source is on. */
-export function isDisplayedViaGroupRow(
+function isDisplayedViaGroupRow(
   sourceId: string,
   channelGroups: readonly ChannelGroup[],
   groupRowVisibilities: Record<string, boolean>,
@@ -101,8 +119,8 @@ export function sourceChannelInAnyGroup(
 }
 
 /**
- * Every channel in `group` on, every other source channel and group row off.
- * The selection-mask eye is left as it was.
+ * Every channel in `group` on, every other source channel and group row off
+ * (and no channel shown in its own style).
  */
 export function visibilitiesShowingOnlyGroup(args: {
   group: ChannelGroup;
@@ -117,6 +135,7 @@ export function visibilitiesShowingOnlyGroup(args: {
   const channelVisibilities = { ...args.stackVisibilities };
   for (const sc of args.sourceChannels) {
     channelVisibilities[sc.id] = memberIds.has(sc.id);
+    delete channelVisibilities[ownStyleKey(sc.id)];
   }
   const channelGroupRowVisibilities: Record<string, boolean> = {};
   for (const group of args.channelGroups) {
@@ -189,7 +208,8 @@ export function buildCompositedIntensityLayers(
     const intensity = onLoader.filter(isImageChannel);
     const unitOn = intensity.every((sc) =>
       groupedIds.has(sc.id)
-        ? isDisplayedViaGroupRow(sc.id, viewGroups, groupRowVisibilities)
+        ? isDisplayedViaGroupRow(sc.id, viewGroups, groupRowVisibilities) ||
+          isOwnStyleShown(stackVisibilities, sc.id)
         : !hasVisibilityMap || isStackVisible(stackVisibilities, sc.id),
     );
     if (!unitOn) return [];
@@ -232,11 +252,14 @@ export function buildCompositedIntensityLayers(
     }
   }
 
+  // Then ungrouped channels by their eye, and grouped ones shown in their
+  // own style (a visible row above wins).
   for (const sc of onLoader) {
-    if (groupedIds.has(sc.id) || usedSourceIds.has(sc.id)) continue;
-    if (!hasVisibilityMap || !isStackVisible(stackVisibilities, sc.id)) {
-      continue;
-    }
+    if (usedSourceIds.has(sc.id)) continue;
+    const on = groupedIds.has(sc.id)
+      ? isOwnStyleShown(stackVisibilities, sc.id)
+      : hasVisibilityMap && isStackVisible(stackVisibilities, sc.id);
+    if (!on) continue;
     if (requireColor && !rgbSource && sc.samples !== 3 && !sc.color) continue;
     usedSourceIds.add(sc.id);
     ordered.push({ sc, gc: null });
@@ -253,7 +276,11 @@ export type VivIntensityCapVis = {
   groupRowVisibilities: Record<string, boolean>;
 };
 
-function compositedForImage(imageId: string, vis: VivIntensityCapVis) {
+function compositedForImage(
+  imageId: string,
+  vis: VivIntensityCapVis,
+  requireColor = false,
+) {
   return buildCompositedIntensityLayers({
     onLoader: vis.channels.filter(
       (sc) => sc.imageId === imageId && isImageChannel(sc),
@@ -263,33 +290,8 @@ function compositedForImage(imageId: string, vis: VivIntensityCapVis) {
     stackVisibilities: vis.stackVisibilities,
     groupRowVisibilities: vis.groupRowVisibilities,
     hasVisibilityMap: true,
-    requireColor: false,
+    requireColor,
   });
-}
-
-/** Source ids occupying a Viv slot per image (first `MAX_VIV_INTENSITY_CHANNELS`). */
-export function vivShownIntensitySourceIds(
-  vis: VivIntensityCapVis,
-): Set<string> {
-  const ids = new Set<string>();
-  const imageIds = new Set<string>();
-  for (const sc of vis.channels) {
-    if (isImageChannel(sc)) imageIds.add(sc.imageId);
-  }
-  for (const imageId of imageIds) {
-    const layers = compositedForImage(imageId, vis);
-    for (let i = 0; i < layers.length && i < MAX_VIV_INTENSITY_CHANNELS; i++) {
-      ids.add(layers[i].sc.id);
-    }
-  }
-  return ids;
-}
-
-export function vivIntensityLayerCount(
-  imageId: string,
-  vis: VivIntensityCapVis,
-): number {
-  return compositedForImage(imageId, vis).length;
 }
 
 /** True when this image's composite would exceed the Viv shader cap. */
@@ -297,7 +299,7 @@ export function vivIntensityCapExceeded(
   imageId: string,
   vis: VivIntensityCapVis,
 ): boolean {
-  return vivIntensityLayerCount(imageId, vis) > MAX_VIV_INTENSITY_CHANNELS;
+  return compositedForImage(imageId, vis).length > MAX_VIV_INTENSITY_CHANNELS;
 }
 
 export function isMaskSourceRendered(args: {
@@ -353,17 +355,12 @@ export function diffGroupRowIds(
 function preservedStackVisibilities(
   sourceChannels: Channel[],
   prev: Record<string, boolean>,
-  preserveSelectionMask = false,
 ): Record<string, boolean> {
   const sourceIds = new Set(sourceChannels.map((sc) => sc.id));
   const out: Record<string, boolean> = {};
   for (const [key, visible] of Object.entries(prev)) {
-    if (
-      sourceIds.has(key) ||
-      (preserveSelectionMask && key === SELECTION_MASK_CHANNEL_KEY)
-    ) {
-      out[key] = visible;
-    }
+    const id = key.startsWith(OWN_PREFIX) ? key.slice(OWN_PREFIX.length) : key;
+    if (sourceIds.has(id)) out[key] = visible;
   }
   return out;
 }
@@ -401,7 +398,7 @@ export function applyStackVisibilities(
     case "remove":
       return preservedStackVisibilities(sourceChannels, prev);
     case "appendMask": {
-      const out = preservedStackVisibilities(sourceChannels, prev, true);
+      const out = preservedStackVisibilities(sourceChannels, prev);
       const newIds = new Set(transition.newChannelIds);
       for (const sc of sourceChannels) {
         if (newIds.has(sc.id) && isMaskChannel(sc)) out[sc.id] = true;
@@ -409,7 +406,7 @@ export function applyStackVisibilities(
       return out;
     }
     case "appendIntensity": {
-      const out = preservedStackVisibilities(sourceChannels, prev, true);
+      const out = preservedStackVisibilities(sourceChannels, prev);
       const newIds = new Set(transition.newChannelIds);
       for (const sc of sourceChannels) {
         if (newIds.has(sc.id)) out[sc.id] = false;
@@ -422,7 +419,7 @@ export function applyStackVisibilities(
       if (!sourceChannels.some((sc) => prev[sc.id] !== undefined)) {
         return freshStackDefaults(sourceChannels);
       }
-      const out = preservedStackVisibilities(sourceChannels, prev, true);
+      const out = preservedStackVisibilities(sourceChannels, prev);
       for (const sc of sourceChannels) {
         if (out[sc.id] !== undefined) continue;
         out[sc.id] = isMaskChannel(sc);
@@ -479,8 +476,19 @@ export function applyGroupRowVisibilities(
   return out;
 }
 
+/** Intensity layers the viewer paints for one image (same call as `toSettings`). */
+export function paintedIntensityLayers(
+  imageId: string,
+  vis: VivIntensityCapVis,
+): CompositedIntensityLayer[] {
+  return compositedForImage(imageId, vis, true).slice(
+    0,
+    MAX_VIV_INTENSITY_CHANNELS,
+  );
+}
+
 /** Empty session map → first-group / import defaults. A written map is kept. */
-export function visibilityKindForMap(
+function visibilityKindForMap(
   map: Record<string, boolean>,
 ): VisibilityTransition {
   return Object.keys(map).length === 0 ? { kind: "fresh" } : { kind: "sync" };

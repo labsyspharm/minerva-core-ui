@@ -14,8 +14,7 @@ import {
 import "@deck.gl/widgets/stylesheet.css";
 
 import type { Layer } from "@deck.gl/core";
-import { MaskExtension } from "@deck.gl/extensions";
-import { BitmapLayer, PolygonLayer } from "@deck.gl/layers";
+import { PolygonLayer } from "@deck.gl/layers";
 import { ImageArrangeBox } from "@/components/shared/viewer/ImageArrangeBox";
 import { LoadingWidget } from "@/components/shared/viewer/layers/LoadingWidget";
 import {
@@ -25,19 +24,10 @@ import {
 } from "@/lib/featureTable";
 import { useFeatureTableLutEpoch } from "@/lib/featureTable/hooks";
 import { isMaskSourceRendered } from "@/lib/imaging/channelCompositor";
-import {
-  DEFAULT_MASK_VISUALIZATION,
-  isMaskChannel,
-} from "@/lib/imaging/channelKind";
+import { isMaskChannel } from "@/lib/imaging/channelKind";
 import { opacityForImage } from "@/lib/imaging/imageOpacity";
 import { orientationForImage } from "@/lib/imaging/imageOrientation";
 import type { LoaderList } from "@/lib/imaging/loaderEntries";
-import {
-  IMAGE_SELECTION_MASK_LAYER_ID,
-  SELECTION_MASK_CHANNEL_KEY,
-  selectionMaskBinaryImageData,
-  selectionMaskDisplayImageData,
-} from "@/lib/imaging/maskLayers";
 import { createMaskTileLayer } from "@/lib/imaging/maskTileLayer";
 import { effectiveMaskVisualizationForSource } from "@/lib/imaging/sourceChannelStyle";
 import type { Loader } from "@/lib/imaging/viv";
@@ -458,7 +448,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
     (s) => s.authoringWaypointEditorOpen,
   );
   // Live contrast/color preview is folded in `useViewerLayers`, not here.
-  const imageSelectionMask = useAppStore((s) => s.imageSelectionMask);
   const imageOrientationPreview = useAppStore((s) => s.imageOrientationPreview);
   const imageOpacityPreview = useAppStore((s) => s.imageOpacityPreview);
   const arrangeImageId = useAppStore((s) => s.arrangeImageId);
@@ -468,10 +457,6 @@ export const ImageViewer = (props: ImageViewerProps) => {
   const activeWaypoint = useActiveWaypoint();
   const hiddenLegendClasses = useAppStore((s) => s.hiddenLegendClasses);
   const featureTableLutEpoch = useFeatureTableLutEpoch();
-  const selectionMaskActive =
-    imageSelectionMask != null &&
-    (channelVisibilities[SELECTION_MASK_CHANNEL_KEY] ?? true);
-  const maskExtension = useMemo(() => new MaskExtension(), []);
   useShapeLayers(authoringWaypointEditorOpen);
   const [viewportSize, setViewportSize] = useState(windowSize);
   /** False until the viewer element reports its size; the window size is only a guess. */
@@ -1005,53 +990,10 @@ export const ImageViewer = (props: ImageViewerProps) => {
     });
   }, [frame]);
 
-  const selectionMaskDeckLayers = useMemo(() => {
-    if (!imageSelectionMask) return [] as Layer[];
-    const [minX, minY, maxX, maxY] = imageSelectionMask.bounds;
-    const bounds: [number, number, number, number] = [minX, minY, maxX, maxY];
-    const visualization =
-      imageSelectionMask.maskVisualization ?? DEFAULT_MASK_VISUALIZATION;
-    const layers: Layer[] = [
-      new BitmapLayer({
-        id: IMAGE_SELECTION_MASK_LAYER_ID,
-        operation: "mask",
-        bounds,
-        image: selectionMaskBinaryImageData(imageSelectionMask),
-        pickable: false,
-      }),
-    ];
-    if (selectionMaskActive) {
-      layers.push(
-        new BitmapLayer({
-          id: "image-selection-display",
-          bounds,
-          image: selectionMaskDisplayImageData({
-            ...imageSelectionMask,
-            maskVisualization: visualization,
-          }),
-          opacity: visualization.opacity,
-          pickable: false,
-        }),
-      );
-    }
-    return layers;
-  }, [imageSelectionMask, selectionMaskActive]);
-
-  const clippedImageLayers = useMemo(() => {
-    if (!selectionMaskActive || !imageSelectionMask) return imageLayers;
-    return imageLayers.map((layer) =>
-      layer.clone({
-        extensions: [maskExtension],
-        maskId: IMAGE_SELECTION_MASK_LAYER_ID,
-      } as Parameters<typeof layer.clone>[0]),
-    );
-  }, [imageLayers, selectionMaskActive, imageSelectionMask, maskExtension]);
-
   const allLayers = useMemo(() => {
     const layers: AnyLayer[] = [
       worldPickSurfaceLayer,
-      ...selectionMaskDeckLayers,
-      ...clippedImageLayers,
+      ...imageLayers,
       ...maskDisplayLayers,
       ...overlayLayers,
     ];
@@ -1059,8 +1001,7 @@ export const ImageViewer = (props: ImageViewerProps) => {
     return layers;
   }, [
     worldPickSurfaceLayer,
-    selectionMaskDeckLayers,
-    clippedImageLayers,
+    imageLayers,
     maskDisplayLayers,
     overlayLayers,
     scaleBarLayer,

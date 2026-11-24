@@ -180,7 +180,10 @@ export const ImageSchema = z.object({
     })
     .optional(),
   omeXmlHash: z.string(),
+  /** The file's name; matching (e.g. OME ROI import) and exports use it. */
   basename: z.string(),
+  /** A name the author gave the image; shown instead of the file's. */
+  label: z.string().optional(),
   /** Import intent: intensity stack vs segmentation labels (persisted for Images tab). */
   contentRole: z.enum(["intensity", "segmentation"]).optional(),
   /**

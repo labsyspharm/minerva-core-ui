@@ -313,26 +313,6 @@
 .detailClassesSection {
   flex-shrink: 0;
 }
-
-.detailSelectionActions {
-  padding: 0 0 8px;
-}
-
-.detailSelectionButton {
-  width: 100%;
-  background: var(--minerva-wash);
-  border: 1px solid var(--minerva-edge);
-  color: var(--minerva-ink);
-  padding: 6px 10px;
-  cursor: pointer;
-  font-size: inherit;
-  text-align: left;
-}
-
-.detailSelectionButton:hover {
-  box-shadow: inset 0 -1px 0 var(--minerva-ink);
-}
-
 /* ---- Collapsible detail sections ---- */
 
 .detailCollapsible {

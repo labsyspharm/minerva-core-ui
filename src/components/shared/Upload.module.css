@@ -15,6 +15,53 @@
   border-bottom: 1px solid var(--minerva-edge);
 }
 
+/*
+ * splitPanel: under the add strip, `dockAfter` and the body each take the
+ * height their content needs, up to 50% of the panel, and scroll inside
+ * themselves past that. A folded one (`splitFixed`) keeps only its header
+ * and the other may then take all the room.
+ */
+.panelDockSplit {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* The room under the add strip, which the two halves' 50% is of. */
+.splitArea {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.splitTop {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 var(--minerva-inset) 8px;
+  border-bottom: 1px solid var(--minerva-edge);
+}
+
+/* Chained to .splitTop to beat the panel body's own `flex: 1`. */
+.splitTop.splitGrow,
+.splitTop ~ .splitGrow {
+  flex: 0 1 auto;
+  box-sizing: border-box;
+  min-height: 0;
+  max-height: 50%;
+}
+
+.splitTop.splitFixed ~ .splitGrow,
+.splitTop.splitGrow:has(~ .splitFixed) {
+  max-height: none;
+}
+
+.splitTop.splitFixed,
+.splitTop ~ .splitFixed {
+  flex: none;
+}
+
 .addStrip {
   display: flex;
   flex-direction: column;
@@ -421,6 +468,107 @@
   gap: 2px;
 }
 
-.imageOpacity {
-  padding: 0 12px 8px;
+.imageCardTextCompact {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.imageCardTitleCompact {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--minerva-ink);
+}
+
+/* Images as lines, not cards. */
+.stackLines {
+  gap: 0;
+  padding: 0;
+}
+
+/*
+ * One grid line per image, like a group line: spacer, name, two cells for
+ * `renderImageHeaderExtra`, then Arrange / Replace / Delete, which show on
+ * hover or focus but keep their room (nothing shifts, and nothing lands
+ * under the pointer). The body goes underneath.
+ */
+.imageCardRow {
+  display: grid;
+  /* 36px indent + 6px gap: names line up with the Images tab's group lines. */
+  grid-template-columns: 36px fit-content(160px) minmax(0, 1fr) auto auto;
+  column-gap: 6px;
+  align-items: start;
+  padding: 2px 6px 2px 0;
+  border: 0;
+  border-top: 1px solid var(--minerva-edge);
+  overflow: visible;
+}
+
+.imageCardRow > .imageCardHeader {
+  display: contents;
+}
+
+.imageCardRow .imageCardTextCompact {
+  grid-row: 1;
+  grid-column: 2;
+  align-items: center;
+  height: 22px;
+}
+
+.imageCardRow .imageCardActions {
+  grid-row: 1;
+  grid-column: 5;
+  height: 22px;
+}
+
+.imageCardRow:not(:hover, :focus-within)
+  .imageCardActions:not(:has([aria-pressed="true"])) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* A file to allow or locate: one line across the row, inside it. */
+.imageCardRow:has(> .fileAccessOverlay) {
+  min-height: 34px;
+  overflow: hidden;
+}
+
+.imageCardRow .fileAccessOverlay {
+  flex-direction: row;
+  justify-content: flex-start;
+  padding: 0 8px;
+}
+
+.imageCardRow .fileAccessName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* Double-click an image's name to rename it. */
+.imageCardTextCompact .imageCardTitleCompact {
+  cursor: text;
+}
+
+.imageCardRename {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 22px;
+  margin-left: -7px;
+  padding: 0 6px;
+  border: 1px solid var(--minerva-ink);
+  border-radius: 0;
+  background: var(--minerva-paper);
+  color: var(--minerva-ink);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
 }

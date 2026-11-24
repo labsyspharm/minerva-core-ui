@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ImagesTab } from "@/components/authoring/imagesTab/ImagesTab";
 import { StoryTitleBar } from "@/components/authoring/StoryTitleBar";
 import {
   ConsumePendingLibraryImport,
@@ -73,7 +74,6 @@ import {
   jpegLoaderEntriesFromImages,
   useSyncJpegChannelFolders,
 } from "@/lib/imaging/loadJpegFromDocument";
-import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/maskLayers";
 import { sharedOmeDecodePool } from "@/lib/imaging/omeDecodePool";
 import {
   applyPaletteToFlatImportImages,
@@ -664,8 +664,11 @@ const Content = (props: Props) => {
   /** After reload, app store resets while channel groups persist — select first group and sync lists/visibilities. */
   useEffect(() => {
     if (channelGroups.length === 0 || sourceChannels.length === 0) return;
-    const active = useAppStore.getState().activeChannelGroupId;
+    const app = useAppStore.getState();
+    const active = app.activeChannelGroupId;
     if (active != null && channelGroups.some((g) => g.id === active)) return;
+    // The author chose no group (Images tab): leave it so.
+    if (active == null && app.channelGroupCleared) return;
     updateGroupChannelLists({
       ChannelGroups: channelGroups,
     });
@@ -729,12 +732,6 @@ const Content = (props: Props) => {
     if (removed.length === 0) return;
     const app = useAppStore.getState();
     app.clearChannelRendering();
-    const channelVisibilities = { ...app.channelVisibilities };
-    delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
-    useAppStore.setState({
-      imageSelectionMask: null,
-      channelVisibilities,
-    });
     const keys = removed.flatMap((im) =>
       im.source?.kind === "local" ? [im.source.handleKey] : [],
     );
@@ -2371,7 +2368,11 @@ const Content = (props: Props) => {
           exitPlaybackPreview,
           viewerImages,
         };
-        const imagesPanel = <Upload {...uploadProps} />;
+        const imagesPanel = (
+          <ImagesTab
+            renderUpload={(slots) => <Upload {...uploadProps} {...slots} />}
+          />
+        );
         const viewer = (
           <div className={styles.viewerHost}>
             {noLoader ? null : (

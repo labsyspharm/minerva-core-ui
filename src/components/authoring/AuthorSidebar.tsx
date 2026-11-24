@@ -4,7 +4,6 @@ import {
   type AuthorChannelNav,
   AuthorChannelNavProvider,
 } from "@/components/shared/channel/AuthorChannelNav";
-import { ChannelGroupsMasterDetail } from "@/components/shared/channel/ChannelGroupsMasterDetail";
 import { ChevronIcon } from "@/components/shared/common/ChevronIcon";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import {
@@ -18,13 +17,12 @@ import { useAppStore } from "@/lib/stores/appStore";
 import { useWaypointCanvasShapes } from "@/lib/waypoints/useWaypointCanvasShapes";
 import styles from "./AuthorSidebar.module.css";
 
-type AuthorTab = "images" | "channels" | "story";
+type AuthorTab = "images" | "story";
 
-const TAB_ORDER: AuthorTab[] = ["images", "channels", "story"];
+const TAB_ORDER: AuthorTab[] = ["images", "story"];
 
 const TAB_LABELS: Record<AuthorTab, string> = {
   images: "Images",
-  channels: "Channels",
   story: "Story",
 };
 
@@ -32,7 +30,6 @@ const TAB_ITEMS = TAB_ORDER.map((id) => ({ id, label: TAB_LABELS[id] }));
 
 export type AuthorSidebarProps = {
   imagesPanel: ReactNode;
-  noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
   contrastEditable?: boolean;
   expanded: boolean;
@@ -71,19 +68,10 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
   const channelNav = useMemo<AuthorChannelNav>(
     () => ({
       ensureChannelHistograms: props.ensureChannelHistograms,
+      contrastEditable: props.contrastEditable,
     }),
-    [props.ensureChannelHistograms],
+    [props.ensureChannelHistograms, props.contrastEditable],
   );
-
-  const otherPanel =
-    activeTab === "channels" ? (
-      <ChannelGroupsMasterDetail
-        noLoader={props.noLoader}
-        contrastEditable={props.contrastEditable}
-      />
-    ) : activeTab === "story" ? (
-      <WaypointsList />
-    ) : null;
 
   return (
     <AuthorChannelNavProvider value={channelNav}>
@@ -114,7 +102,7 @@ export function AuthorSidebar(props: AuthorSidebarProps) {
               >
                 {props.imagesPanel}
               </div>
-              {otherPanel}
+              {activeTab === "story" ? <WaypointsList /> : null}
             </div>
           </div>
         </div>
@@ -166,7 +154,6 @@ export function AuthorViewerRegion(props: AuthorViewerRegionProps) {
 export type AuthorViewProps = {
   imagesPanel: ReactNode;
   viewer: ReactNode;
-  noLoader: boolean;
   ensureChannelHistograms?: (channelIds: string[]) => Promise<void>;
   contrastEditable?: boolean;
   /** Story preview pane shown instead of the sidebar; the viewer stays mounted. */
@@ -199,7 +186,6 @@ export function AuthorView(props: AuthorViewProps) {
         <>
           <AuthorSidebar
             imagesPanel={props.imagesPanel}
-            noLoader={props.noLoader}
             ensureChannelHistograms={props.ensureChannelHistograms}
             contrastEditable={props.contrastEditable}
             expanded={expanded}

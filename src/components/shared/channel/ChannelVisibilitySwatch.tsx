@@ -10,7 +10,7 @@ import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import { VIEWER_INTENSITY_LIMIT_HINT } from "@/lib/imaging/channelKind";
 import styles from "./ChannelRow.module.css";
 
-const EyeIcon = () => (
+export const EyeIcon = () => (
   <svg
     aria-hidden
     width="14"
@@ -28,7 +28,7 @@ const EyeIcon = () => (
   </svg>
 );
 
-const EyeOffIcon = () => (
+export const EyeOffIcon = () => (
   <svg
     aria-hidden
     width="14"
@@ -65,8 +65,9 @@ export function CursorHint(props: {
   children: ReactNode;
 }) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  // Only a hint that shows needs the pointer (every channel chip has one).
   const track = (e: PointerEvent<HTMLElement>) => {
-    setPos({ x: e.clientX, y: e.clientY });
+    if (props.enabled) setPos({ x: e.clientX, y: e.clientY });
   };
   return (
     <span

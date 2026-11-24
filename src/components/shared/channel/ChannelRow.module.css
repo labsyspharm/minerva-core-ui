@@ -74,19 +74,6 @@
   min-width: 0;
 }
 
-.channelImageSubtitle {
-  flex: 0 1 auto;
-  min-width: 0;
-  max-width: 38%;
-  font-size: 10px;
-  line-height: 1;
-  color: var(--minerva-quiet);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin: 0;
-}
-
 .maskModeControls {
   display: flex;
   flex-wrap: nowrap;
@@ -105,8 +92,7 @@
   min-width: 0;
 }
 
-.maskModeGroupLabel,
-.maskOpacityLabel {
+.maskModeGroupLabel {
   font-size: 10px;
   line-height: 1;
   color: var(--minerva-quiet);
@@ -129,105 +115,6 @@
   border-radius: 0;
   background: var(--minerva-wash);
   gap: 2px;
-}
-
-.maskOpacityControl {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 2px;
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-.maskOpacityInputRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  height: 22px;
-  padding: 0 4px;
-  box-sizing: border-box;
-  background: var(--minerva-wash);
-  border: 1px solid var(--minerva-edge);
-}
-
-.maskOpacitySlider {
-  flex: 1 1 auto;
-  min-width: 48px;
-  height: 14px;
-  margin: 0;
-  padding: 0;
-  -webkit-appearance: none;
-  appearance: none;
-  background: linear-gradient(
-    to right,
-    color-mix(in srgb, var(--minerva-ink) 70%, transparent) 0%,
-    color-mix(in srgb, var(--minerva-ink) 70%, transparent)
-      var(--mask-opacity-pct, 100%),
-    var(--minerva-edge) var(--mask-opacity-pct, 100%),
-    var(--minerva-edge) 100%
-  );
-  background-position: center;
-  background-size: 100% 2px;
-  background-repeat: no-repeat;
-  cursor: pointer;
-}
-
-.maskOpacitySlider::-webkit-slider-runnable-track {
-  height: 2px;
-  background: transparent;
-}
-
-.maskOpacitySlider::-moz-range-track {
-  height: 2px;
-  background: transparent;
-  border: none;
-}
-
-.maskOpacitySlider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 9px;
-  height: 9px;
-  margin-top: -3.5px;
-  border: 1px solid var(--minerva-ink);
-  border-radius: 0;
-  background: var(--minerva-paper);
-  box-shadow: inset 0 0 0 1px var(--minerva-paper);
-}
-
-.maskOpacitySlider::-moz-range-thumb {
-  width: 9px;
-  height: 9px;
-  border: 1px solid var(--minerva-ink);
-  border-radius: 0;
-  background: var(--minerva-paper);
-}
-
-.maskOpacitySlider:hover::-webkit-slider-thumb,
-.maskOpacitySlider:focus-visible::-webkit-slider-thumb {
-  background: var(--minerva-ink);
-}
-
-.maskOpacitySlider:hover::-moz-range-thumb,
-.maskOpacitySlider:focus-visible::-moz-range-thumb {
-  background: var(--minerva-ink);
-}
-
-.maskOpacitySlider:focus-visible {
-  outline: var(--minerva-focus-width) solid var(--minerva-ink);
-  outline-offset: var(--minerva-focus-offset);
-}
-
-.maskOpacityValue {
-  flex-shrink: 0;
-  min-width: 1.85rem;
-  text-align: right;
-  font-size: 10px;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-  color: var(--minerva-quiet);
 }
 
 .cursorHintHost {
@@ -285,17 +172,14 @@
   color: var(--minerva-quiet);
 }
 
-.channelColorSwatch,
-.channelColorSwatchStatic {
+/* Flat, square swatch (no button bevel). */
+.channelColorSwatch {
+  flex-shrink: 0;
   width: 14px;
   height: 14px;
   padding: 0;
   border: 1px solid var(--minerva-edge);
   border-radius: 0;
-  flex-shrink: 0;
-}
-
-.channelColorSwatch {
   cursor: pointer;
 }
 
@@ -315,10 +199,6 @@
 .channelColorSwatch:focus-visible {
   outline: var(--minerva-focus-width) solid var(--minerva-ink);
   outline-offset: var(--minerva-focus-offset);
-}
-
-.detailChannelRowLocked .channelColorSwatch {
-  box-shadow: inset 0 0 0 1px var(--minerva-ink);
 }
 
 .maskVizOption {
@@ -412,4 +292,90 @@
 .channelRow .channelNameInput:focus-visible {
   outline: var(--minerva-focus-width) solid var(--minerva-ink);
   outline-offset: 1px;
+}
+
+/* look "inline" (Images tab): a narrow, quiet name (click to rename). */
+.lookInline .channelRowTitle,
+.lookInline .channelNameSlot {
+  flex: 0 0 8ch;
+  width: 8ch;
+}
+
+.lookInline .channelNameInput {
+  color: var(--minerva-quiet);
+  font-size: 12px;
+}
+
+.lookInline .channelNameInput:hover,
+.lookInline .channelNameInput:focus {
+  color: var(--minerva-ink);
+}
+
+.lookInline .channelRowTrailing {
+  flex: none;
+  width: auto;
+  min-width: 0;
+  gap: 2px;
+}
+
+.lookInline .channelRowTrailing:empty {
+  display: none;
+}
+
+.lookInline {
+  padding-block: 0;
+}
+
+.lookInline .channelRowMain {
+  gap: 8px;
+}
+
+.lookInline .channelColorSwatch {
+  width: 16px;
+  height: 16px;
+}
+
+.lookCompact .channelColorSwatch {
+  width: 14px;
+  height: 14px;
+}
+
+/*
+ * look "compact" (a group's channel lines): the row and its main line take
+ * the caller's grid columns (subgrid), whose first is as wide as its widest
+ * label; each label (a chip) keeps its own width and every row's plot,
+ * swatch and actions line up. The row keeps its box (its busy overlay).
+ */
+.lookCompact,
+.lookCompact .channelRowMain {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+}
+
+.lookCompact .channelRowTitle {
+  grid-column: 1;
+  flex: none;
+  width: auto;
+  max-width: 160px;
+}
+
+.lookCompact .channelNameSlot {
+  flex: none;
+  width: auto;
+  max-width: 100%;
+}
+
+.lookCompact .labelSlot .channelNameSlot > * {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.lookCompact .channelRowMid {
+  grid-column: 2;
+}
+
+.lookCompact .maskControlsPanel {
+  grid-column: 1 / -1;
 }

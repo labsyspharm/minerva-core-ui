@@ -98,7 +98,6 @@ export const PlaybackModeView = (props: PlaybackModeViewProps) => {
           ) : null}
           <AuthorView
             imagesPanel={props.imagesPanel}
-            noLoader={props.noLoader}
             ensureChannelHistograms={props.ensureChannelHistograms}
             contrastEditable={props.contrastEditable}
             previewNav={

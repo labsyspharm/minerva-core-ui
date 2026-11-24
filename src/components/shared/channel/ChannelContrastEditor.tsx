@@ -150,6 +150,11 @@ export type ChannelContrastEditorProps = {
   sourceDataTypeId?: string;
   /** Finite sample span for a float plane. Absent for integer dtypes. */
   floatRange?: { min: number; max: number } | null;
+  /**
+   * `inline` (Images tab): quiet limits and a taller plot, on one line.
+   * `compact`: the same, with a plot no taller than a chip.
+   */
+  look?: "inline" | "compact";
 };
 
 export function renderingForSource<K extends ChannelRendering["kind"]>(
@@ -500,7 +505,15 @@ export function ChannelContrastEditor(props: ChannelContrastEditorProps) {
   const trimmed = chart.startBin > 0;
 
   return (
-    <div className={styles.wrap}>
+    <div
+      className={[
+        styles.wrap,
+        props.look ? styles.wrapInline : null,
+        props.look === "compact" ? styles.wrapCompact : null,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <input
         type="number"
         className={`${minervaTheme.input} ${styles.limitInput}`}

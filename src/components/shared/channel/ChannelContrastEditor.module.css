@@ -196,3 +196,43 @@
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* look "inline" (Images tab): limits read as quiet numbers until hovered or
+ * focused; the plot is taller. */
+.wrapInline {
+  --range-input-width: 3.5em;
+  gap: 4px;
+}
+
+.wrapInline .limitInput {
+  padding: 1px 2px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--minerva-quiet);
+  font-size: 12px;
+}
+
+.wrapInline .limitInput:hover,
+.wrapInline .limitInput:focus {
+  border-color: var(--minerva-edge);
+  color: var(--minerva-ink);
+}
+
+.wrapInline .histogramPlot {
+  height: 34px;
+}
+
+.wrapInline .histogramSvg {
+  height: 24px;
+}
+
+/* look "compact": the plot fits a chip's height (22px), handles and the
+   axis break kept on its baseline. */
+.wrapCompact .histogramPlot {
+  height: 22px;
+  padding-top: 2px;
+}
+
+.wrapCompact .histogramSvg {
+  height: 15px;
+}

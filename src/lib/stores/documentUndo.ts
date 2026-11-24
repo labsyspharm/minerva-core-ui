@@ -1,6 +1,5 @@
 import { useStore } from "zustand";
 import { applyVisibilityTransition } from "@/lib/imaging/channelCompositor";
-import { SELECTION_MASK_CHANNEL_KEY } from "@/lib/imaging/maskLayers";
 import { useAppStore } from "./appStore";
 import {
   flattenImageChannelsInDocumentOrder,
@@ -27,13 +26,15 @@ export function syncAppStoreChannelMirrorsFromDocument(): void {
     app.activeChannelGroupId,
   );
   const { channelVisibilities } = visibility;
-  delete channelVisibilities[SELECTION_MASK_CHANNEL_KEY];
 
+  // A group the author cleared stays cleared; a deleted one falls back to the first.
   const activeId = app.activeChannelGroupId;
   const nextActiveId =
     activeId && groups.some((g) => g.id === activeId)
       ? activeId
-      : (groups[0]?.id ?? null);
+      : activeId == null && app.channelGroupCleared
+        ? null
+        : (groups[0]?.id ?? null);
 
   useAppStore.setState({
     groupNames,

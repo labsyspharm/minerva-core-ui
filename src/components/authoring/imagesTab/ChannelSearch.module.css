@@ -1,0 +1,22 @@
+.search {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--minerva-edge);
+  border-radius: 0;
+  background: transparent;
+  color: var(--minerva-ink);
+  font: inherit;
+  font-size: 12px;
+}
+
+.search::placeholder {
+  color: var(--minerva-quiet);
+}
+
+.search:focus {
+  border-color: var(--minerva-ink);
+  outline: none;
+}

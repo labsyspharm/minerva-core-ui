@@ -1,6 +1,7 @@
 import {
   applyVisibilityTransition,
   buildCompositedIntensityLayers,
+  isOwnStyleShown,
   isStackVisible,
   sourceChannelInAnyGroup,
 } from "@/lib/imaging/channelCompositor";
@@ -24,7 +25,10 @@ import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
-import { applySourceChannelsToImages } from "@/lib/stores/storeUtils";
+import {
+  applySourceChannelsToImages,
+  patchSourceChannelOnImages,
+} from "@/lib/stores/storeUtils";
 
 /** OKLab L bounds × 100 (psudo 0.15+ / palette study default). */
 const DEFAULT_LUMINANCE = new Uint16Array([60, 92]);
@@ -705,33 +709,7 @@ async function runEnsureStackPalette(sourceChannelId: string): Promise<void> {
   }
   if (shown.color && !isStackSeedColor(shown.color)) return;
 
-  const groups = doc.channelGroups;
-  const app = useAppStore.getState();
-  const visibility = applyVisibilityTransition(
-    sourceChannels,
-    groups,
-    app.channelVisibilities,
-    app.channelGroupRowVisibilities,
-    { kind: "sync" },
-  );
-  const lockedSlots: PaletteSlot[] = [];
-  const seen = new Set<string>([shown.id]);
-  for (const { sc, gc } of buildCompositedIntensityLayers({
-    onLoader: sourceChannels.filter(isImageChannel),
-    activeGroup: groups.find((g) => g.id === app.activeChannelGroupId),
-    channelGroups: groups,
-    stackVisibilities: visibility.channelVisibilities,
-    groupRowVisibilities: visibility.channelGroupRowVisibilities,
-    hasVisibilityMap: true,
-  })) {
-    if (seen.has(sc.id)) continue;
-    if (sc.samples === 3 || isRgbDisplayChannel(sc, sourceChannels)) continue;
-    seen.add(sc.id);
-    const color = gc?.color ?? sc.color;
-    if (color) {
-      lockedSlots.push({ id: sc.id, color: asRgbColor(color) });
-    }
-  }
+  const lockedSlots = slotsOnScreen(sourceChannels, shown.id);
 
   const lockedIds = new Set(lockedSlots.map((slot) => slot.id));
   const unlockedStart = shown.color
@@ -780,4 +758,115 @@ async function runEnsureStackPalette(sourceChannelId: string): Promise<void> {
   });
   if (!changed) return;
   docNow.setImages(applySourceChannelsToImages(docNow.images, next));
+}
+
+/**
+ * The color of every intensity channel on screen now, except `exceptId` and
+ * H&E planes (one slot per channel), for psudo to keep while it picks.
+ */
+function slotsOnScreen(
+  sourceChannels: Channel[],
+  exceptId: string,
+): PaletteSlot[] {
+  const doc = useDocumentStore.getState();
+  const groups = doc.channelGroups;
+  const app = useAppStore.getState();
+  const visibility = applyVisibilityTransition(
+    sourceChannels,
+    groups,
+    app.channelVisibilities,
+    app.channelGroupRowVisibilities,
+    { kind: "sync" },
+  );
+  const lockedSlots: PaletteSlot[] = [];
+  const seen = new Set<string>([exceptId]);
+  for (const { sc, gc } of buildCompositedIntensityLayers({
+    onLoader: sourceChannels.filter(isImageChannel),
+    activeGroup: groups.find((g) => g.id === app.activeChannelGroupId),
+    channelGroups: groups,
+    stackVisibilities: visibility.channelVisibilities,
+    groupRowVisibilities: visibility.channelGroupRowVisibilities,
+    hasVisibilityMap: true,
+  })) {
+    if (seen.has(sc.id)) continue;
+    if (sc.samples === 3 || isRgbDisplayChannel(sc, sourceChannels)) continue;
+    seen.add(sc.id);
+    const color = gc?.color ?? sc.color;
+    if (color) {
+      lockedSlots.push({ id: sc.id, color: asRgbColor(color) });
+    }
+  }
+  return lockedSlots;
+}
+
+/** Shown in its own style now (hidden again, e.g. by a double-click, it isn't). */
+function stillShownOwnStyle(sourceId: string): boolean {
+  const stack = useAppStore.getState().channelVisibilities;
+  return sourceChannelInAnyGroup(
+    useDocumentStore.getState().channelGroups,
+    sourceId,
+  )
+    ? isOwnStyleShown(stack, sourceId)
+    : isStackVisible(stack, sourceId);
+}
+
+/**
+ * Give a channel just shown in its own style (from an image's channel list)
+ * a color that stands apart from everything else on screen, as its own
+ * color. One with no color yet gets a start color at once, so it draws.
+ * psudo's pick then replaces the color, unless it changed meanwhile (an edit
+ * or an undo) or the channel was hidden again. With nothing else on screen a colored channel keeps its color.
+ * Runs on the stack palette chain, so the ungrouped reconcile that follows
+ * sees the pick and leaves it.
+ */
+export function assignOwnStyleColor(sourceChannelId: string): Promise<void> {
+  const doc = useDocumentStore.getState();
+  const sourceChannels = flattenImageChannelsInDocumentOrder(doc.images);
+  const shown = sourceChannels.find((sc) => sc.id === sourceChannelId);
+  if (!shown || !isImportPaletteSource(shown, sourceChannels)) {
+    return Promise.resolve();
+  }
+  const locked = slotsOnScreen(sourceChannels, shown.id);
+  const start = startingColorAwayFromLocked(locked.map((slot) => slot.color));
+  const write = (color: RgbColor) => {
+    const now = useDocumentStore.getState();
+    now.setImages(
+      patchSourceChannelOnImages(now.images, shown.id, {
+        color: { r: color.r, g: color.g, b: color.b },
+      }),
+    );
+  };
+  if (!shown.color) write(start);
+  if (locked.length === 0) return Promise.resolve();
+  const before = shown.color ?? start;
+  const colorNow = () =>
+    findSourceChannel(
+      flattenImageChannelsInDocumentOrder(useDocumentStore.getState().images),
+      shown.id,
+    )?.color;
+  setStackPalettePendingMany([shown.id], true);
+  const run = stackPaletteChain.then(async () => {
+    try {
+      const colors = await optimizePaletteSlots(
+        [...locked, { id: shown.id, color: start }],
+        new Set(locked.map((slot) => slot.id)),
+      );
+      const picked = colors[locked.length];
+      const now = colorNow();
+      const unchanged =
+        now?.r === before.r && now?.g === before.g && now?.b === before.b;
+      if (picked && unchanged && stillShownOwnStyle(shown.id)) write(picked);
+    } catch (e) {
+      if (import.meta.env.DEV) {
+        console.warn("[psudo] own-style color failed", e);
+      }
+    } finally {
+      setStackPalettePendingMany([shown.id], false);
+    }
+  });
+  stackPaletteChain = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
 }

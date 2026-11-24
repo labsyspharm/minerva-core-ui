@@ -1,12 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
-import { OpacitySlider } from "@/components/shared/channel/ChannelRow";
 import {
   FeatureCsvAttachDialog,
   FeatureCsvColumnPick,
   pickFeatureCsv,
 } from "@/components/shared/channel/FeatureTable";
-import { ImageChannelOverviewCard } from "@/components/shared/channel/ImageChannelOverview";
 import { TrashIcon } from "@/components/shared/common/TrashIcon";
 import { ImportOverlay } from "@/components/shared/ImportOverlay";
 import MoveIcon from "@/components/shared/icons/move.svg?react";
@@ -35,7 +39,6 @@ import {
   fileHandleFromDataTransferItem,
   findFile,
 } from "@/lib/imaging/filesystem";
-import { clampImageOpacity } from "@/lib/imaging/imageOpacity";
 import {
   dragHasFiles,
   type ImportFileKind,
@@ -70,7 +73,6 @@ import {
   flattenImageChannelsInDocumentOrder,
   useDocumentStore,
 } from "@/lib/stores/documentStore";
-import { setImageOpacity } from "@/lib/stores/storeUtils";
 import styles from "./Upload.module.css";
 
 export type { OmeImportResult };
@@ -112,7 +114,30 @@ export type OmeImportRequest = {
   channelNames?: ReadonlyMap<number, string>;
 };
 
-type UploadProps = {
+/**
+ * Hooks for the author Images tab. Each image is a grid line: its name
+ * (double-click renames), `renderImageHeaderExtra`'s cells, then Arrange /
+ * Replace / Delete (shown on hover or focus); `renderImageBody` goes under it.
+ */
+export type UploadSlots = {
+  /** Under each image's line (its channels). */
+  renderImageBody?: (image: Image) => ReactNode;
+  /** Cells on each image's line, before Arrange / Replace / Delete. */
+  renderImageHeaderExtra?: (image: Image) => ReactNode;
+  /** Pinned under the add strip, outside the scrolling body. */
+  dockAfter?: ReactNode;
+  /** Inside the scrolling body, above the images. */
+  bodyBefore?: ReactNode;
+  /**
+   * Under the add strip, `dockAfter` and the body each take the height their
+   * content needs, up to half, each scrolling on its own. A folded one
+   * (`false`) keeps only its header (the body then leaves the images out)
+   * and the other may take all the room.
+   */
+  split?: { dock: boolean; body: boolean };
+};
+
+type UploadProps = UploadSlots & {
   onAllow: (kinds: readonly ImportFileKind[]) => Promise<Handle.File[]>;
   /**
    * Drop / Browse route by extension. Images open the import dialog. With this
@@ -235,6 +260,8 @@ function imageDisplayLabel(
   index: number,
   opts: { fileName: string; lastOmeTiffUrl: string | null },
 ): string {
+  const given = im.label?.trim();
+  if (given) return given;
   const base = im.basename.trim();
   if (base) return base;
   const src = im.source;
@@ -348,6 +375,11 @@ const Upload = (props: UploadProps) => {
     onReplaceImage,
     row = false,
     disabled = false,
+    renderImageBody,
+    renderImageHeaderExtra,
+    dockAfter,
+    bodyBefore,
+    split = { dock: true, body: true },
   } = props;
 
   const [pointTarget, setPointTarget] = useState<PointTarget | null>(null);
@@ -367,6 +399,22 @@ const Upload = (props: UploadProps) => {
   };
 
   const images = useDocumentStore((s) => s.images);
+  // The image whose name is being edited (double-click a compact title).
+  const [renamingImageId, setRenamingImageId] = useState<string | null>(null);
+  /** `shown`: the name on screen before editing (the file's, if unnamed). */
+  const renameImage = (imageId: string, value: string, shown: string) => {
+    const doc = useDocumentStore.getState();
+    const label = value.trim();
+    const im = doc.images.find((i) => i.id === imageId);
+    if (!im || (im.label ?? "") === label) return;
+    // Left as the file's own name: nothing to save.
+    if (!im.label && label === shown) return;
+    doc.setImages(
+      doc.images.map((i) =>
+        i.id === imageId ? { ...i, label: label || undefined } : i,
+      ),
+    );
+  };
 
   useEffect(() => {
     if (!pointTarget) return;
@@ -956,14 +1004,48 @@ const Upload = (props: UploadProps) => {
 
     const pointing = pointTarget?.imageId === im.id ? pointTarget.mode : null;
     return (
-      <article key={im.id} className={styles.imageCard}>
+      <article
+        key={im.id}
+        className={`${styles.imageCard} ${styles.imageCardRow}`}
+      >
         <div className={styles.imageCardHeader}>
-          <div className={styles.imageCardText}>
-            <div className={styles.imageCardTitle} title={title}>
-              {title}
-            </div>
-            <div className={styles.imageCardMeta}>{metaParts.join(" · ")}</div>
+          <div
+            className={styles.imageCardTextCompact}
+            title={[title, ...metaParts, "Double-click to rename"].join(" · ")}
+          >
+            {renamingImageId === im.id ? (
+              <input
+                // biome-ignore lint/a11y/noAutofocus: opened by an explicit double-click.
+                autoFocus
+                className={styles.imageCardRename}
+                defaultValue={im.label?.trim() || title}
+                aria-label="Image name"
+                onFocus={(e) => e.currentTarget.select()}
+                onBlur={(e) => {
+                  // Back to the file's name when cleared.
+                  renameImage(im.id, e.currentTarget.value, title);
+                  setRenamingImageId(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    e.currentTarget.value = im.label?.trim() || title;
+                  }
+                  if (e.key === "Enter" || e.key === "Escape") {
+                    e.currentTarget.blur();
+                  }
+                }}
+              />
+            ) : (
+              // biome-ignore lint/a11y/noStaticElementInteractions: double-click rename, as group names do; the name is not otherwise interactive.
+              <span
+                className={styles.imageCardTitleCompact}
+                onDoubleClick={() => setRenamingImageId(im.id)}
+              >
+                {title}
+              </span>
+            )}
           </div>
+          {renderImageHeaderExtra?.(im)}
           <div className={styles.imageCardActions}>
             <PanelIconButton
               title="Arrange"
@@ -1000,24 +1082,7 @@ const Upload = (props: UploadProps) => {
             ) : null}
           </div>
         </div>
-        <OpacitySlider
-          className={styles.imageOpacity}
-          value={clampImageOpacity(im.opacity)}
-          ariaLabel={title}
-          onPreview={(opacity) => {
-            const app = useAppStore.getState();
-            if (opacity !== null) {
-              app.setImageOpacityPreview({ imageId: im.id, opacity });
-            } else if (app.imageOpacityPreview?.imageId === im.id) {
-              app.setImageOpacityPreview(null);
-            }
-          }}
-          onCommit={(opacity) => {
-            const doc = useDocumentStore.getState();
-            doc.setImages(setImageOpacity(doc.images, im.id, opacity));
-          }}
-        />
-        <ImageChannelOverviewCard image={im} />
+        {renderImageBody?.(im)}
         {showAccessOverlay ? (
           <div className={styles.fileAccessOverlay}>
             {fileReference ? (
@@ -1211,13 +1276,33 @@ const Upload = (props: UploadProps) => {
         addStrip
       ) : (
         <div className={panel.authorPanel}>
-          <div className={styles.panelDock}>{addStrip}</div>
-          <div
-            className={[panel.authorPanelBody, panel.thinScrollbar].join(" ")}
-          >
-            {imageCards.length > 0 ? (
-              <div className={styles.stack}>{imageCards}</div>
+          <div className={`${styles.panelDock} ${styles.panelDockSplit}`}>
+            {addStrip}
+          </div>
+          <div className={styles.splitArea}>
+            {dockAfter != null ? (
+              <div
+                className={`${styles.splitTop} ${
+                  split.dock ? styles.splitGrow : styles.splitFixed
+                }`}
+              >
+                {dockAfter}
+              </div>
             ) : null}
+            <div
+              className={[
+                panel.authorPanelBody,
+                panel.thinScrollbar,
+                split.body ? styles.splitGrow : styles.splitFixed,
+              ].join(" ")}
+            >
+              {bodyBefore}
+              {split.body && imageCards.length > 0 ? (
+                <div className={`${styles.stack} ${styles.stackLines}`}>
+                  {imageCards}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       )}

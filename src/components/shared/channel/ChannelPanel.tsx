@@ -131,7 +131,7 @@ export const ChannelPanel = (props: ChannelPanelProps) => {
       if (entries.length === 0) continue;
       sections.push({
         imageId: im.id,
-        label: legendLabelForImage(im.basename ?? ""),
+        label: im.label?.trim() || legendLabelForImage(im.basename ?? ""),
         entries,
       });
     }

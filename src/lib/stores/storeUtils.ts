@@ -300,6 +300,8 @@ export function rebindReplacementImageChannels(
     contentRole: previous.contentRole ?? incoming.contentRole,
     rgbDisplay: previous.rgbDisplay ?? incoming.rgbDisplay,
     opacity: clampImageOpacity(previous.opacity),
+    // The author's name for the image outlives a new file.
+    label: previous.label,
   };
 }
 
@@ -391,6 +393,8 @@ export function uniqueImageDisplayLabels(
   images: readonly Image[],
 ): Map<string, string> {
   const rows = images.map((im) => {
+    const given = im.label?.trim();
+    if (given) return { id: im.id, base: given };
     const trimmed = (im.basename ?? "").trim();
     const base = trimmed
       ? trimmed.replace(/\.ome\.tiff?$/i, "").replace(/\.tiff?$/i, "") ||
