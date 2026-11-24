@@ -6,15 +6,7 @@ import {
   applyStackVisibilities,
   visibilitiesShowingOnlyGroup,
 } from "../imaging/channelCompositor";
-import type { MaskVisualization } from "../imaging/channelKind";
-import { DEFAULT_MASK_VISUALIZATION } from "../imaging/channelKind";
 import type { ImageOpacityPreview } from "../imaging/imageOpacity";
-import {
-  type ImageSelectionMask,
-  polygonRingFromShape,
-  rasterizePolygonToImageMask,
-  SELECTION_MASK_CHANNEL_KEY,
-} from "../imaging/maskLayers";
 import { effectiveWorldFrame, type WorldFrame } from "../imaging/worldFrame";
 import { buildBrushHull } from "../shapes/brushHull";
 import { polygonDifference, polygonUnion } from "../shapes/polygonClipping";
@@ -629,20 +621,6 @@ export interface AppStore {
   brushEditTargetId: string | null;
   brushEditMode: "add" | "subtract" | null;
 
-  /**
-   * Binary mask for spatial selection (from waypoint annotation or future sources).
-   * Shown as a virtual "Selection" row in the channel list; clips image layers when visible.
-   */
-  imageSelectionMask: ImageSelectionMask | null;
-  setImageSelectionMaskVisualization: (viz: MaskVisualization) => void;
-  setImageSelectionMaskFromShape: (shape: Shape) => boolean;
-  /** Prefer `preferredShapeIds` (e.g. layers panel selection), else first maskable shape in `shapeIds`. */
-  setImageSelectionMaskFromWaypoint: (
-    shapeIds: string[],
-    preferredShapeIds?: string[],
-  ) => boolean;
-  clearImageSelectionMask: () => void;
-
   activeStoryIndex: number | null;
 
   /** Ephemeral camera / UI-state per waypoint, keyed by waypoint id. */
@@ -798,6 +776,13 @@ export interface AppStore {
 
   // Channel group and channel actions
   setActiveChannelGroup: (channelGroupId: string) => void;
+  /**
+   * Select no group (the Images tab's channels then show and edit their own
+   * styles). Stays so until a group is selected or the story is reset.
+   */
+  clearActiveChannelGroup: () => void;
+  /** True after `clearActiveChannelGroup`: don't re-select a group for it. */
+  channelGroupCleared: boolean;
   /** Select a group and show only its channels. */
   showOnlyChannelGroup: (channelGroupId: string) => void;
   setChannelVisibilities: (vis: Record<string, boolean>) => void;
@@ -971,12 +956,12 @@ const overlayInitialState = {
   selectedShapeId: null as string | null,
   brushEditTargetId: null as string | null,
   brushEditMode: null as "add" | "subtract" | null,
-  imageSelectionMask: null as ImageSelectionMask | null,
   activeStoryIndex: null,
   waypointAuthoring: new Map<string, AuthoringWaypointExtra>(),
   authoringWaypointShapesIndex: null as number | null,
   openWaypointId: null as string | null,
   activeChannelGroupId: null, // No channel group initially
+  channelGroupCleared: false,
   channelRendering: null,
   imageOrientationPreview: null,
   imageOpacityPreview: null,
@@ -1257,9 +1242,8 @@ export const useAppStore = create<AppStore>()(
       },
 
       resetStoryViewerSession: () => {
-        const vis = { ...get().channelVisibilities };
-        delete vis[SELECTION_MASK_CHANNEL_KEY];
         set({
+          channelGroupCleared: false,
           shapes: [],
           shapeGroups: [],
           hiddenShapeIds: new Set<string>(),
@@ -1269,8 +1253,6 @@ export const useAppStore = create<AppStore>()(
           brushMask: null,
           brushMaskVersion: 0,
           brushLastScreenCoord: null,
-          imageSelectionMask: null,
-          channelVisibilities: vis,
           hiddenLegendClasses: {},
           activeStoryIndex: null,
           waypointAuthoring: new Map(),
@@ -1583,77 +1565,6 @@ export const useAppStore = create<AppStore>()(
 
       clearBrushMask: () => {
         set({ brushMask: null, brushMaskVersion: 0 });
-      },
-
-      setImageSelectionMaskFromShape: (shape: Shape) => {
-        const frame = referenceWorldFrameForActions(get);
-        if (frame.worldWidth <= 0 || frame.worldHeight <= 0) return false;
-        const ring = polygonRingFromShape(shape);
-        if (!ring) return false;
-        const mask = rasterizePolygonToImageMask(
-          ring,
-          frame.worldWidth,
-          frame.worldHeight,
-          {
-            sourceShapeId: shape.id,
-            sourceShapeLabel: shape.metadata?.label,
-          },
-        );
-        if (!mask) return false;
-        const vis = { ...get().channelVisibilities };
-        vis[SELECTION_MASK_CHANNEL_KEY] = true;
-        set({
-          imageSelectionMask: {
-            ...mask,
-            maskVisualization: DEFAULT_MASK_VISUALIZATION,
-          },
-          channelVisibilities: vis,
-        });
-        return true;
-      },
-
-      setImageSelectionMaskVisualization: (viz) => {
-        const mask = get().imageSelectionMask;
-        if (!mask) return;
-        set({ imageSelectionMask: { ...mask, maskVisualization: viz } });
-      },
-
-      clearImageSelectionMask: () => {
-        const vis = { ...get().channelVisibilities };
-        delete vis[SELECTION_MASK_CHANNEL_KEY];
-        set({
-          imageSelectionMask: null,
-          channelVisibilities: vis,
-        });
-      },
-
-      setImageSelectionMaskFromWaypoint: (shapeIds, preferredShapeIds) => {
-        if (shapeIds.length === 0) return false;
-        const docShapes = documentShapes(useDocumentStore.getState());
-        const viewerShapes = get().shapes;
-        const tryIds = [
-          ...(preferredShapeIds ?? []),
-          ...shapeIds.filter((id) => !preferredShapeIds?.includes(id)),
-        ];
-        const frame = referenceWorldFrameForActions(get);
-        const apply = get().setImageSelectionMaskFromShape;
-        for (const id of tryIds) {
-          const live = viewerShapes.find((s) => s.id === id);
-          if (live && apply(live)) return true;
-          const persisted = docShapes.find((s) => s.id === id);
-          if (
-            persisted &&
-            apply(
-              storyShapeToViewer(persisted, {
-                imageWidth: frame.worldWidth,
-                imageHeight: frame.worldHeight,
-              }),
-            )
-          ) {
-            return true;
-          }
-        }
-        return false;
       },
 
       brushPaintStart: (screenCoord: [number, number]) => {
@@ -2470,7 +2381,14 @@ export const useAppStore = create<AppStore>()(
       },
 
       setActiveChannelGroup: (channelGroupId: string) => {
-        set({ activeChannelGroupId: channelGroupId });
+        set({
+          activeChannelGroupId: channelGroupId,
+          channelGroupCleared: false,
+        });
+      },
+
+      clearActiveChannelGroup: () => {
+        set({ activeChannelGroupId: null, channelGroupCleared: true });
       },
 
       showOnlyChannelGroup: (channelGroupId: string) => {
@@ -2486,6 +2404,7 @@ export const useAppStore = create<AppStore>()(
         });
         set({
           activeChannelGroupId: group.id,
+          channelGroupCleared: false,
           channelVisibilities: next.channelVisibilities,
           channelGroupRowVisibilities: next.channelGroupRowVisibilities,
         });

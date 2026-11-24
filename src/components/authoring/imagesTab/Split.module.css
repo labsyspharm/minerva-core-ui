@@ -1,0 +1,423 @@
+.bare {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--minerva-quiet);
+  font: inherit;
+  cursor: pointer;
+}
+
+.bare:hover:not(:disabled) {
+  color: var(--minerva-ink);
+}
+
+/* Section headers: chevron and label fold the section; actions at the end. */
+.head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  height: 24px;
+}
+
+.head h2 {
+  margin-right: auto;
+}
+
+.fold {
+  gap: 6px;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+
+.fold svg {
+  width: 10px;
+  height: 10px;
+}
+
+.count {
+  color: var(--minerva-quiet);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* Channel groups: the dock's growing half; the list scrolls inside it. */
+.groups {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 8px;
+}
+
+/*
+ * One grid for every group line, so the names share a column as wide as the
+ * longest (up to a cap) and every chip line starts at the same x.
+ */
+.list {
+  display: grid;
+  flex: 0 1 auto;
+  /* 36px indent + 6px gap, as image lines (Upload.module.css). */
+  grid-template-columns: 36px fit-content(130px) minmax(0, 1fr) auto;
+  align-content: start;
+  column-gap: 6px;
+  min-height: 0;
+  margin: 2px calc(-1 * var(--minerva-inset)) -8px;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.group {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: start;
+  padding: 2px 0;
+  border-top: 1px solid var(--minerva-edge);
+}
+
+.group:not(.active):hover {
+  background: color-mix(in srgb, var(--minerva-wash) 50%, transparent);
+}
+
+.active {
+  background: var(--minerva-wash);
+  box-shadow: inset 2px 0 0 var(--minerva-blue);
+}
+
+.group.over {
+  background: color-mix(in srgb, var(--minerva-blue) 22%, transparent);
+  box-shadow: inset 0 0 0 1px var(--minerva-blue);
+}
+
+/* Under the Images header while a group's "+" is on: the tiles add to it. */
+.addingBar {
+  display: flex;
+  position: sticky;
+  top: 24px;
+  z-index: 2;
+  align-items: center;
+  gap: 8px;
+  /* Text starts where image and group names do (36px column + 6px gap). */
+  padding: 4px var(--minerva-inset) 4px 42px;
+  background: color-mix(in srgb, var(--minerva-blue) 22%, var(--minerva-paper));
+  color: var(--minerva-ink);
+  font-size: 12px;
+}
+
+.addingBar > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.done {
+  padding: 0 6px;
+  height: 22px;
+  color: var(--minerva-ink);
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+/*
+ * The line's first column indents it under the section title; the expand /
+ * collapse chevron sits at its end, under the title's text.
+ */
+.disclose {
+  justify-self: end;
+  width: 12px;
+}
+
+.disclose svg {
+  width: 10px;
+  height: 10px;
+}
+
+.name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--minerva-ink);
+  font-size: 13px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.active .name {
+  font-weight: 600;
+  cursor: text;
+}
+
+.rename {
+  min-width: 0;
+  height: 22px;
+  margin-left: -7px;
+  padding: 0 6px;
+  border: 1px solid var(--minerva-ink);
+  border-radius: 0;
+  background: var(--minerva-paper);
+  color: var(--minerva-ink);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.acts {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  padding-right: 6px;
+}
+
+/* The "⋯" menu and trash: active line, hover or focus only. */
+.group:not(.active, :hover, :focus-within) .idle:not(.held) {
+  opacity: 0;
+}
+
+.moreWrap {
+  display: inline-flex;
+}
+
+.groupMenu {
+  min-width: 10rem;
+}
+
+/*
+ * An opened group: a line per channel under the name, from the names' column
+ * to the end, its chip as the label beside its histogram and color.
+ */
+.chLines {
+  display: grid;
+  grid-column: 2 / -1;
+  grid-template-columns: max-content minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 2px 8px;
+  padding: 0 8px 4px 0;
+}
+
+/* Each line spans the grid above and passes its columns on (subgrid; see
+   ChannelRow's compact look). */
+.chLine {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+}
+
+/* A line with no histogram (H&E): just its chip. */
+.chLabel {
+  grid-column: 1;
+}
+
+/* A chip that renames: its pencil shows on hover or focus. */
+.renameHost {
+  position: relative;
+}
+
+.renameHost:not(:hover, :focus-within) .pencil {
+  opacity: 0;
+}
+
+/* While it shows, the name makes room for it (ending in "…" if need be). */
+.renameHost:is(:hover, :focus-within) button[aria-pressed] {
+  padding-right: 16px;
+}
+
+/* Chained to beat the chip's own trailing-slot size. */
+.renameHost .pencil {
+  width: 16px;
+  opacity: 0.85;
+}
+
+.renameHost .pencil:hover {
+  opacity: 1;
+}
+
+.renameHost .pencil svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* The rename box, over the chip and on along its line (width set inline). */
+.chipRename {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  box-sizing: border-box;
+  width: 12rem;
+  height: 22px;
+  padding: 0 4px;
+  border: 1px solid var(--minerva-ink);
+  border-radius: 0;
+  background: var(--minerva-paper);
+  color: var(--minerva-ink);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.chLines [draggable] {
+  cursor: grab;
+}
+
+/* An image's channels drawn in their own style, under its tiles. */
+.imageLines {
+  padding: 0 0 4px;
+}
+
+.chEmpty {
+  grid-column: 1 / -1;
+  color: var(--minerva-quiet);
+  font-size: 12px;
+  line-height: 22px;
+}
+
+.chImage {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  color: var(--minerva-quiet);
+  font-size: 11px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chImage:not(:first-child) {
+  margin-top: 4px;
+}
+
+/* Add channels, on the name line of an opened group. */
+.openTools {
+  display: flex;
+  grid-column: 3;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  height: 22px;
+}
+
+/* Chip lines (clamped by ClampedChips). */
+.line > div,
+.imageBody > div {
+  cursor: grab;
+}
+
+/* In no group. */
+.imageBody > .unused > div {
+  border-style: dashed;
+}
+
+/* Between a closed group line's images. */
+.sepRule {
+  align-self: center;
+  width: 1px;
+  height: 14px;
+  margin: 0 3px;
+  background: var(--minerva-edge);
+}
+
+.add {
+  box-sizing: border-box;
+  width: 22px;
+  border: 1px dashed var(--minerva-edge);
+}
+
+.add[aria-pressed="true"] {
+  border-style: solid;
+  border-color: var(--minerva-blue);
+  background: color-mix(in srgb, var(--minerva-blue) 22%, transparent);
+  color: var(--minerva-ink);
+}
+
+.add:hover,
+.add[aria-pressed="true"] {
+  border-color: var(--minerva-ink);
+  color: var(--minerva-ink);
+}
+
+/* Images: the body's half; its header stays put while the cards scroll. */
+.imagesHead {
+  position: sticky;
+  top: 0;
+  /* Above rows scrolled under it (their actions and file overlay stack). */
+  z-index: 3;
+  height: auto;
+  padding: 8px var(--minerva-inset) 0;
+  background: var(--minerva-paper);
+}
+
+/* An image line's eye: after the search, before the hover actions. */
+.imageEyeCell {
+  display: flex;
+  grid-row: 1;
+  grid-column: 4;
+}
+
+/* An image line's chips: under the name, to the line's end. */
+.imageBody {
+  grid-row: 2;
+  grid-column: 2 / -1;
+  min-height: 22px;
+}
+
+/* An image's channels: even tiles on their own line under the name. */
+.imageBody.tiles {
+  display: grid;
+  /* As many chip-wide columns as fit (ChannelChip's one width). */
+  grid-template-columns: repeat(auto-fill, 60px);
+  margin: 2px 0 4px;
+  font-size: 11px;
+}
+
+.noMatch {
+  grid-column: 1 / -1;
+  color: var(--minerva-quiet);
+  font-size: 12px;
+  line-height: 22px;
+}
+
+/* An image's channel search, beside its name. */
+.imageSearchCell {
+  display: flex;
+  grid-row: 1;
+  grid-column: 3;
+  min-width: 0;
+}
+
+/* A one-channel image's chip: on its name line, in the search's cell. */
+.imageBody.imageBodyInline {
+  grid-row: 1;
+  grid-column: 3;
+  margin: 0;
+}
+
+/* The channel editor's "Fit" and color lock. */
+.textAction {
+  height: 22px;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.textAction:disabled {
+  cursor: default;
+}
+
+.lock {
+  width: 22px;
+}
+
+.lock svg {
+  width: 12px;
+  height: 12px;
+}
+
+.lock[aria-pressed="true"] {
+  color: var(--minerva-ink);
+}

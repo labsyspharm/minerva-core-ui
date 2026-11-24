@@ -1,0 +1,108 @@
+/* The author Images tab's channel chips and tiles. */
+
+/* One size for every channel chip: group lines, channel lines, image tiles. */
+.cell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: none;
+  width: 60px;
+  min-width: 0;
+  height: 22px;
+  box-sizing: border-box;
+  border: 1px solid #fff;
+  background: transparent;
+  color: var(--minerva-quiet);
+}
+
+.on {
+  border-color: var(--ch);
+  background: var(--ch);
+  color: var(--ch-ink, #000);
+}
+
+.faded {
+  border-color: color-mix(in srgb, var(--ch) 45%, transparent);
+  background: color-mix(in srgb, var(--ch) 28%, transparent);
+  color: var(--minerva-ink);
+}
+
+.outlined {
+  border-color: var(--ch);
+  color: var(--minerva-ink);
+}
+
+.unassigned {
+  border-color: #fff;
+  color: var(--minerva-ink);
+}
+
+.neutral {
+  border-color: var(--minerva-edge);
+  color: var(--minerva-quiet);
+}
+
+.hint {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.button,
+.trailing {
+  appearance: none;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.button {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0 6px;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.trailing {
+  grid-column: 1;
+  grid-row: 1;
+  z-index: 1;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 100%;
+  padding: 0;
+}
+
+.trailing svg {
+  width: 8px;
+  height: 8px;
+}
+
+/* Section label above a chip list ("Channels", a group, an image). */
+.label {
+  margin: 0;
+  min-width: 0;
+  flex: 0 1 auto;
+  color: var(--minerva-quiet);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

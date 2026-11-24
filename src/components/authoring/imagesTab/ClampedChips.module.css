@@ -1,0 +1,67 @@
+/*
+ * Chips clamped to `--rows` rows of 22px; past the fit they stay laid out but
+ * unseen, so they can be measured. Open, they all wrap.
+ */
+.clamp {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+  min-height: 22px;
+}
+
+.clamp:not(.open) {
+  max-height: calc(var(--rows) * 22px + (var(--rows) - 1) * 4px);
+  overflow: hidden;
+}
+
+.clamp.open {
+  padding-bottom: 2px;
+}
+
+/* Chips keep their one width (ChannelChip's cell). */
+.clamp > div {
+  flex: none;
+  min-width: 0;
+}
+
+.more {
+  position: absolute;
+  height: 22px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--minerva-quiet);
+  font: inherit;
+  font-size: 12px;
+  line-height: 22px;
+  cursor: pointer;
+}
+
+.more:hover {
+  color: var(--minerva-ink);
+}
+
+/* Closes an opened line (when `onClose` is given). */
+.less {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--minerva-quiet);
+  cursor: pointer;
+}
+
+.less:hover {
+  color: var(--minerva-ink);
+}
+
+.less svg {
+  width: 10px;
+  height: 10px;
+}

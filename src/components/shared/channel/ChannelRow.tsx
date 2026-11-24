@@ -10,7 +10,6 @@ import {
   ChannelContrastEditor,
   type ChannelContrastEditorProps,
 } from "@/components/shared/channel/ChannelContrastEditor";
-import { ChannelVisibilitySwatch } from "@/components/shared/channel/ChannelVisibilitySwatch";
 import minervaTheme from "@/components/shared/minervaTheme.module.css";
 import type { MaskVisualization } from "@/lib/imaging/channelKind";
 import { withReseededRandomColors } from "@/lib/imaging/channelKind";
@@ -72,82 +71,6 @@ function MaskVizButton(props: {
     >
       <span className={props.iconClass} aria-hidden />
     </button>
-  );
-}
-
-/** 0–100% slider over a `0…1` opacity; previews while dragging, commits on release. */
-export function OpacitySlider(props: {
-  value: number;
-  onCommit: (opacity: number) => void;
-  onPreview?: (opacity: number | null) => void;
-  ariaLabel: string;
-  className?: string;
-}) {
-  const { value, onCommit, onPreview, ariaLabel, className } = props;
-  const committedPct = Math.round(value * 100);
-  const [pct, setPct] = useState(committedPct);
-  // Release can land in the same render as the last change; commit from the ref.
-  const pctRef = useRef(committedPct);
-  const lastCommittedPct = useRef(committedPct);
-
-  const onPreviewRef = useRef(onPreview);
-  onPreviewRef.current = onPreview;
-
-  useEffect(() => {
-    pctRef.current = committedPct;
-    setPct(committedPct);
-    lastCommittedPct.current = committedPct;
-  }, [committedPct]);
-
-  useEffect(() => () => onPreviewRef.current?.(null), []);
-
-  const show = (nextPct: number) => {
-    pctRef.current = nextPct;
-    setPct(nextPct);
-  };
-  const commit = () => {
-    const nextPct = pctRef.current;
-    if (nextPct !== lastCommittedPct.current) {
-      lastCommittedPct.current = nextPct;
-      onCommit(nextPct / 100);
-    }
-    onPreview?.(null);
-  };
-
-  return (
-    <label
-      className={[styles.maskOpacityControl, className]
-        .filter(Boolean)
-        .join(" ")}
-      title={`Opacity ${pct}%`}
-      style={{ ["--mask-opacity-pct" as string]: `${pct}%` }}
-    >
-      <span className={styles.maskOpacityInputRow}>
-        <input
-          type="range"
-          className={styles.maskOpacitySlider}
-          min={0}
-          max={100}
-          step={1}
-          value={pct}
-          aria-label={`${ariaLabel} opacity`}
-          onChange={(e) => {
-            const nextPct = Number(e.target.value);
-            show(nextPct);
-            onPreview?.(nextPct / 100);
-          }}
-          onPointerUp={commit}
-          onPointerCancel={() => {
-            show(committedPct);
-            onPreview?.(null);
-          }}
-          onKeyUp={commit}
-          onBlur={commit}
-        />
-        <span className={styles.maskOpacityValue}>{pct}%</span>
-      </span>
-      <span className={styles.maskOpacityLabel}>Opacity</span>
-    </label>
   );
 }
 
@@ -221,43 +144,37 @@ function MaskModeControls(props: {
   );
 }
 
-type ChannelRowNameProps =
-  | {
-      mode: "label";
-      name: string;
-      title?: string;
-      className: string;
-    }
-  | {
-      mode: "editable";
-      name: string;
-      meta: string;
-      onBlur: (value: string) => void;
-    };
+type ChannelRowNameProps = {
+  mode: "editable";
+  name: string;
+  meta: string;
+  onBlur: (value: string) => void;
+};
 
 type ChannelRowProps = {
+  /** Fills the color swatch (the row has no eye: its chip is that). */
   visible: boolean;
-  visibilityTitle: string;
-  visibilityAriaLabel: string;
-  onToggleVisibility: MouseEventHandler<HTMLButtonElement>;
   name: ChannelRowNameProps;
-  imageSubtitle?: string | null;
   contrast?: ChannelContrastEditorProps;
   trailing?: ReactNode;
-  locked?: boolean;
   isMask?: boolean;
   maskVisualization?: MaskVisualization;
   onMaskVisualizationChange?: (viz: MaskVisualization) => void;
   maskFooter?: ReactNode;
   maskAction?: ReactNode;
   maskAriaLabel?: string;
-  /** Non-interactive swatch when the row has no color picker (e.g. selection mask). */
-  fixedColorHex?: string;
   colorHex?: string;
   colorTitle?: string;
   busy?: boolean;
   fitting?: boolean;
-  visibilityBlocked?: boolean;
+  /**
+   * `inline` (Images tab, opened from a chip): a narrow editable name, a
+   * larger swatch, quiet limits, a taller plot and `trailing` at the end.
+   * `compact`: the same, no taller than a chip (a group's channel lines).
+   */
+  look?: "inline" | "compact";
+  /** Shown in place of the name (e.g. the channel's chip), in a wider slot. */
+  label?: ReactNode;
   onColorClick?: MouseEventHandler<HTMLButtonElement>;
 };
 
@@ -315,26 +232,19 @@ function EditableChannelRowName(
 export function ChannelRow(props: ChannelRowProps) {
   const {
     visible,
-    visibilityTitle,
-    visibilityAriaLabel,
-    onToggleVisibility,
     name,
-    imageSubtitle,
     contrast,
     trailing,
-    locked,
     isMask,
     maskVisualization,
     onMaskVisualizationChange,
     maskFooter,
     maskAction,
     maskAriaLabel,
-    fixedColorHex,
     colorHex,
     colorTitle,
     busy,
     fitting,
-    visibilityBlocked,
     onColorClick,
   } = props;
 
@@ -345,7 +255,8 @@ export function ChannelRow(props: ChannelRowProps) {
     <div
       className={[
         styles.channelRow,
-        locked ? styles.detailChannelRowLocked : null,
+        props.look ? styles.lookInline : null,
+        props.look === "compact" ? styles.lookCompact : null,
         fitting ? minervaTheme.busyOverlay : null,
       ]
         .filter(Boolean)
@@ -358,34 +269,19 @@ export function ChannelRow(props: ChannelRowProps) {
           showMask ? ` ${styles.channelRowMainMask}` : ""
         }`}
       >
-        <ChannelVisibilitySwatch
-          visible={visible}
-          title={visibilityTitle}
-          ariaLabel={visibilityAriaLabel}
-          blocked={visibilityBlocked}
-          onClick={onToggleVisibility}
-        />
-        <div className={styles.channelRowTitle}>
+        <div
+          className={`${styles.channelRowTitle}${
+            props.label ? ` ${styles.labelSlot}` : ""
+          }`}
+        >
           <div className={styles.channelNameSlot}>
-            {name.mode === "label" ? (
-              <span className={name.className} title={name.title ?? name.name}>
-                {name.name}
-              </span>
-            ) : (
-              <EditableChannelRowName {...name} />
-            )}
+            {props.label ?? <EditableChannelRowName {...name} />}
           </div>
-          {imageSubtitle ? (
-            <span
-              className={styles.channelImageSubtitle}
-              title={`From ${imageSubtitle}`}
-            >
-              {imageSubtitle}
-            </span>
-          ) : null}
         </div>
         <div className={styles.channelRowMid}>
-          {contrast ? <ChannelContrastEditor {...contrast} /> : null}
+          {contrast ? (
+            <ChannelContrastEditor {...contrast} look={props.look} />
+          ) : null}
           {showMask && onMaskVisualizationChange ? (
             <MaskModeControls
               value={maskVisualization}
@@ -395,13 +291,6 @@ export function ChannelRow(props: ChannelRowProps) {
             />
           ) : null}
         </div>
-        {showMask && fixedColorHex ? (
-          <span
-            className={styles.channelColorSwatchStatic}
-            style={{ backgroundColor: `#${fixedColorHex}` }}
-            aria-hidden
-          />
-        ) : null}
         {showColor ? (
           <ChannelColorSwatchButton
             hex={colorHex}

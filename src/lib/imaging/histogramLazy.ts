@@ -1,5 +1,5 @@
 /**
- * Lazy OME-TIFF and DICOM histograms: `ChannelGroupsMasterDetail` requests indices →
+ * Lazy OME-TIFF and DICOM histograms: the channel editor requests indices →
  * `ensureOmeHistogramDistributions` (tile extract + in-memory cache) →
  * `mergeHistogramsIntoSourceChannelsByChannelId` patches `sourceDistribution`
  * on the store.
@@ -10,40 +10,6 @@ import type { Channel } from "../stores/documentStore";
 import type { FloatRange } from "./floatRange";
 import type { Loader } from "./viv";
 
-export type BackgroundTaskHandle = { cancel: () => void };
-
-/** Defer work until the browser is idle (histogram fetch, etc.). */
-export function scheduleBackgroundTask(
-  fn: () => void,
-  opts?: { timeout?: number },
-): BackgroundTaskHandle {
-  const timeout = opts?.timeout ?? 2500;
-  let cancelled = false;
-  let idleId: number | undefined;
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-  const run = () => {
-    if (cancelled) return;
-    fn();
-  };
-
-  if (typeof requestIdleCallback !== "undefined") {
-    idleId = requestIdleCallback(run, { timeout });
-  } else {
-    timeoutId = setTimeout(run, 16);
-  }
-
-  return {
-    cancel: () => {
-      cancelled = true;
-      if (idleId != null && typeof cancelIdleCallback !== "undefined") {
-        cancelIdleCallback(idleId);
-      }
-      if (timeoutId != null) clearTimeout(timeoutId);
-    },
-  };
-}
-
 export function sourceDistributionYValuesLength(sc: Channel): number {
   const d = sc.sourceDistribution;
   return d?.YValues?.length ?? 0;
@@ -51,6 +17,11 @@ export function sourceDistributionYValuesLength(sc: Channel): number {
 
 /** Per-image OME pyramid; cleared when switching images. */
 const omeHistogramCache = new Map<string, ConfigSourceDistribution>();
+/** Extractions running now, by the same key, so a second request joins one. */
+const inFlight = new Map<
+  string,
+  Promise<ConfigSourceDistribution | undefined>
+>();
 
 function cacheKey(
   imageKey: string,
@@ -64,6 +35,7 @@ function cacheKey(
 
 export function clearOmeHistogramCache(): void {
   omeHistogramCache.clear();
+  inFlight.clear();
 }
 
 /** Prefer when OME channels from several images can share the same pyramid `index`. */
@@ -122,20 +94,34 @@ export async function ensureOmeHistogramDistributions(
     return result;
   }
 
-  const fresh = await extractDistributionsForSourceIndices(
-    loader,
-    toCompute,
-    ranges,
-  );
+  // Join extractions already running for a channel; start one for the rest.
+  const waits: [number, Promise<ConfigSourceDistribution | undefined>][] = [];
+  const start: number[] = [];
   for (const c of toCompute) {
-    const dist = fresh.get(c);
-    if (dist) {
-      omeHistogramCache.set(
-        cacheKey(imageKey, sourceImageId, c, ranges?.get(c)),
-        dist,
-      );
-      result.set(c, dist);
+    const running = inFlight.get(
+      cacheKey(imageKey, sourceImageId, c, ranges?.get(c)),
+    );
+    if (running) waits.push([c, running]);
+    else start.push(c);
+  }
+  if (start.length > 0) {
+    const batch = extractDistributionsForSourceIndices(loader, start, ranges);
+    for (const c of start) {
+      const key = cacheKey(imageKey, sourceImageId, c, ranges?.get(c));
+      const one = batch
+        .then((fresh) => {
+          const dist = fresh.get(c);
+          if (dist) omeHistogramCache.set(key, dist);
+          return dist;
+        })
+        .finally(() => inFlight.delete(key));
+      inFlight.set(key, one);
+      waits.push([c, one]);
     }
+  }
+  for (const [c, one] of waits) {
+    const dist = await one;
+    if (dist) result.set(c, dist);
   }
 
   return result;

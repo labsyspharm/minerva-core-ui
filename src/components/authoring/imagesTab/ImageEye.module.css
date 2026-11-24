@@ -1,0 +1,106 @@
+.eye {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  min-width: 22px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--minerva-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.eye:hover,
+.eye[aria-expanded="true"] {
+  background: var(--minerva-wash);
+}
+
+.off {
+  color: var(--minerva-quiet);
+}
+
+.pct {
+  color: var(--minerva-quiet);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pop {
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  padding: 8px 10px 10px;
+  border: 1px solid var(--minerva-edge);
+  background: var(--minerva-paper);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.35);
+  color: var(--minerva-ink);
+  font-size: 12px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 6px;
+  align-items: center;
+  color: var(--minerva-quiet);
+}
+
+.value {
+  color: var(--minerva-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A plain track filled to the value, with a square thumb. */
+.slider {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 14px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    var(--minerva-ink) var(--pct),
+    color-mix(in srgb, var(--minerva-ink) 18%, transparent) var(--pct)
+  );
+}
+
+.slider::-moz-range-track {
+  height: 4px;
+  background: color-mix(in srgb, var(--minerva-ink) 18%, transparent);
+}
+
+.slider::-moz-range-progress {
+  height: 4px;
+  background: var(--minerva-ink);
+}
+
+.slider::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border: 0;
+  background: var(--minerva-ink);
+  appearance: none;
+}
+
+.slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 0;
+  background: var(--minerva-ink);
+}
+
+.slider:focus-visible {
+  outline: var(--minerva-focus-width) solid var(--minerva-ink);
+  outline-offset: var(--minerva-focus-offset);
+}
